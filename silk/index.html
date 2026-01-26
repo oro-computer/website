@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Silk · Oro Computer</title>
+    <meta
+      name="description"
+      content="Silk is a spec-first programming language and toolchain with packages/modules, a swappable stdlib, TAP testing, and opt-in Z3-backed formal verification."
+    />
+    <meta name="theme-color" content="#101012" />
+    <link rel="icon" type="image/png" href="../docs/branding/assets/logo-icon-small.png" sizes="32x32" />
+    <link rel="stylesheet" href="../assets/site.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="hero">
+      <div class="container">
+        <div class="site-header">
+          <a class="brand" href="../">
+            <img
+              class="brand-mark"
+              src="../docs/branding/assets/logo-icon.png"
+              alt="Oro Computer logo"
+              width="32"
+              height="32"
+            />
+            <span class="brand-name">Oro Computer</span>
+          </a>
+          <nav class="nav" aria-label="Page navigation">
+            <a href="../">Home</a>
+            <a href="../runtime/">Runtime</a>
+            <a href="https://github.com/oro-computer" target="_blank" rel="noreferrer">GitHub</a>
+            <a href="../#contact">Contact</a>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="section">
+        <div class="container">
+          <article class="prose">
+            <h1>Silk</h1>
+            <p>
+              Silk is a spec-first programming language and compiler toolchain implemented in Zig. The design is written
+              down first, then implemented: the <code>docs/</code> tree is the canonical reference for the language,
+              standard library, and embedding ABI. The compiler implements a growing subset and aims for stable diagnostics
+              and predictable behavior as the design evolves.
+            </p>
+
+            <h2>Documentation-first is a feature</h2>
+            <p>
+              “Spec-first” in Silk is not a slogan — it is an engineering constraint. When the docs are the source of truth,
+              downstream users can reason about the language from a single place, and the compiler can treat deviations as
+              bugs rather than “whatever the implementation happens to do”.
+            </p>
+            <p>
+              The practical value is boring (in the best way): clearer semantics, fewer accidental behaviors, and a language
+              surface that is designed to be implemented and tested incrementally.
+            </p>
+
+            <h2>Packages and modules</h2>
+            <p>
+              Silk code is organized into namespaces using <code>::</code>-qualified paths. A source file can declare either
+              a <code>package</code> (a named collection of files that share a namespace) or a <code>module</code> (a
+              compile-time-only namespace value). These declarations live at the very top of the file, before imports.
+            </p>
+            <p>
+              This strict header ordering is intentional: it makes builds easier to understand, keeps tooling deterministic,
+              and prevents subtle “imports halfway through a file” dependency patterns.
+            </p>
+            <pre><code>package my_app::core;
+
+import std::io::println;
+
+export fn greet () -&gt; string {
+  return &quot;hello&quot;;
+}
+
+fn main () -&gt; int {
+  println(greet());
+  return 0;
+}</code></pre>
+            <p>
+              Modules can also be written inline to create nested namespaces inside a single file. Inline modules are a
+              structured alternative to prefix naming and keep APIs grouped.
+            </p>
+            <pre><code>package my_app;
+
+export module util {
+  export let answer: int = 42;
+}</code></pre>
+
+            <h2>Imports and exports</h2>
+            <p>
+              Silk supports a small set of import forms that cover most real code without turning imports into a mini
+              language. You can import whole packages, import a single symbol into scope, or import from a module specifier
+              (a relative file, a <code>std/</code> file path, or a package specifier).
+            </p>
+            <pre><code>import std::strings;              // package import
+import std::io::println;          // bring one symbol into scope
+import { Name } from &quot;./file.slk&quot;; // module-specifier import (named)
+import ns from &quot;./file.slk&quot;;       // namespace/default import</code></pre>
+            <p>
+              Exports are explicit. <code>export fn</code> and <code>export let</code> define a package’s public surface, and
+              named re-exports let you curate what a package exposes without duplicating definitions.
+            </p>
+            <pre><code>export fn add (a: int, b: int) -&gt; int { return a + b; }
+export { add as sum };</code></pre>
+
+            <h2>Standard library (<code>std::</code>)</h2>
+            <p>
+              The standard library lives under the reserved <code>std::</code> namespace. It is intended to be linked by
+              default for normal builds, but also designed to be <strong>swappable</strong>: you can select an alternative
+              <code>std::</code> implementation at build time without changing the language or the C ABI.
+            </p>
+            <p>
+              That “swappable stdlib” goal matters for systems work: it keeps the language core stable while allowing
+              different runtimes (hosted POSIX, embedded/freestanding, custom environments) to provide different
+              implementations of OS-facing functionality.
+            </p>
+            <p>
+              In the current compiler/backend subset, the in-tree stdlib includes a small but functional set of utilities
+              implemented purely in Silk (including generic collections), plus a hosted POSIX baseline for modules like
+              <code>std::io</code>, <code>std::fs</code>, <code>std::task</code>, and <code>std::sync</code> via a runtime
+              interface layer.
+            </p>
+
+            <h2>Compiler CLI: check, build, targets</h2>
+            <p>
+              The <code>silk</code> CLI is designed around a simple idea: a command operates on a <em>module set</em> — the
+              set of source files compiled together for that invocation. That module set determines what packages exist,
+              what imports can resolve, and what gets type-checked together.
+            </p>
+            <p>
+              The “checker” is exposed as a first-class command: <code>silk check</code> parses and type-checks your module
+              set without producing an output binary. This encourages tight feedback loops and makes “does this program
+              make sense?” a cheap, explicit operation.
+            </p>
+            <pre><code>silk check src/main.slk
+silk test src/main.slk</code></pre>
+            <p>
+              <code>silk build</code> compiles to concrete outputs. The output <em>kind</em> is explicit, and the CLI is built
+              to grow into a tool you can use for libraries and embedding scenarios, not only “build an executable”.
+            </p>
+            <pre><code>silk build src/main.slk -o build/app --kind executable
+silk build src/lib.slk -o build/libfoo.o --kind object
+silk build src/lib.slk -o build/libfoo.a --kind static
+silk build src/lib.slk -o build/libfoo.so --kind shared</code></pre>
+            <p>
+              Targets are selected explicitly when needed (<code>--target &lt;triple&gt;</code>, <code>--arch &lt;arch&gt;</code>),
+              and standard library resolution is configurable (<code>--std-root</code>, <code>--nostd</code>) so builds can be
+              made hermetic in CI or tailored for embedding.
+            </p>
+            <p>
+              The CLI also treats documentation as part of the toolchain: <code>silk doc</code> can generate Markdown from
+              doc comments and <code>silk man</code> can render/view manpages derived from the same sources. This keeps “what
+              the code means” close to the code.
+            </p>
+
+            <h2>Testing experience</h2>
+            <p>
+              Silk testing is language-level: tests live next to the code they exercise (a Zig-like authoring experience),
+              and the compiler knows how to discover and run them. A <code>test</code> declaration is a top-level block that
+              the runner executes under <code>silk test</code>.
+            </p>
+            <pre><code>import std::test::expect_equal;
+
+test &quot;addition&quot; {
+  expect_equal(3, 1 + 2);
+}
+
+test &quot;nested grouping&quot; {
+  test &quot;subtest&quot; {
+    assert 1 + 1 == 2;
+  }
+}</code></pre>
+            <p>
+              The runner emits modern TAP output (TAP v13) so the results are easy to consume in existing tooling. In test
+              builds, failed assertions do not have to abort the process: failures are recorded and execution continues so
+              a single run can report multiple problems.
+            </p>
+
+            <h2>Formal Silk (Z3-backed, opt-in)</h2>
+            <p>
+              Formal Silk is Silk’s compile-time formal verification language. It uses syntax that does not exist at
+              runtime, and it is discharged at compile time using the Z3 SMT solver. When verification syntax is present,
+              the compiler generates verification conditions (VCs), proves them, and fails the build if any VC cannot be
+              proven.
+            </p>
+            <p>
+              The key design choice is that verification is <strong>opt-in by syntax</strong>: ordinary code stays ordinary,
+              and proofs are required only where you ask for them. When you do opt in, you get a mechanically checked
+              contract between what you wrote and what you intended — with zero runtime cost.
+            </p>
+            <pre><code>#require x &gt;= 0;
+#assure result &gt; x;
+fn inc (x: int) -&gt; int {
+  return x + 1;
+}</code></pre>
+            <p>
+              Formal Silk also supports loop invariants and termination measures (<code>#invariant</code>, <code>#variant</code>)
+              and block-local proof obligations (<code>#assert</code>). When a proof fails, the compiler reports a normal
+              diagnostic at the annotation site, and debug modes can emit Z3 reproduction scripts to help you iterate.
+            </p>
+
+            <h2>Embedding (<code>libsilk</code>)</h2>
+            <p>
+              Silk is designed to be used as a standalone compiler <em>and</em> as a library. The toolchain includes a C99
+              embedding ABI so other systems can integrate Silk compilation (or parts of it) directly:
+              <code>libsilk.a</code> plus <code>include/silk.h</code>.
+            </p>
+            <p>
+              This matters for “real” systems integration: editors, build systems, and host applications can link against
+              the compiler as a dependency instead of shelling out to a subprocess, while still relying on stable CLI
+              behavior when that is the better interface.
+            </p>
+
+            <h2>Links</h2>
+            <p><a href="../runtime/">Oro Runtime</a></p>
+            <p><a href="https://github.com/oro-computer" target="_blank" rel="noreferrer">github.com/oro-computer</a></p>
+            <p><a href="mailto:contributors@oro.computer">contributors@oro.computer</a></p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-inner">
+          <strong>Silk</strong>
+          <span>© <span data-year>2026</span> Oro Computer.</span>
+        </div>
+      </div>
+    </footer>
+    <script src="../assets/site.js" defer></script>
+  </body>
+</html>
