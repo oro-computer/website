@@ -1,0 +1,581 @@
+{
+  "generatedAt": "2026-01-26T21:49:21+00:00",
+  "kind": "wiki",
+  "count": 82,
+  "items": [
+    {
+      "id": "start",
+      "title": "Silk Wiki",
+      "section": "overview",
+      "summary": "The Silk Wiki is a learning-first, example-driven reference.",
+      "text": "Silk Wiki The Silk Wiki is a learning-first, example-driven reference. Use it when you want: a practical explanation of a concept examples that show how a feature feels in real code a gentler progression than the full reference material Start here Language: Overview Standard library: Overview"
+    },
+    {
+      "id": "language/flow-break",
+      "title": "`break`",
+      "section": "language",
+      "summary": "`break;` exits the nearest enclosing loop.",
+      "text": "break break; exits the nearest enclosing loop. Status Syntax break; Example (Works today) fn main () -> int { let mut i: int = 0; while true { i += 1; if i == 3 { break; } } return i; } See also"
+    },
+    {
+      "id": "language/flow-continue",
+      "title": "`continue`",
+      "section": "language",
+      "summary": "`continue;` skips the remainder of the current loop body and advances to the next iteration.",
+      "text": "continue continue; skips the remainder of the current loop body and advances to the next iteration. Status Syntax continue; Example (Works today) fn main () -> int { let mut sum: int = 0; for i in 0..5 { if i == 3 { continue; } sum += i; } return sum; // 0 + 1 + 2 + 4 = 7 } See also"
+    },
+    {
+      "id": "language/duration-instant",
+      "title": "`Duration` and `Instant`",
+      "section": "language",
+      "summary": "`Duration` represents a signed time span and `Instant` represents a signed point-in-time on a monotonic timeline. The current backend subset treats both as distinct Silk types that lower to `i64` nanoseconds.",
+      "text": "Duration and Instant Duration represents a signed time span and Instant represents a signed point-in-time on a monotonic timeline. The current backend subset treats both as distinct Silk types that lower to i64 nanoseconds. Example (Works today): Duration arithmetic fn main () -> int { let a: Duration = 10ms; let b: Duration = 2s; let c: Duration = a + b; if c > a { return 0; } return 1; } See also"
+    },
+    {
+      "id": "language/flow-for",
+      "title": "`for` loops",
+      "section": "language",
+      "summary": "`for` loops iterate over:",
+      "text": "for loops for loops iterate over: integer ranges (start..end / start..=end), builtin arrays and slices (for x in xs { ... }), iterator values (for x in it { ... } when it.next() -> T?), and C-style headers (for (init; cond; step) { ... }). Status Syntax (Selected) for x in xs { // ... } for (let i = 0; i < 10; ++i) { // ... } Examples Works today: range iteration fn main () -> int { let mut sum: int = 0; for i in 0..3 { sum += i; // 0, 1, 2 } return sum; } Works today: array iteration fn main () -> int { let xs: int[3] = [1, 2, 3]; let mut sum: int = 0; for x in xs { sum += x; } return sum; } See also"
+    },
+    {
+      "id": "language/flow-if-else",
+      "title": "`if` / `else`",
+      "section": "language",
+      "summary": "Use `if` / `else` for boolean branching.",
+      "text": "if / else Use if / else for boolean branching. In the current compiler subset, if is a statement that chooses which block executes. The broader language design includes expression-oriented forms; see the canonical spec for details. Status Syntax if condition { // ... } else { // ... } Examples Works today: minimal if / else fn main () -> int { if true { return 0; } else { return 1; } } Works today: else if chains In the current implementation, else if parses as sugar for a nested if in the else branch. fn main () -> int { let x: int = 1; if x == 0 { return 0; } else if x == 1 { return 1; } else { return 2; } } See also"
+    },
+    {
+      "id": "language/flow-loop",
+      "title": "`loop`",
+      "section": "language",
+      "summary": "`loop { ... }` is an infinite loop that exits via `break` or `return`.",
+      "text": "loop loop { ... } is an infinite loop that exits via break or return. Status Syntax loop { // ... } Example (Works today) fn main () -> int { let mut i: int = 0; loop { if i == 3 { break; } i += 1; } return i; } See also"
+    },
+    {
+      "id": "language/flow-match",
+      "title": "`match`",
+      "section": "language",
+      "summary": "`match` provides structured pattern matching.",
+      "text": "match match provides structured pattern matching. In the current implementation: match <optional> { None => expr, Some(x) => expr } is supported (expression form), match <enum> { E::V => expr, ... } is supported in a restricted exhaustive subset, typed-error handling uses a separate match (expr) { ... } statement form (see typed errors). Status Syntax (Current match-expression subset) match value { Pattern => expr, Pattern => expr, } Examples Works today: matching an optional fn main () -> int { let x: int? = Some(7); let y: int = match x { None => 5, Some(v) => v, }; return y; } Works today: matching an enum enum Msg { Quit, Add(int), } fn main () -> int { let m: Msg = Msg::Add(5); return match m { Msg::Quit => 0, Msg::Add(n) => n, }; } See also"
+    },
+    {
+      "id": "language/flow-return",
+      "title": "`return`",
+      "section": "language",
+      "summary": "Use `return` to exit the current function.",
+      "text": "return Use return to exit the current function. Status Syntax return; return expr; Example (Works today) fn add1 (x: int) -> int { return x + 1; } fn main () -> int { return add1(41); } See also"
+    },
+    {
+      "id": "language/flow-while",
+      "title": "`while`",
+      "section": "language",
+      "summary": "Use `while` for condition-controlled looping.",
+      "text": "while Use while for condition-controlled looping. Status Syntax while condition { // ... } Example (Works today) fn main () -> int { let mut i: int = 0; let mut sum: int = 0; while i < 3 { sum += i; i += 1; } return sum; // 0 + 1 + 2 = 3 } See also"
+    },
+    {
+      "id": "language/literals-aggregate",
+      "title": "Aggregate literals (arrays and structs)",
+      "section": "language",
+      "summary": "Aggregate literals build compound values directly in source code:",
+      "text": "Aggregate literals (arrays and structs) Aggregate literals build compound values directly in source code: array literals: [a, b, c] struct literals: Type{ field: value, ... } Example (Works today) struct Pair { a: int, b: int, } fn main () -> int { let xs: int[3] = [1, 2, 3]; let p: Pair = Pair{ a: xs[0], b: xs[2] }; return p.a + p.b; } See also"
+    },
+    {
+      "id": "language/arenas",
+      "title": "Arenas (legacy)",
+      "section": "language",
+      "summary": "The \u201carenas\u201d concept has been renamed and reworked as **regions**.",
+      "text": "Arenas (legacy) The \u201carenas\u201d concept has been renamed and reworked as regions. Example (Works today) The legacy \u201carena allocation\u201d idea is expressed as region allocation via with: struct Point { x: int, y: int, } fn main () -> int { const region arena: u8[1024]; with arena { let p: &Point = new Point{ x: 1, y: 2 }; return p.x + p.y; } } See also"
+    },
+    {
+      "id": "language/flow-blocks-statements",
+      "title": "Blocks and statements",
+      "section": "language",
+      "summary": "Blocks (`{ ... }`) group statements and introduce a new scope.",
+      "text": "Blocks and statements Blocks ({ ... }) group statements and introduce a new scope. Status Example (Works today): scope boundaries fn main () -> int { let x: int = 1; { let y: int = 2; if x + y != 3 { return 1; } } // y is not in scope here. return 0; } See also"
+    },
+    {
+      "id": "language/literals-boolean",
+      "title": "Boolean literals",
+      "section": "language",
+      "summary": "Silk has the boolean type `bool` with literals `true` and `false`.",
+      "text": "Boolean literals Silk has the boolean type bool with literals true and false. Example (Works today) fn main () -> int { let ok: bool = true; if ok && !false { return 0; } return 1; }"
+    },
+    {
+      "id": "language/borrow-checker",
+      "title": "Borrow checker (design)",
+      "section": "language",
+      "summary": "Silk\u2019s long-term design includes a borrow-checker-style static safety layer over references and mutation. The current compiler subset enforces a simpler, explicit `mut` borrow contract (see mutability).",
+      "text": "Borrow checker (design) Silk\u2019s long-term design includes a borrow-checker-style static safety layer over references and mutation. The current compiler subset enforces a simpler, explicit mut borrow contract (see mutability). Example (Works today): explicit mutable borrow struct Counter { value: int, } fn inc (mut c: &Counter) -> void { c.value += 1; } fn main () -> int { let mut c: Counter = Counter{ value: 0 }; inc(mut c); return c.value; } See also"
+    },
+    {
+      "id": "language/buffers",
+      "title": "Buffers (`Buffer(T)`) (design)",
+      "section": "language",
+      "summary": "The long-term design includes an intrinsic `Buffer(T)` type for low-level, unsafe contiguous memory access, intended to sit underneath safe collections.",
+      "text": "Buffers (Buffer(T)) (design) The long-term design includes an intrinsic Buffer(T) type for low-level, unsafe contiguous memory access, intended to sit underneath safe collections. In the current toolchain, buffer-like functionality is provided via std::: std::vector::Vector(T) for owning growable storage std::buffer::BufferU8 as an owning packed byte buffer, plus width-oriented scalar buffer aliases (BufferI32, etc.) Example (Works today): buffer aliases import std::buffer; fn main () -> int { let br = BufferU8.init(4); if br.iserr() { return 1; } let mut b: BufferU8 = match (br) { Ok(v) => v, Err() => BufferU8.empty(), }; (mut b).push(1 as u8); (mut b).drop(); return 0; } See also"
+    },
+    {
+      "id": "language/literals-character",
+      "title": "Character literals",
+      "section": "language",
+      "summary": "`char` represents a Unicode scalar value. Character literals write a `char` value directly in source code.",
+      "text": "Character literals char represents a Unicode scalar value. Character literals write a char value directly in source code. Example (Works today) fn main () -> int { let a: char = 'A'; let nl: char = '\\\\n'; if a != 'A' { return 1; } if nl != '\\\\n' { return 2; } return 0; } See also"
+    },
+    {
+      "id": "language/cheat-sheet",
+      "title": "Cheat sheet",
+      "section": "language",
+      "summary": "If you want a fast, high-signal overview of Silk surface syntax, start with the canonical cheat sheet:",
+      "text": "Cheat sheet If you want a fast, high-signal overview of Silk surface syntax, start with the canonical cheat sheet: This wiki page exists to keep wiki navigation self-contained; the cheat sheet itself is already concise and example-heavy. Example (Works today) fn main () -> int { return 0; }"
+    },
+    {
+      "id": "language/concurrency",
+      "title": "Concurrency (`async`, `task`, `await`, `yield`)",
+      "section": "language",
+      "summary": "Silk concurrency is built around:",
+      "text": "Concurrency (async, task, await, yield) Silk concurrency is built around: async fn (pausable/awaitable concurrency), task fn (parallelizable work), await for promises, and yield/yield for task values. Status Examples (Works today) task inside async fn + yield task fn worker (x: int) -> int { return x + 1; } async fn main () -> int { task { let a = worker(10); let values: int[] = yield a; return values[0]; } } Task(Promise(T)) composition: await yield async fn add1 (x: int) -> int { return x + 1; } task fn producepromises (n: int) -> Promise(int) { var i: int = 0; while i < n { yield add1(i); i = i + 1; } return add1(n); } async fn main () -> int { task { let t = producepromises(3); let values: int[] = await yield t; return values[0]; } } See also"
+    },
+    {
+      "id": "language/const-functions",
+      "title": "Const Functions (`const fn`)",
+      "section": "language",
+      "summary": "`const fn` marks a function as eligible for **compile-time evaluation**.",
+      "text": "Const Functions (const fn) const fn marks a function as eligible for compile-time evaluation. This wiki page is an overview. The canonical specification is Example const fn add (a: int, b: int) -> int { return a + b; } const answer: int = add(20, 22); fn main () -> int { return answer; } Notes (Current Subset) Const functions are intended for const initializer evaluation. Const functions are compile-time-only: they are not callable from runtime code and are not emitted as runtime/linkable symbols. The current subset targets scalar-only const evaluation; string/aggregate return values and higher-order const evaluation are planned. In the current subset, const fn bodies must not allocate (new) or use regions/with, must not contain panic, and may only call other const fn declarations. See also"
+    },
+    {
+      "id": "language/dependent-types",
+      "title": "Dependent types (const parameters) (design)",
+      "section": "language",
+      "summary": "This page covers Silk\u2019s intended support for types that mention compile-time values (especially integers), such as dependent-length collections.",
+      "text": "Dependent types (const parameters) (design) This page covers Silk\u2019s intended support for types that mention compile-time values (especially integers), such as dependent-length collections. Example (Design) // Design-only sketch: a vector type with a compile-time length N. struct VectorN(T, N: int) { / ... / } See also"
+    },
+    {
+      "id": "language/doc-comments",
+      "title": "Doc comments",
+      "section": "language",
+      "summary": "Silk supports both line and block doc comments. They attach to the following declaration (like many C/Rust-style doc systems).",
+      "text": "Doc comments Silk supports both line and block doc comments. They attach to the following declaration (like many C/Rust-style doc systems). Syntax /// Line doc comment fn main () -> int { return 0; } / Block doc comment @example silk fn main () -> int { return 0; } / fn other () -> int { return 0; } See also"
+    },
+    {
+      "id": "language/literals-duration",
+      "title": "Duration literals",
+      "section": "language",
+      "summary": "Duration literals represent time spans with unit suffixes (`ms`, `s`, `min`, etc) and produce a `Duration` value.",
+      "text": "Duration literals Duration literals represent time spans with unit suffixes (ms, s, min, etc) and produce a Duration value. Example (Works today) fn main () -> int { let a: Duration = 10ms; let b: Duration = 2s; let c: Duration = a + b; if c > a { return 0; } return 1; } See also"
+    },
+    {
+      "id": "language/enums",
+      "title": "Enums",
+      "section": "language",
+      "summary": "`enum` defines a nominal sum type with a fixed set of variants.",
+      "text": "Enums enum defines a nominal sum type with a fixed set of variants. In the current implementation, enums support: unit variants (E::A), tuple variants (E::B(x)), exhaustive match expressions over enum values (restricted subset; no guards). Status Syntax (Selected) enum Msg { Quit, Add(int), } Examples Works today: construct + match enum Msg { Quit, Add(int), } fn main () -> int { let m: Msg = Msg::Add(5); return match m { Msg::Quit => 0, Msg::Add(n) => n, }; } See also"
+    },
+    {
+      "id": "language/errors",
+      "title": "Errors and assertions",
+      "section": "language",
+      "summary": "Silk favors explicit, typed error modeling (optionals and `Result`-style return shapes) and uses typed errors (`error`, `panic`, `T | ErrorType...`) for unrecoverable logic bugs and contract violations.",
+      "text": "Errors and assertions Silk favors explicit, typed error modeling (optionals and Result-style return shapes) and uses typed errors (error, panic, T ErrorType...) for unrecoverable logic bugs and contract violations. This page focuses on assertions and the high-level model; see typed errors for the full rules. Example (Works today): assert fn main () -> int { assert (1 + 2) == 3; return 0; } See also"
+    },
+    {
+      "id": "language/flow-expression-statements",
+      "title": "Expression statements",
+      "section": "language",
+      "summary": "Many expressions can appear as standalone statements when followed by `;` (assignment, calls, `++`/`--`, and other \u201cstatement-like\u201d expressions).",
+      "text": "Expression statements Many expressions can appear as standalone statements when followed by ; (assignment, calls, ++/--, and other \u201cstatement-like\u201d expressions). Status Example (Works today): assignment + increment fn main () -> int { let mut x: int = 0; x += 1; ++x; return x; } See also"
+    },
+    {
+      "id": "language/ext",
+      "title": "External declarations (`ext`)",
+      "section": "language",
+      "summary": "`ext` declares foreign symbols so Silk code can call C (or wasm imports) and access foreign variables.",
+      "text": "External declarations (ext) ext declares foreign symbols so Silk code can call C (or wasm imports) and access foreign variables. Status Syntax (Selected) // C function named puts. ext puts = fn (string) -> i32; // Bind a different symbol name. ext cmalloc \"malloc\" = fn (i64) -> u64; ext cfree \"free\" = fn (u64) -> void; // External variable. ext errno = i32; Examples Works today: call a C symbol import std::io; ext puts = fn (string) -> i32; fn main () -> int { puts(\"hello from ext\"); std::io::println(\"ok\"); return 0; } Works today: opaque handle pattern (FFI-safe pointers) struct Thing; ext thingnew = fn () -> &Thing; ext thingfree = fn (&Thing) -> void; fn main () -> int { let t: &Thing = thingnew(); thingfree(t); return 0; } See also"
+    },
+    {
+      "id": "language/flow-overview",
+      "title": "Flow control overview",
+      "section": "language",
+      "summary": "Silk has familiar structured control flow:",
+      "text": "Flow control overview Silk has familiar structured control flow: branching: if / else loops: while, for, loop structured matching: match early exit: break, continue, return Status Example (Works today) fn main () -> int { let mut sum: int = 0; for i in 0..5 { if i == 3 { continue; } sum += i; } if sum > 0 { return sum; } return 0; } See also"
+    },
+    {
+      "id": "language/formal-verification",
+      "title": "Formal verification (Formal Silk)",
+      "section": "language",
+      "summary": "Silk includes syntax for writing contracts and verification metadata:",
+      "text": "Formal verification (Formal Silk) Silk includes syntax for writing contracts and verification metadata: #require / #assure for pre/postconditions #assert for local assertions #invariant / #variant for loops Example (Design / verifier-oriented) require x >= 0; assure result == x + 1; fn inc (x: int) -> int { return x + 1; } See also"
+    },
+    {
+      "id": "language/function-disciplines",
+      "title": "Function disciplines (`pure`, `async`, `task`)",
+      "section": "language",
+      "summary": "Function modifiers declare constraints and concurrency behavior:",
+      "text": "Function disciplines (pure, async, task) Function modifiers declare constraints and concurrency behavior: pure fn for side-effect-free functions (checker-enforced subset) async fn for promise-producing functions task fn for task-producing functions Examples (Works today) pure fn add (x: int, y: int) -> int { return x + y; } task fn worker (x: int) -> int { return x + 1; } See also"
+    },
+    {
+      "id": "language/generics",
+      "title": "Generics (monomorphized)",
+      "section": "language",
+      "summary": "Silk generics are compile-time and monomorphized: each applied type like `Vector(int)` produces a concrete instantiation at build time (no runtime type parameters).",
+      "text": "Generics (monomorphized) Silk generics are compile-time and monomorphized: each applied type like Vector(int) produces a concrete instantiation at build time (no runtime type parameters). Status Syntax (Selected) struct Pair(T) { a: T, b: T, } impl Pair(T) { public fn first (self: &Pair(T)) -> T { return self.a; } } Examples Works today: generic struct + applied type struct Pair(T) { a: T, b: T, } impl Pair(T) { public fn first (self: &Pair(T)) -> T { return self.a; } } fn main () -> int { let p: Pair(int) = { a: 1, b: 2 }; return p.first(); } See also"
+    },
+    {
+      "id": "language/grammar",
+      "title": "Grammar",
+      "section": "language",
+      "summary": "for Silk surface syntax.",
+      "text": "Grammar for Silk surface syntax. This wiki page is a reading guide, not a replacement for the grammar itself. How to use the grammar Use the grammar when you need the exact token-level surface form. Example (Works today) import std::io; fn main () -> int { std::io::println(\"hello {s}\", \"world\"); return 0; } See also"
+    },
+    {
+      "id": "language/interfaces",
+      "title": "Interfaces",
+      "section": "language",
+      "summary": "Interfaces declare method signatures that types (or modules) can conform to via `impl ... as ...` (or `module ... as ...`). This is the basis for protocol-like surfaces such as iterators and Drop.",
+      "text": "Interfaces Interfaces declare method signatures that types (or modules) can conform to via impl ... as ... (or module ... as ...). This is the basis for protocol-like surfaces such as iterators and Drop. Status Dynamic dispatch (trait objects/vtables): not implemented yet Syntax (Selected) interface Len { fn len() -> i64; } struct Counter { n: i64, } impl Counter as Len { fn len (self: &Counter) -> i64 { return self.n; } } Examples Works today: conformance + direct method call interface Len { fn len() -> i64; } struct Counter { n: i64, } impl Counter as Len { fn len (self: &Counter) -> i64 { return self.n; } } fn main () -> int { let c: Counter = Counter{ n: 3 }; return c.len() as int; } See also"
+    },
+    {
+      "id": "language/literals-overview",
+      "title": "Literals",
+      "section": "language",
+      "summary": "Literals are the simplest way to write values directly in source code: numbers, booleans, chars, strings, durations, and aggregates like arrays and struct literals.",
+      "text": "Literals Literals are the simplest way to write values directly in source code: numbers, booleans, chars, strings, durations, and aggregates like arrays and struct literals. This wiki page is a learning-oriented companion to the canonical spec: Status Syntax (Selected) let n: int = 42; let pi: f64 = 3.14159; let ok: bool = true; let c: char = '\\\\n'; let s: string = \"hello\"; // Duration literals let d: Duration = 10ms; // Aggregates let xs: int[3] = [1, 2, 3]; // let p: Point = Point{ x: 1, y: 2 }; Examples Works today: array literal + indexing fn main () -> int { let xs: int[3] = [10, 20, 30]; return xs[1]; } Works today: strings and escapes import std::io; fn main () -> int { std::io::println(\"line1\\\\nline2\"); return 0; } See also"
+    },
+    {
+      "id": "language/memory-model",
+      "title": "Memory model",
+      "section": "language",
+      "summary": "This page is a learning-oriented companion to the canonical memory model:",
+      "text": "Memory model This page is a learning-oriented companion to the canonical memory model: At a high level: Most values are plain, copyable scalars (or structs that lower to a fixed set of scalar slots in the current backend subset). Heap allocation is introduced via new, producing &Struct references. with regions can redirect new allocations away from the heap (see regions). Status Example (Works today): new + reference field access struct Point { x: int, y: int, } fn main () -> int { let p: &Point = new Point{ x: 1, y: 2 }; return p.x + p.y; } See also"
+    },
+    {
+      "id": "language/mutability",
+      "title": "Mutability (`mut`)",
+      "section": "language",
+      "summary": "Silk is safe-by-default: bindings and borrows are immutable unless you opt in to mutation.",
+      "text": "Mutability (mut) Silk is safe-by-default: bindings and borrows are immutable unless you opt in to mutation. Status Syntax (Selected) let mut x: int = 0; x += 1; // Two-part mut borrow contract: // - parameter declared mut, and // - call site uses mut <expr>. // fn bump(mut p: &Pair) -> void { ... } // bump(mut pair); Example (Works today): mutable local + mutable borrow struct Pair { a: int, b: int, } fn bumpa (mut p: &Pair) -> void { p.a += 1; } fn main () -> int { let mut p: Pair = Pair{ a: 1, b: 2 }; bumpa(mut p); return p.a; } See also"
+    },
+    {
+      "id": "language/literals-numeric",
+      "title": "Numeric literals",
+      "section": "language",
+      "summary": "Silk supports integer and floating-point literals, including base prefixes and suffixes as defined in the canonical spec.",
+      "text": "Numeric literals Silk supports integer and floating-point literals, including base prefixes and suffixes as defined in the canonical spec. Example (Works today) fn main () -> int { let a: int = 42; let b: u64 = 0xff as u64; let c: f64 = 1.5; if a + (b as int) > 0 && c > 0.0 { return 0; } return 1; } See also"
+    },
+    {
+      "id": "language/operators",
+      "title": "Operators",
+      "section": "language",
+      "summary": "Silk\u2019s operators cover arithmetic, comparisons, logical operators, assignment, casts, ranges, optionals (`?.`, `??`), and typed-error propagation (`?`).",
+      "text": "Operators Silk\u2019s operators cover arithmetic, comparisons, logical operators, assignment, casts, ranges, optionals (?., ??), and typed-error propagation (?). This wiki page is a learning-oriented companion to the canonical reference: Status Syntax (Selected) let a: int = 10; let b: int = 3; let sum: int = a + b; let cmp: bool = a >= b; // Optional chaining and coalescing // let email: string = user.profile?.email ?? \"no-email\"; // Casts let x: u64 = 123 as u64; // Typed-error propagation // let value: T = maypanic()?; Examples Works today: arithmetic + comparisons fn main () -> int { let a: int = 10; let b: int = 3; if a % b == 1 { return a + b; // 13 } return 0; } Works today: ?? coalescing fn main () -> int { let x: int? = None; return x ?? 42; } See also"
+    },
+    {
+      "id": "language/optional",
+      "title": "Optionals (`T?`)",
+      "section": "language",
+      "summary": "Optionals represent \u201cmaybe a value\u201d without sentinel `null`s.",
+      "text": "Optionals (T?) Optionals represent \u201cmaybe a value\u201d without sentinel nulls. The nominal form is Option(T). The idiomatic form is suffix T?. Values are None (empty) or Some(value) (present). Use ?? (coalescing), ?. (optional field access), and match to consume optionals. Status Syntax (Selected) let a: int? = None; let b: int? = Some(123); let x: int = b ?? 0; let y: int = match b { None => 0, Some(v) => v, }; Examples Works today: ?? and match fn main () -> int { let x: int? = Some(7); let y: int = x ?? 0; let z: int = match x { None => 1, Some(v) => v, }; return y + z; } Works today: optional struct field access with ?. struct Profile { email: string, } struct User { profile: Profile?, } fn main () -> int { let u: User = User{ profile: Some(Profile{ email: \"a@b\" }) }; let email: string = u.profile?.email ?? \"no-email\"; if email == \"a@b\" { return 0; } return 1; } See also"
+    },
+    {
+      "id": "language/packages-imports-exports",
+      "title": "Packages, imports, and exports",
+      "section": "language",
+      "summary": "Silk has explicit module/package structure:",
+      "text": "Packages, imports, and exports Silk has explicit module/package structure: a source file may declare package ...; or header-form module ...; (mutually exclusive), imports come next as a contiguous block, then declarations (fn, let, struct, enum, impl, ...). Silk supports both: package imports (import std::io;, import ui;), and file imports (import { Name } from \"./module.slk\";). Status Syntax (Selected) package myapp; import std::io; import { add } from \"./math.slk\"; import helpers from \"./helpers.slk\"; // default import / namespace import export fn main () -> int { return 0; } Examples Works today: named file import // math.slk package app; export fn add (x: int, y: int) -> int { return x + y; } // main.slk package app; import { add } from \"./math.slk\"; fn main () -> int { return add(40, 2); } Works today: default export and default import // module.slk package module; export default fn () -> int { return 1 + 2; } // main.slk import foo from \"./module.slk\"; fn main () -> int { return foo(); } See also"
+    },
+    {
+      "id": "language/refinement-types",
+      "title": "Refinement types (design)",
+      "section": "language",
+      "summary": "Refinement types are types annotated with logical predicates (`where`) that constrain the set of values they may represent.",
+      "text": "Refinement types (design) Refinement types are types annotated with logical predicates (where) that constrain the set of values they may represent. Example (Design) // Design-only sketch: a string that is proven non-empty. type NonEmptyString = { s: string where std::length(s) > 0 }; See also"
+    },
+    {
+      "id": "language/regions",
+      "title": "Regions (`with`)",
+      "section": "language",
+      "summary": "Regions provide a fixed-size, statically allocated backing store that can be used as an allocation context for `new`.",
+      "text": "Regions (with) Regions provide a fixed-size, statically allocated backing store that can be used as an allocation context for new. Status Syntax (Selected) const region arena: u8[1024]; with arena { // new allocations use arena as backing storage. } Example (Works today) struct Point { x: int, y: int, } fn main () -> int { const region arena: u8[1024]; with arena { let p: &Point = new Point{ x: 1, y: 2 }; return p.x + p.y; } } See also"
+    },
+    {
+      "id": "language/literals-string",
+      "title": "String literals",
+      "section": "language",
+      "summary": "`string` is Silk\u2019s built-in UTF\u20118 byte sequence type. String literals write a `string` value directly in source code.",
+      "text": "String literals string is Silk\u2019s built-in UTF\u20118 byte sequence type. String literals write a string value directly in source code. Example (Works today): escapes import std::io; fn main () -> int { std::io::println(\"line1\\\\nline2\"); std::io::println(\"quote=\\\\\\\" backslash=\\\\\\\\\"); return 0; } See also"
+    },
+    {
+      "id": "language/structs-impls-layout",
+      "title": "Structs and `impl`",
+      "section": "language",
+      "summary": "`struct` is Silk\u2019s primary record type: named fields stored together as one value. `impl` blocks attach methods (and special methods like `constructor` and `drop`) to a type.",
+      "text": "Structs and impl struct is Silk\u2019s primary record type: named fields stored together as one value. impl blocks attach methods (and special methods like constructor and drop) to a type. Status Syntax (Selected) struct Point { x: int, y: int, } impl Point { public fn sum (self: &Point) -> int { return self.x + self.y; } } Examples Works today: struct literal + method call struct Point { x: int, y: int, } impl Point { public fn add (self: &Point, other: Point) -> Point { return Point{ x: self.x + other.x, y: self.y + other.y, }; } } fn main () -> int { let p: Point = Point{ x: 1, y: 2 }; let q: Point = Point{ x: 3, y: 4 }; let r: Point = p.add(q); return r.x + r.y; // 10 } See also"
+    },
+    {
+      "id": "language/syntax-tour",
+      "title": "Syntax tour",
+      "section": "language",
+      "summary": "The canonical syntax tour is a soup-to-nuts walkthrough of Silk surface syntax, with many examples and cross-links:",
+      "text": "Syntax tour The canonical syntax tour is a soup-to-nuts walkthrough of Silk surface syntax, with many examples and cross-links: This wiki page keeps navigation self-contained and highlights where to look next when you want precise rules. Example (Works today): minimal executable fn main () -> int { return 0; } See also"
+    },
+    {
+      "id": "language/testing",
+      "title": "Testing (`test`)",
+      "section": "language",
+      "summary": "Silk supports top-level `test` declarations that are discovered and executed by `silk test`.",
+      "text": "Testing (test) Silk supports top-level test declarations that are discovered and executed by silk test. Syntax test \"addition works\" { if (1 + 2) != 3 { std::abort(); } } See also"
+    },
+    {
+      "id": "language/typed-errors",
+      "title": "Typed errors (`error`, `panic`, and `T | ErrorType...`)",
+      "section": "language",
+      "summary": "Typed errors make \u201cthis function can fail\u201d explicit in the type system:",
+      "text": "Typed errors (error, panic, and T ErrorType...) Typed errors make \u201cthis function can fail\u201d explicit in the type system: define error types, declare error contracts in function return types (T MyError), trigger errors with panic MyError { ... };, handle them with match (expr) { ... } (statement form + Terminal Arm Rule), and propagate them with the postfix ? operator (call()?). Status Syntax (Selected) error OutOfBounds { index: int, len: int } fn getat (xs: &u8[], index: int) -> u8 OutOfBounds { if index < 0 { panic OutOfBounds{ index: index, len: 0 }; } return 0; } fn caller (xs: &u8[]) -> u8 OutOfBounds { let x: u8 = getat(xs, 0)?; return x; } Examples Works today: ? propagation error Boom { code: int } fn mayboom () -> int Boom { panic Boom{ code: 7 }; } fn main () -> int Boom { let x: int = mayboom()?; return x; } Works today: handling with match statement error Boom { code: int } fn mayboom (x: int) -> int Boom { if x == 0 { panic Boom{ code: 123 }; } return 7; } fn main () -> int { match (mayboom(0)) { value => { return value; }, err: Boom => { std::abort(); }, } } See also"
+    },
+    {
+      "id": "language/types",
+      "title": "Types",
+      "section": "language",
+      "summary": "Silk is a statically typed language with a small set of built-in primitive types and first-class user-defined types (`struct`, `enum`, `interface`).",
+      "text": "Types Silk is a statically typed language with a small set of built-in primitive types and first-class user-defined types (struct, enum, interface). This wiki page is a learning-oriented companion to the canonical spec: Status Common Type Forms // Primitives let ok: bool = true; let n: int = 42; let x: f64 = 3.14; let c: char = 'A'; let s: string = \"hello\"; // Optionals let maybe: int? = None; // References (borrows) // let r: &MyStruct = ...; // Arrays and slices let xs: int[3] = [1, 2, 3]; // let ys: int[] = ...; // Function types + function values type IntAdder = fn (int, int) -> int; Examples Works today: function values with an explicit function type type IntAdder = fn (int, int) -> int; fn main () -> int { let add: IntAdder = fn (x: int, y: int) -> x + y; return add(40, 2); } Works today: arrays + for iteration fn main () -> int { let xs: int[3] = [1, 2, 3]; let mut sum: int = 0; for x in xs { sum += x; } return sum; } See also"
+    },
+    {
+      "id": "language/varargs",
+      "title": "Varargs (`...args`)",
+      "section": "language",
+      "summary": "Silk supports \u201cvarargs\u201d parameters to accept a variable number of trailing arguments, used by `std::io::print` / `std::io::println`.",
+      "text": "Varargs (...args) Silk supports \u201cvarargs\u201d parameters to accept a variable number of trailing arguments, used by std::io::print / std::io::println. Syntax fn log (fmt: string, ...args: std::fmt::Arg) -> void { std::io::println(fmt, args); } Example (Works today) import std::io; fn main () -> int { std::io::println(\"hello {s} answer={d}\", \"world\", 42); return 0; } See also"
+    },
+    {
+      "id": "std/package-structure",
+      "title": "`std::` package structure",
+      "section": "std",
+      "summary": "This page describes how `std::` modules are organized and how the compiler finds and links them (including std-root selection and archive wiring).",
+      "text": "std:: package structure This page describes how std:: modules are organized and how the compiler finds and links them (including std-root selection and archive wiring). Status Design + initial implementation: std-root resolution and std::... import mapping are implemented. How std:: resolves std::foo::bar resolves to <stdroot>/foo/bar.slk. The std root can be overridden per build (CLI flags) or via environment variables. On supported hosted targets, a prebuilt std archive (libsilkstd.a) can be used to link std modules without recompiling them. Examples Works today: import a std module import std::io; import std::strings; fn main () -> int { if std::strings::eq(\"a\", \"a\") { std::io::println(\"ok\"); return 0; } return 1; } Build with a custom std root (CLI) silk build main.slk silk build --std-root ./my-stdlib main.slk silk build --std-root ./my-stdlib --std-lib ./my-stdlib/libsilkstd.a main.slk See also"
+    },
+    {
+      "id": "std/algorithms",
+      "title": "`std::algorithms`",
+      "section": "std",
+      "summary": "`std::algorithms` provides common algorithms over collections. Today, a small current subset exists for scalar types.",
+      "text": "std::algorithms std::algorithms provides common algorithms over collections. Today, a small current subset exists for scalar types. Importing import std::algorithms; Example (Works today): clampint import std::algorithms; fn main () -> int { if std::algorithms::clampint(10, 0, 5) != 5 { return 1; } if std::algorithms::clampint(-1, 0, 5) != 0 { return 2; } return 0; } See also"
+    },
+    {
+      "id": "std/args",
+      "title": "`std::args`",
+      "section": "std",
+      "summary": "`std::args` provides helpers for working with the hosted `main(argc, argv)` entrypoint shape.",
+      "text": "std::args std::args provides helpers for working with the hosted main(argc, argv) entrypoint shape. Example (Works today) import args from \"std/args\"; import { println } from \"std/io\"; fn main (argc: int, argv: u64) -> int { let a = args::Args.init(argc, argv); if (a.count() != argc) { return 1; } if argc > 0 { println(\"argv[0]={}\", a.get(0)); } return 0; } See also"
+    },
+    {
+      "id": "std/arrays",
+      "title": "`std::arrays`",
+      "section": "std",
+      "summary": "`std::arrays` defines borrowed views like `Slice(T)` and helpers for working with fixed arrays and slices.",
+      "text": "std::arrays std::arrays defines borrowed views like Slice(T) and helpers for working with fixed arrays and slices. Status Implemented subset + design: a usable subset is implemented. Importing import std::arrays; Examples Works today: Slice(T) + SliceIter(T) import std::arrays; import std::buffer; fn main () -> int { let mut buf: BufferU64 = BufferU64.init(4); (mut buf).push(10); (mut buf).push(11); (mut buf).push(12); let s: std::arrays::Slice(u64) = { ptr: buf.ptr, len: buf.len() }; let mut it = s.iter(); let mut sum: u64 = 0; while true { let v: u64? = (mut it).next(); if v == None { break; } sum += (v ?? 0 as u64); } (mut buf).drop(); if sum != 33 { return 1; } return 0; } See also"
+    },
+    {
+      "id": "std/bits",
+      "title": "`std::bits`",
+      "section": "std",
+      "summary": "`std::bits` is the standard bit-manipulation and byte-order helper module.",
+      "text": "std::bits std::bits is the standard bit-manipulation and byte-order helper module. What works today (current subset) Implemented in std/bits.slk: Byte swaps: std::bits::bswapu16 std::bits::bswapu32 std::bits::bswapu64 Rotations: std::bits::rotlu32, std::bits::rotru32 std::bits::rotlu64, std::bits::rotru64 Bit counts: std::bits::popcountu32, std::bits::clzu32, std::bits::ctzu32 std::bits::popcountu64, std::bits::clzu64, std::bits::ctzu64 Example import std::bits; fn main () -> int { let v: u32 = 1; let r: u32 = std::bits::rotlu32(v, 5); if r != ((1 as u32) << 5) { return 1; } if std::bits::popcountu32(r) != 1 { return 2; } return 0; }"
+    },
+    {
+      "id": "std/buffer",
+      "title": "`std::buffer`",
+      "section": "std",
+      "summary": "In the in-tree stdlib, `std::buffer` provides a packed byte buffer (`BufferU8`) plus width-oriented scalar buffer aliases built on `std::vector::Vector(T)` (for example `BufferI32`).",
+      "text": "std::buffer In the in-tree stdlib, std::buffer provides a packed byte buffer (BufferU8) plus width-oriented scalar buffer aliases built on std::vector::Vector(T) (for example BufferI32). Importing import std::buffer; Example (Works today): BufferU8 import std::buffer; fn main () -> int { let br = BufferU8.init(4); if br.iserr() { return 1; } let mut b: BufferU8 = match (br) { Ok(v) => v, Err() => BufferU8.empty(), }; (mut b).push(1 as u8); (mut b).push(2 as u8); if (mut b).pop() != Some(2 as u8) { (mut b).drop(); return 1; } (mut b).drop(); return 0; } See also"
+    },
+    {
+      "id": "std/crypto",
+      "title": "`std::crypto`",
+      "section": "std",
+      "summary": "`std::crypto` provides cryptography primitives (hosted baseline via libsodium in the current design).",
+      "text": "std::crypto std::crypto provides cryptography primitives (hosted baseline via libsodium in the current design). Status Implemented subset + design: core libsodium-backed primitives are implemented on the hosted baseline. Importing import std::arrays; import std::crypto; import std::crypto::hash; import std::buffer; import std::runtime::mem; Examples Works today: init + memzero + blake2b import std::crypto; import std::crypto::hash; import std::buffer; import std::runtime::mem; fn main () -> int { if std::crypto::init() != None { return 1; } // memzero: wipe a buffer in place. let wiper = std::buffer::BufferU8.init(16); if wiper.iserr() { return 2; } let mut wipe: std::buffer::BufferU8 = match (wiper) { Ok(v) => v, Err() => std::buffer::BufferU8.empty(), }; var i: i64 = 0; while i < 16 { (mut wipe).push(std::runtime::mem::truncu8(100 + (i as int))); i = i + 1; } let wipeerr: std::crypto::CryptoFailed? = std::crypto::memzero(wipe.asbytes()); if wipeerr != None { (mut wipe).drop(); return 3; } var j: i64 = 0; while j < 16 { if wipe.get(j) != 0 { (mut wipe).drop(); return 4; } j = j + 1; } (mut wipe).drop(); // blake2b(\"abc\") with digestsize=32. let msg: string = \"abc\"; let msgptr: u64 = std::runtime::mem::stringptr(msg); let msglen: i64 = std::runtime::mem::stringlen(msg); let outr = std::buffer::BufferU8.init(32); let expectedr = std::buffer::BufferU8.init(32); if outr.iserr() expectedr.iserr() { return 2; } let mut out: std::buffer::BufferU8 = match (outr) { Ok(v) => v, Err() => std::buffer::BufferU8.empty(), }; let mut expected: std::buffer::BufferU8 = match (expectedr) { Ok(v) => v, Err() => std::buffer::BufferU8.empty(), }; // Expected digest: bddd813c634239723171ef3fee98579b94964e3bb1cb3e427262c8c068d52319 (mut expected).push(189); (mut expected).push(221); (mut expected).push(129); (mut expected).push(60); (mut expected).push(99); (mut expected).push(66); (mut expected).push(57); (mut expected).push(114); (mut expected).push(49); (mut expected).push(113); (mut expected).push(239); (mut expected).push(63); (mut expected).push(238); (mut expected).push(152); (mut expected).push(87); (mut expected).push(155); (mut expected).push(148); (mut expected).push(150); (mut expected).push(78); (mut expected).push(59); (mut expected).push(177); (mut expected).push(203); (mut expected).push(62); (mut expected).push(66); (mut expected).push(114); (mut expected).push(98); (mut expected).push(200); (mut expected).push(192); (mut expected).push(104); (mut expected).push(213); (mut expected).push(35); (mut expected).push(25); let hasherr: std::crypto::CryptoError? = std::crypto::hash::blake2b( mut out, 32, std::arrays::ByteSlice{ ptr: msgptr, len: msglen } ); if hasherr != None { (mut out).drop(); (mut expected).drop(); return 6; } let eqr: std::crypto::CryptoBoolResult = std::crypto::equal(out.asbytes(), expected.asbytes()); let eqopt: bool? = std::crypto::CryptoBoolResult.okvalue(eqr); if eqopt == None { (mut out).drop(); (mut expected).drop(); return 7; } if !(eqopt ?? false) { (mut out).drop(); (mut expected).drop(); return 7; } (mut out).drop(); (mut expected).drop(); return 0; } See also End-to-end fixtures:"
+    },
+    {
+      "id": "std/env",
+      "title": "`std::env`",
+      "section": "std",
+      "summary": "`std::env` provides access to process environment variables and common directory helpers.",
+      "text": "std::env std::env provides access to process environment variables and common directory helpers. Example (Works today): get import std::env; import { println } from \"std/io\"; fn main () -> int { let vopt = std::env::get(\"HOME\"); match (vopt) { Some(v) => println(\"HOME = {}\", v), None => println(\"HOME is not set\"), }; return 0; } See also"
+    },
+    {
+      "id": "std/fmt",
+      "title": "`std::fmt`",
+      "section": "std",
+      "summary": "`std::fmt` defines the formatting model used by `std::io::print`/`println` and by string-building helpers. It follows a Zig-`std.fmt`-style format-string syntax.",
+      "text": "std::fmt std::fmt defines the formatting model used by std::io::print/println and by string-building helpers. It follows a Zig-std.fmt-style format-string syntax. Status Implemented subset is available to support std::io printing. Examples Works today: println formatting import std::io; fn main () -> int { std::io::println(\"name={s} ok={}\", \"silk\", true); return 0; } See also"
+    },
+    {
+      "id": "std/formal",
+      "title": "`std::formal`",
+      "section": "std",
+      "summary": "`std::formal` provides reusable Formal Silk theories (\u201cstandard lemmas\u201d) used by stdlib code and downstream verified code.",
+      "text": "std::formal std::formal provides reusable Formal Silk theories (\u201cstandard lemmas\u201d) used by stdlib code and downstream verified code. Status Implemented subset is available (initial theory set). Importing Theories are imported via file imports and applied with #theory: import { nonnegativei64, boundsi64 } from \"std/formal\"; Examples Works today: applying standard theories import { nonnegativei64, boundsi64 } from \"std/formal\"; theory nonnegativei64(len); theory boundsi64(index, len); fn getat (index: i64, len: i64) -> i64 { return index; } See also"
+    },
+    {
+      "id": "std/filesystem",
+      "title": "`std::fs`",
+      "section": "std",
+      "summary": "`std::fs` provides a small hosted POSIX-oriented filesystem API (current subset subset).",
+      "text": "std::fs std::fs provides a small hosted POSIX-oriented filesystem API (current subset subset). Example (Works today): existence checks import std::fs; fn main () -> int { if !std::fs::exists(\"docs\") { return 1; } if !std::fs::canread(\"docs\") { return 2; } if std::fs::exists(\"thisfileshouldnotexistsilkstdfs\") { return 3; } return 0; } See also"
+    },
+    {
+      "id": "std/interfaces",
+      "title": "`std::interfaces`",
+      "section": "std",
+      "summary": "`std::interfaces` defines shared std protocol interfaces such as `Drop`, `Len`, and `Iterator(T)`.",
+      "text": "std::interfaces std::interfaces defines shared std protocol interfaces such as Drop, Len, and Iterator(T). Example (Works today): Iterator(T) and next() -> T? import std::interfaces; struct CounterIter { cur: int, end: int, } impl CounterIter { public fn init (end: int) -> CounterIter { return { cur: 0, end: end }; } } impl CounterIter as std::interfaces::Iterator(int) { public fn next (mut self: &CounterIter) -> int? { if self.cur >= self.end { return None; } let v: int = self.cur; self.cur = self.cur + 1; return Some(v); } } See also"
+    },
+    {
+      "id": "std/io",
+      "title": "`std::io`",
+      "section": "std",
+      "summary": "`std::io` provides basic stdin/stdout/stderr I/O and a small formatting surface (`print`/`println`).",
+      "text": "std::io std::io provides basic stdin/stdout/stderr I/O and a small formatting surface (print/println). Status Design + initial implementation: basic reads/writes are implemented via std::runtime::io. Importing import std::io; Examples Works today: formatted printing import std::io; fn main () -> int { std::io::println(\"hello {s} answer={d}\", \"world\", 42); return 0; } See also"
+    },
+    {
+      "id": "std/json",
+      "title": "`std::json`",
+      "section": "std",
+      "summary": "`std::json` provides JSON parsing and stringifying (initial implementation + expanded subset).",
+      "text": "std::json std::json provides JSON parsing and stringifying (initial implementation + expanded subset). Status Implemented subset + design: parsing and stringify are implemented; the DOM/query surface is still evolving. Importing import std::json; import std::strings; API (selected) Document.parse(input: string) -> std::json::ParseResult (borrowed views into input) Document.parseowned(input: string) -> std::json::ParseResult (owned copies) Document.objectget(obj: i64, key: string) -> i64? Document.asstring(id: i64) -> string? Document.asnumberlexeme(id: i64) -> string? std::json::numberasi64(doc: &Document, id: i64) -> i64? std::json::stringify(doc: &Document, id: i64) -> std::result::Result(std::strings::String, std::memory::OutOfMemory) std::json::stringifypretty(doc: &Document, id: i64, indent: int) -> std::result::Result(std::strings::String, std::memory::OutOfMemory) Examples Works today: parse + query + stringify import std::json; import std::strings; import std::result; import std::memory; type StringAllocResult = std::result::Result(std::strings::String, std::memory::OutOfMemory); fn main () -> int { let mut doc: Document = Document{}; let input: string = {\"a\":1,\"b\":true,\"c\":null,\"d\":[\"x\",\"y\"],\"u\":\"\\u0041\"}; let rootr: std::json::ParseResult = (mut doc).parse(input); if rootr.iserr() { (mut doc).drop(); return 1; } if !doc.isok() { (mut doc).drop(); return 2; } let root: i64 = match (rootr) { Ok(v) => v, Err() => 0 as i64, }; let uidopt = doc.objectget(root, \"u\"); if uidopt == None { (mut doc).drop(); return 3; } let uid: i64 = uidopt ?? 0 as i64; let uopt = doc.asstring(uid); if uopt == None { (mut doc).drop(); return 4; } if (uopt ?? \"\") != \"A\" { (mut doc).drop(); return 5; } let aidopt = doc.objectget(root, \"a\"); if aidopt == None { (mut doc).drop(); return 6; } let aid: i64 = aidopt ?? 0 as i64; let anumopt = std::json::numberasi64(doc, aid); if anumopt == None { (mut doc).drop(); return 7; } if (anumopt ?? 0 as i64) != 1 { (mut doc).drop(); return 8; } let compactr: StringAllocResult = std::json::stringify(doc, root); if compactr.iserr() { (mut doc).drop(); return 9; } let mut compact: std::strings::String = match (compactr) { StringAllocResult::Ok(v) => v, StringAllocResult::Err() => std::strings::String.empty(), }; let expected: string = {\"a\":1,\"b\":true,\"c\":null,\"d\":[\"x\",\"y\"],\"u\":\"A\"}; if compact.asstring() != expected { (mut compact).drop(); (mut doc).drop(); return 10; } (mut compact).drop(); (mut doc).drop(); return 0; } See also"
+    },
+    {
+      "id": "std/map",
+      "title": "`std::map`",
+      "section": "std",
+      "summary": "`std::map` provides associative containers:",
+      "text": "std::map std::map provides associative containers: HashMap(K, V) (unordered, hash table), TreeMap(K, V) (ordered, red-black tree). Status Implemented subset: usable in the current compiler subset with documented limits. Importing import std::map; Examples Works today: HashMap(u64, int) basic usage import std::map; import std::result; import std::memory; type Map = std::map::HashMap(u64, int); type InitResult = std::result::Result(Map, std::memory::AllocFailed); fn hashu64 (k: u64) -> u64 { return k; } fn equ64 (a: u64, b: u64) -> bool { return a == b; } fn main () -> int { let initr: InitResult = Map.init(16, hashu64, equ64); if initr.iserr() { return 2; } let mut m: Map = match (initr) { InitResult::Ok(v) => v, InitResult::Err() => Map.empty(hashu64, equ64), }; (mut m).put(1, 10); let v: int = m.get(1) ?? 0; (mut m).drop(); return v; } See also"
+    },
+    {
+      "id": "std/memory",
+      "title": "`std::memory`",
+      "section": "std",
+      "summary": "`std::memory` provides low-level helpers and the long-term allocator design.",
+      "text": "std::memory std::memory provides low-level helpers and the long-term allocator design. Importing import std::memory; Example (Works today): alignment helpers import std::memory; fn main () -> int { if !std::memory::ispoweroftwou64(8) { return 1; } if std::memory::alignupu64(9, 8) != 16 { return 2; } return 0; } See also"
+    },
+    {
+      "id": "std/networking",
+      "title": "`std::net`",
+      "section": "std",
+      "summary": "`std::net` provides networking primitives (hosted POSIX baseline).",
+      "text": "std::net std::net provides networking primitives (hosted POSIX baseline). Example (Works today): IPv4 helpers import std::net; fn main () -> int { let a = ipv4(127, 0, 0, 1); if !ipv4isloopback(a) { return 1; } return 0; } See also"
+    },
+    {
+      "id": "std/path",
+      "title": "`std::path`",
+      "section": "std",
+      "summary": "`std::path` provides path manipulation helpers.",
+      "text": "std::path std::path provides path manipulation helpers. Status Implemented subset is available (POSIX-style / paths). Importing import std::path; import std::strings; Examples Works today: normalize + PathBuf import std::path; import std::strings; fn main () -> int { let mut n: std::strings::String = std::path::normalize(\"/a//b/\"); if n.asstring() != \"/a/b\" { (mut n).drop(); return 1; } (mut n).drop(); let mut pb: std::path::PathBuf = std::path::PathBuf.empty(); (mut pb).push(\"a\"); (mut pb).push(\"b\"); if pb.asstring() != \"a/b\" { (mut pb).drop(); return 2; } if !(mut pb).pop() { (mut pb).drop(); return 3; } if pb.asstring() != \"a\" { (mut pb).drop(); return 4; } (mut pb).drop(); return 0; } See also"
+    },
+    {
+      "id": "std/process",
+      "title": "`std::process`",
+      "section": "std",
+      "summary": "`std::process` provides process-oriented primitives (hosted baseline).",
+      "text": "std::process std::process provides process-oriented primitives (hosted baseline). Status Implemented subset is available for the hosted POSIX baseline. Importing import std::process; import std::strings; Examples Works today: getcwd + chdir with recoverable errors import std::process; import std::strings; fn main () -> int { let cwdr: std::process::GetCwdResult = std::process::getcwd(); if cwdr.iserr() { return 1; } let mut cwd: std::strings::String = match (cwdr) { std::process::GetCwdResult::Ok(v) => v, std::process::GetCwdResult::Err() => std::strings::String.empty(), }; let err1: std::process::ChdirFailed? = std::process::chdir(\"/\"); if err1 != None { (mut cwd).drop(); return 2; } let err2: std::process::ChdirFailed? = std::process::chdir(cwd.asstring()); if err2 != None { (mut cwd).drop(); return 3; } (mut cwd).drop(); return 0; } See also"
+    },
+    {
+      "id": "std/result",
+      "title": "`std::result`",
+      "section": "std",
+      "summary": "`std::result` standardizes the common \u201csuccess or error\u201d return shape as `Result(T, E)` so APIs across `std::` compose cleanly.",
+      "text": "std::result std::result standardizes the common \u201csuccess or error\u201d return shape as Result(T, E) so APIs across std:: compose cleanly. Status Implemented (current representation is a tagged union enum). Importing import std::result; Examples Works today: create and inspect a Result import std::result; type R = std::result::Result(int, string); fn main () -> int { let x: R = R.ok(123); if x.iserr() { return 1; } if R.unwrapor(x, 0) != 123 { return 2; } return 0; } See also"
+    },
+    {
+      "id": "std/runtime",
+      "title": "`std::runtime`",
+      "section": "std",
+      "summary": "`std::runtime` is the interface layer that isolates OS/environment-specific primitives (I/O, filesystem, time, threads, allocation) from higher-level `std::...` modules.",
+      "text": "std::runtime std::runtime is the interface layer that isolates OS/environment-specific primitives (I/O, filesystem, time, threads, allocation) from higher-level std::... modules. Status Design + partial implementation. Importing import std::runtime::build; import std::runtime::mem; Examples Works today: build metadata + raw memory import std::runtime::build; import std::runtime::mem; fn main () -> int { // This reports whether the current artifact was built with --debug / -g. if std::runtime::build::isdebug() { return 1; } // std::runtime::mem provides low-level allocation and raw load/store. let ptr: u64 = std::runtime::mem::alloc(4); if ptr == 0 { return 2; } std::runtime::mem::storeu8(ptr, 0, std::runtime::mem::truncu8(65)); std::runtime::mem::storeu8(ptr, 1, std::runtime::mem::truncu8(66)); if std::runtime::mem::loadu8(ptr, 0) != 65 { std::runtime::mem::free(ptr); return 3; } std::runtime::mem::free(ptr); return 0; } See also"
+    },
+    {
+      "id": "std/semver",
+      "title": "`std::semver`",
+      "section": "std",
+      "summary": "`std::semver` implements Semantic Versioning (SemVer 2.0.0):",
+      "text": "std::semver std::semver implements Semantic Versioning (SemVer 2.0.0): strict parsing of MAJOR.MINOR.PATCH[-PRERELEASE][+BUILD] SemVer precedence comparison (build metadata is ignored) Quick example import std::semver; fn main () -> int { let r = std::semver::parse(\"1.2.3-alpha.1+build.5\"); if r.iserr() { return 1; } let v: std::semver::Version = match (r) { Ok(v) => v, Err() => std::semver::Version{ major: 0, minor: 0, patch: 0, prerelease: None, build: None }, }; // Precedence comparison ignores build metadata. let ar = std::semver::parse(\"1.0.0-alpha\"); let br = std::semver::parse(\"1.0.0\"); if ar.iserr() { return 2; } if br.iserr() { return 3; } let a: std::semver::Version = match (ar) { Ok(v) => v, Err() => std::semver::Version{ major: 0, minor: 0, patch: 0, prerelease: None, build: None } }; let b: std::semver::Version = match (br) { Ok(v) => v, Err() => std::semver::Version{ major: 0, minor: 0, patch: 0, prerelease: None, build: None } }; if a.cmp(b) >= 0 { return 4; } return 0; }"
+    },
+    {
+      "id": "std/set",
+      "title": "`std::set`",
+      "section": "std",
+      "summary": "`std::set` provides set containers:",
+      "text": "std::set std::set provides set containers: SetMap(T) (unordered set, open addressing), TreeSet(T) (ordered set, red-black tree). Status Implemented subset: usable in the current compiler subset with documented limits. Importing import std::set; Examples Works today: SetMap(u64) basic usage import std::set; import std::result; import std::memory; type Set = std::set::SetMap(u64); type InitResult = std::result::Result(Set, std::memory::AllocFailed); type InsertResult = std::result::Result(bool, std::memory::OutOfMemory); fn hashu64 (k: u64) -> u64 { return k; } fn equ64 (a: u64, b: u64) -> bool { return a == b; } fn main () -> int { let initr: InitResult = Set.init(4, hashu64, equ64); if initr.iserr() { return 1; } let mut s: Set = match (initr) { InitResult::Ok(v) => v, InitResult::Err() => Set.empty(hashu64, equ64), }; let insertr: InsertResult = (mut s).insert(1); if insertr.iserr() { (mut s).drop(); return 2; } let ok: bool = s.contains(1); (mut s).drop(); if ok { return 0; } return 1; } See also"
+    },
+    {
+      "id": "std/strings",
+      "title": "`std::strings`",
+      "section": "std",
+      "summary": "`std::strings` provides utilities and types built on top of the core `string` type (UTF\u20118 bytes), including simple comparisons and owned string construction.",
+      "text": "std::strings std::strings provides utilities and types built on top of the core string type (UTF\u20118 bytes), including simple comparisons and owned string construction. Status Implemented subset is available; long-term API is still evolving. Importing import std::strings; API (Implemented subset) module std::strings; export fn eq (a: string, b: string) -> bool; export fn isempty (s: string) -> bool; export fn orempty (s: string?) -> string; Examples Works today: equality + optionals import std::strings; fn main () -> int { let a: string = \"hi\"; let b: string? = None; if std::strings::eq(a, \"hi\") && std::strings::isempty(std::strings::orempty(b)) { return 0; } return 1; } See also"
+    },
+    {
+      "id": "std/sync",
+      "title": "`std::sync`",
+      "section": "std",
+      "summary": "`std::sync` provides synchronization primitives (hosted baseline).",
+      "text": "std::sync std::sync provides synchronization primitives (hosted baseline). Status Implemented subset is available (mutex/condvar/channel/cancellation token). Importing import std::sync; Examples Works today: Channel(u64) across tasks import sync from \"std/sync\"; type ChanU64 = sync::Channel(u64); task fn producer (c: sync::ChannelBorrow(u64)) -> int { let err: sync::SyncFailed? = c.send(42); if err != None { return 10; } return 0; } async fn main () -> int { task { let cr = ChanU64.init(1); if cr.iserr() { return 100; } let mut c: ChanU64 = match (cr) { Ok(v) => v, Err() => ChanU64.invalid(), }; let h = producer(c.borrow()); let v1: u64 = (c.recv() ?? 0); c.close(); let v2: u64 = (c.recv() ?? 99); let rcvalues: int[] = yield h; let rc: int = rcvalues[0]; (mut c).destroy(); if rc != 0 { return 11; } if v1 != 42 { return 1; } if v2 != 99 { return 2; } return 0; } } See also End-to-end fixtures:"
+    },
+    {
+      "id": "std/task",
+      "title": "`std::task`",
+      "section": "std",
+      "summary": "`std::task` provides hosted task/runtime helpers, including sleep/yield operations.",
+      "text": "std::task std::task provides hosted task/runtime helpers, including sleep/yield operations. Example (Works today) import std::task; fn main () -> int { let n: int = availableparallelism(); yieldnow(); sleepms(0); if n < 1 { return 1; } return 0; } See also"
+    },
+    {
+      "id": "std/temporal",
+      "title": "`std::temporal`",
+      "section": "std",
+      "summary": "`std::temporal` provides `Instant`/`Duration` helpers and time-related utilities.",
+      "text": "std::temporal std::temporal provides Instant/Duration helpers and time-related utilities. Example (Works today) import std::temporal; fn main () -> int { let z: Duration = std::temporal::durationzero(); if !std::temporal::iszero(z) { return 1; } if std::temporal::isnegative(1s) { return 2; } if !std::temporal::isnegative(-1s) { return 3; } return 0; } See also"
+    },
+    {
+      "id": "std/tls",
+      "title": "`std::tls`",
+      "section": "std",
+      "summary": "`std::tls` provides TLS client/server primitives (hosted baseline via mbedTLS).",
+      "text": "std::tls std::tls provides TLS client/server primitives (hosted baseline via mbedTLS). Status Implemented subset + design: Session + MemPipe are implemented for hosted targets. Importing import std::tls; Examples Works today: in-memory client/server handshake (MemPipe) This example uses MemPipe so it does not require sockets. It is kept runnable import mem from \"std/runtime/mem.slk\"; import std::arrays; import std::tls; fn testcert () -> string { return -----BEGIN CERTIFICATE----- MIIDCTCCAfGgAwIBAgIUZGlB8Eq9CXntm2xyJOT1X1eNCjMwDQYJKoZIhvcNAQEL BQAwFDESMBAGA1UEAwwJbG9jYWxob3N0MB4XDTI2MDEwMzAyMDUyM1oXDTM2MDEw MTAyMDUyM1owFDESMBAGA1UEAwwJbG9jYWxob3N0MIIBIjANBgkqhkiG9w0BAQEF AAOCAQ8AMIIBCgKCAQEA0RvQxOWGAe2a4qh9/lUFpIeEOdQFKrGf569AwPwAbcLo /Ah9/wBSXzXL/jCy8ofemWS7HmP94Ikm11zJxjOeufXCbGS+X+M2OrhRYJDx5CCv FwjZsSpNjTkW/weDr9ysVgTdsuOEVnnHnTVXiO2urKSVwPgkDS9xJjorx8tsBQLk R/w2GgmNQ+7tp7BD8HmXFSKw+ysCyK4p3s4+UZj8y2ieoEB/wJtEGKh6boYNR4o3 c2tb/pSV0ADB1BijLgiIa/UTejC3vyYNzi9j0vt4lntjsLcBWASdGT++0EX1IBR9 KQtoTvRrdp7Yima383+0Wp7WYa3XLMcpZuZPmD5OyQIDAQABo1MwUTAdBgNVHQ4E FgQUNBuK6PDKUMNJUvuJzAdki6AztyIwHwYDVR0jBBgwFoAUNBuK6PDKUMNJUvuJ zAdki6AztyIwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAqcHO Cfik6/WU/VysILwfO+27xAryD/xcTTT5WWIAKAH7d7Hmg9OyyLe7AZ0hog2rhLzW +LYzQK8glzKoblXe+h8Mukel84DMzCJHdJAfdNKftf1gg+pxUP7Bg6MyJqBXo6gd UN2jRsbYhxNPlIECJk/vYuDgi9i+k43+At/CHClZjx9dOmx4Nv8kK9r6aOlI6Vms y4hZQtsSHGmUJs8T57aW3TKW0mFs/jUAISkeLBoBO84tu7Gzu+QeFGYAgHWR8wp2 4H5eSv3/R0eBaHUM9riHaS6wF+9cF+vZFzRgWHaCHpVghIpQhpQTD+RdO8mdVmi5 4qqkcIeXp+6Zggtv9w== END CERTIFICATE----- ; } fn testkey () -> string { return -----BEGIN PRIVATE KEY----- MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDRG9DE5YYB7Zri qH3+VQWkh4Q51AUqsZ/nr0DA/ABtwuj8CH3/AFJfNcv+MLLyh96ZZLseY/3giSbX XMnGM5659cJsZL5f4zY6uFFgkPHkIK8XCNmxKk2NORb/B4Ov3KxWBN2y44RWeced NVeI7a6spJXA+CQNL3EmOivHy2wFAuRH/DYaCY1D7u2nsEPweZcVIrD7KwLIrine zj5RmPzLaJ6gQH/Am0QYqHpuhg1Hijdza1v+lJXQAMHUGKMuCIhr9RN6MLe/Jg3O L2PS+3iWe2OwtwFYBJ0ZP77QRfUgFH0pC2hO9Gt2ntiKZrfzf7RantZhrdcsxylm 5k+YPk7JAgMBAAECggEABBHaBNMAwi3ZK1sjJJ2MABFBIgz90sBlP9GZ3YeqDHjU Jv+VUC6167N01mwlN3Isg2jB+Yvxp3qT3nIoXSqpBq6BS7HEQMJ/zjHDJ7F6e7ml Hrol3nxXyQ1Y5LrFNdmCIyRyGiaybypsl6MvonMZyLNlVL2fmgAX4CoWqwtK/Wfx dwssGbrlr3QvGM6aTBEDDY/xCwSvkZ5l0ImGq1Fuk61rkwnFysRNlzuOwcbAjDoM Qd+fjRKWfCltnHJdc1BxnyTTuzuc9rR7ZCEaoe4xgG9A1YIrXdA89CPHP3hC9nmr uTxjJ/fT5xir0p4FBjeImDiyhfMFrARTGexVLx8MpwKBgQDVDXotnEkYPFFyMvWD nxtT+9pesJpnqF0LGFm1Un9Fgjg7so41P5nJVsO/vSKXDAOG1UT5wAmDVtGSmAre Zaopy/OWm5QsFUzTet5sALF0j8whIiy2epVGd1Om4ndmWUOrKapq5ZwfR5UW4tei 6xI57YdA9v/N+6Im7DwVAQ4IRwKBgQD7Qs9GoROQ9S0tYh/JHWx8/MiNGycEb4CA B7dt1QhGkVff+fhfEX6l5uTU6xbtjmX6ZJJHNcjgv6Y/ngC+UvohSrdaIq6R0k03 ZJPzf9WFDdvc8n2sT52MJSMb/lz4zU/TuOiwROuKhJ/M1g3MoY3uFOx7smxHzeV2 b/DBX6WIbwKBgGk4mcHS8OquR48+CbEysD1/Ii8ny2osZZ9oLE3363F5yan6Gm/D 9IDSgCS/FUlCHq/FvqYWKNyb0S80NhH2Zd70ol4cgkZvUp0TjqwKf5nQtwEaLrkE u5qsrjy6ljuPFHOBRXA77CoqoUBHUjZdIIhJfkYgdt/VShUtENNSzQpbAoGAJY9+ Ntu7dg8AuukRQVpRrnmHbXiio4oblogQxq1y+EGf9k6C74tI+HoEuUOPgOGpov3H 1DdZGSftLVNsXwc+dx2ZPTM0D351ppM1ftAcVjCVLnldihW4wouGrRegRF1E0qyw tDEJWQKsdM2G8JEyC2Y7V957S1yfMc5YGkA3GacCgYEAuTfYz3IY6lIWGd0eDijU ElDm/6m2Eb8JcH9F+fayYJ5ebQQgsrvNQXpFI4y0Z01X/l/OtYYgUeO1vDKWVzOp 6Jq1125v1+I7+Fce5KVj56oWiirFHqGXqGJK104sGOSTCjXy7pyZGoVCpplqWabN GSDCV/JoUBg4iPwQ0rK0Tlo= END PRIVATE KEY----- ; } fn drivehandshake (mut client: &Session, mut server: &Session) -> bool { var clientdone: bool = false; var serverdone: bool = false; var steps: int = 0; while steps < 100000 { steps += 1; if !clientdone { let rc = client.handshakestep(); if rc == 0 { clientdone = true; } else { if rc != ERRWANTREAD && rc != ERRWANTWRITE { return false; } } } if !serverdone { let rc = server.handshakestep(); if rc == 0 { serverdone = true; } else { if rc != ERRWANTREAD && rc != ERRWANTWRITE { return false; } } } if clientdone && serverdone { return true; } } return false; } fn readsome (mut sess: &Session, ptr: u64, cap: u64) -> i32 { var tries: int = 0; while tries < 100000 { tries += 1; let rc = sess.read(std::arrays::ByteSlice{ ptr: ptr, len: cap as i64 }); if rc > 0 { return rc; } if rc == ERRWANTREAD rc == ERRWANTWRITE { continue; } return rc; } return -1 as i32; } fn main () -> int { var pipe = MemPipe.init(65536); if !pipe.isvalid() { return 1; } var client: Session = Session.client() ?? Session.invalid(); if !client.isvalid() { (mut pipe).drop(); return 2; } var server: Session = Session.server(testcert(), testkey()) ?? Session.invalid(); if !server.isvalid() { (mut client).drop(); (mut pipe).drop(); return 3; } client.setbiomempipe(pipe.clientctx()); server.setbiomempipe(pipe.serverctx()); if !drivehandshake(mut client, mut server) { (mut server).drop(); (mut client).drop(); (mut pipe).drop(); return 4; } if !client.writestring(\"ping\") { (mut server).drop(); (mut client).drop(); (mut pipe).drop(); return 5; } let bufptr = mem::alloc(64); if bufptr == 0 { (mut server).drop(); (mut client).drop(); (mut pipe).drop(); return 6; } let n = readsome(mut server, bufptr, 64); if n <= 0 { mem::free(bufptr); (mut server).drop(); (mut client).drop(); (mut pipe).drop(); return 7; } let got = mem::stringfromptrlen(bufptr, n as int); if got != \"ping\" { mem::free(bufptr); (mut server).drop(); (mut client).drop(); (mut pipe).drop(); return 8; } if !server.writestring(\"pong\") { mem::free(bufptr); (mut server).drop(); (mut client).drop(); (mut pipe).drop(); return 9; } let n2 = readsome(mut client, bufptr, 64); if n2 <= 0 { mem::free(bufptr); (mut server).drop(); (mut client).drop(); (mut pipe).drop(); return 10; } let got2 = mem::stringfromptrlen(bufptr, n2 as int); if got2 != \"pong\" { mem::free(bufptr); (mut server).drop(); (mut client).drop(); (mut pipe).drop(); return 11; } mem::free(bufptr); (mut server).drop(); (mut client).drop(); (mut pipe).drop(); return 0; } See also"
+    },
+    {
+      "id": "std/toml",
+      "title": "`std::toml`",
+      "section": "std",
+      "summary": "`std::toml` provides TOML parsing (initial implementation + expanded subset).",
+      "text": "std::toml std::toml provides TOML parsing (initial implementation + expanded subset). Status Implemented subset + design: parsing is implemented; serialization is planned. Importing import std::toml; API (selected) Document.parse(input: string) -> std::toml::ParseResult (borrowed views into input) Document.parseowned(input: string) -> std::toml::ParseResult (owned copies) Document.tableget(table: i64, key: string) -> i64? Document.asstring(id: i64) -> string? std::toml::intasi64(doc: &Document, id: i64) -> i64? Examples Works today: parse + query import std::toml; fn main () -> int { let mut doc: Document = Document{}; let input: string = title = \"TOML Example\" answer = 42 ; let rootr: std::toml::ParseResult = (mut doc).parse(input); if rootr.iserr() { (mut doc).drop(); return 1; } if !doc.isok() { (mut doc).drop(); return 2; } let root: i64 = match (rootr) { Ok(v) => v, Err() => 0 as i64, }; let titleidopt = doc.tableget(root, \"title\"); if titleidopt == None { (mut doc).drop(); return 3; } let titleid: i64 = titleidopt ?? 0 as i64; let titleopt = doc.asstring(titleid); if titleopt == None { (mut doc).drop(); return 4; } if (titleopt ?? \"\") != \"TOML Example\" { (mut doc).drop(); return 5; } let answeridopt = doc.tableget(root, \"answer\"); if answeridopt == None { (mut doc).drop(); return 6; } let answerid: i64 = answeridopt ?? 0 as i64; let answeropt = std::toml::intasi64(doc, answerid); if answeropt == None { (mut doc).drop(); return 7; } if (answeropt ?? 0 as i64) != 42 { (mut doc).drop(); return 8; } (mut doc).drop(); return 0; } See also"
+    },
+    {
+      "id": "std/url",
+      "title": "`std::url`",
+      "section": "std",
+      "summary": "`std::url` provides a WHATWG URL parser/serializer and `URLSearchParams`-style behavior.",
+      "text": "std::url std::url provides a WHATWG URL parser/serializer and URLSearchParams-style behavior. Status Implemented (core parsing + serialization + URLSearchParams). Importing import std::url; import std::strings; API (selected) std::url::parse(input: string) -> URLResult std::url::parsewithbase(input: string, base: &URL) -> URLResult URL.href() -> std::result::Result(std::strings::String, std::memory::OutOfMemory) URL.origin() -> std::result::Result(std::strings::String, std::memory::OutOfMemory) URLSearchParams.fromstring(s: string) -> std::result::Result(URLSearchParams, std::memory::OutOfMemory) URLSearchParams.tostring() -> std::result::Result(std::strings::String, std::memory::OutOfMemory) URLSearchParams.has(name: string) -> std::result::Result(bool, std::memory::OutOfMemory) URLSearchParams.get(name: string) -> std::result::Result(std::strings::String?, std::memory::OutOfMemory) URLSearchParams.append/delete/set/sort -> std::memory::OutOfMemory? Examples Works today: parse + resolve + query params import std::url; import std::strings; fn dummyurl () -> URL { return URL{ scheme: std::strings::String.empty(), username: std::strings::String.empty(), password: std::strings::String.empty(), hostkind: 0, hoststr: std::strings::String.empty(), ipv4: 0, ipv6s0: 0, ipv6s1: 0, ipv6s2: 0, ipv6s3: 0, ipv6s4: 0, ipv6s5: 0, ipv6s6: 0, ipv6s7: 0, port: None, path: std::strings::String.empty(), query: std::strings::String.empty(), hasquery: false, fragment: std::strings::String.empty(), hasfragment: false, cannotbeabase: false, }; } fn main () -> int { let abs: URLResult = std::url::parse(\"https://example.com:443/a/./b/../c?x=1#frag\"); if abs.value == None { return 1; } let mut url: URL = abs.value ?? dummyurl(); let mut hrefr = url.href(); if hrefr.err != None { (mut url).drop(); return 2; } hrefr.err = None; let mut href: std::strings::String = hrefr.value ?? std::strings::String.empty(); hrefr.value = None; if href.asstring() != \"https://example.com/a/c?x=1#frag\" { (mut href).drop(); (mut url).drop(); return 2; } (mut href).drop(); let baseres: URLResult = std::url::parse(\"https://example.com/dir/file\"); if baseres.value == None { (mut url).drop(); return 3; } let mut base: URL = baseres.value ?? dummyurl(); let relres: URLResult = std::url::parsewithbase(\"../x?y=z\", base); (mut base).drop(); if relres.value == None { (mut url).drop(); return 4; } let mut rel: URL = relres.value ?? dummyurl(); let mut href2r = rel.href(); if href2r.err != None { (mut rel).drop(); (mut url).drop(); return 5; } href2r.err = None; let mut href2: std::strings::String = href2r.value ?? std::strings::String.empty(); href2r.value = None; if href2.asstring() != \"https://example.com/x?y=z\" { (mut href2).drop(); (mut rel).drop(); (mut url).drop(); return 5; } (mut href2).drop(); (mut rel).drop(); let mut paramsr = URLSearchParams.fromstring(\"?a=b%20c&d=e\"); if paramsr.err != None { (mut url).drop(); return 6; } paramsr.err = None; let mut params: URLSearchParams = paramsr.value ?? URLSearchParams.empty(); paramsr.value = None; let mut qsr = params.tostring(); if qsr.err != None { (mut params).drop(); (mut url).drop(); return 6; } qsr.err = None; let mut qs: std::strings::String = qsr.value ?? std::strings::String.empty(); qsr.value = None; if qs.asstring() != \"a=b+c&d=e\" { (mut qs).drop(); (mut params).drop(); (mut url).drop(); return 6; } (mut qs).drop(); let mut vr = params.get(\"a\"); if vr.err != None { (mut params).drop(); (mut url).drop(); return 7; } vr.err = None; let mut vopt: std::strings::String? = vr.value ?? None; vr.value = None; if vopt == None { (mut params).drop(); (mut url).drop(); return 7; } let mut v: std::strings::String = vopt ?? std::strings::String.empty(); vopt = None; if v.asstring() != \"b c\" { (mut v).drop(); (mut params).drop(); (mut url).drop(); return 8; } (mut v).drop(); if (mut params).delete(\"d\") != None { (mut params).drop(); (mut url).drop(); return 9; } let mut qs2r = params.tostring(); if qs2r.err != None { (mut params).drop(); (mut url).drop(); return 9; } qs2r.err = None; let mut qs2: std::strings::String = qs2r.value ?? std::strings::String.empty(); qs2r.value = None; if qs2.asstring() != \"a=b+c\" { (mut qs2).drop(); (mut params).drop(); (mut url).drop(); return 9; } (mut qs2).drop(); (mut params).drop(); (mut url).drop(); return 0; } See also"
+    },
+    {
+      "id": "std/uuid",
+      "title": "`std::uuid`",
+      "section": "std",
+      "summary": "`std::uuid` provides UUID primitives (parsing, formatting, and variants).",
+      "text": "std::uuid std::uuid provides UUID primitives (parsing, formatting, and variants). Status Implemented (v1/v3/v4/v5/v6/v7/v8 parsing + formatting + constructors). Importing import std::uuid; import std::strings; Examples Works today: parse + name-based UUID (v5) import std::uuid; import std::strings; import std::result; import std::memory; type StringAllocResult = std::result::Result(std::strings::String, std::memory::OutOfMemory); fn uuidstringeq (u: UUID, expected: string) -> bool { let r: StringAllocResult = u.tostringlower(); if r.iserr() { return false; } let mut s: std::strings::String = match (r) { Ok(v) => v, Err() => std::strings::String.empty(), }; let ok: bool = s.asstring() == expected; (mut s).drop(); return ok; } fn main () -> int { let s0: string = \"6ba7b810-9dad-11d1-80b4-00c04fd430c8\"; let u0r: std::uuid::ParseResult = std::uuid::parse(s0); if u0r.iserr() { return 1; } let u0: UUID = match (u0r) { Ok(v) => v, Err() => { hi: 0, lo: 0 }, }; if !uuidstringeq(u0, s0) { return 2; } let dns: UUID = std::uuid::namespacedns(); let v5dnsr: std::uuid::UUIDResult = std::uuid::v5(dns, \"www.widgets.com\"); if v5dnsr.iserr() { return 3; } let v5dns: UUID = match (v5dnsr) { Ok(v) => v, Err() => { hi: 0, lo: 0 }, }; if !uuidstringeq(v5dns, \"21f7f8de-8051-5b89-8680-0195ef798b6a\") { return 4; } if v5dns.version() != 5 { return 5; } if !v5dns.isrfc4122() { return 6; } return 0; } See also"
+    },
+    {
+      "id": "std/vector",
+      "title": "`std::vector`",
+      "section": "std",
+      "summary": "`std::vector` provides a generic, growable owning container `Vector(T)` used widely throughout `std::`.",
+      "text": "std::vector std::vector provides a generic, growable owning container Vector(T) used widely throughout std::. Status Implemented subset + design: a usable subset is implemented in std/vector.slk. Importing import std::vector; Examples Works today: push/pop import std::vector; type Vec = std::vector::Vector(int); fn main () -> int { let vr = Vec.init(4); if vr.iserr() { return 0; } let mut v: Vec = match (vr) { Ok(v) => v, Err() => Vec.empty(), }; (mut v).push(1); (mut v).push(2); let x: int = (mut v).pop() ?? 0; (mut v).drop(); return x; } See also"
+    },
+    {
+      "id": "std/overview",
+      "title": "Standard library overview (`std::`)",
+      "section": "std",
+      "summary": "the intended API and structure; an in-tree stdlib implementation exists under `std/` for the current compiler subset.",
+      "text": "Standard library overview (std::) the intended API and structure; an in-tree stdlib implementation exists under std/ for the current compiler subset. Status Design + initial implementation: many modules have an implemented subset; the overall surface is still evolving. Importing std:: is available to import by default in normal silk build workflows. import std::io; import std::vector; Examples Works today: a tiny \u201chello std\u201d program import std::io; import std::vector; type VecInt = std::vector::Vector(int); fn main () -> int { let mut v: VecInt = VecInt.init(4); (mut v).push(10); (mut v).push(32); std::io::println(\"len={d} firstpop={d}\", v.len() as int, (mut v).pop() ?? 0); (mut v).drop(); return 0; } See also"
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+# `silk-check` (1) — Parse and Type-Check
+
+> NOTE: This is the Markdown source for the eventual man 1 page for `silk check`. The roff-formatted manpage should be generated from this content.
+
+## Name
+
+`silk-check` — parse and type-check a Silk module set.
+
+## Synopsis
+
+- `silk check [options] <file> [<file> ...]`
+- `silk check [options] --package <dir|manifest>`
+
+## Description
+
+`silk check` parses and type-checks a module set and reports any diagnostics. It does not emit an output artifact.
+
+To check a package manifest (`silk.toml`), pass `--package` / `--pkg` and omit explicit input files.
+
+When explicit input files are used (no `--package`), the `silk` CLI may load additional packages into the module set by resolving bare-specifier package imports (for example `import util from "util";`) from the package search path (`SILK_PACKAGE_PATH`).
+
+## Options
+
+- `--help`, `-h` — show command help and exit.
+- `--nostd`, `-nostd` — disable stdlib auto-loading for `import std::...;`.
+- `--std-root <path>` — override the stdlib root directory used to resolve `import std::...;`.
+- `--std <path>` — alias of `--std-root` when `<path>` does not end in `.a`.
+- `--std-lib <path>` — accepted for consistency; ignored by `check`.
+- `--std <path>.a` — accepted for consistency; ignored by `check`.
+- `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`).
+- `--debug`, `-g` — emit Z3 debug output and write `.smt2` dumps for failing Formal Silk obligations.
+- `--package <dir|manifest>`, `--pkg <dir|manifest>` — load the module set from a `silk.toml` manifest instead of explicit input files.
+- `--` — end of options; treat following args as file paths (even if they begin with `-`).
+
+## Examples
+
+```sh
+# Check a single-file program.
+silk check main.slk
+
+# Check a module set.
+silk check src/main.slk src/util.slk
+
+# Check the current directory as a package (explicit).
+silk check --package .
+```
+
+## Environment
+
+- `SILK_PACKAGE_PATH` — PATH-like list of package root directories used to resolve bare-specifier package imports (entries separated by `:` on POSIX).
+
+## Exit status
+
+- `0` on success.
+- non-zero on error.
+
+## See Also
+
+- `silk` (1), `silk-build` (1)
+- `docs/compiler/cli-silk.md`
+- `docs/compiler/diagnostics.md`
