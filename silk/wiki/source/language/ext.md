@@ -11,7 +11,7 @@ Canonical spec: `docs/language/ext.md`.
 - End-to-end support snapshot: `STATUS.md`
 - Embedding ABI contract: `docs/compiler/abi-libsilk.md`
 
-## Syntax (Selected)
+## Syntax
 
 ```silk
 // C function named `puts`.

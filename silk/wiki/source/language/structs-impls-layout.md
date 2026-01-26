@@ -11,7 +11,7 @@ Canonical spec: `docs/language/structs-impls-layout.md`.
 - Implemented subset + layout model: `docs/language/structs-impls-layout.md`
 - End-to-end support snapshot: `STATUS.md`
 
-## Syntax (Selected)
+## Syntax
 
 ```silk
 struct Point {

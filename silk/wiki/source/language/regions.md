@@ -10,7 +10,7 @@ Canonical spec: `docs/language/regions.md`.
 - Implemented subset + current limitations: `docs/language/regions.md`
 - End-to-end fixtures: `tests/silk/pass_region_*.slk`
 
-## Syntax (Selected)
+## Syntax
 
 ```silk
 const region arena: u8[1024];

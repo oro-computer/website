@@ -18,7 +18,7 @@ Status: implemented for the current front-end + native backend subset.
 - Error model overview: `docs/language/errors.md`
 - End-to-end support snapshot: `STATUS.md`
 
-## Syntax (Selected)
+## Syntax
 
 ```silk
 error OutOfBounds { index: int, len: int }

@@ -12,7 +12,7 @@ Canonical spec: `docs/language/interfaces.md`.
 - Dynamic dispatch (trait objects/vtables): not implemented yet
 - End-to-end support snapshot: `STATUS.md`
 
-## Syntax (Selected)
+## Syntax
 
 ```silk
 interface Len {

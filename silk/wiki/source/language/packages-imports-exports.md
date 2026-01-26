@@ -18,7 +18,7 @@ Canonical spec: `docs/language/packages-imports-exports.md`.
 - Full rules and many examples: `docs/language/packages-imports-exports.md`
 - End-to-end support snapshot: `STATUS.md`
 
-## Syntax (Selected)
+## Syntax
 
 ```silk
 package my_app;

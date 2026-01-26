@@ -11,7 +11,7 @@ Canonical spec: `docs/language/generics.md`.
 - Current supported forms and restrictions: `docs/language/generics.md`
 - End-to-end support snapshot: `STATUS.md`
 
-## Syntax (Selected)
+## Syntax
 
 ```silk
 struct Pair(T) {

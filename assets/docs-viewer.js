@@ -147,10 +147,183 @@
     const banned =
       /(STATUS\.md|PLAN\.md|llms\.txt|docs\/llms\.txt|docs\/wiki\/style-guide\.md|_template-[^`\\s]+|style-guide\.md|README\.md)/;
     const statusLine = /^(Status:|Implementation status:)\s*/i;
-    return String(markdown)
-      .split("\n")
-      .filter((line) => !banned.test(line) && !statusLine.test(line))
-      .join("\n");
+    const statusHeading = /^(#{1,6})\s+(Status|Implementation status)\b/i;
+
+    function rewriteOutsideCode(text) {
+      let out = text;
+
+      // Remove status-y "Works today" framing in prose.
+      out = out.replace(/^(\s*#{1,6}\s+)What works today\b/i, "$1Supported behavior");
+      out = out.replace(/\bwhat works today\b/gi, "supported behavior");
+      out = out.replace(/\bExamples\s*\(Works today\)\b/gi, "Examples");
+      out = out.replace(/\bExample\s*\(Works today\)\s*:/gi, "Example:");
+      out = out.replace(/^(\s*#{1,6}\s+)Works today:\s*/i, "$1Example: ");
+      out = out.replace(/^(\s*#{1,6}\s+)Works today\b/i, "$1Example");
+      out = out.replace(/^(\s*[-*+]\s+)Works today:\s*/i, "$1Example: ");
+      out = out.replace(/^(\s*[-*+]\s+)Works today\b/i, "$1Example");
+      out = out.replace(/^\s*Works today:\s*/i, "Example: ");
+      out = out.replace(/^(\s*)Works today\b/i, "$1Example");
+      out = out.replace(/\(Works today\)/gi, "");
+
+      // Prefer present-tense, spec-like language over "current subset".
+      out = out.replace(
+        /^(\s*(?:[-*+]\s+)?)in the current (?:compiler\/backend|compiler|backend|scalar-slot backend)?\s*subset\b/gi,
+        "$1In Silk"
+      );
+      out = out.replace(
+        /\bin the current (?:compiler\/backend|compiler|backend|scalar-slot backend)?\s*subset\b/gi,
+        "in Silk"
+      );
+      out = out.replace(/\bthe current compiler\/backend subset\b/gi, "the compiler");
+      out = out.replace(/\bthe current compiler subset\b/gi, "the compiler");
+      out = out.replace(/\bthe current scalar-slot backend subset\b/gi, "the scalar-slot backend");
+      out = out.replace(/\bthe current backend subset\b/gi, "the backend");
+      out = out.replace(/\bCurrent subset limitation\b/gi, "Limitation");
+      out = out.replace(/\bcurrent\s+(?:subset|support)\b/gi, "");
+      out = out.replace(/\s*\(current\s+(?:subset|support)[^)]*$/gi, "");
+
+      // Strip parentheticals that explicitly call out incompleteness.
+      if (/^\s*#{1,6}\s/.test(out)) {
+        out = out.replace(/\s*\([^)]*subset[^)]*\)/gi, "");
+        out = out.replace(/\s*\([^)]*works today[^)]*\)/gi, "");
+      }
+
+      // Replace remaining "subset" phrasing with "support" (more neutral).
+      out = out.replace(/\bsubset\b/gi, "support");
+      out = out.replace(/\bsupported\s+([`A-Za-z0-9_:./-]+)\s+support\b/gi, "$1 support");
+      out = out.replace(/\bimplemented support\b/gi, "supported behavior");
+
+      // Avoid "Implemented" as a status label.
+      out = out.replace(/\s*\(Implemented\)\b/gi, "");
+      out = out.replace(/\s*\(implemented[^)]*\)\b/gi, "");
+      out = out.replace(/\bImplemented in\b/g, "Defined in");
+      out = out.replace(/\bimplemented in\b/g, "defined in");
+      out = out.replace(/\bis implemented\b/gi, "is supported");
+      out = out.replace(/\bare implemented\b/gi, "are supported");
+      out = out.replace(/\bImplemented\b/g, "Supported");
+      out = out.replace(/\bimplemented\b/g, "supported");
+
+      // Avoid "currently not ..." framing.
+      out = out.replace(/\bcurrently\s+not\b/gi, "not");
+      out = out.replace(/\(\s*\)/g, "");
+
+      // Tidy up extra whitespace introduced by rewrites.
+      const leading = (out.match(/^\s*/) || [""])[0];
+      let body = out.slice(leading.length);
+      body = body
+        .replace(/ {2,}/g, " ")
+        .replace(/\s+:/g, ":")
+        .replace(/\s+,/g, ",")
+        .replace(/\(\s+/g, "(")
+        .replace(/\s+\)/g, ")");
+      return leading + body;
+    }
+
+    const lines = String(markdown).split("\n");
+    const out = [];
+    let inCode = false;
+    let skipLevel = null;
+    let codeLang = null;
+
+    for (let line of lines) {
+      const trimmed = line.trimStart();
+      if (trimmed.startsWith("```")) {
+        const entering = !inCode;
+        inCode = !inCode;
+        if (entering) {
+          const lang = trimmed.slice(3).trim().split(/\s+/)[0];
+          codeLang = lang ? lang.toLowerCase() : null;
+        } else {
+          codeLang = null;
+        }
+        if (skipLevel === null) out.push(line);
+        continue;
+      }
+
+      if (!inCode) {
+        const headingMatch = line.match(/^(#{1,6})\s+(.+?)\s*$/);
+        if (skipLevel !== null && headingMatch) {
+          const level = headingMatch[1].length;
+          if (level <= skipLevel) skipLevel = null;
+        }
+
+        if (skipLevel === null) {
+          const statusMatch = line.match(statusHeading);
+          if (statusMatch) {
+            skipLevel = statusMatch[1].length;
+            continue;
+          }
+        }
+      }
+
+      if (skipLevel !== null) continue;
+
+      if (!inCode && (banned.test(line) || statusLine.test(line))) {
+        continue;
+      }
+
+      if (!inCode) {
+        // Preserve inline-code spans while rewriting prose.
+        const parts = line.split("`");
+        for (let i = 0; i < parts.length; i += 2) {
+          parts[i] = rewriteOutsideCode(parts[i]);
+        }
+        line = parts.join("`");
+        // Handle "supported `Type` support" across inline code spans.
+        line = line.replace(/\bsupported\s+(`[^`]+`)\s+support\b/gi, "$1 support");
+      } else {
+        // Code fences are treated as examples; keep semantics intact, but rewrite tone-y
+        // status language inside comment text (both whole-line and trailing comments).
+        const rewriteComment = (comment) =>
+          comment
+            .replace(/\bwhat works today\b/gi, "supported behavior")
+            .replace(/\bworks today\b/gi, "Example")
+            .replace(/\bcurrent\s+(?:subset|support)\b/gi, "")
+            .replace(/\bcurrently\s+not\b/gi, "not")
+            .replace(/\bsubset\b/gi, "support")
+            .replace(/\bImplemented in\b/g, "Defined in")
+            .replace(/\bimplemented in\b/g, "defined in")
+            .replace(/\bis implemented\b/gi, "is supported")
+            .replace(/\bare implemented\b/gi, "are supported")
+            .replace(/\bImplemented\b/g, "Supported")
+            .replace(/\bimplemented\b/g, "supported")
+            .replace(/ {2,}/g, " ")
+            .replace(/\(\s*\)/g, "")
+            .trimEnd();
+
+        const t = line.trimStart();
+        const hasLineComment =
+          t.startsWith("//") || t.startsWith("#") || t.startsWith("--") || t.startsWith("*");
+
+        if (hasLineComment) {
+          line = rewriteComment(line);
+        } else if (codeLang && ["silk", "slk", "c", "cpp", "cc", "c++", "js", "javascript", "ts", "typescript", "zig"].includes(codeLang)) {
+          const idx = line.indexOf("//");
+          if (idx !== -1) {
+            const prev = idx > 0 ? line[idx - 1] : "";
+            if (idx === 0 || /\s/.test(prev)) {
+              line = line.slice(0, idx) + rewriteComment(line.slice(idx));
+            }
+          }
+        } else if (codeLang && ["bash", "sh", "zsh", "fish", "toml", "yaml", "yml"].includes(codeLang)) {
+          const idx = line.indexOf("#");
+          if (idx !== -1) {
+            const prev = idx > 0 ? line[idx - 1] : "";
+            if (idx === 0 || /\s/.test(prev)) {
+              line = line.slice(0, idx) + rewriteComment(line.slice(idx));
+            }
+          }
+        }
+      }
+
+      if (!inCode && /^(subset|support)\)\.?$/i.test(line.trim())) {
+        continue;
+      }
+
+      out.push(line);
+    }
+
+    return out.join("\n");
   }
 
   function highlightContent(container) {

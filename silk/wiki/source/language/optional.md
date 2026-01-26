@@ -15,7 +15,7 @@ Canonical spec: `docs/language/optional.md`.
 - Implemented subset + backend payload limits: `docs/language/optional.md`
 - End-to-end support snapshot: `STATUS.md`
 
-## Syntax (Selected)
+## Syntax
 
 ```silk
 let a: int? = None;

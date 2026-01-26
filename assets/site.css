@@ -36,7 +36,7 @@ body {
   font-family: var(--font-body);
   background: var(--color-bg);
   color: var(--color-fg);
-  line-height: 1.6;
+  line-height: 1.7;
   text-rendering: optimizeLegibility;
 }
 
@@ -185,10 +185,11 @@ p {
 
 .prose {
   max-width: var(--text-max);
+  line-height: 1.75;
 }
 
 .prose > * + * {
-  margin-top: 1rem;
+  margin-top: 1.15rem;
 }
 
 .prose h2 {
@@ -202,7 +203,7 @@ p {
 }
 
 .prose li + li {
-  margin-top: 0.35rem;
+  margin-top: 0.5rem;
 }
 
 .prose dl {
