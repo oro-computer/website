@@ -1,0 +1,66 @@
+:root {
+  --hljs-comment: rgba(250, 248, 244, 0.5);
+  --hljs-keyword: rgba(246, 201, 69, 0.95);
+  --hljs-string: rgba(62, 155, 101, 0.95);
+  --hljs-number: rgba(244, 122, 40, 0.95);
+  --hljs-built-in: rgba(91, 59, 162, 0.95);
+}
+
+pre code.hljs {
+  display: block;
+  color: var(--color-fg);
+}
+
+.hljs-comment {
+  color: var(--hljs-comment);
+}
+
+.hljs-doctag,
+.hljs-meta {
+  color: rgba(250, 248, 244, 0.62);
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-tag {
+  color: var(--hljs-keyword);
+}
+
+.hljs-string {
+  color: var(--hljs-string);
+}
+
+.hljs-number {
+  color: var(--hljs-number);
+}
+
+.hljs-built_in,
+.hljs-attribute {
+  color: var(--hljs-built-in);
+}
+
+.hljs-title,
+.hljs-section {
+  color: rgba(250, 248, 244, 0.92);
+  font-weight: 650;
+}
+
+.hljs-literal {
+  color: rgba(246, 201, 69, 0.85);
+}
+
+.hljs-name,
+.hljs-attr,
+.hljs-variable,
+.hljs-symbol,
+.hljs-bullet {
+  color: rgba(250, 248, 244, 0.9);
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: 650;
+}

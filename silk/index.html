@@ -11,6 +11,10 @@
     <meta name="theme-color" content="#101012" />
     <link rel="icon" type="image/png" href="../docs/branding/assets/logo-icon-small.png" sizes="32x32" />
     <link rel="stylesheet" href="../assets/site.css" />
+    <link rel="stylesheet" href="../assets/highlight/highlight.css" />
+    <script src="../assets/highlight/highlight.min.js" defer></script>
+    <script src="../assets/highlight/languages/bash.min.js" defer></script>
+    <script src="../assets/highlight/languages/silk.js" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -70,7 +74,7 @@
               This strict header ordering is intentional: it makes builds easier to understand, keeps tooling deterministic,
               and prevents subtle “imports halfway through a file” dependency patterns.
             </p>
-            <pre><code>package my_app::core;
+            <pre><code class="language-silk">package my_app::core;
 
 import std::io::println;
 
@@ -86,7 +90,7 @@ fn main () -&gt; int {
               Modules can also be written inline to create nested namespaces inside a single file. Inline modules are a
               structured alternative to prefix naming and keep APIs grouped.
             </p>
-            <pre><code>package my_app;
+            <pre><code class="language-silk">package my_app;
 
 export module util {
   export let answer: int = 42;
@@ -98,7 +102,7 @@ export module util {
               language. You can import whole packages, import a single symbol into scope, or import from a module specifier
               (a relative file, a <code>std/</code> file path, or a package specifier).
             </p>
-            <pre><code>import std::strings;              // package import
+            <pre><code class="language-silk">import std::strings;              // package import
 import std::io::println;          // bring one symbol into scope
 import { Name } from &quot;./file.slk&quot;; // module-specifier import (named)
 import ns from &quot;./file.slk&quot;;       // namespace/default import</code></pre>
@@ -106,7 +110,7 @@ import ns from &quot;./file.slk&quot;;       // namespace/default import</code><
               Exports are explicit. <code>export fn</code> and <code>export let</code> define a package’s public surface, and
               named re-exports let you curate what a package exposes without duplicating definitions.
             </p>
-            <pre><code>export fn add (a: int, b: int) -&gt; int { return a + b; }
+            <pre><code class="language-silk">export fn add (a: int, b: int) -&gt; int { return a + b; }
 export { add as sum };</code></pre>
 
             <h2>Standard library (<code>std::</code>)</h2>
@@ -138,13 +142,13 @@ export { add as sum };</code></pre>
               set without producing an output binary. This encourages tight feedback loops and makes “does this program
               make sense?” a cheap, explicit operation.
             </p>
-            <pre><code>silk check src/main.slk
+            <pre><code class="language-bash">silk check src/main.slk
 silk test src/main.slk</code></pre>
             <p>
               <code>silk build</code> compiles to concrete outputs. The output <em>kind</em> is explicit, and the CLI is built
               to grow into a tool you can use for libraries and embedding scenarios, not only “build an executable”.
             </p>
-            <pre><code>silk build src/main.slk -o build/app --kind executable
+            <pre><code class="language-bash">silk build src/main.slk -o build/app --kind executable
 silk build src/lib.slk -o build/libfoo.o --kind object
 silk build src/lib.slk -o build/libfoo.a --kind static
 silk build src/lib.slk -o build/libfoo.so --kind shared</code></pre>
@@ -165,7 +169,7 @@ silk build src/lib.slk -o build/libfoo.so --kind shared</code></pre>
               and the compiler knows how to discover and run them. A <code>test</code> declaration is a top-level block that
               the runner executes under <code>silk test</code>.
             </p>
-            <pre><code>import std::test::expect_equal;
+            <pre><code class="language-silk">import std::test::expect_equal;
 
 test &quot;addition&quot; {
   expect_equal(3, 1 + 2);
@@ -194,7 +198,7 @@ test &quot;nested grouping&quot; {
               and proofs are required only where you ask for them. When you do opt in, you get a mechanically checked
               contract between what you wrote and what you intended — with zero runtime cost.
             </p>
-            <pre><code>#require x &gt;= 0;
+            <pre><code class="language-silk">#require x &gt;= 0;
 #assure result &gt; x;
 fn inc (x: int) -&gt; int {
   return x + 1;

@@ -11,6 +11,12 @@
     <meta name="theme-color" content="#101012" />
     <link rel="icon" type="image/png" href="../docs/branding/assets/logo-icon-small.png" sizes="32x32" />
     <link rel="stylesheet" href="../assets/site.css" />
+    <link rel="stylesheet" href="../assets/highlight/highlight.css" />
+    <script src="../assets/highlight/highlight.min.js" defer></script>
+    <script src="../assets/highlight/languages/javascript.min.js" defer></script>
+    <script src="../assets/highlight/languages/bash.min.js" defer></script>
+    <script src="../assets/highlight/languages/xml.min.js" defer></script>
+    <script src="../assets/highlight/languages/toml.js" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -64,7 +70,7 @@
               namespace. These modules are the public API surface of the runtime: they give you window management, storage,
               networking, system integration, and more without you writing platform-specific code.
             </p>
-            <pre><code>import application from 'oro:application'
+            <pre><code class="language-javascript">import application from 'oro:application'
 import { onApplicationURL } from 'oro:hooks'
 import fs from 'oro:fs/promises'
 import { open } from 'oro:sqlite'
@@ -109,7 +115,7 @@ import * as secureStorage from 'oro:secure-storage'</code></pre>
             </p>
 
             <p><strong>Project layout</strong></p>
-            <pre><code>hello/
+            <pre><code class="language-plaintext">hello/
   oro.toml
   copy-map.toml
   web/
@@ -117,7 +123,7 @@ import * as secureStorage from 'oro:secure-storage'</code></pre>
     main.js</code></pre>
 
             <p><strong><code>oro.toml</code></strong></p>
-            <pre><code>[meta]
+            <pre><code class="language-toml">[meta]
 bundle_identifier = "com.example.hello"
 version = "0.1.0"
 
@@ -130,11 +136,11 @@ copy_map = "copy-map.toml"</code></pre>
               Copy-maps let you explicitly map build inputs into the bundle root. This is the same pattern used by the
               runtime’s examples.
             </p>
-            <pre><code>"./web/index.html" = "index.html"
+            <pre><code class="language-toml">"./web/index.html" = "index.html"
 "./web/main.js" = "main.js"</code></pre>
 
             <p><strong><code>web/index.html</code></strong></p>
-            <pre><code>&lt;!doctype html&gt;
+            <pre><code class="language-html">&lt;!doctype html&gt;
 &lt;html lang=&quot;en&quot;&gt;
   &lt;meta charset=&quot;utf-8&quot; /&gt;
   &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot; /&gt;
@@ -153,7 +159,7 @@ copy_map = "copy-map.toml"</code></pre>
               This example intentionally mixes web APIs (DOM + ES modules) with a small, high-level runtime API call
               (<code>oro:application</code>) so you can see the programming model.
             </p>
-            <pre><code>import application from 'oro:application'
+            <pre><code class="language-javascript">import application from 'oro:application'
 
 const status = document.getElementById('status')
 status.textContent = `isOroRuntime: ${globalThis.isOroRuntime === true}`
@@ -168,9 +174,9 @@ application.getScreenSize().then(({ width, height }) => {
               experiments, it can infer a minimal configuration from an HTML file.
             </p>
             <p><strong>Run (development)</strong></p>
-            <pre><code>oroc run .</code></pre>
+            <pre><code class="language-bash">oroc run .</code></pre>
             <p><strong>Build (bundle/package)</strong></p>
-            <pre><code>oroc build .</code></pre>
+            <pre><code class="language-bash">oroc build .</code></pre>
             <p>
               By default, build outputs go under <code>./build</code>. For larger apps, it’s common to run a web build step
               before copying assets into the bundle (for example, emitting <code>web/</code> from a bundler and then mapping
@@ -183,7 +189,7 @@ application.getScreenSize().then(({ width, height }) => {
               APIs. They are also the best source of “real” <code>oro.toml</code> patterns (copy-maps, build scripts, and
               multi-entry bundles).
             </p>
-            <pre><code>oroc build examples
+            <pre><code class="language-bash">oroc build examples
 oroc run examples --entry window/messaging.html</code></pre>
 
             <h2>Runtime detection</h2>
