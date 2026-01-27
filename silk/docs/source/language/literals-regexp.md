@@ -41,7 +41,7 @@ valid token sequence. Use an explicit empty pattern, for example `/(?:)/`.
 
 The supported flag set is intentionally small in the current subset:
 
-- `g` — global (recorded; does not change `std::regex::is_match` semantics)
+- `g` — global (recorded; does not change `std::regex::matches` semantics)
 - `i` — ignore case
 - `m` — multiline
 - `s` — dotAll
@@ -70,7 +70,7 @@ The type checker rejects:
 import std::regex;
 
 fn main () -> int {
-  if std::regex::is_match(/hello/, "hello world") {
+  if std::regex::matches(/hello/, "hello world") {
     return 0;
   }
   return 1;

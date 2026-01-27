@@ -27,10 +27,15 @@ The lexer operates over:
   - memory and regions: `move`, `region`, `with`, `new`,
   - other operators: `sizeof`, `alignof`, `offsetof`, `typename`,
   - optionals and literals: `None`/`none`, `Some`, `true`, `false`, `null`,
-  - verification and external declarations: `ext`, and Formal Silk directives `#const`, `#require`, `#assure`, `#assert`, `#invariant`, `#variant`, `#theory`,
+  - verification and external declarations: `ext`, and Formal Silk directives `#const`, `#require`, `#assure`, `#assert`, `#invariant`, `#variant`, `#monovariant`, `#theory`,
   - other keywords as listed in the spec.
 
-  The `#require` / `#assure` / `#assert` / `#invariant` / `#variant` / `#const` / `#theory` forms are
+  Keywords are lexed as distinct tokens, but in name positions (for example
+  qualified-name segments like `std::test`, function/method names, and member
+  access like `value.test`) the parser accepts keywords anywhere an
+  identifier is expected.
+
+  The `#require` / `#assure` / `#assert` / `#invariant` / `#variant` / `#monovariant` / `#const` / `#theory` forms are
   **not** comments; they are first-class lexical tokens that participate in the
   normal expression grammar and are handled by the verifier. A directive token
   begins with `#` followed by optional horizontal whitespace and the directive
@@ -95,28 +100,28 @@ At a high level, the language can be structured as:
 
   - `PackageDecl ::= 'package' PackagePath ';'`
   - `ModuleDecl ::= 'module' PackagePath ModuleAsOpt ';'`
-  - `InlineModuleDecl ::= ExportModifier 'module' Identifier '{' InlineModuleItem* '}'`
+  - `InlineModuleDecl ::= ExportModifier 'module' NameToken '{' InlineModuleItem* '}'`
   - `InlineModuleItem ::= InlineModuleDecl | UsingDecl | ExportableDecl`
-  - `PackagePath ::= Identifier ('::' PackageSegment)*`
-  - `PackageSegment ::= Identifier | 'task'`
+  - `NameToken ::= Identifier | Keyword`
+  - `PackagePath ::= NameToken ('::' NameToken)*`
   - `ModuleAsOpt ::= ('as' QualifiedName TypeArgListOpt) | ε`
 
   - `ImportDecl ::= 'import' ImportSpec ';'`
   - `ImportSpec ::= ImportPath | FileImportSpec | FileDefaultImportSpec`
-  - `ImportPath ::= ('::')? Identifier ('::' PackageSegment)*`
+  - `ImportPath ::= ('::')? NameToken ('::' NameToken)*`
   - `ImportFrom ::= StringLiteral | PackagePath`
   - `FileImportSpec ::= '{' ImportBindingListOpt '}' 'from' ImportFrom`
-  - `FileDefaultImportSpec ::= Identifier 'from' ImportFrom`
+  - `FileDefaultImportSpec ::= NameToken 'from' ImportFrom`
   - `ImportBindingListOpt ::= ImportBindingList | ε`
   - `ImportBindingList ::= ImportBinding (',' ImportBinding)* ','?`
-  - `ImportBinding ::= Identifier ('as' Identifier)?`
+  - `ImportBinding ::= NameToken ('as' NameToken)?`
 
   - `ReExportDecl ::= 'export' '{' ReExportBindingListOpt '}' ';'`
   - `ReExportBindingListOpt ::= ReExportBindingList | ε`
   - `ReExportBindingList ::= ReExportBinding (',' ReExportBinding)* ','?`
-  - `ReExportBinding ::= Identifier ('as' Identifier)?`
+  - `ReExportBinding ::= NameToken ('as' NameToken)?`
 
-  - `DefaultExportDecl ::= 'export' 'default' Identifier ';'`
+  - `DefaultExportDecl ::= 'export' 'default' NameToken ';'`
 
   - `UsingDecl ::= 'using' Identifier '=' QualifiedName ';' | 'using' QualifiedName UsingAsOpt ';'`
   - `UsingAsOpt ::= ('as' Identifier) | ε`
@@ -132,7 +137,7 @@ At a high level, the language can be structured as:
   - `FnModifierOpt ::= FnModifier*`
   - `FnModifier ::= 'const' | 'pure' | 'task' | 'async'`
   - `FnGenericParamListOpt ::= GenericParamList | ε`
-  - `FnNameOpt ::= Identifier | ε`
+  - `FnNameOpt ::= NameToken | ε`
   - `FnSpecs ::= (FnPrecondition | FnPostcondition | FnContractTheory)*`
   - `FnPrecondition ::= '#require' Expr ';'`
   - `FnPostcondition ::= '#assure' Expr ';'`
@@ -234,15 +239,14 @@ At a high level, the language can be structured as:
 
   FFI declarations are also part of the language grammar:
 
-  - `ExtDecl ::= ExportModifier 'ext' Identifier ExtExternNameOpt '=' Type ';'`
+  - `ExtDecl ::= ExportModifier 'ext' NameToken ExtExternNameOpt '=' Type ';'`
   - `ExtExternNameOpt ::= StringLiteral | ε`
 
   When `ExtExternNameOpt` is present, it sets the linked external symbol name.
   This allows Silk code to bind a local name that differs from the C/FFI symbol
   name (for example to avoid name collisions in wrapper modules).
 
-  The current compiler implementation supports external declarations (`ext` in
-  the legacy Silk spelling, `ext` in Silk) whose type
+  The current compiler implementation supports external declarations (`ext`) whose type
   is either:
 
   - a `FunctionType` (external functions, callable from Silk), or
@@ -289,7 +293,7 @@ At a high level, the language can be structured as:
 
   - `InterfaceDecl ::= ExportModifier 'interface' Identifier GenericParamListOpt InterfaceExtendsOpt '{' InterfaceItem* '}'`
   - `InterfaceExtendsOpt ::= ('extends' QualifiedName) | ε`
-  - `InterfaceMethodDecl ::= 'fn' Identifier FnSignature ';'`
+  - `InterfaceMethodDecl ::= 'fn' NameToken FnSignature ';'`
   - `InterfaceItem ::= InterfaceMethodDecl | UsingDecl`
 
   - `ImplDecl ::= 'impl' QualifiedName GenericParamListOpt ImplAsOpt '{' ImplMemberDecl* '}'`
@@ -346,7 +350,17 @@ At a high level, the language can be structured as:
 
   - `Stmt ::= LetStmt | SpecConstStmt | SpecAssertStmt | SpecTheoryDeclStmt | SpecTheoryStmt | AsyncBlockStmt | TaskBlockStmt | ExprStmt | IfStmt | LoopStmt | WhileStmt | ForStmt | MatchStmt | ReturnStmt | PanicStmt | AssertStmt | BreakStmt | ContinueStmt`
 
-  - `LetStmt ::= ('const' | 'let' MutOpt | 'var') Identifier TypeAnnotationOpt InitializerOpt ';'`
+  - `LetStmt ::= ('const' | 'let' MutOpt | 'var') LetBinder TypeAnnotationOpt InitializerOpt ';'`
+  - `LetBinder ::= Identifier | '_' | LetTupleBinder | LetStructBinder | LetArrayBinder`
+  - `LetTupleBinder ::= '(' LetTupleBinderItemsOpt ')'`
+  - `LetTupleBinderItemsOpt ::= LetTupleBinderItem (',' LetTupleBinderItem)* ','? | ε`
+  - `LetTupleBinderItem ::= Identifier | '_'`
+  - `LetStructBinder ::= '{' LetStructBinderItemsOpt '}'`
+  - `LetStructBinderItemsOpt ::= LetStructBinderItem (',' LetStructBinderItem)* ','? | ε`
+  - `LetStructBinderItem ::= Identifier ('as' (Identifier | '_'))?`
+  - `LetArrayBinder ::= '[' LetArrayBinderItemsOpt ']'`
+  - `LetArrayBinderItemsOpt ::= LetArrayBinderItem (',' LetArrayBinderItem)* ','? | ε`
+  - `LetArrayBinderItem ::= Identifier | '_'`
   - `SpecConstStmt ::= '#const' Identifier '=' Expr ';'`
   - `SpecAssertStmt ::= '#assert' Expr ';'`
   - `SpecTheoryDeclStmt ::= '#theory' Identifier '(' TheoryParamsOpt ')' '{' TheoryBodyItem* '}'`
@@ -359,9 +373,10 @@ At a high level, the language can be structured as:
   - `LoopStmt ::= LoopPrefixOpt 'loop' Block`
   - `LoopPrefixOpt ::= 'async' | 'task' | ε`
   - `WhileStmt ::= WhileSpecs 'while' Expr Block`
-  - `WhileSpecs ::= (LoopInvariant | LoopVariant)*`
+  - `WhileSpecs ::= (LoopInvariant | LoopVariant | LoopMonovariant)*`
   - `LoopInvariant ::= '#invariant' Expr ';'`
   - `LoopVariant ::= '#variant' Expr ';'`
+  - `LoopMonovariant ::= '#monovariant' Expr ';'`
   - `ForStmt ::= ForInStmt | ForCStmt`
   - `ForInStmt ::= 'for' ForBinder 'in' Expr (RangeOp Expr)? Block`
   - `ForCStmt ::= 'for' '(' ForInit ';' Expr ';' Expr ')' Block`
@@ -420,7 +435,8 @@ At a high level, the language can be structured as:
   - `BitOr ::= BitXor ('|' BitXor)*`
   - `BitXor ::= BitAnd ('^' BitAnd)*`
   - `BitAnd ::= Equality ('&' Equality)*`
-  - `Equality ::= Relational (('==' | '!=') Relational)*`
+  - `Equality ::= TypeTest (('==' | '!=') TypeTest)*`
+  - `TypeTest ::= Relational ('is' Type)?`
   - `Relational ::= Shift (('<' | '<=' | '>' | '>=') Shift)*`
   - `Shift ::= AddSub (('<<' | '>>') AddSub)*`
   - `AddSub ::= MulDiv (('+' | '-') MulDiv)*`
@@ -429,8 +445,8 @@ At a high level, the language can be structured as:
   - `Postfix ::= Primary PostfixSuffix*`
   - `PostfixSuffix ::= CallSuffix | FieldSuffix | OptionalFieldSuffix | StructLiteralSuffix | IndexSuffix | SliceSuffix | CastSuffix | TrySuffix | IncDecSuffix`
   - `CallSuffix ::= '(' CallArgsOpt ')'`
-  - `FieldSuffix ::= '.' Identifier`
-  - `OptionalFieldSuffix ::= '?.' Identifier`
+  - `FieldSuffix ::= '.' NameToken`
+  - `OptionalFieldSuffix ::= '?.' NameToken`
   - `StructLiteralSuffix ::= '{' StructInitListOpt '}'`
   - `IndexSuffix ::= '[' Expr ']'`
   - `SliceSuffix ::= '[' SliceBoundOpt '..' SliceBoundOpt ']'`
@@ -442,7 +458,7 @@ At a high level, the language can be structured as:
   - `IncDecSuffix ::= '++' | '--'`
   - `StructInitListOpt ::= StructInitList | ε`
   - `StructInitList ::= StructInit (',' StructInit)* ','?`
-  - `StructInit ::= Identifier (':' Expr)?`
+  - `StructInit ::= NameToken (':' Expr)?`
 
   - `CallArgsOpt ::= CallArgs | ε`
   - `CallArgs ::= GenericArgListOpt ';' ArgListOpt | ArgList`
@@ -509,7 +525,7 @@ At a high level, the language can be structured as:
   - `ExprListOpt ::= ExprList | ε`
   - `ExprList ::= Expr (',' Expr)* ','?`
 
-  - `QualifiedName ::= GlobalPrefixOpt Identifier ('::' Identifier)*`
+  - `QualifiedName ::= GlobalPrefixOpt NameToken ('::' NameToken)*`
   - `GlobalPrefixOpt ::= '::' | ε`
 
   - `InferredStructLiteral ::= '{' StructInitListOpt '}'`
@@ -594,7 +610,7 @@ This document serves as the reference for:
 As the parser and lexer are implemented, this file must be updated with:
 
 - the exact grammar that the compiler accepts (including any temporary limitations),
-- any clarifications or corrections relative to the upstream spec,
+- clarifications or corrections discovered during implementation (recorded here so this file remains canonical),
 - notes about desugaring and how surface constructs map into the internal AST,
 - clear indication of which productions are implemented today vs. planned
   future work, so that downstream users can see both the full language

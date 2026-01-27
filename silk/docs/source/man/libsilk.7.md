@@ -36,8 +36,16 @@ bool silk_compiler_set_std_root(SilkCompiler *compiler,
                                 SilkString    std_root);
 bool silk_compiler_set_nostd(SilkCompiler *compiler,
                              bool          nostd);
+bool silk_compiler_set_debug(SilkCompiler *compiler,
+                             bool          debug);
+bool silk_compiler_set_noheap(SilkCompiler *compiler,
+                              bool          noheap);
 bool silk_compiler_set_target(SilkCompiler *compiler,
                               SilkString    target_triple);
+bool silk_compiler_set_z3_lib(SilkCompiler *compiler,
+                              SilkString    path);
+bool silk_compiler_set_std_archive(SilkCompiler *compiler,
+                                   SilkString    path);
 bool silk_compiler_add_needed_library(SilkCompiler *compiler,
                                       SilkString    soname);
 bool silk_compiler_add_runpath(SilkCompiler *compiler,
@@ -46,6 +54,8 @@ bool silk_compiler_set_soname(SilkCompiler *compiler,
                               SilkString    soname);
 bool silk_compiler_set_optimization_level(SilkCompiler *compiler,
                                           int           level);
+bool silk_compiler_set_c_header(SilkCompiler *compiler,
+                                SilkString    path);
 
 /* Sources */
 SilkModule *silk_compiler_add_source_buffer(SilkCompiler *compiler,
@@ -159,7 +169,7 @@ The header defines:
 
 ```c
 #define SILK_ABI_VERSION_MAJOR 0
-#define SILK_ABI_VERSION_MINOR 1
+#define SILK_ABI_VERSION_MINOR 2
 #define SILK_ABI_VERSION_PATCH 0
 ```
 
@@ -241,6 +251,32 @@ bool silk_compiler_set_nostd(SilkCompiler *compiler,
   the corresponding sources as modules (for example via
   `silk_compiler_add_source_buffer`).
 
+### Debug build mode (`debug`)
+
+```c
+bool silk_compiler_set_debug(SilkCompiler *compiler,
+                             bool          debug);
+```
+
+- Enables the same debug build mode as the CLI (`silk --debug` / `-g`) for the
+  supported subset:
+  - debug-mode lowering for supported native outputs (e.g. stack traces on
+    failed `assert` for `linux/x86_64`),
+  - additional Z3 debug output and `.smt2` dump emission on failing Formal Silk
+    verification (see `docs/language/formal-verification.md`).
+- `--debug` is currently incompatible with `--noheap`.
+
+### No-heap build mode (`noheap`)
+
+```c
+bool silk_compiler_set_noheap(SilkCompiler *compiler,
+                              bool          noheap);
+```
+
+- Enables the same no-heap build mode as the CLI (`silk --noheap`), disabling
+  heap-backed allocation for the supported subset.
+- `--noheap` is currently incompatible with `--debug`.
+
 ### Target triple
 
 ```c
@@ -255,6 +291,30 @@ bool silk_compiler_set_target(SilkCompiler *compiler,
 - `wasm32-unknown-unknown` (IR-backed wasm32 mode; emits a final `.wasm` module exporting `memory` and exported functions, including `main` when present; `ext` declarations become imports under `env.<name>`; also supports export-only modules with no `main` for JS/Node-style embedding),
   - `wasm32-wasi` (IR-backed wasm32 WASI mode; emits `memory` and `_start () -> void`, imports `wasi_snapshot_preview1.proc_exit`, and calls Silk `fn main () -> int`; also supports export-only modules for embedding, which do not include `_start`).
 - Note: for `wasm32` targets, only `SILK_OUTPUT_EXECUTABLE` is supported. `wasm32-wasi` currently supports only `fn main () -> int` (no argv).
+
+### Z3 dynamic library override (`z3_lib`)
+
+```c
+bool silk_compiler_set_z3_lib(SilkCompiler *compiler,
+                              SilkString    path);
+```
+
+- Configures a Z3 dynamic library override for Formal Silk verification
+  (equivalent to `silk --z3-lib <path>`).
+- Passing an empty string clears the override and returns to normal Z3
+  resolution (including honoring `SILK_Z3_LIB`).
+
+### Stdlib archive override (`std_archive`)
+
+```c
+bool silk_compiler_set_std_archive(SilkCompiler *compiler,
+                                   SilkString    path);
+```
+
+- Configures a stdlib archive override for native builds (equivalent to
+  `silk --std-lib <path>`).
+- Passing an empty string clears the override and returns to normal stdlib
+  archive resolution (including honoring `SILK_STD_LIB`).
 
 ### Dynamic linker metadata
 
@@ -280,6 +340,9 @@ bool silk_compiler_add_needed_library(SilkCompiler *compiler,
   modules like `std::io` and `std::fs` do not require manually adding libc).
   Additional non-libc dependencies still require explicit `DT_NEEDED` entries
   via this API.
+- `DT_NEEDED` entries starting with `libsilk_rt` are rejected: bundled runtime
+  helpers are linked statically from `libsilk_rt.a` / `libsilk_rt_noheap.a` and
+  must not become runtime loader dependencies.
 
 #### `silk_compiler_add_runpath`
 
@@ -322,6 +385,22 @@ bool silk_compiler_set_optimization_level(SilkCompiler *compiler,
 - Returns:
   - `true` on success,
   - `false` and records an error (e.g. `"invalid optimization level (expected 0-3)"`) when the value is invalid.
+
+### C header generation (`c_header`)
+
+```c
+bool silk_compiler_set_c_header(SilkCompiler *compiler,
+                                SilkString    path);
+```
+
+- Configures C header generation for non-executable outputs (equivalent to the
+  CLI `--c-header <path>`).
+- Passing an empty string clears the configured header output path.
+- The header is written when `silk_compiler_build` succeeds for:
+  - `SILK_OUTPUT_OBJECT`,
+  - `SILK_OUTPUT_STATIC_LIBRARY`,
+  - `SILK_OUTPUT_SHARED_LIBRARY`.
+- C header generation is not supported for `silk_compiler_build_to_bytes`.
 
 ## Source buffers
 
@@ -407,9 +486,9 @@ Return value:
             backend, and
           - for `while true { ... }`, a body consisting of zero or more
             constant `let` statements followed by a `break;`, with no other
-            control flow; loop invariants (`#invariant`) and variants
-            (`#variant`) may be present but are treated as metadata and do not
-            affect constant evaluation,
+            control flow; loop invariants (`#invariant`), variants (`#variant`),
+            and monovariants (`#monovariant`) may be present but are treated as
+            metadata and do not affect constant evaluation,
       - then `silk_compiler_build`:
         - evaluates the constant integer expression determined by `main`,
         - emits a tiny native executable image *directly* using an Silk‑owned
@@ -585,7 +664,7 @@ compiler:
   back‑end is extended.
 
 When Formal Silk verification syntax is present (for example `#require`,
-`#assure`, `#assert`, `#invariant`, `#variant`, `#const`), `libsilk` runs the Z3-backed
+`#assure`, `#assert`, `#invariant`, `#variant`, `#monovariant`, `#const`), `libsilk` runs the Z3-backed
 Formal Silk verifier and fails the build if verification conditions cannot be
 proven. The verifier is currently skipped for `std::...` modules until it
 covers the full std surface.

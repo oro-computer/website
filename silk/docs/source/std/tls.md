@@ -115,5 +115,5 @@ These pointers can be passed to `Session.set_bio_mempipe(...)`.
   POSIX file descriptors (`set_bio_fd`). General user-provided transport
   callbacks are planned but require additional FFI expressiveness beyond the
   current compiler subset.
-- The test suite uses `MemPipe` instead of real sockets so it can run in
-  environments where `socket(2)` is restricted.
+- The initial tests use `MemPipe` instead of real sockets so `make test` can run
+  in environments where `socket(2)` is restricted.

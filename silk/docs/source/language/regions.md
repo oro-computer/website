@@ -6,9 +6,6 @@ be used as an allocation context for `new`.
 Regions are represented at runtime as a first-class `Region` handle value. A
 `Region` value may be passed to functions, stored in structs, and exported.
 
-This is a replacement for the older “arenas” concept; see `arenas.md` for the
-rename note.
-
 ## Implementation Status (Current Compiler)
 
 Status: **in progress**.

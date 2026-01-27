@@ -1,8 +1,8 @@
-# Documentation Comments (JSdoc-style)
+# Silkdoc (Documentation Comments)
 
-This document specifies Silk’s documentation-comment format. Documentation
-comments are intended for tools (documentation generators, editors, and the
-language server). They **do not** affect program semantics.
+This document specifies **Silkdoc**, Silk’s documentation-comment format.
+Silkdoc comments are intended for tools (documentation generators, editors,
+and the language server). They **do not** affect program semantics.
 
 The goal is a familiar JSdoc feel with Silk/TypeScript-style type annotations.
 
@@ -19,7 +19,7 @@ immediately before it with only whitespace/comments between them.
 Initial implementation scope:
 
 - Doc comments attach to **top-level declarations** (`package`, `module`,
-  `import`, `fn`, `let`, `struct`, `ext`, `interface`, `impl`).
+  `import`, `fn`, `theory`, `let`, `struct`, `ext`, `interface`, `impl`).
 - Doc comments also attach to:
   - methods inside `impl Type { ... }` blocks, and
   - method signatures inside `interface Name { ... }` blocks.
@@ -111,6 +111,19 @@ Note: the language does not yet have a stable error type; `@throws` is
 documentation-only until `Result(T, E)` and error conventions are fully
 implemented.
 
+### `@external`
+
+Indicate that a declaration is an **external FFI binding** (its implementation
+is provided outside Silk).
+
+This tag is typically used to document `ext` function declarations.
+
+Syntax:
+
+```text
+@external
+```
+
 ### `@example`
 
 Provide an example snippet. The tag may optionally declare a language for
@@ -139,6 +152,63 @@ The initial toolchain may also recognize:
 - `@see <text...>` (repeatable)
 
 Additional tags must be documented here before they are relied on by tooling.
+
+### Formal Silkdoc tags
+
+Silkdoc can document Formal Silk constructs without affecting verification.
+These tags are documentation-only (they do not prove anything and do not
+introduce Formal Silk obligations).
+
+#### `@requires`
+
+Document one precondition for a declaration (typically mirroring `#require` on a
+function or a theory).
+
+Syntax:
+
+```text
+@requires <Expr...>
+```
+
+This tag is repeatable.
+
+#### `@assures`
+
+Document one postcondition for a declaration (typically mirroring `#assure` on
+a function or a theory).
+
+Syntax:
+
+```text
+@assures <Expr...>
+```
+
+This tag is repeatable.
+
+#### `@asserts`
+
+Document one internal proof obligation (typically mirroring a `#assert` inside a
+function or theory body).
+
+Syntax:
+
+```text
+@asserts <Expr...>
+```
+
+This tag is repeatable.
+
+#### `@theory`
+
+Document one theory attachment or use (typically mirroring `#theory Name(args...);`).
+
+Syntax:
+
+```text
+@theory <Name(args...)...>
+```
+
+This tag is repeatable.
 
 ### Manpage-oriented tags
 
@@ -232,6 +302,8 @@ The documentation generator renders doc comments to Markdown using:
 - `@param` entries as a “Parameters” list,
 - `@returns` as a “Returns” section,
 - `@throws` as a “Throws” section,
+- `@requires`, `@assures`, `@asserts`, and `@theory` as dedicated sections (one
+  bullet per tag instance),
 - `@example` blocks as fenced code blocks.
 
 The generator must keep formatting stable (deterministic output) so that

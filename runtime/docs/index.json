@@ -1,0 +1,212 @@
+{
+  "generatedAt": "2026-01-27T13:07:52+00:00",
+  "kind": "docs",
+  "count": 29,
+  "sections": [
+    {
+      "name": "overview",
+      "items": [
+        {
+          "id": "start",
+          "title": "Oro Runtime Documentation",
+          "file": "start.md"
+        }
+      ]
+    },
+    {
+      "name": "architecture",
+      "items": [
+        {
+          "id": "RUNTIME_ARCHITECTURE",
+          "title": "Oro Runtime Architecture",
+          "file": "RUNTIME_ARCHITECTURE.md"
+        },
+        {
+          "id": "NAVIGATOR_MOUNTS",
+          "title": "Navigator Mounts",
+          "file": "NAVIGATOR_MOUNTS.md"
+        },
+        {
+          "id": "CONDUIT",
+          "title": "Conduit Transport",
+          "file": "CONDUIT.md"
+        }
+      ]
+    },
+    {
+      "name": "apis",
+      "items": [
+        {
+          "id": "TAR_API",
+          "title": "Tar Archive API (`oro:tar`)",
+          "file": "TAR_API.md"
+        }
+      ]
+    },
+    {
+      "name": "platform",
+      "items": [
+        {
+          "id": "WINDOW_MANAGEMENT",
+          "title": "Window Management",
+          "file": "WINDOW_MANAGEMENT.md"
+        },
+        {
+          "id": "ANDROID_STORAGE",
+          "title": "Android Storage Defaults",
+          "file": "ANDROID_STORAGE.md"
+        },
+        {
+          "id": "background-services",
+          "title": "Background Services Architecture",
+          "file": "background-services.md"
+        }
+      ]
+    },
+    {
+      "name": "security",
+      "items": [
+        {
+          "id": "SECURE_STORAGE",
+          "title": "Secure Storage",
+          "file": "SECURE_STORAGE.md"
+        },
+        {
+          "id": "SANDBOX_HELPER",
+          "title": "Sandbox Helper Implementation Plan",
+          "file": "SANDBOX_HELPER.md"
+        }
+      ]
+    },
+    {
+      "name": "networking",
+      "items": [
+        {
+          "id": "TLS_QUICKSTART",
+          "title": "TLS Quickstart (Experimental)",
+          "file": "TLS_QUICKSTART.md"
+        },
+        {
+          "id": "TLS_TESTING",
+          "title": "TLS Testing Guide",
+          "file": "TLS_TESTING.md"
+        },
+        {
+          "id": "WEBVIEW_TLS_PINS",
+          "title": "WebView TLS Pins",
+          "file": "WEBVIEW_TLS_PINS.md"
+        }
+      ]
+    },
+    {
+      "name": "web-platform",
+      "items": [
+        {
+          "id": "WEB_BLUETOOTH_STATUS",
+          "title": "Web Bluetooth Runtime Status",
+          "file": "WEB_BLUETOOTH_STATUS.md"
+        },
+        {
+          "id": "WEB_OTP",
+          "title": "Web OTP Support",
+          "file": "WEB_OTP.md"
+        },
+        {
+          "id": "WEB_HID_STATUS",
+          "title": "WebHID Runtime Status",
+          "file": "WEB_HID_STATUS.md"
+        },
+        {
+          "id": "webusb",
+          "title": "WebUSB in Oro Runtime",
+          "file": "webusb.md"
+        }
+      ]
+    },
+    {
+      "name": "mcp",
+      "items": [
+        {
+          "id": "MCP",
+          "title": "MCP Server Configuration",
+          "file": "MCP.md"
+        },
+        {
+          "id": "mcp/2025-06-18/INDEX",
+          "title": "MCP Specification (2025-06-18)",
+          "file": "mcp/2025-06-18/INDEX.md"
+        }
+      ]
+    },
+    {
+      "name": "ai",
+      "items": [
+        {
+          "id": "AI_SERVER",
+          "title": "Embedded LLaMA Server (AI, OpenAI-compatible)",
+          "file": "AI_SERVER.md"
+        },
+        {
+          "id": "AI_TOOL_CALLING",
+          "title": "Tool-Calling (Stub) Behavior",
+          "file": "AI_TOOL_CALLING.md"
+        },
+        {
+          "id": "AI_WHISPER",
+          "title": "Whisper Speech Integration",
+          "file": "AI_WHISPER.md"
+        }
+      ]
+    },
+    {
+      "name": "release",
+      "items": [
+        {
+          "id": "APPLICATION_UPDATE_PROTOCOL",
+          "title": "Oro Application Update Protocol (OUP)",
+          "file": "APPLICATION_UPDATE_PROTOCOL.md"
+        },
+        {
+          "id": "release/ORO_RELEASE_AUTOMATION",
+          "title": "Oro Runtime Release Automation (npm packages)",
+          "file": "release/ORO_RELEASE_AUTOMATION.md"
+        },
+        {
+          "id": "CI_MATRIX",
+          "title": "Oro Runtime CI/CD Matrix",
+          "file": "CI_MATRIX.md"
+        },
+        {
+          "id": "ORO_ARTIFACT_NAMING",
+          "title": "Oro Runtime Artifact Naming",
+          "file": "ORO_ARTIFACT_NAMING.md"
+        }
+      ]
+    },
+    {
+      "name": "governance",
+      "items": [
+        {
+          "id": "GOVERNANCE",
+          "title": "Oro Runtime Governance Overview",
+          "file": "GOVERNANCE.md"
+        },
+        {
+          "id": "ENGINEERING_SCOPING",
+          "title": "Engineering Note: Scoped State, Metrics, and Limits",
+          "file": "ENGINEERING_SCOPING.md"
+        }
+      ]
+    },
+    {
+      "name": "debugging",
+      "items": [
+        {
+          "id": "CDP",
+          "title": "CDP (Chrome DevTools Protocol)",
+          "file": "CDP.md"
+        }
+      ]
+    }
+  ]
+}

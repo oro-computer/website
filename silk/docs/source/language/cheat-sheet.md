@@ -21,6 +21,11 @@ refinement/dependent types are **not** implemented end-to-end yet.
 In the current compiler subset:
 
 - Runtime `let`/`var` bindings and compile-time `const` bindings must have an initializer (`docs/compiler/diagnostics.md`, `E2015`).
+- Destructuring `let` bindings from structs are supported:
+  - positional: `let (id, name) = User{ ... };`
+  - named + aliasing: `let { data as d, id as i } = Record{ ... };`
+- Array destructuring is supported:
+  - arrays/slices: `let [a, b] = xs;`
 - `const` initializers must be compile-time evaluable (`docs/compiler/diagnostics.md`, `E2041`); in the current subset this is restricted to scalar expressions and calls to `const fn` functions (still no `/` or `%`), plus string literals / `const` string aliases.
 - Monomorphized generics are supported for `struct`/`interface`/`impl` and applied types (`Name(args...)`):
   - const parameters/arguments and generic functions are still rejected (`E2016`),
@@ -140,18 +145,16 @@ Mutability:
 - Interfaces:
 
   ```silk
-  interface Logger {
-    fn log(msg: string) -> void;
+  interface Element {
+    fn onclick(event: &Event) -> void;
   }
 
-  struct StdoutLogger {}
-
-  impl StdoutLogger as Logger {
-    fn log(self: &StdoutLogger, msg: string) -> void { ... }
+  impl Button as Element {
+    fn onclick(self: &Button, event: &Event) -> void { ... }
   }
   ```
 
-See “Struct layout” and “Interfaces” in the reference for details.
+See `structs-impls-layout.md` and `interfaces.md` for details.
 
 ## Regions & Buffers
 
@@ -216,9 +219,10 @@ See `concurrency.md` for deeper semantics.
 - `#assert` — block-local proof obligations.
 - `#invariant` — invariants.
 - `#variant` — termination measures.
+- `#monovariant` — monotonic measures.
 - `theory` / `#theory` — reusable proof obligations.
 
-`#require` / `#assure` appear before functions; `#invariant` / `#variant` appear before loops; `#const` and `#assert` appear inside blocks. See `formal-verification.md`.
+`#require` / `#assure` appear before functions; `#invariant` / `#variant` / `#monovariant` appear before loops; `#const` and `#assert` appear inside blocks. See `formal-verification.md`.
 
 ## External Declarations & ABI (Quick View)
 

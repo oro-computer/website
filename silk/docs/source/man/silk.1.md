@@ -55,7 +55,7 @@ For the initial implementation, the supported options are:
     - `--std-root <path>` (or `--std <path>` / `-std <path>` when `<path>` does **not** end in `.a`) — override the stdlib root directory used to resolve `import std::...;` and std-root file imports (`from "std/<path>"` / `from "std/<path>.slk"`).
     - `--std-lib <path>` (or `--std <path>.a` / `-std <path>.a`) — select a stdlib archive path for linking auto-loaded `std::...` modules during builds (ignored by `check`).
     - `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`).
-    - `--debug`, `-g` — when Formal Silk verification fails, emit Z3 debugging output and write an SMT-LIB2 reproduction script under `tmp/`.
+    - `--debug`, `-g` — when Formal Silk verification fails, emit Z3 debugging output and write an SMT-LIB2 reproduction script under `.silk/z3/` (or `$SILK_WORK_DIR/z3`).
     - `--package <dir|manifest>` (or `--pkg`) — load the module set from a package manifest (`silk.toml`) instead of explicit input files. When `--package` is provided, `<file> ...` inputs must be omitted.
     - `--` — end of options; treat remaining args as file paths (even if they begin with `-`).
 
@@ -88,7 +88,7 @@ For the initial implementation, the supported options are:
     - `--debug`, `-g` — enable debug build mode (supported subset, `linux/x86_64`):
       - failed `assert` prints a panic header + optional message + stack trace to stderr (via glibc `backtrace_symbols_fd`) before aborting, and
       - dynamically-linked executables preserve internal function symbols in `.dynsym` (similar to `-rdynamic`) for stack trace symbolization.
-      - when Formal Silk verification fails, `--debug` also emits Z3 debugging output and writes an SMT-LIB2 reproduction script under `tmp/`.
+      - when Formal Silk verification fails, `--debug` also emits Z3 debugging output and writes an SMT-LIB2 reproduction script under `.silk/z3/` (or `$SILK_WORK_DIR/z3`).
       - compiled code can query this mode at runtime via `std::runtime::build::is_debug()`.
     - `--noheap` — disable heap allocation for the current subset:
       - heap-backed `new` (outside a `with` region) is rejected with `E2027`,
@@ -147,7 +147,14 @@ For the initial implementation, the supported options are:
           - `--kind shared` (dynamic imports emitted and loads go through the shared object’s GOT; symbols must be available at runtime),
           - `--kind executable` (a dynamically-linked ELF64 executable is emitted and loads go through the executable’s GOT; symbols must be available at runtime),
         - writing to `ext` variables is not supported,
-        - for executables and shared libraries, dynamic dependencies can be declared via `--needed <soname>` (emitted as `DT_NEEDED`) and runtime search paths can be declared via `--runpath <path>` (emitted as `DT_RUNPATH`); for shared outputs, the library soname can be set via `--soname <soname>` (emitted as `DT_SONAME`); on `linux/x86_64` with the glibc dynamic loader (`ld-linux`), `silk` automatically adds `libc.so.6` as a `DT_NEEDED` dependency when external symbols are present, adds `libpthread.so.0` when `pthread_*` symbols are imported, and adds `libsodium.so.23` when libsodium-backed symbols are imported (for example via `import std::crypto;`); additional dependencies must be declared via `--needed` (or be available in the process global scope at load time, for example via `LD_PRELOAD`),
+        - for executables and shared libraries, dynamic dependencies can be declared via `--needed <soname>` (emitted as `DT_NEEDED`) and runtime search paths can be declared via `--runpath <path>` (emitted as `DT_RUNPATH`); for shared outputs, the library soname can be set via `--soname <soname>` (emitted as `DT_SONAME`).
+          - on `linux/x86_64` with the glibc dynamic loader (`ld-linux`), `silk` automatically adds:
+            - `libc.so.6` when external symbols are present,
+            - `libpthread.so.0` when `pthread_*` symbols are imported,
+            - `libsodium.so.23` when libsodium-backed symbols are imported (for example via `import std::crypto;`),
+          - when bundled runtime helpers are imported (for example via `import std::{regex,unicode,number};`), `silk` statically links the bundled runtime archive (`libsilk_rt.a`, or `libsilk_rt_noheap.a` when `--noheap`) into the output, and does not emit a runtime `DT_NEEDED` dependency on `libsilk_rt*`,
+          - `--needed` entries starting with `libsilk_rt` are rejected; the bundled runtime support layer is always linked from the static archives,
+          - additional dependencies must be declared via `--needed` (or be available in the process global scope at load time, for example via `LD_PRELOAD`),
       - multi-file builds are supported for `--kind executable` and for `--kind object`, `--kind static`, and `--kind shared`:
         - when multiple packages are present in a module set for a non-executable output, only exports from the *root package* (the package of the first input module) are emitted as globally-visible symbols; other packages are compiled as dependencies and their `export` declarations are treated as internal for that output,
       - attempts to emit a native executable using:
@@ -219,7 +226,7 @@ For the initial implementation, the supported options are:
 
 - **Doc command:**
   - Markdown mode: `silk doc [--all] <file> [<file> ...] [-o <path>]`:
-    - Generates Markdown documentation from JSdoc-style doc comments (`/** ... */` and `/// ...`) attached to declarations.
+    - Generates Markdown documentation from Silkdoc comments (`/** ... */` and `/// ...`) attached to declarations.
     - By default, includes exported `fn`/`let`/`ext` declarations and exported `impl` methods, plus all `struct` and `interface` declarations in the input modules.
     - `--help`, `-h` — show `doc` usage and exit.
     - `--all` includes non-exported functions, bindings, and methods.
@@ -247,6 +254,8 @@ As the CLI is extended (additional flags, subcommands, and fully-featured backen
   is set (and `--nostd` is not set), `silk` searches for:
   - a `std/` directory in the current working directory (development default), otherwise
   - `../share/silk/std` relative to the `silk` executable (installed default).
+- `SILK_WORK_DIR` — base directory for compiler-generated scratch/debug artifacts (defaults to `.silk`).
+  - For example, Formal Silk Z3 dumps are written under `$SILK_WORK_DIR/z3` and `silk man` may write temporary roff output under `$SILK_WORK_DIR/man`.
 - `SILK_STD_LIB` — path to a target-specific stdlib static archive (`libsilk_std.a`).
   When present, supported executable builds treat auto-loaded `std::...` modules as
   external and resolve their exported functions from this archive.

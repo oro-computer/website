@@ -27,7 +27,6 @@ See also:
 - `docs/std/package-structure.md` (namespace + linkage + swappability)
 - `docs/std/conventions.md` (API conventions: errors, allocation, ownership)
 - `docs/std/result.md` (the standard `Result(T, E)` error return type)
-- MDN-style stdlib wiki: `docs/wiki/std/README.md`
 
 ## Core Areas (Initial)
 
@@ -40,6 +39,7 @@ distribution:
 - `std::regex` — regular expression literals and helpers (see `docs/std/regex.md`).
 - `std::unicode` — Unicode scalar classification helpers (see `docs/std/unicode.md`).
 - `std::number` — number parsing/formatting helpers (see `docs/std/number.md`).
+- `std::limits` — numeric min/max limits for primitive types (see `docs/std/limits.md`).
 - `std::crypto` — cryptography primitives (hosted baseline via libsodium; see
   `docs/std/crypto.md`).
 - `std::uuid` — UUID primitives (v1/v3/v4/v5/v6/v7/v8) with parsing/formatting

@@ -11,7 +11,7 @@ This wiki page is a learning-oriented companion to the canonical reference:
 - Full operator set + precedence: `docs/language/operators.md`
 - Implemented-subset notes: `STATUS.md`
 
-## Syntax
+## Syntax (Selected)
 
 ```silk
 let a: int = 10;

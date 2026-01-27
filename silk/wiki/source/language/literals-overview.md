@@ -12,7 +12,7 @@ This wiki page is a learning-oriented companion to the canonical spec:
 - Detailed rules and edge cases: `docs/language/literals-*.md`
 - Implemented-subset notes: `STATUS.md`
 
-## Syntax
+## Syntax (Selected)
 
 ```silk
 let n: int = 42;

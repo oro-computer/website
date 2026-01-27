@@ -106,11 +106,16 @@ The initial C header provided in this repository defines:
   bool silk_compiler_set_stdlib(SilkCompiler *compiler, SilkString stdlib_name);
   bool silk_compiler_set_std_root(SilkCompiler *compiler, SilkString std_root);
   bool silk_compiler_set_nostd(SilkCompiler *compiler, bool nostd);
+  bool silk_compiler_set_debug(SilkCompiler *compiler, bool debug);
+  bool silk_compiler_set_noheap(SilkCompiler *compiler, bool noheap);
   bool silk_compiler_set_target(SilkCompiler *compiler, SilkString target_triple);
+  bool silk_compiler_set_z3_lib(SilkCompiler *compiler, SilkString path);
+  bool silk_compiler_set_std_archive(SilkCompiler *compiler, SilkString path);
   bool silk_compiler_add_needed_library(SilkCompiler *compiler, SilkString soname);
   bool silk_compiler_add_runpath(SilkCompiler *compiler, SilkString path);
   bool silk_compiler_set_soname(SilkCompiler *compiler, SilkString soname);
   bool silk_compiler_set_optimization_level(SilkCompiler *compiler, int level);
+  bool silk_compiler_set_c_header(SilkCompiler *compiler, SilkString path);
   ```
 
   `silk_compiler_set_std_root` configures the filesystem stdlib root directory used
@@ -123,6 +128,16 @@ The initial C header provided in this repository defines:
   satisfied by explicitly adding the corresponding std sources as modules (for
   example via `silk_compiler_add_source_buffer`); the compiler will not consult
   `SILK_STD_ROOT` or the filesystem std root search paths.
+
+  `silk_compiler_set_debug` enables the same debug build mode as the CLI
+  (`silk --debug`): debug-mode lowering for supported native outputs, and
+  additional Z3 debug output plus `.smt2` reproduction scripts on failing Formal
+  Silk obligations (written under `.silk/z3/` or `$SILK_WORK_DIR/z3`).
+
+  `silk_compiler_set_noheap` enables the same no-heap mode as the CLI
+  (`silk --noheap`): heap-backed allocation is disabled for the supported
+  subset. `--noheap` is currently incompatible with `--debug`; the ABI rejects
+  configurations that enable both.
 
   `silk_compiler_set_target` selects the code generation target. The
   `target_triple` string is copied. The initial implementation recognizes:
@@ -164,6 +179,9 @@ The initial C header provided in this repository defines:
   executable and shared library outputs (emitted as `DT_NEEDED`). The `soname`
   string is copied; the function may be called multiple times (duplicates are
   ignored). For static library and object outputs, the value is ignored.
+  `DT_NEEDED` entries starting with `libsilk_rt` are rejected: bundled runtime
+  helpers are linked statically from `libsilk_rt.a` / `libsilk_rt_noheap.a` and
+  must not become runtime loader dependencies.
   On `linux/x86_64` with the glibc dynamic loader (`ld-linux`), when an
   executable or shared library imports any external symbols, the compiler
   automatically adds `libc.so.6` as a `DT_NEEDED` dependency (so embedders do
@@ -181,6 +199,22 @@ The initial C header provided in this repository defines:
   `DT_SONAME` for shared library outputs. The `soname` string is copied; passing
   an empty string clears the configured soname (no `DT_SONAME` entry). For
   executable, static library, and object outputs, the value is ignored.
+
+  `silk_compiler_set_z3_lib` configures a Z3 dynamic library override for Formal
+  Silk verification (equivalent to the CLI `--z3-lib <path>`). Passing an empty
+  string clears the override and returns to the normal Z3 selection rules
+  (including honoring `SILK_Z3_LIB`).
+
+  `silk_compiler_set_std_archive` configures a stdlib archive override
+  (equivalent to the CLI `--std-lib <path>`). Passing an empty string clears
+  the override and returns to the normal stdlib archive selection rules
+  (including honoring `SILK_STD_LIB`).
+
+  `silk_compiler_set_c_header` configures C header generation for non-executable
+  outputs (equivalent to the CLI `--c-header <path>`). The header is written
+  when `silk_compiler_build` succeeds for `SILK_OUTPUT_OBJECT`,
+  `SILK_OUTPUT_STATIC_LIBRARY`, or `SILK_OUTPUT_SHARED_LIBRARY`. C header
+  generation is not supported for `silk_compiler_build_to_bytes`.
 
 - Source management:
 
@@ -235,13 +269,13 @@ The initial C header provided in this repository defines:
       package/import relationships and exported constants, according to the
       language grammar and semantics documented under `docs/language/`,
     - if Formal Silk syntax is present (for example `#require`, `#assure`,
-      `#assert`, `#invariant`, `#variant`, `#const`), it also runs the Z3-backed verifier
-      and fails the build if verification fails (`E3001`..`E3005`),
-      - the verifier is currently skipped for stdlib modules (`std::...`),
-      - on `linux/x86_64`, Z3 is linked from the vendored static archive
-        `vendor/lib/x64-linux/libz3.a`,
-      - the verifier honors `SILK_Z3_LIB` (environment variable) to override
-        the Z3 dynamic library at runtime,
+      `#assert`, `#invariant`, `#variant`, `#monovariant`, `#const`), it also runs the Z3-backed verifier
+      and fails the build if verification fails (`E3001`..`E3008`),
+    - the verifier is currently skipped for stdlib modules (`std::...`),
+    - on `linux/x86_64`, Z3 is linked from the vendored static archive
+      `vendor/lib/x64-linux/libz3.a`,
+    - the verifier honors `SILK_Z3_LIB` (environment variable) to override
+      the Z3 dynamic library at runtime,
     - it fails fast on the first front‑end error.
     - when packages/imports are present:
       - `import` declarations must refer to packages that exist in the current
@@ -267,18 +301,30 @@ The initial C header provided in this repository defines:
       - the stdlib root is selected via:
         - `silk_compiler_set_std_root` when set, otherwise
         - `SILK_STD_ROOT` (environment variable) when set, otherwise
-        - a toolchain default stdlib root.
+        - a `std/` directory in the current working directory (development default), otherwise
+        - `../share/silk/std` relative to the current executable (installed default).
       - package-to-path mapping is deterministic:
         - `std::foo::bar` resolves to the file `<std_root>/foo/bar.slk`,
       - if the embedder explicitly provides a `std::...` module via
         `silk_compiler_add_source_buffer`, that module is treated as authoritative
         for its package (auto-loading does not replace already-provided packages).
-    - stdlib archives (hosted targets):
-      - the toolchain may link `std::` from a target-specific stdlib archive
-        (`libsilk_std.a`) when available,
-      - embedders can select an explicit archive via `SILK_STD_LIB`,
-      - when no archive is selected or available, the toolchain may fall back
-        to compiling the needed std sources as part of the build.
+    - standard library archive linking (`linux/x86_64`, current archive layout):
+      - the toolchain can build a target-specific stdlib static archive
+        (`libsilk_std.a`) containing one ELF object per std module (for example
+        via `make stdlib`),
+      - for supported executable builds, the compiler treats *auto-loaded*
+        `std::...` modules as external during code generation and resolves their
+        exported functions from the archive when available (while still
+        type-checking the std sources as part of the module set),
+      - archive discovery (in order):
+        - `SILK_STD_LIB` when set, otherwise
+        - `zig-out/lib/libsilk_std.a` when using the in-repo `std/` root, otherwise
+        - `../lib/libsilk_std.a` relative to the current executable, otherwise
+        - common installed-layout heuristics derived from the selected stdlib root,
+        - walk up from the current working directory to find `libsilk_std.a` or `lib/libsilk_std.a`,
+      - when no suitable archive is found (or on unsupported targets), the
+        compiler falls back to compiling the reachable std sources into the
+        build as part of module-set code generation.
   - When a front‑end error occurs (e.g. parse error, type mismatch, invalid
     control‑flow such as `break`/`continue`/`return` in the wrong context, or
     other semantic violations), the call returns `false` and

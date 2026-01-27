@@ -59,7 +59,7 @@ From the overall language design:
   - either by returning a value that encodes both success and error (e.g. an optional or a nominal error-aware type),
   - or by returning an error-only type where success is absence of error.
 
-The exact naming and shapes of error-carrying types are defined in the upstream spec and library APIs, but the compiler must:
+The naming and shapes of error-carrying types are defined by this language spec and by standard library APIs, but the compiler must:
 
 - treat them as regular, first-class types,
 - enforce that callers handle them appropriately (e.g. via pattern matching, explicit checks).
@@ -79,7 +79,7 @@ The compiler must:
 
 ## Verification and Errors
 
-Formal Silk constructs (`#require`, `#assure`, `#assert`, `#invariant`, `#variant`) apply equally to:
+Formal Silk constructs (`#require`, `#assure`, `#assert`, `#invariant`, `#variant`, `#monovariant`) apply equally to:
 
 - success paths (e.g. postconditions describing the returned value),
 - error paths (e.g. guarantees about when and how certain errors can occur).

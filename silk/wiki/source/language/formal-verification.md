@@ -4,7 +4,7 @@ Silk includes syntax for writing contracts and verification metadata:
 
 - `#require` / `#assure` for pre/postconditions
 - `#assert` for local assertions
-- `#invariant` / `#variant` for loops
+- `#invariant` / `#variant` / `#monovariant` for loops
 
 Canonical doc: `docs/language/formal-verification.md`.
 

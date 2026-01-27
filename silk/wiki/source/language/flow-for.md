@@ -14,7 +14,7 @@ Canonical spec: `docs/language/flow-for.md`.
 - Implemented subset + current limitations: `docs/language/flow-for.md`
 - End-to-end support snapshot: `STATUS.md`
 
-## Syntax
+## Syntax (Selected)
 
 ```silk
 for x in xs {

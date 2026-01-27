@@ -21,7 +21,7 @@ while (x < y && y < 10) {
 }
 ```
 
-### Loop Specifications (`#invariant` / `#variant`)
+### Loop Specifications (`#invariant` / `#variant` / `#monovariant`)
 
 The language supports attaching loop specifications immediately before a
 `while`. This is part of Formal Silk (see `docs/language/formal-verification.md`).
@@ -31,6 +31,7 @@ Z3 at compile time.
 ```silk
 #invariant <expr>;
 #variant <expr>;
+#monovariant <expr>;
 while <condition> {
   ...
 }
@@ -64,10 +65,12 @@ The checker enforces:
 - Each `#invariant` expression must have type `bool` (otherwise `E2001`).
 - If present, the `#variant` expression must have an integer type (`int` or a
   fixed-width integer; otherwise `E2001`).
+- Each `#monovariant` expression must have an integer type (`int` or a
+  fixed-width integer; otherwise `E2001`).
 
-`#invariant` and `#variant` expressions are compile-time-only (erased from
-runtime code). When Formal Silk verification is enabled by syntax, they are
-proved with Z3 during compilation.
+`#invariant`, `#variant`, and `#monovariant` expressions are compile-time-only
+(erased from runtime code). When Formal Silk verification is enabled by syntax,
+they are proved with Z3 during compilation.
 
 ## Examples
 
@@ -107,8 +110,8 @@ Implemented end-to-end:
 
 - `while` loops with boolean conditions.
 - `break` / `continue` inside `while` bodies.
-- `#invariant` (type-checked as `bool`) and `#variant` (type-checked as an
-  integer) attached to `while`.
+- `#invariant` (type-checked as `bool`), `#variant` (type-checked as an
+  integer), and `#monovariant` (type-checked as an integer) attached to `while`.
 
 Examples that exercise the implemented subset:
 

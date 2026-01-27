@@ -1,12 +1,5 @@
-# Arenas (Renamed to Regions)
+# Arenas
 
-The “arenas” concept has been renamed and reworked as **regions**.
+Arenas are not part of the language surface. Use **regions** instead.
 
-See `docs/language/regions.md` for the current specification.
-
-This file is kept as a compatibility pointer for older links and historical
-notes. It is not the current specification.
-
-## Implementation Status (Current Compiler)
-
-See `docs/language/regions.md` for the current implementation status.
+See `docs/language/regions.md`.

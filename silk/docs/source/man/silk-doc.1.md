@@ -13,7 +13,7 @@
 
 ## Description
 
-`silk doc` reads Silk sources and renders documentation from JSdoc-style doc comments (`/** ... */` and `/// ...`) attached to declarations.
+`silk doc` reads Silk sources and renders documentation from Silkdoc comments (`/** ... */` and `/// ...`) attached to declarations.
 
 It supports two modes:
 

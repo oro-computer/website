@@ -68,7 +68,14 @@ def read_text(path: Path) -> str:
 
 
 def first_heading(markdown: str) -> str | None:
+    in_comment = False
     for line in markdown.splitlines():
+        if "<!--" in line:
+            in_comment = True
+        if in_comment:
+            if "-->" in line:
+                in_comment = False
+            continue
         if line.startswith("#"):
             heading = line.lstrip("#").strip()
             heading = re.sub(r"\s+", " ", heading)
@@ -81,9 +88,16 @@ def first_heading(markdown: str) -> str | None:
 
 def first_paragraph(markdown: str) -> str:
     in_code = False
+    in_comment = False
     buf: list[str] = []
     for raw in markdown.splitlines():
         line = raw.rstrip()
+        if "<!--" in line:
+            in_comment = True
+        if in_comment:
+            if "-->" in line:
+                in_comment = False
+            continue
         if line.startswith("```"):
             in_code = not in_code
             continue
@@ -155,6 +169,9 @@ def strip_internal_refs(markdown: str) -> str:
             flags=re.I,
         )
         out = re.sub(r"\bwhat works today\b", "supported behavior", out, flags=re.I)
+        out = re.sub(r"^(\s*#{1,6}\s+)Syntax\s*\(Selected\)\s*$", r"\1Syntax", out, flags=re.I)
+        out = re.sub(r"\bCurrent limitations\b", "Limitations", out, flags=re.I)
+        out = out.replace("Implemented in", "Defined in")
         out = re.sub(r"\bExamples\s*\(Works today\)\b", "Examples", out, flags=re.I)
         out = re.sub(r"\bExample\s*\(Works today\)\s*:", "Example:", out, flags=re.I)
         out = re.sub(r"^(\s*#{1,6}\s+)Works today:\s*", r"\1Example: ", out, flags=re.I)
@@ -188,26 +205,45 @@ def strip_internal_refs(markdown: str) -> str:
         out = re.sub(r"\bthe current backend subset\b", "the backend", out, flags=re.I)
         out = re.sub(r"\bCurrent subset limitation\b", "Limitation", out, flags=re.I)
         out = re.sub(r"\bcurrent\s+(?:subset|support)\b", "", out, flags=re.I)
-        out = re.sub(r"\s*\(current\s+(?:subset|support)[^)]*$", "", out, flags=re.I)
+        out = re.sub(r"\s*\(\s*current\s+(?:subset|support)[^)]*\)", "", out, flags=re.I)
 
         if re.match(r"^\s*#{1,6}\s", out):
-            out = re.sub(r"\s*\([^)]*subset[^)]*\)", "", out, flags=re.I)
-            out = re.sub(r"\s*\([^)]*works today[^)]*\)", "", out, flags=re.I)
+            out = re.sub(
+                r"\s*\([^)]*(works today|implemented|planned|selected|current\s+(?:subset|compiler|backend|checker|implementation))[^)]*\)",
+                "",
+                out,
+                flags=re.I,
+            )
 
-        out = re.sub(r"\bsubset\b", "support", out, flags=re.I)
-        out = re.sub(r"\bsupported\s+([A-Za-z0-9_:./-]+)\s+support\b", r"\1 support", out, flags=re.I)
-        out = re.sub(r"\bimplemented support\b", "supported behavior", out, flags=re.I)
+        out = re.sub(
+            r"^(\s*#{1,6}\s+.+?)\s*\(([^)]+)\)\s*$",
+            lambda m: m.group(1)
+            if re.search(
+                r"(works today|implemented|planned|selected|current\s+(?:subset|compiler|backend|checker|implementation))",
+                m.group(2),
+                flags=re.I,
+            )
+            else m.group(0),
+            out,
+        )
+        out = re.sub(
+            r"^(\s*#{1,6}\s+)(?:Current\s+|Initial\s+)?Implemented\s+Subset\s*$",
+            r"\1Details",
+            out,
+            flags=re.I,
+        )
+        out = re.sub(r"^(\s*#{1,6}\s+)Implemented\s*$", r"\1Details", out, flags=re.I)
+        out = re.sub(r"^(\s*#{1,6}\s+)Implemented\s+API\b", r"\1API", out, flags=re.I)
+        out = re.sub(r"^(\s*[-*+]\s+)Implemented\s*:\s*", r"\1", out, flags=re.I)
+        out = re.sub(r"^\s*Implemented\s*:\s*", "", out, flags=re.I)
+        out = re.sub(r"^(\s*(?:[-*+]\s+)?)Implemented subset notes:\s*", r"\1Notes: ", out, flags=re.I)
+        out = re.sub(r"^(\s*(?:[-*+]\s+)?)Implemented initial subset:\s*", r"\1Notes: ", out, flags=re.I)
+        out = re.sub(r"^(\s*(?:[-*+]\s+)?)Implemented subset:\s*", r"\1Notes: ", out, flags=re.I)
+        out = re.sub(r"^(\s*(?:[-*+]\s+)?)Implemented runtime areas\b", r"\1Runtime areas", out, flags=re.I)
+        out = re.sub(r"^(\s*(?:[-*+]\s+)?)Implemented as\b", r"\1Designed as", out, flags=re.I)
+        out = re.sub(r"\s*\(\s*Implemented[^)]*\)", "", out, flags=re.I)
         out = re.sub(r"\bcurrently\s+not\b", "not", out, flags=re.I)
         out = re.sub(r"\(\s*\)", "", out)
-
-        out = re.sub(r"\s*\(Implemented\)\b", "", out, flags=re.I)
-        out = re.sub(r"\s*\(implemented[^)]*\)\b", "", out, flags=re.I)
-        out = re.sub(r"\bImplemented in\b", "Defined in", out)
-        out = re.sub(r"\bimplemented in\b", "defined in", out)
-        out = re.sub(r"\bis implemented\b", "is supported", out, flags=re.I)
-        out = re.sub(r"\bare implemented\b", "are supported", out, flags=re.I)
-        out = re.sub(r"\bImplemented\b", "Supported", out)
-        out = re.sub(r"\bimplemented\b", "supported", out)
 
         leading = re.match(r"^\s*", out).group(0)
         body = out[len(leading) :]
@@ -229,13 +265,6 @@ def strip_internal_refs(markdown: str) -> str:
         out = re.sub(r"\bworks today\b", "Example", out, flags=re.I)
         out = re.sub(r"\bcurrent\s+(?:subset|support)\b", "", out, flags=re.I)
         out = re.sub(r"\bcurrently\s+not\b", "not", out, flags=re.I)
-        out = re.sub(r"\bsubset\b", "support", out, flags=re.I)
-        out = re.sub(r"\bImplemented in\b", "Defined in", out)
-        out = re.sub(r"\bimplemented in\b", "defined in", out)
-        out = re.sub(r"\bis implemented\b", "is supported", out, flags=re.I)
-        out = re.sub(r"\bare implemented\b", "are supported", out, flags=re.I)
-        out = re.sub(r"\bImplemented\b", "Supported", out)
-        out = re.sub(r"\bimplemented\b", "supported", out)
         out = re.sub(r" {2,}", " ", out)
         out = re.sub(r"\(\s*\)", "", out)
         return out.rstrip()
@@ -278,9 +307,16 @@ def strip_internal_refs(markdown: str) -> str:
             for i in range(0, len(parts), 2):
                 parts[i] = rewrite_outside_code(parts[i])
             line = "`".join(parts)
-            line = re.sub(r"\bsupported\s+(`[^`]+`)\s+support\b", r"\1 support", line, flags=re.I)
-            if not re.match(r"^\s*(subset|support)\)\.?\s*$", line, flags=re.I):
-                out_lines.append(line)
+            # Status-y parentheticals can straddle inline-code spans; strip them on the full line.
+            line = re.sub(r"\(\s*Implemented[^)]*\)", "", line, flags=re.I)
+            line = re.sub(r"\(\s*Works today[^)]*\)", "", line, flags=re.I)
+            line = re.sub(
+                r"\(\s*(?:Planned|Selected|current\s+(?:subset|compiler|backend|checker|implementation))[^)]*\)",
+                "",
+                line,
+                flags=re.I,
+            )
+            out_lines.append(line)
         else:
             # Keep code blocks searchable, but rewrite status-y language inside comment text.
             if trimmed.startswith(("//", "#", "--", "/*", "*")):

@@ -241,6 +241,22 @@ Notes:
   (see `E2041`).
 - Only `let mut`/`var` bindings are assignable lvalues (see
   `docs/language/mutability.md` and `docs/language/operators.md`).
+- Destructuring `let` bindings are supported for struct values:
+
+  ```silk
+  struct User { id: u64, name: string }
+  let (id, name) = User{ id: 123, name: "alice" };
+
+  struct Record { id: u64, data: string }
+  let { data as d, id as i } = Record{ id: 456, data: "other" };
+  ```
+
+  Array destructuring is also supported:
+
+  ```silk
+  let records: Record[] = [{ id: 123, data: "a" }, { id: 456, data: "b" }];
+  let [a, b] = records;
+  ```
 
 ### 4.2 Functions: `fn` (plus `pure`, `async`, `task`)
 
@@ -994,7 +1010,7 @@ Formal Silk is Silk’s compile-time verification surface (Z3-backed). It uses
 directive tokens that attach to functions and loops:
 
 - function contracts: `#require`, `#assure`, `#theory`
-- loop contracts: `#invariant`, `#variant`
+- loop contracts: `#invariant`, `#variant`, `#monovariant`
 - formal Silk declarations: `#const`
 - block-local proof obligations: `#assert`
 - reusable proof bundles: `theory` / `#theory`
@@ -1012,7 +1028,7 @@ fn inc (x: int) -> int {
 }
 ```
 
-### Loop invariants and variants
+### Loop invariants, variants, and monovariants
 
 ```silk
 fn main () -> int {
@@ -1023,6 +1039,7 @@ fn main () -> int {
   #invariant i >= 0;
   #invariant i <= original_limit;
   #variant original_limit - i;
+  #monovariant i;
   while i < limit {
     i += 1;
   }

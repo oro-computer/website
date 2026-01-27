@@ -10,7 +10,7 @@ Canonical spec: `docs/language/mutability.md`.
 - Implemented subset + borrow rules: `docs/language/mutability.md`
 - End-to-end support snapshot: `STATUS.md`
 
-## Syntax
+## Syntax (Selected)
 
 ```silk
 let mut x: int = 0;

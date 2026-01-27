@@ -63,6 +63,52 @@ A block introduces a lexical scope:
   - Any produced runtime value is cleaned up at end-of-statement (not at scope
     exit).
 
+Destructuring `let` bindings (implemented subset) bind multiple locals from a
+single struct value:
+
+- Positional (field order):
+
+  ```silk
+  struct User { id: u64, name: string }
+  let (id, name) = User{ id: 123, name: "alice" };
+  ```
+
+- Named (by field name, order-independent), with aliasing:
+
+  ```silk
+  struct Record { id: u64, data: string }
+  let { data, id } = Record{ id: 123, data: "a record" };
+  let { data as d, id as i } = Record{ id: 456, data: "other record" };
+  ```
+
+Array destructuring binds multiple locals from a single array/slice value:
+
+```silk
+struct Record { id: u64, data: string }
+
+let records: Record[] = [{ id: 123, data: "a" }, { id: 456, data: "b" }];
+let [a, b] = records;
+```
+
+Rules (current subset):
+
+- Only flat patterns are supported (no nested destructuring).
+- The initializer is required.
+- The initializer must have a non-opaque `struct` value type.
+- The pattern must account for every field exactly once:
+  - positional patterns must have exactly one binder per declared field (in
+    field order),
+  - named patterns must list each field exactly once (in any order),
+  - use `_` to discard a field (`let (_, name) = ...;` or `let { data as _ } = ...;`).
+
+For array/slice destructuring:
+
+- The initializer must have an array type (`T[N]`) or slice type (`T[]`).
+- Each binder is positional (index order).
+- The pattern binds exactly the number of listed binders:
+  - fixed arrays require an exact arity match (`[a, b]` requires `T[2]`),
+  - slices trap at runtime if too short (as if indexing each element).
+
 `const` bindings are compile-time constants:
 
 - their initializer expression must be compile-time evaluable (otherwise the
@@ -88,7 +134,7 @@ bindings is restricted to:
   - another `const` string binding.
 
 Formal Silk declarations (`#const`) are compile-time-only names intended for specifications
-(`#require`, `#assure`, `#assert`, `#invariant`, `#variant`). They must not be referenced
+(`#require`, `#assure`, `#assert`, `#invariant`, `#variant`, `#monovariant`). They must not be referenced
 in runtime expressions (see `docs/language/formal-verification.md` and
 `docs/compiler/diagnostics.md`, `E2014`).
 

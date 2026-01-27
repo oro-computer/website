@@ -194,15 +194,19 @@ Supported ctor-like method names (destination type opts in by defining these):
 - `T.bool(value: bool) -> T`
 - `T.char(value: char) -> T`
 - `T.string(value: string) -> T`
+- `T.regexp(value: regexp) -> T`
+- `T.Region(value: Region) -> T`
 
 Selection (source type → constructor):
 
-- Signed integer primitives (`i8/i16/i32/i64/int/Instant/Duration`) → `int`
-- Unsigned integer primitives (`u8/u16/u32/u64`) → `u64`
+- Signed integer primitives (`i8/i16/i32/i64/int/size/isize/Instant/Duration`) → `int`
+- Unsigned integer primitives (`u8/u16/u32/u64/usize`) → `u64`
 - Float primitives (`f32/f64`) → `f64`
 - `bool` → `bool`
 - `char` → `char`
 - `string` → `string`
+- `regexp` → `regexp`
+- `Region` → `Region`
 
 Integer width:
 

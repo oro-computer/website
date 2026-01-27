@@ -77,12 +77,14 @@ compiler’s varargs limit).
 - `Arg.bool(value: bool)` — boolean argument.
 - `Arg.char(value: char)` — Unicode scalar argument (formatted as UTF-8 bytes for `{c}` / `{u}`; invalid codepoints render as U+FFFD).
 - `Arg.string(value: string)` — string argument.
+- `Arg.regexp(value: regexp)` — regexp argument (currently formatted as placeholder text).
+- `Arg.Region(value: Region)` — region argument (currently formatted as placeholder text).
 
 Compiler convenience (implemented): the compiler supports an opt-in implicit
 call-argument coercion mechanism for struct types that provide exported static
-ctor methods (`int`/`u64`/`f64`/`bool`/`char`/`string`). `std::fmt::Arg` implements
-these ctors, so callers can pass primitives directly to `std::io::print` /
-`std::io::println` without explicit `Arg.*` wrappers.
+ctor methods (`int`/`u64`/`f64`/`bool`/`char`/`string`/`regexp`/`Region`).
+`std::fmt::Arg` implements these ctors, so callers can pass primitives directly
+to `std::io::print` / `std::io::println` without explicit `Arg.*` wrappers.
 
 See `docs/language/types.md` for the full rule.
 

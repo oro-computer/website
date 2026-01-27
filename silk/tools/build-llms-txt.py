@@ -93,6 +93,9 @@ def sanitize_markdown(markdown: str) -> str:
         out = text
         out = re.sub(r"^(\s*#{1,6}\s+)What works today\b", r"\1Supported behavior", out, flags=re.I)
         out = re.sub(r"\bwhat works today\b", "supported behavior", out, flags=re.I)
+        out = re.sub(r"^(\s*#{1,6}\s+)Syntax\s*\(Selected\)\s*$", r"\1Syntax", out, flags=re.I)
+        out = re.sub(r"\bCurrent limitations\b", "Limitations", out, flags=re.I)
+        out = out.replace("Implemented in", "Defined in")
 
         out = re.sub(r"\bExamples\s*\(Works today\)\b", "Examples", out, flags=re.I)
         out = re.sub(r"\bExample\s*\(Works today\)\s*:", "Example:", out, flags=re.I)
@@ -122,18 +125,46 @@ def sanitize_markdown(markdown: str) -> str:
         out = re.sub(r"\bthe current backend subset\b", "the backend", out, flags=re.I)
         out = re.sub(r"\bCurrent subset limitation\b", "Limitation", out, flags=re.I)
         out = re.sub(r"\bcurrent\s+(?:subset|support)\b", "", out, flags=re.I)
+        out = re.sub(r"\s*\(\s*current\s+(?:subset|support)[^)]*\)", "", out, flags=re.I)
 
-        out = re.sub(r"\bsubset\b", "support", out, flags=re.I)
+        if re.match(r"^\s*#{1,6}\s", out):
+            out = re.sub(
+                r"\s*\([^)]*(works today|implemented|planned|selected|current\s+(?:subset|compiler|backend|checker|implementation))[^)]*\)",
+                "",
+                out,
+                flags=re.I,
+            )
+
+        out = re.sub(
+            r"^(\s*#{1,6}\s+.+?)\s*\(([^)]+)\)\s*$",
+            lambda m: m.group(1)
+            if re.search(
+                r"(works today|implemented|planned|selected|current\s+(?:subset|compiler|backend|checker|implementation))",
+                m.group(2),
+                flags=re.I,
+            )
+            else m.group(0),
+            out,
+        )
+        out = re.sub(
+            r"^(\s*#{1,6}\s+)(?:Current\s+|Initial\s+)?Implemented\s+Subset\s*$",
+            r"\1Details",
+            out,
+            flags=re.I,
+        )
+        out = re.sub(r"^(\s*#{1,6}\s+)Implemented\s*$", r"\1Details", out, flags=re.I)
+        out = re.sub(r"^(\s*#{1,6}\s+)Implemented\s+API\b", r"\1API", out, flags=re.I)
+        out = re.sub(r"^(\s*[-*+]\s+)Implemented\s*:\s*", r"\1", out, flags=re.I)
+        out = re.sub(r"^\s*Implemented\s*:\s*", "", out, flags=re.I)
+        out = re.sub(r"^(\s*(?:[-*+]\s+)?)Implemented subset notes:\s*", r"\1Notes: ", out, flags=re.I)
+        out = re.sub(r"^(\s*(?:[-*+]\s+)?)Implemented initial subset:\s*", r"\1Notes: ", out, flags=re.I)
+        out = re.sub(r"^(\s*(?:[-*+]\s+)?)Implemented subset:\s*", r"\1Notes: ", out, flags=re.I)
+        out = re.sub(r"^(\s*(?:[-*+]\s+)?)Implemented runtime areas\b", r"\1Runtime areas", out, flags=re.I)
+        out = re.sub(r"^(\s*(?:[-*+]\s+)?)Implemented as\b", r"\1Designed as", out, flags=re.I)
+        out = re.sub(r"\s*\(\s*Implemented[^)]*\)", "", out, flags=re.I)
+
         out = re.sub(r"\bcurrently\s+not\b", "not", out, flags=re.I)
 
-        out = re.sub(r"\s*\(Implemented\)\b", "", out, flags=re.I)
-        out = re.sub(r"\s*\(implemented[^)]*\)\b", "", out, flags=re.I)
-        out = re.sub(r"\bImplemented in\b", "Defined in", out)
-        out = re.sub(r"\bimplemented in\b", "defined in", out)
-        out = re.sub(r"\bis implemented\b", "is supported", out, flags=re.I)
-        out = re.sub(r"\bare implemented\b", "are supported", out, flags=re.I)
-        out = re.sub(r"\bImplemented\b", "Supported", out)
-        out = re.sub(r"\bimplemented\b", "supported", out)
         return out
 
     def rewrite_comment(text: str) -> str:
@@ -142,13 +173,6 @@ def sanitize_markdown(markdown: str) -> str:
         out = re.sub(r"\bworks today\b", "Example", out, flags=re.I)
         out = re.sub(r"\bcurrent\s+(?:subset|support)\b", "", out, flags=re.I)
         out = re.sub(r"\bcurrently\s+not\b", "not", out, flags=re.I)
-        out = re.sub(r"\bsubset\b", "support", out, flags=re.I)
-        out = re.sub(r"\bImplemented in\b", "Defined in", out)
-        out = re.sub(r"\bimplemented in\b", "defined in", out)
-        out = re.sub(r"\bis implemented\b", "is supported", out, flags=re.I)
-        out = re.sub(r"\bare implemented\b", "are supported", out, flags=re.I)
-        out = re.sub(r"\bImplemented\b", "Supported", out)
-        out = re.sub(r"\bimplemented\b", "supported", out)
         return out
 
     out_lines: list[str] = []
@@ -192,8 +216,6 @@ def sanitize_markdown(markdown: str) -> str:
 
         if not in_code:
             line = rewrite_text(raw)
-            if re.match(r"^\s*(subset|support)\)\.?\s*$", line, flags=re.I):
-                continue
             out_lines.append(line)
             continue
 

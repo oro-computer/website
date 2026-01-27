@@ -278,6 +278,61 @@ Operand notes (current subset):
 - For monomorphized generic instantiations, the string is the human-readable
   display name (not an internal `__silk_mono__...` symbol).
 
+## `is`
+
+`<expr> is <Type>` checks whether the **static type** of `<expr>` conforms to
+`<Type>`.
+
+Result type:
+
+- `is` always returns `bool`.
+
+Evaluation mode:
+
+- `is` is always a compile-time constant boolean.
+
+Rules (current subset):
+
+- The right-hand side must be a type (primitive, nominal `struct`/`enum`/`error`,
+  `interface`, a function type, or a type alias for one of those).
+- If `<Type>` is a nominal `struct` type, `expr is Type` is true when the
+  expression’s static type is exactly `Type` **or** a `struct` that `extends`
+  `Type`.
+- If `<Type>` is an `interface`, `expr is Interface` is true when the expression’s
+  static type declares conformance (`impl T as Interface`) or when the operand is
+  a module declared `module Name as Interface`.
+- For primitive types, enum/error types, reference types (`&T`), slice/array types
+  (`T[]`, `T[N]`), optionals (`T?`), and function types, `is` currently checks
+  **exact type equality** (after resolving type aliases).
+
+Notes:
+
+- `is` does not perform runtime tagging or value inspection. For runtime
+  discrimination of union/optional values, use `match` and the relevant pattern
+  forms.
+
+Examples:
+
+```silk
+type Adder = fn (x: int, y: int) -> int;
+fn my_adder (x: int, y: int) -> int { return x + y; }
+if my_adder is Adder { /* ... */ }
+
+struct User { id: u64 = 0 }
+struct Beep extends User { boop: string = "" }
+let beep = Beep{ boop: "boop" };
+if beep is User { /* ... */ }
+
+let n = 123;
+if n is int { /* ... */ }
+
+interface Logger { fn log (value: string) -> void; }
+module my_logger as Logger {
+  export log (value: string) { /* ... */ }
+}
+if my_logger is Logger { /* ... */ }
+```
+
 ## Wrapping and Overflow
 
 The spec notes “Arithmetic Wraps” for certain operators. The checker and code generator must:

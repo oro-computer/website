@@ -121,19 +121,22 @@ Implemented runtime areas in the shipped stdlib:
   delegates to `std::runtime::posix::process` in the shipped stdlib).
 - `std::runtime::net` — hosted networking primitives used by `std::net`
   (IPv4/IPv6 TCP + UDP sockets; delegates to `std::runtime::posix::net` in the shipped stdlib).
-- `std::runtime::regex` / `std::runtime::unicode` / `std::runtime::number` —
+  - `std::runtime::regex` / `std::runtime::unicode` / `std::runtime::number` —
   non-OS-specific runtime helpers used by `std::{regex,unicode,number}`. These
   are implemented via `ext` bindings to a small bundled runtime support library
   (`libsilk_rt`) that ships alongside the compiler.
+  - the compiler statically links this bundled runtime support into executable
+    and shared-library outputs (no runtime `DT_NEEDED` dependency on
+    `libsilk_rt*`).
   - embedders can override internal allocation used by `libsilk_rt` (for
     example regex runtime compilation) by calling `silk_rt_set_allocator` (see
     `include/silk_rt.h`) before invoking any `silk_rt_*` entrypoints. This hook
     affects allocations routed through `silk_rt_malloc_bytes` /
     `silk_rt_realloc_bytes` / `silk_rt_free_bytes`; it does not change the
     allocator used by `std::runtime::mem` for heap-backed pointers.
-  - when building with `--noheap`, the compiler links `libsilk_rt_noheap.so`
-    instead of `libsilk_rt.so`. In that configuration, `libsilk_rt` performs
-    no default heap allocation unless an embedder installs an allocator via
+  - when building with `--noheap`, the compiler links `libsilk_rt_noheap.a`
+    instead of `libsilk_rt.a`. In that configuration, `libsilk_rt` performs no
+    default heap allocation unless an embedder installs an allocator via
     `silk_rt_set_allocator`.
 
 Follow-ups are expected to introduce additional runtime areas:
@@ -205,4 +208,4 @@ Archive member naming requirement (current scheme):
   replaced by `_`, and `.slk` replaced by `.o`,
 - for example: `std/runtime/posix/task.slk` → `runtime_posix_task.o`.
 
-Toolchains can produce archives with this naming scheme to avoid basename collisions.
+The in-repo `make stdlib` target produces archives with this naming scheme.

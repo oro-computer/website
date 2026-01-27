@@ -7,7 +7,7 @@ errors.
 
 Status: **design in progress**. Refinement types are not implemented in the
 current compiler subset. Today, Silk provides verification annotations
-(`#require`, `#assure`, `#assert`, `#invariant`, `#variant`) and formal Silk declarations (`#const`)
+(`#require`, `#assure`, `#assert`, `#invariant`, `#variant`, `#monovariant`) and formal Silk declarations (`#const`)
 as compile-time-only metadata; see `docs/language/formal-verification.md`.
 
 Note: in Silk, any use of a `where` predicate is verification syntax. When
@@ -80,5 +80,5 @@ In the current implementation:
 - and there is no verifier that can prove user-defined predicates.
 
 The existing verification directives (`#require`, `#assure`, `#assert`,
-`#invariant`, `#variant`) are parsed, type-checked as `bool` where appropriate, and preserved
+`#invariant`, `#variant`, `#monovariant`) are parsed, type-checked as `bool` where appropriate, and preserved
 as metadata, but they do not yet affect code generation.

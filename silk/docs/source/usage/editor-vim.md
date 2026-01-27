@@ -46,7 +46,7 @@ It currently highlights:
 - special method names: `constructor` and `drop` (both have language-defined meaning in the current compiler subset);
 - well-known package prefixes such as `std::`, so that standard library imports and qualified names stand out from ordinary identifiers;
 - operators and punctuation, including `++`, `--`, `?.`, `??`, `::`, `..`, `..=`, `...`, `->`, `=>` as described in `docs/language/operators.md`;
-- Formal Silk annotations: `#const`, `#require`, `#assure`, `#assert`, `#invariant`, `#variant`, `#theory` (including whitespace forms like `#  require`) are treated as preprocessor-style constructs;
+- Formal Silk annotations: `#const`, `#require`, `#assure`, `#assert`, `#invariant`, `#variant`, `#monovariant`, `#theory` (including whitespace forms like `#  require`) are treated as preprocessor-style constructs;
 - doc comments: `///` and `/** ... */`, including common doc tags like `@param` / `@returns` / `@throws` / `@example` / `@since` / `@deprecated` / `@remarks` / `@see` (see `docs/language/doc-comments.md`);
 - comments: both `//` line comments and `/* ... */` block comments (excluding doc-comment forms), consistent with the current lexer behavior in `src/lexer.zig`.
 

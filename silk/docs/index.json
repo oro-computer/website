@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-01-26T22:49:11+00:00",
+  "generatedAt": "2026-01-27T16:26:45+00:00",
   "kind": "docs",
-  "count": 149,
+  "count": 155,
   "sections": [
     {
       "name": "overview",
@@ -123,7 +123,7 @@
         },
         {
           "id": "language/arenas",
-          "title": "Arenas (Renamed to Regions)",
+          "title": "Arenas",
           "file": "language/arenas.md"
         },
         {
@@ -170,11 +170,6 @@
           "id": "language/dependent-types",
           "title": "Dependent Types (Const Parameters and Type-Level Computation)",
           "file": "language/dependent-types.md"
-        },
-        {
-          "id": "language/doc-comments",
-          "title": "Documentation Comments (JSdoc-style)",
-          "file": "language/doc-comments.md"
         },
         {
           "id": "language/literals-duration",
@@ -232,6 +227,11 @@
           "file": "language/cheat-sheet.md"
         },
         {
+          "id": "language/conventions",
+          "title": "Language Spec Conventions",
+          "file": "language/conventions.md"
+        },
+        {
           "id": "language/literals-overview",
           "title": "Literals Overview",
           "file": "language/literals-overview.md"
@@ -285,6 +285,11 @@
           "id": "language/syntax-tour",
           "title": "Silk Syntax Tour (Soup to Nuts)",
           "file": "language/syntax-tour.md"
+        },
+        {
+          "id": "language/doc-comments",
+          "title": "Silkdoc (Documentation Comments)",
+          "file": "language/doc-comments.md"
         },
         {
           "id": "language/literals-string",
@@ -415,6 +420,11 @@
           "id": "std/json",
           "title": "`std::json`",
           "file": "std/json.md"
+        },
+        {
+          "id": "std/limits",
+          "title": "`std::limits`",
+          "file": "std/limits.md"
         },
         {
           "id": "std/map",
@@ -577,6 +587,11 @@
           "file": "usage/editor-coc-nvim.md"
         },
         {
+          "id": "usage/getting-started",
+          "title": "Getting Started (Repo Workflow)",
+          "file": "usage/getting-started.md"
+        },
+        {
           "id": "usage/github-linguist",
           "title": "GitHub Linguist Support",
           "file": "usage/github-linguist.md"
@@ -663,7 +678,7 @@
         },
         {
           "id": "compiler/limits",
-          "title": "Compiler Limits (Current Implementation)",
+          "title": "Compiler Limits",
           "file": "compiler/limits.md"
         },
         {
@@ -685,6 +700,16 @@
           "id": "compiler/stdlib-integration",
           "title": "Standard Library Integration",
           "file": "compiler/stdlib-integration.md"
+        },
+        {
+          "id": "compiler/testing-strategy",
+          "title": "Testing Strategy (Zig + C99 + Silk)",
+          "file": "compiler/testing-strategy.md"
+        },
+        {
+          "id": "compiler/vendored-deps",
+          "title": "Vendored Dependencies",
+          "file": "compiler/vendored-deps.md"
         },
         {
           "id": "compiler/backend-wasm",
@@ -780,6 +805,16 @@
           "id": "man/slcc.1",
           "title": "`slcc` (1) \u2014 Alias of `silk cc`",
           "file": "man/slcc.1.md"
+        }
+      ]
+    },
+    {
+      "name": "spec",
+      "items": [
+        {
+          "id": "spec/2026",
+          "title": "Silk Specification (2026)",
+          "file": "spec/2026.md"
         }
       ]
     }

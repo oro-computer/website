@@ -17,7 +17,9 @@
   const baseUrl = app.getAttribute("data-base") || "source/";
   const defaultId = app.getAttribute("data-default") || "start";
 
-  const titleSuffix = kind === "wiki" ? "Silk Wiki" : "Silk Docs";
+  const titleSuffix =
+    app.getAttribute("data-title-suffix") ||
+    (kind === "wiki" ? "Silk Wiki" : "Silk Docs");
 
   const marked = globalThis.marked;
   if (marked?.setOptions) {
@@ -139,6 +141,9 @@
   function humanizeSectionName(name) {
     if (!name) return "Docs";
     if (name === "overview") return "Start";
+    if (name === "ai") return "AI";
+    if (name === "mcp") return "MCP";
+    if (name === "api" || name === "apis") return "APIs";
     if (name === "std") return "Standard library";
     return name.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   }
@@ -155,6 +160,9 @@
       // Remove status-y "Works today" framing in prose.
       out = out.replace(/^(\s*#{1,6}\s+)What works today\b/i, "$1Supported behavior");
       out = out.replace(/\bwhat works today\b/gi, "supported behavior");
+      out = out.replace(/^(\s*#{1,6}\s+)Syntax\s*\(Selected\)\s*$/i, "$1Syntax");
+      out = out.replace(/\bCurrent limitations\b/gi, "Limitations");
+      out = out.replace(/\bImplemented in\b/g, "Defined in");
       out = out.replace(/\bExamples\s*\(Works today\)\b/gi, "Examples");
       out = out.replace(/\bExample\s*\(Works today\)\s*:/gi, "Example:");
       out = out.replace(/^(\s*#{1,6}\s+)Works today:\s*/i, "$1Example: ");
@@ -180,28 +188,42 @@
       out = out.replace(/\bthe current backend subset\b/gi, "the backend");
       out = out.replace(/\bCurrent subset limitation\b/gi, "Limitation");
       out = out.replace(/\bcurrent\s+(?:subset|support)\b/gi, "");
-      out = out.replace(/\s*\(current\s+(?:subset|support)[^)]*$/gi, "");
+      out = out.replace(/\s*\(\s*current\s+(?:subset|support)[^)]*\)/gi, "");
 
-      // Strip parentheticals that explicitly call out incompleteness.
+      // Strip parentheticals/headings that explicitly call out implementation status.
       if (/^\s*#{1,6}\s/.test(out)) {
-        out = out.replace(/\s*\([^)]*subset[^)]*\)/gi, "");
-        out = out.replace(/\s*\([^)]*works today[^)]*\)/gi, "");
+        out = out.replace(
+          /\s*\([^)]*(works today|implemented|planned|selected|current\s+(?:subset|compiler|backend|checker|implementation))[^)]*\)/gi,
+          ""
+        );
       }
 
-      // Replace remaining "subset" phrasing with "support" (more neutral).
-      out = out.replace(/\bsubset\b/gi, "support");
-      out = out.replace(/\bsupported\s+([`A-Za-z0-9_:./-]+)\s+support\b/gi, "$1 support");
-      out = out.replace(/\bimplemented support\b/gi, "supported behavior");
+      // Drop trailing status qualifiers on headings (e.g., "Syntax (Implemented Subset)").
+      out = out.replace(
+        /^(\s*#{1,6}\s+.+?)\s*\(([^)]+)\)\s*$/i,
+        (m, head, meta) =>
+          /(works today|implemented|planned|selected|current\s+(?:subset|compiler|backend|checker|implementation))/i.test(meta)
+            ? head
+            : m
+      );
 
-      // Avoid "Implemented" as a status label.
-      out = out.replace(/\s*\(Implemented\)\b/gi, "");
-      out = out.replace(/\s*\(implemented[^)]*\)\b/gi, "");
-      out = out.replace(/\bImplemented in\b/g, "Defined in");
-      out = out.replace(/\bimplemented in\b/g, "defined in");
-      out = out.replace(/\bis implemented\b/gi, "is supported");
-      out = out.replace(/\bare implemented\b/gi, "are supported");
-      out = out.replace(/\bImplemented\b/g, "Supported");
-      out = out.replace(/\bimplemented\b/g, "supported");
+      // Replace status-only headings with neutral labels.
+      out = out.replace(
+        /^(\s*#{1,6}\s+)(?:Current\s+|Initial\s+)?Implemented\s+Subset\s*$/i,
+        "$1Details"
+      );
+      out = out.replace(/^(\s*#{1,6}\s+)Implemented\s*$/i, "$1Details");
+      out = out.replace(/^(\s*#{1,6}\s+)Implemented\s+API\b/i, "$1API");
+
+      // Drop "Implemented:" label prefixes in prose/lists.
+      out = out.replace(/^(\s*[-*+]\s+)Implemented\s*:\s*/i, "$1");
+      out = out.replace(/^\s*Implemented\s*:\s*/i, "");
+      out = out.replace(/^(\s*[-*+]\s+)?Implemented subset notes:\s*/i, "$1Notes: ");
+      out = out.replace(/^(\s*[-*+]\s+)?Implemented initial subset:\s*/i, "$1Notes: ");
+      out = out.replace(/^(\s*[-*+]\s+)?Implemented subset:\s*/i, "$1Notes: ");
+      out = out.replace(/^(\s*[-*+]\s+)?Implemented runtime areas\b/i, "$1Runtime areas");
+      out = out.replace(/^(\s*[-*+]\s+)?Implemented as\b/i, "$1Designed as");
+      out = out.replace(/\s*\(\s*Implemented[^)]*\)/gi, "");
 
       // Avoid "currently not ..." framing.
       out = out.replace(/\bcurrently\s+not\b/gi, "not");
@@ -269,8 +291,13 @@
           parts[i] = rewriteOutsideCode(parts[i]);
         }
         line = parts.join("`");
-        // Handle "supported `Type` support" across inline code spans.
-        line = line.replace(/\bsupported\s+(`[^`]+`)\s+support\b/gi, "$1 support");
+        // Status-y parentheticals can straddle inline-code spans; strip them on the full line.
+        line = line.replace(/\(\s*Implemented[^)]*\)/gi, "");
+        line = line.replace(/\(\s*Works today[^)]*\)/gi, "");
+        line = line.replace(
+          /\(\s*(?:Planned|Selected|current\s+(?:subset|compiler|backend|checker|implementation))[^)]*\)/gi,
+          ""
+        );
       } else {
         // Code fences are treated as examples; keep semantics intact, but rewrite tone-y
         // status language inside comment text (both whole-line and trailing comments).
@@ -280,13 +307,6 @@
             .replace(/\bworks today\b/gi, "Example")
             .replace(/\bcurrent\s+(?:subset|support)\b/gi, "")
             .replace(/\bcurrently\s+not\b/gi, "not")
-            .replace(/\bsubset\b/gi, "support")
-            .replace(/\bImplemented in\b/g, "Defined in")
-            .replace(/\bimplemented in\b/g, "defined in")
-            .replace(/\bis implemented\b/gi, "is supported")
-            .replace(/\bare implemented\b/gi, "are supported")
-            .replace(/\bImplemented\b/g, "Supported")
-            .replace(/\bimplemented\b/g, "supported")
             .replace(/ {2,}/g, " ")
             .replace(/\(\s*\)/g, "")
             .trimEnd();
@@ -314,10 +334,6 @@
             }
           }
         }
-      }
-
-      if (!inCode && /^(subset|support)\)\.?$/i.test(line.trim())) {
-        continue;
       }
 
       out.push(line);

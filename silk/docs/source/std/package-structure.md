@@ -103,29 +103,59 @@ The default stdlib must be replaceable by an alternate implementation:
 
 The concrete selection mechanism is a compiler/driver responsibility and must
 be documented in the CLI (`docs/compiler/cli-silk.md`) and embedding ABI
-(`docs/compiler/abi-libsilk.md`).
+(`docs/compiler/abi-libsilk.md`) once implemented.
 
-## Stdlib root selection
+Current toolchain behavior (first slice):
 
-- The `silk` CLI and embedding APIs resolve `std::...` imports from a stdlib root selected by:
+- Both the `silk` CLI and the `libsilk.a` embedding build path resolve
+  `std::...` imports from a stdlib root selected by:
   - an explicit override (`--std-root` for `silk`, or `silk_compiler_set_std_root` for embedders), otherwise
   - `SILK_STD_ROOT` (environment variable) when set, otherwise
-  - a default stdlib root configured by the toolchain (for example, an installed `share/silk/std` directory).
+  - a `std/` directory in the current working directory (development default), otherwise
+  - `../share/silk/std` relative to the current executable (installed default).
 - Mapping is deterministic: `std::foo::bar` resolves to `<std_root>/foo/bar.slk`.
 
-## Stdlib archives (`--std-lib`)
+## Static Archive Distribution (Current Toolchain)
 
-On hosted targets, the toolchain may provide a target-specific stdlib archive (`libsilk_std.a`) to link against. When a
-stdlib archive is used, `silk` can type-check the `std::...` sources from the stdlib root while resolving stdlib symbols
-from the archive during linking/code generation.
+For distribution and incremental development, the stdlib can be built into a
+static archive for a specific target ABI:
 
-Select an explicit archive with:
+- `make stdlib` compiles each `std/**/*.slk` module (including `std/runtime/...`)
+  to an ELF object via
+  `silk build --kind object` and archives them into `zig-out/lib/libsilk_std.a`.
+- This archive is target-specific (e.g. `linux/x86_64` ELF objects) and should
+  be treated as one artifact per supported target triple/ABI, not as a
+  universally portable library.
 
-- `--std-lib <path>` (or `--std <path>.a` / `-std <path>.a`)
-- `SILK_STD_LIB` (environment variable)
+Current toolchain behavior (`linux/x86_64`):
 
-When `--nostd` is used, stdlib auto-loading is disabled and the toolchain should not implicitly link a default stdlib
-archive.
+- The compiler still loads stdlib Silk sources from the configured stdlib root
+  for parsing/type-checking (so the language-level package graph is validated),
+  but executable code generation treats *auto-loaded* `std::...` modules as
+  **external** and resolves their exported functions from the prebuilt archive
+  when one is available.
+- Archive discovery (in order):
+  - `--std-lib <path>` (or `--std <path>.a` / `-std <path>.a`) when provided, otherwise
+  - `SILK_STD_LIB` (environment variable) when set,
+  - `zig-out/lib/libsilk_std.a` when using the in-repo `std/` root (development),
+  - `../lib/libsilk_std.a` relative to the installed `silk` executable,
+  - common installed-layout heuristics derived from the selected stdlib root.
+
+Archive member naming (scheme):
+
+- to avoid basename collisions (for example `std/task.slk` and
+  `std/runtime/posix/task.slk`), archive member names are based on the std-root
+  relative path with `/` replaced by `_`, and `.slk` replaced by `.o`,
+- for example: `std/runtime/posix/task.slk` → `runtime_posix_task.o`.
+- When no suitable archive is found (or on unsupported targets), the compiler
+  falls back to compiling the reachable std sources into the build as part of
+  module-set code generation.
+- `--nostd` disables stdlib auto-loading and therefore also avoids linking the
+  default std archive; users may still explicitly provide their own `std::...`
+  modules as ordinary inputs when desired.
+- `--std-root <path>` (or `--std <path>` / `-std <path>` when `<path>` does **not** end in `.a`) selects an alternate stdlib root, and
+  the corresponding archive is discovered via the same `--std-lib` / `SILK_STD_LIB` and
+  installed-layout rules.
 
 ## Hosted vs Freestanding
 

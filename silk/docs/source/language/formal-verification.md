@@ -19,7 +19,7 @@ Silk requires proofs only when verification syntax is present in the compiled
 module set:
 
 - any use of `#...` directives (`#require`, `#assure`, `#assert`, `#invariant`,
-  `#variant`, `#const`), and/or
+  `#variant`, `#monovariant`, `#const`), and/or
 - any use of `where` predicates (for example refinement-type binders).
 
 Note: `where` predicates are not implemented yet. When they land, they will
@@ -53,14 +53,14 @@ at the failing annotation site.
 
 When `--debug` is passed to `silk build` or `silk test`, the verifier also emits
 additional Z3 debugging output to stderr and writes an SMT-LIB2 reproduction
-script under `tmp/` in the current working directory:
+script under `.silk/z3/` in the current working directory (or `$SILK_WORK_DIR/z3`):
 
-- `tmp/silk_z3_m<module>_<n>.smt2`
+- `.silk/z3/silk_z3_m<module>_<n>.smt2`
 
 You can replay the query with an external Z3 binary:
 
 ```sh
-z3 -smt2 tmp/silk_z3_m0_0.smt2
+z3 -smt2 .silk/z3/silk_z3_m0_0.smt2
 ```
 
 ## Z3 model (current subset)
@@ -114,7 +114,8 @@ The main constructs are:
 - `#assure` — postcondition.
 - `#assert` — block-local proof obligation.
 - `#invariant` — loop or state invariant.
-- `#variant` — measure that must change (e.g. for termination).
+- `#variant` — well-founded termination measure (ranking function).
+- `#monovariant` — monotonic measure (non-decreasing or non-increasing).
 - `theory` / `#theory` — reusable, parameterized proof obligations.
 
 Key properties:
@@ -138,7 +139,7 @@ Rules:
 - The binding is **compile-time-only** and is not lowered into runtime code.
 - A `#const` binding is visible only inside specification expressions:
   - function specs (`#require`, `#assure`),
-  - loop specs (`#invariant`, `#variant`).
+  - loop specs (`#invariant`, `#variant`, `#monovariant`).
 - Using a `#const` name in a runtime expression (e.g. in `while` conditions or normal
   `let` initializers) is a compile-time error. Use a normal `let` binding for
   runtime values, and (optionally) introduce a `#const` alias for specifications.
@@ -187,7 +188,7 @@ fn name (params) -> ResultType {
   - attaches them to the corresponding function in the AST as lists of
     preconditions, postconditions, and contract theories.
 
-Loop invariants and variants (`#invariant`, `#variant`) follow a similar
+Loop specifications (`#invariant`, `#variant`, `#monovariant`) follow a similar
 pattern for loops.
 
 ### Loop annotations (initial syntax)
@@ -197,6 +198,7 @@ For `while` loops, the initial surface syntax is:
 ```silk
 #invariant <Expr>;
 #variant <Expr2>;
+#monovariant <Expr3>;
 while condition {
   ...
 }
@@ -204,22 +206,27 @@ while condition {
 
 Rules:
 
-- One or more `#invariant` annotations and at most one `#variant` annotation
-  may appear immediately before the `while` keyword.
+- One or more `#invariant` annotations, zero or more `#monovariant` annotations,
+  and at most one `#variant` annotation may appear immediately before the
+  `while` keyword.
 - Each annotation is terminated by a semicolon.
 - The compiler front-end:
   - lexes these annotations as directive tokens,
   - parses the annotation expressions using the normal expression grammar,
-  - attaches them to the corresponding loop in the AST as invariants and a
-    (single) variant expression.
+  - attaches them to the corresponding loop in the AST as invariants,
+    monovariants, and a (single) variant expression.
 
 The verifier will interpret:
 
-- `#invariant` expressions as properties that must hold:
+- `#invariant` expressions (type `bool` in the current subset) as properties that must hold:
   - before entering the loop,
-  - after each iteration (assuming the body and condition do not diverge).
+  - after each iteration (assuming the body and condition do not diverge),
+  - and at `break` exits (so proofs after the loop may rely on the invariant).
 - `#variant` expressions as a well-founded measure that must decrease on each
-  iteration, used for termination proofs.
+  iteration (and be non-negative at the loop head), used for termination proofs.
+- `#monovariant` expressions as measures that must be monotonic on each
+  iteration (either non-decreasing or non-increasing, proved consistently across
+  all continuation paths).
 
 Compiler requirements:
 
@@ -260,9 +267,11 @@ Implemented end-to-end (Z3-backed, current subset):
 - `#assert`:
   - proves the asserted expression holds at the `#assert` site,
   - and then assumes it for the remainder of the block.
-- `#invariant` / `#variant` on `while` loops:
+- `#invariant` / `#variant` / `#monovariant` on `while` loops:
   - prove invariants at entry and preservation across one iteration,
   - prove variants are non-negative and decrease across one iteration.
+  - prove monovariants are monotonic across one iteration (either non-decreasing
+    or non-increasing, consistent across all continuation paths).
 - Formal Silk declarations via `#const`:
   - may be referenced only by specification expressions,
   - are rejected in runtime expressions (`E2014`).

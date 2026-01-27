@@ -210,6 +210,7 @@ Fields:
   - `needed = ["libc.so.6", "..."]` (repeatable `DT_NEEDED` entries),
   - `runpath = ["$ORIGIN", "..."]` (joined with `:` for `DT_RUNPATH`),
   - `soname = "libfoo.so"` (for shared libraries).
+  - Note: `needed` entries starting with `libsilk_rt` are rejected; bundled runtime helpers are linked statically by `silk build` when referenced.
 
 ## Default Target (`[build]`)
 

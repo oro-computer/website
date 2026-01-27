@@ -8,7 +8,6 @@ It sits at the bottom of most other std modules.
 
 See also:
 
-- `docs/language/arenas.md` (historical pointer; renamed to regions)
 - `docs/language/regions.md` (`region`, `with`, and region-backed `new`)
 - `docs/language/buffers.md` (`Buffer(T)` intrinsic)
 - `docs/std/conventions.md` (allocation conventions)

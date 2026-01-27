@@ -18,8 +18,8 @@ An interface declares a set of required method *signatures*.
 Syntax:
 
 ```silk
-interface Logger {
-  fn log(msg: string) -> void;
+interface Element {
+  fn onclick(event: &Event) -> void;
 }
 ```
 
@@ -96,15 +96,17 @@ and provides method bodies.
 Example:
 
 ```silk
-interface Logger {
-  fn log(msg: string) -> void;
+interface Element {
+  fn onclick(event: &Event) -> void;
 }
 
-struct StdoutLogger {}
+struct Button {
+  handle: i64;
+}
 
-impl StdoutLogger as Logger {
-  fn constructor(...) -> StdoutLogger { ... }
-  fn log(self: &StdoutLogger, msg: string) -> void { ... }
+impl Button as Element {
+  fn constructor(...) -> Button { ... }
+  fn onclick(self: &Button, event: &Event) -> void { ... }
 }
 ```
 
@@ -197,4 +199,5 @@ For the initial compiler/backend subset, interface use is limited to:
 - calling methods directly on concrete types (no interface-typed values at
   runtime).
 - special-case compiler hooks for specific interfaces (currently
-  `std::interfaces::Drop` for deterministic cleanup).
+  `std::interfaces::Drop` for deterministic cleanup; see
+  `docs/std/interfaces.md` and `docs/language/memory-model.md`).

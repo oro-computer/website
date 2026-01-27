@@ -214,6 +214,11 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2104` — invalid regexp literal (pattern compile failed).
 - `E2105` — method is private to its `impl` block (not visible from the call site).
 - `E2106` — interface-required methods may not be declared `private`.
+- `E2107` — destructuring requires a non-opaque struct value.
+- `E2108` — cannot destructure opaque struct.
+- `E2109` — destructuring pattern does not match the struct type (wrong arity, unknown field, or duplicate binder/field).
+- `E2110` — array destructuring requires an array/slice value.
+- `E2111` — array destructuring pattern does not match the array type (wrong arity for fixed arrays, or duplicate binder).
 
 ### Formal Silk Verification
 
@@ -224,12 +229,13 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E3005` — Formal Silk verification failed to initialize or encountered an unsupported construct.
 - `E3006` — assertion may not hold (`#assert` and theory assertions).
 - `E3007` — call precondition may not hold.
+- `E3008` — loop monovariant may not be monotonic.
 
 Notes:
 
 - When `silk build --debug` or `silk test --debug` is used, failed Formal Silk
   checks emit additional Z3 debug output and write an SMT-LIB2 reproduction
-  script under `tmp/` in the current working directory.
+  script under `.silk/z3/` in the current working directory (or `$SILK_WORK_DIR/z3`).
 
 ### Code Generation / Backend Lowering
 

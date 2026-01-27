@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-01-26T22:49:11+00:00",
+  "generatedAt": "2026-01-27T16:26:45+00:00",
   "kind": "wiki",
-  "count": 82,
+  "count": 84,
   "sections": [
     {
       "name": "overview",
@@ -68,7 +68,7 @@
         },
         {
           "id": "language/arenas",
-          "title": "Arenas (legacy)",
+          "title": "Arenas",
           "file": "language/arenas.md"
         },
         {
@@ -110,6 +110,11 @@
           "id": "language/const-functions",
           "title": "Const Functions (`const fn`)",
           "file": "language/const-functions.md"
+        },
+        {
+          "id": "language/conventions",
+          "title": "Conventions",
+          "file": "language/conventions.md"
         },
         {
           "id": "language/dependent-types",
@@ -261,6 +266,11 @@
     {
       "name": "std",
       "items": [
+        {
+          "id": "std/conventions",
+          "title": "`std::` conventions",
+          "file": "std/conventions.md"
+        },
         {
           "id": "std/package-structure",
           "title": "`std::` package structure",

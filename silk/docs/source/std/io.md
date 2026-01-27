@@ -73,10 +73,10 @@ Notes:
 - `read_to_end` returns `IOErrorIntResult` (`Ok(total_bytes)` or `Err(IOFailed)`), where allocation failure is reported as `IOErrorKind::OutOfMemory` and `IOFailed.requested`.
 - For ergonomics, `std::fmt::Arg` opts into the compiler’s implicit
   call-argument coercion mechanism (see `docs/language/types.md`). This allows
-  passing primitive values (`int`/fixed-width ints, `f32`/`f64`, `bool`, `char`, `string`)
-  directly when calling functions that expect `Arg` parameters (including
-  varargs), so you can write `println("hello {}", "world")` without explicit
-  `Arg.*` wrappers.
+  passing primitive values (`int`/fixed-width ints, `usize`/`size`, `f32`/`f64`,
+  `bool`, `char`, `string`, `regexp`, `Region`) directly when calling functions
+  that expect `Arg` parameters (including varargs), so you can write
+  `println("hello {}", "world")` without explicit `Arg.*` wrappers.
 - Executable outputs import external libc symbols. On `linux/x86_64` with the
   glibc dynamic loader (`ld-linux`), `silk` automatically adds `libc.so.6` as a
   `DT_NEEDED` dependency when external symbols are present, so `--needed libc.so.6`

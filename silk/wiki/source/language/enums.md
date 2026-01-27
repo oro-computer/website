@@ -15,7 +15,7 @@ Canonical spec: `docs/language/enums.md`.
 - Implemented subset + representation: `docs/language/enums.md`
 - End-to-end support snapshot: `STATUS.md`
 
-## Syntax
+## Syntax (Selected)
 
 ```silk
 enum Msg {
