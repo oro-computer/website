@@ -79,6 +79,20 @@
     return normalized;
   }
 
+  // Standalone spec pages: keep the spec reader-focused (TC39-style).
+  if (kind === "docs") {
+    const params = new URLSearchParams(globalThis.location.search);
+    const raw = params.get("p");
+    const normalized = raw ? normalizeRelPath(raw) : null;
+    const match = normalized ? normalized.match(/^spec\/(\d{4})$/) : null;
+    if (match) {
+      const year = match[1];
+      const hash = globalThis.location.hash || "";
+      globalThis.location.replace(`../spec/${year}/${hash}`);
+      return;
+    }
+  }
+
   function dirname(path) {
     const parts = path.split("/");
     parts.pop();

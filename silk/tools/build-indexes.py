@@ -259,6 +259,22 @@ def strip_internal_refs(markdown: str) -> str:
     skip_level: int | None = None
     code_lang: str | None = None
 
+    def drop_proposal_process(md: str) -> str:
+        lines = md.splitlines()
+        out: list[str] = []
+        i = 0
+        while i < len(lines):
+            if re.match(r"^##\s+Silk Proposal Process\b", lines[i], flags=re.I):
+                i += 1
+                while i < len(lines) and not re.match(r"^##\s+", lines[i]):
+                    i += 1
+                continue
+            out.append(lines[i])
+            i += 1
+        return "\n".join(out)
+
+    markdown = drop_proposal_process(markdown)
+
     def rewrite_comment(text: str) -> str:
         out = text
         out = re.sub(r"\bwhat works today\b", "supported behavior", out, flags=re.I)

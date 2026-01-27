@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-01-27T16:26:45+00:00
+Generated: 2026-01-27T20:49:16+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -176,7 +176,7 @@ Silk Docs
   - man/slc.1 — `slc` (1) — Alias of `silk build` — /silk/docs/?p=man/slc.1
   - man/slcc.1 — `slcc` (1) — Alias of `silk cc` — /silk/docs/?p=man/slcc.1
 - Spec
-  - spec/2026 — Silk Specification (2026) — /silk/docs/?p=spec/2026
+  - spec/2026 — Silk Specification (2026) — /silk/spec/2026/
 
 Silk Wiki
 - Start
@@ -322,7 +322,7 @@ Start here:
 - Guides: [Hello world](?p=guides/hello-world) · [Language tour](?p=guides/language-tour) · [Modules & packages](?p=guides/modules-and-packages)
 - Guides: [Standard library](?p=guides/standard-library) · [CLI and toolchain](?p=guides/cli)
 - Guides: [Testing](?p=guides/testing) · [Formal Silk](?p=guides/formal-silk)
-- Spec: [Silk Spec (2026)](?p=spec/2026)
+- Spec: [Silk Spec (2026)](../spec/2026/)
 
 ==============================================================================
 DOCS: What Silk is for (guides/purpose)
@@ -24185,7 +24185,7 @@ See `silk-cc` (1) for details, including the default `-I`/`-L`/`-lsilk` flags.
 
 ==============================================================================
 DOCS: Silk Specification (2026) (spec/2026)
-URL: /silk/docs/?p=spec/2026
+URL: /silk/spec/2026/
 ==============================================================================
 
 <!--
@@ -24197,52 +24197,6 @@ This file is generated. Do not edit it by hand.
 This is the single-file edition of the Silk language specification for 2026.
 
 ---
-## Silk Proposal Process (TC39-Inspired)
-
-This directory contains Silk language proposals. The process is inspired by
-TC39 (the ECMAScript standards committee), but adapted to Silk’s repo workflow:
-
-- the repository specification is docs-first,
-- the single-file spec is generated from source chapters,
-- and non-trivial work must be recorded in the repo’s planning/status trackers.
-
-### Proposal Files
-
-- Proposals live as Markdown files in this directory.
-- File name convention:
-  - `YYYY-MM-DD-short-title.md` (recommended), or
-  - `short-title.md` (when date is not useful).
-- Each proposal MUST start with a header block:
-
-  ```md
-  # Title
-
-  Status: Stage 1
-  Champion(s): @name, @name
-  Updated: 2026-01-27
-  ```
-
-### Promotion and Changes
-
-- To promote a proposal to a new stage, edit its `Status:` line and update the
-  “Updated:” date.
-- Promotions to Stage 2+ SHOULD include a link to the PR or issue implementing
-  the change.
-- Promotions to Finished MUST update:
-  - the repo’s status tracker (what shipped, what is still missing),
-  - and any affected spec/ABI/CLI documentation.
-
-### Spec Integration
-
-The single-file edition spec is generated from source chapters. Do not edit it
-by hand.
-
-If a proposal changes language semantics, it MUST:
-
-- update the relevant spec chapters,
-- add runnable fixtures (pass + fail cases),
-- and ensure diagnostics are stable and documented.
-
 ## Language Cheat Sheet
 
 This document summarizes the key syntax and concepts from the Silk language in a condensed form. It is meant as a quick reference; detailed semantics live in the other `this specification` files.

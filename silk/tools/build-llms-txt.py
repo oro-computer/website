@@ -68,6 +68,10 @@ def section_label(name: str) -> str:
 
 
 def doc_url(item: DocItem) -> str:
+    if item.kind == "docs":
+        m = re.match(r"^spec/(\d{4})$", item.id)
+        if m:
+            return f"/silk/spec/{m.group(1)}/"
     if item.kind == "wiki":
         return f"/silk/wiki/?p={item.id}"
     return f"/silk/docs/?p={item.id}"
@@ -179,6 +183,22 @@ def sanitize_markdown(markdown: str) -> str:
     in_code = False
     skip_level: int | None = None
     code_lang: str | None = None
+
+    def drop_proposal_process(md: str) -> str:
+        lines = md.splitlines()
+        out: list[str] = []
+        i = 0
+        while i < len(lines):
+            if re.match(r"^##\s+Silk Proposal Process\b", lines[i], flags=re.I):
+                i += 1
+                while i < len(lines) and not re.match(r"^##\s+", lines[i]):
+                    i += 1
+                continue
+            out.append(lines[i])
+            i += 1
+        return "\n".join(out)
+
+    markdown = drop_proposal_process(markdown)
 
     for raw in markdown.splitlines():
         trimmed = raw.lstrip()

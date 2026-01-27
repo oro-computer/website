@@ -295,6 +295,83 @@ pre code {
   align-items: start;
 }
 
+.spec-layout {
+  grid-template-columns: 320px minmax(0, 1fr);
+}
+
+.spec-toc-wrap {
+  padding: 1rem 0;
+}
+
+.spec-toc-title {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: rgba(250, 248, 244, 0.62);
+  margin-bottom: 0.75rem;
+}
+
+.spec-toc {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.spec-toc a {
+  display: block;
+  padding: 0.45rem 0.55rem;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  text-decoration: none;
+  color: rgba(250, 248, 244, 0.78);
+  font-size: 0.93rem;
+  line-height: 1.25;
+}
+
+.spec-toc a:hover,
+.spec-toc a:focus-visible {
+  border-color: var(--color-border);
+  background: rgba(250, 248, 244, 0.06);
+  color: var(--color-fg);
+}
+
+.spec-toc a[data-active="true"] {
+  border-color: var(--color-border);
+  background: rgba(250, 248, 244, 0.08);
+  color: var(--color-fg);
+}
+
+.spec-toc a[data-level="h2"] {
+  font-weight: 650;
+}
+
+.spec-toc a[data-level="h3"] {
+  padding-left: 1.05rem;
+}
+
+.spec-toc a[data-level="h4"] {
+  padding-left: 1.7rem;
+  color: rgba(250, 248, 244, 0.7);
+  font-size: 0.9rem;
+}
+
+.spec-toc a[data-level="h5"] {
+  padding-left: 2.35rem;
+  color: rgba(250, 248, 244, 0.66);
+  font-size: 0.88rem;
+}
+
+.spec-prose {
+  max-width: 92ch;
+}
+
+.spec-prose h2,
+.spec-prose h3,
+.spec-prose h4,
+.spec-prose h5 {
+  scroll-margin-top: 1.5rem;
+}
+
 .docs-sidebar {
   position: sticky;
   top: 1.25rem;
