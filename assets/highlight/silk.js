@@ -15,7 +15,7 @@ module.exports = function (hljs) {
   const DOC_TAG = {
     className: "doctag",
     begin:
-      /@(param|returns|throws|example|since|deprecated|remarks|see|misc|cli|synopsis|option|command)\b/,
+      /@(param|returns|throws|external|requires|assures|asserts|theory|example|since|deprecated|remarks|see|misc|cli|synopsis|option|command)\b/,
     relevance: 0,
   };
 
@@ -138,7 +138,7 @@ module.exports = function (hljs) {
 
   const VERIFIER = {
     className: "meta",
-    begin: /#[ \t]*(?:const|require|assure|assert|invariant|variant|theory)\b/,
+    begin: /#[ \t]*(?:const|require|assure|assert|invariant|variant|monovariant|theory)\b/,
     relevance: 0,
   };
 
