@@ -32,10 +32,28 @@ The initial implementation is intentionally smaller and focuses on:
   - `help` — print global usage and exit,
   - `help <command>` — print command-specific usage and exit,
   - `--version` — print the embedding ABI version and exit,
+- `silk repl` — start an interactive “compile-and-run” REPL:
+  - currently supported only on `linux/x86_64` (native ELF backend),
+  - intended as a node-like default when `silk` is launched with no arguments
+    and stdin is a TTY,
+  - stateful by replay: each successful line is appended to a session program.
+    When you enter runtime lines (statements/expressions), the session is
+    re-executed from the start (so side effects may repeat). Import and
+    declaration lines are validated by compilation only (not executed),
+  - supports:
+    - `.help` — show help,
+    - `.clear` — reset session state,
+    - `.cls` — clear the screen,
+    - `.undo` — undo the last successful line,
+    - `.exit` — exit the REPL,
+  - history is loaded/saved to:
+    - `$SILK_REPL_HISTORY` when set, otherwise
+    - `$SILK_WORK_DIR/repl_history` (default: `.silk/repl_history` under the
+      nearest package root or current directory),
 - `silk check [--nostd] [--std-root <path>] [--z3-lib <path>] [--debug] [--package <dir|manifest>] <file> [<file> ...]` — parse and type-check one or more Silk source files as a unit, exiting with:
   - code `0` on success,
   - non-zero on error, printing a human-readable diagnostic (format specified in `docs/compiler/diagnostics.md`).
-- `silk test [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [--noheap] [--filter <pattern>] [--package <dir|manifest>] <file> [<file> ...]` — compile and run language-level `test` declarations found in the module set, emitting TAP output:
+- `silk test [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--filter <pattern>] [--package <dir|manifest>] <file> [<file> ...]` — compile and run language-level `test` declarations found in the module set, emitting TAP output:
   - uses TAP version 13 formatting (`TAP version 13`, `1..N`, `ok`/`not ok` lines),
   - in the current implementation, each test runs in its own process so a failing `assert` (panic/abort) does not stop the whole suite,
   - the supported code generation subset matches `silk build` for the active target (initially `linux/x86_64`).
@@ -103,10 +121,15 @@ The initial implementation is intentionally smaller and focuses on:
   - `make stdlib` builds a target-specific static archive (`libsilk_std.a`)
     containing one ELF object per std module (development default:
     `zig-out/lib/libsilk_std.a`),
-  - for supported executable builds, the compiler treats auto-loaded `std::...`
-    modules as **external** during code generation and resolves their exported
-    functions from the archive when available (while still type-checking the
-    std sources as part of the module set),
+  - for supported `silk build --kind executable` builds, the compiler can treat
+    auto-loaded `std::...` modules as **external** during code generation and
+    resolve their exported functions from the archive when available (while
+    still type-checking the std sources as part of the module set),
+    - by default this archive-linking path is only used for `-O0` builds (when
+      `-O` is omitted, this is usually the case only when `--debug` is enabled),
+    - for `-O1`+ builds, `silk build` prefers compiling std sources into the
+      executable so unreachable std code can be pruned,
+    - `--std-lib` / `--std <path>.a` forces archive linking regardless of `-O`,
     - only std modules auto-loaded via `import std::...;` participate in this
       external/archive path; std modules imported by file path (including
       `from "std/<path>"`) are compiled into the build like ordinary file
@@ -125,12 +148,20 @@ The initial implementation is intentionally smaller and focuses on:
     as ordinary source files),
 - user-provided `package std::...;` modules continue to override the default
   std implementation for the same package names.
-- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <file> [<file> ...] -o <path> [--kind executable|object|static|shared] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]` (or `--out <path>`) — for now:
+- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]` (or `--out <path>`) — for now:
+  - inputs are classified by extension:
+    - `.slk` — Silk source files (compiled as the module set),
+    - `.o` — ELF relocatable objects linked into `--kind executable|shared` outputs (and included in `--kind static` archives),
+    - `.a` — static archives; their `.o` members are treated like object inputs,
+    - `.so` — shared libraries treated as dynamic dependencies (equivalent to `--needed <soname>` using the library’s basename),
+    - `.c` — C sources compiled to objects via the host C compiler (see `silk cc` / `SILK_CC`) and then treated like `.o` inputs,
+    - note: linking `.o`/`.a`/`.c` inputs is currently supported only for `linux/x86_64` outputs,
   - when multiple input files are provided, runs module-set front-end checks (package/import resolver + multi-module type checking that accounts for imported exported constants and imported `export fn` calls),
+  - declaration-only exported function prototypes (`export fn name(...) -> T;`) are accepted as module exports for type-checking, but do not emit code; calls lower as link-time symbol references that must be satisfied by other Silk sources in the module set and/or non-`.slk` link inputs (`.o`/`.a`/`.c`),
   - when a single input file is provided, runs the existing single-module front-end checks,
   - when no input files are provided and `--package` / `--pkg` is omitted, but `./silk.toml` exists, the compiler behaves as if `--package .` was provided (package builds from the current directory by default),
   - when `--package` is provided:
-    - input files must be omitted,
+    - `.slk` input files must be omitted (the module set is loaded from the manifest), but non-`.slk` link inputs (`.c`, `.o`, `.a`, `.so`) may still be provided,
     - `--build-script` runs `<package_root>/build.silk` and uses its stdout as
       the package manifest (see `docs/compiler/build-scripts.md`),
     - `--package-target <name>` selects one or more manifest `[[target]]` entries by name (repeatable; `--pkg-target` is accepted as an alias),
@@ -143,7 +174,11 @@ The initial implementation is intentionally smaller and focuses on:
   - when `-o/--out` or `--c-header` includes parent directories that do not exist yet, the compiler creates them (like `mkdir -p`),
   - multi-file builds are supported for `--kind executable` and for `--kind object`, `--kind static`, and `--kind shared`:
     - when multiple packages are present in a module set for a non-executable output, only exports from the *root package* (the package of the first input module) are emitted as globally-visible symbols; other packages are compiled as dependencies and their `export` declarations are treated as internal for that output,
-  - for `--kind executable`, enforces the executable entrypoint rule (exactly one `main` of either `fn main() -> int`, `async fn main() -> int`, or `fn main(argc: int, argv: u64) -> int`),
+  - for `--kind executable`:
+    - when the module set defines a valid Silk entrypoint, enforces the executable entrypoint rule (exactly one `main` of either `fn main() -> int`, `async fn main() -> int`, or `fn main(argc: int, argv: u64) -> int`),
+    - script-style entrypoints: when the **first** `.slk` input contains top-level *statements* (after the normal `package`/`module` header and `import` block) and does not define an explicit `main`, `silk build` treats those statements as a script body and synthesizes an implicit `fn main() -> int` that executes them and then returns `0`,
+    - when the module set defines no valid Silk `main`, requires an object/archive-provided `main(argc: int, argv: u64) -> int` symbol (for example from a `.c`/`.o`/`.a` input) and emits an entry stub that forwards `argc`/`argv` to it,
+    - note: for now, `--std-lib` / `--std <path>.a` is rejected when linking additional `.c`/`.o`/`.a` inputs into an executable (std sources are compiled into the build instead),
     - for `linux/x86_64` native executables, when the `argc`/`argv` form is used, the entry stub passes:
       - `argc`: the process argument count, and
       - `argv`: a raw pointer to the argv pointer list (a C-style `char**`, where `argv[0]` is at byte offset `0`, `argv[1]` at `8`, etc.),
@@ -211,7 +246,7 @@ The initial implementation is intentionally smaller and focuses on:
       - string literals are embedded as rodata byte blobs and `.text`→rodata fixups are emitted/handled appropriately for each output kind (ELF relocations for object/static outputs; direct RIP-relative displacement patching for shared libraries and executables once the final `.text`/rodata layout is known),
     - for non-executable outputs, exported `string` constants (`export let`/`export const` with a string literal initializer; `: string` is optional) are emitted as `SilkString` data symbols for downstream C consumers, and exported functions of this subset may accept and return `string` values using the same `{ ptr: u64, len: i64 }` ABI.
     - on `linux/x86_64`, the current backend also supports a limited `struct` subset:
-      - `struct` declarations with 1+ fields of supported value types:
+      - `struct` declarations with 0+ fields of supported value types:
         - scalar primitives (`int`/fixed-width ints, `bool`, `char`, `f32`, `f64`, `Instant`, `Duration`),
         - `string` (lowered as `{ ptr: u64, len: i64 }`),
         - nested (non-opaque) structs,
@@ -222,7 +257,7 @@ The initial implementation is intentionally smaller and focuses on:
       - at ABI boundaries for exported/FFI functions, structs must be ABI-safe: after slot flattening, all slots must be `i64`/`u64`/`f64` (for example `string` fields are ABI-safe, but `bool`, `char`, and `f32` fields are not).
     - on `linux/x86_64`, the current backend also supports a limited optional subset:
       - optionals of scalar payload types (`T?` where `T` is `bool`, `char`, `f32`, `f64`, `int`, `Instant`, `Duration`, or a fixed-width integer),
-      - optionals of `string` payload type (`string?`), and optionals of the supported `struct` subset (`Type?` where `Type` is a supported 1+ field `struct`),
+      - optionals of `string` payload type (`string?`), and optionals of the supported `struct` subset (`Type?` where `Type` is a supported 0+ field `struct`),
       - nested optionals (`T??`) for these payload types,
       - constructing optionals via `None` and `Some(<expr>)` for those payload types,
       - `==` / `!=` comparisons over those optionals (tag + payload equality; nested optionals compare recursively); `None` / `Some(...)` can be used directly in equality expressions when the other operand provides the optional type context (for example `opt == None` and `opt == Some(x)`),
@@ -247,6 +282,7 @@ The initial implementation is intentionally smaller and focuses on:
       - for shared library outputs, the library soname can be set via `--soname <soname>` (emitted as `DT_SONAME`),
       - on `linux/x86_64` with the glibc dynamic loader (`ld-linux`), when an executable or shared library imports any external symbols, `silk` automatically adds `libc.so.6` as a `DT_NEEDED` dependency (so hosted `std::` modules do not require `--needed libc.so.6`),
       - on the same baseline, when libsodium-backed symbols are imported (for example via `import std::crypto;`), `silk` automatically adds `libsodium.so.23` as a `DT_NEEDED` dependency,
+      - on the same baseline, when `std::ggml` is imported (or when linked `.o`/`.a` inputs reference `silk_ggml_init`) and the vendored ggml static archives are present, `silk` links them automatically and adds `libstdc++.so.6`, `libgcc_s.so.1`, `libm.so.6`, and `libdl.so.2` as `DT_NEEDED` dependencies (see `docs/std/ggml.md` and `docs/compiler/vendored-deps.md`),
       - on the same baseline, when bundled runtime support symbols are imported (for example via `import std::regex;`, `import std::unicode;`, or `import std::number;`), `silk` statically links the bundled runtime support archive into the output (`libsilk_rt.a`, or `libsilk_rt_noheap.a` when building with `--noheap`); the produced executable/shared library does not depend on `libsilk_rt*.so` at runtime,
       - additional non-libc, non-libsodium dependencies still must be declared via `--needed <soname>` (or otherwise be available in the process global scope at load time, for example via `LD_PRELOAD`),
       - bundled runtime archive discovery:
@@ -345,14 +381,22 @@ Top-level commands:
   - When `--package` is provided, input files must be omitted and the module set is loaded from the package manifest (see `docs/compiler/package-manifests.md`).
   - Prints a success message on stdout for valid programs.
   - Prints a human-readable error on stderr and exits non-zero for invalid programs.
-- `silk test [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [--noheap] [--filter <pattern>] [--package <dir|manifest>] <file> [<file> ...]`:
+- `silk test [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--filter <pattern>] [--package <dir|manifest>] <file> [<file> ...]`:
   - Discovers language-level `test` declarations (see `docs/language/testing.md`) in the loaded module set.
   - Compiles and runs each test, emitting TAP version 13 output.
   - In the current implementation, each test runs in its own process so a failing `assert` (panic/abort) does not stop the whole suite.
+  - Optimization:
+    - `-O <0-3>` selects the optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`).
+    - In the current implementation, `-O1`+ prunes unused extern symbols before code generation (typically reducing output size and stdlib linkage).
+    - For IR-backed native executable builds, `-O1`+ also prunes unreachable functions from the executable entrypoint (function-level dead-code elimination).
   - When `--filter <pattern>` is provided, only tests whose display name contains `<pattern>` are executed.
   - When `<file> ...` inputs are omitted and `--package` is also omitted, but `./silk.toml` exists, `silk test` behaves as if `--package .` was provided.
-- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <file> [<file> ...] -o <path> [--kind executable|object|static|shared] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]` (or `--out <path>`):
+- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <file> [<file> ...] -o <path> [--kind executable|object|static|shared] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]` (or `--out <path>`):
   - Reads one or more input files, runs the same front-end pipeline as `check`.
+  - Optimization:
+    - `-O <0-3>` selects the optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`).
+    - In the current implementation, `-O1`+ prunes unused extern symbols before code generation.
+    - For `--kind executable` builds, `-O1`+ also prunes unreachable functions from the executable entrypoint (function-level dead-code elimination), typically reducing output size.
   - When `--package` is provided:
     - input files must be omitted,
     - `--build-script` runs `<package_root>/build.silk` and uses its stdout as

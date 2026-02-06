@@ -258,6 +258,18 @@ Notes:
   let [a, b] = records;
   ```
 
+  Enum destructuring is also supported:
+
+  ```silk
+  import std::result;
+
+  fn main () -> int {
+    type R = std::result::Result(int, int);
+    let Ok(value) = R.ok(7);
+    return value;
+  }
+  ```
+
 ### 4.2 Functions: `fn` (plus `pure`, `async`, `task`)
 
 Basic function declaration:

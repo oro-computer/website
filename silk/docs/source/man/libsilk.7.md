@@ -382,6 +382,11 @@ bool silk_compiler_set_optimization_level(SilkCompiler *compiler,
   - `1` — light optimization,
   - `2` — balanced optimization,
   - `3` — aggressive optimization.
+- The default optimization level is `0` unless overridden.
+- In the current implementation, `level >= 1` enables lowering-time pruning of
+  unused extern symbols before code generation. This typically reduces output
+  size and over-linking when using the prebuilt stdlib archive (`libsilk_std.a`)
+  to satisfy auto-loaded `import std::...;` modules.
 - Returns:
   - `true` on success,
   - `false` and records an error (e.g. `"invalid optimization level (expected 0-3)"`) when the value is invalid.

@@ -26,6 +26,14 @@ Implementation status (current compiler subset):
   literal type arguments (`Foo(N: int)`, `Foo(u8, 1024)`) (`docs/compiler/diagnostics.md`, `E2016`),
   and the removed builtin map type form (`map(K, V)`) (`E2017`; use
   `std::map::{HashMap, TreeMap}` instead).
+- Implemented in the native backend subset: 128-bit scalar primitives
+  (`i128`, `u128`, `f128`).
+  - In the current scalar-slot model (`docs/language/structs-impls-layout.md`),
+    these primitives lower to **two 8-byte slots** (`lo: u64`, `hi: u64`).
+  - `f128` uses the IEEE‑754 binary128 bit pattern stored across those slots.
+  - On `linux/x86_64` in the current backend implementation, `f128` arithmetic
+    and some `as` casts lower to bundled runtime helper calls and rely on
+    `libgcc_s.so.1` for `__float128` builtins.
 - Typed errors (`error`, `panic`, and `T | ErrorType...`) are specified in
   `docs/language/typed-errors.md`. The current compiler models typed error
   contracts as an effect on function return types and expressions.
@@ -41,7 +49,7 @@ The core categories are:
 - Booleans: `bool`
   - Examples: `true`, `false`.
   - Notes: logical values.
-- Integers (fixed width): `u8`, `i8`, `u16`, `i16`, `u32`, `i32`, `u64`, `i64`
+- Integers (fixed width): `u8`, `i8`, `u16`, `i16`, `u32`, `i32`, `u64`, `i64`, `u128`, `i128`
   - Examples: `let n: i32 = 42;`.
   - Notes: signed/unsigned bit-widths.
 - Integer (platform): `int`
@@ -52,7 +60,7 @@ The core categories are:
   - Notes: unsigned/signed integer types whose width matches the target
     architecture pointer width (for example 64-bit on `linux/x86_64`).
   - Compatibility: `isize` is accepted as an alias for `size`.
-- Floats: `f32`, `f64`
+- Floats: `f32`, `f64`, `f128`
   - Examples: `let x: f64 = 3.14;`.
   - Notes: IEEE‑754.
 - Char: `char`
@@ -189,8 +197,11 @@ Rule (informal):
 Supported ctor-like method names (destination type opts in by defining these):
 
 - `T.int(value: int) -> T`
+- `T.i128(value: i128) -> T`
 - `T.u64(value: u64) -> T`
+- `T.u128(value: u128) -> T`
 - `T.f64(value: f64) -> T`
+- `T.f128(value: f128) -> T`
 - `T.bool(value: bool) -> T`
 - `T.char(value: char) -> T`
 - `T.string(value: string) -> T`
@@ -200,8 +211,11 @@ Supported ctor-like method names (destination type opts in by defining these):
 Selection (source type → constructor):
 
 - Signed integer primitives (`i8/i16/i32/i64/int/size/isize/Instant/Duration`) → `int`
+- Signed wide integer primitive (`i128`) → `i128`
 - Unsigned integer primitives (`u8/u16/u32/u64/usize`) → `u64`
+- Unsigned wide integer primitive (`u128`) → `u128`
 - Float primitives (`f32/f64`) → `f64`
+- Wide float primitive (`f128`) → `f128`
 - `bool` → `bool`
 - `char` → `char`
 - `string` → `string`

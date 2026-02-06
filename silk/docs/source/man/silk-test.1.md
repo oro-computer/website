@@ -28,6 +28,7 @@ When explicit input files are used (no `--package`), the `silk` CLI may load add
 - `--std <path>.a` — alias of `--std-lib`.
 - `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`).
 - `--debug`, `-g` — enable debug build mode (also enables extra Formal Silk debug output when verification fails).
+- `-O <0-3>` — set optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`). `-O1`+ prunes unused extern symbols before code generation and prunes unreachable functions in executable builds (typically reducing output size).
 - `--noheap` — reject heap allocation in the supported subset.
 - `--filter <pattern>` — run only tests whose display name contains `<pattern>` (substring match).
 - `--package <dir|manifest>`, `--pkg <dir|manifest>` — load the module set from a `silk.toml` manifest instead of explicit input files. When `<file> ...` inputs are omitted and `--package` / `--pkg` is also omitted, but `./silk.toml` exists, `silk test` behaves as if `--package .` was provided.

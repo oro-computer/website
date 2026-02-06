@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-01-27T20:49:16+00:00",
+  "generatedAt": "2026-02-06T22:39:16+00:00",
   "kind": "docs",
-  "count": 155,
+  "count": 159,
   "sections": [
     {
       "name": "overview",
@@ -397,6 +397,11 @@
           "file": "std/filesystem.md"
         },
         {
+          "id": "std/ggml",
+          "title": "`std::ggml`",
+          "file": "std/ggml.md"
+        },
+        {
           "id": "std/http",
           "title": "`std::http`",
           "file": "std/http.md"
@@ -432,6 +437,11 @@
           "file": "std/map.md"
         },
         {
+          "id": "std/math",
+          "title": "`std::math`",
+          "file": "std/math.md"
+        },
+        {
           "id": "std/memory",
           "title": "`std::memory`",
           "file": "std/memory.md"
@@ -455,6 +465,11 @@
           "id": "std/process",
           "title": "`std::process`",
           "file": "std/process.md"
+        },
+        {
+          "id": "std/readline",
+          "title": "`std::readline`",
+          "file": "std/readline.md"
         },
         {
           "id": "std/regex",
@@ -490,6 +505,11 @@
           "id": "std/ssh2",
           "title": "`std::ssh2`",
           "file": "std/ssh2.md"
+        },
+        {
+          "id": "std/stream",
+          "title": "`std::stream`",
+          "file": "std/stream.md"
         },
         {
           "id": "std/strings",

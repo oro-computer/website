@@ -1,7 +1,7 @@
 # Numeric Literals
 
-Numeric literals produce integer (`int`, `u8`, `i64`, …) and floating-point
-(`f32`, `f64`) values.
+Numeric literals produce integer (`int`, `u8`, `i128`, …) and floating-point
+(`f32`, `f64`, `f128`) values.
 
 In Silk, the sign is an operator: `-1` is a unary `-` expression applied to the
 integer literal token `1`, not a distinct “negative literal” token.
@@ -20,9 +20,9 @@ What works end-to-end today (lexer → parser → checker → lowering → codeg
 - Unary `-` over numeric literals: `-1`, `-1.5`.
 - Contextual typing:
   - integer literals default to `int`, but adopt an expected integer type
-    (`u8`, `i32`, …) or time type (`Duration`, `Instant`) when a context
+    (`u8`, `i128`, …) or time type (`Duration`, `Instant`) when a context
     provides one,
-  - float literals default to `f64`, but adopt `f32`/`f64` from context.
+  - float literals default to `f64`, but adopt `f32`/`f64`/`f128` from context.
 - Duration literal tokens of the form `<number><unit>` (no whitespace) such as
   `500ms` and `1.5s` (specified in `docs/language/literals-duration.md`).
 - Lowering note (current IR backend subset): unannotated local `let` bindings
@@ -34,6 +34,8 @@ Not implemented yet:
 - Digit separators (`1_000`).
 - Exponent notation (`1e6`, `1.0e-3`).
 - Numeric type suffixes (`42u8`, `1.5f32`).
+- Numeric suffixes for 128-bit types (`1u128`, `1.0f128`) are not implemented;
+  use annotations or `as` casts.
 
 ## Quick Reference
 

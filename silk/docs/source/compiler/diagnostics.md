@@ -164,6 +164,7 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2052` — module does not satisfy the declared interface (signature mismatch).
 - `E2053` — unknown re-export name.
 - `E2054` — duplicate exported name.
+- `E2055` — prototype implementation is missing required import of its prototype module.
 - `E2056` — function expression may not have `&T` parameters.
 - `E2057` — duplicate type alias name.
 - `E2058` — type alias cycle.
@@ -174,6 +175,7 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2063` — derived struct redeclares an inherited field name.
 - `E2064` — derived interface redeclares an inherited method name.
 - `E2065` — opaque structs may not use `extends`.
+- `E2066` — prototype and implementation signatures do not match.
 - `E2067` — capturing closure is not allowed in `pure` code.
 - `E2068` — capturing closure capture type is not supported in the current subset.
 - `E2069` — capturing closure may not capture a mutable binding in the current subset.
@@ -219,6 +221,10 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2109` — destructuring pattern does not match the struct type (wrong arity, unknown field, or duplicate binder/field).
 - `E2110` — array destructuring requires an array/slice value.
 - `E2111` — array destructuring pattern does not match the array type (wrong arity for fixed arrays, or duplicate binder).
+- `E2112` — enum destructuring requires an enum value.
+- `E2113` — enum destructuring pattern does not match the enum type (unknown variant or wrong arity).
+- `E2114` — reserved (previously: `u128` not supported in the subset).
+- `E2115` — reserved (previously: `f128` not supported in the subset).
 
 ### Formal Silk Verification
 

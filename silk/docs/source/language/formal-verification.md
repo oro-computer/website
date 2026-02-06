@@ -291,9 +291,16 @@ Implemented end-to-end (Z3-backed, current subset):
   - after the call, the verifier assumes the callee’s postconditions (explicit
     `#assure` plus attached-theory `#assure`/`#invariant`) into the caller’s
     symbolic state so subsequent proofs can use them,
-  - in the current subset, contracted calls require the callee body to be a
-    single return expression (no runtime statements), and recursion is not
-    supported yet.
+  - if the callee has a source-visible body, the current subset requires that
+    body to be a single return expression (no runtime statements); the verifier
+    inlines that return expression in the caller’s symbolic state,
+  - if the callee has **no body** (a declaration-only prototype, typically used
+    when linking against a precompiled implementation), the verifier treats the
+    call as **opaque**:
+    - it proves the preconditions at the call site,
+    - introduces an uninterpreted symbolic value for the return,
+    - and assumes postconditions about that return value,
+  - recursion is not supported yet.
 - Stdlib is currently skipped:
   - Formal Silk verification does not run on `std::...` modules yet (they are
     treated as trusted) until the verifier covers the full std surface.

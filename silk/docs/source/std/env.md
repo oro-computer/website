@@ -6,7 +6,8 @@ Status: **Implemented subset**.
 
 The current implementation targets a hosted POSIX baseline (Linux/glibc) and is
 implemented on top of the pluggable `std::runtime::env` interface. WASI support
-is currently a stub (see “Platform notes”).
+is partially implemented: `get` works, while `set` remains unsupported (see
+“Platform notes”).
 
 ## API
 
@@ -40,9 +41,14 @@ export fn set_current_dir (path: string) -> std::process::ChdirFailed?;
 - `None`.
 
 The returned `string` is a **view** into the underlying runtime environment
-storage. It does not allocate and does not copy. Callers should treat the view
-as valid only until the environment is mutated (for example by calling
-`std::env::set`).
+storage. It does not copy. On POSIX, `get` does not allocate. On WASI, `get`
+may allocate once on first use to cache an environment snapshot (WASI requires
+caller-provided buffers for `environ_get`).
+
+Callers should treat the view as valid only until the environment is mutated
+(for example by calling `std::env::set`). On WASI Preview 1, environment
+mutation is not supported by the runtime, so values returned by `get` remain
+valid for the process lifetime.
 
 Example:
 
@@ -88,9 +94,15 @@ fn main () -> int {
 
 - **POSIX (default shipped stdlib)**: implemented via `getenv(3)` and
   `setenv(3)`.
-- **WASI**: currently stubbed:
-  - `get` always returns `None`,
-  - `set` always fails (returns `Some(SetVarFailed{ code: ... })` with `kind() == Unknown`).
+- **WASI**:
+  - `get` is implemented via WASI Preview 1 `environ_sizes_get` /
+    `environ_get` and caches the returned environment buffer for the process
+    lifetime,
+  - `set` is not supported on WASI Preview 1 and always fails (returns
+    `Some(SetVarFailed{ code: ... })` with `kind() == Unknown`).
+  - `get_current_dir` / `set_current_dir` are implemented via the virtual cwd
+    layer backing `std::process::getcwd` / `std::process::chdir` (they do not
+    mutate `$PWD`).
 
 ## Directory helpers
 
@@ -107,6 +119,10 @@ Current implementation:
 
 This is a pure environment-variable view and may be missing or stale if the
 process environment is not kept in sync with the real working directory.
+
+On `wasm32-wasi`, `$PWD` is often unset and does not track the virtual cwd used
+by `std::process::chdir`; prefer `get_current_dir` when you need the runtime
+working directory.
 
 ### `get_current_dir`
 

@@ -29,6 +29,10 @@ export const I64_MIN: i64;
 export const I64_MAX: i64;
 export const U64_MAX: u64;
 
+export const I128_MIN: i128;
+export const I128_MAX: i128;
+export const U128_MAX: u128;
+
 export const INT_MIN: int;
 export const INT_MAX: int;
 ```

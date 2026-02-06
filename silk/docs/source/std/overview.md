@@ -39,9 +39,12 @@ distribution:
 - `std::regex` — regular expression literals and helpers (see `docs/std/regex.md`).
 - `std::unicode` — Unicode scalar classification helpers (see `docs/std/unicode.md`).
 - `std::number` — number parsing/formatting helpers (see `docs/std/number.md`).
+- `std::math` — linear algebra utilities (vectors/matrices) for graphics and
+  general computation (see `docs/std/math.md`).
 - `std::limits` — numeric min/max limits for primitive types (see `docs/std/limits.md`).
 - `std::crypto` — cryptography primitives (hosted baseline via libsodium; see
   `docs/std/crypto.md`).
+- `std::ggml` — ggml tensor library bindings (early bring-up; see `docs/std/ggml.md`).
 - `std::uuid` — UUID primitives (v1/v3/v4/v5/v6/v7/v8) with parsing/formatting
   (see `docs/std/uuid.md`).
 - `std::semver` — Semantic Versioning (SemVer 2.0.0) parsing and precedence
@@ -68,7 +71,10 @@ distribution:
 - `std::url` — WHATWG URL parsing/serialization and `URLSearchParams` (`application/x-www-form-urlencoded`; see `docs/std/url.md`).
 - `std::task` — task/runtime helpers (hosted baseline; see `docs/std/task.md`).
 - `std::sync` — synchronization primitives (hosted baseline; see `docs/std/sync.md`).
+- `std::stream` — Web Streams-inspired byte streams and piping (see `docs/std/stream.md`).
 - `std::args` — native `main(argc, argv)` argument helpers (current subset; see `docs/std/args.md`).
+- `std::readline` — interactive line editor for CLI programs (TTY mode) built on
+  the bundled `linenoise` sources (see `docs/std/readline.md`).
 - `std::flag` — command line flag + positional parsing (current subset; see `docs/std/flag.md`).
 - `std::test` — test helpers for `silk test` (current subset; see `docs/std/test.md`).
 - `std::env` — environment variable access (hosted baseline; see `docs/std/env.md`).

@@ -362,10 +362,11 @@ conversions:
 - Integer → Integer (including `Instant`, `Duration`, and `char`):
   - The conversion is deterministic and may be lossy. It is performed by
     canonicalizing the underlying bits to the destination integer type
-    (width truncation + sign/zero extension as appropriate). This matches the
-    behavior of `ir.CastInt` in the current IR.
+    (width truncation + sign/zero extension as appropriate). For scalar widths
+    up to 64 bits this matches the behavior of `ir.CastInt` in the current IR;
+    `i128`/`u128` follow the analogous rule over their `{ lo, hi }` lane layout.
 - Float → Float:
-  - `f32` ↔ `f64` using standard IEEE-754 conversion and rounding.
+  - `f32`/`f64`/`f128` conversions using standard IEEE-754 conversion and rounding.
 - Integer → Float:
   - Converts the integer value to the destination float type (IEEE-754),
     with rounding when the integer cannot be represented exactly.
@@ -519,16 +520,26 @@ Syntax:
 
 Rules (current subset):
 
-- Both the operand and the target type must be scalar numeric types supported
-  by the current backend (`i8`/`u8`/`i16`/`u16`/`i32`/`u32`/`i64`/`u64`/`int`,
-  `f32`/`f64`, plus int-like primitives lowered to those scalars such as
-  `Duration`/`Instant` and `char`).
+- Both the operand and the target type must be numeric primitive types
+  supported by the current backend subset:
+  - 64-bit-slot scalars: `i8`/`u8`/`i16`/`u16`/`i32`/`u32`/`i64`/`u64`/`int`,
+    `f32`/`f64`, plus int-like primitives lowered to those scalars such as
+    `Duration`/`Instant` and `char`.
+  - 128-bit wide primitives: `i128`/`u128`/`f128` (two 8-byte lanes; `f128`
+    stores the raw IEEE-754 binary128 bit pattern).
 - `as raw` is not permitted for `string`, `void`, `&T`, optionals, arrays,
   maps, function types, or structs/enums.
 - Semantics:
   - The operand’s current canonical scalar bits are reinterpreted as the target
     type’s canonical scalar bits (bit-level truncation/masking for narrower
     target widths such as `u8`/`u16`/`u32` and `f32`).
+    - For 128-bit primitives, this is lane-wise:
+      - the low lane is copied as `u64` bits,
+      - the high lane is reinterpreted across `u64`/`i64` as needed,
+      - when casting a 128-bit value to a <=64-bit target, the low lane is used,
+      - when casting a <=64-bit *integer* value to `i128`/`u128`, the high lane
+        is sign-extended (`i128`) or zero-extended (`u128`) in the current
+        subset.
   - No numeric conversion is performed. For example, `1.0 as u64` yields
     `1`, while `1.0 as raw u64` yields the IEEE-754 bit pattern.
 

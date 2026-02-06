@@ -32,6 +32,10 @@ Implemented:
   imports that bind either:
   - the default-exported symbol, or
   - the module namespace when no default export exists.
+- Declaration-only exported function prototypes (`export fn name(...) -> T;`)
+  for header-style “prototype modules” that describe an exported surface without
+  providing a body (satisfied by link-time definitions from other Silk sources
+  and/or `.o`/`.a` inputs).
 
 Not implemented yet:
 
@@ -378,6 +382,12 @@ part of the command’s module set (for example by passing their `.slk` files to
 In addition to `import pkg::name;` package imports, Silk supports JS-style
 import forms that use a string literal *import specifier* after `from`.
 
+The current JS-style forms are:
+
+- Named imports: `import { Name } from "<specifier>";`
+- Default imports / namespace imports: `import Name from "<specifier>";`
+- Ambient imports: `import "<specifier>";`
+
 An import specifier string is interpreted in one of three ways:
 
 - **File specifier**: the string begins with `./` or `../`, or is an absolute
@@ -409,6 +419,32 @@ fn main () -> void {
   helpers::do_something();
 }
 ```
+
+### Ambient imports
+
+An ambient import loads a module into the module set without introducing any
+imported names into local scope:
+
+```silk
+import "./my_api.slk";
+import "std/io";
+```
+
+Notes:
+
+- Ambient imports use the same specifier interpretation rules as other
+  specifier-based imports:
+  - `./` / `../` / absolute paths are resolved as file imports,
+  - `std/<path>` is resolved under the configured stdlib root,
+  - other strings are treated as package specifiers (for example `"ui"` or
+    `"std::strings"`).
+- Ambient imports do not bind a namespace or import any symbols. If you need to
+  call a function or reference a type from the imported module, use a named
+  import, a default import (namespace import), or a package import.
+- Ambient imports are useful for declaring dependencies that exist only to:
+  - satisfy prototype/definition conformance rules (see below), or
+  - ensure a module is present in the module set so its types and methods are
+    available for type checking and monomorphization.
 
 ### Named imports
 
@@ -594,7 +630,8 @@ Rules:
   declarations. Inside `impl` blocks, `public` controls method visibility and
   `export` is reserved for static members.
 - The initial implementation supports `export` on:
-  - functions (`export fn ...`),
+  - functions (`export fn ...`), including a declaration-only prototype form
+    (`export fn name(...) -> T;`) used for header-style interface modules,
   - `let` and `const` bindings (`export let ...`, `export const ...`).
   - `ext` declarations (`export ext name = ...;`),
   - Formal Silk theories (`export theory Name(...) { ... }`),
@@ -615,6 +652,67 @@ In the current implementation, most type names are treated as visible across
 module boundaries once the relevant module(s) are loaded into the module set.
 The `export` modifier is still recorded on type declarations so the
 package/export model can be tightened later without changing source.
+
+### Prototype exports (`export fn ...;`)
+
+In addition to ordinary function definitions (`export fn ... { ... }`), a module
+may declare a **prototype** (a declaration without a body) by terminating the
+signature with `;`:
+
+```silk
+module bar;
+
+export fn foo (value: string) -> int;
+```
+
+This is the Silk analogue of a C/C++ header prototype or a TypeScript `*.d.ts`
+declaration file:
+
+- Other modules may import the prototype (named import or namespace import) and
+  type-check calls against its signature.
+- The prototype itself does **not** provide an implementation. The symbol must
+  be provided at link time by:
+  - another Silk source file in the same package that defines `export fn foo ... { ... }`, and/or
+  - an object/archive input that defines the symbol (for example a `.o`/`.a`
+    produced by a C compiler).
+- Prototype declarations may include Formal Silk contract annotations (`#require`
+  / `#assure` / contract `#theory` uses). This is the visible contract surface
+  for callers; when the implementation is precompiled and the function body is
+  not available in the module set, callers still type-check and may verify call
+  sites against the prototype’s contract surface.
+
+When both a prototype declaration and a source-level implementation are present
+in the same build/module set, the compiler enforces:
+
+- the signatures match, and
+- the implementation package explicitly imports the prototype module (via a
+  file import) so the relationship is declared in source.
+
+Example (consumer imports the prototype):
+
+```silk
+import { foo } from "./ibar.slk";
+
+export fn main () -> int {
+  return foo("hello");
+}
+```
+
+Example (implementation imports the prototype and provides the body):
+
+```silk
+module bar;
+
+import "./ibar.slk"; // ambient import; used for conformance only
+
+export fn foo (value: string) -> int {
+  return 0;
+}
+```
+
+This pattern is equivalent in intent to describing the export surface as an
+`interface` and declaring module conformance (`module ... as ...`), but it is
+file-based and designed to support separate compilation + link-style workflows.
 
 ### Re-export declarations (`export { ... };`)
 
@@ -686,9 +784,10 @@ export tables:
 
 - for each package, all `export fn` and `export let` declarations are
   collected into a symbol list,
-- duplicate exported names within the same package are rejected with a
-  dedicated resolver error (reported through the ABI as
-  `"duplicate exported symbol"` and validated by C tests),
+- duplicate exported names within the same package are rejected, except for the
+  prototype/definition pairing described above (`export fn name(...) -> T;` +
+  `export fn name(...) -> T { ... }`), which is accepted only when the
+  signatures match,
 - these export tables are currently used only for consistency checks; the
   type checker does not yet use them for cross-package name resolution.
 

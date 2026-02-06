@@ -26,6 +26,8 @@ In the current compiler subset:
   - named + aliasing: `let { data as d, id as i } = Record{ ... };`
 - Array destructuring is supported:
   - arrays/slices: `let [a, b] = xs;`
+- Enum destructuring is supported:
+  - variants: `let Ok(v) = expr;`, `let Pair(a, b) = expr;`, `let E::Variant(x) = expr;` (traps on non-matching variants)
 - `const` initializers must be compile-time evaluable (`docs/compiler/diagnostics.md`, `E2041`); in the current subset this is restricted to scalar expressions and calls to `const fn` functions (still no `/` or `%`), plus string literals / `const` string aliases.
 - Monomorphized generics are supported for `struct`/`interface`/`impl` and applied types (`Name(args...)`):
   - const parameters/arguments and generic functions are still rejected (`E2016`),
@@ -39,8 +41,8 @@ In the current compiler subset:
 ## Types (Surface Forms)
 
 - Booleans: `bool` — `true`, `false`.
-- Integers: `u8`, `i8`, `u16`, `i16`, `u32`, `i32`, `u64`, `i64`, `int`.
-- Floats: `f32`, `f64`.
+- Integers: `u8`, `i8`, `u16`, `i16`, `u32`, `i32`, `u64`, `i64`, `u128`, `i128`, `int`.
+- Floats: `f32`, `f64`, `f128`.
 - Char: `char`.
 - String: `string`.
 - Time: `Instant`, `Duration`.

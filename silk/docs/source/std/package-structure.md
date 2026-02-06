@@ -29,6 +29,7 @@ available to user programs.
   - `std::js::ecma` (current ECMAScript FFI surface; see `docs/std/js-ecma.md`)
   - `std::wasm` (WebAssembly runtime API; see `docs/std/wasm.md`)
   - `std::io`
+  - `std::stream` (Web Streams-inspired byte streams; see `docs/std/stream.md`)
   - `std::env`
   - `std::process`
   - `std::path`

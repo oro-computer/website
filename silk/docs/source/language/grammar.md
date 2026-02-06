@@ -107,9 +107,10 @@ At a high level, the language can be structured as:
   - `ModuleAsOpt ::= ('as' QualifiedName TypeArgListOpt) | ε`
 
   - `ImportDecl ::= 'import' ImportSpec ';'`
-  - `ImportSpec ::= ImportPath | FileImportSpec | FileDefaultImportSpec`
+  - `ImportSpec ::= ImportPath | FileImportSpec | FileDefaultImportSpec | AmbientFileImportSpec`
   - `ImportPath ::= ('::')? NameToken ('::' NameToken)*`
   - `ImportFrom ::= StringLiteral | PackagePath`
+  - `AmbientFileImportSpec ::= StringLiteral`
   - `FileImportSpec ::= '{' ImportBindingListOpt '}' 'from' ImportFrom`
   - `FileDefaultImportSpec ::= NameToken 'from' ImportFrom`
   - `ImportBindingListOpt ::= ImportBindingList | ε`
@@ -133,7 +134,8 @@ At a high level, the language can be structured as:
   appears before the declaration keyword (currently `fn`, `let`, `ext`, `type`,
   `struct`, `enum`, `theory`, `error`, and `interface`):
 
-  - `FnDecl ::= FnSpecs FnExportModifier FnModifierOpt 'fn' FnGenericParamListOpt FnNameOpt FnSignature Block`
+  - `FnDecl ::= FnSpecs FnExportModifier FnModifierOpt 'fn' FnGenericParamListOpt FnNameOpt FnSignature FnBody`
+  - `FnBody ::= Block | ';'`
   - `FnModifierOpt ::= FnModifier*`
   - `FnModifier ::= 'const' | 'pure' | 'task' | 'async'`
   - `FnGenericParamListOpt ::= GenericParamList | ε`
@@ -326,7 +328,7 @@ At a high level, the language can be structured as:
   - `TypeListOpt ::= TypeList | ε`
   - `TypeList ::= Type (',' Type)*`
   - `SimpleType ::= PrimitiveType | NamedType`
-  - `PrimitiveType ::= 'bool' | 'i8' | 'u8' | 'i16' | 'u16' | 'i32' | 'u32' | 'i64' | 'u64' | 'int' | 'f32' | 'f64' | 'char' | 'string' | 'void' | 'Instant' | 'Duration'`
+  - `PrimitiveType ::= 'bool' | 'i8' | 'u8' | 'i16' | 'u16' | 'i32' | 'u32' | 'i64' | 'u64' | 'i128' | 'u128' | 'int' | 'f32' | 'f64' | 'f128' | 'char' | 'string' | 'void' | 'Instant' | 'Duration'`
   - `NamedType ::= QualifiedName TypeArgListOpt`
   - `TypeArgListOpt ::= ('(' TypeArgListInnerOpt ')') | ε`
   - `TypeArgListInnerOpt ::= TypeArgListInner | ε`
@@ -351,7 +353,7 @@ At a high level, the language can be structured as:
   - `Stmt ::= LetStmt | SpecConstStmt | SpecAssertStmt | SpecTheoryDeclStmt | SpecTheoryStmt | AsyncBlockStmt | TaskBlockStmt | ExprStmt | IfStmt | LoopStmt | WhileStmt | ForStmt | MatchStmt | ReturnStmt | PanicStmt | AssertStmt | BreakStmt | ContinueStmt`
 
   - `LetStmt ::= ('const' | 'let' MutOpt | 'var') LetBinder TypeAnnotationOpt InitializerOpt ';'`
-  - `LetBinder ::= Identifier | '_' | LetTupleBinder | LetStructBinder | LetArrayBinder`
+  - `LetBinder ::= Identifier | '_' | LetTupleBinder | LetStructBinder | LetArrayBinder | LetEnumBinder`
   - `LetTupleBinder ::= '(' LetTupleBinderItemsOpt ')'`
   - `LetTupleBinderItemsOpt ::= LetTupleBinderItem (',' LetTupleBinderItem)* ','? | ε`
   - `LetTupleBinderItem ::= Identifier | '_'`
@@ -361,6 +363,9 @@ At a high level, the language can be structured as:
   - `LetArrayBinder ::= '[' LetArrayBinderItemsOpt ']'`
   - `LetArrayBinderItemsOpt ::= LetArrayBinderItem (',' LetArrayBinderItem)* ','? | ε`
   - `LetArrayBinderItem ::= Identifier | '_'`
+  - `LetEnumBinder ::= QualifiedName '(' LetEnumBinderItemsOpt ')'`
+  - `LetEnumBinderItemsOpt ::= LetEnumBinderItem (',' LetEnumBinderItem)* ','? | ε`
+  - `LetEnumBinderItem ::= Identifier | '_'`
   - `SpecConstStmt ::= '#const' Identifier '=' Expr ';'`
   - `SpecAssertStmt ::= '#assert' Expr ';'`
   - `SpecTheoryDeclStmt ::= '#theory' Identifier '(' TheoryParamsOpt ')' '{' TheoryBodyItem* '}'`

@@ -72,8 +72,11 @@ compiler’s varargs limit).
 
 - `Arg.missing()` — missing argument placeholder.
 - `Arg.int(value: int)` — signed integer argument.
+- `Arg.i128(value: i128)` — signed 128-bit integer argument.
 - `Arg.u64(value: u64)` — unsigned integer / pointer-sized argument.
+- `Arg.u128(value: u128)` — unsigned 128-bit integer argument.
 - `Arg.f64(value: f64)` — floating-point argument (both `f32` and `f64` coerce to this ctor).
+- `Arg.f128(value: f128)` — 128-bit floating-point argument.
 - `Arg.bool(value: bool)` — boolean argument.
 - `Arg.char(value: char)` — Unicode scalar argument (formatted as UTF-8 bytes for `{c}` / `{u}`; invalid codepoints render as U+FFFD).
 - `Arg.string(value: string)` — string argument.
@@ -82,7 +85,7 @@ compiler’s varargs limit).
 
 Compiler convenience (implemented): the compiler supports an opt-in implicit
 call-argument coercion mechanism for struct types that provide exported static
-ctor methods (`int`/`u64`/`f64`/`bool`/`char`/`string`/`regexp`/`Region`).
+ctor methods (`int`/`i128`/`u64`/`u128`/`f64`/`f128`/`bool`/`char`/`string`/`regexp`/`Region`).
 `std::fmt::Arg` implements these ctors, so callers can pass primitives directly
 to `std::io::print` / `std::io::println` without explicit `Arg.*` wrappers.
 
@@ -93,12 +96,12 @@ See `docs/language/types.md` for the full rule.
 The current formatter supports:
 
 - `s` — string
-- `d` — decimal number (`int`/`u64` and `f64`)
+- `d` — decimal number (`int`/`u64`/`i128`/`u128` and `f64`/`f128`)
 - `b` — binary integer
 - `o` — octal integer
 - `x` — lowercase hex integer
 - `X` — uppercase hex integer
-- `e` — scientific `f64`
+- `e` — scientific `f64`/`f128`
 - `c` — Unicode scalar (`char`) rendered as UTF-8 bytes
 - `u` — Unicode scalar (`char`) rendered as UTF-8 bytes
 - `any` — alias for default formatting in the current subset
@@ -110,6 +113,9 @@ Zig-compat note: when a width is specified (and non-zero), signed integers
 include an explicit sign for non-negative values (for example `"{:4}"` formats
 `123` as `"+123"`).
 
+Current subset limitation: formatting signed integers (`int`/`i128`) in
+non-decimal bases (`b`/`o`/`x`/`X`) requires non-negative values.
+
 Float formatting is implemented for `f64` in the current subset:
 
 - `{}` / `{d}` format as decimal by default, with an automatic scientific fallback
@@ -120,6 +126,9 @@ Float formatting is implemented for `f64` in the current subset:
 
 Hex float formatting (`{x}` on floats) and full debug formatting (`{any}`
 recursing through arbitrary types) remain future work.
+
+`f128` formatting is implemented by converting values to `f64` for formatting,
+so output precision is limited to `f64` precision in the current subset.
 
 ## High-Level Formatting (`format`) (Implemented)
 

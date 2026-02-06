@@ -6,6 +6,8 @@ cryptography/TLS libraries. For the hosted POSIX baseline, Silk vendors:
 - libsodium (`jedisct1/libsodium`) at tag `1.0.20-RELEASE`
 - mbedTLS (`Mbed-TLS/mbedtls`) at tag `mbedtls-4.0.0`
 - libssh2 (`libssh2/libssh2`) at tag `libssh2-1.11.1`
+- SQLite amalgamation at version `3510200` (downloaded from sqlite.org)
+- ggml (`ggml-org/ggml`) at tag `v0.9.5`
 
 These dependencies are fetched as shallow clones (`--depth 1`) and built as
 static libraries for `linux/x86_64`.
@@ -38,6 +40,11 @@ This populates:
   - `libmbedx509.a`
   - `libmbedcrypto.a`
   - `libssh2.a`
+  - `libsqlite3.a`
+  - `libggml.a`
+  - `libggml-base.a`
+  - `libggml-cpu.a`
+  - `libsilk_ggml_shims.a` (ABI-safe Silk wrappers for by-value ggml APIs)
 
 These directories and generated `.a` files are ignored by git.
 

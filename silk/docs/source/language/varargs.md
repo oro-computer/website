@@ -61,7 +61,7 @@ fixed-size **pack value** with:
 
 - `len: int` — the number of provided varargs arguments.
 - `a0 .. a(N-1)` — storage for up to `N` arguments (implementation-defined,
-  currently `N = 128`).
+  currently `N = 32`).
 
 The pack is passed by value using the same “flattened scalar slot” ABI as other
 POD structs.

@@ -219,9 +219,12 @@ The spec includes a table mapping Silk primitive types to C types, for example:
 - `i16`, `u16` → `int16_t`, `uint16_t`
 - `i32`, `u32` → `int32_t`, `uint32_t`
 - `i64`, `u64` → `int64_t`, `uint64_t`
+- `i128` → `SilkI128` (see `docs/compiler/abi-libsilk.md`; `{ lo, hi }` lanes)
+- `u128` → `SilkU128` (see `docs/compiler/abi-libsilk.md`; `{ lo, hi }` lanes)
 - `int` → `int64_t` (current `linux/x86_64` baseline; do not assume C `int`)
 - `f32` → `float`
 - `f64` → `double`
+- `f128` → `SilkF128` (see `docs/compiler/abi-libsilk.md`; IEEE binary128 bits in `{ lo, hi }`)
 - `bool` → `bool` (or `_Bool`)
 - `char` → `uint32_t` (UTF‑32)
 - `string` → `SilkString` (`{ char *ptr; int64_t len; }`)
@@ -232,6 +235,9 @@ Notes:
 
 - For FFI with APIs that use a C `int` (for example many POSIX syscalls),
   prefer `i32`/`u32` in your `ext` declarations rather than `int`.
+- The stable C99 ABI does **not** use compiler-specific `__int128` or
+  `__float128` types for these primitives; it uses explicit `{ lo, hi }`
+  structs so the ABI is portable and can be expressed in strict C99.
 
 These mappings must be reflected exactly in the C99 ABI.
 
@@ -298,7 +304,7 @@ The full language design includes rich user-defined structs and nested
 aggregates. The current compiler implementation supports only a small subset of
 structs in code generation:
 
-- structs with 1+ fields of supported value types (scalar primitives, `string`,
+- structs with 0+ fields of supported value types (scalar primitives, `string`,
   nested structs, and supported optionals) in function bodies and internal helper calls,
 - on `linux/x86_64`, passing and returning these structs by value at ABI boundaries
   using a scalar-slot lowering model:

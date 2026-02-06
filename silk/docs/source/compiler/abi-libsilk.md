@@ -66,6 +66,31 @@ The initial C header provided in this repository defines:
   } SilkBytes;
   ```
 
+- 128-bit scalar primitives (`i128` / `u128` / `f128`) used by generated C
+  headers for exported Silk interfaces:
+
+  ```c
+  typedef struct SilkU128 {
+      uint64_t lo;
+      uint64_t hi;
+  } SilkU128;
+
+  typedef struct SilkI128 {
+      uint64_t lo;
+      int64_t  hi;
+  } SilkI128;
+
+  typedef struct SilkF128 {
+      uint64_t lo;
+      uint64_t hi;
+  } SilkF128;
+  ```
+
+  Notes:
+  - `SilkF128` stores the IEEE‑754 binary128 bit pattern. It is not C `long double`.
+  - These types are passed and returned as two integer-like 8-byte slots in the
+    current `linux/x86_64` backend subset.
+
 - Opaque handles:
 
   ```c
@@ -138,6 +163,15 @@ The initial C header provided in this repository defines:
   (`silk --noheap`): heap-backed allocation is disabled for the supported
   subset. `--noheap` is currently incompatible with `--debug`; the ABI rejects
   configurations that enable both.
+
+  `silk_compiler_set_optimization_level` selects the optimization level (0-3),
+  matching the CLI `-O` flag. The default is level 0 unless overridden. In the
+  current implementation, level 1+ enables lowering-time pruning of unused
+  extern symbols before code generation. For IR-backed native executable
+  builds, it also prunes unreachable functions from the executable entrypoint
+  (function-level dead-code elimination), typically reducing output size and
+  over-linking when using the prebuilt `libsilk_std.a` archive to satisfy
+  auto-loaded `import std::...;` modules.
 
   `silk_compiler_set_target` selects the code generation target. The
   `target_triple` string is copied. The initial implementation recognizes:
@@ -362,8 +396,12 @@ The initial C header provided in this repository defines:
           - `string`: string literals, `let` bindings of `string`, `return` of a `string` value, direct calls to `string`-returning helpers, and `==`/`!=`/`<`/`<=`/`>`/`>=` comparisons over `string` values (producing `bool`),
           - `regexp`: regex literals (`/pattern/flags`), `let` bindings of `regexp`, `return` of a `regexp` value, and direct calls between helpers that accept/return `regexp`,
           - other string operations (concatenation, indexing, etc.) are not implemented yet; higher-level regex matching lives in `std::regex` and is routed through `ext` calls.
+      - within the current `linux/x86_64` IR subset, `i128`/`u128`/`f128` values are supported at ABI boundaries using the stable C99 `{ lo, hi }` struct shapes:
+        - parameters lower to two integer-like scalars (`u64 lo`, then `u64`/`i64 hi`) and consume integer argument locations,
+        - results return as two integer-like scalars in `rax`/`rdx`,
+        - `f128` values are transported as raw IEEE binary128 bits in the two lanes (not via SSE registers).
       - within the current `linux/x86_64` IR subset, a limited `struct` subset is supported at ABI boundaries:
-        - within function bodies and internal helper calls, `struct` declarations with 1+ fields of supported value types are supported (scalar primitives, `string`, nested structs, and supported optionals),
+        - within function bodies and internal helper calls, `struct` declarations with 0+ fields of supported value types are supported (scalar primitives, `string`, nested structs, and supported optionals),
         - at ABI boundaries for exported/FFI functions, only ABI-safe structs are currently supported: after slot-flattening, all scalar slots must be `i64`/`u64`/`f64` (until packed ABI mapping for smaller fields is implemented),
         - at the C ABI surface, exported function *parameters* support 1+ slot ABI-safe structs by lowering the struct to its scalar slots in order; downstream C callers should declare separate parameters for 3+ slot structs (by-value C struct parameters are ABI-compatible only for the 1–2 slot cases), while exported function *returns* support 1+ slot ABI-safe structs (3+ slot returns use the native backend’s sret return path and are ABI-compatible with returning an equivalent C struct by value),
         - in all cases, the compiler lowers a struct value into N scalar slots in field order and assigns argument/result locations according to System V AMD64 integer/SSE classification for those slots.

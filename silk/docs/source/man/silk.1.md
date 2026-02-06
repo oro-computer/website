@@ -11,9 +11,10 @@
 - `silk [--help|-h] [--version]`
 - `silk <command> [options] [args...]`
 - `silk help [<command>]`
+- `silk repl`
 - `silk check [--nostd] [--std-root <path>] [--z3-lib <path>] [--debug] [--package <dir|manifest>] <file> [<file> ...]`
-- `silk test [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [--noheap] [--filter <pattern>] [--package <dir|manifest>] <file> [<file> ...]`
-- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <file> [<file> ...] -o <path> [--kind executable|object|static|shared] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]`
+- `silk test [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--filter <pattern>] [--package <dir|manifest>] <file> [<file> ...]`
+- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]`
 - `silk doc [--all] <file> [<file> ...] [-o <path>]`
 - `silk doc --man [--package <dir|manifest>] [--std-root <path>] <query> [-o <path>]`
 - `silk man <query>`
@@ -29,6 +30,9 @@ Convenience entrypoints:
 
 - `slc` — behaves like `silk build ...`.
 - `slcc` — behaves like `silk cc ...`.
+
+When invoked with no command and stdin is a TTY, `silk` enters the interactive
+REPL (equivalent to running `silk repl`).
 
 ## Diagnostics
 
@@ -48,6 +52,23 @@ For the initial implementation, the supported options are:
   - `help <command>` — show command-specific usage and exit.
   - `--version` — show the embedding ABI version (queried via `silk_abi_get_version`) and exit.
 
+- **REPL command:**
+  - `silk repl` starts an interactive “compile-and-run” REPL.
+  - Currently supported only on `linux/x86_64` (native ELF backend).
+  - Stateful by replay: each successful line is appended to a session program.
+    When you enter runtime lines (statements/expressions), the session is
+    re-executed from the start (so side effects may repeat). Import and
+    declaration lines are validated by compilation only (not executed).
+  - Built-in commands:
+    - `.help` — show help
+    - `.clear` — reset session state
+    - `.cls` — clear the screen
+    - `.undo` — undo the last successful line
+    - `.exit` — exit the REPL
+  - History is loaded/saved to:
+    - `$SILK_REPL_HISTORY` when set, otherwise
+    - `$SILK_WORK_DIR/repl_history` (default: `.silk/repl_history`).
+
 - **Check command:**
   - `silk check [--nostd] [--std-root <path>] [--z3-lib <path>] [--debug] [--package <dir|manifest>] <file> [<file> ...]`:
     - `--help`, `-h` — show `check` usage and exit.
@@ -60,11 +81,12 @@ For the initial implementation, the supported options are:
     - `--` — end of options; treat remaining args as file paths (even if they begin with `-`).
 
 - **Test command:**
-  - `silk test [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [--noheap] [--filter <pattern>] [--package <dir|manifest>] <file> [<file> ...]`:
+  - `silk test [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--filter <pattern>] [--package <dir|manifest>] <file> [<file> ...]`:
     - `--help`, `-h` — show `test` usage and exit.
     - discovers language-level `test` declarations (see `docs/language/testing.md`) in the loaded module set,
     - compiles and runs each test, emitting TAP version 13 output,
     - in the current implementation, each test runs in its own process so a failing `assert` (panic/abort) does not stop the whole suite.
+    - `-O <0-3>` — set optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`). `-O1`+ prunes unused extern symbols before code generation and prunes unreachable functions in executable builds (typically reducing output size).
     - `--filter <pattern>` — run only tests whose display name contains `<pattern>` (substring match).
     - `--package <dir|manifest>` (or `--pkg`) — load the module set from a package manifest (`silk.toml`) instead of explicit input files. When `--package` is provided:
       - `<file> ...` inputs must be omitted.
@@ -72,8 +94,8 @@ For the initial implementation, the supported options are:
     - `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`).
     - `--` — end of options; treat remaining args as file paths (even if they begin with `-`).
 
-  - **Build command:**
-  - `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <file> [<file> ...] -o <path> [--kind executable|object|static|shared] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]`:
+- **Build command:**
+  - `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]`:
     - `--help`, `-h` — show `build` usage and exit.
     - `-o <path>`, `--out <path>` — write the generated output to `<path>`.
       - if the parent directories of `<path>` do not exist, the compiler creates them (like `mkdir -p`).
@@ -90,6 +112,7 @@ For the initial implementation, the supported options are:
       - dynamically-linked executables preserve internal function symbols in `.dynsym` (similar to `-rdynamic`) for stack trace symbolization.
       - when Formal Silk verification fails, `--debug` also emits Z3 debugging output and writes an SMT-LIB2 reproduction script under `.silk/z3/` (or `$SILK_WORK_DIR/z3`).
       - compiled code can query this mode at runtime via `std::runtime::build::is_debug()`.
+    - `-O <0-3>` — set optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`). `-O1`+ prunes unused extern symbols before code generation and prunes unreachable functions in executable builds (typically reducing output size).
     - `--noheap` — disable heap allocation for the current subset:
       - heap-backed `new` (outside a `with` region) is rejected with `E2027`,
       - `ext` bindings to libc heap primitives (`malloc`/`calloc`/`realloc`/`free`/etc) are rejected with `E2027` in non-stdlib modules,
@@ -131,10 +154,15 @@ For the initial implementation, the supported options are:
       - runs front-end checks,
         - when multiple input files are provided, performs module-set validation (package/import resolution + multi-module type checking that accounts for imported exported constants and imported `export fn` calls for the current scalar subset),
       - resolves `std::...` imports by loading stdlib source files from a configured stdlib root (see **Environment** below),
-      - for `--kind executable` (the default), enforces the executable entrypoint rule (exactly one `main` of either `fn main() -> int`, `async fn main() -> int`, or `fn main(argc: int, argv: u64) -> int`),
+      - for `--kind executable` (the default):
+        - when the module set defines a valid Silk entrypoint, enforces the executable entrypoint rule (exactly one `main` of either `fn main() -> int`, `async fn main() -> int`, or `fn main(argc: int, argv: u64) -> int`),
+        - script-style entrypoints: when the **first** `.slk` input contains top-level statements (after the normal `package`/`module` header and `import` block) and does not define an explicit `main`, `silk build` synthesizes an implicit `fn main() -> int` that executes those statements and then returns `0`,
+        - when the module set defines no valid Silk `main`, requires an object/archive-provided `main(argc: int, argv: u64) -> int` symbol (for example from a `.c`/`.o`/`.a` input) and emits an entry stub that forwards `argc`/`argv` to it,
+        - note: for now, `--std-lib` / `--std <path>.a` is rejected when linking additional `.c`/`.o`/`.a` inputs into an executable (std sources are compiled into the build instead),
         - on `linux/x86_64` native executables, when the `argc`/`argv` form is used, `argv` is a raw pointer to the argv pointer list (a C-style `char**`, where `argv[0]` is at byte offset `0`, `argv[1]` at `8`, etc.),
       - for `--kind object`, `--kind static`, and `--kind shared`, `main` is optional; the current backend emits supported `export fn` functions and supported exported constants (`export let` with an explicit type annotation and a literal initializer; currently scalar types and `string`), plus a valid executable `main` when present, as global symbols,
         - it is valid for a non-executable output to contain no globally-visible symbols (for example, type-only or interface-only modules); in that case the build still succeeds and produces an “empty” object/archive/shared library,
+        - declaration-only exported function prototypes (`export fn name(...) -> T;`) are accepted as module exports for type-checking, but do not emit code; calls lower as link-time symbol references that must be satisfied by other Silk sources in the module set and/or `.c`/`.o`/`.a` inputs,
       - on `linux/x86_64`, the current backend also supports a limited `string` subset (SilkString `{ ptr, len }` ABI, string literals + `let`/`return` + calls to `string`-returning helpers + `==`/`!=`/`<`/`<=`/`>`/`>=` comparisons; exported `string` constants are supported for non-executable outputs),
       - on `linux/x86_64`, the current backend also supports a limited FFI call subset:
         - top-level `ext` declarations of external functions (`ext name = fn (T, ...) -> R;`) may be called like normal functions from Silk code,
@@ -178,7 +206,7 @@ For the initial implementation, the supported options are:
           - allow call expressions as standalone statements (discarding the returned value),
           - allow assignment and compound assignment to `let mut` locals by name (`x = expr;`, `x += y;`); `=` is supported for all currently supported value types (including `string`, the supported `struct` subset, and optionals of those), and compound assignments are supported only for numeric scalar locals,
           - for optionals in the supported subset (scalar payloads, `string?`, and optionals of the supported `struct` subset), supports `None`, `Some(<expr>)`, `==` / `!=` comparisons (tag + payload equality; `opt == None` and `opt == Some(x)` infer type from the other operand), optional field access (`opt?.field`), `match <scrutinee> { None => <expr>, Some(<name|_>) => <expr>, }`, and `??` coalescing with short-circuit fallback evaluation (including unwrapping `T??` to `T?`); nested optionals (`T??`) are supported for the same payload subset, and optionals pass/return between helpers as `(bool tag, payload0, payload1, ...)` where the payload slots follow the lowering of the underlying type (for example `string?` is `(bool, u64 ptr, i64 len)`); for non-executable outputs, exported functions may accept and return these optionals (see `docs/compiler/abi-libsilk.md`),
-          - for a limited subset of structs (slot-flattened structs with 1+ fields of supported value types), supports `struct` declarations, struct literals (`Type{ field: expr, ... }`, including partial initialization), field access (`value.field`, including nested access), `==` / `!=` comparisons (deep/slot-wise), and passing/returning such structs by value using the System V AMD64 convention (one ABI “eightbyte” per slot). For non-executable outputs, exported functions accept only ABI-safe structs whose flattened scalar slots are restricted to `i64`/`u64`/`f64`; downstream C callers should declare separate parameters for 3+ slot structs,
+          - for a limited subset of structs (slot-flattened structs with 0+ fields of supported value types), supports `struct` declarations, struct literals (`Type{ field: expr, ... }`, including partial initialization), field access (`value.field`, including nested access), `==` / `!=` comparisons (deep/slot-wise), and passing/returning such structs by value using the System V AMD64 convention (one ABI “eightbyte” per slot). For non-executable outputs, exported functions accept only ABI-safe structs whose flattened scalar slots are restricted to `i64`/`u64`/`f64`; downstream C callers should declare separate parameters for 3+ slot structs,
           - and, for helpers, use direct calls between functions that fit this subset, following the System V AMD64 scalar calling convention (`rdi`..`r9` for integer-like args, `xmm0`..`xmm7` for `f32`/`f64`, stack spill for remaining args, and `rax`/`xmm0` results), and
         - `main` may either be a single structured function or call such helpers; the compiler lowers these programs into an IR program and compiles them to a single ELF64 executable,
         - when multiple input files are provided, helper calls may target:

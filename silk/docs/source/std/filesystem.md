@@ -15,6 +15,19 @@ See also:
 - `docs/std/runtime.md` (runtime interface layer and pluggable runtimes)
 - `docs/std/conventions.md`
 
+## Platform notes
+
+- Hosted baseline (`linux/x86_64`): `std::runtime::fs` delegates to
+  `std::runtime::posix::fs` and uses POSIX syscalls.
+- `wasm32-wasi`: `std::runtime::fs` is backed by `std::runtime::wasi::fs` and
+  requires the embedder to provide at least one preopened directory. Paths are
+  interpreted as relative to the first preopened directory found via
+  `fd_prestat_get` (sandbox root):
+  - absolute paths (`/foo/bar`) are interpreted relative to the sandbox root,
+  - relative paths (`foo/bar`) are resolved against a virtual working directory
+    managed by `std::process::chdir` / `std::process::getcwd`,
+  - `.` and `..` segments are normalized; `..` cannot escape above the sandbox root.
+
 ## Implemented API
 
 A hosted POSIX baseline exists today in `std/fs.slk`. The low-level OS bindings
@@ -29,7 +42,7 @@ export fn can_read (path: string) -> bool;
 export fn can_write (path: string) -> bool;
 export fn can_exec (path: string) -> bool;
 
-enum FsErrorKind {
+enum FSErrorKind {
   OutOfMemory,
   NotFound,
   PermissionDenied,
@@ -41,22 +54,22 @@ enum FsErrorKind {
   Unknown,
 }
 
-struct FsFailed {
+struct FSFailed {
   code: int,
   requested: i64,
 }
 
-impl FsFailed {
-  public fn kind (self: &FsFailed) -> FsErrorKind;
+impl FSFailed {
+  public fn kind (self: &FSFailed) -> FSErrorKind;
 }
 
-export type FsError = FsFailed;
+export type FSError = FSFailed;
 
-export type FsIntResult = std::result::Result(int, FsFailed);
-export type FsI64Result = std::result::Result(i64, FsFailed);
-export type FsErrorIntResult = std::result::Result(int, FsError);
-export type FsBufferU8Result = std::result::Result(std::buffer::BufferU8, FsError);
-export type FsStringResult = std::result::Result(std::strings::String, FsError);
+export type FSIntResult = std::result::Result(int, FSFailed);
+export type FSI64Result = std::result::Result(i64, FSFailed);
+export type FSErrorIntResult = std::result::Result(int, FSError);
+export type FSBufferU8Result = std::result::Result(std::buffer::BufferU8, FSError);
+export type FSStringResult = std::result::Result(std::strings::String, FSError);
 
 struct OpenOptions {
   read: bool,
@@ -86,7 +99,7 @@ struct File {
   fd: int,
 }
 
-export type FileResult = std::result::Result(File, FsFailed);
+export type FileResult = std::result::Result(File, FSFailed);
 
 impl File {
   // Construct an invalid/closed file handle (`fd = -1`).
@@ -99,21 +112,21 @@ impl File {
   public fn create (path: string, mode: int) -> FileResult;
   public fn append (path: string, mode: int) -> FileResult;
   public fn is_valid (self: &File) -> bool;
-  public fn close (mut self: &File) -> FsFailed?;
+  public fn close (mut self: &File) -> FSFailed?;
 
   // Byte I/O (hosted baseline).
-  public fn read (self: &File, buf: std::arrays::ByteSlice) -> FsIntResult;
-  public fn read_exact (self: &File, buf: std::arrays::ByteSlice) -> FsFailed?;
-  public fn write (self: &File, buf: std::arrays::ByteSlice) -> FsIntResult;
-  public fn seek (self: &File, offset: i64, whence: SeekWhence) -> FsI64Result;
-  public fn tell (self: &File) -> FsI64Result;
-  public fn size (self: &File) -> FsI64Result;
-  public fn sync (self: &File) -> FsFailed?;
-  public fn truncate (self: &File, len: i64) -> FsFailed?;
+  public fn read (self: &File, buf: std::arrays::ByteSlice) -> FSIntResult;
+  public fn read_exact (self: &File, buf: std::arrays::ByteSlice) -> FSFailed?;
+  public fn write (self: &File, buf: std::arrays::ByteSlice) -> FSIntResult;
+  public fn seek (self: &File, offset: i64, whence: SeekWhence) -> FSI64Result;
+  public fn tell (self: &File) -> FSI64Result;
+  public fn size (self: &File) -> FSI64Result;
+  public fn sync (self: &File) -> FSFailed?;
+  public fn truncate (self: &File, len: i64) -> FSFailed?;
 
   // Convenience helpers.
-  public fn read_to_end (self: &File, mut out: &std::buffer::BufferU8) -> FsErrorIntResult;
-  public fn write_all (self: &File, buf: std::arrays::ByteSlice) -> FsFailed?;
+  public fn read_to_end (self: &File, mut out: &std::buffer::BufferU8) -> FSErrorIntResult;
+  public fn write_all (self: &File, buf: std::arrays::ByteSlice) -> FSFailed?;
 }
 
 // Files are closed on scope exit and on overwrite.
@@ -122,20 +135,20 @@ impl File as std::interfaces::Drop {
 }
 
 // Convenience helpers for common whole-file operations.
-export fn read_file (path: string) -> FsBufferU8Result;
-export fn read_file_string (path: string) -> FsStringResult;
-export fn write_file (path: string, buf: std::arrays::ByteSlice, mode: int) -> FsIntResult;
-export fn append_file (path: string, buf: std::arrays::ByteSlice, mode: int) -> FsIntResult;
-export fn write_file_string (path: string, contents: string, mode: int) -> FsIntResult;
-export fn append_file_string (path: string, contents: string, mode: int) -> FsIntResult;
-export fn copy_file (src: string, dst: string, mode: int) -> FsErrorIntResult;
+export fn read_file (path: string) -> FSBufferU8Result;
+export fn read_file_string (path: string) -> FSStringResult;
+export fn write_file (path: string, buf: std::arrays::ByteSlice, mode: int) -> FSIntResult;
+export fn append_file (path: string, buf: std::arrays::ByteSlice, mode: int) -> FSIntResult;
+export fn write_file_string (path: string, contents: string, mode: int) -> FSIntResult;
+export fn append_file_string (path: string, contents: string, mode: int) -> FSIntResult;
+export fn copy_file (src: string, dst: string, mode: int) -> FSErrorIntResult;
 
 // Path-based helpers (`None` on success).
-export fn unlink (path: string) -> FsFailed?;
-export fn rename (old_path: string, new_path: string) -> FsFailed?;
-export fn mkdir (path: string, mode: int) -> FsFailed?;
-export fn rmdir (path: string) -> FsFailed?;
-export fn mkdir_all (path: string, mode: int) -> FsError?;
+export fn unlink (path: string) -> FSFailed?;
+export fn rename (old_path: string, new_path: string) -> FSFailed?;
+export fn mkdir (path: string, mode: int) -> FSFailed?;
+export fn rmdir (path: string) -> FSFailed?;
+export fn mkdir_all (path: string, mode: int) -> FSError?;
 ```
 
 Notes:
@@ -147,10 +160,10 @@ Notes:
   required for typical `std::fs` use.
   - This applies to other `std::fs` POSIX bindings as well (`open(2)`,
     `read(2)`, `close(2)`, etc.).
-  - `std::fs` maps runtime failures into a portable `FsErrorKind` set; the raw
+  - `std::fs` maps runtime failures into a portable `FSErrorKind` set; the raw
     platform error mechanism (for example POSIX `errno`) is not part of the
     public API. The mapping from the platform mechanism into stable
-    `FsFailed.code` values is performed by `std::runtime::fs`.
+    `FSFailed.code` values is performed by `std::runtime::fs`.
   - `mkdir_all` is a convenience helper for `mkdir -p` behavior. In the current
     hosted subset it treats `EEXIST` as success and does not distinguish an
     existing directory from an existing non-directory at the same path.

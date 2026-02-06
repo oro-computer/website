@@ -36,12 +36,16 @@ export type Atou64Result = std::result::Result(u64, ParseFailed);
 export type Atoi64Result = std::result::Result(i64, ParseFailed);
 export type Atou32Result = std::result::Result(u32, ParseFailed);
 export type Atoi32Result = std::result::Result(i32, ParseFailed);
+export type Atou128Result = std::result::Result(u128, ParseFailed);
+export type Atoi128Result = std::result::Result(i128, ParseFailed);
 
 export fn atod (s: string) -> AtodResult;
 export fn atou64 (s: string) -> Atou64Result;
 export fn atoi64 (s: string) -> Atoi64Result;
 export fn atou32 (s: string) -> Atou32Result;
 export fn atoi32 (s: string) -> Atoi32Result;
+export fn atou128 (s: string) -> Atou128Result;
+export fn atoi128 (s: string) -> Atoi128Result;
 ```
 
 Notes:
@@ -65,6 +69,9 @@ export fn u64toa (value: u64) -> std::result::Result(std::strings::String, std::
 export fn i64toa (value: i64) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
 export fn u32toa (value: u32) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
 export fn i32toa (value: i32) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+
+export fn u128toa (value: u128) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+export fn i128toa (value: i128) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
 ```
 
 ## Related Documents

@@ -7,21 +7,21 @@ environment variables, such as the current working directory.
 
 The current implementation targets a hosted POSIX baseline (Linux/glibc) and is
 implemented on top of the pluggable `std::runtime::process` interface. WASI
-support is currently a stub (see “Platform notes”).
+support is partially implemented (see “Platform notes”).
 
 ## API
 
 ```silk
 module std::process;
 
-	import std::result;
-	import std::strings;
+  import std::result;
+  import std::strings;
 
-	enum ChdirErrorKind { InvalidInput, NotFound, NotADirectory, PermissionDenied, Unknown }
-	error ChdirFailed { code: int }
+  enum ChdirErrorKind { InvalidInput, NotFound, NotADirectory, PermissionDenied, Unknown }
+  error ChdirFailed { code: int }
 
-	enum GetCwdErrorKind { OutOfMemory, NotFound, PermissionDenied, Unknown }
-	error GetCwdFailed { code: int, requested: i64 }
+  enum GetCwdErrorKind { OutOfMemory, NotFound, PermissionDenied, Unknown }
+  error GetCwdFailed { code: int, requested: i64 }
 
 export type GetCwdError = GetCwdFailed;
 export type GetCwdResult = std::result::Result(std::strings::String, GetCwdError);
@@ -91,7 +91,5 @@ Notes:
   `chdir(2)`.
 - **Child processes (POSIX)**: implemented via `fork(2)` + `exec*` + `waitpid(2)`
   with pipe-based stdio and poll-based output capture.
-- **WASI**: currently stubbed:
-  - `getcwd` fails (returns `GetCwdResult.err = Some(GetCwdFailed{ code })`),
-  - `chdir` fails (returns `Some(ChdirFailed{ code })`).
-  - `std::process::child` operations fail.
+- **WASI (Preview 1)**: `getcwd` and `chdir` are implemented via a virtual
+  working directory. `std::process::child` operations remain unsupported.

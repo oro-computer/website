@@ -158,7 +158,7 @@ Compiler requirements:
 The current compiler implementation supports struct literals only for the
 limited struct subset described in `structs-impls-layout.md`:
 
-- structs with 1+ fields of supported value types (scalar primitives, `string`,
+- structs with 0+ fields of supported value types (scalar primitives, `string`,
   nested structs, and supported optionals),
 - literals may omit fields:
   - omitted fields that have a field default (`field: T = <expr>`) use that

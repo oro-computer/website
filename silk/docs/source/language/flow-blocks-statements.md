@@ -109,6 +109,40 @@ For array/slice destructuring:
   - fixed arrays require an exact arity match (`[a, b]` requires `T[2]`),
   - slices trap at runtime if too short (as if indexing each element).
 
+Enum destructuring binds payload elements from a single enum variant:
+
+```silk
+import std::result;
+
+error Oops { code: int }
+
+fn foo (oops: bool) -> std::result::Result(int, Oops) {
+  if (oops) {
+    return Err(Oops{ code: 123 });
+  }
+  return Ok(7);
+}
+
+fn main () -> int {
+  // Destructure `Ok(...)` and bind its payload.
+  // If the value is `Err(...)`, the program traps.
+  let Ok(value) = foo(false);
+  return value;
+}
+```
+
+Rules (current subset):
+
+- The initializer is required.
+- The initializer must have an enum type `E` (including a monomorphized generic enum).
+- The initializer value is consumed (moved); the original binding may not be
+  used after destructuring.
+- The pattern must be an enum variant pattern:
+  - `Variant(...)` (shorthand), or
+  - `E::Variant(...)` / `pkg::E::Variant(...)` / `::pkg::E::Variant(...)`.
+- Binder arity must match the variant payload arity (use `_` to discard payload elements).
+- If the runtime value is not the matched variant, execution traps.
+
 `const` bindings are compile-time constants:
 
 - their initializer expression must be compile-time evaluable (otherwise the

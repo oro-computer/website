@@ -230,7 +230,9 @@ The Silk language design includes full support for user-defined structs, nested
 aggregates, and FFI-safe ABI mapping. The current compiler/backend
 implementation supports only a narrow, explicitly documented subset:
 
-- Only "plain" structs with **1+ fields** are supported by codegen.
+- Only "plain" structs with **0+ fields** are supported by codegen.
+  - Empty structs (`struct Empty {}`) are currently represented as a single
+    placeholder `u64` slot in the scalar-slot model.
 - Fields may be:
   - scalar primitive types (`bool`, fixed-width integers, `int`, `char`,
     `f32`/`f64`, `Instant`, `Duration`),

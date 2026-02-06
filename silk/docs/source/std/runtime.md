@@ -37,17 +37,27 @@ Example:
 In the shipped stdlib today:
 
 - `std::runtime::mem` delegates to `std::runtime::posix::mem`,
-- `std::runtime::fs` delegates to `std::runtime::posix::fs`,
-- `std::runtime::io` delegates to `std::runtime::posix::io`,
+- `std::runtime::fs` delegates to `std::runtime::posix::fs` (hosted baseline;
+  on `wasm32-wasi` the compiler rewrites this to `std::runtime::wasi::fs`,
+  which implements a filesystem subset using WASI Preview 1 preopened
+  directories and resolves relative paths against a virtual cwd),
+- `std::runtime::io` delegates to `std::runtime::posix::io` (hosted baseline;
+  on `wasm32-wasi` the compiler rewrites this to `std::runtime::wasi::io`,
+  which implements stdio primitives and maintains a POSIX-shaped `errno` cell
+  for higher-level wrappers like `std::runtime::process`),
 - `std::runtime::task` delegates to `std::runtime::posix::task`,
 - `std::runtime::sync` delegates to `std::runtime::posix::sync`,
 - `std::runtime::time` delegates to `std::runtime::posix::time`,
 - `std::runtime::env` delegates to `std::runtime::posix::env`,
-- `std::runtime::process` delegates to `std::runtime::posix::process`,
+- `std::runtime::process` delegates to `std::runtime::posix::process` (hosted baseline;
+  on `wasm32-wasi` the compiler rewrites this to `std::runtime::wasi::process`,
+  which implements `_exit` via WASI `proc_exit` and `chdir`/`getcwd` via a
+  virtual cwd layer),
 - `std::runtime::net` delegates to `std::runtime::posix::net` (hosted sockets),
 - `std::runtime::regex` is implemented via bundled runtime support (`libsilk_rt`) and is used by `std::regex`,
 - `std::runtime::unicode` is implemented via bundled runtime support (`libsilk_rt`) and is used by `std::unicode`,
-- `std::runtime::number` is implemented via bundled runtime support (`libsilk_rt`) and is used by `std::number`.
+- `std::runtime::number` is implemented via bundled runtime support (`libsilk_rt`) and is used by `std::number`,
+- `std::runtime::readline` is implemented via bundled runtime support (`libsilk_rt`) and is used by `std::readline`.
 
 The long-term shape is still that `std::runtime::<area>` remains the stable
 interface point, while platform backends (such as `std::runtime::posix::<area>`
@@ -101,8 +111,13 @@ Implemented runtime areas in the shipped stdlib:
   - `kind() -> string` returns the current build kind (`"executable"`, `"object"`, `"static"`, or `"shared"`).
   - `mode() -> string` returns the current build mode (`"debug"`, `"release"`, or `"test"`).
   - `version() -> string` returns the current package version when building a package, otherwise `"0.0.0"`.
-- `std::runtime::fs` — filesystem primitives used by `std::fs`.
-- `std::runtime::io` — low-level stdio primitives used by `std::io`.
+- `std::runtime::fs` — filesystem primitives used by `std::fs` (hosted baseline;
+  on `wasm32-wasi` the shipped backend supports a small subset using the first
+  preopened directory as a sandbox root, and resolves relative paths against a
+  virtual cwd (`std::runtime::wasi::cwd`)).
+- `std::runtime::io` — low-level stdio primitives used by `std::io` (on
+  `wasm32-wasi`, rewritten to `std::runtime::wasi::io`, which maintains a
+  POSIX-shaped `errno` cell for wrappers that still query `errno()`).
 - `std::runtime::task` — hosted task/runtime primitives used by `std::task`
   (sleep/yield_now/available parallelism; currently blocking OS-thread operations;
   delegates to `std::runtime::posix::task` in the shipped stdlib).
@@ -115,14 +130,22 @@ Implemented runtime areas in the shipped stdlib:
   - Unix wall-clock timestamp reads (`unix_now_ns` / `unix_now_ms`),
   - delegates to `std::runtime::posix::time` in the shipped stdlib.
 - `std::runtime::env` — hosted environment primitives used by `std::env`
-  (process environment variables; delegates to `std::runtime::posix::env` in the shipped stdlib).
+  (process environment variables; delegates to `std::runtime::posix::env` in the
+  shipped stdlib on hosted targets. On `wasm32-wasi` the compiler rewrites the
+  backend to `std::runtime::wasi::env`, which implements `getenv` via
+  `environ_sizes_get` / `environ_get` (caching the environment snapshot for the
+  process lifetime) and leaves `setenv` unsupported).
 - `std::runtime::process` — hosted process primitives used by `std::process`
   (current working directory plus child-process primitives for `std::process::child`;
-  delegates to `std::runtime::posix::process` in the shipped stdlib).
+  delegates to `std::runtime::posix::process` in the shipped stdlib on hosted
+  targets. On `wasm32-wasi`, `_exit` is implemented via `proc_exit`, while
+  `chdir`/`getcwd` are implemented via a virtual cwd layer
+  (`std::runtime::wasi::cwd`); hosted child-process operations remain
+  unsupported).
 - `std::runtime::net` — hosted networking primitives used by `std::net`
   (IPv4/IPv6 TCP + UDP sockets; delegates to `std::runtime::posix::net` in the shipped stdlib).
-  - `std::runtime::regex` / `std::runtime::unicode` / `std::runtime::number` —
-  non-OS-specific runtime helpers used by `std::{regex,unicode,number}`. These
+  - `std::runtime::regex` / `std::runtime::unicode` / `std::runtime::number` / `std::runtime::readline` —
+  non-OS-specific runtime helpers used by `std::{regex,unicode,number,readline}`. These
   are implemented via `ext` bindings to a small bundled runtime support library
   (`libsilk_rt`) that ships alongside the compiler.
   - the compiler statically links this bundled runtime support into executable

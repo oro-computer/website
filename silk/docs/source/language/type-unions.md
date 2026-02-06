@@ -51,8 +51,9 @@ supported union-member set:
 - **Primitive scalar** types in `{ bool, char, i8, u8, i16, u16, i32, u32, i64,
   u64, int, usize, size, Instant, Duration }` (`isize` is accepted as an alias
   for `size`), and/or
-- **Nominal POD structs** (including `error` types) that lower to a scalar-slot
-  representation in the current backend subset (no opaque structs; no enums).
+- **Nominal POD structs** (including `error` types) and **nominal POD enums**
+  that lower to a scalar-slot representation in the current backend subset (no
+  opaque structs).
 
 Unions may freely **mix** primitive and nominal members in this subset.
 

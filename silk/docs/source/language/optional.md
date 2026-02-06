@@ -61,7 +61,7 @@ Implementation status:
   - scalars (`bool`, `char`, `f32`, `f64`, `int`, and fixed-width integers),
   - `string` (lowered as `{ ptr: u64, len: i64 }`),
   - enums (tagged unions) in the current enum backend subset (lowered as `(u64 tag, payload_0, payload_1, ...)`),
-  - and the supported `struct` subset (1+ fields of supported value types,
+  - and the supported `struct` subset (0+ fields of supported value types,
     including nested structs and optionals; see `docs/language/structs-impls-layout.md`).
 
   In this subset, optionals are represented at IR boundaries as a `Bool` tag
