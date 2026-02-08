@@ -86,7 +86,7 @@ Notes:
 - `Iterator(T)` is modeled after Rust’s `Iterator` and represents a sequential
   producer of values. Implementations typically use a receiver of the form
   `public fn next (mut self: &Type) -> T?`, so calling `next` requires an
-  explicit mutable borrow at the call site: `(mut it).next()`.
+  explicit mutable borrow at the call site: `it.next()`.
   - `for x in it { ... }` can also be used when `it.next() -> T?`; the loop
     evaluates the iterator expression once and calls `next()` repeatedly until
     `None` (see `docs/language/flow-for.md`).

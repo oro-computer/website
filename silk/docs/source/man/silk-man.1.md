@@ -9,6 +9,7 @@
 ## Synopsis
 
 - `silk man [options] <query>`
+- `silk man [options] <section> <name>`
 
 ## Description
 
@@ -22,9 +23,15 @@
 
 The doc-comment tag semantics are specified in `docs/language/doc-comments.md`.
 
+Notes:
+
+- You may also spell section selection as `name.<section>` (for example `silk.7`).
+- `name(<section>)` is accepted but must be quoted in most shells.
+
 ## Options
 
 - `--help`, `-h` — show command help and exit.
+- `--section <n>`, `-s <n>` — select the manpage section (`1`, `3`, or `7`).
 - `--package <dir|manifest>`, `--pkg <dir|manifest>` — load a module set from a package manifest (`silk.toml`) rooted at the provided directory (or from the provided manifest path).
   - when omitted, and the query is not `std::...`, `silk man` searches the current working directory and its parent directories for `silk.toml` and uses the nearest match.
   - when no manifest is discoverable, `silk man` may also resolve the query from the package search path (`SILK_PACKAGE_PATH`).
@@ -38,6 +45,9 @@ The doc-comment tag semantics are specified in `docs/language/doc-comments.md`.
 ## Examples
 
 ```sh
+# View a shipped toolchain overview page (section 7).
+silk man 7 silk
+
 # View docs for a stdlib module.
 silk man std::flag
 

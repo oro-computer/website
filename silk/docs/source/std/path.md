@@ -77,7 +77,7 @@ fn main () -> int {
   match std::path::join("/tmp", "file.txt") {
     mut p => {
       // ...
-      (mut p).drop();
+      p.drop();
       return 0;
     },
     err: std::memory::OutOfMemory => { return 1; }

@@ -16,7 +16,7 @@ Canonical spec: `docs/language/regions.md`.
 const region arena: u8[1024];
 
 with arena {
- // `new` allocations use `arena` as backing storage.
+  // `new` allocations use `arena` as backing storage.
 }
 ```
 
@@ -24,16 +24,16 @@ with arena {
 
 ```silk
 struct Point {
- x: int,
- y: int,
+  x: int,
+  y: int,
 }
 
 fn main () -> int {
- const region arena: u8[1024];
- with arena {
- let p: &Point = new Point{ x: 1, y: 2 };
- return p.x + p.y;
- }
+  const region arena: u8[1024];
+  with arena {
+    let p: &Point = new Point{ x: 1, y: 2 };
+    return p.x + p.y;
+  }
 }
 ```
 

@@ -91,7 +91,7 @@ used as a heap reference:
 import std::toml;
 
 let mut doc: &Document = new Document();
-let root_r: std::toml::ParseResult = (mut doc).parse(`a = 1`);
+let root_r: std::toml::ParseResult = doc.parse(`a = 1`);
 ```
 
 ## Planned Follow-ups

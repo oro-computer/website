@@ -19,11 +19,11 @@ return expr;
 
 ```silk
 fn add1 (x: int) -> int {
- return x + 1;
+  return x + 1;
 }
 
 fn main () -> int {
- return add1(41);
+  return add1(41);
 }
 ```
 

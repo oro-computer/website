@@ -27,6 +27,7 @@ module std::stream;
 
 import std::arrays;
 import std::buffer;
+import std::interfaces;
 import std::memory;
 import std::result;
 
@@ -59,12 +60,22 @@ export type BytesResult = std::result::Result(Bytes, std::memory::AllocFailed);
 impl Bytes {
   public fn empty () -> Bytes;
   public fn from_handle (handle: u64) -> Bytes;
-  public fn is_empty (self: &Bytes) -> bool;
-  public fn len (self: &Bytes) -> i64;
   public fn as_slice (self: &Bytes) -> std::arrays::ByteSlice;
   public fn copy_from (slice: std::arrays::ByteSlice) -> BytesResult;
   public fn copy_from_string (s: string) -> BytesResult;
   public fn take_from_buffer (mut buf: &std::buffer::BufferU8) -> BytesResult;
+}
+
+impl Bytes as std::interfaces::Len {
+  public fn len (self: &Bytes) -> i64;
+}
+
+impl Bytes as std::interfaces::IsEmpty {
+  public fn is_empty (self: &Bytes) -> bool;
+}
+
+impl Bytes as std::interfaces::Sized {
+  public fn size (self: &Bytes) -> usize;
 }
 
 // Read outcomes.
@@ -218,8 +229,8 @@ async fn main () -> int {
       },
     };
 
-    let w = (mut pt).take_writable();
-    let r = (mut pt).take_readable();
+    let w = pt.take_writable();
+    let r = pt.take_readable();
 
     let hp = producer(w);
     let hc = consumer(r);
@@ -264,8 +275,8 @@ async fn main () -> int {
       },
     };
 
-    let w = (mut pt).take_writable();
-    let r = (mut pt).take_readable();
+    let w = pt.take_writable();
+    let r = pt.take_readable();
 
     let hr = std::fs::stream::pipe_file_to_stream("input.txt", w, 4096);
     let hw = std::fs::stream::pipe_stream_to_file(r, "output.txt", 420);

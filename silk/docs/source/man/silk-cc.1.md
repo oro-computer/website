@@ -14,7 +14,7 @@
 
 `silk cc` is a convenience wrapper for building C/C++ programs that embed or link against `libsilk.a`.
 
-It selects the underlying compiler via `SILK_CC` (default: `cc`) and:
+It selects the underlying compiler via `SILK_CC` (fallback: `CC`, default: `cc`) and:
 
 - adds `-I <install>/include` automatically,
 - unless you pass `-c`/`-E`/`-S`/`-M`/`-MM`, also adds `-L <install>/lib -lsilk`,
@@ -22,7 +22,8 @@ It selects the underlying compiler via `SILK_CC` (default: `cc`) and:
 
 ## Environment
 
-- `SILK_CC` — host C compiler executable (default: `cc`).
+- `SILK_CC` — host C compiler executable (falls back to `CC`, then `cc`).
+- `CC` — host C compiler executable (used when `SILK_CC` is unset or empty).
 
 ## Examples
 

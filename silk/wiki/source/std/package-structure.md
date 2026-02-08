@@ -25,11 +25,11 @@ import std::io;
 import std::strings;
 
 fn main () -> int {
- if std::strings::eq("a", "a") {
- std::io::println("ok");
- return 0;
- }
- return 1;
+  if std::strings::eq("a", "a") {
+    std::io::println("ok");
+    return 0;
+  }
+  return 1;
 }
 ```
 

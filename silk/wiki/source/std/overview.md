@@ -31,13 +31,13 @@ import std::vector;
 type VecInt = std::vector::Vector(int);
 
 fn main () -> int {
- let mut v: VecInt = VecInt.init(4);
- (mut v).push(10);
- (mut v).push(32);
+  let mut v: VecInt = VecInt.init(4);
+  v.push(10);
+  v.push(32);
 
- std::io::println("len={d} first_pop={d}", v.len() as int, (mut v).pop() ?? 0);
- (mut v).drop();
- return 0;
+  std::io::println("len={d} first_pop={d}", v.len() as int, v.pop() ?? 0);
+  v.drop();
+  return 0;
 }
 ```
 

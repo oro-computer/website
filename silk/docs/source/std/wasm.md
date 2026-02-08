@@ -105,10 +105,10 @@ fn main () -> int {
   };
 
   // Link the wasm import `(import "env" "add1" ...)` to a host callback.
-  let _ = (mut m).put(std::wasm::ImportFuncName{ module_name: "env", name: "add1" }, host_call);
+  let _ = m.put(std::wasm::ImportFuncName{ module_name: "env", name: "add1" }, host_call);
 
-  let inst_r = (mut module).instantiate_with_named_func_imports(imports, &m);
-  (mut m).drop();
+  let inst_r = module.instantiate_with_named_func_imports(imports, &m);
+  m.drop();
   // ...
   return 0;
 }
@@ -279,9 +279,9 @@ fn main () -> int {
   };
   var i: i64 = 0;
   while i < 39 {
-    let push_err = (mut buf).push(wasm_bytes[i]);
+    let push_err = buf.push(wasm_bytes[i]);
     if push_err != None {
-      (mut buf).drop();
+      buf.drop();
       return 2;
     }
     i = i + 1;
@@ -289,14 +289,14 @@ fn main () -> int {
   let bytes: ByteSlice = buf.as_bytes();
 
   let m_r: ModuleResult = engine.compile(bytes);
-  (mut buf).drop();
+  buf.drop();
   if m_r.is_err() { return 2; }
   let mut m: Module = match (m_r) {
     Ok(v) => v,
     Err(_) => Module.empty(),
   };
 
-  let inst_r: InstanceResult = (mut m).instantiate();
+  let inst_r: InstanceResult = m.instantiate();
   if inst_r.is_err() { return 3; }
   let mut inst: Instance = match (inst_r) {
     Ok(v) => v,
@@ -308,7 +308,7 @@ fn main () -> int {
   let f: Func = f_opt ?? Func{ index: 0 };
 
   let args: U64Slice = { ptr: 0, len: 0 };
-  let call_r: CallResult = (mut inst).call(f, args);
+  let call_r: CallResult = inst.call(f, args);
   if call_r.is_err() { return 5; }
 
   let out_opt: Val? = match (call_r) {

@@ -28,7 +28,7 @@ import std::arrays;
 import std::tls;
 
 fn test_cert () -> string {
- return `-----BEGIN CERTIFICATE-----
+  return `-----BEGIN CERTIFICATE-----
 MIIDCTCCAfGgAwIBAgIUZGlB8Eq9CXntm2xyJOT1X1eNCjMwDQYJKoZIhvcNAQEL
 BQAwFDESMBAGA1UEAwwJbG9jYWxob3N0MB4XDTI2MDEwMzAyMDUyM1oXDTM2MDEw
 MTAyMDUyM1owFDESMBAGA1UEAwwJbG9jYWxob3N0MIIBIjANBgkqhkiG9w0BAQEF
@@ -51,7 +51,7 @@ y4hZQtsSHGmUJs8T57aW3TKW0mFs/jUAISkeLBoBO84tu7Gzu+QeFGYAgHWR8wp2
 }
 
 fn test_key () -> string {
- return `-----BEGIN PRIVATE KEY-----
+  return `-----BEGIN PRIVATE KEY-----
 MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDRG9DE5YYB7Zri
 qH3+VQWkh4Q51AUqsZ/nr0DA/ABtwuj8CH3/AFJfNcv+MLLyh96ZZLseY/3giSbX
 XMnGM5659cJsZL5f4zY6uFFgkPHkIK8XCNmxKk2NORb/B4Ov3KxWBN2y44RWeced
@@ -83,152 +83,152 @@ GSDCV/JoUBg4iPwQ0rK0Tlo=
 }
 
 fn drive_handshake (mut client: &Session, mut server: &Session) -> bool {
- var client_done: bool = false;
- var server_done: bool = false;
+  var client_done: bool = false;
+  var server_done: bool = false;
 
- var steps: int = 0;
- while steps < 100000 {
- steps += 1;
+  var steps: int = 0;
+  while steps < 100000 {
+    steps += 1;
 
- if !client_done {
- let rc = client.handshake_step();
- if rc == 0 {
- client_done = true;
- } else {
- if rc != ERR_WANT_READ && rc != ERR_WANT_WRITE {
- return false;
- }
- }
- }
+    if !client_done {
+      let rc = client.handshake_step();
+      if rc == 0 {
+        client_done = true;
+      } else {
+        if rc != ERR_WANT_READ && rc != ERR_WANT_WRITE {
+          return false;
+        }
+      }
+    }
 
- if !server_done {
- let rc = server.handshake_step();
- if rc == 0 {
- server_done = true;
- } else {
- if rc != ERR_WANT_READ && rc != ERR_WANT_WRITE {
- return false;
- }
- }
- }
+    if !server_done {
+      let rc = server.handshake_step();
+      if rc == 0 {
+        server_done = true;
+      } else {
+        if rc != ERR_WANT_READ && rc != ERR_WANT_WRITE {
+          return false;
+        }
+      }
+    }
 
- if client_done && server_done {
- return true;
- }
- }
+    if client_done && server_done {
+      return true;
+    }
+  }
 
- return false;
+  return false;
 }
 
 fn read_some (mut sess: &Session, ptr: u64, cap: u64) -> i32 {
- var tries: int = 0;
- while tries < 100000 {
- tries += 1;
- let rc = sess.read(std::arrays::ByteSlice{ ptr: ptr, len: cap as i64 });
- if rc > 0 {
- return rc;
- }
- if rc == ERR_WANT_READ || rc == ERR_WANT_WRITE {
- continue;
- }
- return rc;
- }
- return -1 as i32;
+  var tries: int = 0;
+  while tries < 100000 {
+    tries += 1;
+    let rc = sess.read(std::arrays::ByteSlice{ ptr: ptr, len: cap as i64 });
+    if rc > 0 {
+      return rc;
+    }
+    if rc == ERR_WANT_READ || rc == ERR_WANT_WRITE {
+      continue;
+    }
+    return rc;
+  }
+  return -1 as i32;
 }
 
 fn main () -> int {
- var pipe = MemPipe.init(65536);
- if !pipe.is_valid() {
- return 1;
- }
+  var pipe = MemPipe.init(65536);
+  if !pipe.is_valid() {
+    return 1;
+  }
 
- var client: Session = Session.client() ?? Session.invalid();
- if !client.is_valid() {
- (mut pipe).drop();
- return 2;
- }
+  var client: Session = Session.client() ?? Session.invalid();
+  if !client.is_valid() {
+    pipe.drop();
+    return 2;
+  }
 
- var server: Session = Session.server(test_cert(), test_key()) ?? Session.invalid();
- if !server.is_valid() {
- (mut client).drop();
- (mut pipe).drop();
- return 3;
- }
+  var server: Session = Session.server(test_cert(), test_key()) ?? Session.invalid();
+  if !server.is_valid() {
+    client.drop();
+    pipe.drop();
+    return 3;
+  }
 
- client.set_bio_mempipe(pipe.client_ctx());
- server.set_bio_mempipe(pipe.server_ctx());
+  client.set_bio_mempipe(pipe.client_ctx());
+  server.set_bio_mempipe(pipe.server_ctx());
 
- if !drive_handshake(mut client, mut server) {
- (mut server).drop();
- (mut client).drop();
- (mut pipe).drop();
- return 4;
- }
+  if !drive_handshake(mut client, mut server) {
+    server.drop();
+    client.drop();
+    pipe.drop();
+    return 4;
+  }
 
- if !client.write_string("ping") {
- (mut server).drop();
- (mut client).drop();
- (mut pipe).drop();
- return 5;
- }
+  if !client.write_string("ping") {
+    server.drop();
+    client.drop();
+    pipe.drop();
+    return 5;
+  }
 
- let buf_ptr = mem::alloc(64);
- if buf_ptr == 0 {
- (mut server).drop();
- (mut client).drop();
- (mut pipe).drop();
- return 6;
- }
+  let buf_ptr = mem::alloc(64);
+  if buf_ptr == 0 {
+    server.drop();
+    client.drop();
+    pipe.drop();
+    return 6;
+  }
 
- let n = read_some(mut server, buf_ptr, 64);
- if n <= 0 {
- mem::free(buf_ptr);
- (mut server).drop();
- (mut client).drop();
- (mut pipe).drop();
- return 7;
- }
+  let n = read_some(mut server, buf_ptr, 64);
+  if n <= 0 {
+    mem::free(buf_ptr);
+    server.drop();
+    client.drop();
+    pipe.drop();
+    return 7;
+  }
 
- let got = mem::string_from_ptr_len(buf_ptr, n as int);
- if got != "ping" {
- mem::free(buf_ptr);
- (mut server).drop();
- (mut client).drop();
- (mut pipe).drop();
- return 8;
- }
+  let got = mem::string_from_ptr_len(buf_ptr, n as int);
+  if got != "ping" {
+    mem::free(buf_ptr);
+    server.drop();
+    client.drop();
+    pipe.drop();
+    return 8;
+  }
 
- if !server.write_string("pong") {
- mem::free(buf_ptr);
- (mut server).drop();
- (mut client).drop();
- (mut pipe).drop();
- return 9;
- }
+  if !server.write_string("pong") {
+    mem::free(buf_ptr);
+    server.drop();
+    client.drop();
+    pipe.drop();
+    return 9;
+  }
 
- let n2 = read_some(mut client, buf_ptr, 64);
- if n2 <= 0 {
- mem::free(buf_ptr);
- (mut server).drop();
- (mut client).drop();
- (mut pipe).drop();
- return 10;
- }
+  let n2 = read_some(mut client, buf_ptr, 64);
+  if n2 <= 0 {
+    mem::free(buf_ptr);
+    server.drop();
+    client.drop();
+    pipe.drop();
+    return 10;
+  }
 
- let got2 = mem::string_from_ptr_len(buf_ptr, n2 as int);
- if got2 != "pong" {
- mem::free(buf_ptr);
- (mut server).drop();
- (mut client).drop();
- (mut pipe).drop();
- return 11;
- }
+  let got2 = mem::string_from_ptr_len(buf_ptr, n2 as int);
+  if got2 != "pong" {
+    mem::free(buf_ptr);
+    server.drop();
+    client.drop();
+    pipe.drop();
+    return 11;
+  }
 
- mem::free(buf_ptr);
- (mut server).drop();
- (mut client).drop();
- (mut pipe).drop();
- return 0;
+  mem::free(buf_ptr);
+  server.drop();
+  client.drop();
+  pipe.drop();
+  return 0;
 }
 ```
 

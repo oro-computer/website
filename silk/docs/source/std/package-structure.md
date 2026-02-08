@@ -41,6 +41,7 @@ available to user programs.
   - `std::stream` (Web Streams-inspired byte streams; see `docs/std/stream.md`)
   - `std::env`
   - `std::process`
+  - `std::os`
   - `std::path`
   - `std::fs`
   - `std::net`

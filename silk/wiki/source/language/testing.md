@@ -9,9 +9,9 @@ Canonical doc: `docs/language/testing.md`.
 
 ```silk
 test "addition works" {
- if (1 + 2) != 3 {
- std::abort();
- }
+  if (1 + 2) != 3 {
+    std::abort();
+  }
 }
 ```
 

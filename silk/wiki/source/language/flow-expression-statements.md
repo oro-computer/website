@@ -13,10 +13,10 @@ Canonical spec: `docs/language/flow-expression-statements.md`.
 
 ```silk
 fn main () -> int {
- let mut x: int = 0;
- x += 1;
- ++x;
- return x;
+  let mut x: int = 0;
+  x += 1;
+  ++x;
+  return x;
 }
 ```
 

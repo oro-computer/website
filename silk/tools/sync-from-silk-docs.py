@@ -106,7 +106,21 @@ def sanitize_wiki_markdown(markdown: str) -> str:
         flags=re.I,
     )
 
+    in_code = False
+
     for raw in markdown.splitlines():
+        trimmed = raw.lstrip()
+        if trimmed.startswith("```"):
+            in_code = not in_code
+            out_lines.append(raw.rstrip())
+            continue
+
+        if in_code:
+            # Never rewrite inside fenced code blocks; preserve indentation and
+            # exact spelling.
+            out_lines.append(raw.rstrip())
+            continue
+
         line = raw
 
         if drop_whole_line.match(line):
@@ -125,12 +139,17 @@ def sanitize_wiki_markdown(markdown: str) -> str:
         for basename in ("STATUS.md", "PLAN.md"):
             # Common: "... and `STATUS.md`"
             line = re.sub(rf"\s+(?:and|&)\s+`?{re.escape(basename)}`?\s*$", "", line, flags=re.I)
-            # Fallback: strip any remaining mention.
+            # Strip any remaining mention.
             line = re.sub(rf"`?{re.escape(basename)}`?", "", line, flags=re.I)
 
-        # If we removed a trailing reference, clean up dangling conjunctions/punct.
+        # If we removed a reference, clean up dangling conjunctions.
         line = re.sub(r"\s+(?:and|&)\s*$", "", line, flags=re.I)
-        line = re.sub(r"\s{2,}", " ", line).rstrip()
+
+        # Tidy up extra spaces introduced by stripping (but preserve indentation).
+        leading = re.match(r"^\s*", line).group(0)
+        body = line[len(leading) :]
+        body = re.sub(r"[ \t]{2,}", " ", body)
+        line = (leading + body).rstrip()
 
         # Drop empty bullets like "- Details:" after stripping.
         if re.match(r"^\s*[-*+]\s*[^A-Za-z0-9`]*\s*$", line):

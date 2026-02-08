@@ -84,6 +84,7 @@ distribution:
 - `std::test` — test helpers for `silk test` (current subset; see `docs/std/test.md`).
 - `std::env` — environment variable access (hosted baseline; see `docs/std/env.md`).
 - `std::process` — process primitives (hosted baseline; see `docs/std/process.md`).
+- `std::os` — target OS/arch metadata and small OS helpers (see `docs/std/os.md`).
 - `std::path` — path manipulation utilities (current subset; see `docs/std/path.md`).
 - `std::io` — basic I/O (readers/writers, formatting, stdout/stderr).
 - `std::fmt` — shared formatting layer used by `std::io` and string builders.

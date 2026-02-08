@@ -14,14 +14,14 @@ Canonical spec: `docs/language/structs-impls-layout.md`.
 
 ```silk
 struct Point {
- x: int,
- y: int,
+  x: int,
+  y: int,
 }
 
 impl Point {
- public fn sum (self: &Point) -> int {
- return self.x + self.y;
- }
+  public fn sum (self: &Point) -> int {
+    return self.x + self.y;
+  }
 }
 ```
 
@@ -31,24 +31,24 @@ impl Point {
 
 ```silk
 struct Point {
- x: int,
- y: int,
+  x: int,
+  y: int,
 }
 
 impl Point {
- public fn add (self: &Point, other: Point) -> Point {
- return Point{
- x: self.x + other.x,
- y: self.y + other.y,
- };
- }
+  public fn add (self: &Point, other: Point) -> Point {
+    return Point{
+      x: self.x + other.x,
+      y: self.y + other.y,
+    };
+  }
 }
 
 fn main () -> int {
- let p: Point = Point{ x: 1, y: 2 };
- let q: Point = Point{ x: 3, y: 4 };
- let r: Point = p.add(q);
- return r.x + r.y; // 10
+  let p: Point = Point{ x: 1, y: 2 };
+  let q: Point = Point{ x: 3, y: 4 };
+  let r: Point = p.add(q);
+  return r.x + r.y; // 10
 }
 ```
 

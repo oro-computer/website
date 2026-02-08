@@ -23,6 +23,7 @@ See also:
 ```silk
 module std::sync;
 
+import std::interfaces;
 import std::result;
 
 enum SyncErrorKind {
@@ -83,7 +84,6 @@ impl Channel(T) {
   public fn init (cap: int) -> std::result::Result(Channel(T), SyncFailed);
   public fn borrow (self: &Channel(T)) -> ChannelBorrow(T);
   public fn cap (self: &Channel(T)) -> int;
-  public fn len (self: &Channel(T)) -> int;
   public fn is_closed (self: &Channel(T)) -> bool;
   public fn try_send (self: &Channel(T), value: T) -> SyncFailed?;
   public fn send (self: &Channel(T), value: T) -> SyncFailed?;
@@ -91,6 +91,18 @@ impl Channel(T) {
   public fn recv (self: &Channel(T)) -> T?;
   public fn close (self: &Channel(T)) -> void;
   public fn destroy (mut self: &Channel(T)) -> void;
+}
+
+impl Channel(T) as std::interfaces::Len {
+  public fn len (self: &Channel(T)) -> i64;
+}
+
+impl Channel(T) as std::interfaces::Capacity {
+  public fn capacity (self: &Channel(T)) -> i64;
+}
+
+impl Channel(T) as std::interfaces::IsEmpty {
+  public fn is_empty (self: &Channel(T)) -> bool;
 }
 
 impl ChannelBorrow(T) {

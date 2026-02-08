@@ -13,8 +13,8 @@ Canonical doc: `docs/language/errors.md`.
 
 ```silk
 fn main () -> int {
- assert (1 + 2) == 3;
- return 0;
+  assert (1 + 2) == 3;
+  return 0;
 }
 ```
 

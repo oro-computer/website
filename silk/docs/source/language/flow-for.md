@@ -147,7 +147,7 @@ instance method (typically by implementing `std::interfaces::Iterator(T)`).
 Semantics (implemented subset):
 
 - The iterable expression is evaluated once to produce the iterator value.
-- The loop repeatedly calls `(mut it).next()`.
+- The loop repeatedly calls `it.next()`.
   - When the result is `None`, the loop exits.
   - When the result is `Some(value)`, the binder (when not `_`) is bound to
     `value` (a copy) for that iteration and the body executes.

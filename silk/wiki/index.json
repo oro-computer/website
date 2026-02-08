@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-02-08T02:44:56+00:00",
+  "generatedAt": "2026-02-08T14:37:51+00:00",
   "kind": "wiki",
-  "count": 84,
+  "count": 85,
   "sections": [
     {
       "name": "overview",
@@ -230,6 +230,11 @@
           "id": "language/literals-string",
           "title": "String literals",
           "file": "language/literals-string.md"
+        },
+        {
+          "id": "language/struct-requirements",
+          "title": "Struct requirements (`#require`)",
+          "file": "language/struct-requirements.md"
         },
         {
           "id": "language/structs-impls-layout",

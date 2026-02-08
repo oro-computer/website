@@ -13,8 +13,10 @@ fn main () -> int { return 0; }
 
 /**
  * Block doc comment
+ *
  * @example silk
  * fn main () -> int { return 0; }
+ */
 fn other () -> int { return 0; }
 ```
 

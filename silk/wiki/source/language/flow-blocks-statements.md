@@ -12,15 +12,15 @@ Canonical spec: `docs/language/flow-blocks-statements.md`.
 
 ```silk
 fn main () -> int {
- let x: int = 1;
- {
- let y: int = 2;
- if x + y != 3 {
- return 1;
- }
- }
- // `y` is not in scope here.
- return 0;
+  let x: int = 1;
+  {
+    let y: int = 2;
+    if x + y != 3 {
+      return 1;
+    }
+  }
+  // `y` is not in scope here.
+  return 0;
 }
 ```
 

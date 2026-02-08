@@ -35,12 +35,12 @@ let x: u64 = 123 as u64;
 
 ```silk
 fn main () -> int {
- let a: int = 10;
- let b: int = 3;
- if a % b == 1 {
- return a + b; // 13
- }
- return 0;
+  let a: int = 10;
+  let b: int = 3;
+  if a % b == 1 {
+    return a + b; // 13
+  }
+  return 0;
 }
 ```
 
@@ -48,8 +48,8 @@ fn main () -> int {
 
 ```silk
 fn main () -> int {
- let x: int? = None;
- return x ?? 42;
+  let x: int? = None;
+  return x ?? 42;
 }
 ```
 

@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-02-08T02:44:59+00:00
+Generated: 2026-02-08T14:37:51+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -73,7 +73,9 @@ Silk Docs
   - language/syntax-tour — Silk Syntax Tour (Soup to Nuts) — /silk/docs/?p=language/syntax-tour
   - language/doc-comments — Silkdoc (Documentation Comments) — /silk/docs/?p=language/doc-comments
   - language/literals-string — String Literals — /silk/docs/?p=language/literals-string
+  - language/struct-requirements — Struct Requirements (`#require`) — /silk/docs/?p=language/struct-requirements
   - language/structs-impls-layout — Structs, Impl Blocks, and Memory Layout — /silk/docs/?p=language/structs-impls-layout
+  - language/target-metadata — Target Metadata (`OS_PLATFORM`, `OS_ARCH`, `OS_IS_UNIX`, `OS_IS_POSIX`) — /silk/docs/?p=language/target-metadata
   - language/testing — Testing — /silk/docs/?p=language/testing
   - language/type-unions — Type Unions (`T1 | T2 | ...`) — /silk/docs/?p=language/type-unions
   - language/typed-errors — Typed Errors (`error`, `panic`, and `T | ErrorType...`) — /silk/docs/?p=language/typed-errors
@@ -107,6 +109,7 @@ Silk Docs
   - std/memory — `std::memory` — /silk/docs/?p=std/memory
   - std/networking — `std::net` — /silk/docs/?p=std/networking
   - std/number — `std::number` — /silk/docs/?p=std/number
+  - std/os — `std::os` — /silk/docs/?p=std/os
   - std/path — `std::path` — /silk/docs/?p=std/path
   - std/process — `std::process` — /silk/docs/?p=std/process
   - std/readline — `std::readline` — /silk/docs/?p=std/readline
@@ -171,6 +174,7 @@ Silk Docs
   - man/silk-cc.1 — `silk-cc` (1) — C Compiler Wrapper for `libsilk` — /silk/docs/?p=man/silk-cc.1
   - man/silk-check.1 — `silk-check` (1) — Parse and Type-Check — /silk/docs/?p=man/silk-check.1
   - man/silk-doc.1 — `silk-doc` (1) — Generate Documentation (Markdown or Manpages) — /silk/docs/?p=man/silk-doc.1
+  - man/silk-env.1 — `silk-env` (1) — Print `silk` CLI Environment — /silk/docs/?p=man/silk-env.1
   - man/silk-lsp.1 — `silk-lsp` (1) — Language Server Protocol (LSP) Server — /silk/docs/?p=man/silk-lsp.1
   - man/silk-man.1 — `silk-man` (1) — View Manpages Derived from Source Docs — /silk/docs/?p=man/silk-man.1
   - man/silk-test.1 — `silk-test` (1) — Run Language-Level Tests — /silk/docs/?p=man/silk-test.1
@@ -232,6 +236,7 @@ Silk Wiki
   - language/refinement-types — Refinement types (removed) — /silk/wiki/?p=language/refinement-types
   - language/regions — Regions (`with`) — /silk/wiki/?p=language/regions
   - language/literals-string — String literals — /silk/wiki/?p=language/literals-string
+  - language/struct-requirements — Struct requirements (`#require`) — /silk/wiki/?p=language/struct-requirements
   - language/structs-impls-layout — Structs and `impl` — /silk/wiki/?p=language/structs-impls-layout
   - language/syntax-tour — Syntax tour — /silk/wiki/?p=language/syntax-tour
   - language/testing — Testing (`test`) — /silk/wiki/?p=language/testing
@@ -2135,7 +2140,7 @@ instance method (typically by implementing `std::interfaces::Iterator(T)`).
 Semantics:
 
 - The iterable expression is evaluated once to produce the iterator value.
-- The loop repeatedly calls `(mut it).next()`.
+- The loop repeatedly calls `it.next()`.
   - When the result is `None`, the loop exits.
   - When the result is `Some(value)`, the binder (when not `_`) is bound to
     `value` (a copy) for that iteration and the body executes.
@@ -10683,6 +10688,47 @@ The compiler must:
 - Ensure compatibility with the FFI `SilkString` representation.
 
 ==============================================================================
+DOCS: Struct Requirements (`#require`) (language/struct-requirements)
+URL: /silk/docs/?p=language/struct-requirements
+==============================================================================
+
+# Struct Requirements (`#require`)
+
+Use `#require` on a `struct` to state requirements that must hold for all
+values constructed for that struct type.
+
+Example:
+
+```silk
+#require id > 0;
+struct User {
+  id: int,
+}
+
+#assure result > 0;
+fn get_id () -> int {
+  return 1;
+}
+
+fn main () -> int {
+  // This fails verification:
+  // let bad = User{ id: 0 };
+
+  let user = User{ id: get_id() };
+  return user.id;
+}
+```
+
+Rules ():
+
+- `#require` expressions on a `struct` may reference that struct's fields by
+  name.
+- When Formal Silk syntax is present in the compiled module set, the verifier
+  proves these requirements at struct literal construction sites (`Type{ ... }`
+  and `new Type{ ... }`). If any requirement cannot be proven, compilation
+  fails.
+
+==============================================================================
 DOCS: Structs, Impl Blocks, and Memory Layout (language/structs-impls-layout)
 URL: /silk/docs/?p=language/structs-impls-layout
 ==============================================================================
@@ -10967,22 +11013,36 @@ that follow the same calling conventions as other Silk functions.
 ### Generic impl blocks
 
 If a type is declared with type parameters (struct or enum), its impl blocks
-must also declare those type parameters:
+must provide a full type-argument list of the same arity.
+
+Each position in the `impl Name(...)` argument list may be:
+
+- a **type parameter name** (a generic impl), or
+- a **concrete primitive type name** (an impl specialization for that argument).
 
 ```silk
 struct Data(T) { value: T }
 
-// OK:
+// Generic impl (applies to all specializations of Data(T)).
 impl Data(T) {
   fn get(self: &Self) -> T { return self.value; }
 }
 
-// Error:
-// impl Data { ... }
+// Specialized impl (applies only to Data(u8)).
+impl Data(u8) {
+  fn is_zero(self: &Self) -> bool { return self.value == 0; }
+}
 ```
 
-This rule makes monomorphization explicit and ensures method receivers are not
-ambiguous when the type is specialized.
+Specialized impl blocks are merged with any other applicable impl blocks for
+the same type specialization, subject to the usual duplicate method-name rules.
+
+Limitation:
+
+- Only **primitive type names** (for example `u64`, `string`, `bool`) are
+  recognized as concrete specialization arguments in `impl Name(...)`. Any
+  other identifier in an `impl` argument position is treated as a type
+  parameter name.
 
 ### Syntax
 
@@ -11085,7 +11145,7 @@ Mutability rule ():
     or a mutable reference binding (for example a `mut self: &Type` receiver),
     the compiler treats `value.method(...)` as a mutable receiver call (no
     `(mut value)` wrapper required).
-  - The explicit `(mut value).method(...)` form is permitted but is no longer
+  - The explicit `value.method(...)` form is permitted but is no longer
     required for name receivers.
 - If the method receiver is `self: Type` or `mut self: Type`, the call site
   passes the receiver **by value**. For ownership-tracked values (for example
@@ -11105,6 +11165,113 @@ Compiler requirements:
 - Keep data layout and behavior separate in the IR.
 - Preserve struct layout exactly for ABI and FFI.
 - Enforce rules for opaque structs and UB as described in this document and the ABI spec.
+
+==============================================================================
+DOCS: Target Metadata (`OS_PLATFORM`, `OS_ARCH`, `OS_IS_UNIX`, `OS_IS_POSIX`) (language/target-metadata)
+URL: /silk/docs/?p=language/target-metadata
+==============================================================================
+
+# Target Metadata (`OS_PLATFORM`, `OS_ARCH`, `OS_IS_UNIX`, `OS_IS_POSIX`)
+
+Silk exposes a small set of compiler-provided **target metadata** values to both
+runtime code and Formal Silk (compile-time verification).
+
+These values let programs adapt to the compilation target (platform/OS and CPU
+architecture) without requiring environment-specific runtime queries.
+
+## Built-In Constants
+
+The compiler provides the following built-in constants in every module:
+
+- `OS_PLATFORM: string`
+- `OS_ARCH: string`
+- `OS_IS_UNIX: bool`
+- `OS_IS_POSIX: bool`
+
+These behave like normal `const` values:
+
+- They do not require an import.
+- They may be used anywhere an expression of the corresponding type is allowed.
+- They are compile-time constants (their values are fixed at compile time and
+  are embedded into the output artifact).
+
+### `OS_PLATFORM`
+
+A canonical target platform/OS name string.
+
+Current compiler target set and values:
+
+- `linux/x86_64`:
+  - `OS_PLATFORM == "linux"`
+- `wasm32-unknown-unknown`:
+  - `OS_PLATFORM == "unknown"`
+- `wasm32-wasi`:
+  - `OS_PLATFORM == "wasi"`
+
+### `OS_ARCH`
+
+A canonical target CPU architecture name string.
+
+Current compiler target set and values:
+
+- `linux/x86_64`:
+  - `OS_ARCH == "x86_64"`
+- `wasm32-unknown-unknown` and `wasm32-wasi`:
+  - `OS_ARCH == "wasm32"`
+
+### `OS_IS_UNIX`
+
+Whether the compilation target is a UNIX family target.
+
+Current compiler target set:
+
+- `linux/x86_64`: `true`
+- `wasm32-unknown-unknown`: `false`
+- `wasm32-wasi`: `false`
+
+### `OS_IS_POSIX`
+
+Whether the compilation target is a POSIX target.
+
+Current compiler target set:
+
+- `linux/x86_64`: `true`
+- `wasm32-unknown-unknown`: `false`
+- `wasm32-wasi`: `false`
+
+## Relationship to `std::os`
+
+The standard library provides `std::os` helpers that expose the same metadata
+in a namespaced form and additionally map these strings into enums for use with
+
+## Examples
+
+### Target-gated behavior
+
+```silk
+import std::os;
+import { println } from "std/io";
+
+fn main () -> int {
+  if OS_IS_POSIX {
+    println("posix");
+  }
+
+  match (std::os::platform()) {
+    std::os::Platform::Linux => println("linux"),
+    std::os::Platform::WASI => println("wasi"),
+    std::os::Platform::Unknown => println("unknown"),
+  };
+
+  return 0;
+}
+```
+
+### Formal Silk requirements
+
+```silk
+#require OS_IS_POSIX;
+```
 
 ==============================================================================
 DOCS: Testing (language/testing)
@@ -12349,6 +12516,7 @@ available to user programs.
   - `std::io`
   - `std::env`
   - `std::process`
+  - `std::os`
   - `std::path`
   - `std::fs`
   - `std::net`
@@ -13400,13 +13568,13 @@ fn main (argc: int, argv: u64) -> int {
   let a = std::args::Args.init(argc, argv);
   let mut fs = std::flag::FlagSet.init();
 
-  let verbose_r = (mut fs).bool({ name: "verbose", alias: "v", default_value: false, usage: "enable verbose logging" });
-  let out_r = (mut fs).string({ name: "out", alias: "", default_value: "out.txt", usage: "output path" });
-  let input_r = (mut fs).positional_string("input", "input file");
+  let verbose_r = fs.bool({ name: "verbose", alias: "v", default_value: false, usage: "enable verbose logging" });
+  let out_r = fs.string({ name: "out", alias: "", default_value: "out.txt", usage: "output path" });
+  let input_r = fs.positional_string("input", "input file");
 
-  if verbose_r.is_err() { (mut fs).drop(); return 2; }
-  if out_r.is_err() { (mut fs).drop(); return 2; }
-  if input_r.is_err() { (mut fs).drop(); return 2; }
+  if verbose_r.is_err() { fs.drop(); return 2; }
+  if out_r.is_err() { fs.drop(); return 2; }
+  if input_r.is_err() { fs.drop(); return 2; }
 
   let verbose: std::flag::BoolFlag = match (verbose_r) {
     Ok(v) => v,
@@ -13421,11 +13589,11 @@ fn main (argc: int, argv: u64) -> int {
     Err(_) => {},
   };
 
-  let parsed_r = (mut fs).parse_args(a, 1);
+  let parsed_r = fs.parse_args(a, 1);
   match (parsed_r) {
     Err(e) => {
       println("flag parse error: kind={} at argv[{}]: {}", e.kind(), e.arg_index, e.arg(a));
-      (mut fs).drop();
+      fs.drop();
       return 2;
     },
     Ok(p) => {
@@ -13440,7 +13608,7 @@ fn main (argc: int, argv: u64) -> int {
         println("rest[{}]={}", i, p.rest(a, i));
         i += 1;
       }
-      (mut fs).drop();
+      fs.drop();
       return 0;
     }
   }
@@ -13608,7 +13776,7 @@ fn main () -> int {
 
   let sum_r: StringAllocResult = format("a + b = {}", a + b);
   if sum_r.is_err() {
-    (mut hello).drop();
+    hello.drop();
     return 2;
   }
   let mut sum: std::strings::String = match (sum_r) {
@@ -13618,8 +13786,8 @@ fn main () -> int {
 
   println("{}", hello.as_string());
   println("sum of {}", sum.as_string());
-  (mut sum).drop();
-  (mut hello).drop();
+  sum.drop();
+  hello.drop();
   return 0;
 }
 ```
@@ -13841,7 +14009,7 @@ struct Dir { handle: u64 }
 struct DirEntry { name: std::strings::String }
 
 export type DirResult = std::result::Result(Dir, FSFailed);
-export type DirEntryResult = std::result::Result(DirEntry?, FSFailed);
+export type DirEntryResult = std::result::Result(DirEntry, FSFailed);
 
 impl DirEntry {
   public fn name (self: &DirEntry) -> string;
@@ -13852,7 +14020,10 @@ impl Dir {
   public fn open (path: string) -> DirResult;
   public fn is_valid (self: &Dir) -> bool;
   public fn close (mut self: &Dir) -> FSFailed?;
-  public fn next (self: &Dir) -> DirEntryResult;
+}
+
+impl Dir as std::interfaces::Iterator(DirEntryResult) {
+  public fn next (mut self: &Dir) -> DirEntryResult?;
 }
 
 impl Dir as std::interfaces::Drop {
@@ -13886,8 +14057,8 @@ Notes:
     hosted subset it treats `EEXIST` as success and does not distinguish an
     existing directory from an existing non-directory at the same path.
   - `read_dir` returns a `Dir` handle for iteration. `Dir.next()` yields
-    `Ok(Some(DirEntry))` for entries and `Ok(None)` on end-of-directory.
-    `std::fs` skips `"."` and `".."`.
+    `Some(Ok(DirEntry))` for entries, `Some(Err(FSFailed))` on error, and
+    `None` on end-of-directory. `std::fs` skips `"."` and `".."`.
   - `std::fs::stream` provides task-based adapters that connect `std::fs` with
     `std::stream` using producer/consumer loops
     (`std::fs::stream::pipe_file_to_stream` and
@@ -14052,11 +14223,26 @@ Those pieces are platform- and engine-specific and are expected to live above
 `std::graphics` is organized as:
 
 - `std::graphics` — shared conventions and basic pointer/handle aliases.
-- `std::graphics::opengl` — a small set of OpenGL types/constants and `ext`
-  function declarations.
-- `std::graphics::opengles` — the corresponding OpenGL ES subset.
-- `std::graphics::vulkan` — a small set of Vulkan types/constants and `ext`
-  function declarations.
+- `std::graphics::opengl` — generated OpenGL bindings (core OpenGL 4.6).
+- `std::graphics::opengles` — generated OpenGL ES bindings (core OpenGL ES 3.2).
+- `std::graphics::vulkan` — generated Vulkan bindings (core Vulkan 1.3).
+
+These bindings are generated from the Khronos registries and pinned to specific
+upstream commits so the surface area is stable and reviewable.
+
+Pinned registry inputs:
+
+- OpenGL / OpenGL ES: `gl.xml` from `KhronosGroup/OpenGL-Registry` commit
+  `0b449b97cdf1043eef5e1f0e235cbbab6ec10c86`.
+- Vulkan: `vk.xml` from `KhronosGroup/Vulkan-Docs` commit
+  `fb8116669f76e26bdab4c7ad0bf1cafdeff484dc`.
+
+Regeneration:
+
+- The generated outputs are:
+  - `std/graphics/opengl.slk`
+  - `std/graphics/opengles.slk`
+  - `std/graphics/vulkan.slk`
 
 ## Linking (Hosted `linux/x86_64` Baseline)
 
@@ -14081,13 +14267,21 @@ system libraries are installed.
 These APIs are inherently low-level:
 
 - Many functions are unsafe without an active context/device.
-- Pointer parameters are represented as `u64` addresses and must be valid for
-  the duration of the call.
+- Most pointer parameters are represented as `std::graphics::Ptr` (`u64`)
+  addresses and must be valid for the duration of the call.
+- Some `const char *` inputs are represented as Silk `string` values for
+  convenience (lowered as C-string pointers by the current `ext` ABI mapping).
 - Returned pointers (for example from `glGetString`) are borrowed views into
   driver-managed memory and must not be freed.
 
-The initial `std::graphics` bindings focus on mechanical ABI mapping and leave
+The `std::graphics` bindings focus on mechanical ABI mapping and leave
 ownership/lifetime management to higher layers.
+
+Important current limitation (compiler subset):
+
+- The compiler does not yet implement packed C struct layout. As a result,
+  these bindings use `u64` pointers for C pointer parameters and do not rely on
+  passing user-defined structs by value to C.
 
 ==============================================================================
 DOCS: `std::http` (std/http)
@@ -14215,13 +14409,13 @@ export fn main () -> int {
   let mut conn = http::Connection.from_stream(stream);
   let w_err: http::Error? = conn.write_request("GET", "/", "localhost", "");
   if w_err != None {
-    (mut conn).close();
+    conn.close();
     return 2;
   }
 
-  let resp_r = (mut conn).read_response();
+  let resp_r = conn.read_response();
   if resp_r.is_err() {
-    (mut conn).close();
+    conn.close();
     return 3;
   }
   let resp: http::Response = match (resp_r) {
@@ -14229,7 +14423,7 @@ export fn main () -> int {
     http::ResponseResult::Err(_) => trap(http::Response;),
   };
   _ = resp.status_code();
-  (mut conn).close();
+  conn.close();
   return 0;
 }
 ```
@@ -14474,7 +14668,7 @@ Notes:
 - `Iterator(T)` is modeled after Rust’s `Iterator` and represents a sequential
   producer of values. Implementations typically use a receiver of the form
   `public fn next (mut self: &Type) -> T?`, so calling `next` requires an
-  explicit mutable borrow at the call site: `(mut it).next()`.
+  explicit mutable borrow at the call site: `it.next()`.
   - `for x in it { ... }` can also be used when `it.next() -> T?`; the loop
     evaluates the iterator expression once and calls `next()` repeatedly until
 - Most interfaces use an implicit receiver: the interface method signature
@@ -14947,9 +15141,11 @@ model for container element drops.
 
 ### Construction
 
-`HashMap` requires user-supplied hashing and equality functions (similar in
-spirit to the `Hash` and `KeyEqual` customization points of C++
-`std::unordered_map`).
+`HashMap` requires hashing and equality functions (similar in spirit to the
+`Hash` and `KeyEqual` customization points of C++ `std::unordered_map`). For
+common key types, `std::map` ships default `hash_*` / `eq_*` helpers and
+`HashMap` provides `empty()` / `init(cap)` overloads that select those defaults
+implicitly.
 
 For common key types, `std::map` provides default `hash_*` / `eq_*` helpers so
 callers do not need to write hashing and equality functions themselves.
@@ -14962,7 +15158,7 @@ Default helper functions are provided for these key types:
 - `char`
 - `string` (bytewise FNV-1a)
 
-Example (using `std::map` defaults):
+Example (using `std::map` defaults via `HashMap.init(cap)` / `HashMap.empty()`):
 
 ```silk
 import std::map;
@@ -14973,17 +15169,17 @@ type Map = std::map::HashMap(u64, int);
 type InitResult = std::result::Result(Map, std::memory::AllocFailed);
 
 fn main () -> int {
-  let init_r: InitResult = Map.init(16, std::map::hash_u64, std::map::eq_u64);
+  let init_r: InitResult = Map.init(16);
   if init_r.is_err() { return 1; }
   let mut m: Map = match (init_r) {
     InitResult::Ok(v) => v,
-    InitResult::Err(_) => Map.empty(std::map::hash_u64, std::map::eq_u64),
+    InitResult::Err(_) => Map.empty(),
   };
-  let put_r = (mut m).put(1, 10);
-  if put_r.is_err() { (mut m).drop(); return 2; }
+  let put_r = m.put(1, 10);
+  if put_r.is_err() { m.drop(); return 2; }
 
   let v: int = m.get(1) ?? 0;
-  (mut m).drop();
+  m.drop();
   return v;
 }
 ```
@@ -15002,18 +15198,18 @@ fn hash_u64 (k: u64) -> u64 { return k; }
 fn eq_u64 (a: u64, b: u64) -> bool { return a == b; }
 
 fn main () -> int {
-  let init_r: InitResult = Map.init(16, hash_u64, eq_u64);
+  let init_r: InitResult = Map.init_with(16, hash_u64, eq_u64);
   if init_r.is_err() { return 1; }
   let mut m: Map = match (init_r) {
     InitResult::Ok(v) => v,
-    InitResult::Err(_) => Map.empty(hash_u64, eq_u64),
+    InitResult::Err(_) => Map.empty_with(hash_u64, eq_u64),
   };
-  (mut m).drop();
+  m.drop();
   return 0;
 }
 ```
 
-`HashMap.init(cap, ...)` validates the requested capacity:
+`HashMap.init_with(cap, ...)` validates the requested capacity:
 
 - `cap < 0` returns `AllocErrorKind::InvalidInput`.
 - very large `cap` values that would overflow internal sizing arithmetic return
@@ -15023,8 +15219,10 @@ fn main () -> int {
 
 `HashMap(K, V)` provides:
 
-- `fn empty (hash: fn(K) -> u64, eq: fn(K, K) -> bool) -> HashMap(K, V);`
-- `fn init (cap: i64, hash: fn(K) -> u64, eq: fn(K, K) -> bool) -> std::result::Result(HashMap(K, V), std::memory::AllocFailed);`
+- `fn empty () -> HashMap(K, V);` (only for default key types)
+- `fn init (cap: i64) -> std::result::Result(HashMap(K, V), std::memory::AllocFailed);` (only for default key types)
+- `fn empty_with (hash: fn(K) -> u64, eq: fn(K, K) -> bool) -> HashMap(K, V);`
+- `fn init_with (cap: i64, hash: fn(K) -> u64, eq: fn(K, K) -> bool) -> std::result::Result(HashMap(K, V), std::memory::AllocFailed);`
 - `fn len (self: &HashMap(K, V)) -> i64;`
 - `fn is_empty (self: &HashMap(K, V)) -> bool;`
 - `fn capacity (self: &HashMap(K, V)) -> i64;`
@@ -15964,6 +16162,104 @@ export fn i128toa (value: i128) -> std::result::Result(std::strings::String, std
 ## Related Documents
 
 ==============================================================================
+DOCS: `std::os` (std/os)
+URL: /silk/docs/?p=std/os
+==============================================================================
+
+# `std::os`
+
+
+`std::os` provides:
+
+- compiler-provided **target metadata** (platform/OS, architecture, and a small
+  set of booleans),
+- small hosted runtime helpers (uptime and CPU information).
+
+This module is POSIX-first for hosted behavior, but its target-metadata surface
+is available on every target.
+
+See also:
+
+
+## API
+
+```silk
+module std::os;
+
+import std::memory;
+import std::result;
+import std::temporal;
+import std::vector;
+
+export const PLATFORM_NAME: string;
+export const ARCH_NAME: string;
+export const IS_UNIX: bool;
+export const IS_POSIX: bool;
+
+enum Architecture { X86_64, WASM32, Unknown }
+enum Platform { Linux, WASI, Unknown }
+
+export fn arch () -> Architecture;
+export fn platform () -> Platform;
+
+export type UptimeResult = std::result::Result(Duration, std::temporal::TemporalFailed);
+export fn uptime () -> UptimeResult;
+
+struct CPU { model: string }
+export type CPUsResult = std::result::Result(std::vector::Vector(CPU), std::memory::AllocFailed);
+export fn cpus () -> CPUsResult;
+
+export fn cpu_count () -> int;
+```
+
+## Target metadata
+
+The exported constants are compile-time constants derived from the built-in
+target metadata values:
+
+- `PLATFORM_NAME == OS_PLATFORM`
+- `ARCH_NAME == OS_ARCH`
+- `IS_UNIX == OS_IS_UNIX`
+- `IS_POSIX == OS_IS_POSIX`
+
+Use these when you prefer explicit namespacing over using `OS_PLATFORM` /
+`OS_ARCH` directly.
+
+## `Architecture` and `Platform`
+
+`std::os::arch()` and `std::os::platform()` map `ARCH_NAME` and `PLATFORM_NAME`
+into enums suitable for `match`.
+
+The `Unknown` case is returned when the current compiler target is not covered
+by the current enum set.
+
+## Uptime
+
+`std::os::uptime()` returns the current monotonic uptime as a `Duration`.
+
+On the default hosted POSIX runtime, this uses `clock_gettime(CLOCK_MONOTONIC)`
+via `std::temporal`.
+
+## CPU information
+
+### `cpu_count`
+
+`std::os::cpu_count()` returns the number of logical CPUs available to the
+current process (>= 1).
+
+### `cpus`
+
+`std::os::cpus()` returns a `Vector(CPU)` with `len == cpu_count()`.
+
+Ownership:
+
+- Callers must drop the returned vector when finished.
+
+Current implementation:
+
+- `CPU.model` is set to `ARCH_NAME` for each returned CPU record.
+
+==============================================================================
 DOCS: `std::path` (std/path)
 URL: /silk/docs/?p=std/path
 ==============================================================================
@@ -16046,7 +16342,7 @@ fn main () -> int {
   match std::path::join("/tmp", "file.txt") {
     mut p => {
       // ...
-      (mut p).drop();
+      p.drop();
       return 0;
     },
     err: std::memory::OutOfMemory => { return 1; }
@@ -16211,7 +16507,7 @@ export fn main () -> int {
     Ok(line_opt) => match (line_opt) {
       Some(line) => {
         // ...
-        (mut line).drop();
+        line.drop();
         return 0;
       },
       None => return 0, // EOF
@@ -16876,7 +17172,9 @@ In Silk:
 
 ### Core API
 
-`SetMap` requires user-supplied hashing and equality functions.
+`SetMap` requires hashing and equality functions. For common element types,
+`std::set` ships default `hash_*` / `eq_*` helpers and `SetMap` provides
+`empty()` / `init(cap)` overloads that select those defaults implicitly.
 
 For common element types, `std::set` provides default `hash_*` / `eq_*` helpers
 so callers do not need to write hashing and equality functions themselves.
@@ -16890,8 +17188,10 @@ Default helper functions are provided for these element types:
 
 `SetMap(T)` provides:
 
-- `fn empty (hash: fn(T) -> u64, eq: fn(T, T) -> bool) -> SetMap(T);`
-- `fn init (cap: i64, hash: fn(T) -> u64, eq: fn(T, T) -> bool) -> std::result::Result(SetMap(T), std::memory::AllocFailed);`
+- `fn empty () -> SetMap(T);` (only for default element types)
+- `fn init (cap: i64) -> std::result::Result(SetMap(T), std::memory::AllocFailed);` (only for default element types)
+- `fn empty_with (hash: fn(T) -> u64, eq: fn(T, T) -> bool) -> SetMap(T);`
+- `fn init_with (cap: i64, hash: fn(T) -> u64, eq: fn(T, T) -> bool) -> std::result::Result(SetMap(T), std::memory::AllocFailed);`
 - `fn len (self: &SetMap(T)) -> i64;`
 - `fn is_empty (self: &SetMap(T)) -> bool;`
 - `fn capacity (self: &SetMap(T)) -> i64;`
@@ -16905,7 +17205,7 @@ Default helper functions are provided for these element types:
 - `fn reserve_additional (mut self: &SetMap(T), additional: i64) -> std::memory::OutOfMemory?;`
 - `fn drop (mut self: &SetMap(T)) -> void;`
 
-`SetMap.init(cap, ...)` validates the requested capacity:
+`SetMap.init_with(cap, ...)` validates the requested capacity:
 
 - `cap < 0` returns `AllocErrorKind::InvalidInput`.
 - very large `cap` values that would overflow internal sizing arithmetic return
@@ -17181,6 +17481,7 @@ module std::stream;
 
 import std::arrays;
 import std::buffer;
+import std::interfaces;
 import std::memory;
 import std::result;
 
@@ -17213,12 +17514,22 @@ export type BytesResult = std::result::Result(Bytes, std::memory::AllocFailed);
 impl Bytes {
   public fn empty () -> Bytes;
   public fn from_handle (handle: u64) -> Bytes;
-  public fn is_empty (self: &Bytes) -> bool;
-  public fn len (self: &Bytes) -> i64;
   public fn as_slice (self: &Bytes) -> std::arrays::ByteSlice;
   public fn copy_from (slice: std::arrays::ByteSlice) -> BytesResult;
   public fn copy_from_string (s: string) -> BytesResult;
   public fn take_from_buffer (mut buf: &std::buffer::BufferU8) -> BytesResult;
+}
+
+impl Bytes as std::interfaces::Len {
+  public fn len (self: &Bytes) -> i64;
+}
+
+impl Bytes as std::interfaces::IsEmpty {
+  public fn is_empty (self: &Bytes) -> bool;
+}
+
+impl Bytes as std::interfaces::Sized {
+  public fn size (self: &Bytes) -> usize;
 }
 
 // Read outcomes.
@@ -17372,8 +17683,8 @@ async fn main () -> int {
       },
     };
 
-    let w = (mut pt).take_writable();
-    let r = (mut pt).take_readable();
+    let w = pt.take_writable();
+    let r = pt.take_readable();
 
     let hp = producer(w);
     let hc = consumer(r);
@@ -17418,8 +17729,8 @@ async fn main () -> int {
       },
     };
 
-    let w = (mut pt).take_writable();
-    let r = (mut pt).take_readable();
+    let w = pt.take_writable();
+    let r = pt.take_readable();
 
     let hr = std::fs::stream::pipe_file_to_stream("input.txt", w, 4096);
     let hw = std::fs::stream::pipe_stream_to_file(r, "output.txt", 420);
@@ -17702,6 +18013,7 @@ See also:
 ```silk
 module std::sync;
 
+import std::interfaces;
 import std::result;
 
 enum SyncErrorKind {
@@ -17762,7 +18074,6 @@ impl Channel(T) {
   public fn init (cap: int) -> std::result::Result(Channel(T), SyncFailed);
   public fn borrow (self: &Channel(T)) -> ChannelBorrow(T);
   public fn cap (self: &Channel(T)) -> int;
-  public fn len (self: &Channel(T)) -> int;
   public fn is_closed (self: &Channel(T)) -> bool;
   public fn try_send (self: &Channel(T), value: T) -> SyncFailed?;
   public fn send (self: &Channel(T), value: T) -> SyncFailed?;
@@ -17770,6 +18081,18 @@ impl Channel(T) {
   public fn recv (self: &Channel(T)) -> T?;
   public fn close (self: &Channel(T)) -> void;
   public fn destroy (mut self: &Channel(T)) -> void;
+}
+
+impl Channel(T) as std::interfaces::Len {
+  public fn len (self: &Channel(T)) -> i64;
+}
+
+impl Channel(T) as std::interfaces::Capacity {
+  public fn capacity (self: &Channel(T)) -> i64;
+}
+
+impl Channel(T) as std::interfaces::IsEmpty {
+  public fn is_empty (self: &Channel(T)) -> bool;
 }
 
 impl ChannelBorrow(T) {
@@ -18311,7 +18634,7 @@ used as a heap reference:
 import std::toml;
 
 let mut doc: &Document = new Document();
-let root_r: std::toml::ParseResult = (mut doc).parse(`a = 1`);
+let root_r: std::toml::ParseResult = doc.parse(`a = 1`);
 ```
 
 ## Planned Follow-ups
@@ -19305,10 +19628,10 @@ fn main () -> int {
   };
 
   // Link the wasm import `(import "env" "add1" ...)` to a host callback.
-  let _ = (mut m).put(std::wasm::ImportFuncName{ module_name: "env", name: "add1" }, host_call);
+  let _ = m.put(std::wasm::ImportFuncName{ module_name: "env", name: "add1" }, host_call);
 
-  let inst_r = (mut module).instantiate_with_named_func_imports(imports, &m);
-  (mut m).drop();
+  let inst_r = module.instantiate_with_named_func_imports(imports, &m);
+  m.drop();
   // ...
   return 0;
 }
@@ -19479,9 +19802,9 @@ fn main () -> int {
   };
   var i: i64 = 0;
   while i < 39 {
-    let push_err = (mut buf).push(wasm_bytes[i]);
+    let push_err = buf.push(wasm_bytes[i]);
     if push_err != None {
-      (mut buf).drop();
+      buf.drop();
       return 2;
     }
     i = i + 1;
@@ -19489,14 +19812,14 @@ fn main () -> int {
   let bytes: ByteSlice = buf.as_bytes();
 
   let m_r: ModuleResult = engine.compile(bytes);
-  (mut buf).drop();
+  buf.drop();
   if m_r.is_err() { return 2; }
   let mut m: Module = match (m_r) {
     Ok(v) => v,
     Err(_) => Module.empty(),
   };
 
-  let inst_r: InstanceResult = (mut m).instantiate();
+  let inst_r: InstanceResult = m.instantiate();
   if inst_r.is_err() { return 3; }
   let mut inst: Instance = match (inst_r) {
     Ok(v) => v,
@@ -19508,7 +19831,7 @@ fn main () -> int {
   let f: Func = f_opt ?? Func{ index: 0 };
 
   let args: U64Slice = { ptr: 0, len: 0 };
-  let call_r: CallResult = (mut inst).call(f, args);
+  let call_r: CallResult = inst.call(f, args);
   if call_r.is_err() { return 5; }
 
   let out_opt: Val? = match (call_r) {
@@ -24782,7 +25105,7 @@ URL: /silk/docs/?p=man/silk-cc.1
 
 `silk cc` is a convenience wrapper for building C/C++ programs that embed or link against `libsilk.a`.
 
-It selects the underlying compiler via `SILK_CC` (default: `cc`) and:
+It selects the underlying compiler via `SILK_CC` (fallback: `CC`, default: `cc`) and:
 
 - adds `-I <install>/include` automatically,
 - unless you pass `-c`/`-E`/`-S`/`-M`/`-MM`, also adds `-L <install>/lib -lsilk`,
@@ -24790,7 +25113,8 @@ It selects the underlying compiler via `SILK_CC` (default: `cc`) and:
 
 ## Environment
 
-- `SILK_CC` — host C compiler executable (default: `cc`).
+- `SILK_CC` — host C compiler executable (falls back to `CC`, then `cc`).
+- `CC` — host C compiler executable (used when `SILK_CC` is unset or empty).
 
 ## Examples
 
@@ -24826,12 +25150,13 @@ URL: /silk/docs/?p=man/silk-check.1
 
 - `silk check [options] <file> [<file> ...]`
 - `silk check [options] --package <dir|manifest>`
+- `silk check [options]             (when ./silk.toml exists, implies --package .)`
 
 ## Description
 
 `silk check` parses and type-checks a module set and reports any diagnostics. It does not emit an output artifact.
 
-To check a package manifest (`silk.toml`), pass `--package` / `--pkg` and omit explicit input files.
+To check a package manifest (`silk.toml`), pass `--package` / `--pkg` and omit explicit input files. When no input files are provided and `--package` is omitted, but `./silk.toml` exists, `silk check` behaves as if `--package .` was provided.
 
 When explicit input files are used (no `--package`), the `silk` CLI may load additional packages into the module set by resolving bare-specifier package imports (for example `import util from "util";`) from the package search path (`SILK_PACKAGE_PATH`).
 
@@ -24856,6 +25181,9 @@ silk check main.slk
 
 # Check a module set.
 silk check src/main.slk src/util.slk
+
+# Check the current directory as a package (implicit; requires ./silk.toml).
+silk check
 
 # Check the current directory as a package (explicit).
 silk check --package .
@@ -24950,6 +25278,61 @@ silk doc --man std::flag -o std_flag.3
 - `silk-man` (1)
 
 ==============================================================================
+DOCS: `silk-env` (1) — Print `silk` CLI Environment (man/silk-env.1)
+URL: /silk/docs/?p=man/silk-env.1
+==============================================================================
+
+# `silk-env` (1) — Print `silk` CLI Environment
+
+> NOTE: This is the Markdown source for the eventual man 1 page for `silk env`. The roff-formatted manpage should be generated from this content.
+
+## Name
+
+`silk-env` — print key environment variables consulted by the `silk` CLI.
+
+## Synopsis
+
+- `silk env`
+
+## Description
+
+`silk env` prints a list of key environment variables consulted by the `silk` CLI for configuration and debugging. The output is intended to be easy to paste into bug reports.
+
+## Output format
+
+- One `NAME=value` entry per line.
+- Unset variables are printed as `NAME=<unset>`.
+- Variables set to an empty string are printed as `NAME=<empty>`.
+
+## Variables
+
+The output includes, at minimum:
+
+- `SILK_DEBUG_BACKEND` — enable backend debug output when set to a non-empty, non-`0` value.
+- `SILK_DEBUG_BACKEND_ENUMS` — enable enum-lowering debug output.
+- `SILK_STD_ROOT` — override stdlib root used to resolve `import std::...;`.
+- `SILK_STD_LIB` — override stdlib archive used for linking (`libsilk_std.a`).
+- `SILK_Z3_LIB` — override Z3 dynamic library path used for Formal Silk verification.
+- `SILK_PACKAGE_PATH` — package search path for bare-specifier imports.
+- `SILK_WORK_DIR` — override compiler work directory root (defaults to `.silk`).
+- `SILK_REPL_HISTORY` — override REPL history path.
+- `SILK_RT_LIBDIR` — override search directory for bundled runtime archives (`libsilk_rt*.a`).
+- `SILK_CC` / `CC` — select host C compiler for `silk cc` and `.c` inputs during `silk build`.
+- `MANPAGER` / `PAGER` / `TERM` / `NO_COLOR` — paging and rendering configuration for `silk man` and diagnostic output.
+
+## Examples
+
+```sh
+silk env
+```
+
+## See Also
+
+- `silk` (1)
+- `silk-cc` (1)
+- `silk-build` (1)
+
+==============================================================================
 DOCS: `silk-lsp` (1) — Language Server Protocol (LSP) Server (man/silk-lsp.1)
 URL: /silk/docs/?p=man/silk-lsp.1
 ==============================================================================
@@ -25000,6 +25383,7 @@ URL: /silk/docs/?p=man/silk-man.1
 ## Synopsis
 
 - `silk man [options] <query>`
+- `silk man [options] <section> <name>`
 
 ## Description
 
@@ -25012,9 +25396,15 @@ URL: /silk/docs/?p=man/silk-man.1
 - API pages derived from declaration docs (intended for man section 3).
 
 
+Notes:
+
+- You may also spell section selection as `name.<section>` (for example `silk.7`).
+- `name(<section>)` is accepted but must be quoted in most shells.
+
 ## Options
 
 - `--help`, `-h` — show command help and exit.
+- `--section <n>`, `-s <n>` — select the manpage section (`1`, `3`, or `7`).
 - `--package <dir|manifest>`, `--pkg <dir|manifest>` — load a module set from a package manifest (`silk.toml`) rooted at the provided directory (or from the provided manifest path).
   - when omitted, and the query is not `std::...`, `silk man` searches the current working directory and its parent directories for `silk.toml` and uses the nearest match.
   - when no manifest is discoverable, `silk man` may also resolve the query from the package search path (`SILK_PACKAGE_PATH`).
@@ -25028,6 +25418,9 @@ URL: /silk/docs/?p=man/silk-man.1
 ## Examples
 
 ```sh
+# View a shipped toolchain overview page (section 7).
+silk man 7 silk
+
 # View docs for a stdlib module.
 silk man std::flag
 
@@ -37369,14 +37762,14 @@ break;
 
 ```silk
 fn main () -> int {
- let mut i: int = 0;
- while true {
- i += 1;
- if i == 3 {
- break;
- }
- }
- return i;
+  let mut i: int = 0;
+  while true {
+    i += 1;
+    if i == 3 {
+      break;
+    }
+  }
+  return i;
 }
 ```
 
@@ -37403,14 +37796,14 @@ continue;
 
 ```silk
 fn main () -> int {
- let mut sum: int = 0;
- for i in 0..5 {
- if i == 3 {
- continue;
- }
- sum += i;
- }
- return sum; // 0 + 1 + 2 + 4 = 7
+  let mut sum: int = 0;
+  for i in 0..5 {
+    if i == 3 {
+      continue;
+    }
+    sum += i;
+  }
+  return sum; // 0 + 1 + 2 + 4 = 7
 }
 ```
 
@@ -37432,13 +37825,13 @@ as distinct Silk types that lower to `i64` nanoseconds.
 
 ```silk
 fn main () -> int {
- let a: Duration = 10ms;
- let b: Duration = 2s;
- let c: Duration = a + b;
- if c > a {
- return 0;
- }
- return 1;
+  let a: Duration = 10ms;
+  let b: Duration = 2s;
+  let c: Duration = a + b;
+  if c > a {
+    return 0;
+  }
+  return 1;
 }
 ```
 
@@ -37463,11 +37856,11 @@ URL: /silk/wiki/?p=language/flow-for
 
 ```silk
 for x in xs {
- // ...
+  // ...
 }
 
 for (let i = 0; i < 10; ++i) {
- // ...
+  // ...
 }
 ```
 
@@ -37477,11 +37870,11 @@ for (let i = 0; i < 10; ++i) {
 
 ```silk
 fn main () -> int {
- let mut sum: int = 0;
- for i in 0..3 {
- sum += i; // 0, 1, 2
- }
- return sum;
+  let mut sum: int = 0;
+  for i in 0..3 {
+    sum += i; // 0, 1, 2
+  }
+  return sum;
 }
 ```
 
@@ -37489,12 +37882,12 @@ fn main () -> int {
 
 ```silk
 fn main () -> int {
- let xs: int[3] = [1, 2, 3];
- let mut sum: int = 0;
- for x in xs {
- sum += x;
- }
- return sum;
+  let xs: int[3] = [1, 2, 3];
+  let mut sum: int = 0;
+  for x in xs {
+    sum += x;
+  }
+  return sum;
 }
 ```
 
@@ -37518,9 +37911,9 @@ the canonical spec for details.
 
 ```silk
 if condition {
- // ...
+  // ...
 } else {
- // ...
+  // ...
 }
 ```
 
@@ -37530,11 +37923,11 @@ if condition {
 
 ```silk
 fn main () -> int {
- if true {
- return 0;
- } else {
- return 1;
- }
+  if true {
+    return 0;
+  } else {
+    return 1;
+  }
 }
 ```
 
@@ -37545,14 +37938,14 @@ the `else` branch.
 
 ```silk
 fn main () -> int {
- let x: int = 1;
- if x == 0 {
- return 0;
- } else if x == 1 {
- return 1;
- } else {
- return 2;
- }
+  let x: int = 1;
+  if x == 0 {
+    return 0;
+  } else if x == 1 {
+    return 1;
+  } else {
+    return 2;
+  }
 }
 ```
 
@@ -37572,7 +37965,7 @@ URL: /silk/wiki/?p=language/flow-loop
 
 ```silk
 loop {
- // ...
+  // ...
 }
 ```
 
@@ -37580,14 +37973,14 @@ loop {
 
 ```silk
 fn main () -> int {
- let mut i: int = 0;
- loop {
- if i == 3 {
- break;
- }
- i += 1;
- }
- return i;
+  let mut i: int = 0;
+  loop {
+    if i == 3 {
+      break;
+    }
+    i += 1;
+  }
+  return i;
 }
 ```
 
@@ -37613,8 +38006,8 @@ Currently:
 
 ```silk
 match value {
- Pattern => expr,
- Pattern => expr,
+  Pattern => expr,
+  Pattern => expr,
 }
 ```
 
@@ -37624,12 +38017,12 @@ match value {
 
 ```silk
 fn main () -> int {
- let x: int? = Some(7);
- let y: int = match x {
- None => 5,
- Some(v) => v,
- };
- return y;
+  let x: int? = Some(7);
+  let y: int = match x {
+    None => 5,
+    Some(v) => v,
+  };
+  return y;
 }
 ```
 
@@ -37637,16 +38030,16 @@ fn main () -> int {
 
 ```silk
 enum Msg {
- Quit,
- Add(int),
+  Quit,
+  Add(int),
 }
 
 fn main () -> int {
- let m: Msg = Msg::Add(5);
- return match m {
- Msg::Quit => 0,
- Msg::Add(n) => n,
- };
+  let m: Msg = Msg::Add(5);
+  return match m {
+    Msg::Quit => 0,
+    Msg::Add(n) => n,
+  };
 }
 ```
 
@@ -37673,11 +38066,11 @@ return expr;
 
 ```silk
 fn add1 (x: int) -> int {
- return x + 1;
+  return x + 1;
 }
 
 fn main () -> int {
- return add1(41);
+  return add1(41);
 }
 ```
 
@@ -37697,7 +38090,7 @@ Use `while` for condition-controlled looping.
 
 ```silk
 while condition {
- // ...
+  // ...
 }
 ```
 
@@ -37705,15 +38098,15 @@ while condition {
 
 ```silk
 fn main () -> int {
- let mut i: int = 0;
- let mut sum: int = 0;
+  let mut i: int = 0;
+  let mut sum: int = 0;
 
- while i < 3 {
- sum += i;
- i += 1;
- }
+  while i < 3 {
+    sum += i;
+    i += 1;
+  }
 
- return sum; // 0 + 1 + 2 = 3
+  return sum; // 0 + 1 + 2 = 3
 }
 ```
 
@@ -37736,14 +38129,14 @@ Aggregate literals build compound values directly in source code:
 
 ```silk
 struct Pair {
- a: int,
- b: int,
+  a: int,
+  b: int,
 }
 
 fn main () -> int {
- let xs: int[3] = [1, 2, 3];
- let p: Pair = Pair{ a: xs[0], b: xs[2] };
- return p.a + p.b;
+  let xs: int[3] = [1, 2, 3];
+  let p: Pair = Pair{ a: xs[0], b: xs[2] };
+  return p.a + p.b;
 }
 ```
 
@@ -37772,15 +38165,15 @@ Blocks (`{ ... }`) group statements and introduce a new scope.
 
 ```silk
 fn main () -> int {
- let x: int = 1;
- {
- let y: int = 2;
- if x + y != 3 {
- return 1;
- }
- }
- // `y` is not in scope here.
- return 0;
+  let x: int = 1;
+  {
+    let y: int = 2;
+    if x + y != 3 {
+      return 1;
+    }
+  }
+  // `y` is not in scope here.
+  return 0;
 }
 ```
 
@@ -37800,11 +38193,11 @@ Silk has the boolean type `bool` with literals `true` and `false`.
 
 ```silk
 fn main () -> int {
- let ok: bool = true;
- if ok && !false {
- return 0;
- }
- return 1;
+  let ok: bool = true;
+  if ok && !false {
+    return 0;
+  }
+  return 1;
 }
 ```
 
@@ -37824,17 +38217,17 @@ explicit `mut` borrow contract (see mutability).
 
 ```silk
 struct Counter {
- value: int,
+  value: int,
 }
 
 fn inc (mut c: &Counter) -> void {
- c.value += 1;
+  c.value += 1;
 }
 
 fn main () -> int {
- let mut c: Counter = Counter{ value: 0 };
- inc(mut c);
- return c.value;
+  let mut c: Counter = Counter{ value: 0 };
+  inc(mut c);
+  return c.value;
 }
 ```
 
@@ -37855,7 +38248,7 @@ In the current toolchain, buffer-like functionality is provided via `std::`:
 
 - `std::vector::Vector(T)` for owning growable storage
 - `std::buffer::BufferU8` as an owning packed byte buffer, plus width-oriented
- scalar buffer aliases (`BufferI32`, etc.)
+  scalar buffer aliases (`BufferI32`, etc.)
 
 ## Example: buffer aliases
 
@@ -37863,15 +38256,15 @@ In the current toolchain, buffer-like functionality is provided via `std::`:
 import std::buffer;
 
 fn main () -> int {
- let b_r = BufferU8.init(4);
- if b_r.is_err() { return 1; }
- let mut b: BufferU8 = match (b_r) {
- Ok(v) => v,
- Err(_) => BufferU8.empty(),
- };
- (mut b).push(1 as u8);
- (mut b).drop();
- return 0;
+  let b_r = BufferU8.init(4);
+  if b_r.is_err() { return 1; }
+  let mut b: BufferU8 = match (b_r) {
+    Ok(v) => v,
+    Err(_) => BufferU8.empty(),
+  };
+  b.push(1 as u8);
+  b.drop();
+  return 0;
 }
 ```
 
@@ -37892,11 +38285,11 @@ value directly in source code.
 
 ```silk
 fn main () -> int {
- let a: char = 'A';
- let nl: char = '\\n';
- if a != 'A' { return 1; }
- if nl != '\\n' { return 2; }
- return 0;
+  let a: char = 'A';
+  let nl: char = '\\n';
+  if a != 'A' { return 1; }
+  if nl != '\\n' { return 2; }
+  return 0;
 }
 ```
 
@@ -37920,7 +38313,7 @@ itself is already concise and example-heavy.
 
 ```silk
 fn main () -> int {
- return 0;
+  return 0;
 }
 ```
 
@@ -37945,15 +38338,15 @@ Silk concurrency is built around:
 
 ```silk
 task fn worker (x: int) -> int {
- return x + 1;
+  return x + 1;
 }
 
 async fn main () -> int {
- task {
- let a = worker(10);
- let values: int[] = yield * a;
- return values[0];
- }
+  task {
+    let a = worker(10);
+    let values: int[] = yield * a;
+    return values[0];
+  }
 }
 ```
 
@@ -37961,24 +38354,24 @@ async fn main () -> int {
 
 ```silk
 async fn add1 (x: int) -> int {
- return x + 1;
+  return x + 1;
 }
 
 task fn produce_promises (n: int) -> Promise(int) {
- var i: int = 0;
- while i < n {
- yield add1(i);
- i = i + 1;
- }
- return add1(n);
+  var i: int = 0;
+  while i < n {
+    yield add1(i);
+    i = i + 1;
+  }
+  return add1(n);
 }
 
 async fn main () -> int {
- task {
- let t = produce_promises(3);
- let values: int[] = await * yield * t;
- return values[0];
- }
+  task {
+    let t = produce_promises(3);
+    let values: int[] = await * yield * t;
+    return values[0];
+  }
 }
 ```
 
@@ -37999,13 +38392,13 @@ This wiki page is an overview. The canonical specification is
 
 ```silk
 const fn add (a: int, b: int) -> int {
- return a + b;
+  return a + b;
 }
 
 const answer: int = add(20, 22);
 
 fn main () -> int {
- return answer;
+  return answer;
 }
 ```
 
@@ -38013,12 +38406,12 @@ fn main () -> int {
 
 - Const functions are intended for `const` initializer evaluation.
 - Const functions are compile-time-only: they are not callable from runtime
- code and are not emitted as runtime/linkable symbols.
+  code and are not emitted as runtime/linkable symbols.
 - The  targets scalar-only const evaluation; `string`/aggregate
- return values and higher-order const evaluation are planned.
+  return values and higher-order const evaluation are planned.
 - In Silk, `const fn` bodies must not allocate (`new`) or use
- regions/`with`, must not contain `panic`, and may only call other `const fn`
- declarations.
+  regions/`with`, must not contain `panic`, and may only call other `const fn`
+  declarations.
 
 ## See also
 
@@ -38037,11 +38430,11 @@ notation, naming, and the “implementation status” pattern.
 
 ```silk
 fn main () -> int {
- let x: int = 1;
- if x == 1 {
- return 0;
- }
- return 1;
+  let x: int = 1;
+  if x == 1 {
+    return 0;
+  }
+  return 1;
 }
 ```
 
@@ -38086,8 +38479,10 @@ fn main () -> int { return 0; }
 
 /**
  * Block doc comment
+ *
  * @example silk
  * fn main () -> int { return 0; }
+ */
 fn other () -> int { return 0; }
 ```
 
@@ -38108,11 +38503,11 @@ etc) and produce a `Duration` value.
 
 ```silk
 fn main () -> int {
- let a: Duration = 10ms;
- let b: Duration = 2s;
- let c: Duration = a + b;
- if c > a { return 0; }
- return 1;
+  let a: Duration = 10ms;
+  let b: Duration = 2s;
+  let c: Duration = a + b;
+  if c > a { return 0; }
+  return 1;
 }
 ```
 
@@ -38138,8 +38533,8 @@ Currently, enums support:
 
 ```silk
 enum Msg {
- Quit,
- Add(int),
+  Quit,
+  Add(int),
 }
 ```
 
@@ -38149,16 +38544,16 @@ enum Msg {
 
 ```silk
 enum Msg {
- Quit,
- Add(int),
+  Quit,
+  Add(int),
 }
 
 fn main () -> int {
- let m: Msg = Msg::Add(5);
- return match m {
- Msg::Quit => 0,
- Msg::Add(n) => n,
- };
+  let m: Msg = Msg::Add(5);
+  return match m {
+    Msg::Quit => 0,
+    Msg::Add(n) => n,
+  };
 }
 ```
 
@@ -38183,8 +38578,8 @@ the full rules.
 
 ```silk
 fn main () -> int {
- assert (1 + 2) == 3;
- return 0;
+  assert (1 + 2) == 3;
+  return 0;
 }
 ```
 
@@ -38205,10 +38600,10 @@ Many expressions can appear as standalone statements when followed by `;`
 
 ```silk
 fn main () -> int {
- let mut x: int = 0;
- x += 1;
- ++x;
- return x;
+  let mut x: int = 0;
+  x += 1;
+  ++x;
+  return x;
 }
 ```
 
@@ -38249,9 +38644,9 @@ import std::io;
 ext puts = fn (string) -> i32;
 
 fn main () -> int {
- puts("hello from ext");
- std::io::println("ok");
- return 0;
+  puts("hello from ext");
+  std::io::println("ok");
+  return 0;
 }
 ```
 
@@ -38264,9 +38659,9 @@ ext thing_new = fn () -> &Thing;
 ext thing_free = fn (&Thing) -> void;
 
 fn main () -> int {
- let t: &Thing = thing_new();
- thing_free(t);
- return 0;
+  let t: &Thing = thing_new();
+  thing_free(t);
+  return 0;
 }
 ```
 
@@ -38291,19 +38686,19 @@ Silk has familiar structured control flow:
 
 ```silk
 fn main () -> int {
- let mut sum: int = 0;
+  let mut sum: int = 0;
 
- for i in 0..5 {
- if i == 3 {
- continue;
- }
- sum += i;
- }
+  for i in 0..5 {
+    if i == 3 {
+      continue;
+    }
+    sum += i;
+  }
 
- if sum > 0 {
- return sum;
- }
- return 0;
+  if sum > 0 {
+    return sum;
+  }
+  return 0;
 }
 ```
 
@@ -38329,7 +38724,7 @@ Silk includes syntax for writing contracts and verification metadata:
 #require x >= 0;
 #assure result == x + 1;
 fn inc (x: int) -> int {
- return x + 1;
+  return x + 1;
 }
 ```
 
@@ -38353,11 +38748,11 @@ Function modifiers declare constraints and concurrency behavior:
 
 ```silk
 pure fn add (x: int, y: int) -> int {
- return x + y;
+  return x + y;
 }
 
 task fn worker (x: int) -> int {
- return x + 1;
+  return x + 1;
 }
 ```
 
@@ -38379,12 +38774,12 @@ parameters).
 
 ```silk
 struct Pair(T) {
- a: T,
- b: T,
+  a: T,
+  b: T,
 }
 
 impl Pair(T) {
- public fn first (self: &Pair(T)) -> T { return self.a; }
+  public fn first (self: &Pair(T)) -> T { return self.a; }
 }
 ```
 
@@ -38394,17 +38789,17 @@ impl Pair(T) {
 
 ```silk
 struct Pair(T) {
- a: T,
- b: T,
+  a: T,
+  b: T,
 }
 
 impl Pair(T) {
- public fn first (self: &Pair(T)) -> T { return self.a; }
+  public fn first (self: &Pair(T)) -> T { return self.a; }
 }
 
 fn main () -> int {
- let p: Pair(int) = { a: 1, b: 2 };
- return p.first();
+  let p: Pair(int) = { a: 1, b: 2 };
+  return p.first();
 }
 ```
 
@@ -38431,8 +38826,8 @@ This wiki page is a reading guide, not a replacement for the grammar itself.
 import std::io;
 
 fn main () -> int {
- std::io::println("hello {s}", "world");
- return 0;
+  std::io::println("hello {s}", "world");
+  return 0;
 }
 ```
 
@@ -38454,15 +38849,15 @@ surfaces such as iterators and Drop.
 
 ```silk
 interface Len {
- fn len() -> i64;
+  fn len() -> i64;
 }
 
 struct Counter {
- n: i64,
+  n: i64,
 }
 
 impl Counter as Len {
- fn len (self: &Counter) -> i64 { return self.n; }
+  fn len (self: &Counter) -> i64 { return self.n; }
 }
 ```
 
@@ -38472,20 +38867,20 @@ impl Counter as Len {
 
 ```silk
 interface Len {
- fn len() -> i64;
+  fn len() -> i64;
 }
 
 struct Counter {
- n: i64,
+  n: i64,
 }
 
 impl Counter as Len {
- fn len (self: &Counter) -> i64 { return self.n; }
+  fn len (self: &Counter) -> i64 { return self.n; }
 }
 
 fn main () -> int {
- let c: Counter = Counter{ n: 3 };
- return c.len() as int;
+  let c: Counter = Counter{ n: 3 };
+  return c.len() as int;
 }
 ```
 
@@ -38527,8 +38922,8 @@ let xs: int[3] = [1, 2, 3];
 
 ```silk
 fn main () -> int {
- let xs: int[3] = [10, 20, 30];
- return xs[1];
+  let xs: int[3] = [10, 20, 30];
+  return xs[1];
 }
 ```
 
@@ -38538,8 +38933,8 @@ fn main () -> int {
 import std::io;
 
 fn main () -> int {
- std::io::println("line1\\nline2");
- return 0;
+  std::io::println("line1\\nline2");
+  return 0;
 }
 ```
 
@@ -38557,7 +38952,7 @@ This page is a learning-oriented companion to the canonical memory model:
 At a high level:
 
 - Most values are plain, copyable scalars (or structs that lower to a fixed set
- of scalar slots in Silk).
+  of scalar slots in Silk).
 - Heap allocation is introduced via `new`, producing `&Struct` references.
 - `with` regions can redirect `new` allocations away from the heap (see regions).
 
@@ -38565,13 +38960,13 @@ At a high level:
 
 ```silk
 struct Point {
- x: int,
- y: int,
+  x: int,
+  y: int,
 }
 
 fn main () -> int {
- let p: &Point = new Point{ x: 1, y: 2 };
- return p.x + p.y;
+  let p: &Point = new Point{ x: 1, y: 2 };
+  return p.x + p.y;
 }
 ```
 
@@ -38595,7 +38990,7 @@ let mut x: int = 0;
 x += 1;
 
 // Two-part mut borrow contract:
-// - parameter declared `mut`,
+// - parameter declared `mut`, and
 // - call site uses `mut <expr>`.
 // fn bump(mut p: &Pair) -> void { ... }
 // bump(mut pair);
@@ -38605,18 +39000,18 @@ x += 1;
 
 ```silk
 struct Pair {
- a: int,
- b: int,
+  a: int,
+  b: int,
 }
 
 fn bump_a (mut p: &Pair) -> void {
- p.a += 1;
+  p.a += 1;
 }
 
 fn main () -> int {
- let mut p: Pair = Pair{ a: 1, b: 2 };
- bump_a(mut p);
- return p.a;
+  let mut p: Pair = Pair{ a: 1, b: 2 };
+  bump_a(mut p);
+  return p.a;
 }
 ```
 
@@ -38637,13 +39032,13 @@ suffixes as defined in the canonical spec.
 
 ```silk
 fn main () -> int {
- let a: int = 42;
- let b: u64 = 0xff as u64;
- let c: f64 = 1.5;
- if a + (b as int) > 0 && c > 0.0 {
- return 0;
- }
- return 1;
+  let a: int = 42;
+  let b: u64 = 0xff as u64;
+  let c: f64 = 1.5;
+  if a + (b as int) > 0 && c > 0.0 {
+    return 0;
+  }
+  return 1;
 }
 ```
 
@@ -38686,12 +39081,12 @@ let x: u64 = 123 as u64;
 
 ```silk
 fn main () -> int {
- let a: int = 10;
- let b: int = 3;
- if a % b == 1 {
- return a + b; // 13
- }
- return 0;
+  let a: int = 10;
+  let b: int = 3;
+  if a % b == 1 {
+    return a + b; // 13
+  }
+  return 0;
 }
 ```
 
@@ -38699,8 +39094,8 @@ fn main () -> int {
 
 ```silk
 fn main () -> int {
- let x: int? = None;
- return x ?? 42;
+  let x: int? = None;
+  return x ?? 42;
 }
 ```
 
@@ -38719,7 +39114,7 @@ Optionals represent “maybe a value” without sentinel `null`s.
 - The idiomatic form is suffix `T?`.
 - Values are `None` (empty) or `Some(value)` (present).
 - Use `??` (coalescing), `?.` (optional field access), and `match` to consume
- optionals.
+  optionals.
 
 
 ## Syntax
@@ -38730,8 +39125,8 @@ let b: int? = Some(123);
 
 let x: int = b ?? 0;
 let y: int = match b {
- None => 0,
- Some(v) => v,
+  None => 0,
+  Some(v) => v,
 };
 ```
 
@@ -38741,13 +39136,13 @@ let y: int = match b {
 
 ```silk
 fn main () -> int {
- let x: int? = Some(7);
- let y: int = x ?? 0;
- let z: int = match x {
- None => 1,
- Some(v) => v,
- };
- return y + z;
+  let x: int? = Some(7);
+  let y: int = x ?? 0;
+  let z: int = match x {
+    None => 1,
+    Some(v) => v,
+  };
+  return y + z;
 }
 ```
 
@@ -38755,20 +39150,20 @@ fn main () -> int {
 
 ```silk
 struct Profile {
- email: string,
+  email: string,
 }
 
 struct User {
- profile: Profile?,
+  profile: Profile?,
 }
 
 fn main () -> int {
- let u: User = User{ profile: Some(Profile{ email: "a@b" }) };
- let email: string = u.profile?.email ?? "no-email";
- if email == "a@b" {
- return 0;
- }
- return 1;
+  let u: User = User{ profile: Some(Profile{ email: "a@b" }) };
+  let email: string = u.profile?.email ?? "no-email";
+  if email == "a@b" {
+    return 0;
+  }
+  return 1;
 }
 ```
 
@@ -38814,7 +39209,7 @@ export fn main () -> int { return 0; }
 package app;
 
 export fn add (x: int, y: int) -> int {
- return x + y;
+  return x + y;
 }
 ```
 
@@ -38825,7 +39220,7 @@ package app;
 import { add } from "./math.slk";
 
 fn main () -> int {
- return add(40, 2);
+  return add(40, 2);
 }
 ```
 
@@ -38836,7 +39231,7 @@ fn main () -> int {
 package module;
 
 export default fn () -> int {
- return 1 + 2;
+  return 1 + 2;
 }
 ```
 
@@ -38845,7 +39240,7 @@ export default fn () -> int {
 import foo from "./module.slk";
 
 fn main () -> int {
- return foo();
+  return foo();
 }
 ```
 
@@ -38884,7 +39279,7 @@ used as an allocation context for `new`.
 const region arena: u8[1024];
 
 with arena {
- // `new` allocations use `arena` as backing storage.
+  // `new` allocations use `arena` as backing storage.
 }
 ```
 
@@ -38892,16 +39287,16 @@ with arena {
 
 ```silk
 struct Point {
- x: int,
- y: int,
+  x: int,
+  y: int,
 }
 
 fn main () -> int {
- const region arena: u8[1024];
- with arena {
- let p: &Point = new Point{ x: 1, y: 2 };
- return p.x + p.y;
- }
+  const region arena: u8[1024];
+  with arena {
+    let p: &Point = new Point{ x: 1, y: 2 };
+    return p.x + p.y;
+  }
 }
 ```
 
@@ -38924,13 +39319,23 @@ URL: /silk/wiki/?p=language/literals-string
 import std::io;
 
 fn main () -> int {
- std::io::println("line1\\nline2");
- std::io::println("quote=\\\" backslash=\\\\");
- return 0;
+  std::io::println("line1\\nline2");
+  std::io::println("quote=\\\" backslash=\\\\");
+  return 0;
 }
 ```
 
 ## See also
+
+==============================================================================
+WIKI: Struct requirements (`#require`) (language/struct-requirements)
+URL: /silk/wiki/?p=language/struct-requirements
+==============================================================================
+
+# Struct requirements (`#require`)
+
+Use `#require` on a `struct` to state requirements that must hold for all
+values constructed for that type.
 
 ==============================================================================
 WIKI: Structs and `impl` (language/structs-impls-layout)
@@ -38948,14 +39353,14 @@ and `drop`) to a type.
 
 ```silk
 struct Point {
- x: int,
- y: int,
+  x: int,
+  y: int,
 }
 
 impl Point {
- public fn sum (self: &Point) -> int {
- return self.x + self.y;
- }
+  public fn sum (self: &Point) -> int {
+    return self.x + self.y;
+  }
 }
 ```
 
@@ -38965,24 +39370,24 @@ impl Point {
 
 ```silk
 struct Point {
- x: int,
- y: int,
+  x: int,
+  y: int,
 }
 
 impl Point {
- public fn add (self: &Point, other: Point) -> Point {
- return Point{
- x: self.x + other.x,
- y: self.y + other.y,
- };
- }
+  public fn add (self: &Point, other: Point) -> Point {
+    return Point{
+      x: self.x + other.x,
+      y: self.y + other.y,
+    };
+  }
 }
 
 fn main () -> int {
- let p: Point = Point{ x: 1, y: 2 };
- let q: Point = Point{ x: 3, y: 4 };
- let r: Point = p.add(q);
- return r.x + r.y; // 10
+  let p: Point = Point{ x: 1, y: 2 };
+  let q: Point = Point{ x: 3, y: 4 };
+  let r: Point = p.add(q);
+  return r.x + r.y; // 10
 }
 ```
 
@@ -39006,7 +39411,7 @@ next when you want precise rules.
 
 ```silk
 fn main () -> int {
- return 0;
+  return 0;
 }
 ```
 
@@ -39027,9 +39432,9 @@ Silk supports top-level `test` declarations that are discovered and executed by
 
 ```silk
 test "addition works" {
- if (1 + 2) != 3 {
- std::abort();
- }
+  if (1 + 2) != 3 {
+    std::abort();
+  }
 }
 ```
 
@@ -39057,13 +39462,13 @@ Typed errors make “this function can fail” explicit in the type system:
 error OutOfBounds { index: int, len: int }
 
 fn get_at (xs: &u8[], index: int) -> u8 | OutOfBounds {
- if index < 0 { panic OutOfBounds{ index: index, len: 0 }; }
- return 0;
+  if index < 0 { panic OutOfBounds{ index: index, len: 0 }; }
+  return 0;
 }
 
 fn caller (xs: &u8[]) -> u8 | OutOfBounds {
- let x: u8 = get_at(xs, 0)?;
- return x;
+  let x: u8 = get_at(xs, 0)?;
+  return x;
 }
 ```
 
@@ -39075,12 +39480,12 @@ fn caller (xs: &u8[]) -> u8 | OutOfBounds {
 error Boom { code: int }
 
 fn may_boom () -> int | Boom {
- panic Boom{ code: 7 };
+  panic Boom{ code: 7 };
 }
 
 fn main () -> int | Boom {
- let x: int = may_boom()?;
- return x;
+  let x: int = may_boom()?;
+  return x;
 }
 ```
 
@@ -39090,21 +39495,21 @@ fn main () -> int | Boom {
 error Boom { code: int }
 
 fn may_boom (x: int) -> int | Boom {
- if x == 0 {
- panic Boom{ code: 123 };
- }
- return 7;
+  if x == 0 {
+    panic Boom{ code: 123 };
+  }
+  return 7;
 }
 
 fn main () -> int {
- match (may_boom(0)) {
- value => {
- return value;
- },
- err: Boom => {
- std::abort();
- },
- }
+  match (may_boom(0)) {
+    value => {
+      return value;
+    },
+    err: Boom => {
+      std::abort();
+    },
+  }
 }
 ```
 
@@ -39155,8 +39560,8 @@ type IntAdder = fn (int, int) -> int;
 type IntAdder = fn (int, int) -> int;
 
 fn main () -> int {
- let add: IntAdder = fn (x: int, y: int) -> x + y;
- return add(40, 2);
+  let add: IntAdder = fn (x: int, y: int) -> x + y;
+  return add(40, 2);
 }
 ```
 
@@ -39164,12 +39569,12 @@ fn main () -> int {
 
 ```silk
 fn main () -> int {
- let xs: int[3] = [1, 2, 3];
- let mut sum: int = 0;
- for x in xs {
- sum += x;
- }
- return sum;
+  let xs: int[3] = [1, 2, 3];
+  let mut sum: int = 0;
+  for x in xs {
+    sum += x;
+  }
+  return sum;
 }
 ```
 
@@ -39190,7 +39595,7 @@ arguments, used by `std::io::print` / `std::io::println`.
 
 ```silk
 fn log (fmt: string, ...args: std::fmt::Arg) -> void {
- std::io::println(fmt, args);
+  std::io::println(fmt, args);
 }
 ```
 
@@ -39200,8 +39605,8 @@ fn log (fmt: string, ...args: std::fmt::Arg) -> void {
 import std::io;
 
 fn main () -> int {
- std::io::println("hello {s} answer={d}", "world", 42);
- return 0;
+  std::io::println("hello {s} answer={d}", "world", 42);
+  return 0;
 }
 ```
 
@@ -39223,9 +39628,9 @@ error reporting.
 - **Naming**: packages are `std::area`; types are `PascalCase`; functions/methods are `snake_case`.
 - **Ownership**: allocating APIs return owned containers (for example `std::strings::String`) and callers drop them.
 - **Errors**:
- - use `T?` for “absence” (`None`) without extra error information,
- - use typed errors (`T | SomeError`) for recoverable runtime errors with meaning,
- - use `std::result::Result(T, E)` when callers need to distinguish multiple error causes and propagate them cleanly.
+  - use `T?` for “absence” (`None`) without extra error information,
+  - use typed errors (`T | SomeError`) for recoverable runtime errors with meaning,
+  - use `std::result::Result(T, E)` when callers need to distinguish multiple error causes and propagate them cleanly.
 
 ## Examples
 
@@ -39236,21 +39641,21 @@ import std::process;
 import std::strings;
 
 fn main () -> int {
- // Optional: `T?` indicates a value may be absent.
- let missing: int? = None;
- let v: int = missing ?? 123;
- if v != 123 { return 1; }
+  // Optional: `T?` indicates a value may be absent.
+  let missing: int? = None;
+  let v: int = missing ?? 123;
+  if v != 123 { return 1; }
 
- // Typed errors: handle `T | E` with `match`.
- let mut cwd: std::strings::String = std::strings::String.empty();
- match (std::process::getcwd()) {
- s => { cwd = s; },
- _: std::process::GetCwdFailed => { return 2; },
- }
+  // Typed errors: handle `T | E` with `match`.
+  let mut cwd: std::strings::String = std::strings::String.empty();
+  match (std::process::getcwd()) {
+    s => { cwd = s; },
+    _: std::process::GetCwdFailed => { return 2; },
+  }
 
- // Owned std values are explicitly dropped in the .
- (mut cwd).drop();
- return 0;
+  // Owned std values are explicitly dropped in the .
+  cwd.drop();
+  return 0;
 }
 ```
 
@@ -39282,11 +39687,11 @@ import std::io;
 import std::strings;
 
 fn main () -> int {
- if std::strings::eq("a", "a") {
- std::io::println("ok");
- return 0;
- }
- return 1;
+  if std::strings::eq("a", "a") {
+    std::io::println("ok");
+    return 0;
+  }
+  return 1;
 }
 ```
 
@@ -39323,9 +39728,9 @@ import std::algorithms;
 import std::algorithms;
 
 fn main () -> int {
- if std::algorithms::clamp_int(10, 0, 5) != 5 { return 1; }
- if std::algorithms::clamp_int(-1, 0, 5) != 0 { return 2; }
- return 0;
+  if std::algorithms::clamp_int(10, 0, 5) != 5 { return 1; }
+  if std::algorithms::clamp_int(-1, 0, 5) != 0 { return 2; }
+  return 0;
 }
 ```
 
@@ -39349,14 +39754,14 @@ import args from "std/args";
 import { println } from "std/io";
 
 fn main (argc: int, argv: u64) -> int {
- let a = args::Args.init(argc, argv);
- if (a.count() != argc) {
- return 1;
- }
- if argc > 0 {
- println("argv[0]={}", a.get(0));
- }
- return 0;
+  let a = args::Args.init(argc, argv);
+  if (a.count() != argc) {
+    return 1;
+  }
+  if argc > 0 {
+    println("argv[0]={}", a.get(0));
+  }
+  return 0;
 }
 ```
 
@@ -39388,27 +39793,27 @@ import std::arrays;
 import std::buffer;
 
 fn main () -> int {
- let mut buf: BufferU64 = BufferU64.init(4);
- (mut buf).push(10);
- (mut buf).push(11);
- (mut buf).push(12);
+  let mut buf: BufferU64 = BufferU64.init(4);
+  buf.push(10);
+  buf.push(11);
+  buf.push(12);
 
- let s: std::arrays::Slice(u64) = { ptr: buf.ptr, len: buf.len() };
- let mut it = s.iter();
- let mut sum: u64 = 0;
- while true {
- let v: u64? = (mut it).next();
- if v == None {
- break;
- }
- sum += (v ?? 0 as u64);
- }
+  let s: std::arrays::Slice(u64) = { ptr: buf.ptr, len: buf.len() };
+  let mut it = s.iter();
+  let mut sum: u64 = 0;
+  while true {
+    let v: u64? = it.next();
+    if v == None {
+      break;
+    }
+    sum += (v ?? 0 as u64);
+  }
 
- (mut buf).drop();
- if sum != 33 {
- return 1;
- }
- return 0;
+  buf.drop();
+  if sum != 33 {
+    return 1;
+  }
+  return 0;
 }
 ```
 
@@ -39429,15 +39834,15 @@ URL: /silk/wiki/?p=std/bits
 Defined in `std/bits.slk`:
 
 - Byte swaps:
- - `std::bits::bswap_u16`
- - `std::bits::bswap_u32`
- - `std::bits::bswap_u64`
+  - `std::bits::bswap_u16`
+  - `std::bits::bswap_u32`
+  - `std::bits::bswap_u64`
 - Rotations:
- - `std::bits::rotl_u32`, `std::bits::rotr_u32`
- - `std::bits::rotl_u64`, `std::bits::rotr_u64`
+  - `std::bits::rotl_u32`, `std::bits::rotr_u32`
+  - `std::bits::rotl_u64`, `std::bits::rotr_u64`
 - Bit counts:
- - `std::bits::popcount_u32`, `std::bits::clz_u32`, `std::bits::ctz_u32`
- - `std::bits::popcount_u64`, `std::bits::clz_u64`, `std::bits::ctz_u64`
+  - `std::bits::popcount_u32`, `std::bits::clz_u32`, `std::bits::ctz_u32`
+  - `std::bits::popcount_u64`, `std::bits::clz_u64`, `std::bits::ctz_u64`
 
 ## Example
 
@@ -39445,17 +39850,17 @@ Defined in `std/bits.slk`:
 import std::bits;
 
 fn main () -> int {
- let v: u32 = 1;
- let r: u32 = std::bits::rotl_u32(v, 5);
- if r != ((1 as u32) << 5) {
- return 1;
- }
+  let v: u32 = 1;
+  let r: u32 = std::bits::rotl_u32(v, 5);
+  if r != ((1 as u32) << 5) {
+    return 1;
+  }
 
- if std::bits::popcount_u32(r) != 1 {
- return 2;
- }
+  if std::bits::popcount_u32(r) != 1 {
+    return 2;
+  }
 
- return 0;
+  return 0;
 }
 ```
 
@@ -39483,20 +39888,20 @@ import std::buffer;
 import std::buffer;
 
 fn main () -> int {
- let b_r = BufferU8.init(4);
- if b_r.is_err() { return 1; }
- let mut b: BufferU8 = match (b_r) {
- Ok(v) => v,
- Err(_) => BufferU8.empty(),
- };
- (mut b).push(1 as u8);
- (mut b).push(2 as u8);
- if (mut b).pop() != Some(2 as u8) {
- (mut b).drop();
- return 1;
- }
- (mut b).drop();
- return 0;
+  let b_r = BufferU8.init(4);
+  if b_r.is_err() { return 1; }
+  let mut b: BufferU8 = match (b_r) {
+    Ok(v) => v,
+    Err(_) => BufferU8.empty(),
+  };
+  b.push(1 as u8);
+  b.push(2 as u8);
+  if b.pop() != Some(2 as u8) {
+    b.drop();
+    return 1;
+  }
+  b.drop();
+  return 0;
 }
 ```
 
@@ -39534,117 +39939,117 @@ import std::buffer;
 import std::runtime::mem;
 
 fn main () -> int {
- if std::crypto::init() != None {
- return 1;
- }
+  if std::crypto::init() != None {
+    return 1;
+  }
 
- // memzero: wipe a buffer in place.
- let wipe_r = std::buffer::BufferU8.init(16);
- if wipe_r.is_err() { return 2; }
- let mut wipe: std::buffer::BufferU8 = match (wipe_r) {
- Ok(v) => v,
- Err(_) => std::buffer::BufferU8.empty(),
- };
+  // memzero: wipe a buffer in place.
+  let wipe_r = std::buffer::BufferU8.init(16);
+  if wipe_r.is_err() { return 2; }
+  let mut wipe: std::buffer::BufferU8 = match (wipe_r) {
+    Ok(v) => v,
+    Err(_) => std::buffer::BufferU8.empty(),
+  };
 
- var i: i64 = 0;
- while i < 16 {
- (mut wipe).push(std::runtime::mem::trunc_u8(100 + (i as int)));
- i = i + 1;
- }
+  var i: i64 = 0;
+  while i < 16 {
+    wipe.push(std::runtime::mem::trunc_u8(100 + (i as int)));
+    i = i + 1;
+  }
 
- let wipe_err: std::crypto::CryptoFailed? = std::crypto::memzero(wipe.as_bytes());
- if wipe_err != None {
- (mut wipe).drop();
- return 3;
- }
+  let wipe_err: std::crypto::CryptoFailed? = std::crypto::memzero(wipe.as_bytes());
+  if wipe_err != None {
+    wipe.drop();
+    return 3;
+  }
 
- var j: i64 = 0;
- while j < 16 {
- if wipe.get(j) != 0 {
- (mut wipe).drop();
- return 4;
- }
- j = j + 1;
- }
- (mut wipe).drop();
+  var j: i64 = 0;
+  while j < 16 {
+    if wipe.get(j) != 0 {
+      wipe.drop();
+      return 4;
+    }
+    j = j + 1;
+  }
+  wipe.drop();
 
- // blake2b("abc") with digest_size=32.
- let msg: string = "abc";
- let msg_ptr: u64 = std::runtime::mem::string_ptr(msg);
- let msg_len: i64 = std::runtime::mem::string_len(msg);
+  // blake2b("abc") with digest_size=32.
+  let msg: string = "abc";
+  let msg_ptr: u64 = std::runtime::mem::string_ptr(msg);
+  let msg_len: i64 = std::runtime::mem::string_len(msg);
 
- let out_r = std::buffer::BufferU8.init(32);
- let expected_r = std::buffer::BufferU8.init(32);
- if out_r.is_err() || expected_r.is_err() { return 2; }
- let mut out: std::buffer::BufferU8 = match (out_r) {
- Ok(v) => v,
- Err(_) => std::buffer::BufferU8.empty(),
- };
- let mut expected: std::buffer::BufferU8 = match (expected_r) {
- Ok(v) => v,
- Err(_) => std::buffer::BufferU8.empty(),
- };
+  let out_r = std::buffer::BufferU8.init(32);
+  let expected_r = std::buffer::BufferU8.init(32);
+  if out_r.is_err() || expected_r.is_err() { return 2; }
+  let mut out: std::buffer::BufferU8 = match (out_r) {
+    Ok(v) => v,
+    Err(_) => std::buffer::BufferU8.empty(),
+  };
+  let mut expected: std::buffer::BufferU8 = match (expected_r) {
+    Ok(v) => v,
+    Err(_) => std::buffer::BufferU8.empty(),
+  };
 
- // Expected digest: bddd813c634239723171ef3fee98579b94964e3bb1cb3e427262c8c068d52319
- (mut expected).push(189);
- (mut expected).push(221);
- (mut expected).push(129);
- (mut expected).push(60);
- (mut expected).push(99);
- (mut expected).push(66);
- (mut expected).push(57);
- (mut expected).push(114);
- (mut expected).push(49);
- (mut expected).push(113);
- (mut expected).push(239);
- (mut expected).push(63);
- (mut expected).push(238);
- (mut expected).push(152);
- (mut expected).push(87);
- (mut expected).push(155);
- (mut expected).push(148);
- (mut expected).push(150);
- (mut expected).push(78);
- (mut expected).push(59);
- (mut expected).push(177);
- (mut expected).push(203);
- (mut expected).push(62);
- (mut expected).push(66);
- (mut expected).push(114);
- (mut expected).push(98);
- (mut expected).push(200);
- (mut expected).push(192);
- (mut expected).push(104);
- (mut expected).push(213);
- (mut expected).push(35);
- (mut expected).push(25);
+  // Expected digest: bddd813c634239723171ef3fee98579b94964e3bb1cb3e427262c8c068d52319
+  expected.push(189);
+  expected.push(221);
+  expected.push(129);
+  expected.push(60);
+  expected.push(99);
+  expected.push(66);
+  expected.push(57);
+  expected.push(114);
+  expected.push(49);
+  expected.push(113);
+  expected.push(239);
+  expected.push(63);
+  expected.push(238);
+  expected.push(152);
+  expected.push(87);
+  expected.push(155);
+  expected.push(148);
+  expected.push(150);
+  expected.push(78);
+  expected.push(59);
+  expected.push(177);
+  expected.push(203);
+  expected.push(62);
+  expected.push(66);
+  expected.push(114);
+  expected.push(98);
+  expected.push(200);
+  expected.push(192);
+  expected.push(104);
+  expected.push(213);
+  expected.push(35);
+  expected.push(25);
 
- let hash_err: std::crypto::CryptoError? = std::crypto::hash::blake2b(
- mut out,
- 32,
- std::arrays::ByteSlice{ ptr: msg_ptr, len: msg_len }
- );
- if hash_err != None {
- (mut out).drop();
- (mut expected).drop();
- return 6;
- }
- let eq_r: std::crypto::CryptoBoolResult = std::crypto::equal(out.as_bytes(), expected.as_bytes());
- let eq_opt: bool? = std::crypto::CryptoBoolResult.ok_value(eq_r);
- if eq_opt == None {
- (mut out).drop();
- (mut expected).drop();
- return 7;
- }
- if !(eq_opt ?? false) {
- (mut out).drop();
- (mut expected).drop();
- return 7;
- }
+  let hash_err: std::crypto::CryptoError? = std::crypto::hash::blake2b(
+    mut out,
+    32,
+    std::arrays::ByteSlice{ ptr: msg_ptr, len: msg_len }
+  );
+  if hash_err != None {
+    out.drop();
+    expected.drop();
+    return 6;
+  }
+  let eq_r: std::crypto::CryptoBoolResult = std::crypto::equal(out.as_bytes(), expected.as_bytes());
+  let eq_opt: bool? = std::crypto::CryptoBoolResult.ok_value(eq_r);
+  if eq_opt == None {
+    out.drop();
+    expected.drop();
+    return 7;
+  }
+  if !(eq_opt ?? false) {
+    out.drop();
+    expected.drop();
+    return 7;
+  }
 
- (mut out).drop();
- (mut expected).drop();
- return 0;
+  out.drop();
+  expected.drop();
+  return 0;
 }
 ```
 
@@ -39670,12 +40075,12 @@ import std::env;
 import { println } from "std/io";
 
 fn main () -> int {
- let v_opt = std::env::get("HOME");
- match (v_opt) {
- Some(v) => println("HOME = {}", v),
- None => println("HOME is not set"),
- };
- return 0;
+  let v_opt = std::env::get("HOME");
+  match (v_opt) {
+    Some(v) => println("HOME = {}", v),
+    None => println("HOME is not set"),
+  };
+  return 0;
 }
 ```
 
@@ -39701,8 +40106,8 @@ syntax.
 import std::io;
 
 fn main () -> int {
- std::io::println("name={s} ok={}", "silk", true);
- return 0;
+  std::io::println("name={s} ok={}", "silk", true);
+  return 0;
 }
 ```
 
@@ -39737,7 +40142,7 @@ import { nonnegative_i64, bounds_i64 } from "std/formal";
 #theory nonnegative_i64(len);
 #theory bounds_i64(index, len);
 fn get_at (index: i64, len: i64) -> i64 {
- return index;
+  return index;
 }
 ```
 
@@ -39760,10 +40165,10 @@ subset).
 import std::fs;
 
 fn main () -> int {
- if !std::fs::exists("docs") { return 1; }
- if !std::fs::can_read("docs") { return 2; }
- if std::fs::exists("this_file_should_not_exist___silk_std_fs") { return 3; }
- return 0;
+  if !std::fs::exists("docs") { return 1; }
+  if !std::fs::can_read("docs") { return 2; }
+  if std::fs::exists("this_file_should_not_exist___silk_std_fs") { return 3; }
+  return 0;
 }
 ```
 
@@ -39786,25 +40191,25 @@ URL: /silk/wiki/?p=std/interfaces
 import std::interfaces;
 
 struct CounterIter {
- cur: int,
- end: int,
+  cur: int,
+  end: int,
 }
 
 impl CounterIter {
- public fn init (end: int) -> CounterIter {
- return { cur: 0, end: end };
- }
+  public fn init (end: int) -> CounterIter {
+    return { cur: 0, end: end };
+  }
 }
 
 impl CounterIter as std::interfaces::Iterator(int) {
- public fn next (mut self: &CounterIter) -> int? {
- if self.cur >= self.end {
- return None;
- }
- let v: int = self.cur;
- self.cur = self.cur + 1;
- return Some(v);
- }
+  public fn next (mut self: &CounterIter) -> int? {
+    if self.cur >= self.end {
+      return None;
+    }
+    let v: int = self.cur;
+    self.cur = self.cur + 1;
+    return Some(v);
+  }
 }
 ```
 
@@ -39835,8 +40240,8 @@ import std::io;
 import std::io;
 
 fn main () -> int {
- std::io::println("hello {s} answer={d}", "world", 42);
- return 0;
+  std::io::println("hello {s} answer={d}", "world", 42);
+  return 0;
 }
 ```
 
@@ -39884,75 +40289,75 @@ import std::memory;
 type StringAllocResult = std::result::Result(std::strings::String, std::memory::OutOfMemory);
 
 fn main () -> int {
- let mut doc: Document = Document{};
- let input: string = `{"a":1,"b":true,"c":null,"d":["x","y"],"u":"\u0041"}`;
+  let mut doc: Document = Document{};
+  let input: string = `{"a":1,"b":true,"c":null,"d":["x","y"],"u":"\u0041"}`;
 
- let root_r: std::json::ParseResult = (mut doc).parse(input);
- if root_r.is_err() {
- (mut doc).drop();
- return 1;
- }
- if !doc.is_ok() {
- (mut doc).drop();
- return 2;
- }
+  let root_r: std::json::ParseResult = doc.parse(input);
+  if root_r.is_err() {
+    doc.drop();
+    return 1;
+  }
+  if !doc.is_ok() {
+    doc.drop();
+    return 2;
+  }
 
- let root: i64 = match (root_r) {
- Ok(v) => v,
- Err(_) => 0 as i64,
- };
+  let root: i64 = match (root_r) {
+    Ok(v) => v,
+    Err(_) => 0 as i64,
+  };
 
- let u_id_opt = doc.object_get(root, "u");
- if u_id_opt == None {
- (mut doc).drop();
- return 3;
- }
- let u_id: i64 = u_id_opt ?? 0 as i64;
- let u_opt = doc.as_string(u_id);
- if u_opt == None {
- (mut doc).drop();
- return 4;
- }
- if (u_opt ?? "") != "A" {
- (mut doc).drop();
- return 5;
- }
+  let u_id_opt = doc.object_get(root, "u");
+  if u_id_opt == None {
+    doc.drop();
+    return 3;
+  }
+  let u_id: i64 = u_id_opt ?? 0 as i64;
+  let u_opt = doc.as_string(u_id);
+  if u_opt == None {
+    doc.drop();
+    return 4;
+  }
+  if (u_opt ?? "") != "A" {
+    doc.drop();
+    return 5;
+  }
 
- let a_id_opt = doc.object_get(root, "a");
- if a_id_opt == None {
- (mut doc).drop();
- return 6;
- }
- let a_id: i64 = a_id_opt ?? 0 as i64;
- let a_num_opt = std::json::number_as_i64(doc, a_id);
- if a_num_opt == None {
- (mut doc).drop();
- return 7;
- }
- if (a_num_opt ?? 0 as i64) != 1 {
- (mut doc).drop();
- return 8;
- }
+  let a_id_opt = doc.object_get(root, "a");
+  if a_id_opt == None {
+    doc.drop();
+    return 6;
+  }
+  let a_id: i64 = a_id_opt ?? 0 as i64;
+  let a_num_opt = std::json::number_as_i64(doc, a_id);
+  if a_num_opt == None {
+    doc.drop();
+    return 7;
+  }
+  if (a_num_opt ?? 0 as i64) != 1 {
+    doc.drop();
+    return 8;
+  }
 
- let compact_r: StringAllocResult = std::json::stringify(doc, root);
- if compact_r.is_err() {
- (mut doc).drop();
- return 9;
- }
- let mut compact: std::strings::String = match (compact_r) {
- StringAllocResult::Ok(v) => v,
- StringAllocResult::Err(_) => std::strings::String.empty(),
- };
- let expected: string = `{"a":1,"b":true,"c":null,"d":["x","y"],"u":"A"}`;
- if compact.as_string() != expected {
- (mut compact).drop();
- (mut doc).drop();
- return 10;
- }
+  let compact_r: StringAllocResult = std::json::stringify(doc, root);
+  if compact_r.is_err() {
+    doc.drop();
+    return 9;
+  }
+  let mut compact: std::strings::String = match (compact_r) {
+    StringAllocResult::Ok(v) => v,
+    StringAllocResult::Err(_) => std::strings::String.empty(),
+  };
+  let expected: string = `{"a":1,"b":true,"c":null,"d":["x","y"],"u":"A"}`;
+  if compact.as_string() != expected {
+    compact.drop();
+    doc.drop();
+    return 10;
+  }
 
- (mut compact).drop();
- (mut doc).drop();
- return 0;
+  compact.drop();
+  doc.drop();
+  return 0;
 }
 ```
 
@@ -39990,16 +40395,16 @@ type Map = std::map::HashMap(u64, int);
 type InitResult = std::result::Result(Map, std::memory::AllocFailed);
 
 fn main () -> int {
- let init_r: InitResult = Map.init(16, std::map::hash_u64, std::map::eq_u64);
- if init_r.is_err() { return 2; }
- let mut m: Map = match (init_r) {
- InitResult::Ok(v) => v,
- InitResult::Err(_) => Map.empty(std::map::hash_u64, std::map::eq_u64),
- };
- (mut m).put(1, 10);
- let v: int = m.get(1) ?? 0;
- (mut m).drop();
- return v;
+  let init_r: InitResult = Map.init(16);
+  if init_r.is_err() { return 2; }
+  let mut m: Map = match (init_r) {
+    InitResult::Ok(v) => v,
+    InitResult::Err(_) => Map.empty(),
+  };
+  m.put(1, 10);
+  let v: int = m.get(1) ?? 0;
+  m.drop();
+  return v;
 }
 ```
 
@@ -40027,9 +40432,9 @@ import std::memory;
 import std::memory;
 
 fn main () -> int {
- if !std::memory::is_power_of_two_u64(8) { return 1; }
- if std::memory::align_up_u64(9, 8) != 16 { return 2; }
- return 0;
+  if !std::memory::is_power_of_two_u64(8) { return 1; }
+  if std::memory::align_up_u64(9, 8) != 16 { return 2; }
+  return 0;
 }
 ```
 
@@ -40051,9 +40456,9 @@ URL: /silk/wiki/?p=std/networking
 import std::net;
 
 fn main () -> int {
- let a = ipv4(127, 0, 0, 1);
- if !ipv4_is_loopback(a) { return 1; }
- return 0;
+  let a = ipv4(127, 0, 0, 1);
+  if !ipv4_is_loopback(a) { return 1; }
+  return 0;
 }
 ```
 
@@ -40085,31 +40490,31 @@ import std::path;
 import std::strings;
 
 fn main () -> int {
- let mut n: std::strings::String = std::path::normalize("/a//b/");
- if n.as_string() != "/a/b" {
- (mut n).drop();
- return 1;
- }
- (mut n).drop();
+  let mut n: std::strings::String = std::path::normalize("/a//b/");
+  if n.as_string() != "/a/b" {
+    n.drop();
+    return 1;
+  }
+  n.drop();
 
- let mut pb: std::path::PathBuf = std::path::PathBuf.empty();
- (mut pb).push("a");
- (mut pb).push("b");
- if pb.as_string() != "a/b" {
- (mut pb).drop();
- return 2;
- }
- if !(mut pb).pop() {
- (mut pb).drop();
- return 3;
- }
- if pb.as_string() != "a" {
- (mut pb).drop();
- return 4;
- }
+  let mut pb: std::path::PathBuf = std::path::PathBuf.empty();
+  pb.push("a");
+  pb.push("b");
+  if pb.as_string() != "a/b" {
+    pb.drop();
+    return 2;
+  }
+  if !pb.pop() {
+    pb.drop();
+    return 3;
+  }
+  if pb.as_string() != "a" {
+    pb.drop();
+    return 4;
+  }
 
- (mut pb).drop();
- return 0;
+  pb.drop();
+  return 0;
 }
 ```
 
@@ -40141,29 +40546,29 @@ import std::process;
 import std::strings;
 
 fn main () -> int {
- let cwd_r: std::process::GetCwdResult = std::process::getcwd();
- if cwd_r.is_err() {
- return 1;
- }
- let mut cwd: std::strings::String = match (cwd_r) {
- std::process::GetCwdResult::Ok(v) => v,
- std::process::GetCwdResult::Err(_) => std::strings::String.empty(),
- };
+  let cwd_r: std::process::GetCwdResult = std::process::getcwd();
+  if cwd_r.is_err() {
+    return 1;
+  }
+  let mut cwd: std::strings::String = match (cwd_r) {
+    std::process::GetCwdResult::Ok(v) => v,
+    std::process::GetCwdResult::Err(_) => std::strings::String.empty(),
+  };
 
- let err1: std::process::ChdirFailed? = std::process::chdir("/");
- if err1 != None {
- (mut cwd).drop();
- return 2;
- }
+  let err1: std::process::ChdirFailed? = std::process::chdir("/");
+  if err1 != None {
+    cwd.drop();
+    return 2;
+  }
 
- let err2: std::process::ChdirFailed? = std::process::chdir(cwd.as_string());
- if err2 != None {
- (mut cwd).drop();
- return 3;
- }
+  let err2: std::process::ChdirFailed? = std::process::chdir(cwd.as_string());
+  if err2 != None {
+    cwd.drop();
+    return 3;
+  }
 
- (mut cwd).drop();
- return 0;
+  cwd.drop();
+  return 0;
 }
 ```
 
@@ -40196,10 +40601,10 @@ import std::result;
 type R = std::result::Result(int, string);
 
 fn main () -> int {
- let x: R = R.ok(123);
- if x.is_err() { return 1; }
- if R.unwrap_or(x, 0) != 123 { return 2; }
- return 0;
+  let x: R = R.ok(123);
+  if x.is_err() { return 1; }
+  if R.unwrap_or(x, 0) != 123 { return 2; }
+  return 0;
 }
 ```
 
@@ -40233,25 +40638,25 @@ import std::runtime::build;
 import std::runtime::mem;
 
 fn main () -> int {
- // This reports whether the current artifact was built with `--debug` / `-g`.
- if std::runtime::build::is_debug() {
- return 1;
- }
+  // This reports whether the current artifact was built with `--debug` / `-g`.
+  if std::runtime::build::is_debug() {
+    return 1;
+  }
 
- // `std::runtime::mem` provides low-level allocation and raw load/store.
- let ptr: u64 = std::runtime::mem::alloc(4);
- if ptr == 0 { return 2; }
+  // `std::runtime::mem` provides low-level allocation and raw load/store.
+  let ptr: u64 = std::runtime::mem::alloc(4);
+  if ptr == 0 { return 2; }
 
- std::runtime::mem::store_u8(ptr, 0, std::runtime::mem::trunc_u8(65));
- std::runtime::mem::store_u8(ptr, 1, std::runtime::mem::trunc_u8(66));
+  std::runtime::mem::store_u8(ptr, 0, std::runtime::mem::trunc_u8(65));
+  std::runtime::mem::store_u8(ptr, 1, std::runtime::mem::trunc_u8(66));
 
- if std::runtime::mem::load_u8(ptr, 0) != 65 {
- std::runtime::mem::free(ptr);
- return 3;
- }
+  if std::runtime::mem::load_u8(ptr, 0) != 65 {
+    std::runtime::mem::free(ptr);
+    return 3;
+  }
 
- std::runtime::mem::free(ptr);
- return 0;
+  std::runtime::mem::free(ptr);
+  return 0;
 }
 ```
 
@@ -40276,23 +40681,23 @@ URL: /silk/wiki/?p=std/semver
 import std::semver;
 
 fn main () -> int {
- let r = std::semver::parse("1.2.3-alpha.1+build.5");
- if r.is_err() { return 1; }
- let v: std::semver::Version = match (r) {
- Ok(v) => v,
- Err(_) => std::semver::Version{ major: 0, minor: 0, patch: 0, prerelease: None, build: None },
- };
+  let r = std::semver::parse("1.2.3-alpha.1+build.5");
+  if r.is_err() { return 1; }
+  let v: std::semver::Version = match (r) {
+    Ok(v) => v,
+    Err(_) => std::semver::Version{ major: 0, minor: 0, patch: 0, prerelease: None, build: None },
+  };
 
- // Precedence comparison ignores build metadata.
- let ar = std::semver::parse("1.0.0-alpha");
- let br = std::semver::parse("1.0.0");
- if ar.is_err() { return 2; }
- if br.is_err() { return 3; }
- let a: std::semver::Version = match (ar) { Ok(v) => v, Err(_) => std::semver::Version{ major: 0, minor: 0, patch: 0, prerelease: None, build: None } };
- let b: std::semver::Version = match (br) { Ok(v) => v, Err(_) => std::semver::Version{ major: 0, minor: 0, patch: 0, prerelease: None, build: None } };
- if a.cmp(b) >= 0 { return 4; }
+  // Precedence comparison ignores build metadata.
+  let ar = std::semver::parse("1.0.0-alpha");
+  let br = std::semver::parse("1.0.0");
+  if ar.is_err() { return 2; }
+  if br.is_err() { return 3; }
+  let a: std::semver::Version = match (ar) { Ok(v) => v, Err(_) => std::semver::Version{ major: 0, minor: 0, patch: 0, prerelease: None, build: None } };
+  let b: std::semver::Version = match (br) { Ok(v) => v, Err(_) => std::semver::Version{ major: 0, minor: 0, patch: 0, prerelease: None, build: None } };
+  if a.cmp(b) >= 0 { return 4; }
 
- return 0;
+  return 0;
 }
 ```
 
@@ -40329,19 +40734,19 @@ type InitResult = std::result::Result(Set, std::memory::AllocFailed);
 type InsertResult = std::result::Result(bool, std::memory::OutOfMemory);
 
 fn main () -> int {
- let init_r: InitResult = Set.init(4, std::set::hash_u64, std::set::eq_u64);
- if init_r.is_err() { return 1; }
- let mut s: Set = match (init_r) {
- InitResult::Ok(v) => v,
- InitResult::Err(_) => Set.empty(std::set::hash_u64, std::set::eq_u64),
- };
+  let init_r: InitResult = Set.init(4);
+  if init_r.is_err() { return 1; }
+  let mut s: Set = match (init_r) {
+    InitResult::Ok(v) => v,
+    InitResult::Err(_) => Set.empty(),
+  };
 
- let insert_r: InsertResult = (mut s).insert(1);
- if insert_r.is_err() { (mut s).drop(); return 2; }
- let ok: bool = s.contains(1);
- (mut s).drop();
- if ok { return 0; }
- return 1;
+  let insert_r: InsertResult = s.insert(1);
+  if insert_r.is_err() { s.drop(); return 2; }
+  let ok: bool = s.contains(1);
+  s.drop();
+  if ok { return 0; }
+  return 1;
 }
 ```
 
@@ -40383,13 +40788,13 @@ export fn or_empty (s: string?) -> string;
 import std::strings;
 
 fn main () -> int {
- let a: string = "hi";
- let b: string? = None;
+  let a: string = "hi";
+  let b: string? = None;
 
- if std::strings::eq(a, "hi") && std::strings::is_empty(std::strings::or_empty(b)) {
- return 0;
- }
- return 1;
+  if std::strings::eq(a, "hi") && std::strings::is_empty(std::strings::or_empty(b)) {
+    return 0;
+  }
+  return 1;
 }
 ```
 
@@ -40421,37 +40826,37 @@ import sync from "std/sync";
 type ChanU64 = sync::Channel(u64);
 
 task fn producer (c: sync::ChannelBorrow(u64)) -> int {
- let err: sync::SyncFailed? = c.send(42);
- if err != None { return 10; }
- return 0;
+  let err: sync::SyncFailed? = c.send(42);
+  if err != None { return 10; }
+  return 0;
 }
 
 async fn main () -> int {
- task {
- let c_r = ChanU64.init(1);
- if c_r.is_err() {
- return 100;
- }
- let mut c: ChanU64 = match (c_r) {
- Ok(v) => v,
- Err(_) => ChanU64.invalid(),
- };
+  task {
+    let c_r = ChanU64.init(1);
+    if c_r.is_err() {
+      return 100;
+    }
+    let mut c: ChanU64 = match (c_r) {
+      Ok(v) => v,
+      Err(_) => ChanU64.invalid(),
+    };
 
- let h = producer(c.borrow());
+    let h = producer(c.borrow());
 
- let v1: u64 = (c.recv() ?? 0);
- c.close();
- let v2: u64 = (c.recv() ?? 99);
+    let v1: u64 = (c.recv() ?? 0);
+    c.close();
+    let v2: u64 = (c.recv() ?? 99);
 
- let rc_values: int[] = yield * h;
- let rc: int = rc_values[0];
- (mut c).destroy();
+    let rc_values: int[] = yield * h;
+    let rc: int = rc_values[0];
+    c.destroy();
 
- if rc != 0 { return 11; }
- if v1 != 42 { return 1; }
- if v2 != 99 { return 2; }
- return 0;
- }
+    if rc != 0 { return 11; }
+    if v1 != 42 { return 1; }
+    if v2 != 99 { return 2; }
+    return 0;
+  }
 }
 ```
 
@@ -40476,11 +40881,11 @@ operations.
 import std::task;
 
 fn main () -> int {
- let n: int = available_parallelism();
- yield_now();
- sleep_ms(0);
- if n < 1 { return 1; }
- return 0;
+  let n: int = available_parallelism();
+  yield_now();
+  sleep_ms(0);
+  if n < 1 { return 1; }
+  return 0;
 }
 ```
 
@@ -40503,11 +40908,11 @@ utilities.
 import std::temporal;
 
 fn main () -> int {
- let z: Duration = std::temporal::duration_zero();
- if !std::temporal::is_zero(z) { return 1; }
- if std::temporal::is_negative(1s) { return 2; }
- if !std::temporal::is_negative(-1s) { return 3; }
- return 0;
+  let z: Duration = std::temporal::duration_zero();
+  if !std::temporal::is_zero(z) { return 1; }
+  if std::temporal::is_negative(1s) { return 2; }
+  if !std::temporal::is_negative(-1s) { return 3; }
+  return 0;
 }
 ```
 
@@ -40541,7 +40946,7 @@ import std::arrays;
 import std::tls;
 
 fn test_cert () -> string {
- return `-----BEGIN CERTIFICATE-----
+  return `-----BEGIN CERTIFICATE-----
 MIIDCTCCAfGgAwIBAgIUZGlB8Eq9CXntm2xyJOT1X1eNCjMwDQYJKoZIhvcNAQEL
 BQAwFDESMBAGA1UEAwwJbG9jYWxob3N0MB4XDTI2MDEwMzAyMDUyM1oXDTM2MDEw
 MTAyMDUyM1owFDESMBAGA1UEAwwJbG9jYWxob3N0MIIBIjANBgkqhkiG9w0BAQEF
@@ -40564,7 +40969,7 @@ y4hZQtsSHGmUJs8T57aW3TKW0mFs/jUAISkeLBoBO84tu7Gzu+QeFGYAgHWR8wp2
 }
 
 fn test_key () -> string {
- return `-----BEGIN PRIVATE KEY-----
+  return `-----BEGIN PRIVATE KEY-----
 MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDRG9DE5YYB7Zri
 qH3+VQWkh4Q51AUqsZ/nr0DA/ABtwuj8CH3/AFJfNcv+MLLyh96ZZLseY/3giSbX
 XMnGM5659cJsZL5f4zY6uFFgkPHkIK8XCNmxKk2NORb/B4Ov3KxWBN2y44RWeced
@@ -40596,152 +41001,152 @@ GSDCV/JoUBg4iPwQ0rK0Tlo=
 }
 
 fn drive_handshake (mut client: &Session, mut server: &Session) -> bool {
- var client_done: bool = false;
- var server_done: bool = false;
+  var client_done: bool = false;
+  var server_done: bool = false;
 
- var steps: int = 0;
- while steps < 100000 {
- steps += 1;
+  var steps: int = 0;
+  while steps < 100000 {
+    steps += 1;
 
- if !client_done {
- let rc = client.handshake_step();
- if rc == 0 {
- client_done = true;
- } else {
- if rc != ERR_WANT_READ && rc != ERR_WANT_WRITE {
- return false;
- }
- }
- }
+    if !client_done {
+      let rc = client.handshake_step();
+      if rc == 0 {
+        client_done = true;
+      } else {
+        if rc != ERR_WANT_READ && rc != ERR_WANT_WRITE {
+          return false;
+        }
+      }
+    }
 
- if !server_done {
- let rc = server.handshake_step();
- if rc == 0 {
- server_done = true;
- } else {
- if rc != ERR_WANT_READ && rc != ERR_WANT_WRITE {
- return false;
- }
- }
- }
+    if !server_done {
+      let rc = server.handshake_step();
+      if rc == 0 {
+        server_done = true;
+      } else {
+        if rc != ERR_WANT_READ && rc != ERR_WANT_WRITE {
+          return false;
+        }
+      }
+    }
 
- if client_done && server_done {
- return true;
- }
- }
+    if client_done && server_done {
+      return true;
+    }
+  }
 
- return false;
+  return false;
 }
 
 fn read_some (mut sess: &Session, ptr: u64, cap: u64) -> i32 {
- var tries: int = 0;
- while tries < 100000 {
- tries += 1;
- let rc = sess.read(std::arrays::ByteSlice{ ptr: ptr, len: cap as i64 });
- if rc > 0 {
- return rc;
- }
- if rc == ERR_WANT_READ || rc == ERR_WANT_WRITE {
- continue;
- }
- return rc;
- }
- return -1 as i32;
+  var tries: int = 0;
+  while tries < 100000 {
+    tries += 1;
+    let rc = sess.read(std::arrays::ByteSlice{ ptr: ptr, len: cap as i64 });
+    if rc > 0 {
+      return rc;
+    }
+    if rc == ERR_WANT_READ || rc == ERR_WANT_WRITE {
+      continue;
+    }
+    return rc;
+  }
+  return -1 as i32;
 }
 
 fn main () -> int {
- var pipe = MemPipe.init(65536);
- if !pipe.is_valid() {
- return 1;
- }
+  var pipe = MemPipe.init(65536);
+  if !pipe.is_valid() {
+    return 1;
+  }
 
- var client: Session = Session.client() ?? Session.invalid();
- if !client.is_valid() {
- (mut pipe).drop();
- return 2;
- }
+  var client: Session = Session.client() ?? Session.invalid();
+  if !client.is_valid() {
+    pipe.drop();
+    return 2;
+  }
 
- var server: Session = Session.server(test_cert(), test_key()) ?? Session.invalid();
- if !server.is_valid() {
- (mut client).drop();
- (mut pipe).drop();
- return 3;
- }
+  var server: Session = Session.server(test_cert(), test_key()) ?? Session.invalid();
+  if !server.is_valid() {
+    client.drop();
+    pipe.drop();
+    return 3;
+  }
 
- client.set_bio_mempipe(pipe.client_ctx());
- server.set_bio_mempipe(pipe.server_ctx());
+  client.set_bio_mempipe(pipe.client_ctx());
+  server.set_bio_mempipe(pipe.server_ctx());
 
- if !drive_handshake(mut client, mut server) {
- (mut server).drop();
- (mut client).drop();
- (mut pipe).drop();
- return 4;
- }
+  if !drive_handshake(mut client, mut server) {
+    server.drop();
+    client.drop();
+    pipe.drop();
+    return 4;
+  }
 
- if !client.write_string("ping") {
- (mut server).drop();
- (mut client).drop();
- (mut pipe).drop();
- return 5;
- }
+  if !client.write_string("ping") {
+    server.drop();
+    client.drop();
+    pipe.drop();
+    return 5;
+  }
 
- let buf_ptr = mem::alloc(64);
- if buf_ptr == 0 {
- (mut server).drop();
- (mut client).drop();
- (mut pipe).drop();
- return 6;
- }
+  let buf_ptr = mem::alloc(64);
+  if buf_ptr == 0 {
+    server.drop();
+    client.drop();
+    pipe.drop();
+    return 6;
+  }
 
- let n = read_some(mut server, buf_ptr, 64);
- if n <= 0 {
- mem::free(buf_ptr);
- (mut server).drop();
- (mut client).drop();
- (mut pipe).drop();
- return 7;
- }
+  let n = read_some(mut server, buf_ptr, 64);
+  if n <= 0 {
+    mem::free(buf_ptr);
+    server.drop();
+    client.drop();
+    pipe.drop();
+    return 7;
+  }
 
- let got = mem::string_from_ptr_len(buf_ptr, n as int);
- if got != "ping" {
- mem::free(buf_ptr);
- (mut server).drop();
- (mut client).drop();
- (mut pipe).drop();
- return 8;
- }
+  let got = mem::string_from_ptr_len(buf_ptr, n as int);
+  if got != "ping" {
+    mem::free(buf_ptr);
+    server.drop();
+    client.drop();
+    pipe.drop();
+    return 8;
+  }
 
- if !server.write_string("pong") {
- mem::free(buf_ptr);
- (mut server).drop();
- (mut client).drop();
- (mut pipe).drop();
- return 9;
- }
+  if !server.write_string("pong") {
+    mem::free(buf_ptr);
+    server.drop();
+    client.drop();
+    pipe.drop();
+    return 9;
+  }
 
- let n2 = read_some(mut client, buf_ptr, 64);
- if n2 <= 0 {
- mem::free(buf_ptr);
- (mut server).drop();
- (mut client).drop();
- (mut pipe).drop();
- return 10;
- }
+  let n2 = read_some(mut client, buf_ptr, 64);
+  if n2 <= 0 {
+    mem::free(buf_ptr);
+    server.drop();
+    client.drop();
+    pipe.drop();
+    return 10;
+  }
 
- let got2 = mem::string_from_ptr_len(buf_ptr, n2 as int);
- if got2 != "pong" {
- mem::free(buf_ptr);
- (mut server).drop();
- (mut client).drop();
- (mut pipe).drop();
- return 11;
- }
+  let got2 = mem::string_from_ptr_len(buf_ptr, n2 as int);
+  if got2 != "pong" {
+    mem::free(buf_ptr);
+    server.drop();
+    client.drop();
+    pipe.drop();
+    return 11;
+  }
 
- mem::free(buf_ptr);
- (mut server).drop();
- (mut client).drop();
- (mut pipe).drop();
- return 0;
+  mem::free(buf_ptr);
+  server.drop();
+  client.drop();
+  pipe.drop();
+  return 0;
 }
 ```
 
@@ -40779,59 +41184,59 @@ import std::toml;
 import std::toml;
 
 fn main () -> int {
- let mut doc: Document = Document{};
- let input: string = `title = "TOML Example"
+  let mut doc: Document = Document{};
+  let input: string = `title = "TOML Example"
 answer = 42
 `;
 
- let root_r: std::toml::ParseResult = (mut doc).parse(input);
- if root_r.is_err() {
- (mut doc).drop();
- return 1;
- }
- if !doc.is_ok() {
- (mut doc).drop();
- return 2;
- }
- let root: i64 = match (root_r) {
- Ok(v) => v,
- Err(_) => 0 as i64,
- };
+  let root_r: std::toml::ParseResult = doc.parse(input);
+  if root_r.is_err() {
+    doc.drop();
+    return 1;
+  }
+  if !doc.is_ok() {
+    doc.drop();
+    return 2;
+  }
+  let root: i64 = match (root_r) {
+    Ok(v) => v,
+    Err(_) => 0 as i64,
+  };
 
- let title_id_opt = doc.table_get(root, "title");
- if title_id_opt == None {
- (mut doc).drop();
- return 3;
- }
- let title_id: i64 = title_id_opt ?? 0 as i64;
- let title_opt = doc.as_string(title_id);
- if title_opt == None {
- (mut doc).drop();
- return 4;
- }
- if (title_opt ?? "") != "TOML Example" {
- (mut doc).drop();
- return 5;
- }
+  let title_id_opt = doc.table_get(root, "title");
+  if title_id_opt == None {
+    doc.drop();
+    return 3;
+  }
+  let title_id: i64 = title_id_opt ?? 0 as i64;
+  let title_opt = doc.as_string(title_id);
+  if title_opt == None {
+    doc.drop();
+    return 4;
+  }
+  if (title_opt ?? "") != "TOML Example" {
+    doc.drop();
+    return 5;
+  }
 
- let answer_id_opt = doc.table_get(root, "answer");
- if answer_id_opt == None {
- (mut doc).drop();
- return 6;
- }
- let answer_id: i64 = answer_id_opt ?? 0 as i64;
- let answer_opt = std::toml::int_as_i64(doc, answer_id);
- if answer_opt == None {
- (mut doc).drop();
- return 7;
- }
- if (answer_opt ?? 0 as i64) != 42 {
- (mut doc).drop();
- return 8;
- }
+  let answer_id_opt = doc.table_get(root, "answer");
+  if answer_id_opt == None {
+    doc.drop();
+    return 6;
+  }
+  let answer_id: i64 = answer_id_opt ?? 0 as i64;
+  let answer_opt = std::toml::int_as_i64(doc, answer_id);
+  if answer_opt == None {
+    doc.drop();
+    return 7;
+  }
+  if (answer_opt ?? 0 as i64) != 42 {
+    doc.drop();
+    return 8;
+  }
 
- (mut doc).drop();
- return 0;
+  doc.drop();
+  return 0;
 }
 ```
 
@@ -40876,160 +41281,160 @@ import std::url;
 import std::strings;
 
 fn dummy_url () -> URL {
- return URL{
- scheme: std::strings::String.empty(),
- username: std::strings::String.empty(),
- password: std::strings::String.empty(),
- host_kind: 0,
- host_str: std::strings::String.empty(),
- ipv4: 0,
- ipv6_s0: 0,
- ipv6_s1: 0,
- ipv6_s2: 0,
- ipv6_s3: 0,
- ipv6_s4: 0,
- ipv6_s5: 0,
- ipv6_s6: 0,
- ipv6_s7: 0,
- port: None,
- path: std::strings::String.empty(),
- query: std::strings::String.empty(),
- has_query: false,
- fragment: std::strings::String.empty(),
- has_fragment: false,
- cannot_be_a_base: false,
- };
+  return URL{
+    scheme: std::strings::String.empty(),
+    username: std::strings::String.empty(),
+    password: std::strings::String.empty(),
+    host_kind: 0,
+    host_str: std::strings::String.empty(),
+    ipv4: 0,
+    ipv6_s0: 0,
+    ipv6_s1: 0,
+    ipv6_s2: 0,
+    ipv6_s3: 0,
+    ipv6_s4: 0,
+    ipv6_s5: 0,
+    ipv6_s6: 0,
+    ipv6_s7: 0,
+    port: None,
+    path: std::strings::String.empty(),
+    query: std::strings::String.empty(),
+    has_query: false,
+    fragment: std::strings::String.empty(),
+    has_fragment: false,
+    cannot_be_a_base: false,
+  };
 }
 
 fn main () -> int {
- let abs: URLResult = std::url::parse("https://example.com:443/a/./b/../c?x=1#frag");
- if abs.value == None { return 1; }
+  let abs: URLResult = std::url::parse("https://example.com:443/a/./b/../c?x=1#frag");
+  if abs.value == None { return 1; }
 
- let mut url: URL = abs.value ?? dummy_url();
- let mut href_r = url.href();
- if href_r.err != None {
- (mut url).drop();
- return 2;
- }
- href_r.err = None;
- let mut href: std::strings::String = href_r.value ?? std::strings::String.empty();
- href_r.value = None;
- if href.as_string() != "https://example.com/a/c?x=1#frag" {
- (mut href).drop();
- (mut url).drop();
- return 2;
- }
- (mut href).drop();
+  let mut url: URL = abs.value ?? dummy_url();
+  let mut href_r = url.href();
+  if href_r.err != None {
+    url.drop();
+    return 2;
+  }
+  href_r.err = None;
+  let mut href: std::strings::String = href_r.value ?? std::strings::String.empty();
+  href_r.value = None;
+  if href.as_string() != "https://example.com/a/c?x=1#frag" {
+    href.drop();
+    url.drop();
+    return 2;
+  }
+  href.drop();
 
- let base_res: URLResult = std::url::parse("https://example.com/dir/file");
- if base_res.value == None {
- (mut url).drop();
- return 3;
- }
- let mut base: URL = base_res.value ?? dummy_url();
- let rel_res: URLResult = std::url::parse_with_base("../x?y=z", base);
- (mut base).drop();
- if rel_res.value == None {
- (mut url).drop();
- return 4;
- }
+  let base_res: URLResult = std::url::parse("https://example.com/dir/file");
+  if base_res.value == None {
+    url.drop();
+    return 3;
+  }
+  let mut base: URL = base_res.value ?? dummy_url();
+  let rel_res: URLResult = std::url::parse_with_base("../x?y=z", base);
+  base.drop();
+  if rel_res.value == None {
+    url.drop();
+    return 4;
+  }
 
- let mut rel: URL = rel_res.value ?? dummy_url();
- let mut href2_r = rel.href();
- if href2_r.err != None {
- (mut rel).drop();
- (mut url).drop();
- return 5;
- }
- href2_r.err = None;
- let mut href2: std::strings::String = href2_r.value ?? std::strings::String.empty();
- href2_r.value = None;
- if href2.as_string() != "https://example.com/x?y=z" {
- (mut href2).drop();
- (mut rel).drop();
- (mut url).drop();
- return 5;
- }
- (mut href2).drop();
- (mut rel).drop();
+  let mut rel: URL = rel_res.value ?? dummy_url();
+  let mut href2_r = rel.href();
+  if href2_r.err != None {
+    rel.drop();
+    url.drop();
+    return 5;
+  }
+  href2_r.err = None;
+  let mut href2: std::strings::String = href2_r.value ?? std::strings::String.empty();
+  href2_r.value = None;
+  if href2.as_string() != "https://example.com/x?y=z" {
+    href2.drop();
+    rel.drop();
+    url.drop();
+    return 5;
+  }
+  href2.drop();
+  rel.drop();
 
- let mut params_r = URLSearchParams.from_string("?a=b%20c&d=e");
- if params_r.err != None {
- (mut url).drop();
- return 6;
- }
- params_r.err = None;
- let mut params: URLSearchParams = params_r.value ?? URLSearchParams.empty();
- params_r.value = None;
+  let mut params_r = URLSearchParams.from_string("?a=b%20c&d=e");
+  if params_r.err != None {
+    url.drop();
+    return 6;
+  }
+  params_r.err = None;
+  let mut params: URLSearchParams = params_r.value ?? URLSearchParams.empty();
+  params_r.value = None;
 
- let mut qs_r = params.to_string();
- if qs_r.err != None {
- (mut params).drop();
- (mut url).drop();
- return 6;
- }
- qs_r.err = None;
- let mut qs: std::strings::String = qs_r.value ?? std::strings::String.empty();
- qs_r.value = None;
- if qs.as_string() != "a=b+c&d=e" {
- (mut qs).drop();
- (mut params).drop();
- (mut url).drop();
- return 6;
- }
- (mut qs).drop();
+  let mut qs_r = params.to_string();
+  if qs_r.err != None {
+    params.drop();
+    url.drop();
+    return 6;
+  }
+  qs_r.err = None;
+  let mut qs: std::strings::String = qs_r.value ?? std::strings::String.empty();
+  qs_r.value = None;
+  if qs.as_string() != "a=b+c&d=e" {
+    qs.drop();
+    params.drop();
+    url.drop();
+    return 6;
+  }
+  qs.drop();
 
- let mut v_r = params.get("a");
- if v_r.err != None {
- (mut params).drop();
- (mut url).drop();
- return 7;
- }
- v_r.err = None;
- let mut v_opt: std::strings::String? = v_r.value ?? None;
- v_r.value = None;
- if v_opt == None {
- (mut params).drop();
- (mut url).drop();
- return 7;
- }
+  let mut v_r = params.get("a");
+  if v_r.err != None {
+    params.drop();
+    url.drop();
+    return 7;
+  }
+  v_r.err = None;
+  let mut v_opt: std::strings::String? = v_r.value ?? None;
+  v_r.value = None;
+  if v_opt == None {
+    params.drop();
+    url.drop();
+    return 7;
+  }
 
- let mut v: std::strings::String = v_opt ?? std::strings::String.empty();
- v_opt = None;
- if v.as_string() != "b c" {
- (mut v).drop();
- (mut params).drop();
- (mut url).drop();
- return 8;
- }
- (mut v).drop();
+  let mut v: std::strings::String = v_opt ?? std::strings::String.empty();
+  v_opt = None;
+  if v.as_string() != "b c" {
+    v.drop();
+    params.drop();
+    url.drop();
+    return 8;
+  }
+  v.drop();
 
- if (mut params).delete("d") != None {
- (mut params).drop();
- (mut url).drop();
- return 9;
- }
+  if params.delete("d") != None {
+    params.drop();
+    url.drop();
+    return 9;
+  }
 
- let mut qs2_r = params.to_string();
- if qs2_r.err != None {
- (mut params).drop();
- (mut url).drop();
- return 9;
- }
- qs2_r.err = None;
- let mut qs2: std::strings::String = qs2_r.value ?? std::strings::String.empty();
- qs2_r.value = None;
- if qs2.as_string() != "a=b+c" {
- (mut qs2).drop();
- (mut params).drop();
- (mut url).drop();
- return 9;
- }
- (mut qs2).drop();
+  let mut qs2_r = params.to_string();
+  if qs2_r.err != None {
+    params.drop();
+    url.drop();
+    return 9;
+  }
+  qs2_r.err = None;
+  let mut qs2: std::strings::String = qs2_r.value ?? std::strings::String.empty();
+  qs2_r.value = None;
+  if qs2.as_string() != "a=b+c" {
+    qs2.drop();
+    params.drop();
+    url.drop();
+    return 9;
+  }
+  qs2.drop();
 
- (mut params).drop();
- (mut url).drop();
- return 0;
+  params.drop();
+  url.drop();
+  return 0;
 }
 ```
 
@@ -41065,41 +41470,41 @@ import std::memory;
 type StringAllocResult = std::result::Result(std::strings::String, std::memory::OutOfMemory);
 
 fn uuid_string_eq (u: UUID, expected: string) -> bool {
- let r: StringAllocResult = u.to_string_lower();
- if r.is_err() {
- return false;
- }
- let mut s: std::strings::String = match (r) {
- Ok(v) => v,
- Err(_) => std::strings::String.empty(),
- };
- let ok: bool = s.as_string() == expected;
- (mut s).drop();
- return ok;
+  let r: StringAllocResult = u.to_string_lower();
+  if r.is_err() {
+    return false;
+  }
+  let mut s: std::strings::String = match (r) {
+    Ok(v) => v,
+    Err(_) => std::strings::String.empty(),
+  };
+  let ok: bool = s.as_string() == expected;
+  s.drop();
+  return ok;
 }
 
 fn main () -> int {
- let s0: string = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
- let u0_r: std::uuid::ParseResult = std::uuid::parse(s0);
- if u0_r.is_err() { return 1; }
- let u0: UUID = match (u0_r) {
- Ok(v) => v,
- Err(_) => { hi: 0, lo: 0 },
- };
- if !uuid_string_eq(u0, s0) { return 2; }
+  let s0: string = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
+  let u0_r: std::uuid::ParseResult = std::uuid::parse(s0);
+  if u0_r.is_err() { return 1; }
+  let u0: UUID = match (u0_r) {
+    Ok(v) => v,
+    Err(_) => { hi: 0, lo: 0 },
+  };
+  if !uuid_string_eq(u0, s0) { return 2; }
 
- let dns: UUID = std::uuid::namespace_dns();
- let v5_dns_r: std::uuid::UUIDResult = std::uuid::v5(dns, "www.widgets.com");
- if v5_dns_r.is_err() { return 3; }
- let v5_dns: UUID = match (v5_dns_r) {
- Ok(v) => v,
- Err(_) => { hi: 0, lo: 0 },
- };
- if !uuid_string_eq(v5_dns, "21f7f8de-8051-5b89-8680-0195ef798b6a") { return 4; }
+  let dns: UUID = std::uuid::namespace_dns();
+  let v5_dns_r: std::uuid::UUIDResult = std::uuid::v5(dns, "www.widgets.com");
+  if v5_dns_r.is_err() { return 3; }
+  let v5_dns: UUID = match (v5_dns_r) {
+    Ok(v) => v,
+    Err(_) => { hi: 0, lo: 0 },
+  };
+  if !uuid_string_eq(v5_dns, "21f7f8de-8051-5b89-8680-0195ef798b6a") { return 4; }
 
- if v5_dns.version() != 5 { return 5; }
- if !v5_dns.is_rfc4122() { return 6; }
- return 0;
+  if v5_dns.version() != 5 { return 5; }
+  if !v5_dns.is_rfc4122() { return 6; }
+  return 0;
 }
 ```
 
@@ -41132,17 +41537,17 @@ import std::vector;
 type Vec = std::vector::Vector(int);
 
 fn main () -> int {
- let v_r = Vec.init(4);
- if v_r.is_err() { return 0; }
- let mut v: Vec = match (v_r) {
- Ok(v) => v,
- Err(_) => Vec.empty(),
- };
- (mut v).push(1);
- (mut v).push(2);
- let x: int = (mut v).pop() ?? 0;
- (mut v).drop();
- return x;
+  let v_r = Vec.init(4);
+  if v_r.is_err() { return 0; }
+  let mut v: Vec = match (v_r) {
+    Ok(v) => v,
+    Err(_) => Vec.empty(),
+  };
+  v.push(1);
+  v.push(2);
+  let x: int = v.pop() ?? 0;
+  v.drop();
+  return x;
 }
 ```
 
@@ -41179,13 +41584,13 @@ import std::vector;
 type VecInt = std::vector::Vector(int);
 
 fn main () -> int {
- let mut v: VecInt = VecInt.init(4);
- (mut v).push(10);
- (mut v).push(32);
+  let mut v: VecInt = VecInt.init(4);
+  v.push(10);
+  v.push(32);
 
- std::io::println("len={d} first_pop={d}", v.len() as int, (mut v).pop() ?? 0);
- (mut v).drop();
- return 0;
+  std::io::println("len={d} first_pop={d}", v.len() as int, v.pop() ?? 0);
+  v.drop();
+  return 0;
 }
 ```
 

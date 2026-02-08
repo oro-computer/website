@@ -12,7 +12,7 @@ Canonical spec: `docs/language/flow-loop.md`.
 
 ```silk
 loop {
- // ...
+  // ...
 }
 ```
 
@@ -20,14 +20,14 @@ loop {
 
 ```silk
 fn main () -> int {
- let mut i: int = 0;
- loop {
- if i == 3 {
- break;
- }
- i += 1;
- }
- return i;
+  let mut i: int = 0;
+  loop {
+    if i == 3 {
+      break;
+    }
+    i += 1;
+  }
+  return i;
 }
 ```
 

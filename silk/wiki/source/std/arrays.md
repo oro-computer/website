@@ -25,27 +25,27 @@ import std::arrays;
 import std::buffer;
 
 fn main () -> int {
- let mut buf: BufferU64 = BufferU64.init(4);
- (mut buf).push(10);
- (mut buf).push(11);
- (mut buf).push(12);
+  let mut buf: BufferU64 = BufferU64.init(4);
+  buf.push(10);
+  buf.push(11);
+  buf.push(12);
 
- let s: std::arrays::Slice(u64) = { ptr: buf.ptr, len: buf.len() };
- let mut it = s.iter();
- let mut sum: u64 = 0;
- while true {
- let v: u64? = (mut it).next();
- if v == None {
- break;
- }
- sum += (v ?? 0 as u64);
- }
+  let s: std::arrays::Slice(u64) = { ptr: buf.ptr, len: buf.len() };
+  let mut it = s.iter();
+  let mut sum: u64 = 0;
+  while true {
+    let v: u64? = it.next();
+    if v == None {
+      break;
+    }
+    sum += (v ?? 0 as u64);
+  }
 
- (mut buf).drop();
- if sum != 33 {
- return 1;
- }
- return 0;
+  buf.drop();
+  if sum != 33 {
+    return 1;
+  }
+  return 0;
 }
 ```
 

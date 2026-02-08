@@ -11,14 +11,14 @@ Canonical doc: `docs/language/literals-aggregate.md`.
 
 ```silk
 struct Pair {
- a: int,
- b: int,
+  a: int,
+  b: int,
 }
 
 fn main () -> int {
- let xs: int[3] = [1, 2, 3];
- let p: Pair = Pair{ a: xs[0], b: xs[2] };
- return p.a + p.b;
+  let xs: int[3] = [1, 2, 3];
+  let p: Pair = Pair{ a: xs[0], b: xs[2] };
+  return p.a + p.b;
 }
 ```
 

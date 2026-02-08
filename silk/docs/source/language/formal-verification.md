@@ -338,8 +338,6 @@ Not implemented yet (selected gaps):
 - Verification of the full expression language and full statement language
   (`if`, `match`, nested loops, indirect calls/method calls, and many operators
   are not supported yet in verified code).
-- Type-level `where` predicates (the earlier refinement-type sketch is removed;
-  use Formal Silk contracts and struct requirements instead).
 
 ## Theories (`theory` / `#theory`)
 

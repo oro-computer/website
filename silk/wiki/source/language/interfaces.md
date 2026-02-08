@@ -15,15 +15,15 @@ Canonical spec: `docs/language/interfaces.md`.
 
 ```silk
 interface Len {
- fn len() -> i64;
+  fn len() -> i64;
 }
 
 struct Counter {
- n: i64,
+  n: i64,
 }
 
 impl Counter as Len {
- fn len (self: &Counter) -> i64 { return self.n; }
+  fn len (self: &Counter) -> i64 { return self.n; }
 }
 ```
 
@@ -33,20 +33,20 @@ impl Counter as Len {
 
 ```silk
 interface Len {
- fn len() -> i64;
+  fn len() -> i64;
 }
 
 struct Counter {
- n: i64,
+  n: i64,
 }
 
 impl Counter as Len {
- fn len (self: &Counter) -> i64 { return self.n; }
+  fn len (self: &Counter) -> i64 { return self.n; }
 }
 
 fn main () -> int {
- let c: Counter = Counter{ n: 3 };
- return c.len() as int;
+  let c: Counter = Counter{ n: 3 };
+  return c.len() as int;
 }
 ```
 

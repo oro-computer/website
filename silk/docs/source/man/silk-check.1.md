@@ -10,12 +10,13 @@
 
 - `silk check [options] <file> [<file> ...]`
 - `silk check [options] --package <dir|manifest>`
+- `silk check [options]             (when ./silk.toml exists, implies --package .)`
 
 ## Description
 
 `silk check` parses and type-checks a module set and reports any diagnostics. It does not emit an output artifact.
 
-To check a package manifest (`silk.toml`), pass `--package` / `--pkg` and omit explicit input files.
+To check a package manifest (`silk.toml`), pass `--package` / `--pkg` and omit explicit input files. When no input files are provided and `--package` is omitted, but `./silk.toml` exists, `silk check` behaves as if `--package .` was provided.
 
 When explicit input files are used (no `--package`), the `silk` CLI may load additional packages into the module set by resolving bare-specifier package imports (for example `import util from "util";`) from the package search path (`SILK_PACKAGE_PATH`).
 
@@ -40,6 +41,9 @@ silk check main.slk
 
 # Check a module set.
 silk check src/main.slk src/util.slk
+
+# Check the current directory as a package (implicit; requires ./silk.toml).
+silk check
 
 # Check the current directory as a package (explicit).
 silk check --package .

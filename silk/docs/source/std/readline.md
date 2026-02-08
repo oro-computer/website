@@ -23,7 +23,7 @@ export fn main () -> int {
     Ok(line_opt) => match (line_opt) {
       Some(line) => {
         // ...
-        (mut line).drop();
+        line.drop();
         return 0;
       },
       None => return 0, // EOF

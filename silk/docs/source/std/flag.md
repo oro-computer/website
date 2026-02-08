@@ -136,13 +136,13 @@ fn main (argc: int, argv: u64) -> int {
   let a = std::args::Args.init(argc, argv);
   let mut fs = std::flag::FlagSet.init();
 
-  let verbose_r = (mut fs).bool({ name: "verbose", alias: "v", default_value: false, usage: "enable verbose logging" });
-  let out_r = (mut fs).string({ name: "out", alias: "", default_value: "out.txt", usage: "output path" });
-  let input_r = (mut fs).positional_string("input", "input file");
+  let verbose_r = fs.bool({ name: "verbose", alias: "v", default_value: false, usage: "enable verbose logging" });
+  let out_r = fs.string({ name: "out", alias: "", default_value: "out.txt", usage: "output path" });
+  let input_r = fs.positional_string("input", "input file");
 
-  if verbose_r.is_err() { (mut fs).drop(); return 2; }
-  if out_r.is_err() { (mut fs).drop(); return 2; }
-  if input_r.is_err() { (mut fs).drop(); return 2; }
+  if verbose_r.is_err() { fs.drop(); return 2; }
+  if out_r.is_err() { fs.drop(); return 2; }
+  if input_r.is_err() { fs.drop(); return 2; }
 
   let verbose: std::flag::BoolFlag = match (verbose_r) {
     Ok(v) => v,
@@ -157,11 +157,11 @@ fn main (argc: int, argv: u64) -> int {
     Err(_) => {},
   };
 
-  let parsed_r = (mut fs).parse_args(a, 1);
+  let parsed_r = fs.parse_args(a, 1);
   match (parsed_r) {
     Err(e) => {
       println("flag parse error: kind={} at argv[{}]: {}", e.kind(), e.arg_index, e.arg(a));
-      (mut fs).drop();
+      fs.drop();
       return 2;
     },
     Ok(p) => {
@@ -176,7 +176,7 @@ fn main (argc: int, argv: u64) -> int {
         println("rest[{}]={}", i, p.rest(a, i));
         i += 1;
       }
-      (mut fs).drop();
+      fs.drop();
       return 0;
     }
   }

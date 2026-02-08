@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-02-08T02:44:56+00:00",
+  "generatedAt": "2026-02-08T14:37:51+00:00",
   "kind": "docs",
-  "count": 162,
+  "count": 166,
   "sections": [
     {
       "name": "overview",
@@ -297,9 +297,19 @@
           "file": "language/literals-string.md"
         },
         {
+          "id": "language/struct-requirements",
+          "title": "Struct Requirements (`#require`)",
+          "file": "language/struct-requirements.md"
+        },
+        {
           "id": "language/structs-impls-layout",
           "title": "Structs, Impl Blocks, and Memory Layout",
           "file": "language/structs-impls-layout.md"
+        },
+        {
+          "id": "language/target-metadata",
+          "title": "Target Metadata (`OS_PLATFORM`, `OS_ARCH`, `OS_IS_UNIX`, `OS_IS_POSIX`)",
+          "file": "language/target-metadata.md"
         },
         {
           "id": "language/testing",
@@ -465,6 +475,11 @@
           "id": "std/number",
           "title": "`std::number`",
           "file": "std/number.md"
+        },
+        {
+          "id": "std/os",
+          "title": "`std::os`",
+          "file": "std/os.md"
         },
         {
           "id": "std/path",
@@ -785,6 +800,11 @@
           "id": "man/silk-doc.1",
           "title": "`silk-doc` (1) \u2014 Generate Documentation (Markdown or Manpages)",
           "file": "man/silk-doc.1.md"
+        },
+        {
+          "id": "man/silk-env.1",
+          "title": "`silk-env` (1) \u2014 Print `silk` CLI Environment",
+          "file": "man/silk-env.1.md"
         },
         {
           "id": "man/silk-lsp.1",

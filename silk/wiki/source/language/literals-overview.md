@@ -34,8 +34,8 @@ let xs: int[3] = [1, 2, 3];
 
 ```silk
 fn main () -> int {
- let xs: int[3] = [10, 20, 30];
- return xs[1];
+  let xs: int[3] = [10, 20, 30];
+  return xs[1];
 }
 ```
 
@@ -45,8 +45,8 @@ fn main () -> int {
 import std::io;
 
 fn main () -> int {
- std::io::println("line1\\nline2");
- return 0;
+  std::io::println("line1\\nline2");
+  return 0;
 }
 ```
 

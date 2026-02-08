@@ -20,15 +20,15 @@ Canonical spec + implemented subset notes: `docs/language/concurrency.md`.
 
 ```silk
 task fn worker (x: int) -> int {
- return x + 1;
+  return x + 1;
 }
 
 async fn main () -> int {
- task {
- let a = worker(10);
- let values: int[] = yield * a;
- return values[0];
- }
+  task {
+    let a = worker(10);
+    let values: int[] = yield * a;
+    return values[0];
+  }
 }
 ```
 
@@ -36,24 +36,24 @@ async fn main () -> int {
 
 ```silk
 async fn add1 (x: int) -> int {
- return x + 1;
+  return x + 1;
 }
 
 task fn produce_promises (n: int) -> Promise(int) {
- var i: int = 0;
- while i < n {
- yield add1(i);
- i = i + 1;
- }
- return add1(n);
+  var i: int = 0;
+  while i < n {
+    yield add1(i);
+    i = i + 1;
+  }
+  return add1(n);
 }
 
 async fn main () -> int {
- task {
- let t = produce_promises(3);
- let values: int[] = await * yield * t;
- return values[0];
- }
+  task {
+    let t = produce_promises(3);
+    let values: int[] = await * yield * t;
+    return values[0];
+  }
 }
 ```
 

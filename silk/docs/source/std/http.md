@@ -121,13 +121,13 @@ export fn main () -> int {
   let mut conn = http::Connection.from_stream(stream);
   let w_err: http::Error? = conn.write_request("GET", "/", "localhost", "");
   if w_err != None {
-    (mut conn).close();
+    conn.close();
     return 2;
   }
 
-  let resp_r = (mut conn).read_response();
+  let resp_r = conn.read_response();
   if resp_r.is_err() {
-    (mut conn).close();
+    conn.close();
     return 3;
   }
   let resp: http::Response = match (resp_r) {
@@ -135,7 +135,7 @@ export fn main () -> int {
     http::ResponseResult::Err(_) => trap(http::Response;),
   };
   _ = resp.status_code();
-  (mut conn).close();
+  conn.close();
   return 0;
 }
 ```

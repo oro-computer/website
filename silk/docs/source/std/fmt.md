@@ -158,7 +158,7 @@ fn main () -> int {
 
   let sum_r: StringAllocResult = format("a + b = {}", a + b);
   if sum_r.is_err() {
-    (mut hello).drop();
+    hello.drop();
     return 2;
   }
   let mut sum: std::strings::String = match (sum_r) {
@@ -168,8 +168,8 @@ fn main () -> int {
 
   println("{}", hello.as_string());
   println("sum of {}", sum.as_string());
-  (mut sum).drop();
-  (mut hello).drop();
+  sum.drop();
+  hello.drop();
   return 0;
 }
 ```

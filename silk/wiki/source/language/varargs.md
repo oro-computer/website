@@ -9,7 +9,7 @@ Canonical doc: `docs/language/varargs.md`.
 
 ```silk
 fn log (fmt: string, ...args: std::fmt::Arg) -> void {
- std::io::println(fmt, args);
+  std::io::println(fmt, args);
 }
 ```
 
@@ -19,8 +19,8 @@ fn log (fmt: string, ...args: std::fmt::Arg) -> void {
 import std::io;
 
 fn main () -> int {
- std::io::println("hello {s} answer={d}", "world", 42);
- return 0;
+  std::io::println("hello {s} answer={d}", "world", 42);
+  return 0;
 }
 ```
 

@@ -17,19 +17,19 @@ Canonical spec: `docs/language/flow-overview.md`.
 
 ```silk
 fn main () -> int {
- let mut sum: int = 0;
+  let mut sum: int = 0;
 
- for i in 0..5 {
- if i == 3 {
- continue;
- }
- sum += i;
- }
+  for i in 0..5 {
+    if i == 3 {
+      continue;
+    }
+    sum += i;
+  }
 
- if sum > 0 {
- return sum;
- }
- return 0;
+  if sum > 0 {
+    return sum;
+  }
+  return 0;
 }
 ```
 

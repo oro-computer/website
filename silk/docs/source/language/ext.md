@@ -76,12 +76,11 @@ This intentionally limits verification across the `ext` boundary.
 ## Implementation Status (Current Compiler)
 
 Status: the current compiler subset implements this feature under the `ext`
-keyword. As part of the Silk rename/rescope, `ext` is renamed to `ext` and the
-docs treat `ext` as canonical.
+keyword. The docs treat `ext` as canonical.
 
 Currently supported:
 
-- parsing `ext`/`ext`-style external declarations and representing them in the AST,
+- parsing `ext` external declarations and representing them in the AST,
 - optional external symbol aliases (`ext local "extern" = ...;`),
 - `ext` **functions** with fixed parameter lists (`ext name = fn (T0, T1) -> R;`)
   as callable symbols in Silk (C variadic `...` is not implemented yet),

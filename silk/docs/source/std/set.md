@@ -37,7 +37,9 @@ In the current subset:
 
 ### Core API
 
-`SetMap` requires user-supplied hashing and equality functions.
+`SetMap` requires hashing and equality functions. For common element types,
+`std::set` ships default `hash_*` / `eq_*` helpers and `SetMap` provides
+`empty()` / `init(cap)` overloads that select those defaults implicitly.
 
 For common element types, `std::set` provides default `hash_*` / `eq_*` helpers
 so callers do not need to write hashing and equality functions themselves.
@@ -51,8 +53,10 @@ Default helper functions are provided for these element types:
 
 `SetMap(T)` provides:
 
-- `fn empty (hash: fn(T) -> u64, eq: fn(T, T) -> bool) -> SetMap(T);`
-- `fn init (cap: i64, hash: fn(T) -> u64, eq: fn(T, T) -> bool) -> std::result::Result(SetMap(T), std::memory::AllocFailed);`
+- `fn empty () -> SetMap(T);` (only for default element types)
+- `fn init (cap: i64) -> std::result::Result(SetMap(T), std::memory::AllocFailed);` (only for default element types)
+- `fn empty_with (hash: fn(T) -> u64, eq: fn(T, T) -> bool) -> SetMap(T);`
+- `fn init_with (cap: i64, hash: fn(T) -> u64, eq: fn(T, T) -> bool) -> std::result::Result(SetMap(T), std::memory::AllocFailed);`
 - `fn len (self: &SetMap(T)) -> i64;`
 - `fn is_empty (self: &SetMap(T)) -> bool;`
 - `fn capacity (self: &SetMap(T)) -> i64;`
@@ -66,7 +70,7 @@ Default helper functions are provided for these element types:
 - `fn reserve_additional (mut self: &SetMap(T), additional: i64) -> std::memory::OutOfMemory?;`
 - `fn drop (mut self: &SetMap(T)) -> void;`
 
-`SetMap.init(cap, ...)` validates the requested capacity:
+`SetMap.init_with(cap, ...)` validates the requested capacity:
 
 - `cap < 0` returns `AllocErrorKind::InvalidInput`.
 - very large `cap` values that would overflow internal sizing arithmetic return

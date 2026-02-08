@@ -1,6 +1,6 @@
 # `std::graphics` — Graphics API Bindings
 
-Status: **design + initial stubs**. `std::graphics` is a namespace for
+Status: **generated raw bindings (pinned)**. `std::graphics` is a namespace for
 low-level, FFI-oriented bindings to common graphics APIs.
 
 This layer intentionally does **not** include:
@@ -18,11 +18,27 @@ Those pieces are platform- and engine-specific and are expected to live above
 `std::graphics` is organized as:
 
 - `std::graphics` — shared conventions and basic pointer/handle aliases.
-- `std::graphics::opengl` — a small set of OpenGL types/constants and `ext`
-  function declarations.
-- `std::graphics::opengles` — the corresponding OpenGL ES subset.
-- `std::graphics::vulkan` — a small set of Vulkan types/constants and `ext`
-  function declarations.
+- `std::graphics::opengl` — generated OpenGL bindings (core OpenGL 4.6).
+- `std::graphics::opengles` — generated OpenGL ES bindings (core OpenGL ES 3.2).
+- `std::graphics::vulkan` — generated Vulkan bindings (core Vulkan 1.3).
+
+These bindings are generated from the Khronos registries and pinned to specific
+upstream commits so the surface area is stable and reviewable.
+
+Pinned registry inputs:
+
+- OpenGL / OpenGL ES: `gl.xml` from `KhronosGroup/OpenGL-Registry` commit
+  `0b449b97cdf1043eef5e1f0e235cbbab6ec10c86`.
+- Vulkan: `vk.xml` from `KhronosGroup/Vulkan-Docs` commit
+  `fb8116669f76e26bdab4c7ad0bf1cafdeff484dc`.
+
+Regeneration:
+
+- Run `python3 docs/tools/gen_graphics_bindings.py`.
+- The generated outputs are:
+  - `std/graphics/opengl.slk`
+  - `std/graphics/opengles.slk`
+  - `std/graphics/vulkan.slk`
 
 ## Linking (Hosted `linux/x86_64` Baseline)
 
@@ -47,11 +63,18 @@ system libraries are installed.
 These APIs are inherently low-level:
 
 - Many functions are unsafe without an active context/device.
-- Pointer parameters are represented as `u64` addresses and must be valid for
-  the duration of the call.
+- Most pointer parameters are represented as `std::graphics::Ptr` (`u64`)
+  addresses and must be valid for the duration of the call.
+- Some `const char *` inputs are represented as Silk `string` values for
+  convenience (lowered as C-string pointers by the current `ext` ABI mapping).
 - Returned pointers (for example from `glGetString`) are borrowed views into
   driver-managed memory and must not be freed.
 
-The initial `std::graphics` bindings focus on mechanical ABI mapping and leave
+The `std::graphics` bindings focus on mechanical ABI mapping and leave
 ownership/lifetime management to higher layers.
 
+Important current limitation (compiler subset):
+
+- The compiler does not yet implement packed C struct layout. As a result,
+  these bindings use `u64` pointers for C pointer parameters and do not rely on
+  passing user-defined structs by value to C.

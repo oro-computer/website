@@ -19,14 +19,14 @@ continue;
 
 ```silk
 fn main () -> int {
- let mut sum: int = 0;
- for i in 0..5 {
- if i == 3 {
- continue;
- }
- sum += i;
- }
- return sum; // 0 + 1 + 2 + 4 = 7
+  let mut sum: int = 0;
+  for i in 0..5 {
+    if i == 3 {
+      continue;
+    }
+    sum += i;
+  }
+  return sum; // 0 + 1 + 2 + 4 = 7
 }
 ```
 

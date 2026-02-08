@@ -19,8 +19,8 @@ Canonical doc: `docs/std/fmt.md`.
 import std::io;
 
 fn main () -> int {
- std::io::println("name={s} ok={}", "silk", true);
- return 0;
+  std::io::println("name={s} ok={}", "silk", true);
+  return 0;
 }
 ```
 

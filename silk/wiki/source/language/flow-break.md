@@ -18,14 +18,14 @@ break;
 
 ```silk
 fn main () -> int {
- let mut i: int = 0;
- while true {
- i += 1;
- if i == 3 {
- break;
- }
- }
- return i;
+  let mut i: int = 0;
+  while true {
+    i += 1;
+    if i == 3 {
+      break;
+    }
+  }
+  return i;
 }
 ```
 

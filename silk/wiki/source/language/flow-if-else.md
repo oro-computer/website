@@ -16,9 +16,9 @@ Canonical spec: `docs/language/flow-if-else.md`.
 
 ```silk
 if condition {
- // ...
+  // ...
 } else {
- // ...
+  // ...
 }
 ```
 
@@ -28,11 +28,11 @@ if condition {
 
 ```silk
 fn main () -> int {
- if true {
- return 0;
- } else {
- return 1;
- }
+  if true {
+    return 0;
+  } else {
+    return 1;
+  }
 }
 ```
 
@@ -43,14 +43,14 @@ the `else` branch.
 
 ```silk
 fn main () -> int {
- let x: int = 1;
- if x == 0 {
- return 0;
- } else if x == 1 {
- return 1;
- } else {
- return 2;
- }
+  let x: int = 1;
+  if x == 0 {
+    return 0;
+  } else if x == 1 {
+    return 1;
+  } else {
+    return 2;
+  }
 }
 ```
 

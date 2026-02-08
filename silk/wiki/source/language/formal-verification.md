@@ -14,7 +14,7 @@ Canonical doc: `docs/language/formal-verification.md`.
 #require x >= 0;
 #assure result == x + 1;
 fn inc (x: int) -> int {
- return x + 1;
+  return x + 1;
 }
 ```
 

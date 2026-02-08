@@ -13,11 +13,11 @@ Canonical doc: `docs/language/function-disciplines.md`.
 
 ```silk
 pure fn add (x: int, y: int) -> int {
- return x + y;
+  return x + y;
 }
 
 task fn worker (x: int) -> int {
- return x + 1;
+  return x + 1;
 }
 ```
 

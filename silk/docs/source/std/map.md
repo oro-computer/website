@@ -49,9 +49,11 @@ model for container element drops.
 
 ### Construction
 
-`HashMap` requires user-supplied hashing and equality functions (similar in
-spirit to the `Hash` and `KeyEqual` customization points of C++
-`std::unordered_map`).
+`HashMap` requires hashing and equality functions (similar in spirit to the
+`Hash` and `KeyEqual` customization points of C++ `std::unordered_map`). For
+common key types, `std::map` ships default `hash_*` / `eq_*` helpers and
+`HashMap` provides `empty()` / `init(cap)` overloads that select those defaults
+implicitly.
 
 For common key types, `std::map` provides default `hash_*` / `eq_*` helpers so
 callers do not need to write hashing and equality functions themselves.
@@ -64,7 +66,7 @@ Default helper functions are provided for these key types:
 - `char`
 - `string` (bytewise FNV-1a)
 
-Example (using `std::map` defaults):
+Example (using `std::map` defaults via `HashMap.init(cap)` / `HashMap.empty()`):
 
 ```silk
 import std::map;
@@ -75,17 +77,17 @@ type Map = std::map::HashMap(u64, int);
 type InitResult = std::result::Result(Map, std::memory::AllocFailed);
 
 fn main () -> int {
-  let init_r: InitResult = Map.init(16, std::map::hash_u64, std::map::eq_u64);
+  let init_r: InitResult = Map.init(16);
   if init_r.is_err() { return 1; }
   let mut m: Map = match (init_r) {
     InitResult::Ok(v) => v,
-    InitResult::Err(_) => Map.empty(std::map::hash_u64, std::map::eq_u64),
+    InitResult::Err(_) => Map.empty(),
   };
-  let put_r = (mut m).put(1, 10);
-  if put_r.is_err() { (mut m).drop(); return 2; }
+  let put_r = m.put(1, 10);
+  if put_r.is_err() { m.drop(); return 2; }
 
   let v: int = m.get(1) ?? 0;
-  (mut m).drop();
+  m.drop();
   return v;
 }
 ```
@@ -104,18 +106,18 @@ fn hash_u64 (k: u64) -> u64 { return k; }
 fn eq_u64 (a: u64, b: u64) -> bool { return a == b; }
 
 fn main () -> int {
-  let init_r: InitResult = Map.init(16, hash_u64, eq_u64);
+  let init_r: InitResult = Map.init_with(16, hash_u64, eq_u64);
   if init_r.is_err() { return 1; }
   let mut m: Map = match (init_r) {
     InitResult::Ok(v) => v,
-    InitResult::Err(_) => Map.empty(hash_u64, eq_u64),
+    InitResult::Err(_) => Map.empty_with(hash_u64, eq_u64),
   };
-  (mut m).drop();
+  m.drop();
   return 0;
 }
 ```
 
-`HashMap.init(cap, ...)` validates the requested capacity:
+`HashMap.init_with(cap, ...)` validates the requested capacity:
 
 - `cap < 0` returns `AllocErrorKind::InvalidInput`.
 - very large `cap` values that would overflow internal sizing arithmetic return
@@ -125,8 +127,10 @@ fn main () -> int {
 
 `HashMap(K, V)` provides:
 
-- `fn empty (hash: fn(K) -> u64, eq: fn(K, K) -> bool) -> HashMap(K, V);`
-- `fn init (cap: i64, hash: fn(K) -> u64, eq: fn(K, K) -> bool) -> std::result::Result(HashMap(K, V), std::memory::AllocFailed);`
+- `fn empty () -> HashMap(K, V);` (only for default key types)
+- `fn init (cap: i64) -> std::result::Result(HashMap(K, V), std::memory::AllocFailed);` (only for default key types)
+- `fn empty_with (hash: fn(K) -> u64, eq: fn(K, K) -> bool) -> HashMap(K, V);`
+- `fn init_with (cap: i64, hash: fn(K) -> u64, eq: fn(K, K) -> bool) -> std::result::Result(HashMap(K, V), std::memory::AllocFailed);`
 - `fn len (self: &HashMap(K, V)) -> i64;`
 - `fn is_empty (self: &HashMap(K, V)) -> bool;`
 - `fn capacity (self: &HashMap(K, V)) -> i64;`

@@ -279,22 +279,36 @@ that follow the same calling conventions as other Silk functions.
 ### Generic impl blocks
 
 If a type is declared with type parameters (struct or enum), its impl blocks
-must also declare those type parameters:
+must provide a full type-argument list of the same arity.
+
+Each position in the `impl Name(...)` argument list may be:
+
+- a **type parameter name** (a generic impl), or
+- a **concrete primitive type name** (an impl specialization for that argument).
 
 ```silk
 struct Data(T) { value: T }
 
-// OK:
+// Generic impl (applies to all specializations of Data(T)).
 impl Data(T) {
   fn get(self: &Self) -> T { return self.value; }
 }
 
-// Error:
-// impl Data { ... }
+// Specialized impl (applies only to Data(u8)).
+impl Data(u8) {
+  fn is_zero(self: &Self) -> bool { return self.value == 0; }
+}
 ```
 
-This rule makes monomorphization explicit and ensures method receivers are not
-ambiguous when the type is specialized.
+Specialized impl blocks are merged with any other applicable impl blocks for
+the same type specialization, subject to the usual duplicate method-name rules.
+
+Current subset limitation:
+
+- Only **primitive type names** (for example `u64`, `string`, `bool`) are
+  recognized as concrete specialization arguments in `impl Name(...)`. Any
+  other identifier in an `impl` argument position is treated as a type
+  parameter name.
 
 ### Syntax
 
@@ -399,7 +413,7 @@ Mutability rule (current subset):
     or a mutable reference binding (for example a `mut self: &Type` receiver),
     the compiler treats `value.method(...)` as a mutable receiver call (no
     `(mut value)` wrapper required).
-  - The explicit `(mut value).method(...)` form is permitted but is no longer
+  - The explicit `value.method(...)` form is permitted but is no longer
     required for name receivers.
 - If the method receiver is `self: Type` or `mut self: Type`, the call site
   passes the receiver **by value**. For ownership-tracked values (for example

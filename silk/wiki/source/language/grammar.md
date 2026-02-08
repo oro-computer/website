@@ -17,8 +17,8 @@ This wiki page is a reading guide, not a replacement for the grammar itself.
 import std::io;
 
 fn main () -> int {
- std::io::println("hello {s}", "world");
- return 0;
+  std::io::println("hello {s}", "world");
+  return 0;
 }
 ```
 

@@ -18,8 +18,8 @@ Canonical spec: `docs/language/enums.md`.
 
 ```silk
 enum Msg {
- Quit,
- Add(int),
+  Quit,
+  Add(int),
 }
 ```
 
@@ -29,16 +29,16 @@ enum Msg {
 
 ```silk
 enum Msg {
- Quit,
- Add(int),
+  Quit,
+  Add(int),
 }
 
 fn main () -> int {
- let m: Msg = Msg::Add(5);
- return match m {
- Msg::Quit => 0,
- Msg::Add(n) => n,
- };
+  let m: Msg = Msg::Add(5);
+  return match m {
+    Msg::Quit => 0,
+    Msg::Add(n) => n,
+  };
 }
 ```
 

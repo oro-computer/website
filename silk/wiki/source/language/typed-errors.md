@@ -23,13 +23,13 @@ Implemented in the reference compiler (front-end + native backend subset).
 error OutOfBounds { index: int, len: int }
 
 fn get_at (xs: &u8[], index: int) -> u8 | OutOfBounds {
- if index < 0 { panic OutOfBounds{ index: index, len: 0 }; }
- return 0;
+  if index < 0 { panic OutOfBounds{ index: index, len: 0 }; }
+  return 0;
 }
 
 fn caller (xs: &u8[]) -> u8 | OutOfBounds {
- let x: u8 = get_at(xs, 0)?;
- return x;
+  let x: u8 = get_at(xs, 0)?;
+  return x;
 }
 ```
 
@@ -41,12 +41,12 @@ fn caller (xs: &u8[]) -> u8 | OutOfBounds {
 error Boom { code: int }
 
 fn may_boom () -> int | Boom {
- panic Boom{ code: 7 };
+  panic Boom{ code: 7 };
 }
 
 fn main () -> int | Boom {
- let x: int = may_boom()?;
- return x;
+  let x: int = may_boom()?;
+  return x;
 }
 ```
 
@@ -56,21 +56,21 @@ fn main () -> int | Boom {
 error Boom { code: int }
 
 fn may_boom (x: int) -> int | Boom {
- if x == 0 {
- panic Boom{ code: 123 };
- }
- return 7;
+  if x == 0 {
+    panic Boom{ code: 123 };
+  }
+  return 7;
 }
 
 fn main () -> int {
- match (may_boom(0)) {
- value => {
- return value;
- },
- err: Boom => {
- std::abort();
- },
- }
+  match (may_boom(0)) {
+    value => {
+      return value;
+    },
+    err: Boom => {
+      std::abort();
+    },
+  }
 }
 ```
 

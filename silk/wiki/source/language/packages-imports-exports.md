@@ -38,7 +38,7 @@ export fn main () -> int { return 0; }
 package app;
 
 export fn add (x: int, y: int) -> int {
- return x + y;
+  return x + y;
 }
 ```
 
@@ -49,7 +49,7 @@ package app;
 import { add } from "./math.slk";
 
 fn main () -> int {
- return add(40, 2);
+  return add(40, 2);
 }
 ```
 
@@ -60,7 +60,7 @@ fn main () -> int {
 package module;
 
 export default fn () -> int {
- return 1 + 2;
+  return 1 + 2;
 }
 ```
 
@@ -69,7 +69,7 @@ export default fn () -> int {
 import foo from "./module.slk";
 
 fn main () -> int {
- return foo();
+  return foo();
 }
 ```
 
