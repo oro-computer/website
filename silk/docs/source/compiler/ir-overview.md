@@ -81,8 +81,7 @@ typed representation is used by:
   register/stack conventions and any sign/zero-extension rules when
   additional integer widths are introduced.
 
-In the current implementation, this type information is carried on each
-`IrFunction` as:
+This type information is carried on each `IrFunction` as:
 
 - a function signature (`param_types` and `result_types`), and
 - a `value_types` table that maps each `ValueId` slot to a scalar type.
@@ -311,7 +310,7 @@ explicit extern-data table and load instruction:
 
 ## Relationship to Front-End and Back-End
 
-Short term (current implementation):
+Short term:
 
 - The IR is now part of the primary executable build path on `linux/x86_64`:
   - the front-end (parser + checker) produces an `ast.Module`,
@@ -415,7 +414,7 @@ the `Call` instruction:
     `ValueId`s (in order).
 - Native back-ends (starting with the existing ELF64 emitter) lower
   `Call` / `Return` to a concrete calling convention:
-  - for `linux/x86_64`, the current implementation follows a simplified
+  - for `linux/x86_64`, the backend follows a simplified
     subset of the System V AMD64 ABI for scalar parameters:
     - integer-like scalars (`Bool` and integers) use the first six
       general-purpose registers (`rdi`, `rsi`, `rdx`, `rcx`, `r8`, `r9`),
@@ -611,7 +610,7 @@ incrementally in tests and then in the compiler’s lowering pipeline.
   - if that fails, they fall back to the legacy constant-expression evaluator
     in `src/backend_const.zig`,
   - in both cases, `src/backend_const.zig` is still responsible for emitting
-    the minimal ELF64 executable used by the current implementation.
+    the minimal ELF64 executable used by the constant-only backend.
 - `src/backend_ir_elf.zig` provides an IR→ELF64 backend for `linux/x86_64`
   that emits native executables directly from typed scalar IR graphs:
   - it exposes a convenience helper `emitIrFunctionExecutable` for

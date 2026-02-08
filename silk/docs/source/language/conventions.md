@@ -6,7 +6,7 @@ keep the language specification consistent and easy to navigate for both:
 - first-time readers learning Silk, and
 - returning readers looking up precise rules.
 
-See also: `docs/language/README.md` for recommended reading paths.
+See also: `docs/guides/language-tour.md` for a recommended reading path.
 
 ## Document Structure (Recommended)
 
@@ -15,7 +15,7 @@ Concept documents should be structured so readers can answer, quickly:
 - “What is this feature for?”
 - “What syntax does the compiler accept?”
 - “What are the rules and edge cases?”
-- “What works in the current compiler today?”
+- “What does the compiler accept?”
 
 Recommended sections:
 
@@ -29,7 +29,7 @@ Recommended sections:
    - realistic examples (how the feature is used in real code)
 7. **Common pitfalls**
 8. **Related documents**
-9. **Relevant tests** (links to `tests/silk/pass_*.slk` and `tests/silk/fail_*.slk`)
+9. **Tests** (links to `tests/silk/pass_*.slk` and `tests/silk/fail_*.slk`)
 
 Not every concept needs every section, but the goal is that a reader should
 never have to infer critical rules from examples.
@@ -82,8 +82,8 @@ These terms are used consistently across the spec:
 - **Block**: `{ stmt* }`, a scope boundary and the unit of structured control
   flow. (Whether blocks are also expressions depends on the concept; docs must
   be explicit.)
-- **Current compiler subset**: the set of features that parse, type-check, and
-  code-generate end-to-end in the current implementation.
+- **Implemented subset**: the set of features that parse, type-check, and
+  code-generate end-to-end in the compiler.
 
 ## Cross-References
 
@@ -94,4 +94,4 @@ restating it everywhere. Common cross-links include:
 - `docs/language/types.md` for type-system rules and special cases,
 - `docs/language/mutability.md` for `mut` and borrowing rules,
 - `docs/compiler/diagnostics.md` for error codes,
-- `STATUS.md` for a high-level implementation snapshot.
+- “Implementation status” sections near the top of concept docs.

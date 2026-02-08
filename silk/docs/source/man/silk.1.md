@@ -14,7 +14,7 @@
 - `silk repl`
 - `silk check [--nostd] [--std-root <path>] [--z3-lib <path>] [--debug] [--package <dir|manifest>] <file> [<file> ...]`
 - `silk test [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--filter <pattern>] [--package <dir|manifest>] <file> [<file> ...]`
-- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]`
+- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--emit bin|asm] [-S] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]`
 - `silk doc [--all] <file> [<file> ...] [-o <path>]`
 - `silk doc --man [--package <dir|manifest>] [--std-root <path>] <query> [-o <path>]`
 - `silk man <query>`
@@ -85,7 +85,7 @@ For the initial implementation, the supported options are:
     - `--help`, `-h` — show `test` usage and exit.
     - discovers language-level `test` declarations (see `docs/language/testing.md`) in the loaded module set,
     - compiles and runs each test, emitting TAP version 13 output,
-    - in the current implementation, each test runs in its own process so a failing `assert` (panic/abort) does not stop the whole suite.
+    - each test runs in its own process, so a failing `assert` (panic/abort) does not stop the whole suite.
     - `-O <0-3>` — set optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`). `-O1`+ prunes unused extern symbols before code generation and prunes unreachable functions in executable builds (typically reducing output size).
     - `--filter <pattern>` — run only tests whose display name contains `<pattern>` (substring match).
     - `--package <dir|manifest>` (or `--pkg`) — load the module set from a package manifest (`silk.toml`) instead of explicit input files. When `--package` is provided:
@@ -95,7 +95,7 @@ For the initial implementation, the supported options are:
     - `--` — end of options; treat remaining args as file paths (even if they begin with `-`).
 
 - **Build command:**
-  - `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]`:
+  - `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--emit bin|asm] [-S] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]`:
     - `--help`, `-h` — show `build` usage and exit.
     - `-o <path>`, `--out <path>` — write the generated output to `<path>`.
       - if the parent directories of `<path>` do not exist, the compiler creates them (like `mkdir -p`).
@@ -105,7 +105,7 @@ For the initial implementation, the supported options are:
     - `--build-script` — compile and run `<package_root>/build.silk` and use its stdout as the package manifest (see `docs/compiler/build-scripts.md`).
     - `--package-target <name>` — select one or more manifest `[[target]]` entries by name (repeatable; `--pkg-target` is accepted as an alias).
       - when omitted, `silk build --package ...` builds every manifest `[[target]]` entry by default.
-      - when building multiple targets, per-output flags are rejected (`-o/--out`, `--kind`, `--arch`, `--target`, `--c-header`, `--needed`, `--runpath`, `--soname`).
+      - when building multiple targets, per-output flags are rejected (`-o/--out`, `--kind`, `--emit`, `--arch`, `--target`, `--c-header`, `--needed`, `--runpath`, `--soname`).
     - `--` — end of options; treat remaining args as file paths (even if they begin with `-`).
     - `--debug`, `-g` — enable debug build mode (supported subset, `linux/x86_64`):
       - failed `assert` prints a panic header + optional message + stack trace to stderr (via glibc `backtrace_symbols_fd`) before aborting, and
@@ -126,6 +126,10 @@ For the initial implementation, the supported options are:
       - `object` (ELF64 relocatable object on `linux/x86_64`)
       - `static` (static library archive on `linux/x86_64`)
       - `shared` (shared library on `linux/x86_64`)
+    - `--emit bin|asm` — select emission mode:
+      - `bin` (default) emits the selected binary artifact at the `-o` / `--out` path.
+      - `asm` writes an `objdump`-style disassembly (Intel syntax) of the selected output on `linux/x86_64` and writes it to the `-o` / `--out` path.
+    - `-S` — alias of `--emit asm` (defaults to `--kind object` when `--kind` is not set).
     - `--arch <arch>` — shorthand for selecting a known target:
       - `x86_64` / `amd64` → `linux-x86_64`,
       - `wasm32` → `wasm32-unknown-unknown`,
@@ -137,7 +141,7 @@ For the initial implementation, the supported options are:
       - `wasm32-unknown-unknown` (IR-backed wasm32 mode; emits a `.wasm` module exporting `memory` and exported functions, including `main` when present; `ext` declarations become imports under `env.<name>`; also supports export-only modules with no `main` for JS/Node-style embedding),
       - `wasm32-wasi` (IR-backed wasm32 WASI mode; emits `memory` and `_start () -> void`, imports `wasi_snapshot_preview1.proc_exit`, and calls Silk `fn main () -> int`; also supports export-only modules for embedding, which do not include `_start`),
       - unknown or unsupported triples currently cause `silk build` to fail with a “target not implemented” error.
-      - Note: wasm targets are only supported for `--kind executable` in the current implementation.
+      - Note: wasm targets are only supported for `--kind executable` currently.
     - `--arch` and `--target` are mutually exclusive; passing both is an error.
     - `--c-header <path>` — emit a generated C header declaring the root package’s exported symbols (C ABI consumption):
       - writes prototypes for `export fn` and `extern const` declarations for supported `export let` constants,

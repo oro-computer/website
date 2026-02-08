@@ -31,15 +31,12 @@ type Set = std::set::SetMap(u64);
 type InitResult = std::result::Result(Set, std::memory::AllocFailed);
 type InsertResult = std::result::Result(bool, std::memory::OutOfMemory);
 
-fn hash_u64 (k: u64) -> u64 { return k; }
-fn eq_u64 (a: u64, b: u64) -> bool { return a == b; }
-
 fn main () -> int {
-  let init_r: InitResult = Set.init(4, hash_u64, eq_u64);
+  let init_r: InitResult = Set.init(4, std::set::hash_u64, std::set::eq_u64);
   if init_r.is_err() { return 1; }
   let mut s: Set = match (init_r) {
     InitResult::Ok(v) => v,
-    InitResult::Err(_) => Set.empty(hash_u64, eq_u64),
+    InitResult::Err(_) => Set.empty(std::set::hash_u64, std::set::eq_u64),
   };
 
   let insert_r: InsertResult = (mut s).insert(1);

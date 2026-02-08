@@ -10,7 +10,7 @@ Structs and impl blocks are separated:
 Structs define a composite data type made of named fields:
 
 ```silk
-struct Packet {
+struct Frame {
   sequence: u32,
   size: u16,
   flag: u8,
@@ -180,7 +180,7 @@ rules for the corresponding field types on the target:
 Example (typical C layout on `linux/x86_64`):
 
 ```silk
-struct Packet {
+struct Frame {
   sequence: u32, // 4 bytes
   size: u16,     // 2 bytes
   flag: u8,      // 1 byte
@@ -220,7 +220,7 @@ aggregates without committing to a final packed layout. The trade-off is that
 the in-memory representation is not ABI-compatible with a C struct unless the
 struct is restricted to ABI-safe 64-bit slots.
 
-Example (current implementation): the `Packet` above is lowered as 3 scalar
+Example (current compiler): the `Frame` above is lowered as 3 scalar
 slots and occupies 24 bytes when stored in memory (3 × 8-byte cells), even
 though the intended C-like packed layout would be 8 bytes.
 

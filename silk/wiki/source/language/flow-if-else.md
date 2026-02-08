@@ -39,7 +39,7 @@ fn main () -> int {
 
 ### Works today: `else if` chains
 
-In the current implementation, `else if` parses as sugar for a nested `if` in
+Currently, `else if` parses as sugar for a nested `if` in
 the `else` branch.
 
 ```silk

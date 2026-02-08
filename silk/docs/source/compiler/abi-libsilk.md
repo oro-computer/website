@@ -165,8 +165,8 @@ The initial C header provided in this repository defines:
   configurations that enable both.
 
   `silk_compiler_set_optimization_level` selects the optimization level (0-3),
-  matching the CLI `-O` flag. The default is level 0 unless overridden. In the
-  current implementation, level 1+ enables lowering-time pruning of unused
+  matching the CLI `-O` flag. The default is level 0 unless overridden. Level
+  1+ enables lowering-time pruning of unused
   extern symbols before code generation. For IR-backed native executable
   builds, it also prunes unreachable functions from the executable entrypoint
   (function-level dead-code elimination), typically reducing output size and

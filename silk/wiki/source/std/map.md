@@ -30,15 +30,12 @@ import std::memory;
 type Map = std::map::HashMap(u64, int);
 type InitResult = std::result::Result(Map, std::memory::AllocFailed);
 
-fn hash_u64 (k: u64) -> u64 { return k; }
-fn eq_u64 (a: u64, b: u64) -> bool { return a == b; }
-
 fn main () -> int {
-  let init_r: InitResult = Map.init(16, hash_u64, eq_u64);
+  let init_r: InitResult = Map.init(16, std::map::hash_u64, std::map::eq_u64);
   if init_r.is_err() { return 2; }
   let mut m: Map = match (init_r) {
     InitResult::Ok(v) => v,
-    InitResult::Err(_) => Map.empty(hash_u64, eq_u64),
+    InitResult::Err(_) => Map.empty(std::map::hash_u64, std::map::eq_u64),
   };
   (mut m).put(1, 10);
   let v: int = m.get(1) ?? 0;

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-06T22:39:16+00:00",
+  "generatedAt": "2026-02-07T21:29:52+00:00",
   "kind": "wiki",
   "count": 84,
   "items": [
@@ -43,7 +43,7 @@
       "title": "`if` / `else`",
       "section": "language",
       "summary": "Use `if` / `else` for boolean branching.",
-      "text": "if / else Use if / else for boolean branching. In Silk, if is a statement that chooses which block executes. The broader language design includes expression-oriented forms; see the canonical spec for details. Syntax if condition { // ... } else { // ... } Examples Example: minimal if / else fn main () -> int { if true { return 0; } else { return 1; } } Example: else if chains In the current implementation, else if parses as sugar for a nested if in the else branch. fn main () -> int { let x: int = 1; if x == 0 { return 0; } else if x == 1 { return 1; } else { return 2; } } See also"
+      "text": "if / else Use if / else for boolean branching. In Silk, if is a statement that chooses which block executes. The broader language design includes expression-oriented forms; see the canonical spec for details. Syntax if condition { // ... } else { // ... } Examples Example: minimal if / else fn main () -> int { if true { return 0; } else { return 1; } } Example: else if chains Currently, else if parses as sugar for a nested if in the else branch. fn main () -> int { let x: int = 1; if x == 0 { return 0; } else if x == 1 { return 1; } else { return 2; } } See also"
     },
     {
       "id": "language/flow-loop",
@@ -57,7 +57,7 @@
       "title": "`match`",
       "section": "language",
       "summary": "`match` provides structured pattern matching.",
-      "text": "match match provides structured pattern matching. In the current implementation: match <optional> { None => expr, Some(x) => expr } is supported (expression form), match <enum> { E::V => expr, ... } is supported in a restricted exhaustive subset, typed-error handling uses a separate match (expr) { ... } statement form (see typed errors). Syntax (Current match-expression subset) match value { Pattern => expr, Pattern => expr, } Examples Example: matching an optional fn main () -> int { let x: int? = Some(7); let y: int = match x { None => 5, Some(v) => v, }; return y; } Example: matching an enum enum Msg { Quit, Add(int), } fn main () -> int { let m: Msg = Msg::Add(5); return match m { Msg::Quit => 0, Msg::Add(n) => n, }; } See also"
+      "text": "match match provides structured pattern matching. Currently: match <optional> { None => expr, Some(x) => expr } is supported (expression form), match <enum> { E::V => expr, ... } is supported in a restricted exhaustive subset, typed-error handling uses a separate match (expr) { ... } statement form (see typed errors). Syntax (Current match-expression subset) match value { Pattern => expr, Pattern => expr, } Examples Example: matching an optional fn main () -> int { let x: int? = Some(7); let y: int = match x { None => 5, Some(v) => v, }; return y; } Example: matching an enum enum Msg { Quit, Add(int), } fn main () -> int { let m: Msg = Msg::Add(5); return match m { Msg::Quit => 0, Msg::Add(n) => n, }; } See also"
     },
     {
       "id": "language/flow-return",
@@ -176,7 +176,7 @@
       "title": "Enums",
       "section": "language",
       "summary": "`enum` defines a nominal sum type with a fixed set of variants.",
-      "text": "Enums enum defines a nominal sum type with a fixed set of variants. In the current implementation, enums support: unit variants (E::A), tuple variants (E::B(x)), exhaustive match expressions over enum values (restricted subset; no guards). Syntax enum Msg { Quit, Add(int), } Examples Example: construct + match enum Msg { Quit, Add(int), } fn main () -> int { let m: Msg = Msg::Add(5); return match m { Msg::Quit => 0, Msg::Add(n) => n, }; } See also"
+      "text": "Enums enum defines a nominal sum type with a fixed set of variants. Currently, enums support: unit variants (E::A), tuple variants (E::B(x)), exhaustive match expressions over enum values (restricted subset; no guards). Syntax enum Msg { Quit, Add(int), } Examples Example: construct + match enum Msg { Quit, Add(int), } fn main () -> int { let m: Msg = Msg::Add(5); return match m { Msg::Quit => 0, Msg::Add(n) => n, }; } See also"
     },
     {
       "id": "language/errors",
@@ -292,10 +292,10 @@
     },
     {
       "id": "language/refinement-types",
-      "title": "Refinement types (design)",
+      "title": "Refinement types (removed)",
       "section": "language",
-      "summary": "Refinement types are types annotated with logical predicates (`where`) that constrain the set of values they may represent.",
-      "text": "Refinement types (design) Refinement types are types annotated with logical predicates (where) that constrain the set of values they may represent. Example (Design) // Design-only sketch: a string that is proven non-empty. type NonEmptyString = { s: string where std::length(s) > 0 }; See also"
+      "summary": "The earlier refinement-type design (types annotated with `where` predicates) is removed.",
+      "text": "Refinement types (removed) The earlier refinement-type design (types annotated with where predicates) is removed. Use Formal Silk instead: #require / #assure on functions, and #require on struct declarations (struct requirements proved at construction sites)."
     },
     {
       "id": "language/regions",
@@ -463,7 +463,7 @@
       "title": "`std::map`",
       "section": "std",
       "summary": "`std::map` provides associative containers:",
-      "text": "std::map std::map provides associative containers: HashMap(K, V) (unordered, hash table), TreeMap(K, V) (ordered, red-black tree). Importing import std::map; Examples Example: HashMap(u64, int) basic usage import std::map; import std::result; import std::memory; type Map = std::map::HashMap(u64, int); type InitResult = std::result::Result(Map, std::memory::AllocFailed); fn hashu64 (k: u64) -> u64 { return k; } fn equ64 (a: u64, b: u64) -> bool { return a == b; } fn main () -> int { let initr: InitResult = Map.init(16, hashu64, equ64); if initr.iserr() { return 2; } let mut m: Map = match (initr) { InitResult::Ok(v) => v, InitResult::Err() => Map.empty(hashu64, equ64), }; (mut m).put(1, 10); let v: int = m.get(1) ?? 0; (mut m).drop(); return v; } See also"
+      "text": "std::map std::map provides associative containers: HashMap(K, V) (unordered, hash table), TreeMap(K, V) (ordered, red-black tree). Importing import std::map; Examples Example: HashMap(u64, int) basic usage import std::map; import std::result; import std::memory; type Map = std::map::HashMap(u64, int); type InitResult = std::result::Result(Map, std::memory::AllocFailed); fn main () -> int { let initr: InitResult = Map.init(16, std::map::hashu64, std::map::equ64); if initr.iserr() { return 2; } let mut m: Map = match (initr) { InitResult::Ok(v) => v, InitResult::Err() => Map.empty(std::map::hashu64, std::map::equ64), }; (mut m).put(1, 10); let v: int = m.get(1) ?? 0; (mut m).drop(); return v; } See also"
     },
     {
       "id": "std/memory",
@@ -519,7 +519,7 @@
       "title": "`std::set`",
       "section": "std",
       "summary": "`std::set` provides set containers:",
-      "text": "std::set std::set provides set containers: SetMap(T) (unordered set, open addressing), TreeSet(T) (ordered set, red-black tree). Importing import std::set; Examples Example: SetMap(u64) basic usage import std::set; import std::result; import std::memory; type Set = std::set::SetMap(u64); type InitResult = std::result::Result(Set, std::memory::AllocFailed); type InsertResult = std::result::Result(bool, std::memory::OutOfMemory); fn hashu64 (k: u64) -> u64 { return k; } fn equ64 (a: u64, b: u64) -> bool { return a == b; } fn main () -> int { let initr: InitResult = Set.init(4, hashu64, equ64); if initr.iserr() { return 1; } let mut s: Set = match (initr) { InitResult::Ok(v) => v, InitResult::Err() => Set.empty(hashu64, equ64), }; let insertr: InsertResult = (mut s).insert(1); if insertr.iserr() { (mut s).drop(); return 2; } let ok: bool = s.contains(1); (mut s).drop(); if ok { return 0; } return 1; } See also"
+      "text": "std::set std::set provides set containers: SetMap(T) (unordered set, open addressing), TreeSet(T) (ordered set, red-black tree). Importing import std::set; Examples Example: SetMap(u64) basic usage import std::set; import std::result; import std::memory; type Set = std::set::SetMap(u64); type InitResult = std::result::Result(Set, std::memory::AllocFailed); type InsertResult = std::result::Result(bool, std::memory::OutOfMemory); fn main () -> int { let initr: InitResult = Set.init(4, std::set::hashu64, std::set::equ64); if initr.iserr() { return 1; } let mut s: Set = match (initr) { InitResult::Ok(v) => v, InitResult::Err() => Set.empty(std::set::hashu64, std::set::equ64), }; let insertr: InsertResult = (mut s).insert(1); if insertr.iserr() { (mut s).drop(); return 2; } let ok: bool = s.contains(1); (mut s).drop(); if ok { return 0; } return 1; } See also"
     },
     {
       "id": "std/strings",

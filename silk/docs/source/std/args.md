@@ -62,8 +62,8 @@ impl Args {
 
 ## String construction intrinsic
 
-The current implementation uses a reserved, compiler-backed intrinsic
-to construct `string` values at the ABI/IR level:
+The compiler provides a reserved, compiler-backed intrinsic to construct
+`string` values at the ABI/IR level:
 
 - `__silk_string_from_ptr_len(ptr: u64, len: int) -> string`
 

@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-02-06T22:39:19+00:00
+Generated: 2026-02-07T21:29:55+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -67,7 +67,7 @@ Silk Docs
   - language/operators — Operators — /silk/docs/?p=language/operators
   - language/optional — Optional — /silk/docs/?p=language/optional
   - language/packages-imports-exports — Packages, Imports, and Exports — /silk/docs/?p=language/packages-imports-exports
-  - language/refinement-types — Refinement Types — /silk/docs/?p=language/refinement-types
+  - language/refinement-types — Refinement Types (Removed) — /silk/docs/?p=language/refinement-types
   - language/regions — Regions — /silk/docs/?p=language/regions
   - language/literals-regexp — Regular Expression Literals — /silk/docs/?p=language/literals-regexp
   - language/syntax-tour — Silk Syntax Tour (Soup to Nuts) — /silk/docs/?p=language/syntax-tour
@@ -94,8 +94,10 @@ Silk Docs
   - std/formal — `std::formal` — /silk/docs/?p=std/formal
   - std/filesystem — `std::fs` — /silk/docs/?p=std/filesystem
   - std/ggml — `std::ggml` — /silk/docs/?p=std/ggml
+  - std/graphics — `std::graphics` — Graphics API Bindings — /silk/docs/?p=std/graphics
   - std/http — `std::http` — /silk/docs/?p=std/http
   - std/https — `std::https` — /silk/docs/?p=std/https
+  - std/image — `std::image` — Image Codecs + Color — /silk/docs/?p=std/image
   - std/interfaces — `std::interfaces` — /silk/docs/?p=std/interfaces
   - std/io — `std::io` — /silk/docs/?p=std/io
   - std/json — `std::json` — /silk/docs/?p=std/json
@@ -226,7 +228,7 @@ Silk Wiki
   - language/operators — Operators — /silk/wiki/?p=language/operators
   - language/optional — Optionals (`T?`) — /silk/wiki/?p=language/optional
   - language/packages-imports-exports — Packages, imports, and exports — /silk/wiki/?p=language/packages-imports-exports
-  - language/refinement-types — Refinement types (design) — /silk/wiki/?p=language/refinement-types
+  - language/refinement-types — Refinement types (removed) — /silk/wiki/?p=language/refinement-types
   - language/regions — Regions (`with`) — /silk/wiki/?p=language/regions
   - language/literals-string — String literals — /silk/wiki/?p=language/literals-string
   - language/structs-impls-layout — Structs and `impl` — /silk/wiki/?p=language/structs-impls-layout
@@ -1659,7 +1661,7 @@ scalar representation (`i64`) at the IR and native ABI layers.
 
 ## Operators
 
-The current implementation supports the following operator subset:
+Supported operator subset:
 
 - `Duration + Duration -> Duration`
 - `Duration - Duration -> Duration`
@@ -1675,7 +1677,7 @@ The current implementation supports the following operator subset:
   - `Instant` vs `Instant`
 
 Other arithmetic (`*`, `/`, `%`) and bitwise operators are not defined for time
-types in the current implementation.
+types in the implemented subset.
 
 ## Overflow
 
@@ -1974,7 +1976,7 @@ ABI mature.
 ## Related Documents
 
 
-## Relevant Tests
+## Tests
 
 - Enum matches (end-to-end):
 - Namespaced enum references (module-set build):
@@ -2448,8 +2450,7 @@ over many scrutinee types. The current compiler implementation supports only a
 narrow, explicitly documented subset so we can validate end-to-end lowering and
 code generation.
 
-In the current implementation, `match` is accepted as an *expression* of the
-form:
+In the initial subset, `match` is accepted as an *expression* of the form:
 
 ```silk
 match <scrutinee> {
@@ -2461,7 +2462,7 @@ match <scrutinee> {
 Notes:
 
 - Arms are separated by commas; a trailing comma is permitted.
-- Arm bodies are expressions (not blocks) in the current implementation.
+- In the initial subset, arm bodies are expressions (not blocks).
 
 ### Optional Matching (`T?`)
 
@@ -2532,7 +2533,7 @@ Defined initial subset:
 - For `Some(v) => ...`, the binder `v` is in scope only within that arm and has
   type `T` (the inner payload type of the scrutinee `T?`).
 - The result type of a `match` expression is the common type of its arms; all
-  arms must type-check to the same result type in the current implementation.
+  arms must type-check to the same result type in the initial subset.
 
 ## `match` Statement (Typed Errors)
 
@@ -2565,8 +2566,7 @@ Rule because it is not a `T | ...` typed-error expression.
 ### Result Matching (`Ok(...)` / `Err(...)`)
 
 The `match` expression also supports a small subset for
-recoverable “success or error” values. In the current implementation this
-includes:
+recoverable “success or error” values. In the initial subset, this includes:
 
 - `std::result::Result(T, E)` (an `enum` with `Ok(T)` and `Err(E)` variants), and
 - “Result-like” structs of the form `{ value: T?, err: E? }`.
@@ -2610,7 +2610,7 @@ fn main () -> int {
 }
 ```
 
-## Relevant Tests
+## Tests
 
 - Optional `match` expressions:
 - Enum `match` expressions:
@@ -2963,7 +2963,7 @@ let empty_slice: i32[] = [];
   type-checked against `T` and the resulting value has type `T[]`.
   - In Silk, this slice form is lowered as a non-owning
     view over a compiler-generated backing array.
-  - The current implementation does not yet enforce lifetime rules for such
+  - Lifetime rules are not yet enforced for such
     slices; do not allow a slice derived from a stack-backed array literal to
     outlive the scope where it was created.
 
@@ -3393,7 +3393,7 @@ fn main () -> int {
 ## Related Documents
 
 
-## Relevant Tests
+## Tests
 
 - Boolean control flow:
 - Short-circuit semantics:
@@ -3541,7 +3541,7 @@ Key points:
 - The safety model is layered:
   - Layer 1: unsafe `Buffer(T)` primitive.
   - Layer 2: compile-time safety via the verifier.
-  - Layer 3: provable safety via refinement types.
+  - Layer 3: provable safety via Formal Silk (contracts, invariants, and struct requirements).
 
 Compiler requirements:
 
@@ -3684,7 +3684,7 @@ Rules:
 
 Inside a character literal, `\` introduces an escape sequence.
 
-Supported escapes in the current implementation:
+Supported escapes:
 
 - `\n` — U+000A (line feed)
 - `\r` — U+000D (carriage return)
@@ -3766,7 +3766,7 @@ fn main () -> int {
 ## Related Documents
 
 
-## Relevant Tests
+## Tests
 
 - Unicode char equality and `\u{...}` escape:
 - Returning and comparing `char` values:
@@ -4045,7 +4045,7 @@ introduced by the literal syntax itself (see `literals-string.md`), not by the
 
 ## Evaluation Limits
 
-Compile-time evaluation must terminate. The current implementation enforces an
+Compile-time evaluation must terminate. The compiler enforces an
 instruction budget and a call-depth budget when executing `const fn` bodies at
 compile time; evaluation that exceeds these budgets is rejected as not
 compile-time evaluable.
@@ -4156,7 +4156,7 @@ an integer token followed by an identifier.
 
 ## Units
 
-The current implementation recognizes the following suffixes:
+Recognized suffixes:
 
 - `ns` — nanoseconds
 - `us` — microseconds
@@ -4985,11 +4985,11 @@ At a high level, the language can be structured as:
     - defaulted parameters must be **trailing** (once a parameter has a
       default, all subsequent parameters must also have defaults) because
       call syntax is positional-only in the current language subset,
-    - and in the current implementation, default expressions are restricted to
+    - and in the initial subset, default expressions are restricted to
       a constant/literal expression subset (no name references), so they can be
       inlined at call sites during lowering.
     - a parameter declared as `T?` with a default has two effective behaviors
-      in the current implementation subset:
+      in the initial subset:
       - if the default expression has type `T`, the parameter has effective
         type `T` (the argument may be omitted at call sites, but the callee
         sees a non‑optional value),
@@ -5093,7 +5093,7 @@ At a high level, the language can be structured as:
 
   Note: const-parameter-style generics (`N: int` parameters and integer literal
   type arguments like `Foo(u8, 1024)`) remain tracked work; the front-end parses
-  these surface forms but the current implementation focuses on type parameters
+  these surface forms but the compiler currently focuses on type parameters
   and monomorphization for type arguments.
 
   Exception: the nominal optional form `Option(T)` is recognized as sugar for
@@ -5206,7 +5206,7 @@ At a high level, the language can be structured as:
   - `match` as an expression (arms are expressions; see `MatchExpr` below),
   - `match` as a statement (arms are blocks), used for typed errors as
 
-  In the current implementation, the `match` statement form is restricted to a
+  In the implemented subset, the `match` statement form is restricted to a
   call-expression scrutinee and the patterns listed above.
 
 - Expressions:
@@ -5273,8 +5273,8 @@ At a high level, the language can be structured as:
      it is restricted to `move <name>` where `<name>` is a local
     binding.
   - The type checker currently permits `new <expr>` only when it can determine a
-    concrete reference result type of the form `&Struct`. In the current
-    implementation this happens either:
+    concrete reference result type of the form `&Struct`. In the compiler, this
+    happens either:
     - from an expected `&Struct` type context (for example `let x: &Packet = new
       Packet{ ... };` or as a call argument whose parameter type is `&Struct`)
     - from the operand itself when it names the struct type (for example `let x
@@ -5377,7 +5377,7 @@ At a high level, the language can be structured as:
     slice of source text (e.g. `util::answer`),
   - simple function calls such as `helper()` or `util::helper(1, 2)` are
     parsed as call expressions using the `Postfix`/`CallSuffix` productions;
-    the current implementation supports calls to named functions, but the type checker
+    the compiler supports calls to named functions, but the type checker
     and back-end currently restrict which value types can appear at call boundaries;
 
 Further expression forms (ranges, etc.) are described in other
@@ -5427,11 +5427,8 @@ Silk requires proofs only when verification syntax is present in the compiled
 module set:
 
 - any use of `#...` directives (`#require`, `#assure`, `#assert`, `#invariant`,
-  `#variant`, `#monovariant`, `#const`), and/or
-- any use of `where` predicates (for example refinement-type binders).
-
-Note: `where` predicates are not implemented yet. When they land, they will
-also be treated as verification syntax.
+  `#variant`, `#monovariant`, `#const`) — including `#require` attached to
+  `struct` declarations.
 
 When verification syntax is present, compilation MUST:
 
@@ -5594,6 +5591,31 @@ fn name (params) -> ResultType {
     rejected early (specifications are still compile-time-only metadata),
   - attaches them to the corresponding function in the AST as lists of
     preconditions, postconditions, and contract theories.
+
+### Struct requirements (`#require` on `struct`)
+
+Struct declarations may be preceded by one or more `#require` directives:
+
+```silk
+#require <Expr>;
+struct Name {
+  field: int,
+}
+```
+
+These `#require` expressions are **struct requirements**: properties that must
+hold for all values constructed for that struct type.
+
+Rules ():
+
+- Struct requirement expressions may reference the struct's fields by name.
+- When Formal Silk syntax is present, the verifier proves all requirements at
+  struct literal construction sites (`Name{ ... }` and `new Name{ ... }`),
+  using the literal's field initializers and default initialization for any
+  omitted fields.
+- When a struct extends a base struct, the derived struct inherits the base
+  struct's requirements (all requirements must be proven at construction).
+- If the verifier cannot prove a requirement, compilation fails.
 
 Loop specifications (`#invariant`, `#variant`, `#monovariant`) follow a similar
 pattern for loops.
@@ -6540,9 +6562,9 @@ Mutability:
 
 ## Structs, Impl Blocks, Interfaces
 
-- Structs: `struct Packet { seq: u32, size: u16, flag: u8 }`
+- Structs: `struct Frame { seq: u32, size: u16, flag: u8 }`
   - pure data, well-defined layout.
-- Impl blocks: `impl Packet { fn size_bits(self: &Packet) -> u32 { ... } }`
+- Impl blocks: `impl Frame { fn size_bits(self: &Frame) -> u32 { ... } }`
 - Interfaces:
 
   ```silk
@@ -6561,8 +6583,8 @@ See `structs-impls-layout.md` and `interfaces.md` for details.
 
 - Regions (fixed-size allocation context):
   - declare: `const region arena: u8[1024];`
-  - use: `with arena { let p: &Packet = new Packet{ ... }; }`
-  - anonymous: `with 1024 { let p: &Packet = new Packet{ ... }; }`
+  - use: `with arena { let p: &Frame = new Frame{ ... }; }`
+  - anonymous: `with 1024 { let p: &Frame = new Frame{ ... }; }`
 - Buffers:
   - intrinsic `Buffer(T)` with `(ptr, capacity)`,
   - unsafe primitive underpinning higher-level collections.
@@ -6659,7 +6681,7 @@ Concept documents should be structured so readers can answer, quickly:
 - “What is this feature for?”
 - “What syntax does the compiler accept?”
 - “What are the rules and edge cases?”
-- “What works in the current compiler today?”
+- “What does the compiler accept?”
 
 Recommended sections:
 
@@ -6724,13 +6746,15 @@ These terms are used consistently across the spec:
 - **Block**: `{ stmt* }`, a scope boundary and the unit of structured control
   flow. (Whether blocks are also expressions depends on the concept; docs must
   be explicit.)
-- **Current compiler subset**: the set of features that parse, type-check, and
-  code-generate end-to-end in the current implementation.
+- **Implemented subset**: the set of features that parse, type-check, and
+  code-generate end-to-end in the compiler.
 
 ## Cross-References
 
 When describing a rule, link to the most relevant concept doc rather than
 restating it everywhere. Common cross-links include:
+
+- “Implementation status” sections near the top of concept docs.
 
 ==============================================================================
 DOCS: Literals Overview (language/literals-overview)
@@ -6747,7 +6771,7 @@ For first-time readers, a good path is:
 3. the specific literal docs below (syntax, semantics, and supported behavior).
 
 Returning readers typically want the “Implementation Status” section near the top
-of each literal concept doc, plus the “Relevant Tests” links for runnable
+of each literal concept doc, plus the “Tests” links for runnable
 examples.
 
 ## Literal Categories
@@ -6829,21 +6853,21 @@ heap and are represented as an `&Struct` reference in user code.
   counting (RC) for values originating from `new`.
 
 Important: this is currently an internal Silk-managed heap for Silk code, not an
-FFI pointer model. The current implementation does not permit `&Struct` for
+FFI pointer model. The compiler does not permit `&Struct` for
 non-opaque structs in `ext` signatures; only `&Opaque` handles may cross the
 
 #### Details
 
 - `new` is supported only in function bodies (top-level `let` initializers
-  cannot contain `new` in the current implementation).
+  cannot contain `new` in Silk).
 - `new` is supported only when the checker can determine a concrete reference
-  result type of the form `&Struct`. In the current implementation this happens
+  result type of the form `&Struct`. in Silk, this happens
   in two ways:
-  - from an expected type context `&Struct` (for example `let x: &Packet = new
-    Packet{ ... };` or as a call argument where the parameter type is `&Struct`)
+  - from an expected type context `&Struct` (for example `let x: &Frame = new
+    Frame{ ... };` or as a call argument where the parameter type is `&Struct`)
   - from the `new` operand itself when it names a struct type (for example
-    `let x = new Packet{ ... };` or `let x = new Packet(...);`), which allows
-    `let` bindings to infer `&Packet` without an explicit annotation
+    `let x = new Frame{ ... };` or `let x = new Frame(...);`), which allows
+    `let` bindings to infer `&Frame` without an explicit annotation
 - Only non-opaque `struct` types are supported for `new`.
 - Reference counting is applied only to `&Struct` values that originate from
   `new` (borrowed stack references are not treated as RC-managed values).
@@ -7229,7 +7253,7 @@ fn main () -> int {
 
 ## Surface Syntax (Current Lexer)
 
-In the current implementation, numeric literal tokens are recognized as:
+Numeric literal tokens are recognized as:
 
 - **Integer literal**:
   - decimal digits (`[0-9]+`),
@@ -7338,7 +7362,7 @@ fn main () -> int {
 ## Related Documents
 
 
-## Relevant Tests
+## Tests
 
 - Integer literal contextual typing (`u8` parameters):
 - Integer wrap behavior in arithmetic:
@@ -7364,7 +7388,7 @@ The language includes the following operators and delimiters:
 - Assignment and compound assignment: `=`, `+=`, `-=`, `*=`, `/=`.
 - Increment/decrement: `++`, `--` (prefix and postfix).
 - Arithmetic: `+`, `-`, `*`, `/`, `%`.
-  - In the current implementation:
+  - Currently:
     - integer operands support `+`, `-`, `*`, `/`, and `%`,
     - floating-point operands (`f32`/`f64`) support `+`, `-`, `*`, and `/`
       (no `%`).
@@ -7374,7 +7398,7 @@ The language includes the following operators and delimiters:
       - `Instant + Duration`, `Duration + Instant`, `Instant - Duration`,
       - and `Instant - Instant` (producing a `Duration`).
 - Bitwise: `&`, `|`, `^`, `~`, `<<`, `>>`.
-  - In the current implementation, bitwise operators are defined for
+  - Currently, bitwise operators are defined for
     integer operands (`int` and the fixed-width integer types):
     - `&`, `|`, `^` perform bitwise AND/OR/XOR on two integer values of the
       same type and produce a result of that same type.
@@ -7385,7 +7409,7 @@ The language includes the following operators and delimiters:
       signed integers (`i*`/`int`) and a logical right shift for unsigned
       integers (`u*`).
 - Comparison: `==`, `!=`, `<`, `<=`, `>`, `>=`.
-  - In the current implementation, comparisons are defined for both integer
+  - Currently, comparisons are defined for both integer
     operands and floating-point operands of the same type.
   - In Silk, `==` and `!=` are also defined for `bool`
     operands.
@@ -7405,7 +7429,7 @@ The language includes the following operators and delimiters:
     - `Some(x) == Some(y)` compares the payload values for equality (recursively
       for nested optionals),
     - and `!=` is the logical negation of `==`.
-    - In the current implementation, `None` and `Some(...)` can appear in
+    - Currently, `None` and `Some(...)` can appear in
       equality expressions when the other operand has an optional type (for
       example `opt == None` and `opt == Some(x)`), using that other operand’s
       type to infer the optional payload type.
@@ -7417,10 +7441,10 @@ The language includes the following operators and delimiters:
     everything (including itself), and ordered comparisons (`<`, `<=`, `>`,
     `>=`) are false when either operand is `NaN`.
 - Logical: `!`, `&&`, `||`.
-  - In the current implementation:
+  - Currently:
     - `!` is supported for `bool` operands.
 - Member and scope: `.`, `::`, `?.`.
-- In the current implementation:
+- Currently:
   - `.` and `::` are supported,
   - and `?.` is supported for optional field access on the supported `struct`
 - Casts: `as` and `as raw` (postfix).
@@ -7437,7 +7461,7 @@ The language includes the following operators and delimiters:
   - This propagates typed errors from an error-producing call to the enclosing
 - Ranges: `...`, `..=`, `..`.
 - Other punctuation: `?`, `??`, `->`, `=>`, `,`, `;`, `(`, `)`, `{`, `}`, `[`, `]`, `_`, `:`.
-  - In the current implementation, `??` is supported for optionals in the
+  - Currently, `??` is supported for optionals in the
     current backend subset (including scalar, `string`, and the current
     `struct` subset, plus nested optionals in the supported payload subset;
     annotations (`T?`) and as the postfix typed error propagation operator for
@@ -7456,7 +7480,7 @@ expression statement.
 
 Rules:
 
-- The left-hand side must be an assignable lvalue. In the current implementation, it may be:
+- The left-hand side must be an assignable lvalue. in Silk, it may be:
   - an identifier that refers to a local `let mut` binding, or
   - a struct field lvalue `name.field` where `name` is either:
     - a local `let mut` binding of a supported POD `struct`, or
@@ -7475,7 +7499,7 @@ Compound assignments are shorthand for “read-modify-write”:
 Rules:
 
 - The left-hand side must be an assignable lvalue (as described above for `=`).
-- In the current implementation, compound assignments are supported only for numeric
+- In Silk, compound assignments are supported only for numeric
   scalar types (integers and `f32`/`f64`), including numeric struct fields.
 - The compound assignment expression has type `void`.
 
@@ -7761,7 +7785,7 @@ conversions:
     between raw addresses and array/slice views:
     - `ptr as T[]` constructs a `T[]` slice view where the pointer component is
       `ptr` and the length component is a dedicated **unknown-length** sentinel
-      (in the current implementation, `i64.min`). The compiler does not validate
+      (currently, `i64.min`). The compiler does not validate
       the pointer value.
       - Indexing and assignment through an unknown-length slice are permitted
         but **unchecked**: the runtime performs no `index < len` bounds check.
@@ -7793,7 +7817,7 @@ conversions:
   - Limitation: the compiler must be able to resolve the
     receiver’s nominal type at the cast site so it can lower the implicit
     `serialize()` call. This includes name expressions, field accesses, calls,
-    and array/slice indexing (`arr[i] as T`) in the current implementation.
+    and array/slice indexing (`arr[i] as T`) in Silk.
 - `Deserialize(S)`-backed casts (explicit conversion via `deserialize(...)`):
   - When the target type provides a unique **static** method named `deserialize`
     matching the `std::interfaces::Deserialize(S)` surface (`fn deserialize(value: S) -> Self`),
@@ -8007,7 +8031,7 @@ Examples from the spec:
 
 The compiler infers the optional’s element type from context when possible.
 
-In the current implementation, equality comparisons provide optional type
+Equality comparisons provide optional type
 context for `None` / `Some(...)` operands, so forms like `opt == None` and
 `opt == Some(value)` type-check when `opt` has type `T?`.
 
@@ -8233,7 +8257,7 @@ Rules:
 - `import` declarations identify dependencies and bring exported symbols
   from the imported package into scope in the importing module, subject to
   the visibility rules below.
-- In the current implementation:
+- Currently:
   - importing a package makes its exported `let` bindings with explicit
     type annotations visible as ordinary, unqualified names in the
     importing module (for example, `import util;` followed by `answer`
@@ -8344,7 +8368,7 @@ package app;
 import util;
 
 fn main () -> int {
-  // In the current implementation, both unqualified and qualified access are
+  // Currently, both unqualified and qualified access are
   // accepted after importing a package. Prefer the qualified form to make the
   // origin explicit.
   if util::add1(util::answer) != 42 {
@@ -8356,8 +8380,8 @@ fn main () -> int {
 
 ### Package imports resolve against the module set
 
-In the current implementation, a **package import** can only resolve if the
-package exists in the current module set.
+A **package import** resolves only if the package exists in the current module
+set.
 
 This matters most when you use package specifiers (`from "ns_pkg"`) or when you
 expect a package import to find a package that is not otherwise present.
@@ -8480,7 +8504,7 @@ Notes:
 - There is no combined `import foo, { bar } from "...";` form in the current grammar.
   Use separate `import` declarations.
 - For non-`std/` file specifiers, include the `.slk` extension explicitly. (Only
-  `std/...` specifiers get `.slk` appended automatically in the current implementation.)
+  `std/...` specifiers get `.slk` appended automatically.)
 
 Rules:
 
@@ -8510,7 +8534,7 @@ Exported names for named imports:
 - Named imports can import:
   - exported values: `export fn`, `export let`, and exported `ext` bindings, and
   - type names: `struct`, `enum`, `error`, and `interface` declarations (treated
-    as visible across module boundaries in the current implementation),
+    as visible across module boundaries once the relevant module(s) are loaded into the module set),
   - exported type aliases: `export type ...;`, and
   - exported Formal Silk theories: `export theory` declarations (importable so
     they can be applied via `#theory Name(args);`).
@@ -8533,11 +8557,10 @@ Name binding rules:
 - Importing the same value name from multiple file imports without aliasing is
   an error.
 - Importing a value name that is already visible in the module (for example
-  via same-package scope or a package import) is treated as a no-op in the
-  current implementation **unless** it conflicts with a local declaration in
-  the importing module.
+  via same-package scope or a package import) is treated as a no-op **unless**
+  it conflicts with a local declaration in the importing module.
 - Importing a type name that is already visible in the module is treated as a
-  no-op in the current implementation.
+  no-op.
 
 ### Default imports and namespace imports
 
@@ -8667,7 +8690,7 @@ Rules:
   (including how exports appear in the resolver and back-end symbol tables)
   will be specified and implemented alongside the package graph in
 
-In the current implementation, most type names are treated as visible across
+Currently, most type names are treated as visible across
 module boundaries once the relevant module(s) are loaded into the module set.
 The `export` modifier is still recorded on type declarations so the
 package/export model can be tightened later without changing source.
@@ -8753,7 +8776,7 @@ Rules (current compiler subset):
   - The entry may rename the exported name: `export { localName as ExportedName };`.
 - Re-exported names are part of the module/package export surface, so other
   modules may import them via `import { Name } from "./barrel.slk";`.
-- In the current implementation, `export { ... }` supports values and exported
+- Currently, `export { ... }` supports values and exported
   Formal Silk theories (`theory` declarations). It does not export type names.
 
 ## Common Pitfalls
@@ -8770,7 +8793,7 @@ Rules (current compiler subset):
 - **Name collisions with named imports**: when importing from multiple modules, use
   `as` to rename one binding (`E2004`).
 
-## Relevant Tests
+## Tests
 
 - Package import + unqualified/qualified access:
 - Namespace imports (file and package):
@@ -8780,91 +8803,51 @@ Rules (current compiler subset):
 - Importing types and using exported methods:
 
 ==============================================================================
-DOCS: Refinement Types (language/refinement-types)
+DOCS: Refinement Types (Removed) (language/refinement-types)
 URL: /silk/docs/?p=language/refinement-types
 ==============================================================================
 
-# Refinement Types
+# Refinement Types (Removed)
 
-Refinement types are types annotated with logical predicates that constrain the
-set of values they may represent. They are a tool for making illegal states
-unrepresentable and for turning certain classes of bugs into compile-time
-errors.
+Silk previously had an experimental design for **refinement types** (types
+annotated with logical predicates, often written with `where`).
 
-current compiler subset. Today, Silk provides verification annotations
-(`#require`, `#assure`, `#assert`, `#invariant`, `#variant`, `#monovariant`) and formal Silk declarations (`#const`)
+That design has been removed in favor of a single mechanism: **Formal Silk**
+(`#require`, `#assure`, `#assert`, loop invariants/variants, and `theory`), with
+support for attaching `#require` directly to `struct` declarations.
 
-Note: in Silk, any use of a `where` predicate is verification syntax. When
-`where` predicates are implemented, their presence will require proof (VC
-generation + Z3 discharge) for the compiled module set, per
+## Replacement: Formal Silk struct requirements
 
-## Overview
+Use `#require` on a `struct` to state requirements that must hold for all
+values constructed for that struct type.
 
-A refinement type consists of:
-
-- a **base type** (for example `int`, `string`, `&T`, or a struct), and
-- a **predicate** that must hold for all values of the refinement type.
-
-The predicate is written in Silk’s specification expression language (the same
-expression grammar used by `#require` / `#assure`).
-
-## Proposed Surface Syntax
-
-One intended surface form is a record-like binder with a `where` clause:
+Example:
 
 ```silk
-type NonEmptyString = { s: string where std::length(s) > 0 };
-```
+#require id > 0;
+struct User {
+  id: int,
+}
 
-Notes:
+#assure result > 0;
+fn get_id () -> int {
+  return 1;
+}
 
-- `type` aliases are not implemented yet (this is design work).
-- The binder name (`s`) is a name for the value being constrained, usable
-  inside the predicate.
-
-## Checking Model
-
-The compiler/verifier discharges refinement predicates using:
-
-- constant-folding and local reasoning for literals and simple expressions,
-- facts established by control-flow (guards) when the verifier can prove them,
-- facts provided by contracts (`#require` / `#assure`) and invariants
-  (`#invariant`),
-- and, where necessary, explicit evidence via helper constructors or lemmas.
-
-When the compiler cannot prove a predicate, the program should fail to compile
-with a diagnostic that:
-
-- points to the predicate that could not be proven, and
-- suggests how to provide evidence (guard, constructor, or contract).
-
-## Relationship to `#require` / `#assure`
-
-Refinement types and function contracts are meant to compose:
-
-- A parameter of a refinement type encodes a precondition at the type level.
-- A refinement return type encodes a postcondition at the type level.
-
-Example (design-only):
-
-```silk
-type NonZeroInt = { n: int where n != 0 };
-fn safe_divide(numer: int, denom: NonZeroInt) -> int {
-  return numer / denom;
+fn main () -> int {
+  let user = User{ id: get_id() };
+  return user.id;
 }
 ```
 
-## Implementation Notes
+Rules ():
 
-In the current implementation:
-
-- there is no `type` alias declaration,
-- there is no `where` clause in types,
-- and there is no verifier that can prove user-defined predicates.
-
-The existing verification directives (`#require`, `#assure`, `#assert`,
-`#invariant`, `#variant`, `#monovariant`) are parsed, type-checked as `bool` where appropriate, and preserved
-as metadata, but they do not yet affect code generation.
+- `#require` expressions on a `struct` may reference that struct's fields by
+  name.
+- When Formal Silk syntax is present in the compiled module set, the verifier
+  proves these requirements at struct literal construction sites (`Type{ ... }`
+  and `new Type{ ... }`). If any requirement cannot be proven, compilation
+  fails.
 
 ==============================================================================
 DOCS: Regions (language/regions)
@@ -8919,13 +8902,13 @@ Rules:
 `with <region> { ... }` activates a named region binding:
 
 ```silk
-struct Packet { x: int }
+struct Frame { x: int }
 
 fn main () -> int {
   const region arena: u8[1024];
 
   with arena {
-    let p: &Packet = new Packet{ x: 1 };
+    let p: &Frame = new Frame{ x: 1 };
     // ...
   }
 
@@ -8937,11 +8920,11 @@ The `<region>` name may refer to any `Region`-typed binding, including a region
 parameter passed to a function:
 
 ```silk
-struct Packet { x: int }
+struct Frame { x: int }
 
 fn alloc_in (r: Region) -> int {
   with r {
-    let p: &Packet = new Packet{ x: 1 };
+    let p: &Frame = new Frame{ x: 1 };
     return p.x;
   }
 }
@@ -8953,11 +8936,11 @@ fn alloc_in (r: Region) -> int {
 backed by `<bytes>` writable bytes and activates it for the block:
 
 ```silk
-struct Packet { x: int }
+struct Frame { x: int }
 
 fn main () -> int {
   with 1024 {
-    let p: &Packet = new Packet{ x: 1 };
+    let p: &Frame = new Frame{ x: 1 };
     // ...
   }
   return 0;
@@ -8974,13 +8957,13 @@ Rules ():
 first `<bytes>` bytes of `<region>`:
 
 ```silk
-struct Packet { x: int }
+struct Frame { x: int }
 
 fn main () -> int {
   const region arena: u8[2048];
 
   with 1024 from arena {
-    let p: &Packet = new Packet{ x: 1 };
+    let p: &Frame = new Frame{ x: 1 };
     // ...
   }
 
@@ -9021,7 +9004,7 @@ Within a `with <region> { ... }` block:
 
 - any `new` allocation performed by the compiler’s `new` lowering uses the
   active region as its backing store,
-- allocations are **8-byte aligned** in the current implementation subset,
+- allocations are **8-byte aligned** in Silk,
 - if the region does not have enough remaining space, the program traps.
 
 Outside of a `with` block, `new` uses the current heap model described in
@@ -10593,8 +10576,8 @@ When decoding string literals, the compiler must normalize:
 This applies both to embedded newlines in multi-line literals and to escaped
 forms such as `\r`.
 
-Note: a sequence of two escapes like `"\r\n"` is still two escapes. In the
-current implementation, `\r` escapes become `\n`, so `"\r\n"` produces two line
+Note: a sequence of two escapes like `"\r\n"` is still two escapes. In Silk,
+`\r` escapes become `\n`, so `"\r\n"` produces two line
 feed bytes (`"\n\n"`).
 
 ## Examples
@@ -10679,7 +10662,7 @@ b`;
 ## Related Documents
 
 
-## Relevant Tests
+## Tests
 
 - Core string equality and ordering:
 - Escape coverage:
@@ -10708,7 +10691,7 @@ Structs and impl blocks are separated:
 Structs define a composite data type made of named fields:
 
 ```silk
-struct Packet {
+struct Frame {
   sequence: u32,
   size: u16,
   flag: u8,
@@ -10877,7 +10860,7 @@ rules for the corresponding field types on the target:
 Example (typical C layout on `linux/x86_64`):
 
 ```silk
-struct Packet {
+struct Frame {
   sequence: u32, // 4 bytes
   size: u16,     // 2 bytes
   flag: u8,      // 1 byte
@@ -10917,7 +10900,7 @@ aggregates without committing to a final packed layout. The trade-off is that
 the in-memory representation is not ABI-compatible with a C struct unless the
 struct is restricted to ABI-safe 64-bit slots.
 
-Example (current implementation): the `Packet` above is lowered as 3 scalar
+Example (current compiler): the `Frame` above is lowered as 3 scalar
 slots and occupies 24 bytes when stored in memory (3 × 8-byte cells), even
 though the intended C-like packed layout would be 8 bytes.
 
@@ -11636,8 +11619,7 @@ typed errors into:
 - explicit error structs/enums,
 - or a terminal action appropriate for the platform.
 
-`|` (and rejects exported C ABI surfaces with `|`) in the current
-implementation.
+(and rejects exported C ABI surfaces with `|`).
 
 ## Related proposals
 
@@ -12135,7 +12117,7 @@ Here `"world"` and `42` become varargs elements.
 ### Forwarding
 
 Because Silk does not yet have a general “spread” operator for calls, the
-current implementation supports forwarding a varargs pack when you pass a
+compiler supports forwarding a varargs pack when you pass a
 varargs binding as the final argument.
 
 ```silk
@@ -12336,6 +12318,12 @@ available to user programs.
   - `std::interfaces`
   - `std::map`
   - `std::set`
+  - `std::graphics::opengl`
+  - `std::graphics::opengles`
+  - `std::graphics::vulkan`
+  - `std::image::color`
+  - `std::image::png`
+  - `std::image::jpeg`
   - `std::algorithms`
   - `std::temporal`
   - `std::semver`
@@ -12634,8 +12622,8 @@ impl Args {
 
 ## String construction intrinsic
 
-The current implementation uses a reserved, compiler-backed intrinsic
-to construct `string` values at the ABI/IR level:
+The compiler provides a reserved, compiler-backed intrinsic to construct
+`string` values at the ABI/IR level:
 
 - `__silk_string_from_ptr_len(ptr: u64, len: int) -> string`
 
@@ -13091,7 +13079,7 @@ URL: /silk/docs/?p=std/env
 
 `std::env` provides access to process environment variables.
 
-The current implementation targets a hosted POSIX baseline (Linux/glibc) and is
+This module targets a hosted POSIX baseline (Linux/glibc) and is
 implemented on top of the pluggable `std::runtime::env` interface. WASI support
 is partially implemented: `get` works, while `set` remains unsupported (see
 “Platform notes”).
@@ -13484,7 +13472,7 @@ Within `{ ... }`:
 
 - optional **argument selector**:
   - digits: `0`, `1`, `2`, ...
-  - bracketed index: `[0]`, `[1]`, ... (reserved for future named arguments; the current implementation accepts only numeric indices)
+  - bracketed index: `[0]`, `[1]`, ... (reserved for future named arguments; currently only numeric indices are accepted)
 - optional **specifier string** (examples: `d`, `x`, `s`, `c`, `e`)
 - optional `:` followed by:
   - optional `fill` + `alignment`:
@@ -13977,6 +13965,67 @@ The module is expected to grow incrementally as we map more of the upstream API
 into a stable Silk wrapper layer.
 
 ==============================================================================
+DOCS: `std::graphics` — Graphics API Bindings (std/graphics)
+URL: /silk/docs/?p=std/graphics
+==============================================================================
+
+# `std::graphics` — Graphics API Bindings
+
+low-level, FFI-oriented bindings to common graphics APIs.
+
+This layer intentionally does **not** include:
+
+- window-system integration (creating a surface/context),
+- swapchain/window management,
+- higher-level rendering abstractions,
+- automatic resource lifetime management.
+
+Those pieces are platform- and engine-specific and are expected to live above
+`std::graphics` (either as future `std::...` modules or downstream packages).
+
+## Module Layout
+
+`std::graphics` is organized as:
+
+- `std::graphics` — shared conventions and basic pointer/handle aliases.
+- `std::graphics::opengl` — a small set of OpenGL types/constants and `ext`
+  function declarations.
+- `std::graphics::opengles` — the corresponding OpenGL ES subset.
+- `std::graphics::vulkan` — a small set of Vulkan types/constants and `ext`
+  function declarations.
+
+## Linking (Hosted `linux/x86_64` Baseline)
+
+These modules declare external symbols via `ext`. On the hosted baseline, they
+are typically provided by dynamic loader libraries such as:
+
+- OpenGL: `libGL.so.1`
+- OpenGL ES: `libGLESv2.so.2` (or a platform-specific GL ES loader)
+- Vulkan: `libvulkan.so.1`
+
+Downstream programs must link the appropriate library via the CLI:
+
+- `silk build ... --needed libGL.so.1`
+- `silk build ... --needed libGLESv2.so.2`
+- `silk build ... --needed libvulkan.so.1`
+
+and may also need to provide search paths via `--runpath` depending on how the
+system libraries are installed.
+
+## Safety Notes
+
+These APIs are inherently low-level:
+
+- Many functions are unsafe without an active context/device.
+- Pointer parameters are represented as `u64` addresses and must be valid for
+  the duration of the call.
+- Returned pointers (for example from `glGetString`) are borrowed views into
+  driver-managed memory and must not be freed.
+
+The initial `std::graphics` bindings focus on mechanical ABI mapping and leave
+ownership/lifetime management to higher layers.
+
+==============================================================================
 DOCS: `std::http` (std/http)
 URL: /silk/docs/?p=std/http
 ==============================================================================
@@ -14206,6 +14255,66 @@ Notes:
 - This API is blocking and intended for the hosted POSIX baseline.
 - For now, TLS configuration uses current defaults and does not verify
   certificates; this will be tightened as `std::tls` grows.
+
+==============================================================================
+DOCS: `std::image` — Image Codecs + Color (std/image)
+URL: /silk/docs/?p=std/image
+==============================================================================
+
+# `std::image` — Image Codecs + Color
+
+
+- `std::image::color` — color value types and conversion helpers (pure Silk),
+- `std::image::png` — PNG decode/encode backed by libpng,
+- `std::image::jpeg` — JPEG decode/encode backed by libjpeg-turbo.
+
+The codec modules focus on simple, ABI-safe entrypoints (currently RGBA8) that
+work with the current `ext` / C ABI subset.
+
+## Module Layout
+
+- `std::image` — shared image types.
+- `std::image::color` — Go-inspired color model helpers and common color value
+  types.
+- `std::image::png` — PNG decode/encode (`RGBA8`) via libpng.
+- `std::image::jpeg` — JPEG decode/encode (`RGBA8`) via libjpeg-turbo.
+
+## Vendored Dependencies + Linking
+
+On the hosted `linux/x86_64` baseline, the codec modules rely on vendored C
+libraries that are built via the repo dependency workflow:
+
+- libpng `v1.6.54`
+- libjpeg-turbo `3.1.3`
+
+Run:
+
+```sh
+zig build deps
+```
+
+When the vendored archives are present, `silk build` auto-links them when
+`std::image::png` / `std::image::jpeg` are present in the module set, and also
+when linking `.o`/`.a` inputs that reference the shim symbols.
+
+Why shims: libpng and libjpeg-turbo expose callback-heavy APIs and/or by-value
+struct arguments. The current Silk ABI subset is intentionally small, so the
+toolchain builds shim archives that provide scalar-ABI-friendly functions.
+
+Notes:
+
+- The PNG path requires zlib and libm at link/runtime (typically `libz.so.1`
+  and `libm.so.6`).
+- The JPEG path requires libm at link/runtime (typically `libm.so.6`).
+
+## Ownership + Safety
+
+- Decoders return owned pixel buffers; callers must `drop` them when finished.
+- Inputs are treated as borrowed byte slices; they must remain valid for the
+  duration of a call.
+- These modules do not provide sandboxing: decoding untrusted data can be
+  expensive and should be bounded by caller policy (size limits, timeouts,
+  etc.).
 
 ==============================================================================
 DOCS: `std::interfaces` (std/interfaces)
@@ -14766,8 +14875,48 @@ model for container element drops.
 
 ### Construction
 
-`HashMap` requires user-supplied hashing and equality functions (similar to the
-custom `Hash` and `KeyEqual` types of C++ `std::unordered_map`):
+`HashMap` requires user-supplied hashing and equality functions (similar in
+spirit to the `Hash` and `KeyEqual` customization points of C++
+`std::unordered_map`).
+
+For common key types, `std::map` provides default `hash_*` / `eq_*` helpers so
+callers do not need to write hashing and equality functions themselves.
+
+Default helper functions are provided for these key types:
+
+- `bool`
+- fixed-width integers (`u8`/`i8`/`u16`/`i16`/`u32`/`i32`/`u64`/`i64`/`u128`/`i128`)
+- platform integers (`int`, `usize`, `size`/`isize`)
+- `char`
+- `string` (bytewise FNV-1a)
+
+Example (using `std::map` defaults):
+
+```silk
+import std::map;
+import std::result;
+import std::memory;
+
+type Map = std::map::HashMap(u64, int);
+type InitResult = std::result::Result(Map, std::memory::AllocFailed);
+
+fn main () -> int {
+  let init_r: InitResult = Map.init(16, std::map::hash_u64, std::map::eq_u64);
+  if init_r.is_err() { return 1; }
+  let mut m: Map = match (init_r) {
+    InitResult::Ok(v) => v,
+    InitResult::Err(_) => Map.empty(std::map::hash_u64, std::map::eq_u64),
+  };
+  let put_r = (mut m).put(1, 10);
+  if put_r.is_err() { (mut m).drop(); return 2; }
+
+  let v: int = m.get(1) ?? 0;
+  (mut m).drop();
+  return v;
+}
+```
+
+Example (custom hashing/equality):
 
 ```silk
 import std::map;
@@ -14787,12 +14936,8 @@ fn main () -> int {
     InitResult::Ok(v) => v,
     InitResult::Err(_) => Map.empty(hash_u64, eq_u64),
   };
-  let put_r = (mut m).put(1, 10);
-  if put_r.is_err() { (mut m).drop(); return 2; }
-
-  let v: int = m.get(1) ?? 0;
   (mut m).drop();
-  return v;
+  return 0;
 }
 ```
 
@@ -15537,7 +15682,7 @@ impl TcpListener {
 Notes:
 
 - This API is currently **blocking** (no non-blocking sockets/event loop yet).
-- The current implementation targets hosted `linux/x86_64` via `std::runtime::net`
+- This module targets hosted `linux/x86_64` via `std::runtime::net`
   (POSIX sockets); `wasm32-wasi` has no Preview 1 sockets, so the runtime
   stubs return error values.
 - `TcpStream`/`TcpListener` wrap raw file descriptors; avoid copying these
@@ -15873,7 +16018,7 @@ URL: /silk/docs/?p=std/process
 `std::process` provides access to process-level operations that are not tied to
 environment variables, such as the current working directory.
 
-The current implementation targets a hosted POSIX baseline (Linux/glibc) and is
+This module targets a hosted POSIX baseline (Linux/glibc) and is
 implemented on top of the pluggable `std::runtime::process` interface. WASI
 support is partially implemented (see “Platform notes”).
 
@@ -16644,16 +16789,27 @@ In Silk:
 
 - `SetMap(T)` and `TreeSet(T)` store elements by value, but do not automatically
   run `Drop` for stored elements when entries are removed.
-- These sets are intended for “plain” value types:
-  - primitive scalars,
-  - `string` views,
-  - and small POD structs over those primitives.
+- `SetMap(T)` and `TreeSet(T)` currently store each element in a single 8-byte
+  scalar slot (`as raw u64`). Multi-slot values such as `string` (and most
+  structs) are not supported as set elements yet.
 - Avoid storing Drop-managed structs as set elements until the compiler has
   complete Drop integration for values stored inside container memory.
 
 ## Hash Set (`SetMap(T)`)
 
 ### Core API
+
+`SetMap` requires user-supplied hashing and equality functions.
+
+For common element types, `std::set` provides default `hash_*` / `eq_*` helpers
+so callers do not need to write hashing and equality functions themselves.
+
+Default helper functions are provided for these element types:
+
+- `bool`
+- fixed-width integers (`u8`/`i8`/`u16`/`i16`/`u32`/`i32`/`u64`/`i64`/`u128`/`i128`)
+- platform integers (`int`, `usize`, `size`/`isize`)
+- `char`
 
 `SetMap(T)` provides:
 
@@ -18366,7 +18522,7 @@ See also:
 `std::websocket` is a protocol layer that upgrades an HTTP/1.1 connection to a
 WebSocket and then sends/receives WebSocket frames.
 
-Design goals (current implementation):
+Design goals:
 
 - Work for hosted POSIX builds using `std::net`.
 - Be fully interoperable with other WebSocket implementations (browsers,
@@ -18729,6 +18885,8 @@ distribution:
 - `std::buffer` — typed, width-oriented buffer utilities built on top of
 - `std::strings` — UTF-8 text utilities and owned string building.
 - `std::math` — linear algebra utilities (vectors/matrices) for graphics and
+- `std::graphics` — low-level graphics API bindings (OpenGL, OpenGL ES, Vulkan;
+- `std::image` — image codecs + color utilities (PNG via libpng, JPEG via
 - `std::crypto` — cryptography primitives (hosted baseline via libsodium; see
 - `std::uuid` — UUID primitives (v1/v3/v4/v5/v6/v7/v8) with parsing/formatting
 - `std::semver` — Semantic Versioning (SemVer 2.0.0) parsing and precedence
@@ -19509,14 +19667,14 @@ Then:
 For more CLI examples (including stdlib use, wasm outputs, and library/object
 
 
-## Supported behavior vs Full Design
+## Supported Behavior vs Full Design
 
 The language docs describe both:
 
 - the full language design, and
-- the current implemented subset.
+- the implemented subset.
 
-For “supported behavior”:
+For supported behavior:
 
   unsupported features.
 
@@ -19721,6 +19879,7 @@ URL: /silk/docs/?p=usage/editor-textmate
 
 # TextMate Grammar (tmLanguage)
 
+This repository ships a TextMate grammar for Silk under `textmate/silk.tmLanguage.json`. It provides syntax highlighting for editors that consume tmLanguage grammars (TextMate, VS Code, Sublime Text, Nova, and others).
 
 ## Scope and File Extension
 
@@ -19735,6 +19894,8 @@ URL: /silk/docs/?p=usage/editor-textmate
 3. Open an `.slk` (or `.silk`) file and confirm it is recognized as `Silk`.
 
 ## VS Code
+
+A grammar-only VS Code extension is included under `textmate/vscode/`. To try it, open that directory in VS Code and press `F5` to launch an Extension Development Host.
 
 ==============================================================================
 DOCS: Tutorial 1: your first program (usage/tutorials/01-first-program)
@@ -20431,7 +20592,7 @@ The initial implementation is intentionally smaller and focuses on:
   - code `0` on success,
 - `silk test [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--filter <pattern>] [--package <dir|manifest>] <file> [<file> ...]` — compile and run language-level `test` declarations found in the module set, emitting TAP output:
   - uses TAP version 13 formatting (`TAP version 13`, `1..N`, `ok`/`not ok` lines),
-  - in the current implementation, each test runs in its own process so a failing `assert` (panic/abort) does not stop the whole suite,
+  - each test runs in its own process, so a failing `assert` (panic/abort) does not stop the whole suite,
   - the supported code generation subset matches `silk build` for the active target (initially `linux/x86_64`).
   - `--filter <pattern>` runs only tests whose display name contains `<pattern>` (substring match).
   - when `<file> ...` inputs are omitted and `--package` is also omitted, but `./silk.toml` exists, `silk test` behaves as if `--package .` was provided.
@@ -20521,7 +20682,7 @@ The initial implementation is intentionally smaller and focuses on:
     as ordinary source files),
 - user-provided `package std::...;` modules continue to override the default
   std implementation for the same package names.
-- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]` (or `--out <path>`) — for now:
+- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--emit bin|asm] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]` (or `--out <path>`) — for now:
   - inputs are classified by extension:
     - `.slk` — Silk source files (compiled as the module set),
     - `.o` — ELF relocatable objects linked into `--kind executable|shared` outputs (and included in `--kind static` archives),
@@ -20539,7 +20700,7 @@ The initial implementation is intentionally smaller and focuses on:
     - `--package-target <name>` selects one or more manifest `[[target]]` entries by name (repeatable; `--pkg-target` is accepted as an alias),
       - when omitted, the compiler builds every manifest `[[target]]` entry by default,
     - when building multiple targets (the default when `--package-target` is omitted, or when it is repeated), per-output flags are rejected:
-      `-o/--out`, `--kind`, `--arch`, `--target`, `--c-header`, `--needed`, `--runpath`, `--soname`,
+      `-o/--out`, `--kind`, `--emit`, `--arch`, `--target`, `--c-header`, `--needed`, `--runpath`, `--soname`,
     - `-o/--out` is optional only when building a single target (defaults to the target’s `output` or a computed default under `build/`),
     - package dependencies are loaded from the manifest’s `[dependencies]` table,
   - when `-o/--out` or `--c-header` includes parent directories that do not exist yet, the compiler creates them (like `mkdir -p`),
@@ -20602,7 +20763,7 @@ The initial implementation is intentionally smaller and focuses on:
       - in addition to conditions, boolean *value* positions (for example `let flag: bool = a && b;` and `return a || b;` in `bool`-returning helpers) support the same boolean expression subset and preserve short-circuit evaluation,
       - use `break;` and `continue;` inside `while` loops,
       - allow call expressions as standalone statements (discarding the returned value),
-      - allow assignment and compound assignment to `let mut` locals by name (`x = expr;`, `x += y;`); in the current implementation the left-hand side must be an identifier, `=` is supported for all currently supported value types (including `string`, the supported `struct` subset, and optionals of those), and compound assignments are supported only for numeric scalar locals,
+      - allow assignment and compound assignment to `let mut` locals by name (`x = expr;`, `x += y;`); the left-hand side must be an identifier; `=` is supported for all currently supported value types (including `string`, the supported `struct` subset, and optionals of those); compound assignments are supported only for numeric scalar locals,
         - integer-like scalars (`bool` and integers) use up to 6 general-purpose registers (`rdi`, `rsi`, `rdx`, `rcx`, `r8`, `r9`),
         - `f32`/`f64` use up to 8 XMM registers (`xmm0`..`xmm7`),
         - remaining scalar arguments are spilled to the stack in order,
@@ -20629,7 +20790,7 @@ The initial implementation is intentionally smaller and focuses on:
       - constructing optionals via `None` and `Some(<expr>)` for those payload types,
       - `==` / `!=` comparisons over those optionals (tag + payload equality; nested optionals compare recursively); `None` / `Some(...)` can be used directly in equality expressions when the other operand provides the optional type context (for example `opt == None` and `opt == Some(x)`),
       - accessing fields of optional structs via optional field access (`opt?.field`), producing an optional result of the field type (`FieldType?`),
-      - matching on optionals via `match <scrutinee> { None => <expr>, Some(<name|_>) => <expr>, }` (exactly one `None` arm and one `Some(...)` arm; arm bodies are expressions in the current implementation),
+      - matching on optionals via `match <scrutinee> { None => <expr>, Some(<name|_>) => <expr>, }` (exactly one `None` arm and one `Some(...)` arm; arm bodies are expressions),
       - unwrapping optionals via `??` with short-circuit evaluation of the fallback expression (including unwrapping `T??` to `T?`),
       - and passing/returning optionals between helpers at ABI boundaries as `(bool tag, payload0, payload1, ...)`, where the payload slots follow the lowering of the underlying non-optional type (for example `string?` is `(bool, u64 ptr, i64 len)`).
     - on `linux/x86_64`, the current backend also supports a limited external call subset:
@@ -20747,18 +20908,18 @@ Top-level commands:
   - Prints a human-readable error on stderr and exits non-zero for invalid programs.
 - `silk test [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--filter <pattern>] [--package <dir|manifest>] <file> [<file> ...]`:
   - Compiles and runs each test, emitting TAP version 13 output.
-  - In the current implementation, each test runs in its own process so a failing `assert` (panic/abort) does not stop the whole suite.
+  - Each test runs in its own process, so a failing `assert` (panic/abort) does not stop the whole suite.
   - Optimization:
     - `-O <0-3>` selects the optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`).
-    - In the current implementation, `-O1`+ prunes unused extern symbols before code generation (typically reducing output size and stdlib linkage).
+    - `-O1`+ prunes unused extern symbols before code generation (typically reducing output size and stdlib linkage).
     - For IR-backed native executable builds, `-O1`+ also prunes unreachable functions from the executable entrypoint (function-level dead-code elimination).
   - When `--filter <pattern>` is provided, only tests whose display name contains `<pattern>` are executed.
   - When `<file> ...` inputs are omitted and `--package` is also omitted, but `./silk.toml` exists, `silk test` behaves as if `--package .` was provided.
-- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <file> [<file> ...] -o <path> [--kind executable|object|static|shared] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]` (or `--out <path>`):
+- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <file> [<file> ...] -o <path> [--kind executable|object|static|shared] [--emit bin|asm] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]` (or `--out <path>`):
   - Reads one or more input files, runs the same front-end pipeline as `check`.
   - Optimization:
     - `-O <0-3>` selects the optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`).
-    - In the current implementation, `-O1`+ prunes unused extern symbols before code generation.
+    - `-O1`+ prunes unused extern symbols before code generation.
     - For `--kind executable` builds, `-O1`+ also prunes unreachable functions from the executable entrypoint (function-level dead-code elimination), typically reducing output size.
   - When `--package` is provided:
     - input files must be omitted,
@@ -20766,7 +20927,7 @@ Top-level commands:
     - `--package-target <name>` selects one or more manifest `[[target]]` entries by name (repeatable; `--pkg-target` is accepted as an alias),
       - when omitted, the compiler builds every manifest `[[target]]` entry by default,
     - when building multiple targets (the default when `--package-target` is omitted, or when it is repeated), per-output flags are rejected:
-      `-o/--out`, `--kind`, `--arch`, `--target`, `--c-header`, `--needed`, `--runpath`, `--soname`,
+      `-o/--out`, `--kind`, `--emit`, `--arch`, `--target`, `--c-header`, `--needed`, `--runpath`, `--soname`,
     - when building a single target, `-o/--out` is optional (defaults to that target’s `output` or a computed default under `build/`).
   - Target selection:
     - `--arch <arch>` and `--target <triple>` are mutually exclusive; omit both to use the default target.
@@ -20780,6 +20941,10 @@ Top-level commands:
     - `--kind object`: build an ELF64 relocatable object (`.o`) on `linux/x86_64`,
     - `--kind static`: build a static library (`.a`) on `linux/x86_64`,
     - `--kind shared`: build a shared library (`.so`) on `linux/x86_64`.
+  - Emission:
+    - `--emit bin` (default) emits the selected binary artifact at `<path>`,
+    - `--emit asm` writes an `objdump`-style disassembly (Intel syntax) of the selected output on `linux/x86_64` and writes it to `<path>`,
+    - `-S` is accepted as an alias of `--emit asm` and defaults to `--kind object` when `--kind` is not set.
   - Dynamic dependencies:
     - `--needed <soname>` adds a `DT_NEEDED` entry for executable and shared outputs; it may be repeated,
     - `--runpath <path>` (or `--rpath <path>`) adds a runpath element for executable and shared outputs; it may be repeated (joined with ':' into `DT_RUNPATH`),
@@ -20802,7 +20967,7 @@ Top-level commands:
       - any use of `async`, `task`, `await`, `yield`, or capturing closures is rejected with `E2027`,
       - region-backed `new` inside `with` is still permitted.
     - `--noheap` is currently incompatible with `--debug` (debug panic traces require `malloc`/`free`).
-  - For the supported subset, emits the selected artifact at `<path>`.
+  - For the supported subset, emits the selected artifact (or an assembly listing when `--emit asm` is selected) at `<path>`.
   - C99 header emission (for downstream consumers of exported symbols):
     - `--c-header <path>` writes a generated C header at `<path>` that declares the root package’s exported symbols (`export fn` prototypes and `export let` extern declarations) for consumption from C/C++,
     - this option is only meaningful for non-executable outputs (`--kind object|static|shared`) and is rejected for `--kind executable`,
@@ -20876,7 +21041,7 @@ Rules:
   the directory containing the package.
 - If `build.silk` does not exist, `silk build --build-script` fails.
 - The build script is executed as a hosted native program on the build host.
-  In the current implementation, this is supported only on `linux/x86_64`.
+  This is currently supported only on `linux/x86_64`.
 - The build script’s stdout is parsed as a manifest and used for the remainder
   of the build in place of reading `<package_root>/silk.toml`.
 - The build script may write logs to stderr; they are forwarded by the driver.
@@ -20899,8 +21064,7 @@ Build scripts are arbitrary code execution.
 
 For this reason:
 
-- build scripts are **not** run implicitly by `silk build` in the current
-  implementation; they require `--build-script`,
+- build scripts are **not** run implicitly by `silk build`; they require `--build-script`,
 - downstream tooling (package managers, CI, editor integrations) MUST treat
   build scripts as untrusted inputs unless they are pinned and reviewed.
 
@@ -21098,8 +21262,8 @@ The initial C header provided in this repository defines:
   configurations that enable both.
 
   `silk_compiler_set_optimization_level` selects the optimization level (0-3),
-  matching the CLI `-O` flag. The default is level 0 unless overridden. In the
-  current implementation, level 1+ enables lowering-time pruning of unused
+  matching the CLI `-O` flag. The default is level 0 unless overridden. Level
+  1+ enables lowering-time pruning of unused
   extern symbols before code generation. For IR-backed native executable
   builds, it also prunes unreachable functions from the executable entrypoint
   (function-level dead-code elimination), typically reducing output size and
@@ -21686,11 +21850,10 @@ eventually, the `silk` CLI, the compiler enforces a simple, explicit entrypoint:
   - returns `int`,
   - serves as the process entrypoint when an executable is produced.
 
-At the current implementation stage, this requirement is enforced by the
-front-end (via `silk_compiler_build`) and a minimal back-end
-that currently supports only constant integer `main` functions. This is a
-temporary measure; the long-term back-end is a true Silk code generator, not
-a C transpiler.
+In the initial bring-up, this requirement is enforced by the front-end (via
+`silk_compiler_build`) and a minimal back-end that supports only constant
+integer `main` functions. This is a temporary measure; the long-term back-end
+is a true Silk code generator, not a C transpiler.
 
 ## Module Layout (Draft)
 
@@ -22034,7 +22197,7 @@ tables. Module-/package-scoped tables are heap-backed to avoid stack overflows
 when compiling large module sets, while some per-function scratch state is
 still stack-backed.
 
-When these limits are exceeded, the current implementation typically reports
+When these limits are exceeded, the compiler typically reports
 `E2002` (“unsupported expression in Silk”) because the checker
 uses `CheckError.UnsupportedExpression` as a shared “not supported yet” / “hit
 an internal cap” path. This will be refined into dedicated “limit exceeded”
@@ -22067,7 +22230,7 @@ Current caps (`src/lower_ir.zig`):
 
 - **Lowering binding environment size (per function)**: **1024**
   - This is the maximum number of simultaneously in-scope bindings that the IR
-    lowerer can track in the current implementation.
+    lowerer can track.
 - **Type-alias resolution depth**: **256**
   - This bounds recursive/chain alias resolution during lowering to avoid
     runaway recursion in pathological cases.
@@ -22172,8 +22335,7 @@ typed representation is used by:
   register/stack conventions and any sign/zero-extension rules when
   additional integer widths are introduced.
 
-In the current implementation, this type information is carried on each
-`IrFunction` as:
+This type information is carried on each `IrFunction` as:
 
 - a function signature (`param_types` and `result_types`), and
 - a `value_types` table that maps each `ValueId` slot to a scalar type.
@@ -22400,7 +22562,7 @@ explicit extern-data table and load instruction:
 
 ## Relationship to Front-End and Back-End
 
-Short term (current implementation):
+Short term:
 
 - The IR is now part of the primary executable build path on `linux/x86_64`:
   - the front-end (parser + checker) produces an `ast.Module`,
@@ -22503,7 +22665,7 @@ the `Call` instruction:
     `ValueId`s (in order).
 - Native back-ends (starting with the existing ELF64 emitter) lower
   `Call` / `Return` to a concrete calling convention:
-  - for `linux/x86_64`, the current implementation follows a simplified
+  - for `linux/x86_64`, the backend follows a simplified
     subset of the System V AMD64 ABI for scalar parameters:
     - integer-like scalars (`Bool` and integers) use the first six
       general-purpose registers (`rdi`, `rsi`, `rdx`, `rcx`, `r8`, `r9`),
@@ -22591,7 +22753,7 @@ The package name used for package imports (e.g. `import ui from "ui";`) and as
 the default package name for modules that omit an explicit `package ...;`
 declaration.
 
-In the current implementation, `name` MUST be a valid Silk package path:
+`name` MUST be a valid Silk package path:
 
 - one or more identifiers separated by `::`
 - each identifier matches `[A-Za-z_][A-Za-z0-9_]*`
@@ -22606,8 +22768,8 @@ Examples:
 
 Free-form version string (commonly `MAJOR.MINOR.PATCH`).
 
-In the current implementation, when building from a package manifest, the
-compiler surfaces this value to runtime code via `std::runtime::build::version()`
+When building from a package manifest, the compiler surfaces this value to
+runtime code via `std::runtime::build::version()`
 (otherwise it defaults to `"0.0.0"`).
 
 Additional optional metadata fields MAY be present under `[package]` (for
@@ -22628,7 +22790,7 @@ Rules:
 
 - Patterns are evaluated against forward-slash (`/`) relative paths rooted at
   the manifest directory.
-- Supported glob syntax (current implementation):
+- Supported glob syntax:
   - `*` matches any characters within a single path segment.
   - `**` matches zero or more path segments.
 - If `include` is omitted, the default is to include all `**/*.slk` under the
@@ -22649,7 +22811,7 @@ ui = { path = "../libs/silk-ui", sha256 = "sha256:0123456789abcdef..." }
 Fields:
 
 - The dependency key (`ui` above) is the package import name used in source
-  (`import ui from "ui";`). In the current implementation, this MUST match the
+  (`import ui from "ui";`). This MUST match the
   dependency’s own manifest `package.name`.
 - `path` (optional): local filesystem path to the dependency package root,
   resolved relative to the importing manifest directory when not absolute.
@@ -22934,7 +23096,7 @@ The server provides a minimal implementation of `textDocument/completion`:
   - namespace completions after `::` for known packages and namespace imports,
   - member completions for struct fields and methods after `.` when the receiver type is known (including locals with type annotations or struct-literal/cast inference),
   - struct-literal field suggestions in `Type { ... }` expressions when the cursor is in a field-name position (before the `:`).
-- The current implementation:
+- Currently:
   - returns completion items with `label`, `kind`, and `detail` populated when symbol data is available,
   - attaches a plaintext signature preview for functions and methods in completion documentation,
   - filters results by the identifier prefix immediately preceding the cursor position,
@@ -23142,6 +23304,11 @@ This document defines how we validate the compiler, ABI, and standard library.
 - For critical features (especially FFI and ABI), maintain **parallel test cases in Zig and C**:
   - Zig tests verify language semantics and internal representations.
   - C tests verify ABI conformance and interop.
+- For native codegen quality, maintain a small set of **end-to-end guardrails** that:
+  - build representative Silk code to `linux/x86_64` objects,
+  - disassemble with `objdump` using a stable format (no addresses / no raw bytes),
+  - and compare instruction counts + stack frame sizes against a C reference built with the host `cc`,
+  so obvious regressions (exploding instruction counts, excessive spills) are caught early.
 - When a bug is found:
   - add a regression test in Zig and, where relevant, in C,
 
@@ -23891,7 +24058,7 @@ bool silk_compiler_set_std_archive(SilkCompiler *compiler,
 
 These configuration functions affect dynamic metadata emitted for executable and
 shared library outputs on platforms/backends that support dynamic linking (the
-current implementation: `linux/x86_64`).
+current target: `linux/x86_64`).
 
 #### `silk_compiler_add_needed_library`
 
@@ -23954,7 +24121,7 @@ bool silk_compiler_set_optimization_level(SilkCompiler *compiler,
   - `2` — balanced optimization,
   - `3` — aggressive optimization.
 - The default optimization level is `0` unless overridden.
-- In the current implementation, `level >= 1` enables lowering-time pruning of
+- `level >= 1` enables lowering-time pruning of
   unused extern symbols before code generation. This typically reduces output
   size and over-linking when using the prebuilt stdlib archive (`libsilk_std.a`)
   to satisfy auto-loaded `import std::...;` modules.
@@ -24323,6 +24490,10 @@ Output selection:
 
 - `-o <path>`, `--out <path>` — output path. If parent directories do not exist, `silk` creates them.
 - `--kind executable|object|static|shared` — output kind.
+- `--emit bin|asm` — emission mode:
+  - `bin` (default) emits the selected binary artifact at `-o` / `--out`,
+  - `asm` writes an `objdump`-style disassembly (Intel syntax) of the selected output on `linux/x86_64` and writes it to `-o` / `--out`.
+- `-S` — alias of `--emit asm` (defaults to `--kind object` when `--kind` is not set).
 
 Target selection:
 
@@ -24346,7 +24517,7 @@ Package builds:
 - `--build-script` — compile and run `<package_root>/build.silk` and use its stdout as the manifest.
 - `--package-target <name>` — select one or more manifest `[[target]]` entries by name (repeatable; `--pkg-target` is accepted as an alias).
   - when omitted, `silk build --package ...` builds every manifest `[[target]]` entry by default.
-  - when building multiple targets, per-output flags are rejected (`-o/--out`, `--kind`, `--arch`, `--target`, `--c-header`, `--needed`, `--runpath`, `--soname`).
+  - when building multiple targets, per-output flags are rejected (`-o/--out`, `--kind`, `--emit`, `--arch`, `--target`, `--c-header`, `--needed`, `--runpath`, `--soname`).
 
 Argument parsing:
 
@@ -24360,6 +24531,9 @@ silk build src/main.slk -o build/app
 
 # Build an object file (and emit a C header for exported symbols).
 silk build src/lib.slk --kind object -o build/lib.o --c-header build/lib.h
+
+# Emit an assembly listing (objdump-style disassembly) for an object build.
+silk build src/main.slk -S -O2 -o build/main.s
 
 # Link an extra C object into a Silk executable.
 cc -std=c99 -c -o build/extra.o src/extra.c
@@ -24779,7 +24953,7 @@ Embedders should compare the runtime version returned by this function with the 
 
 ## Parameters
 
-- `out_major`, `out_minor`, `out_patch` — output pointers written on success. The current implementation tolerates `NULL` pointers and skips writing those components.
+- `out_major`, `out_minor`, `out_patch` — output pointers written on success. This API tolerates `NULL` pointers and skips writing those components.
 
 ## Return value
 
@@ -24917,7 +25091,7 @@ Target and linkage:
 Optimization:
 
 - `silk_compiler_set_optimization_level` accepts an integer level in the range documented by `include/silk.h`. The default is level 0 unless overridden.
-- In the current implementation, level 1+ enables lowering-time pruning of unused extern symbols before code generation (typically reducing output size and over-linking when using the prebuilt `libsilk_std.a` archive for auto-loaded `import std::...;` modules).
+- Level 1+ enables lowering-time pruning of unused extern symbols before code generation (typically reducing output size and over-linking when using the prebuilt `libsilk_std.a` archive for auto-loaded `import std::...;` modules).
 
 ## Sources
 
@@ -25015,7 +25189,7 @@ URL: /silk/docs/?p=man/silk.1
 - `silk repl`
 - `silk check [--nostd] [--std-root <path>] [--z3-lib <path>] [--debug] [--package <dir|manifest>] <file> [<file> ...]`
 - `silk test [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--filter <pattern>] [--package <dir|manifest>] <file> [<file> ...]`
-- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]`
+- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--emit bin|asm] [-S] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]`
 - `silk doc [--all] <file> [<file> ...] [-o <path>]`
 - `silk doc --man [--package <dir|manifest>] [--std-root <path>] <query> [-o <path>]`
 - `silk man <query>`
@@ -25083,7 +25257,7 @@ For the initial implementation, the supported options are:
   - `silk test [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--filter <pattern>] [--package <dir|manifest>] <file> [<file> ...]`:
     - `--help`, `-h` — show `test` usage and exit.
     - compiles and runs each test, emitting TAP version 13 output,
-    - in the current implementation, each test runs in its own process so a failing `assert` (panic/abort) does not stop the whole suite.
+    - each test runs in its own process, so a failing `assert` (panic/abort) does not stop the whole suite.
     - `-O <0-3>` — set optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`). `-O1`+ prunes unused extern symbols before code generation and prunes unreachable functions in executable builds (typically reducing output size).
     - `--filter <pattern>` — run only tests whose display name contains `<pattern>` (substring match).
     - `--package <dir|manifest>` (or `--pkg`) — load the module set from a package manifest (`silk.toml`) instead of explicit input files. When `--package` is provided:
@@ -25093,7 +25267,7 @@ For the initial implementation, the supported options are:
     - `--` — end of options; treat remaining args as file paths (even if they begin with `-`).
 
 - **Build command:**
-  - `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]`:
+  - `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--emit bin|asm] [-S] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]`:
     - `--help`, `-h` — show `build` usage and exit.
     - `-o <path>`, `--out <path>` — write the generated output to `<path>`.
       - if the parent directories of `<path>` do not exist, the compiler creates them (like `mkdir -p`).
@@ -25102,7 +25276,7 @@ For the initial implementation, the supported options are:
       - When `<file> ...` inputs are omitted and `--package` / `--pkg` is also omitted, but `./silk.toml` exists, `silk build` behaves as if `--package .` was provided.
     - `--package-target <name>` — select one or more manifest `[[target]]` entries by name (repeatable; `--pkg-target` is accepted as an alias).
       - when omitted, `silk build --package ...` builds every manifest `[[target]]` entry by default.
-      - when building multiple targets, per-output flags are rejected (`-o/--out`, `--kind`, `--arch`, `--target`, `--c-header`, `--needed`, `--runpath`, `--soname`).
+      - when building multiple targets, per-output flags are rejected (`-o/--out`, `--kind`, `--emit`, `--arch`, `--target`, `--c-header`, `--needed`, `--runpath`, `--soname`).
     - `--` — end of options; treat remaining args as file paths (even if they begin with `-`).
     - `--debug`, `-g` — enable debug build mode (supported subset, `linux/x86_64`):
       - failed `assert` prints a panic header + optional message + stack trace to stderr (via glibc `backtrace_symbols_fd`) before aborting, and
@@ -25123,6 +25297,10 @@ For the initial implementation, the supported options are:
       - `object` (ELF64 relocatable object on `linux/x86_64`)
       - `static` (static library archive on `linux/x86_64`)
       - `shared` (shared library on `linux/x86_64`)
+    - `--emit bin|asm` — select emission mode:
+      - `bin` (default) emits the selected binary artifact at the `-o` / `--out` path.
+      - `asm` writes an `objdump`-style disassembly (Intel syntax) of the selected output on `linux/x86_64` and writes it to the `-o` / `--out` path.
+    - `-S` — alias of `--emit asm` (defaults to `--kind object` when `--kind` is not set).
     - `--arch <arch>` — shorthand for selecting a known target:
       - `x86_64` / `amd64` → `linux-x86_64`,
       - `wasm32` → `wasm32-unknown-unknown`,
@@ -25134,7 +25312,7 @@ For the initial implementation, the supported options are:
       - `wasm32-unknown-unknown` (IR-backed wasm32 mode; emits a `.wasm` module exporting `memory` and exported functions, including `main` when present; `ext` declarations become imports under `env.<name>`; also supports export-only modules with no `main` for JS/Node-style embedding),
       - `wasm32-wasi` (IR-backed wasm32 WASI mode; emits `memory` and `_start () -> void`, imports `wasi_snapshot_preview1.proc_exit`, and calls Silk `fn main () -> int`; also supports export-only modules for embedding, which do not include `_start`),
       - unknown or unsupported triples currently cause `silk build` to fail with a “target not implemented” error.
-      - Note: wasm targets are only supported for `--kind executable` in the current implementation.
+      - Note: wasm targets are only supported for `--kind executable` currently.
     - `--arch` and `--target` are mutually exclusive; passing both is an error.
     - `--c-header <path>` — emit a generated C header declaring the root package’s exported symbols (C ABI consumption):
       - writes prototypes for `export fn` and `extern const` declarations for supported `export let` constants,
@@ -25439,8 +25617,8 @@ This document summarizes the key syntax and concepts from the Silk language in a
 ### Types (Surface Forms)
 
 - Booleans: `bool` — `true`, `false`.
-- Integers: `u8`, `i8`, `u16`, `i16`, `u32`, `i32`, `u64`, `i64`, `int`.
-- Floats: `f32`, `f64`.
+- Integers: `u8`, `i8`, `u16`, `i16`, `u32`, `i32`, `u64`, `i64`, `u128`, `i128`, `int`.
+- Floats: `f32`, `f64`, `f128`.
 - Char: `char`.
 - String: `string`.
 - Time: `Instant`, `Duration`.
@@ -25880,6 +26058,18 @@ Notes:
   ```silk
   let records: Record[] = [{ id: 123, data: "a" }, { id: 456, data: "b" }];
   let [a, b] = records;
+  ```
+
+  Enum destructuring is also supported:
+
+  ```silk
+  import std::result;
+
+  fn main () -> int {
+    type R = std::result::Result(int, int);
+    let Ok(value) = R.ok(7);
+    return value;
+  }
   ```
 
 #### 4.2 Functions: `fn` (plus `pure`, `async`, `task`)
@@ -26807,9 +26997,10 @@ At a high level, the language can be structured as:
   - `ModuleAsOpt ::= ('as' QualifiedName TypeArgListOpt) | ε`
 
   - `ImportDecl ::= 'import' ImportSpec ';'`
-  - `ImportSpec ::= ImportPath | FileImportSpec | FileDefaultImportSpec`
+  - `ImportSpec ::= ImportPath | FileImportSpec | FileDefaultImportSpec | AmbientFileImportSpec`
   - `ImportPath ::= ('::')? NameToken ('::' NameToken)*`
   - `ImportFrom ::= StringLiteral | PackagePath`
+  - `AmbientFileImportSpec ::= StringLiteral`
   - `FileImportSpec ::= '{' ImportBindingListOpt '}' 'from' ImportFrom`
   - `FileDefaultImportSpec ::= NameToken 'from' ImportFrom`
   - `ImportBindingListOpt ::= ImportBindingList | ε`
@@ -26833,7 +27024,8 @@ At a high level, the language can be structured as:
   appears before the declaration keyword (currently `fn`, `let`, `ext`, `type`,
   `struct`, `enum`, `theory`, `error`, and `interface`):
 
-  - `FnDecl ::= FnSpecs FnExportModifier FnModifierOpt 'fn' FnGenericParamListOpt FnNameOpt FnSignature Block`
+  - `FnDecl ::= FnSpecs FnExportModifier FnModifierOpt 'fn' FnGenericParamListOpt FnNameOpt FnSignature FnBody`
+  - `FnBody ::= Block | ';'`
   - `FnModifierOpt ::= FnModifier*`
   - `FnModifier ::= 'const' | 'pure' | 'task' | 'async'`
   - `FnGenericParamListOpt ::= GenericParamList | ε`
@@ -26892,11 +27084,11 @@ At a high level, the language can be structured as:
     - defaulted parameters must be **trailing** (once a parameter has a
       default, all subsequent parameters must also have defaults) because
       call syntax is positional-only in the current language subset,
-    - and in the current implementation, default expressions are restricted to
+    - and in the initial subset, default expressions are restricted to
       a constant/literal expression subset (no name references), so they can be
       inlined at call sites during lowering.
     - a parameter declared as `T?` with a default has two effective behaviors
-      in the current implementation subset:
+      in the initial subset:
       - if the default expression has type `T`, the parameter has effective
         type `T` (the argument may be omitted at call sites, but the callee
         sees a non‑optional value),
@@ -27004,7 +27196,7 @@ At a high level, the language can be structured as:
 
   Note: const-parameter-style generics (`N: int` parameters and integer literal
   type arguments like `Foo(u8, 1024)`) remain tracked work; the front-end parses
-  these surface forms but the current implementation focuses on type parameters
+  these surface forms but the compiler currently focuses on type parameters
   and monomorphization for type arguments.
 
   Exception: the nominal optional form `Option(T)` is recognized as sugar for
@@ -27026,7 +27218,7 @@ At a high level, the language can be structured as:
   - `TypeListOpt ::= TypeList | ε`
   - `TypeList ::= Type (',' Type)*`
   - `SimpleType ::= PrimitiveType | NamedType`
-  - `PrimitiveType ::= 'bool' | 'i8' | 'u8' | 'i16' | 'u16' | 'i32' | 'u32' | 'i64' | 'u64' | 'int' | 'f32' | 'f64' | 'char' | 'string' | 'void' | 'Instant' | 'Duration'`
+  - `PrimitiveType ::= 'bool' | 'i8' | 'u8' | 'i16' | 'u16' | 'i32' | 'u32' | 'i64' | 'u64' | 'i128' | 'u128' | 'int' | 'f32' | 'f64' | 'f128' | 'char' | 'string' | 'void' | 'Instant' | 'Duration'`
   - `NamedType ::= QualifiedName TypeArgListOpt`
   - `TypeArgListOpt ::= ('(' TypeArgListInnerOpt ')') | ε`
   - `TypeArgListInnerOpt ::= TypeArgListInner | ε`
@@ -27051,7 +27243,7 @@ At a high level, the language can be structured as:
   - `Stmt ::= LetStmt | SpecConstStmt | SpecAssertStmt | SpecTheoryDeclStmt | SpecTheoryStmt | AsyncBlockStmt | TaskBlockStmt | ExprStmt | IfStmt | LoopStmt | WhileStmt | ForStmt | MatchStmt | ReturnStmt | PanicStmt | AssertStmt | BreakStmt | ContinueStmt`
 
   - `LetStmt ::= ('const' | 'let' MutOpt | 'var') LetBinder TypeAnnotationOpt InitializerOpt ';'`
-  - `LetBinder ::= Identifier | '_' | LetTupleBinder | LetStructBinder | LetArrayBinder`
+  - `LetBinder ::= Identifier | '_' | LetTupleBinder | LetStructBinder | LetArrayBinder | LetEnumBinder`
   - `LetTupleBinder ::= '(' LetTupleBinderItemsOpt ')'`
   - `LetTupleBinderItemsOpt ::= LetTupleBinderItem (',' LetTupleBinderItem)* ','? | ε`
   - `LetTupleBinderItem ::= Identifier | '_'`
@@ -27061,6 +27253,9 @@ At a high level, the language can be structured as:
   - `LetArrayBinder ::= '[' LetArrayBinderItemsOpt ']'`
   - `LetArrayBinderItemsOpt ::= LetArrayBinderItem (',' LetArrayBinderItem)* ','? | ε`
   - `LetArrayBinderItem ::= Identifier | '_'`
+  - `LetEnumBinder ::= QualifiedName '(' LetEnumBinderItemsOpt ')'`
+  - `LetEnumBinderItemsOpt ::= LetEnumBinderItem (',' LetEnumBinderItem)* ','? | ε`
+  - `LetEnumBinderItem ::= Identifier | '_'`
   - `SpecConstStmt ::= '#const' Identifier '=' Expr ';'`
   - `SpecAssertStmt ::= '#assert' Expr ';'`
   - `SpecTheoryDeclStmt ::= '#theory' Identifier '(' TheoryParamsOpt ')' '{' TheoryBodyItem* '}'`
@@ -27118,7 +27313,7 @@ At a high level, the language can be structured as:
   - `match` as a statement (arms are blocks), used for typed errors as
     specified in `Typed Errors (`error`, `panic`, and `T | ErrorType...`)`.
 
-  In the current implementation, the `match` statement form is restricted to a
+  In the implemented subset, the `match` statement form is restricted to a
   call-expression scrutinee and the patterns listed above.
 
 - Expressions:
@@ -27185,8 +27380,8 @@ At a high level, the language can be structured as:
      it is restricted to `move <name>` where `<name>` is a local
     binding.
   - The type checker currently permits `new <expr>` only when it can determine a
-    concrete reference result type of the form `&Struct`. In the current
-    implementation this happens either:
+    concrete reference result type of the form `&Struct`. In the compiler, this
+    happens either:
     - from an expected `&Struct` type context (for example `let x: &Packet = new
       Packet{ ... };` or as a call argument whose parameter type is `&Struct`)
     - from the operand itself when it names the struct type (for example `let x
@@ -27289,7 +27484,7 @@ At a high level, the language can be structured as:
     slice of source text (e.g. `util::answer`),
   - simple function calls such as `helper()` or `util::helper(1, 2)` are
     parsed as call expressions using the `Postfix`/`CallSuffix` productions;
-    the current implementation supports calls to named functions, but the type checker
+    the compiler supports calls to named functions, but the type checker
     and back-end currently restrict which value types can appear at call boundaries;
     see ``silk` CLI` for the exact supported subset.
 
@@ -27344,6 +27539,14 @@ Implementation status (current compiler subset):
   literal type arguments (`Foo(N: int)`, `Foo(u8, 1024)`) (`Compiler Diagnostics`, `E2016`),
   and the removed builtin map type form (`map(K, V)`) (`E2017`; use
   `std::map::{HashMap, TreeMap}` instead).
+- Defined in the native backend subset: 128-bit scalar primitives
+  (`i128`, `u128`, `f128`).
+  - In the current scalar-slot model (`Structs, Impl Blocks, and Memory Layout`),
+    these primitives lower to **two 8-byte slots** (`lo: u64`, `hi: u64`).
+  - `f128` uses the IEEE‑754 binary128 bit pattern stored across those slots.
+  - On `linux/x86_64` in the current backend implementation, `f128` arithmetic
+    and some `as` casts lower to bundled runtime helper calls and rely on
+    `libgcc_s.so.1` for `__float128` builtins.
 - Typed errors (`error`, `panic`, and `T | ErrorType...`) are specified in
   `Typed Errors (`error`, `panic`, and `T | ErrorType...`)`. The current compiler models typed error
   contracts as an effect on function return types and expressions.
@@ -27359,7 +27562,7 @@ The core categories are:
 - Booleans: `bool`
   - Examples: `true`, `false`.
   - Notes: logical values.
-- Integers (fixed width): `u8`, `i8`, `u16`, `i16`, `u32`, `i32`, `u64`, `i64`
+- Integers (fixed width): `u8`, `i8`, `u16`, `i16`, `u32`, `i32`, `u64`, `i64`, `u128`, `i128`
   - Examples: `let n: i32 = 42;`.
   - Notes: signed/unsigned bit-widths.
 - Integer (platform): `int`
@@ -27370,7 +27573,7 @@ The core categories are:
   - Notes: unsigned/signed integer types whose width matches the target
     architecture pointer width (for example 64-bit on `linux/x86_64`).
   - Compatibility: `isize` is accepted as an alias for `size`.
-- Floats: `f32`, `f64`
+- Floats: `f32`, `f64`, `f128`
   - Examples: `let x: f64 = 3.14;`.
   - Notes: IEEE‑754.
 - Char: `char`
@@ -27507,8 +27710,11 @@ Rule (informal):
 Supported ctor-like method names (destination type opts in by defining these):
 
 - `T.int(value: int) -> T`
+- `T.i128(value: i128) -> T`
 - `T.u64(value: u64) -> T`
+- `T.u128(value: u128) -> T`
 - `T.f64(value: f64) -> T`
+- `T.f128(value: f128) -> T`
 - `T.bool(value: bool) -> T`
 - `T.char(value: char) -> T`
 - `T.string(value: string) -> T`
@@ -27518,8 +27724,11 @@ Supported ctor-like method names (destination type opts in by defining these):
 Selection (source type → constructor):
 
 - Signed integer primitives (`i8/i16/i32/i64/int/size/isize/Instant/Duration`) → `int`
+- Signed wide integer primitive (`i128`) → `i128`
 - Unsigned integer primitives (`u8/u16/u32/u64/usize`) → `u64`
+- Unsigned wide integer primitive (`u128`) → `u128`
 - Float primitives (`f32/f64`) → `f64`
+- Wide float primitive (`f128`) → `f128`
 - `bool` → `bool`
 - `char` → `char`
 - `string` → `string`
@@ -27766,7 +27975,7 @@ For first-time readers, a good path is:
 3. the specific literal docs below (syntax, semantics, and supported behavior).
 
 Returning readers typically want the “Implementation Status” section near the top
-of each literal concept doc, plus the “Relevant Tests” links for runnable
+of each literal concept doc, plus the “Tests” links for runnable
 examples.
 
 ### Literal Categories
@@ -27795,8 +28004,8 @@ See:
 
 ## Numeric Literals
 
-Numeric literals produce integer (`int`, `u8`, `i64`, …) and floating-point
-(`f32`, `f64`) values.
+Numeric literals produce integer (`int`, `u8`, `i128`, …) and floating-point
+(`f32`, `f64`, `f128`) values.
 
 In Silk, the sign is an operator: `-1` is a unary `-` expression applied to the
 integer literal token `1`, not a distinct “negative literal” token.
@@ -27820,7 +28029,7 @@ fn main () -> int {
 
 ### Surface Syntax (Current Lexer)
 
-In the current implementation, numeric literal tokens are recognized as:
+Numeric literal tokens are recognized as:
 
 - **Integer literal**:
   - decimal digits (`[0-9]+`),
@@ -27936,7 +28145,7 @@ fn main () -> int {
 - `Operators` (unary `-`, arithmetic, and `as` casts)
 - `Types` (primitive numeric type names)
 
-### Relevant Tests
+### Tests
 
 - Integer literal contextual typing (`u8` parameters):
   - `the runnable fixtures`
@@ -28031,8 +28240,8 @@ When decoding string literals, the compiler must normalize:
 This applies both to embedded newlines in multi-line literals and to escaped
 forms such as `\r`.
 
-Note: a sequence of two escapes like `"\r\n"` is still two escapes. In the
-current implementation, `\r` escapes become `\n`, so `"\r\n"` produces two line
+Note: a sequence of two escapes like `"\r\n"` is still two escapes. In Silk,
+`\r` escapes become `\n`, so `"\r\n"` produces two line
 feed bytes (`"\n\n"`).
 
 ### Examples
@@ -28120,7 +28329,7 @@ b`;
 - `Character Literals` (shared escape spellings)
 - `C99 ABI and `libsilk.a`` (C ABI string representation)
 
-### Relevant Tests
+### Tests
 
 - Core string equality and ordering:
   - `the runnable fixtures`
@@ -28241,7 +28450,7 @@ Rules:
 
 Inside a character literal, `\` introduces an escape sequence.
 
-Supported escapes in the current implementation:
+Supported escapes:
 
 - `\n` — U+000A (line feed)
 - `\r` — U+000D (carriage return)
@@ -28327,7 +28536,7 @@ fn main () -> int {
 - `String Literals` (string literals and escape sequences)
 - `Operators` (`as` casts for int-like types, including `char`)
 
-### Relevant Tests
+### Tests
 
 - Unicode char equality and `\u{...}` escape:
   - `the runnable fixtures`
@@ -28373,7 +28582,7 @@ let empty_slice: i32[] = [];
   type-checked against `T` and the resulting value has type `T[]`.
   - In Silk, this slice form is lowered as a non-owning
     view over a compiler-generated backing array.
-  - The current implementation does not yet enforce lifetime rules for such
+  - Lifetime rules are not yet enforced for such
     slices; do not allow a slice derived from a stack-backed array literal to
     outlive the scope where it was created.
 
@@ -28568,7 +28777,7 @@ fn main () -> int {
 - ``if` / `else`` (`if` statement semantics)
 - ``while` Loop` (`while` statement semantics)
 
-### Relevant Tests
+### Tests
 
 - Boolean control flow:
   - `the runnable fixtures`
@@ -28602,7 +28811,7 @@ an integer token followed by an identifier.
 
 ### Units
 
-The current implementation recognizes the following suffixes:
+Recognized suffixes:
 
 - `ns` — nanoseconds
 - `us` — microseconds
@@ -29202,8 +29411,7 @@ over many scrutinee types. The current compiler implementation supports only a
 narrow, explicitly documented subset so we can validate end-to-end lowering and
 code generation.
 
-In the current implementation, `match` is accepted as an *expression* of the
-form:
+In the initial subset, `match` is accepted as an *expression* of the form:
 
 ```silk
 match <scrutinee> {
@@ -29215,7 +29423,7 @@ match <scrutinee> {
 Notes:
 
 - Arms are separated by commas; a trailing comma is permitted.
-- Arm bodies are expressions (not blocks) in the current implementation.
+- In the initial subset, arm bodies are expressions (not blocks).
 
 #### Optional Matching (`T?`)
 
@@ -29288,7 +29496,7 @@ Defined initial subset:
 - For `Some(v) => ...`, the binder `v` is in scope only within that arm and has
   type `T` (the inner payload type of the scrutinee `T?`).
 - The result type of a `match` expression is the common type of its arms; all
-  arms must type-check to the same result type in the current implementation.
+  arms must type-check to the same result type in the initial subset.
 
 ### `match` Statement (Typed Errors)
 
@@ -29323,8 +29531,7 @@ Rule because it is not a `T | ...` typed-error expression.
 #### Result Matching (`Ok(...)` / `Err(...)`)
 
 The `match` expression also supports a small subset for
-recoverable “success or error” values. In the current implementation this
-includes:
+recoverable “success or error” values. In the initial subset, this includes:
 
 - `std::result::Result(T, E)` (an `enum` with `Ok(T)` and `Err(E)` variants), and
 - “Result-like” structs of the form `{ value: T?, err: E? }`.
@@ -29368,7 +29575,7 @@ fn main () -> int {
 }
 ```
 
-### Relevant Tests
+### Tests
 
 - Optional `match` expressions:
   - `the runnable fixtures`
@@ -29615,7 +29822,7 @@ aggregates without committing to a final packed layout. The trade-off is that
 the in-memory representation is not ABI-compatible with a C struct unless the
 struct is restricted to ABI-safe 64-bit slots.
 
-Example (current implementation): the `Packet` above is lowered as 3 scalar
+Example (current compiler): the `Packet` above is lowered as 3 scalar
 slots and occupies 24 bytes when stored in memory (3 × 8-byte cells), even
 though the intended C-like packed layout would be 8 bytes.
 
@@ -30088,7 +30295,7 @@ ABI mature.
 - `Packages, Imports, and Exports` (namespaces and imports)
 - `Typed Errors (`error`, `panic`, and `T | ErrorType...`)` (typed errors, not enums)
 
-### Relevant Tests
+### Tests
 
 - Enum matches (end-to-end):
   - `the runnable fixtures`
@@ -30462,7 +30669,7 @@ Rules:
 - `import` declarations identify dependencies and bring exported symbols
   from the imported package into scope in the importing module, subject to
   the visibility rules below.
-- In the current implementation:
+- Currently:
   - importing a package makes its exported `let` bindings with explicit
     type annotations visible as ordinary, unqualified names in the
     importing module (for example, `import util;` followed by `answer`
@@ -30573,7 +30780,7 @@ package app;
 import util;
 
 fn main () -> int {
-  // In the current implementation, both unqualified and qualified access are
+  // Currently, both unqualified and qualified access are
   // accepted after importing a package. Prefer the qualified form to make the
   // origin explicit.
   if util::add1(util::answer) != 42 {
@@ -30585,8 +30792,8 @@ fn main () -> int {
 
 #### Package imports resolve against the module set
 
-In the current implementation, a **package import** can only resolve if the
-package exists in the current module set.
+A **package import** resolves only if the package exists in the current module
+set.
 
 This matters most when you use package specifiers (`from "ns_pkg"`) or when you
 expect a package import to find a package that is not otherwise present.
@@ -30634,6 +30841,12 @@ part of the command’s module set (for example by passing their `.slk` files to
 In addition to `import pkg::name;` package imports, Silk supports JS-style
 import forms that use a string literal *import specifier* after `from`.
 
+The current JS-style forms are:
+
+- Named imports: `import { Name } from "<specifier>";`
+- Default imports / namespace imports: `import Name from "<specifier>";`
+- Ambient imports: `import "<specifier>";`
+
 An import specifier string is interpreted in one of three ways:
 
 - **File specifier**: the string begins with `./` or `../`, or is an absolute
@@ -30666,6 +30879,32 @@ fn main () -> void {
 }
 ```
 
+#### Ambient imports
+
+An ambient import loads a module into the module set without introducing any
+imported names into local scope:
+
+```silk
+import "./my_api.slk";
+import "std/io";
+```
+
+Notes:
+
+- Ambient imports use the same specifier interpretation rules as other
+  specifier-based imports:
+  - `./` / `../` / absolute paths are resolved as file imports,
+  - `std/<path>` is resolved under the configured stdlib root,
+  - other strings are treated as package specifiers (for example `"ui"` or
+    `"std::strings"`).
+- Ambient imports do not bind a namespace or import any symbols. If you need to
+  call a function or reference a type from the imported module, use a named
+  import, a default import (namespace import), or a package import.
+- Ambient imports are useful for declaring dependencies that exist only to:
+  - satisfy prototype/definition conformance rules (see below), or
+  - ensure a module is present in the module set so its types and methods are
+    available for type checking and monomorphization.
+
 #### Named imports
 
 Named imports import selected exported names directly into the importing
@@ -30680,7 +30919,7 @@ Notes:
 - There is no combined `import foo, { bar } from "...";` form in the current grammar.
   Use separate `import` declarations.
 - For non-`std/` file specifiers, include the `.slk` extension explicitly. (Only
-  `std/...` specifiers get `.slk` appended automatically in the current implementation.)
+  `std/...` specifiers get `.slk` appended automatically.)
 
 Rules:
 
@@ -30710,7 +30949,7 @@ Exported names for named imports:
 - Named imports can import:
   - exported values: `export fn`, `export let`, and exported `ext` bindings, and
   - type names: `struct`, `enum`, `error`, and `interface` declarations (treated
-    as visible across module boundaries in the current implementation),
+    as visible across module boundaries once the relevant module(s) are loaded into the module set),
   - exported type aliases: `export type ...;`, and
   - exported Formal Silk theories: `export theory` declarations (importable so
     they can be applied via `#theory Name(args);`).
@@ -30733,11 +30972,10 @@ Name binding rules:
 - Importing the same value name from multiple file imports without aliasing is
   an error.
 - Importing a value name that is already visible in the module (for example
-  via same-package scope or a package import) is treated as a no-op in the
-  current implementation **unless** it conflicts with a local declaration in
-  the importing module.
+  via same-package scope or a package import) is treated as a no-op **unless**
+  it conflicts with a local declaration in the importing module.
 - Importing a type name that is already visible in the module is treated as a
-  no-op in the current implementation.
+  no-op.
 
 #### Default imports and namespace imports
 
@@ -30850,7 +31088,8 @@ Rules:
   declarations. Inside `impl` blocks, `public` controls method visibility and
   `export` is reserved for static members.
 - The initial implementation supports `export` on:
-  - functions (`export fn ...`),
+  - functions (`export fn ...`), including a declaration-only prototype form
+    (`export fn name(...) -> T;`) used for header-style interface modules,
   - `let` and `const` bindings (`export let ...`, `export const ...`).
   - `ext` declarations (`export ext name = ...;`),
   - Formal Silk theories (`export theory Name(...) { ... }`),
@@ -30867,10 +31106,71 @@ Rules:
   will be specified and implemented alongside the package graph in
   `Compiler Architecture`.
 
-In the current implementation, most type names are treated as visible across
+Currently, most type names are treated as visible across
 module boundaries once the relevant module(s) are loaded into the module set.
 The `export` modifier is still recorded on type declarations so the
 package/export model can be tightened later without changing source.
+
+#### Prototype exports (`export fn ...;`)
+
+In addition to ordinary function definitions (`export fn ... { ... }`), a module
+may declare a **prototype** (a declaration without a body) by terminating the
+signature with `;`:
+
+```silk
+module bar;
+
+export fn foo (value: string) -> int;
+```
+
+This is the Silk analogue of a C/C++ header prototype or a TypeScript `*.d.ts`
+declaration file:
+
+- Other modules may import the prototype (named import or namespace import) and
+  type-check calls against its signature.
+- The prototype itself does **not** provide an implementation. The symbol must
+  be provided at link time by:
+  - another Silk source file in the same package that defines `export fn foo ... { ... }`, and/or
+  - an object/archive input that defines the symbol (for example a `.o`/`.a`
+    produced by a C compiler).
+- Prototype declarations may include Formal Silk contract annotations (`#require`
+  / `#assure` / contract `#theory` uses). This is the visible contract surface
+  for callers; when the implementation is precompiled and the function body is
+  not available in the module set, callers still type-check and may verify call
+  sites against the prototype’s contract surface.
+
+When both a prototype declaration and a source-level implementation are present
+in the same build/module set, the compiler enforces:
+
+- the signatures match, and
+- the implementation package explicitly imports the prototype module (via a
+  file import) so the relationship is declared in source.
+
+Example (consumer imports the prototype):
+
+```silk
+import { foo } from "./ibar.slk";
+
+export fn main () -> int {
+  return foo("hello");
+}
+```
+
+Example (implementation imports the prototype and provides the body):
+
+```silk
+module bar;
+
+import "./ibar.slk"; // ambient import; used for conformance only
+
+export fn foo (value: string) -> int {
+  return 0;
+}
+```
+
+This pattern is equivalent in intent to describing the export surface as an
+`interface` and declaring module conformance (`module ... as ...`), but it is
+file-based and designed to support separate compilation + link-style workflows.
 
 #### Re-export declarations (`export { ... };`)
 
@@ -30892,7 +31192,7 @@ Rules (current compiler subset):
   - The entry may rename the exported name: `export { localName as ExportedName };`.
 - Re-exported names are part of the module/package export surface, so other
   modules may import them via `import { Name } from "./barrel.slk";`.
-- In the current implementation, `export { ... }` supports values and exported
+- Currently, `export { ... }` supports values and exported
   Formal Silk theories (`theory` declarations). It does not export type names.
 
 ### Common Pitfalls
@@ -30909,7 +31209,7 @@ Rules (current compiler subset):
 - **Name collisions with named imports**: when importing from multiple modules, use
   `as` to rename one binding (`E2004`).
 
-### Relevant Tests
+### Tests
 
 - Package import + unqualified/qualified access:
   - `the runnable fixtures`
@@ -31040,7 +31340,7 @@ Examples from the spec:
 
 The compiler infers the optional’s element type from context when possible.
 
-In the current implementation, equality comparisons provide optional type
+Equality comparisons provide optional type
 context for `None` / `Some(...)` operands, so forms like `opt == None` and
 `opt == Some(value)` type-check when `opt` has type `T?`.
 
@@ -31515,8 +31815,7 @@ typed errors into:
 - explicit error structs/enums,
 - or a terminal action appropriate for the platform.
 
-`|` (and rejects exported C ABI surfaces with `|`) in the current
-implementation.
+(and rejects exported C ABI surfaces with `|`).
 
 ### Related proposals
 
@@ -31796,7 +32095,7 @@ heap and are represented as an `&Struct` reference in user code.
   counting (RC) for values originating from `new`.
 
 Important: this is currently an internal Silk-managed heap for Silk code, not an
-FFI pointer model. The current implementation does not permit `&Struct` for
+FFI pointer model. The compiler does not permit `&Struct` for
 non-opaque structs in `ext` signatures; only `&Opaque` handles may cross the
 FFI boundary (see `Structs, Impl Blocks, and Memory Layout` and
 `External Declarations (`ext`)`).
@@ -31804,9 +32103,9 @@ FFI boundary (see `Structs, Impl Blocks, and Memory Layout` and
 ##### Details
 
 - `new` is supported only in function bodies (top-level `let` initializers
-  cannot contain `new` in the current implementation).
+  cannot contain `new` in Silk).
 - `new` is supported only when the checker can determine a concrete reference
-  result type of the form `&Struct`. In the current implementation this happens
+  result type of the form `&Struct`. in Silk, this happens
   in two ways:
   - from an expected type context `&Struct` (for example `let x: &Packet = new
     Packet{ ... };` or as a call argument where the parameter type is `&Struct`)
@@ -32236,7 +32535,7 @@ Within a `with <region> { ... }` block:
 
 - any `new` allocation performed by the compiler’s `new` lowering uses the
   active region as its backing store,
-- allocations are **8-byte aligned** in the current implementation subset,
+- allocations are **8-byte aligned** in Silk,
 - if the region does not have enough remaining space, the program traps.
 
 Outside of a `with` block, `new` uses the current heap model described in
@@ -33216,7 +33515,7 @@ fn safe_divide(numer: int, denom: NonZeroInt) -> int {
 
 ### Implementation Notes
 
-In the current implementation:
+Currently:
 
 - there is no `type` alias declaration,
 - there is no `where` clause in types,
@@ -33548,7 +33847,7 @@ introduced by the literal syntax itself (see `String Literals`), not by the
 
 ### Evaluation Limits
 
-Compile-time evaluation must terminate. The current implementation enforces an
+Compile-time evaluation must terminate. The compiler enforces an
 instruction budget and a call-depth budget when executing `const fn` bodies at
 compile time; evaluation that exceeds these budgets is rejected as not
 compile-time evaluable.
@@ -33596,7 +33895,7 @@ Here `"world"` and `42` become varargs elements.
 #### Forwarding
 
 Because Silk does not yet have a general “spread” operator for calls, the
-current implementation supports forwarding a varargs pack when you pass a
+compiler supports forwarding a varargs pack when you pass a
 varargs binding as the final argument.
 
 ```silk
@@ -33616,7 +33915,7 @@ fixed-size **pack value** with:
 
 - `len: int` — the number of provided varargs arguments.
 - `a0 .. a(N-1)` — storage for up to `N` arguments (implementation-defined,
-  currently `N = 128`).
+  currently `N = 32`).
 
 The pack is passed by value using the same “flattened scalar slot” ABI as other
 POD structs.
@@ -33649,7 +33948,7 @@ Concept documents should be structured so readers can answer, quickly:
 - “What is this feature for?”
 - “What syntax does the compiler accept?”
 - “What are the rules and edge cases?”
-- “What works in the current compiler today?”
+- “What does the compiler accept?”
 
 Recommended sections:
 
@@ -33663,7 +33962,7 @@ Recommended sections:
    - realistic examples (how the feature is used in real code)
 7. **Common pitfalls**
 8. **Related documents**
-9. **Relevant tests** (links to `the runnable fixtures` and `the runnable fixtures`)
+9. **Tests** (links to `the runnable fixtures` and `the runnable fixtures`)
 
 Not every concept needs every section, but the goal is that a reader should
 never have to infer critical rules from examples.
@@ -33717,7 +34016,7 @@ These terms are used consistently across the spec:
   flow. (Whether blocks are also expressions depends on the concept; docs must
   be explicit.)
 - **Current compiler subset**: the set of features that parse, type-check, and
-  code-generate end-to-end in the current implementation.
+  code-generate end-to-end today.
 
 ### Cross-References
 
@@ -33741,7 +34040,7 @@ The language includes the following operators and delimiters:
 - Assignment and compound assignment: `=`, `+=`, `-=`, `*=`, `/=`.
 - Increment/decrement: `++`, `--` (prefix and postfix).
 - Arithmetic: `+`, `-`, `*`, `/`, `%`.
-  - In the current implementation:
+  - Currently:
     - integer operands support `+`, `-`, `*`, `/`, and `%`,
     - floating-point operands (`f32`/`f64`) support `+`, `-`, `*`, and `/`
       (no `%`).
@@ -33751,7 +34050,7 @@ The language includes the following operators and delimiters:
       - `Instant + Duration`, `Duration + Instant`, `Instant - Duration`,
       - and `Instant - Instant` (producing a `Duration`).
 - Bitwise: `&`, `|`, `^`, `~`, `<<`, `>>`.
-  - In the current implementation, bitwise operators are defined for
+  - Currently, bitwise operators are defined for
     integer operands (`int` and the fixed-width integer types):
     - `&`, `|`, `^` perform bitwise AND/OR/XOR on two integer values of the
       same type and produce a result of that same type.
@@ -33762,7 +34061,7 @@ The language includes the following operators and delimiters:
       signed integers (`i*`/`int`) and a logical right shift for unsigned
       integers (`u*`).
 - Comparison: `==`, `!=`, `<`, `<=`, `>`, `>=`.
-  - In the current implementation, comparisons are defined for both integer
+  - Currently, comparisons are defined for both integer
     operands and floating-point operands of the same type.
   - In Silk, `==` and `!=` are also defined for `bool`
     operands.
@@ -33782,7 +34081,7 @@ The language includes the following operators and delimiters:
     - `Some(x) == Some(y)` compares the payload values for equality (recursively
       for nested optionals),
     - and `!=` is the logical negation of `==`.
-    - In the current implementation, `None` and `Some(...)` can appear in
+    - Currently, `None` and `Some(...)` can appear in
       equality expressions when the other operand has an optional type (for
       example `opt == None` and `opt == Some(x)`), using that other operand’s
       type to infer the optional payload type.
@@ -33795,10 +34094,10 @@ The language includes the following operators and delimiters:
     everything (including itself), and ordered comparisons (`<`, `<=`, `>`,
     `>=`) are false when either operand is `NaN`.
 - Logical: `!`, `&&`, `||`.
-  - In the current implementation:
+  - Currently:
     - `!` is supported for `bool` operands.
 - Member and scope: `.`, `::`, `?.`.
-- In the current implementation:
+- Currently:
   - `.` and `::` are supported,
   - and `?.` is supported for optional field access on the supported `struct`
     subset (`opt?.field` yields `FieldType?`; see `Optional`).
@@ -33817,7 +34116,7 @@ The language includes the following operators and delimiters:
     function; see `Typed Errors (`error`, `panic`, and `T | ErrorType...`)`.
 - Ranges: `...`, `..=`, `..`.
 - Other punctuation: `?`, `??`, `->`, `=>`, `,`, `;`, `(`, `)`, `{`, `}`, `[`, `]`, `_`, `:`.
-  - In the current implementation, `??` is supported for optionals in the
+  - Currently, `??` is supported for optionals in the
     current backend subset (including scalar, `string`, and the current
     `struct` subset, plus nested optionals in the supported payload subset;
     see `Optional`). The `?` token is used both in type
@@ -33838,7 +34137,7 @@ expression statement.
 
 Rules:
 
-- The left-hand side must be an assignable lvalue. In the current implementation, it may be:
+- The left-hand side must be an assignable lvalue. in Silk, it may be:
   - an identifier that refers to a local `let mut` binding, or
   - a struct field lvalue `name.field` where `name` is either:
     - a local `let mut` binding of a supported POD `struct`, or
@@ -33857,7 +34156,7 @@ Compound assignments are shorthand for “read-modify-write”:
 Rules:
 
 - The left-hand side must be an assignable lvalue (as described above for `=`).
-- In the current implementation, compound assignments are supported only for numeric
+- In Silk, compound assignments are supported only for numeric
   scalar types (integers and `f32`/`f64`), including numeric struct fields.
 - The compound assignment expression has type `void`.
 
@@ -34094,10 +34393,11 @@ conversions:
 - Integer → Integer (including `Instant`, `Duration`, and `char`):
   - The conversion is deterministic and may be lossy. It is performed by
     canonicalizing the underlying bits to the destination integer type
-    (width truncation + sign/zero extension as appropriate). This matches the
-    behavior of `ir.CastInt` in the current IR.
+    (width truncation + sign/zero extension as appropriate). For scalar widths
+    up to 64 bits this matches the behavior of `ir.CastInt` in the current IR;
+    `i128`/`u128` follow the analogous rule over their `{ lo, hi }` lane layout.
 - Float → Float:
-  - `f32` ↔ `f64` using standard IEEE-754 conversion and rounding.
+  - `f32`/`f64`/`f128` conversions using standard IEEE-754 conversion and rounding.
 - Integer → Float:
   - Converts the integer value to the destination float type (IEEE-754),
     with rounding when the integer cannot be represented exactly.
@@ -34146,7 +34446,7 @@ conversions:
     between raw addresses and array/slice views:
     - `ptr as T[]` constructs a `T[]` slice view where the pointer component is
       `ptr` and the length component is a dedicated **unknown-length** sentinel
-      (in the current implementation, `i64.min`). The compiler does not validate
+      (currently, `i64.min`). The compiler does not validate
       the pointer value.
       - Indexing and assignment through an unknown-length slice are permitted
         but **unchecked**: the runtime performs no `index < len` bounds check.
@@ -34178,7 +34478,7 @@ conversions:
   - Limitation: the compiler must be able to resolve the
     receiver’s nominal type at the cast site so it can lower the implicit
     `serialize()` call. This includes name expressions, field accesses, calls,
-    and array/slice indexing (`arr[i] as T`) in the current implementation.
+    and array/slice indexing (`arr[i] as T`) in Silk.
 - `Deserialize(S)`-backed casts (explicit conversion via `deserialize(...)`):
   - When the target type provides a unique **static** method named `deserialize`
     matching the `std::interfaces::Deserialize(S)` surface (`fn deserialize(value: S) -> Self`),
@@ -34251,16 +34551,26 @@ Syntax:
 
 Rules ():
 
-- Both the operand and the target type must be scalar numeric types supported
-  by the current backend (`i8`/`u8`/`i16`/`u16`/`i32`/`u32`/`i64`/`u64`/`int`,
-  `f32`/`f64`, plus int-like primitives lowered to those scalars such as
-  `Duration`/`Instant` and `char`).
+- Both the operand and the target type must be numeric primitive types
+  supported by the backend:
+  - 64-bit-slot scalars: `i8`/`u8`/`i16`/`u16`/`i32`/`u32`/`i64`/`u64`/`int`,
+    `f32`/`f64`, plus int-like primitives lowered to those scalars such as
+    `Duration`/`Instant` and `char`.
+  - 128-bit wide primitives: `i128`/`u128`/`f128` (two 8-byte lanes; `f128`
+    stores the raw IEEE-754 binary128 bit pattern).
 - `as raw` is not permitted for `string`, `void`, `&T`, optionals, arrays,
   maps, function types, or structs/enums.
 - Semantics:
   - The operand’s current canonical scalar bits are reinterpreted as the target
     type’s canonical scalar bits (bit-level truncation/masking for narrower
     target widths such as `u8`/`u16`/`u32` and `f32`).
+    - For 128-bit primitives, this is lane-wise:
+      - the low lane is copied as `u64` bits,
+      - the high lane is reinterpreted across `u64`/`i64` as needed,
+      - when casting a 128-bit value to a <=64-bit target, the low lane is used,
+      - when casting a <=64-bit *integer* value to `i128`/`u128`, the high lane
+        is sign-extended (`i128`) or zero-extended (`u128`) in the current
+        subset.
   - No numeric conversion is performed. For example, `1.0 as u64` yields
     `1`, while `1.0 as raw u64` yields the IEEE-754 bit pattern.
 
@@ -34297,7 +34607,7 @@ scalar representation (`i64`) at the IR and native ABI layers.
 
 ### Operators
 
-The current implementation supports the following operator subset:
+Supported operator subset:
 
 - `Duration + Duration -> Duration`
 - `Duration - Duration -> Duration`
@@ -34313,7 +34623,7 @@ The current implementation supports the following operator subset:
   - `Instant` vs `Instant`
 
 Other arithmetic (`*`, `/`, `%`) and bitwise operators are not defined for time
-types in the current implementation.
+types in the implemented subset.
 
 ### Overflow
 
@@ -34503,9 +34813,12 @@ The spec includes a table mapping Silk primitive types to C types, for example:
 - `i16`, `u16` → `int16_t`, `uint16_t`
 - `i32`, `u32` → `int32_t`, `uint32_t`
 - `i64`, `u64` → `int64_t`, `uint64_t`
+- `i128` → `SilkI128` (see `C99 ABI and `libsilk.a``; `{ lo, hi }` lanes)
+- `u128` → `SilkU128` (see `C99 ABI and `libsilk.a``; `{ lo, hi }` lanes)
 - `int` → `int64_t` (current `linux/x86_64` baseline; do not assume C `int`)
 - `f32` → `float`
 - `f64` → `double`
+- `f128` → `SilkF128` (see `C99 ABI and `libsilk.a``; IEEE binary128 bits in `{ lo, hi }`)
 - `bool` → `bool` (or `_Bool`)
 - `char` → `uint32_t` (UTF‑32)
 - `string` → `SilkString` (`{ char *ptr; int64_t len; }`)
@@ -34516,6 +34829,9 @@ Notes:
 
 - For FFI with APIs that use a C `int` (for example many POSIX syscalls),
   prefer `i32`/`u32` in your `ext` declarations rather than `int`.
+- The stable C99 ABI does **not** use compiler-specific `__int128` or
+  `__float128` types for these primitives; it uses explicit `{ lo, hi }`
+  structs so the ABI is portable and can be expressed in strict C99.
 
 These mappings must be reflected exactly in the C99 ABI.
 
@@ -34748,6 +35064,40 @@ For array/slice destructuring:
 - The pattern binds exactly the number of listed binders:
   - fixed arrays require an exact arity match (`[a, b]` requires `T[2]`),
   - slices trap at runtime if too short (as if indexing each element).
+
+Enum destructuring binds payload elements from a single enum variant:
+
+```silk
+import std::result;
+
+error Oops { code: int }
+
+fn foo (oops: bool) -> std::result::Result(int, Oops) {
+  if (oops) {
+    return Err(Oops{ code: 123 });
+  }
+  return Ok(7);
+}
+
+fn main () -> int {
+  // Destructure `Ok(...)` and bind its payload.
+  // If the value is `Err(...)`, the program traps.
+  let Ok(value) = foo(false);
+  return value;
+}
+```
+
+Rules ():
+
+- The initializer is required.
+- The initializer must have an enum type `E` (including a monomorphized generic enum).
+- The initializer value is consumed (moved); the original binding may not be
+  used after destructuring.
+- The pattern must be an enum variant pattern:
+  - `Variant(...)` (shorthand), or
+  - `E::Variant(...)` / `pkg::E::Variant(...)` / `::pkg::E::Variant(...)`.
+- Binder arity must match the variant payload arity (use `_` to discard payload elements).
+- If the runtime value is not the matched variant, execution traps.
 
 `const` bindings are compile-time constants:
 
@@ -35742,8 +36092,9 @@ supported union-member set:
 - **Primitive scalar** types in `{ bool, char, i8, u8, i16, u16, i32, u32, i64,
   u64, int, usize, size, Instant, Duration }` (`isize` is accepted as an alias
   for `size`), and/or
-- **Nominal POD structs** (including `error` types) that lower to a scalar-slot
-  representation in Silk (no opaque structs; no enums).
+- **Nominal POD structs** (including `error` types) and **nominal POD enums**
+  that lower to a scalar-slot representation in Silk (no
+  opaque structs).
 
 Unions may freely **mix** primitive and nominal members in this subset.
 
@@ -36111,6 +36462,7 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2052` — module does not satisfy the declared interface (signature mismatch).
 - `E2053` — unknown re-export name.
 - `E2054` — duplicate exported name.
+- `E2055` — prototype implementation is missing required import of its prototype module.
 - `E2056` — function expression may not have `&T` parameters.
 - `E2057` — duplicate type alias name.
 - `E2058` — type alias cycle.
@@ -36121,6 +36473,7 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2063` — derived struct redeclares an inherited field name.
 - `E2064` — derived interface redeclares an inherited method name.
 - `E2065` — opaque structs may not use `extends`.
+- `E2066` — prototype and implementation signatures do not match.
 - `E2067` — capturing closure is not allowed in `pure` code.
 - `E2068` — capturing closure capture type is not supported in Silk.
 - `E2069` — capturing closure may not capture a mutable binding in Silk.
@@ -36166,6 +36519,10 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2109` — destructuring pattern does not match the struct type (wrong arity, unknown field, or duplicate binder/field).
 - `E2110` — array destructuring requires an array/slice value.
 - `E2111` — array destructuring pattern does not match the array type (wrong arity for fixed arrays, or duplicate binder).
+- `E2112` — enum destructuring requires an enum value.
+- `E2113` — enum destructuring pattern does not match the enum type (unknown variant or wrong arity).
+- `E2114` — reserved (previously: `u128` not supported in the subset).
+- `E2115` — reserved (previously: `f128` not supported in the subset).
 
 #### Formal Silk Verification
 
@@ -36269,6 +36626,31 @@ The initial C header provided in this repository defines:
   } SilkBytes;
   ```
 
+- 128-bit scalar primitives (`i128` / `u128` / `f128`) used by generated C
+  headers for exported Silk interfaces:
+
+  ```c
+  typedef struct SilkU128 {
+      uint64_t lo;
+      uint64_t hi;
+  } SilkU128;
+
+  typedef struct SilkI128 {
+      uint64_t lo;
+      int64_t  hi;
+  } SilkI128;
+
+  typedef struct SilkF128 {
+      uint64_t lo;
+      uint64_t hi;
+  } SilkF128;
+  ```
+
+  Notes:
+  - `SilkF128` stores the IEEE‑754 binary128 bit pattern. It is not C `long double`.
+  - These types are passed and returned as two integer-like 8-byte slots in the
+    current `linux/x86_64` backend subset.
+
 - Opaque handles:
 
   ```c
@@ -36341,6 +36723,15 @@ The initial C header provided in this repository defines:
   (`silk --noheap`): heap-backed allocation is disabled for the supported
   subset. `--noheap` is currently incompatible with `--debug`; the ABI rejects
   configurations that enable both.
+
+  `silk_compiler_set_optimization_level` selects the optimization level (0-3),
+  matching the CLI `-O` flag. The default is level 0 unless overridden. Level
+  1+ enables lowering-time pruning of unused
+  extern symbols before code generation. For IR-backed native executable
+  builds, it also prunes unreachable functions from the executable entrypoint
+  (function-level dead-code elimination), typically reducing output size and
+  over-linking when using the prebuilt `libsilk_std.a` archive to satisfy
+  auto-loaded `import std::...;` modules.
 
   `silk_compiler_set_target` selects the code generation target. The
   `target_triple` string is copied. The initial implementation recognizes:
@@ -36565,6 +36956,10 @@ The initial C header provided in this repository defines:
           - `string`: string literals, `let` bindings of `string`, `return` of a `string` value, direct calls to `string`-returning helpers, and `==`/`!=`/`<`/`<=`/`>`/`>=` comparisons over `string` values (producing `bool`),
           - `regexp`: regex literals (`/pattern/flags`), `let` bindings of `regexp`, `return` of a `regexp` value, and direct calls between helpers that accept/return `regexp`,
           - other string operations (concatenation, indexing, etc.) are not implemented yet; higher-level regex matching lives in `std::regex` and is routed through `ext` calls.
+      - within the current `linux/x86_64` IR subset, `i128`/`u128`/`f128` values are supported at ABI boundaries using the stable C99 `{ lo, hi }` struct shapes:
+        - parameters lower to two integer-like scalars (`u64 lo`, then `u64`/`i64 hi`) and consume integer argument locations,
+        - results return as two integer-like scalars in `rax`/`rdx`,
+        - `f128` values are transported as raw IEEE binary128 bits in the two lanes (not via SSE registers).
       - within the current `linux/x86_64` IR subset, a limited `struct` subset is supported at ABI boundaries:
         - within function bodies and internal helper calls, `struct` declarations with 0+ fields of supported value types are supported (scalar primitives, `string`, nested structs, and supported optionals),
         - at ABI boundaries for exported/FFI functions, only ABI-safe structs are currently supported: after slot-flattening, all scalar slots must be `i64`/`u64`/`f64` (until packed ABI mapping for smaller fields is implemented),
@@ -37042,7 +37437,7 @@ fn main () -> int {
 
 ### Example: `else if` chains
 
-In the current implementation, `else if` parses as sugar for a nested `if` in
+Currently, `else if` parses as sugar for a nested `if` in
 the `else` branch.
 
 ```silk
@@ -37104,7 +37499,7 @@ URL: /silk/wiki/?p=language/flow-match
 
 `match` provides structured pattern matching.
 
-In the current implementation:
+Currently:
 
 - `match <optional> { None => expr, Some(x) => expr }` is supported (expression form),
 - `match <enum> { E::V => expr, ... }` is supported in a restricted exhaustive subset,
@@ -37631,7 +38026,7 @@ URL: /silk/wiki/?p=language/enums
 
 `enum` defines a nominal sum type with a fixed set of variants.
 
-In the current implementation, enums support:
+Currently, enums support:
 
 - unit variants (`E::A`),
 - tuple variants (`E::B(x)`),
@@ -38356,24 +38751,20 @@ fn main () -> int {
 ## See also
 
 ==============================================================================
-WIKI: Refinement types (design) (language/refinement-types)
+WIKI: Refinement types (removed) (language/refinement-types)
 URL: /silk/wiki/?p=language/refinement-types
 ==============================================================================
 
-# Refinement types (design)
+# Refinement types (removed)
 
-Refinement types are types annotated with logical predicates (`where`) that
-constrain the set of values they may represent.
+The earlier refinement-type design (types annotated with `where` predicates) is
+removed.
 
+Use Formal Silk instead:
 
-## Example (Design)
-
-```silk
-// Design-only sketch: a string that is proven non-empty.
-type NonEmptyString = { s: string where std::length(s) > 0 };
-```
-
-## See also
+- `#require` / `#assure` on functions, and
+- `#require` on `struct` declarations (struct requirements proved at
+  construction sites).
 
 ==============================================================================
 WIKI: Regions (`with`) (language/regions)
@@ -39497,15 +39888,12 @@ import std::memory;
 type Map = std::map::HashMap(u64, int);
 type InitResult = std::result::Result(Map, std::memory::AllocFailed);
 
-fn hash_u64 (k: u64) -> u64 { return k; }
-fn eq_u64 (a: u64, b: u64) -> bool { return a == b; }
-
 fn main () -> int {
-  let init_r: InitResult = Map.init(16, hash_u64, eq_u64);
+  let init_r: InitResult = Map.init(16, std::map::hash_u64, std::map::eq_u64);
   if init_r.is_err() { return 2; }
   let mut m: Map = match (init_r) {
     InitResult::Ok(v) => v,
-    InitResult::Err(_) => Map.empty(hash_u64, eq_u64),
+    InitResult::Err(_) => Map.empty(std::map::hash_u64, std::map::eq_u64),
   };
   (mut m).put(1, 10);
   let v: int = m.get(1) ?? 0;
@@ -39839,15 +40227,12 @@ type Set = std::set::SetMap(u64);
 type InitResult = std::result::Result(Set, std::memory::AllocFailed);
 type InsertResult = std::result::Result(bool, std::memory::OutOfMemory);
 
-fn hash_u64 (k: u64) -> u64 { return k; }
-fn eq_u64 (a: u64, b: u64) -> bool { return a == b; }
-
 fn main () -> int {
-  let init_r: InitResult = Set.init(4, hash_u64, eq_u64);
+  let init_r: InitResult = Set.init(4, std::set::hash_u64, std::set::eq_u64);
   if init_r.is_err() { return 1; }
   let mut s: Set = match (init_r) {
     InitResult::Ok(v) => v,
-    InitResult::Err(_) => Set.empty(hash_u64, eq_u64),
+    InitResult::Err(_) => Set.empty(std::set::hash_u64, std::set::eq_u64),
   };
 
   let insert_r: InsertResult = (mut s).insert(1);

@@ -5,7 +5,7 @@
 - `HashMap(K, V)` — an unordered map backed by a hash table.
 - `TreeMap(K, V)` — an ordered map backed by a red-black tree.
 
-Status: **initial implementation**. The API is specified here; the current implementation
+Status: **initial implementation**. The API is specified here; it
 targets the current compiler/backend subset and will grow as the language gains
 first-class move/Drop semantics for values stored inside heap-backed data
 structures.
@@ -49,8 +49,48 @@ model for container element drops.
 
 ### Construction
 
-`HashMap` requires user-supplied hashing and equality functions (similar to the
-custom `Hash` and `KeyEqual` types of C++ `std::unordered_map`):
+`HashMap` requires user-supplied hashing and equality functions (similar in
+spirit to the `Hash` and `KeyEqual` customization points of C++
+`std::unordered_map`).
+
+For common key types, `std::map` provides default `hash_*` / `eq_*` helpers so
+callers do not need to write hashing and equality functions themselves.
+
+Default helper functions are provided for these key types:
+
+- `bool`
+- fixed-width integers (`u8`/`i8`/`u16`/`i16`/`u32`/`i32`/`u64`/`i64`/`u128`/`i128`)
+- platform integers (`int`, `usize`, `size`/`isize`)
+- `char`
+- `string` (bytewise FNV-1a)
+
+Example (using `std::map` defaults):
+
+```silk
+import std::map;
+import std::result;
+import std::memory;
+
+type Map = std::map::HashMap(u64, int);
+type InitResult = std::result::Result(Map, std::memory::AllocFailed);
+
+fn main () -> int {
+  let init_r: InitResult = Map.init(16, std::map::hash_u64, std::map::eq_u64);
+  if init_r.is_err() { return 1; }
+  let mut m: Map = match (init_r) {
+    InitResult::Ok(v) => v,
+    InitResult::Err(_) => Map.empty(std::map::hash_u64, std::map::eq_u64),
+  };
+  let put_r = (mut m).put(1, 10);
+  if put_r.is_err() { (mut m).drop(); return 2; }
+
+  let v: int = m.get(1) ?? 0;
+  (mut m).drop();
+  return v;
+}
+```
+
+Example (custom hashing/equality):
 
 ```silk
 import std::map;
@@ -70,12 +110,8 @@ fn main () -> int {
     InitResult::Ok(v) => v,
     InitResult::Err(_) => Map.empty(hash_u64, eq_u64),
   };
-  let put_r = (mut m).put(1, 10);
-  if put_r.is_err() { (mut m).drop(); return 2; }
-
-  let v: int = m.get(1) ?? 0;
   (mut m).drop();
-  return v;
+  return 0;
 }
 ```
 

@@ -41,6 +41,10 @@ distribution:
 - `std::number` — number parsing/formatting helpers (see `docs/std/number.md`).
 - `std::math` — linear algebra utilities (vectors/matrices) for graphics and
   general computation (see `docs/std/math.md`).
+- `std::graphics` — low-level graphics API bindings (OpenGL, OpenGL ES, Vulkan;
+  see `docs/std/graphics.md`).
+- `std::image` — image codecs + color utilities (PNG via libpng, JPEG via
+  libjpeg-turbo; see `docs/std/image.md`).
 - `std::limits` — numeric min/max limits for primitive types (see `docs/std/limits.md`).
 - `std::crypto` — cryptography primitives (hosted baseline via libsodium; see
   `docs/std/crypto.md`).

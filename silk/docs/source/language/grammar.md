@@ -194,11 +194,11 @@ At a high level, the language can be structured as:
     - defaulted parameters must be **trailing** (once a parameter has a
       default, all subsequent parameters must also have defaults) because
       call syntax is positional-only in the current language subset,
-    - and in the current implementation, default expressions are restricted to
+    - and in the initial subset, default expressions are restricted to
       a constant/literal expression subset (no name references), so they can be
       inlined at call sites during lowering.
     - a parameter declared as `T?` with a default has two effective behaviors
-      in the current implementation subset:
+      in the initial subset:
       - if the default expression has type `T`, the parameter has effective
         type `T` (the argument may be omitted at call sites, but the callee
         sees a non‑optional value),
@@ -306,7 +306,7 @@ At a high level, the language can be structured as:
 
   Note: const-parameter-style generics (`N: int` parameters and integer literal
   type arguments like `Foo(u8, 1024)`) remain tracked work; the front-end parses
-  these surface forms but the current implementation focuses on type parameters
+  these surface forms but the compiler currently focuses on type parameters
   and monomorphization for type arguments.
 
   Exception: the nominal optional form `Option(T)` is recognized as sugar for
@@ -423,7 +423,7 @@ At a high level, the language can be structured as:
   - `match` as a statement (arms are blocks), used for typed errors as
     specified in `docs/language/typed-errors.md`.
 
-  In the current implementation, the `match` statement form is restricted to a
+  In the implemented subset, the `match` statement form is restricted to a
   call-expression scrutinee and the patterns listed above.
 
 - Expressions (implemented subset):
@@ -490,8 +490,8 @@ At a high level, the language can be structured as:
     current subset it is restricted to `move <name>` where `<name>` is a local
     binding.
   - The type checker currently permits `new <expr>` only when it can determine a
-    concrete reference result type of the form `&Struct`. In the current
-    implementation this happens either:
+    concrete reference result type of the form `&Struct`. In the compiler, this
+    happens either:
     - from an expected `&Struct` type context (for example `let x: &Packet = new
       Packet{ ... };` or as a call argument whose parameter type is `&Struct`)
     - from the operand itself when it names the struct type (for example `let x
@@ -594,7 +594,7 @@ At a high level, the language can be structured as:
     slice of source text (e.g. `util::answer`),
   - simple function calls such as `helper()` or `util::helper(1, 2)` are
     parsed as call expressions using the `Postfix`/`CallSuffix` productions;
-    the current implementation supports calls to named functions, but the type checker
+    the compiler supports calls to named functions, but the type checker
     and back-end currently restrict which value types can appear at call boundaries;
     see `docs/compiler/cli-silk.md` for the exact supported subset.
 

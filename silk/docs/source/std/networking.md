@@ -178,7 +178,7 @@ impl TcpListener {
 Notes:
 
 - This API is currently **blocking** (no non-blocking sockets/event loop yet).
-- The current implementation targets hosted `linux/x86_64` via `std::runtime::net`
+- This module targets hosted `linux/x86_64` via `std::runtime::net`
   (POSIX sockets); `wasm32-wasi` has no Preview 1 sockets, so the runtime
   stubs return error values.
 - `TcpStream`/`TcpListener` wrap raw file descriptors; avoid copying these

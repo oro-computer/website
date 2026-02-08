@@ -19,7 +19,7 @@ Key points:
 - The safety model is layered:
   - Layer 1: unsafe `Buffer(T)` primitive.
   - Layer 2: compile-time safety via the verifier.
-  - Layer 3: provable safety via refinement types.
+  - Layer 3: provable safety via Formal Silk (contracts, invariants, and struct requirements).
 
 Compiler requirements:
 

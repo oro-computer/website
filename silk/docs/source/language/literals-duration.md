@@ -21,7 +21,7 @@ an integer token followed by an identifier.
 
 ## Units (Implemented)
 
-The current implementation recognizes the following suffixes:
+Recognized suffixes:
 
 - `ns` — nanoseconds
 - `us` — microseconds

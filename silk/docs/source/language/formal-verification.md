@@ -19,11 +19,8 @@ Silk requires proofs only when verification syntax is present in the compiled
 module set:
 
 - any use of `#...` directives (`#require`, `#assure`, `#assert`, `#invariant`,
-  `#variant`, `#monovariant`, `#const`), and/or
-- any use of `where` predicates (for example refinement-type binders).
-
-Note: `where` predicates are not implemented yet. When they land, they will
-also be treated as verification syntax.
+  `#variant`, `#monovariant`, `#const`) — including `#require` attached to
+  `struct` declarations.
 
 When verification syntax is present, compilation MUST:
 
@@ -188,6 +185,31 @@ fn name (params) -> ResultType {
   - attaches them to the corresponding function in the AST as lists of
     preconditions, postconditions, and contract theories.
 
+### Struct requirements (`#require` on `struct`)
+
+Struct declarations may be preceded by one or more `#require` directives:
+
+```silk
+#require <Expr>;
+struct Name {
+  field: int,
+}
+```
+
+These `#require` expressions are **struct requirements**: properties that must
+hold for all values constructed for that struct type.
+
+Rules (current subset):
+
+- Struct requirement expressions may reference the struct's fields by name.
+- When Formal Silk syntax is present, the verifier proves all requirements at
+  struct literal construction sites (`Name{ ... }` and `new Name{ ... }`),
+  using the literal's field initializers and default initialization for any
+  omitted fields.
+- When a struct extends a base struct, the derived struct inherits the base
+  struct's requirements (all requirements must be proven at construction).
+- If the verifier cannot prove a requirement, compilation fails.
+
 Loop specifications (`#invariant`, `#variant`, `#monovariant`) follow a similar
 pattern for loops.
 
@@ -264,6 +286,10 @@ Implemented end-to-end (Z3-backed, current subset):
   - build metadata constants are available in Formal Silk expressions:
     - `BUILD_KIND`, `BUILD_MODE`, `BUILD_VERSION` as built-in compile-time `string` values,
     - and `BUILD_VERSION_MAJOR` / `BUILD_VERSION_MINOR` / `BUILD_VERSION_PATCH` as built-in compile-time `u64` values.
+- Struct requirements (`#require` on `struct` declarations):
+  - generate VCs and prove them at struct literal construction sites (`Type{ ... }`
+    and `new Type{ ... }`),
+  - include inherited requirements from base structs (`struct Child extends Base { ... }`).
 - `#assert`:
   - proves the asserted expression holds at the `#assert` site,
   - and then assumes it for the remainder of the block.
@@ -312,7 +338,8 @@ Not implemented yet (selected gaps):
 - Verification of the full expression language and full statement language
   (`if`, `match`, nested loops, indirect calls/method calls, and many operators
   are not supported yet in verified code).
-- `where` predicates / refinement types.
+- Type-level `where` predicates (the earlier refinement-type sketch is removed;
+  use Formal Silk contracts and struct requirements instead).
 
 ## Theories (`theory` / `#theory`)
 

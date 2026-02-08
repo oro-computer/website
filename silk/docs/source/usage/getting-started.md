@@ -4,9 +4,9 @@ This document is a practical starting point for working with the Silk compiler
 repository: building the `silk` CLI, running a minimal program, and finding the
 right documentation for deeper language and ABI details.
 
-If you want language semantics, start with `docs/language/README.md`.
+If you want language semantics, start with `docs/guides/language-tour.md`.
 
-For tutorials and task-oriented guides, see `docs/usage/README.md`.
+For step-by-step walkthroughs, start with `docs/usage/tutorials/01-first-program.md`.
 
 ## Build `silk`
 
@@ -60,18 +60,17 @@ Then:
 For more CLI examples (including stdlib use, wasm outputs, and library/object
 builds), see `docs/usage/cli-examples.md`.
 
-For step-by-step walkthroughs, see `docs/usage/tutorials/README.md`.
+For step-by-step walkthroughs, see `docs/usage/tutorials/01-first-program.md`.
 
-## What Works Today vs Full Design
+## Supported Behavior vs Full Design
 
 The language docs describe both:
 
 - the full language design, and
-- the current implemented subset.
+- the implemented subset.
 
-For “what works today”:
+For supported behavior:
 
-- `STATUS.md` summarizes the current compiler feature set.
 - Many `docs/language/*.md` files include “Implementation status” sections.
 - `tests/silk/pass_*.slk` are the most reliable working language examples.
 - `docs/compiler/diagnostics.md` lists the stable error codes you will see for
@@ -92,7 +91,7 @@ This runs:
 
 ## Where To Go Next
 
-- Language guide: `docs/language/README.md`
+- Language tour: `docs/guides/language-tour.md`
 - Language quick reference: `docs/language/cheat-sheet.md`
 - Compiler CLI design: `docs/compiler/cli-silk.md` and `docs/man/silk.1.md`
 - C99 ABI contract for embedding: `docs/compiler/abi-libsilk.md` and `docs/man/libsilk.7.md`

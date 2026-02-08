@@ -5,7 +5,7 @@
 - `SetMap(T)` — an unordered set backed by an open-addressing hash table.
 - `TreeSet(T)` — an ordered set backed by a red-black tree.
 
-Status: **initial implementation**. The API is specified here; the current implementation
+Status: **initial implementation**. The API is specified here; it
 targets the current compiler/backend subset and will grow as the language gains
 first-class move/Drop semantics for values stored inside heap-backed data
 structures.
@@ -27,16 +27,27 @@ In the current subset:
 
 - `SetMap(T)` and `TreeSet(T)` store elements by value, but do not automatically
   run `Drop` for stored elements when entries are removed.
-- These sets are intended for “plain” value types:
-  - primitive scalars,
-  - `string` views,
-  - and small POD structs over those primitives.
+- `SetMap(T)` and `TreeSet(T)` currently store each element in a single 8-byte
+  scalar slot (`as raw u64`). Multi-slot values such as `string` (and most
+  structs) are not supported as set elements yet.
 - Avoid storing Drop-managed structs as set elements until the compiler has
   complete Drop integration for values stored inside container memory.
 
 ## Hash Set (`SetMap(T)`)
 
 ### Core API
+
+`SetMap` requires user-supplied hashing and equality functions.
+
+For common element types, `std::set` provides default `hash_*` / `eq_*` helpers
+so callers do not need to write hashing and equality functions themselves.
+
+Default helper functions are provided for these element types:
+
+- `bool`
+- fixed-width integers (`u8`/`i8`/`u16`/`i16`/`u32`/`i32`/`u64`/`i64`/`u128`/`i128`)
+- platform integers (`int`, `usize`, `size`/`isize`)
+- `char`
 
 `SetMap(T)` provides:
 

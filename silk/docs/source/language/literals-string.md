@@ -30,7 +30,7 @@ What works end-to-end today (lexer → parser → checker → lowering → codeg
   - `\u{...}` (1–6 hex digits, inserts UTF-8 bytes for a Unicode scalar)
 - Line ending normalization:
   - embedded `\r\n` and `\r` in the literal source are normalized to `\n`,
-  - `\r` escapes are normalized to `\n` in the current implementation.
+  - `\r` escapes are normalized to `\n`.
 - Equality and ordering comparisons (`==`, `!=`, `<`, `<=`, `>`, `>=`) over
   `string` values in the current subset.
 
@@ -100,8 +100,8 @@ When decoding string literals, the compiler must normalize:
 This applies both to embedded newlines in multi-line literals and to escaped
 forms such as `\r`.
 
-Note: a sequence of two escapes like `"\r\n"` is still two escapes. In the
-current implementation, `\r` escapes become `\n`, so `"\r\n"` produces two line
+Note: a sequence of two escapes like `"\r\n"` is still two escapes. In Silk,
+`\r` escapes become `\n`, so `"\r\n"` produces two line
 feed bytes (`"\n\n"`).
 
 ## Examples
@@ -189,7 +189,7 @@ b`;
 - `docs/language/literals-character.md` (shared escape spellings)
 - `docs/compiler/abi-libsilk.md` (C ABI string representation)
 
-## Relevant Tests
+## Tests
 
 - Core string equality and ordering:
   - `tests/silk/pass_string_eq.slk`

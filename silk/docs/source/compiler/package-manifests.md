@@ -56,7 +56,7 @@ The package name used for package imports (e.g. `import ui from "ui";`) and as
 the default package name for modules that omit an explicit `package ...;`
 declaration.
 
-In the current implementation, `name` MUST be a valid Silk package path:
+`name` MUST be a valid Silk package path:
 
 - one or more identifiers separated by `::`
 - each identifier matches `[A-Za-z_][A-Za-z0-9_]*`
@@ -71,8 +71,8 @@ Examples:
 
 Free-form version string (commonly `MAJOR.MINOR.PATCH`).
 
-In the current implementation, when building from a package manifest, the
-compiler surfaces this value to runtime code via `std::runtime::build::version()`
+When building from a package manifest, the compiler surfaces this value to
+runtime code via `std::runtime::build::version()`
 (otherwise it defaults to `"0.0.0"`).
 
 Additional optional metadata fields MAY be present under `[package]` (for
@@ -93,7 +93,7 @@ Rules:
 
 - Patterns are evaluated against forward-slash (`/`) relative paths rooted at
   the manifest directory.
-- Supported glob syntax (current implementation):
+- Supported glob syntax:
   - `*` matches any characters within a single path segment.
   - `**` matches zero or more path segments.
 - If `include` is omitted, the default is to include all `**/*.slk` under the
@@ -114,7 +114,7 @@ ui = { path = "../libs/silk-ui", sha256 = "sha256:0123456789abcdef..." }
 Fields:
 
 - The dependency key (`ui` above) is the package import name used in source
-  (`import ui from "ui";`). In the current implementation, this MUST match the
+  (`import ui from "ui";`). This MUST match the
   dependency’s own manifest `package.name`.
 - `path` (optional): local filesystem path to the dependency package root,
   resolved relative to the importing manifest directory when not absolute.

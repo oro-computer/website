@@ -48,7 +48,7 @@ Within `{ ... }`:
 
 - optional **argument selector**:
   - digits: `0`, `1`, `2`, ...
-  - bracketed index: `[0]`, `[1]`, ... (reserved for future named arguments; the current implementation accepts only numeric indices)
+  - bracketed index: `[0]`, `[1]`, ... (reserved for future named arguments; currently only numeric indices are accepted)
 - optional **specifier string** (examples: `d`, `x`, `s`, `c`, `e`)
 - optional `:` followed by:
   - optional `fill` + `alignment`:

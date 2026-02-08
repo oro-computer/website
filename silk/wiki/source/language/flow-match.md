@@ -2,7 +2,7 @@
 
 `match` provides structured pattern matching.
 
-In the current implementation:
+Currently:
 
 - `match <optional> { None => expr, Some(x) => expr }` is supported (expression form),
 - `match <enum> { E::V => expr, ... }` is supported in a restricted exhaustive subset,

@@ -9,7 +9,7 @@ The language includes the following operators and delimiters:
 - Assignment and compound assignment: `=`, `+=`, `-=`, `*=`, `/=`.
 - Increment/decrement: `++`, `--` (prefix and postfix).
 - Arithmetic: `+`, `-`, `*`, `/`, `%`.
-  - In the current implementation:
+  - Currently:
     - integer operands support `+`, `-`, `*`, `/`, and `%`,
     - floating-point operands (`f32`/`f64`) support `+`, `-`, `*`, and `/`
       (no `%`).
@@ -19,7 +19,7 @@ The language includes the following operators and delimiters:
       - `Instant + Duration`, `Duration + Instant`, `Instant - Duration`,
       - and `Instant - Instant` (producing a `Duration`).
 - Bitwise: `&`, `|`, `^`, `~`, `<<`, `>>`.
-  - In the current implementation, bitwise operators are defined for
+  - Currently, bitwise operators are defined for
     integer operands (`int` and the fixed-width integer types):
     - `&`, `|`, `^` perform bitwise AND/OR/XOR on two integer values of the
       same type and produce a result of that same type.
@@ -30,7 +30,7 @@ The language includes the following operators and delimiters:
       signed integers (`i*`/`int`) and a logical right shift for unsigned
       integers (`u*`).
 - Comparison: `==`, `!=`, `<`, `<=`, `>`, `>=`.
-  - In the current implementation, comparisons are defined for both integer
+  - Currently, comparisons are defined for both integer
     operands and floating-point operands of the same type.
   - In the current backend subset, `==` and `!=` are also defined for `bool`
     operands.
@@ -50,7 +50,7 @@ The language includes the following operators and delimiters:
     - `Some(x) == Some(y)` compares the payload values for equality (recursively
       for nested optionals),
     - and `!=` is the logical negation of `==`.
-    - In the current implementation, `None` and `Some(...)` can appear in
+    - Currently, `None` and `Some(...)` can appear in
       equality expressions when the other operand has an optional type (for
       example `opt == None` and `opt == Some(x)`), using that other operand’s
       type to infer the optional payload type.
@@ -63,10 +63,10 @@ The language includes the following operators and delimiters:
     everything (including itself), and ordered comparisons (`<`, `<=`, `>`,
     `>=`) are false when either operand is `NaN`.
 - Logical: `!`, `&&`, `||`.
-  - In the current implementation:
+  - Currently:
     - `!` is supported for `bool` operands.
 - Member and scope: `.`, `::`, `?.`.
-- In the current implementation:
+- Currently:
   - `.` and `::` are supported,
   - and `?.` is supported for optional field access on the supported `struct`
     subset (`opt?.field` yields `FieldType?`; see `docs/language/optional.md`).
@@ -85,7 +85,7 @@ The language includes the following operators and delimiters:
     function; see `docs/language/typed-errors.md`.
 - Ranges: `...`, `..=`, `..`.
 - Other punctuation: `?`, `??`, `->`, `=>`, `,`, `;`, `(`, `)`, `{`, `}`, `[`, `]`, `_`, `:`.
-  - In the current implementation, `??` is supported for optionals in the
+  - Currently, `??` is supported for optionals in the
     current backend subset (including scalar, `string`, and the current
     `struct` subset, plus nested optionals in the supported payload subset;
     see `docs/language/optional.md`). The `?` token is used both in type
@@ -106,7 +106,7 @@ expression statement.
 
 Rules:
 
-- The left-hand side must be an assignable lvalue. In the current implementation, it may be:
+- The left-hand side must be an assignable lvalue. In the current subset, it may be:
   - an identifier that refers to a local `let mut` binding, or
   - a struct field lvalue `name.field` where `name` is either:
     - a local `let mut` binding of a supported POD `struct`, or
@@ -125,7 +125,7 @@ Compound assignments are shorthand for “read-modify-write”:
 Rules:
 
 - The left-hand side must be an assignable lvalue (as described above for `=`).
-- In the current implementation, compound assignments are supported only for numeric
+- In the current subset, compound assignments are supported only for numeric
   scalar types (integers and `f32`/`f64`), including numeric struct fields.
 - The compound assignment expression has type `void`.
 
@@ -415,7 +415,7 @@ conversions:
     between raw addresses and array/slice views:
     - `ptr as T[]` constructs a `T[]` slice view where the pointer component is
       `ptr` and the length component is a dedicated **unknown-length** sentinel
-      (in the current implementation, `i64.min`). The compiler does not validate
+      (currently, `i64.min`). The compiler does not validate
       the pointer value.
       - Indexing and assignment through an unknown-length slice are permitted
         but **unchecked**: the runtime performs no `index < len` bounds check.
@@ -447,7 +447,7 @@ conversions:
   - Current subset limitation: the compiler must be able to resolve the
     receiver’s nominal type at the cast site so it can lower the implicit
     `serialize()` call. This includes name expressions, field accesses, calls,
-    and array/slice indexing (`arr[i] as T`) in the current implementation.
+    and array/slice indexing (`arr[i] as T`) in the current subset.
 - `Deserialize(S)`-backed casts (explicit conversion via `deserialize(...)`):
   - When the target type provides a unique **static** method named `deserialize`
     matching the `std::interfaces::Deserialize(S)` surface (`fn deserialize(value: S) -> Self`),

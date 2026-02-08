@@ -49,7 +49,7 @@ Rules:
 
 Inside a character literal, `\` introduces an escape sequence.
 
-Supported escapes in the current implementation:
+Supported escapes:
 
 - `\n` — U+000A (line feed)
 - `\r` — U+000D (carriage return)
@@ -135,7 +135,7 @@ fn main () -> int {
 - `docs/language/literals-string.md` (string literals and escape sequences)
 - `docs/language/operators.md` (`as` casts for int-like types, including `char`)
 
-## Relevant Tests
+## Tests
 
 - Unicode char equality and `\u{...}` escape:
   - `tests/silk/pass_char_eq.slk`

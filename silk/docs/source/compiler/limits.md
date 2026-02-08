@@ -1,4 +1,4 @@
-# Compiler Limits (Current Implementation)
+# Compiler Limits
 
 This document enumerates the current hard limits in the Silk compiler and its
 tooling. These limits are **implementation guardrails** (primarily to keep
@@ -29,7 +29,7 @@ tables. Module-/package-scoped tables are heap-backed to avoid stack overflows
 when compiling large module sets, while some per-function scratch state is
 still stack-backed.
 
-When these limits are exceeded, the current implementation typically reports
+When these limits are exceeded, the compiler typically reports
 `E2002` (“unsupported expression in the current subset”) because the checker
 uses `CheckError.UnsupportedExpression` as a shared “not supported yet” / “hit
 an internal cap” path. This will be refined into dedicated “limit exceeded”
@@ -63,7 +63,7 @@ Current caps (`src/lower_ir.zig`):
 
 - **Lowering binding environment size (per function)**: **1024**
   - This is the maximum number of simultaneously in-scope bindings that the IR
-    lowerer can track in the current implementation.
+    lowerer can track.
 - **Type-alias resolution depth**: **256**
   - This bounds recursive/chain alias resolution during lowering to avoid
     runaway recursion in pathological cases.

@@ -58,6 +58,10 @@ Output selection:
 
 - `-o <path>`, `--out <path>` — output path. If parent directories do not exist, `silk` creates them.
 - `--kind executable|object|static|shared` — output kind.
+- `--emit bin|asm` — emission mode:
+  - `bin` (default) emits the selected binary artifact at `-o` / `--out`,
+  - `asm` writes an `objdump`-style disassembly (Intel syntax) of the selected output on `linux/x86_64` and writes it to `-o` / `--out`.
+- `-S` — alias of `--emit asm` (defaults to `--kind object` when `--kind` is not set).
 
 Target selection:
 
@@ -81,7 +85,7 @@ Package builds:
 - `--build-script` — compile and run `<package_root>/build.silk` and use its stdout as the manifest.
 - `--package-target <name>` — select one or more manifest `[[target]]` entries by name (repeatable; `--pkg-target` is accepted as an alias).
   - when omitted, `silk build --package ...` builds every manifest `[[target]]` entry by default.
-  - when building multiple targets, per-output flags are rejected (`-o/--out`, `--kind`, `--arch`, `--target`, `--c-header`, `--needed`, `--runpath`, `--soname`).
+  - when building multiple targets, per-output flags are rejected (`-o/--out`, `--kind`, `--emit`, `--arch`, `--target`, `--c-header`, `--needed`, `--runpath`, `--soname`).
 
 Argument parsing:
 
@@ -95,6 +99,9 @@ silk build src/main.slk -o build/app
 
 # Build an object file (and emit a C header for exported symbols).
 silk build src/lib.slk --kind object -o build/lib.o --c-header build/lib.h
+
+# Emit an assembly listing (objdump-style disassembly) for an object build.
+silk build src/main.slk -S -O2 -o build/main.s
 
 # Link an extra C object into a Silk executable.
 cc -std=c99 -c -o build/extra.o src/extra.c

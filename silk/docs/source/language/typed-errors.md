@@ -8,7 +8,7 @@ enforce it.
 
 This document specifies the surface syntax and checker rules for typed errors.
 
-Status: **implemented for the current front-end + native backend subset**.
+Status: **implemented for the front-end + native backend subset**.
 The compiler supports `error` declarations, `panic` statements, error-aware
 return types (`T | ErrorType...`), and the `match` *statement* form for handling
 typed errors (including the Terminal Arm Rule), plus the postfix `?`
@@ -287,9 +287,8 @@ typed errors into:
 - explicit error structs/enums,
 - or a terminal action appropriate for the platform.
 
-Status: the current compiler rejects `ext` declarations whose function types use
-`|` (and rejects exported C ABI surfaces with `|`) in the current
-implementation.
+Status: the compiler rejects `ext` declarations whose function types use `|`
+(and rejects exported C ABI surfaces with `|`).
 
 ## Related proposals (not implemented)
 

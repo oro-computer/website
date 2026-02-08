@@ -2,7 +2,7 @@
 
 `enum` defines a nominal sum type with a fixed set of variants.
 
-In the current implementation, enums support:
+Currently, enums support:
 
 - unit variants (`E::A`),
 - tuple variants (`E::B(x)`),

@@ -56,7 +56,7 @@ fn main () -> int {
 
 ## Surface Syntax (Current Lexer)
 
-In the current implementation, numeric literal tokens are recognized as:
+Numeric literal tokens are recognized as:
 
 - **Integer literal**:
   - decimal digits (`[0-9]+`),
@@ -172,7 +172,7 @@ fn main () -> int {
 - `docs/language/operators.md` (unary `-`, arithmetic, and `as` casts)
 - `docs/language/types.md` (primitive numeric type names)
 
-## Relevant Tests
+## Tests
 
 - Integer literal contextual typing (`u8` parameters):
   - `tests/silk/pass_typed_params_u8_many_stack.slk`

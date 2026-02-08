@@ -50,7 +50,7 @@ heap and are represented as an `&Struct` reference in user code.
   counting (RC) for values originating from `new`.
 
 Important: this is currently an internal Silk-managed heap for Silk code, not an
-FFI pointer model. The current implementation does not permit `&Struct` for
+FFI pointer model. The compiler does not permit `&Struct` for
 non-opaque structs in `ext` signatures; only `&Opaque` handles may cross the
 FFI boundary (see `docs/language/structs-impls-layout.md` and
 `docs/language/ext.md`).
@@ -58,15 +58,15 @@ FFI boundary (see `docs/language/structs-impls-layout.md` and
 #### Implemented subset (current compiler)
 
 - `new` is supported only in function bodies (top-level `let` initializers
-  cannot contain `new` in the current implementation).
+  cannot contain `new` in the current subset).
 - `new` is supported only when the checker can determine a concrete reference
-  result type of the form `&Struct`. In the current implementation this happens
+  result type of the form `&Struct`. In the current subset, this happens
   in two ways:
-  - from an expected type context `&Struct` (for example `let x: &Packet = new
-    Packet{ ... };` or as a call argument where the parameter type is `&Struct`)
+  - from an expected type context `&Struct` (for example `let x: &Frame = new
+    Frame{ ... };` or as a call argument where the parameter type is `&Struct`)
   - from the `new` operand itself when it names a struct type (for example
-    `let x = new Packet{ ... };` or `let x = new Packet(...);`), which allows
-    `let` bindings to infer `&Packet` without an explicit annotation
+    `let x = new Frame{ ... };` or `let x = new Frame(...);`), which allows
+    `let` bindings to infer `&Frame` without an explicit annotation
 - Only non-opaque `struct` types are supported for `new`.
 - Reference counting is applied only to `&Struct` values that originate from
   `new` (borrowed stack references are not treated as RC-managed values).

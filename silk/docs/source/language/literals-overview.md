@@ -9,7 +9,7 @@ For first-time readers, a good path is:
 3. the specific literal docs below (syntax, semantics, and what works today).
 
 Returning readers typically want the “Implementation Status” section near the top
-of each literal concept doc, plus the “Relevant Tests” links for runnable
+of each literal concept doc, plus the “Tests” links for runnable
 examples.
 
 ## Literal Categories

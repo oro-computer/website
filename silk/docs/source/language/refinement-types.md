@@ -1,84 +1,43 @@
-# Refinement Types
+# Refinement Types (Removed)
 
-Refinement types are types annotated with logical predicates that constrain the
-set of values they may represent. They are a tool for making illegal states
-unrepresentable and for turning certain classes of bugs into compile-time
-errors.
+Silk previously had an experimental design for **refinement types** (types
+annotated with logical predicates, often written with `where`).
 
-Status: **design in progress**. Refinement types are not implemented in the
-current compiler subset. Today, Silk provides verification annotations
-(`#require`, `#assure`, `#assert`, `#invariant`, `#variant`, `#monovariant`) and formal Silk declarations (`#const`)
-as compile-time-only metadata; see `docs/language/formal-verification.md`.
+That design has been removed in favor of a single mechanism: **Formal Silk**
+(`#require`, `#assure`, `#assert`, loop invariants/variants, and `theory`), with
+support for attaching `#require` directly to `struct` declarations.
 
-Note: in Silk, any use of a `where` predicate is verification syntax. When
-`where` predicates are implemented, their presence will require proof (VC
-generation + Z3 discharge) for the compiled module set, per
-`docs/language/formal-verification.md`.
+## Replacement: Formal Silk struct requirements
 
-## Overview
+Use `#require` on a `struct` to state requirements that must hold for all
+values constructed for that struct type.
 
-A refinement type consists of:
-
-- a **base type** (for example `int`, `string`, `&T`, or a struct), and
-- a **predicate** that must hold for all values of the refinement type.
-
-The predicate is written in Silk’s specification expression language (the same
-expression grammar used by `#require` / `#assure`).
-
-## Proposed Surface Syntax
-
-One intended surface form is a record-like binder with a `where` clause:
+Example:
 
 ```silk
-type NonEmptyString = { s: string where std::length(s) > 0 };
-```
+#require id > 0;
+struct User {
+  id: int,
+}
 
-Notes:
+#assure result > 0;
+fn get_id () -> int {
+  return 1;
+}
 
-- `type` aliases are not implemented yet (this is design work).
-- The binder name (`s`) is a name for the value being constrained, usable
-  inside the predicate.
-
-## Checking Model (Planned)
-
-The compiler/verifier discharges refinement predicates using:
-
-- constant-folding and local reasoning for literals and simple expressions,
-- facts established by control-flow (guards) when the verifier can prove them,
-- facts provided by contracts (`#require` / `#assure`) and invariants
-  (`#invariant`),
-- and, where necessary, explicit evidence via helper constructors or lemmas.
-
-When the compiler cannot prove a predicate, the program should fail to compile
-with a diagnostic that:
-
-- points to the predicate that could not be proven, and
-- suggests how to provide evidence (guard, constructor, or contract).
-
-## Relationship to `#require` / `#assure`
-
-Refinement types and function contracts are meant to compose:
-
-- A parameter of a refinement type encodes a precondition at the type level.
-- A refinement return type encodes a postcondition at the type level.
-
-Example (design-only):
-
-```silk
-type NonZeroInt = { n: int where n != 0 };
-fn safe_divide(numer: int, denom: NonZeroInt) -> int {
-  return numer / denom;
+fn main () -> int {
+  let user = User{ id: get_id() };
+  return user.id;
 }
 ```
 
-## Implementation Notes (Current Compiler)
+Rules (current subset):
 
-In the current implementation:
+- `#require` expressions on a `struct` may reference that struct's fields by
+  name.
+- When Formal Silk syntax is present in the compiled module set, the verifier
+  proves these requirements at struct literal construction sites (`Type{ ... }`
+  and `new Type{ ... }`). If any requirement cannot be proven, compilation
+  fails.
 
-- there is no `type` alias declaration,
-- there is no `where` clause in types,
-- and there is no verifier that can prove user-defined predicates.
-
-The existing verification directives (`#require`, `#assure`, `#assert`,
-`#invariant`, `#variant`, `#monovariant`) are parsed, type-checked as `bool` where appropriate, and preserved
-as metadata, but they do not yet affect code generation.
+See `docs/language/formal-verification.md`.

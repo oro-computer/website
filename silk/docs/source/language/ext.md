@@ -79,7 +79,7 @@ Status: the current compiler subset implements this feature under the `ext`
 keyword. As part of the Silk rename/rescope, `ext` is renamed to `ext` and the
 docs treat `ext` as canonical.
 
-The current implementation supports:
+Currently supported:
 
 - parsing `ext`/`ext`-style external declarations and representing them in the AST,
 - optional external symbol aliases (`ext local "extern" = ...;`),

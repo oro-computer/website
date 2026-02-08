@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-02-06T22:39:16+00:00",
+  "generatedAt": "2026-02-07T21:29:52+00:00",
   "kind": "docs",
-  "count": 159,
+  "count": 161,
   "sections": [
     {
       "name": "overview",
@@ -268,7 +268,7 @@
         },
         {
           "id": "language/refinement-types",
-          "title": "Refinement Types",
+          "title": "Refinement Types (Removed)",
           "file": "language/refinement-types.md"
         },
         {
@@ -402,6 +402,11 @@
           "file": "std/ggml.md"
         },
         {
+          "id": "std/graphics",
+          "title": "`std::graphics` \u2014 Graphics API Bindings",
+          "file": "std/graphics.md"
+        },
+        {
           "id": "std/http",
           "title": "`std::http`",
           "file": "std/http.md"
@@ -410,6 +415,11 @@
           "id": "std/https",
           "title": "`std::https`",
           "file": "std/https.md"
+        },
+        {
+          "id": "std/image",
+          "title": "`std::image` \u2014 Image Codecs + Color",
+          "file": "std/image.md"
         },
         {
           "id": "std/interfaces",

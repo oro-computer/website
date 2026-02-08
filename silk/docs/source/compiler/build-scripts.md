@@ -34,7 +34,7 @@ Rules:
   the directory containing the package.
 - If `build.silk` does not exist, `silk build --build-script` fails.
 - The build script is executed as a hosted native program on the build host.
-  In the current implementation, this is supported only on `linux/x86_64`.
+  This is currently supported only on `linux/x86_64`.
 - The build script’s stdout is parsed as a manifest and used for the remainder
   of the build in place of reading `<package_root>/silk.toml`.
 - The build script may write logs to stderr; they are forwarded by the driver.
@@ -58,8 +58,7 @@ Build scripts are arbitrary code execution.
 
 For this reason:
 
-- build scripts are **not** run implicitly by `silk build` in the current
-  implementation; they require `--build-script`,
+- build scripts are **not** run implicitly by `silk build`; they require `--build-script`,
 - downstream tooling (package managers, CI, editor integrations) MUST treat
   build scripts as untrusted inputs unless they are pinned and reviewed.
 

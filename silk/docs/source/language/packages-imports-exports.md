@@ -210,7 +210,7 @@ Rules:
 - `import` declarations identify dependencies and bring exported symbols
   from the imported package into scope in the importing module, subject to
   the visibility rules below.
-- In the current implementation:
+- Currently:
   - importing a package makes its exported `let` bindings with explicit
     type annotations visible as ordinary, unqualified names in the
     importing module (for example, `import util;` followed by `answer`
@@ -321,7 +321,7 @@ package app;
 import util;
 
 fn main () -> int {
-  // In the current implementation, both unqualified and qualified access are
+  // Currently, both unqualified and qualified access are
   // accepted after importing a package. Prefer the qualified form to make the
   // origin explicit.
   if util::add1(util::answer) != 42 {
@@ -333,8 +333,8 @@ fn main () -> int {
 
 ### Package imports resolve against the module set
 
-In the current implementation, a **package import** can only resolve if the
-package exists in the current module set.
+A **package import** resolves only if the package exists in the current module
+set.
 
 This matters most when you use package specifiers (`from "ns_pkg"`) or when you
 expect a package import to find a package that is not otherwise present.
@@ -460,7 +460,7 @@ Notes:
 - There is no combined `import foo, { bar } from "...";` form in the current grammar.
   Use separate `import` declarations.
 - For non-`std/` file specifiers, include the `.slk` extension explicitly. (Only
-  `std/...` specifiers get `.slk` appended automatically in the current implementation.)
+  `std/...` specifiers get `.slk` appended automatically.)
 
 Rules:
 
@@ -490,7 +490,7 @@ Exported names for named imports:
 - Named imports can import:
   - exported values: `export fn`, `export let`, and exported `ext` bindings, and
   - type names: `struct`, `enum`, `error`, and `interface` declarations (treated
-    as visible across module boundaries in the current implementation),
+    as visible across module boundaries once the relevant module(s) are loaded into the module set),
   - exported type aliases: `export type ...;`, and
   - exported Formal Silk theories: `export theory` declarations (importable so
     they can be applied via `#theory Name(args);`).
@@ -513,11 +513,10 @@ Name binding rules:
 - Importing the same value name from multiple file imports without aliasing is
   an error.
 - Importing a value name that is already visible in the module (for example
-  via same-package scope or a package import) is treated as a no-op in the
-  current implementation **unless** it conflicts with a local declaration in
-  the importing module.
+  via same-package scope or a package import) is treated as a no-op **unless**
+  it conflicts with a local declaration in the importing module.
 - Importing a type name that is already visible in the module is treated as a
-  no-op in the current implementation.
+  no-op.
 
 ### Default imports and namespace imports
 
@@ -648,7 +647,7 @@ Rules:
   will be specified and implemented alongside the package graph in
   `docs/compiler/architecture.md`.
 
-In the current implementation, most type names are treated as visible across
+Currently, most type names are treated as visible across
 module boundaries once the relevant module(s) are loaded into the module set.
 The `export` modifier is still recorded on type declarations so the
 package/export model can be tightened later without changing source.
@@ -734,7 +733,7 @@ Rules (current compiler subset):
   - The entry may rename the exported name: `export { localName as ExportedName };`.
 - Re-exported names are part of the module/package export surface, so other
   modules may import them via `import { Name } from "./barrel.slk";`.
-- In the current implementation, `export { ... }` supports values and exported
+- Currently, `export { ... }` supports values and exported
   Formal Silk theories (`theory` declarations). It does not export type names.
 
 ## Status and Future Work
@@ -813,7 +812,7 @@ Future work (tracked in `PLAN.md`) will:
 - **Name collisions with named imports**: when importing from multiple modules, use
   `as` to rename one binding (`E2004`).
 
-## Relevant Tests
+## Tests
 
 - Package import + unqualified/qualified access:
   - `tests/silk/pass_import_std_strings.slk`

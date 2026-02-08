@@ -30,7 +30,7 @@ Embedders should compare the runtime version returned by this function with the 
 
 ## Parameters
 
-- `out_major`, `out_minor`, `out_patch` — output pointers written on success. The current implementation tolerates `NULL` pointers and skips writing those components.
+- `out_major`, `out_minor`, `out_patch` — output pointers written on success. This API tolerates `NULL` pointers and skips writing those components.
 
 ## Return value
 

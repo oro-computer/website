@@ -14,7 +14,7 @@ See also:
 `std::websocket` is a protocol layer that upgrades an HTTP/1.1 connection to a
 WebSocket and then sends/receives WebSocket frames.
 
-Design goals (current implementation):
+Design goals:
 
 - Work for hosted POSIX builds using `std::net`.
 - Be fully interoperable with other WebSocket implementations (browsers,

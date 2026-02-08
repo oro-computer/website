@@ -331,7 +331,7 @@ ABI mature.
 - `docs/language/packages-imports-exports.md` (namespaces and imports)
 - `docs/language/typed-errors.md` (typed errors, not enums)
 
-## Relevant Tests
+## Tests
 
 - Enum matches (end-to-end):
   - `tests/silk/pass_enum_unit_match_int.slk`

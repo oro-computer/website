@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-06T22:39:16+00:00",
+  "generatedAt": "2026-02-07T21:29:52+00:00",
   "kind": "wiki",
   "count": 84,
   "sections": [
@@ -218,7 +218,7 @@
         },
         {
           "id": "language/refinement-types",
-          "title": "Refinement types (design)",
+          "title": "Refinement types (removed)",
           "file": "language/refinement-types.md"
         },
         {

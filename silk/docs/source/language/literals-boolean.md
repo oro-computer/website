@@ -72,7 +72,7 @@ fn main () -> int {
 - `docs/language/flow-if-else.md` (`if` statement semantics)
 - `docs/language/flow-while.md` (`while` statement semantics)
 
-## Relevant Tests
+## Tests
 
 - Boolean control flow:
   - `tests/silk/pass_if_bool.slk`

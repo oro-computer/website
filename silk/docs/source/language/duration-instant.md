@@ -24,7 +24,7 @@ scalar representation (`i64`) at the IR and native ABI layers.
 
 ## Operators (Implemented Subset)
 
-The current implementation supports the following operator subset:
+Supported operator subset:
 
 - `Duration + Duration -> Duration`
 - `Duration - Duration -> Duration`
@@ -40,7 +40,7 @@ The current implementation supports the following operator subset:
   - `Instant` vs `Instant`
 
 Other arithmetic (`*`, `/`, `%`) and bitwise operators are not defined for time
-types in the current implementation.
+types in the implemented subset.
 
 ## Overflow (Implemented)
 

@@ -41,7 +41,7 @@ Here `"world"` and `42` become varargs elements.
 ### Forwarding
 
 Because Silk does not yet have a general “spread” operator for calls, the
-current implementation supports forwarding a varargs pack when you pass a
+compiler supports forwarding a varargs pack when you pass a
 varargs binding as the final argument.
 
 ```silk

@@ -146,7 +146,7 @@ The server provides a minimal implementation of `textDocument/completion`:
   - namespace completions after `::` for known packages and namespace imports,
   - member completions for struct fields and methods after `.` when the receiver type is known (including locals with type annotations or struct-literal/cast inference),
   - struct-literal field suggestions in `Type { ... }` expressions when the cursor is in a field-name position (before the `:`).
-- The current implementation:
+- Currently:
   - returns completion items with `label`, `kind`, and `detail` populated when symbol data is available,
   - attaches a plaintext signature preview for functions and methods in completion documentation,
   - filters results by the identifier prefix immediately preceding the cursor position,

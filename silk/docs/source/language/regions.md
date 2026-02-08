@@ -81,13 +81,13 @@ Rules:
 `with <region> { ... }` activates a named region binding:
 
 ```silk
-struct Packet { x: int }
+struct Frame { x: int }
 
 fn main () -> int {
   const region arena: u8[1024];
 
   with arena {
-    let p: &Packet = new Packet{ x: 1 };
+    let p: &Frame = new Frame{ x: 1 };
     // ...
   }
 
@@ -99,11 +99,11 @@ The `<region>` name may refer to any `Region`-typed binding, including a region
 parameter passed to a function:
 
 ```silk
-struct Packet { x: int }
+struct Frame { x: int }
 
 fn alloc_in (r: Region) -> int {
   with r {
-    let p: &Packet = new Packet{ x: 1 };
+    let p: &Frame = new Frame{ x: 1 };
     return p.x;
   }
 }
@@ -115,11 +115,11 @@ fn alloc_in (r: Region) -> int {
 backed by `<bytes>` writable bytes and activates it for the block:
 
 ```silk
-struct Packet { x: int }
+struct Frame { x: int }
 
 fn main () -> int {
   with 1024 {
-    let p: &Packet = new Packet{ x: 1 };
+    let p: &Frame = new Frame{ x: 1 };
     // ...
   }
   return 0;
@@ -136,13 +136,13 @@ Rules (current subset):
 first `<bytes>` bytes of `<region>`:
 
 ```silk
-struct Packet { x: int }
+struct Frame { x: int }
 
 fn main () -> int {
   const region arena: u8[2048];
 
   with 1024 from arena {
-    let p: &Packet = new Packet{ x: 1 };
+    let p: &Frame = new Frame{ x: 1 };
     // ...
   }
 
@@ -183,7 +183,7 @@ Within a `with <region> { ... }` block:
 
 - any `new` allocation performed by the compiler’s `new` lowering uses the
   active region as its backing store,
-- allocations are **8-byte aligned** in the current implementation subset,
+- allocations are **8-byte aligned** in the current subset,
 - if the region does not have enough remaining space, the program traps.
 
 Outside of a `with` block, `new` uses the current heap model described in

@@ -1,18 +1,12 @@
-# Refinement types (design)
+# Refinement types (removed)
 
-Refinement types are types annotated with logical predicates (`where`) that
-constrain the set of values they may represent.
+The earlier refinement-type design (types annotated with `where` predicates) is
+removed.
 
-Canonical design doc: `docs/language/refinement-types.md`.
+Use Formal Silk instead:
 
-## Example (Design)
+- `#require` / `#assure` on functions, and
+- `#require` on `struct` declarations (struct requirements proved at
+  construction sites).
 
-```silk
-// Design-only sketch: a string that is proven non-empty.
-type NonEmptyString = { s: string where std::length(s) > 0 };
-```
-
-## See also
-
-- Canonical design doc: `docs/language/refinement-types.md`
-- Formal verification: `docs/wiki/language/formal-verification.md`
+See `docs/language/formal-verification.md`.

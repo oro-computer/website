@@ -171,6 +171,9 @@
     function rewriteOutsideCode(text) {
       let out = text;
 
+      // Headings
+      out = out.replace(/^(\s*#{1,6}\s+)Relevant Tests\b/gi, "$1Tests");
+
       // Remove status-y "Works today" framing in prose.
       out = out.replace(/^(\s*#{1,6}\s+)What works today\b/i, "$1Supported behavior");
       out = out.replace(/\bwhat works today\b/gi, "supported behavior");
@@ -186,6 +189,15 @@
       out = out.replace(/^\s*Works today:\s*/i, "Example: ");
       out = out.replace(/^(\s*)Works today\b/i, "$1Example");
       out = out.replace(/\(Works today\)/gi, "");
+
+      // Prefer direct, present-tense language over "current implementation" framing.
+      out = out.replace(/\bIn the current implementation\b/gi, (m) =>
+        m[0] === "I" ? "Currently" : "currently"
+      );
+      out = out.replace(/\bthe current implementation\b/gi, (m) =>
+        m[0] === "T" ? "The implementation" : "the implementation"
+      );
+      out = out.replace(/\bcurrent implementation stage\b/gi, "initial bring-up");
 
       // Prefer present-tense, spec-like language over "current subset".
       out = out.replace(
@@ -315,8 +327,10 @@
       } else {
         // Code fences are treated as examples; keep semantics intact, but rewrite tone-y
         // status language inside comment text (both whole-line and trailing comments).
-        const rewriteComment = (comment) =>
-          comment
+        const rewriteComment = (comment) => {
+          const leading = (comment.match(/^\s*/) || [""])[0];
+          const body = comment.slice(leading.length);
+          const rewritten = body
             .replace(/\bwhat works today\b/gi, "supported behavior")
             .replace(/\bworks today\b/gi, "Example")
             .replace(/\bcurrent\s+(?:subset|support)\b/gi, "")
@@ -324,6 +338,8 @@
             .replace(/ {2,}/g, " ")
             .replace(/\(\s*\)/g, "")
             .trimEnd();
+          return leading + rewritten;
+        };
 
         const t = line.trimStart();
         const hasLineComment =

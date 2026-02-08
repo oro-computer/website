@@ -20,8 +20,7 @@ over many scrutinee types. The current compiler implementation supports only a
 narrow, explicitly documented subset so we can validate end-to-end lowering and
 code generation.
 
-In the current implementation, `match` is accepted as an *expression* of the
-form:
+In the initial subset, `match` is accepted as an *expression* of the form:
 
 ```silk
 match <scrutinee> {
@@ -33,7 +32,7 @@ match <scrutinee> {
 Notes:
 
 - Arms are separated by commas; a trailing comma is permitted.
-- Arm bodies are expressions (not blocks) in the current implementation.
+- In the initial subset, arm bodies are expressions (not blocks).
 
 ### Optional Matching (`T?`)
 
@@ -106,7 +105,7 @@ Implemented initial subset:
 - For `Some(v) => ...`, the binder `v` is in scope only within that arm and has
   type `T` (the inner payload type of the scrutinee `T?`).
 - The result type of a `match` expression is the common type of its arms; all
-  arms must type-check to the same result type in the current implementation.
+  arms must type-check to the same result type in the initial subset.
 
 ## `match` Statement (Typed Errors)
 
@@ -142,8 +141,7 @@ Rule because it is not a `T | ...` typed-error expression.
 ### Result Matching (`Ok(...)` / `Err(...)`) (Implemented Subset)
 
 The `match` expression also supports a small subset for
-recoverable “success or error” values. In the current implementation this
-includes:
+recoverable “success or error” values. In the initial subset, this includes:
 
 - `std::result::Result(T, E)` (an `enum` with `Ok(T)` and `Err(E)` variants), and
 - “Result-like” structs of the form `{ value: T?, err: E? }`.
@@ -187,7 +185,7 @@ fn main () -> int {
 }
 ```
 
-## Relevant Tests
+## Tests
 
 - Optional `match` expressions:
   - `tests/silk/pass_optional_match_unwrap_int.slk`

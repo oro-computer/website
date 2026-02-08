@@ -140,7 +140,7 @@ introduced by the literal syntax itself (see `literals-string.md`), not by the
 
 ## Evaluation Limits (Current Implementation)
 
-Compile-time evaluation must terminate. The current implementation enforces an
+Compile-time evaluation must terminate. The compiler enforces an
 instruction budget and a call-depth budget when executing `const fn` bodies at
 compile time; evaluation that exceeds these budgets is rejected as not
 compile-time evaluable.

@@ -11,12 +11,14 @@ This cheat sheet includes **both**:
 
 For the authoritative “what works today”, prefer:
 
-- `STATUS.md` (current implementation state), and
+- `STATUS.md` (implementation status), and
 - any “Implementation Status” sections inside the relevant concept documents.
 
 In particular, features such as regions (beyond the current `with` + `new`
 subset), concurrency runtime (scheduler/event loop), and
-refinement/dependent types are **not** implemented end-to-end yet.
+dependent types are **not** implemented end-to-end yet. Value constraints are
+expressed via Formal Silk (`#require` / `#assure`, including `#require` on
+`struct` declarations), not refinement types.
 
 In the current compiler subset:
 
@@ -141,9 +143,9 @@ Mutability:
 
 ## Structs, Impl Blocks, Interfaces
 
-- Structs: `struct Packet { seq: u32, size: u16, flag: u8 }`
+- Structs: `struct Frame { seq: u32, size: u16, flag: u8 }`
   - pure data, well-defined layout.
-- Impl blocks: `impl Packet { fn size_bits(self: &Packet) -> u32 { ... } }`
+- Impl blocks: `impl Frame { fn size_bits(self: &Frame) -> u32 { ... } }`
 - Interfaces:
 
   ```silk
@@ -162,8 +164,8 @@ See `structs-impls-layout.md` and `interfaces.md` for details.
 
 - Regions (fixed-size allocation context):
   - declare: `const region arena: u8[1024];`
-  - use: `with arena { let p: &Packet = new Packet{ ... }; }`
-  - anonymous: `with 1024 { let p: &Packet = new Packet{ ... }; }`
+  - use: `with arena { let p: &Frame = new Frame{ ... }; }`
+  - anonymous: `with 1024 { let p: &Frame = new Frame{ ... }; }`
 - Buffers:
   - intrinsic `Buffer(T)` with `(ptr, capacity)`,
   - unsafe primitive underpinning higher-level collections.

@@ -32,6 +32,11 @@ This document defines how we validate the compiler, ABI, and standard library.
 - For critical features (especially FFI and ABI), maintain **parallel test cases in Zig and C**:
   - Zig tests verify language semantics and internal representations.
   - C tests verify ABI conformance and interop.
+- For native codegen quality, maintain a small set of **end-to-end guardrails** that:
+  - build representative Silk code to `linux/x86_64` objects,
+  - disassemble with `objdump` using a stable format (no addresses / no raw bytes),
+  - and compare instruction counts + stack frame sizes against a C reference built with the host `cc`,
+  so obvious regressions (exploding instruction counts, excessive spills) are caught early.
 - When a bug is found:
   - add a regression test in Zig and, where relevant, in C,
   - record any observed differences or limitations in `STATUS.md`,

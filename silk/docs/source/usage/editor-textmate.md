@@ -1,6 +1,6 @@
 # TextMate Grammar (tmLanguage)
 
-This repository ships a TextMate grammar for Silk under `textmate/silk.tmLanguage.json`. It provides syntax highlighting for editors that consume tmLanguage grammars (TextMate, VS Code, Sublime Text, Nova, and others). For editor-specific install snippets, see `textmate/README.md`.
+This repository ships a TextMate grammar for Silk under `textmate/silk.tmLanguage.json`. It provides syntax highlighting for editors that consume tmLanguage grammars (TextMate, VS Code, Sublime Text, Nova, and others).
 
 ## Scope and File Extension
 
@@ -16,6 +16,6 @@ This repository ships a TextMate grammar for Silk under `textmate/silk.tmLanguag
 
 ## VS Code
 
-A grammar-only VS Code extension is included under `textmate/vscode/`. See `textmate/vscode/README.md` for details on running it in an Extension Development Host.
+A grammar-only VS Code extension is included under `textmate/vscode/`. To try it, open that directory in VS Code and press `F5` to launch an Extension Development Host.
 
 For LSP-backed features (diagnostics, hover, go-to-definition), use the `silk-lsp` language server with an appropriate client (see `docs/compiler/lsp-silk.md` and `docs/usage/editor-vim.md`).

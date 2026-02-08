@@ -55,7 +55,7 @@ The initial implementation is intentionally smaller and focuses on:
   - non-zero on error, printing a human-readable diagnostic (format specified in `docs/compiler/diagnostics.md`).
 - `silk test [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--filter <pattern>] [--package <dir|manifest>] <file> [<file> ...]` — compile and run language-level `test` declarations found in the module set, emitting TAP output:
   - uses TAP version 13 formatting (`TAP version 13`, `1..N`, `ok`/`not ok` lines),
-  - in the current implementation, each test runs in its own process so a failing `assert` (panic/abort) does not stop the whole suite,
+  - each test runs in its own process, so a failing `assert` (panic/abort) does not stop the whole suite,
   - the supported code generation subset matches `silk build` for the active target (initially `linux/x86_64`).
   - `--filter <pattern>` runs only tests whose display name contains `<pattern>` (substring match).
   - when `<file> ...` inputs are omitted and `--package` is also omitted, but `./silk.toml` exists, `silk test` behaves as if `--package .` was provided.
@@ -148,7 +148,7 @@ The initial implementation is intentionally smaller and focuses on:
     as ordinary source files),
 - user-provided `package std::...;` modules continue to override the default
   std implementation for the same package names.
-- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]` (or `--out <path>`) — for now:
+- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--emit bin|asm] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]` (or `--out <path>`) — for now:
   - inputs are classified by extension:
     - `.slk` — Silk source files (compiled as the module set),
     - `.o` — ELF relocatable objects linked into `--kind executable|shared` outputs (and included in `--kind static` archives),
@@ -167,7 +167,7 @@ The initial implementation is intentionally smaller and focuses on:
     - `--package-target <name>` selects one or more manifest `[[target]]` entries by name (repeatable; `--pkg-target` is accepted as an alias),
       - when omitted, the compiler builds every manifest `[[target]]` entry by default,
     - when building multiple targets (the default when `--package-target` is omitted, or when it is repeated), per-output flags are rejected:
-      `-o/--out`, `--kind`, `--arch`, `--target`, `--c-header`, `--needed`, `--runpath`, `--soname`,
+      `-o/--out`, `--kind`, `--emit`, `--arch`, `--target`, `--c-header`, `--needed`, `--runpath`, `--soname`,
     - `-o/--out` is optional only when building a single target (defaults to the target’s `output` or a computed default under `build/`),
     - package dependencies are loaded from the manifest’s `[dependencies]` table,
     - see `docs/compiler/package-manifests.md`,
@@ -234,7 +234,7 @@ The initial implementation is intentionally smaller and focuses on:
       - in addition to conditions, boolean *value* positions (for example `let flag: bool = a && b;` and `return a || b;` in `bool`-returning helpers) support the same boolean expression subset and preserve short-circuit evaluation,
       - use `break;` and `continue;` inside `while` loops,
       - allow call expressions as standalone statements (discarding the returned value),
-      - allow assignment and compound assignment to `let mut` locals by name (`x = expr;`, `x += y;`); in the current implementation the left-hand side must be an identifier, `=` is supported for all currently supported value types (including `string`, the supported `struct` subset, and optionals of those), and compound assignments are supported only for numeric scalar locals,
+      - allow assignment and compound assignment to `let mut` locals by name (`x = expr;`, `x += y;`); the left-hand side must be an identifier; `=` is supported for all currently supported value types (including `string`, the supported `struct` subset, and optionals of those); compound assignments are supported only for numeric scalar locals,
       - and, for helpers, use direct calls between functions of this shape; scalar parameters follow the System V AMD64 calling convention as documented in `docs/compiler/ir-overview.md`:
         - integer-like scalars (`bool` and integers) use up to 6 general-purpose registers (`rdi`, `rsi`, `rdx`, `rcx`, `r8`, `r9`),
         - `f32`/`f64` use up to 8 XMM registers (`xmm0`..`xmm7`),
@@ -262,7 +262,7 @@ The initial implementation is intentionally smaller and focuses on:
       - constructing optionals via `None` and `Some(<expr>)` for those payload types,
       - `==` / `!=` comparisons over those optionals (tag + payload equality; nested optionals compare recursively); `None` / `Some(...)` can be used directly in equality expressions when the other operand provides the optional type context (for example `opt == None` and `opt == Some(x)`),
       - accessing fields of optional structs via optional field access (`opt?.field`), producing an optional result of the field type (`FieldType?`),
-      - matching on optionals via `match <scrutinee> { None => <expr>, Some(<name|_>) => <expr>, }` (exactly one `None` arm and one `Some(...)` arm; arm bodies are expressions in the current implementation),
+      - matching on optionals via `match <scrutinee> { None => <expr>, Some(<name|_>) => <expr>, }` (exactly one `None` arm and one `Some(...)` arm; arm bodies are expressions),
       - unwrapping optionals via `??` with short-circuit evaluation of the fallback expression (including unwrapping `T??` to `T?`),
       - and passing/returning optionals between helpers at ABI boundaries as `(bool tag, payload0, payload1, ...)`, where the payload slots follow the lowering of the underlying non-optional type (for example `string?` is `(bool, u64 ptr, i64 len)`).
       - for non-executable outputs, exported functions may accept and return these optionals; see `docs/compiler/abi-libsilk.md` for the exact C ABI mapping.
@@ -384,18 +384,18 @@ Top-level commands:
 - `silk test [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--filter <pattern>] [--package <dir|manifest>] <file> [<file> ...]`:
   - Discovers language-level `test` declarations (see `docs/language/testing.md`) in the loaded module set.
   - Compiles and runs each test, emitting TAP version 13 output.
-  - In the current implementation, each test runs in its own process so a failing `assert` (panic/abort) does not stop the whole suite.
+  - Each test runs in its own process, so a failing `assert` (panic/abort) does not stop the whole suite.
   - Optimization:
     - `-O <0-3>` selects the optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`).
-    - In the current implementation, `-O1`+ prunes unused extern symbols before code generation (typically reducing output size and stdlib linkage).
+    - `-O1`+ prunes unused extern symbols before code generation (typically reducing output size and stdlib linkage).
     - For IR-backed native executable builds, `-O1`+ also prunes unreachable functions from the executable entrypoint (function-level dead-code elimination).
   - When `--filter <pattern>` is provided, only tests whose display name contains `<pattern>` are executed.
   - When `<file> ...` inputs are omitted and `--package` is also omitted, but `./silk.toml` exists, `silk test` behaves as if `--package .` was provided.
-- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <file> [<file> ...] -o <path> [--kind executable|object|static|shared] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]` (or `--out <path>`):
+- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <file> [<file> ...] -o <path> [--kind executable|object|static|shared] [--emit bin|asm] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]` (or `--out <path>`):
   - Reads one or more input files, runs the same front-end pipeline as `check`.
   - Optimization:
     - `-O <0-3>` selects the optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`).
-    - In the current implementation, `-O1`+ prunes unused extern symbols before code generation.
+    - `-O1`+ prunes unused extern symbols before code generation.
     - For `--kind executable` builds, `-O1`+ also prunes unreachable functions from the executable entrypoint (function-level dead-code elimination), typically reducing output size.
   - When `--package` is provided:
     - input files must be omitted,
@@ -404,7 +404,7 @@ Top-level commands:
     - `--package-target <name>` selects one or more manifest `[[target]]` entries by name (repeatable; `--pkg-target` is accepted as an alias),
       - when omitted, the compiler builds every manifest `[[target]]` entry by default,
     - when building multiple targets (the default when `--package-target` is omitted, or when it is repeated), per-output flags are rejected:
-      `-o/--out`, `--kind`, `--arch`, `--target`, `--c-header`, `--needed`, `--runpath`, `--soname`,
+      `-o/--out`, `--kind`, `--emit`, `--arch`, `--target`, `--c-header`, `--needed`, `--runpath`, `--soname`,
     - when building a single target, `-o/--out` is optional (defaults to that target’s `output` or a computed default under `build/`).
   - Target selection:
     - `--arch <arch>` and `--target <triple>` are mutually exclusive; omit both to use the default target.
@@ -418,6 +418,10 @@ Top-level commands:
     - `--kind object`: build an ELF64 relocatable object (`.o`) on `linux/x86_64`,
     - `--kind static`: build a static library (`.a`) on `linux/x86_64`,
     - `--kind shared`: build a shared library (`.so`) on `linux/x86_64`.
+  - Emission:
+    - `--emit bin` (default) emits the selected binary artifact at `<path>`,
+    - `--emit asm` writes an `objdump`-style disassembly (Intel syntax) of the selected output on `linux/x86_64` and writes it to `<path>`,
+    - `-S` is accepted as an alias of `--emit asm` and defaults to `--kind object` when `--kind` is not set.
   - Dynamic dependencies:
     - `--needed <soname>` adds a `DT_NEEDED` entry for executable and shared outputs; it may be repeated,
     - `--runpath <path>` (or `--rpath <path>`) adds a runpath element for executable and shared outputs; it may be repeated (joined with ':' into `DT_RUNPATH`),
@@ -440,7 +444,7 @@ Top-level commands:
       - any use of `async`, `task`, `await`, `yield`, or capturing closures is rejected with `E2027`,
       - region-backed `new` inside `with` is still permitted.
     - `--noheap` is currently incompatible with `--debug` (debug panic traces require `malloc`/`free`).
-  - For the supported subset, emits the selected artifact at `<path>`.
+  - For the supported subset, emits the selected artifact (or an assembly listing when `--emit asm` is selected) at `<path>`.
   - C99 header emission (for downstream consumers of exported symbols):
     - `--c-header <path>` writes a generated C header at `<path>` that declares the root package’s exported symbols (`export fn` prototypes and `export let` extern declarations) for consumption from C/C++,
     - this option is only meaningful for non-executable outputs (`--kind object|static|shared`) and is rejected for `--kind executable`,

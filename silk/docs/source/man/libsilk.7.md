@@ -320,7 +320,7 @@ bool silk_compiler_set_std_archive(SilkCompiler *compiler,
 
 These configuration functions affect dynamic metadata emitted for executable and
 shared library outputs on platforms/backends that support dynamic linking (the
-current implementation: `linux/x86_64`).
+current target: `linux/x86_64`).
 
 #### `silk_compiler_add_needed_library`
 
@@ -383,7 +383,7 @@ bool silk_compiler_set_optimization_level(SilkCompiler *compiler,
   - `2` — balanced optimization,
   - `3` — aggressive optimization.
 - The default optimization level is `0` unless overridden.
-- In the current implementation, `level >= 1` enables lowering-time pruning of
+- `level >= 1` enables lowering-time pruning of
   unused extern symbols before code generation. This typically reduces output
   size and over-linking when using the prebuilt stdlib archive (`libsilk_std.a`)
   to satisfy auto-loaded `import std::...;` modules.

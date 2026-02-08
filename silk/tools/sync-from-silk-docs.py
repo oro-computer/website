@@ -33,12 +33,19 @@ KEEP_DOCS_FILES = {
     "usage/howto-custom-stdlib-root.md",
     "usage/howto-run-wasi-node.md",
     "usage/editor-coc-nvim.md",
+    "usage/editor-textmate.md",
+    "usage/getting-started.md",
     # Website-owned tutorial rewrites (avoid repo-build steps).
     "usage/tutorials/01-first-program.md",
     "usage/tutorials/02-structs-and-impls.md",
     "usage/tutorials/03-arrays-and-slices.md",
     "usage/tutorials/04-filesystem.md",
     "usage/tutorials/05-concurrency.md",
+    # Website-owned copy edits to avoid repo-internal wording/refs.
+    "language/conventions.md",
+    "language/grammar.md",
+    "language/typed-errors.md",
+    "spec/2026.md",
 }
 
 

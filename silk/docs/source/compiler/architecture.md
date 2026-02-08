@@ -93,11 +93,10 @@ eventually, the `silk` CLI, the compiler enforces a simple, explicit entrypoint:
   - returns `int`,
   - serves as the process entrypoint when an executable is produced.
 
-At the current implementation stage, this requirement is enforced by the
-front-end (via `silk_compiler_build`) and a minimal back-end
-that currently supports only constant integer `main` functions. This is a
-temporary measure; the long-term back-end is a true Silk code generator, not
-a C transpiler.
+In the initial bring-up, this requirement is enforced by the front-end (via
+`silk_compiler_build`) and a minimal back-end that supports only constant
+integer `main` functions. This is a temporary measure; the long-term back-end
+is a true Silk code generator, not a C transpiler.
 
 ## Module Layout (Draft)
 

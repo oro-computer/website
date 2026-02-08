@@ -111,7 +111,7 @@ Examples from the spec:
 
 The compiler infers the optional’s element type from context when possible.
 
-In the current implementation, equality comparisons provide optional type
+Equality comparisons provide optional type
 context for `None` / `Some(...)` operands, so forms like `opt == None` and
 `opt == Some(value)` type-check when `opt` has type `T?`.
 

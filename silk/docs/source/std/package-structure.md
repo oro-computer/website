@@ -21,6 +21,14 @@ available to user programs.
   - `std::interfaces`
   - `std::map`
   - `std::set`
+  - `std::graphics` (low-level graphics API bindings; see `docs/std/graphics.md`)
+  - `std::graphics::opengl`
+  - `std::graphics::opengles`
+  - `std::graphics::vulkan`
+  - `std::image` (image codecs + color utilities; see `docs/std/image.md`)
+  - `std::image::color`
+  - `std::image::png`
+  - `std::image::jpeg`
   - `std::algorithms`
   - `std::temporal`
   - `std::semver`

@@ -35,7 +35,7 @@ let empty_slice: i32[] = [];
   type-checked against `T` and the resulting value has type `T[]`.
   - In the current compiler subset, this slice form is lowered as a non-owning
     view over a compiler-generated backing array.
-  - The current implementation does not yet enforce lifetime rules for such
+  - Lifetime rules are not yet enforced for such
     slices; do not allow a slice derived from a stack-backed array literal to
     outlive the scope where it was created.
 

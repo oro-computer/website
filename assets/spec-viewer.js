@@ -183,8 +183,10 @@
         );
       } else {
         // In code fences, rewrite comment text only.
-        const rewriteComment = (comment) =>
-          comment
+        const rewriteComment = (comment) => {
+          const leading = (comment.match(/^\s*/) || [""])[0];
+          const body = comment.slice(leading.length);
+          const rewritten = body
             .replace(/\bwhat works today\b/gi, "supported behavior")
             .replace(/\bworks today\b/gi, "Example")
             .replace(/\bcurrent\s+(?:subset|support)\b/gi, "")
@@ -192,6 +194,8 @@
             .replace(/ {2,}/g, " ")
             .replace(/\(\s*\)/g, "")
             .trimEnd();
+          return leading + rewritten;
+        };
 
         const t = line.trimStart();
         const hasLineComment =
@@ -401,4 +405,3 @@
 
   init();
 })();
-
