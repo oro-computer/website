@@ -9,7 +9,7 @@ Canonical doc: `docs/std/strings.md`.
 ## Status
 
 - Implemented subset is available; long-term API is still evolving.
-- Details: `docs/std/strings.md` and `STATUS.md`
+- Details: `docs/std/strings.md`
 
 ## Importing
 
@@ -35,13 +35,13 @@ export fn or_empty (s: string?) -> string;
 import std::strings;
 
 fn main () -> int {
-  let a: string = "hi";
-  let b: string? = None;
+ let a: string = "hi";
+ let b: string? = None;
 
-  if std::strings::eq(a, "hi") && std::strings::is_empty(std::strings::or_empty(b)) {
-    return 0;
-  }
-  return 1;
+ if std::strings::eq(a, "hi") && std::strings::is_empty(std::strings::or_empty(b)) {
+ return 0;
+ }
+ return 1;
 }
 ```
 

@@ -321,8 +321,11 @@ Rules:
 - Multiple `impl` blocks may exist for the same type name; the compiler merges
   their methods (subject to duplicate-name rules).
 - Methods inside an `impl` block are `fn` declarations (with bodies).
-- The receiver, when present, is the first parameter and must be a borrowed
-  reference to the `impl` type (`self: &Type` or `mut self: &Type`).
+- The receiver, when present, is the first parameter named `self` and must be
+  either:
+  - a borrowed reference to the `impl` type (`self: &Type` / `mut self: &Type`),
+    or
+  - an owned value of the `impl` type (`self: Type` / `mut self: Type`).
 - Within an `impl` block, the special type name `Self` may be used anywhere a
   type name is accepted, and is treated as an alias for the `impl` type.
   For example, `self: &Self` is equivalent to `self: &Type`, and `-> Self` is
@@ -398,11 +401,16 @@ Mutability rule (current subset):
     `(mut value)` wrapper required).
   - The explicit `(mut value).method(...)` form is permitted but is no longer
     required for name receivers.
+- If the method receiver is `self: Type` or `mut self: Type`, the call site
+  passes the receiver **by value**. For ownership-tracked values (for example
+  types with `Drop`), this consumes the receiver binding (use after move is
+  rejected); for plain scalars and POD structs it behaves like a copy.
 
 Current subset limitations:
 
-- Mutable receiver calls must use a name receiver; mutable borrows from
-  non-name receiver expressions (for example `make().push(1)`) are rejected.
+- Mutable **borrow** receiver calls (`mut self: &Type`) must use a name receiver;
+  mutable borrows from non-name receiver expressions (for example `make().push(1)`)
+  are rejected.
 - Non-`mut` receivers may be arbitrary expressions (including calls), so
   chaining like `url.href().as_string()` is permitted.
 

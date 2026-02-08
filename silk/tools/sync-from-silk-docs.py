@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import argparse
+import re
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable
 
 
 EXCLUDE_BASENAMES = {
@@ -42,10 +44,24 @@ KEEP_DOCS_FILES = {
     "usage/tutorials/04-filesystem.md",
     "usage/tutorials/05-concurrency.md",
     # Website-owned copy edits to avoid repo-internal wording/refs.
+    "compiler/backend-wasm.md",
+    "compiler/cli-silk.md",
+    "compiler/testing-strategy.md",
+    "compiler/zig-api.md",
     "language/conventions.md",
+    "language/cheat-sheet.md",
+    "language/flow-overview.md",
     "language/grammar.md",
+    "language/memory-model.md",
+    "language/packages-imports-exports.md",
+    "language/syntax-tour.md",
     "language/typed-errors.md",
+    "man/silk.1.md",
     "spec/2026.md",
+    "std/crypto.md",
+    "std/json.md",
+    "std/url.md",
+    "std/uuid.md",
 }
 
 
@@ -73,7 +89,66 @@ def should_skip(rel: str, keep_files: set[str], keep_prefixes: tuple[str, ...]) 
     return False
 
 
-def sync_tree(src_root: Path, dst_root: Path, *, keep_files: set[str], keep_prefixes: tuple[str, ...]) -> SyncStats:
+def sanitize_wiki_markdown(markdown: str) -> str:
+    """
+    The upstream Silk wiki is written for repo contributors and sometimes
+    references internal tracker files (STATUS.md, PLAN.md) that don't exist (or
+    aren't meaningful) on the public website.
+
+    This function keeps the useful parts of those lines while removing the
+    internal-only references.
+    """
+
+    out_lines: list[str] = []
+
+    drop_whole_line = re.compile(
+        r"^\s*[-*+]\s*(End-to-end support snapshot|Implemented-subset notes)\s*:\s*`?(STATUS|PLAN)\.md`?\s*$",
+        flags=re.I,
+    )
+
+    for raw in markdown.splitlines():
+        line = raw
+
+        if drop_whole_line.match(line):
+            continue
+
+        # Rewrite a few common wiki-only phrasings.
+        line = re.sub(r"^(\s*[-*+]\s+)Relevant fixtures:\s*", r"\1Fixtures: ", line, flags=re.I)
+        line = re.sub(
+            r"^\s*Status:\s*implemented for the current front-end \+\s*native backend subset\.\s*$",
+            "Implemented in the reference compiler (front-end + native backend subset).",
+            line,
+            flags=re.I,
+        )
+
+        # Remove internal tracker refs while preserving surrounding prose.
+        for basename in ("STATUS.md", "PLAN.md"):
+            # Common: "... and `STATUS.md`"
+            line = re.sub(rf"\s+(?:and|&)\s+`?{re.escape(basename)}`?\s*$", "", line, flags=re.I)
+            # Fallback: strip any remaining mention.
+            line = re.sub(rf"`?{re.escape(basename)}`?", "", line, flags=re.I)
+
+        # If we removed a trailing reference, clean up dangling conjunctions/punct.
+        line = re.sub(r"\s+(?:and|&)\s*$", "", line, flags=re.I)
+        line = re.sub(r"\s{2,}", " ", line).rstrip()
+
+        # Drop empty bullets like "- Details:" after stripping.
+        if re.match(r"^\s*[-*+]\s*[^A-Za-z0-9`]*\s*$", line):
+            continue
+
+        out_lines.append(line)
+
+    return "\n".join(out_lines) + ("\n" if markdown.endswith("\n") else "")
+
+
+def sync_tree(
+    src_root: Path,
+    dst_root: Path,
+    *,
+    keep_files: set[str],
+    keep_prefixes: tuple[str, ...],
+    sanitize: Callable[[str], str] | None = None,
+) -> SyncStats:
     copied = 0
     skipped = 0
 
@@ -90,7 +165,11 @@ def sync_tree(src_root: Path, dst_root: Path, *, keep_files: set[str], keep_pref
 
         dst = dst_root / rel
         dst.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(path, dst)
+
+        if sanitize and path.suffix == ".md":
+            dst.write_text(sanitize(path.read_text(encoding="utf-8")), encoding="utf-8")
+        else:
+            shutil.copyfile(path, dst)
         copied += 1
 
     return SyncStats(copied=copied, skipped=skipped)
@@ -134,6 +213,7 @@ def main() -> None:
             dst_wiki,
             keep_files=KEEP_WIKI_FILES,
             keep_prefixes=(),
+            sanitize=sanitize_wiki_markdown,
         )
     else:
         wiki_stats = SyncStats()

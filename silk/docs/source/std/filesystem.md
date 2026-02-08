@@ -143,6 +143,32 @@ export fn write_file_string (path: string, contents: string, mode: int) -> FSInt
 export fn append_file_string (path: string, contents: string, mode: int) -> FSIntResult;
 export fn copy_file (src: string, dst: string, mode: int) -> FSErrorIntResult;
 
+// Directory iteration.
+struct Dir { handle: u64 }
+
+struct DirEntry { name: std::strings::String }
+
+export type DirResult = std::result::Result(Dir, FSFailed);
+export type DirEntryResult = std::result::Result(DirEntry?, FSFailed);
+
+impl DirEntry {
+  public fn name (self: &DirEntry) -> string;
+}
+
+impl Dir {
+  public fn invalid () -> Dir;
+  public fn open (path: string) -> DirResult;
+  public fn is_valid (self: &Dir) -> bool;
+  public fn close (mut self: &Dir) -> FSFailed?;
+  public fn next (self: &Dir) -> DirEntryResult;
+}
+
+impl Dir as std::interfaces::Drop {
+  public fn drop (mut self: &Dir) -> void;
+}
+
+export fn read_dir (path: string) -> DirResult;
+
 // Path-based helpers (`None` on success).
 export fn unlink (path: string) -> FSFailed?;
 export fn rename (old_path: string, new_path: string) -> FSFailed?;
@@ -167,6 +193,14 @@ Notes:
   - `mkdir_all` is a convenience helper for `mkdir -p` behavior. In the current
     hosted subset it treats `EEXIST` as success and does not distinguish an
     existing directory from an existing non-directory at the same path.
+  - `read_dir` returns a `Dir` handle for iteration. `Dir.next()` yields
+    `Ok(Some(DirEntry))` for entries and `Ok(None)` on end-of-directory.
+    `std::fs` skips `"."` and `".."`.
+  - `std::fs::stream` provides task-based adapters that connect `std::fs` with
+    `std::stream` using producer/consumer loops
+    (`std::fs::stream::pipe_file_to_stream` and
+    `std::fs::stream::pipe_stream_to_file`). These are blocking OS-thread
+    operations in the current runtime subset.
 
 ## Scope
 

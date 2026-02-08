@@ -10,9 +10,9 @@ Canonical doc: `docs/std/networking.md`.
 import std::net;
 
 fn main () -> int {
-  let a = ipv4(127, 0, 0, 1);
-  if !ipv4_is_loopback(a) { return 1; }
-  return 0;
+ let a = ipv4(127, 0, 0, 1);
+ if !ipv4_is_loopback(a) { return 1; }
+ return 0;
 }
 ```
 

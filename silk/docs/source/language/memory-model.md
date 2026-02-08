@@ -3,9 +3,8 @@
 This document specifies Silk’s intended memory model: how values are allocated,
 passed, and how (future) heap-managed values interact with the type system.
 
-Status: **partially implemented**. The current compiler subset implements a
-minimal heap model for `new` on `linux/x86_64` and a small lexical
-move/cleanup model for droppable values:
+The compiler implements a minimal heap model for `new` on `linux/x86_64` and a
+small lexical move/cleanup model for droppable values:
 
 - `new` is supported for allocating non-opaque `struct` values on the heap and
   producing an `&Struct` reference.
@@ -13,8 +12,7 @@ move/cleanup model for droppable values:
   compiler during lowering.
 
 Regions and a richer move/borrow model remain design-in-progress. See
-`docs/language/regions.md`, `docs/language/borrow-checker.md`, and `STATUS.md`
-for current scope.
+`docs/language/regions.md` and `docs/language/borrow-checker.md`.
 
 ## Goals
 

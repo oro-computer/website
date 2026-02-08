@@ -436,8 +436,8 @@ Top-level commands:
   - Debug builds:
     - `--debug` (or `-g`) enables runtime stack traces for failed `assert` statements on `linux/x86_64` by printing a stack trace to stderr before aborting, and preserves internal function symbols in `.dynsym` for better symbolization.
     - when Formal Silk verification fails, `--debug` also emits Z3 debugging output and writes an SMT-LIB2 reproduction script under `.silk/z3/` (or `$SILK_WORK_DIR/z3`).
-  - Heap control (current subset):
-    - `--noheap` disables heap allocation for the current subset:
+  - Heap control:
+    - `--noheap` disables heap allocation:
       - heap-backed `new` (outside a `with` region) is rejected with `E2027`,
       - `ext` bindings to libc heap primitives (`malloc`/`calloc`/`realloc`/`free`/etc) are rejected with `E2027` in non-stdlib modules,
       - `std::runtime::mem::{alloc,realloc,free}` traps when called without an active `with` region (no implicit heap fallback),

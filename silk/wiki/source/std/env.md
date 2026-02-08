@@ -12,12 +12,12 @@ import std::env;
 import { println } from "std/io";
 
 fn main () -> int {
-  let v_opt = std::env::get("HOME");
-  match (v_opt) {
-    Some(v) => println("HOME = {}", v),
-    None => println("HOME is not set"),
-  };
-  return 0;
+ let v_opt = std::env::get("HOME");
+ match (v_opt) {
+ Some(v) => println("HOME = {}", v),
+ None => println("HOME is not set"),
+ };
+ return 0;
 }
 ```
 

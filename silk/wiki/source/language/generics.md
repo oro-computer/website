@@ -9,18 +9,17 @@ Canonical spec: `docs/language/generics.md`.
 ## Status
 
 - Current supported forms and restrictions: `docs/language/generics.md`
-- End-to-end support snapshot: `STATUS.md`
 
 ## Syntax (Selected)
 
 ```silk
 struct Pair(T) {
-  a: T,
-  b: T,
+ a: T,
+ b: T,
 }
 
 impl Pair(T) {
-  public fn first (self: &Pair(T)) -> T { return self.a; }
+ public fn first (self: &Pair(T)) -> T { return self.a; }
 }
 ```
 
@@ -30,17 +29,17 @@ impl Pair(T) {
 
 ```silk
 struct Pair(T) {
-  a: T,
-  b: T,
+ a: T,
+ b: T,
 }
 
 impl Pair(T) {
-  public fn first (self: &Pair(T)) -> T { return self.a; }
+ public fn first (self: &Pair(T)) -> T { return self.a; }
 }
 
 fn main () -> int {
-  let p: Pair(int) = { a: 1, b: 2 };
-  return p.first();
+ let p: Pair(int) = { a: 1, b: 2 };
+ return p.first();
 }
 ```
 

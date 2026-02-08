@@ -12,17 +12,16 @@ Canonical spec: `docs/language/flow-for.md`.
 ## Status
 
 - Implemented subset + current limitations: `docs/language/flow-for.md`
-- End-to-end support snapshot: `STATUS.md`
 
 ## Syntax (Selected)
 
 ```silk
 for x in xs {
-  // ...
+ // ...
 }
 
 for (let i = 0; i < 10; ++i) {
-  // ...
+ // ...
 }
 ```
 
@@ -32,11 +31,11 @@ for (let i = 0; i < 10; ++i) {
 
 ```silk
 fn main () -> int {
-  let mut sum: int = 0;
-  for i in 0..3 {
-    sum += i; // 0, 1, 2
-  }
-  return sum;
+ let mut sum: int = 0;
+ for i in 0..3 {
+ sum += i; // 0, 1, 2
+ }
+ return sum;
 }
 ```
 
@@ -44,12 +43,12 @@ fn main () -> int {
 
 ```silk
 fn main () -> int {
-  let xs: int[3] = [1, 2, 3];
-  let mut sum: int = 0;
-  for x in xs {
-    sum += x;
-  }
-  return sum;
+ let xs: int[3] = [1, 2, 3];
+ let mut sum: int = 0;
+ for x in xs {
+ sum += x;
+ }
+ return sum;
 }
 ```
 

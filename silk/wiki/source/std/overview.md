@@ -9,7 +9,7 @@ Canonical doc: `docs/std/overview.md`.
 ## Status
 
 - Design + initial implementation: many modules have an implemented subset; the overall surface is still evolving.
-- Details: `docs/std/overview.md` and `STATUS.md`
+- Details: `docs/std/overview.md`
 
 ## Importing
 
@@ -31,13 +31,13 @@ import std::vector;
 type VecInt = std::vector::Vector(int);
 
 fn main () -> int {
-  let mut v: VecInt = VecInt.init(4);
-  (mut v).push(10);
-  (mut v).push(32);
+ let mut v: VecInt = VecInt.init(4);
+ (mut v).push(10);
+ (mut v).push(32);
 
-  std::io::println("len={d} first_pop={d}", v.len() as int, (mut v).pop() ?? 0);
-  (mut v).drop();
-  return 0;
+ std::io::println("len={d} first_pop={d}", v.len() as int, (mut v).pop() ?? 0);
+ (mut v).drop();
+ return 0;
 }
 ```
 

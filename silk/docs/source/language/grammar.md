@@ -94,9 +94,9 @@ At a high level, the language can be structured as:
 
 - Packages and imports:
 
-  The surface syntax for packages, imports, and exports is specified in detail in
-  `docs/language/packages-imports-exports.md`. The grammar in this file mirrors
-  the currently implemented subset:
+	  The surface syntax for packages, imports, and exports is specified in detail in
+	  `docs/language/packages-imports-exports.md`. The grammar in this file mirrors
+	  the implemented subset:
 
   - `PackageDecl ::= 'package' PackagePath ';'`
   - `ModuleDecl ::= 'module' PackagePath ModuleAsOpt ';'`

@@ -8,7 +8,7 @@ Canonical doc: `docs/std/package-structure.md`.
 ## Status
 
 - Design + initial implementation: std-root resolution and `std::...` import mapping are implemented.
-- Details: `docs/std/package-structure.md` and `STATUS.md`
+- Details: `docs/std/package-structure.md`
 
 ## How `std::` resolves
 
@@ -25,11 +25,11 @@ import std::io;
 import std::strings;
 
 fn main () -> int {
-  if std::strings::eq("a", "a") {
-    std::io::println("ok");
-    return 0;
-  }
-  return 1;
+ if std::strings::eq("a", "a") {
+ std::io::println("ok");
+ return 0;
+ }
+ return 1;
 }
 ```
 

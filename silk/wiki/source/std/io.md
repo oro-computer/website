@@ -8,7 +8,7 @@ Canonical doc: `docs/std/io.md`.
 ## Status
 
 - Design + initial implementation: basic reads/writes are implemented via `std::runtime::io`.
-- Details: `docs/std/io.md` and `STATUS.md`
+- Details: `docs/std/io.md`
 
 ## Importing
 
@@ -24,8 +24,8 @@ import std::io;
 import std::io;
 
 fn main () -> int {
-  std::io::println("hello {s} answer={d}", "world", 42);
-  return 0;
+ std::io::println("hello {s} answer={d}", "world", 42);
+ return 0;
 }
 ```
 

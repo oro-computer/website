@@ -13,14 +13,13 @@ Canonical spec: `docs/language/flow-match.md`.
 ## Status
 
 - Implemented subset + tests: `docs/language/flow-match.md`
-- End-to-end support snapshot: `STATUS.md`
 
 ## Syntax (Current match-expression subset)
 
 ```silk
 match value {
-  Pattern => expr,
-  Pattern => expr,
+ Pattern => expr,
+ Pattern => expr,
 }
 ```
 
@@ -30,12 +29,12 @@ match value {
 
 ```silk
 fn main () -> int {
-  let x: int? = Some(7);
-  let y: int = match x {
-    None => 5,
-    Some(v) => v,
-  };
-  return y;
+ let x: int? = Some(7);
+ let y: int = match x {
+ None => 5,
+ Some(v) => v,
+ };
+ return y;
 }
 ```
 
@@ -43,16 +42,16 @@ fn main () -> int {
 
 ```silk
 enum Msg {
-  Quit,
-  Add(int),
+ Quit,
+ Add(int),
 }
 
 fn main () -> int {
-  let m: Msg = Msg::Add(5);
-  return match m {
-    Msg::Quit => 0,
-    Msg::Add(n) => n,
-  };
+ let m: Msg = Msg::Add(5);
+ return match m {
+ Msg::Quit => 0,
+ Msg::Add(n) => n,
+ };
 }
 ```
 

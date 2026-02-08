@@ -5,8 +5,8 @@ removed.
 
 Use Formal Silk instead:
 
-- `#require` / `#assure` on functions, and
+- `#require` / `#assure` on functions,
 - `#require` on `struct` declarations (struct requirements proved at
-  construction sites).
+ construction sites).
 
 See `docs/language/formal-verification.md`.

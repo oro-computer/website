@@ -1,6 +1,6 @@
 # External declarations (`ext`)
 
-`ext` declares foreign symbols so Silk code can call C (or wasm imports) and
+`ext` declares foreign symbols so Silk code can call C (or wasm imports)
 access foreign variables.
 
 Canonical spec: `docs/language/ext.md`.
@@ -8,7 +8,6 @@ Canonical spec: `docs/language/ext.md`.
 ## Status
 
 - Current supported `ext` subset + ABI notes: `docs/language/ext.md`
-- End-to-end support snapshot: `STATUS.md`
 - Embedding ABI contract: `docs/compiler/abi-libsilk.md`
 
 ## Syntax (Selected)
@@ -35,9 +34,9 @@ import std::io;
 ext puts = fn (string) -> i32;
 
 fn main () -> int {
-  puts("hello from ext");
-  std::io::println("ok");
-  return 0;
+ puts("hello from ext");
+ std::io::println("ok");
+ return 0;
 }
 ```
 
@@ -50,9 +49,9 @@ ext thing_new = fn () -> &Thing;
 ext thing_free = fn (&Thing) -> void;
 
 fn main () -> int {
-  let t: &Thing = thing_new();
-  thing_free(t);
-  return 0;
+ let t: &Thing = thing_new();
+ thing_free(t);
+ return 0;
 }
 ```
 

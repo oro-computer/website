@@ -193,5 +193,5 @@ eventually target WASI syscalls rather than libc symbols. This implies:
    `wasm32-wasi`. (Implemented for the constant-main subset.)
 5. **wasm64 exploration**: validate pointer-width changes and ABI decisions.
 
-Each phase must update `PLAN.md` and `STATUS.md`, and any new CLI surface must
-be documented in `docs/compiler/cli-silk.md` and `docs/man/silk.1.md`.
+Each phase should be reflected in the docs, and any new CLI surface must be
+documented in `docs/compiler/cli-silk.md` and `docs/man/silk.1.md`.

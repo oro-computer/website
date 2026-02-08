@@ -11,7 +11,6 @@ This cheat sheet includes **both**:
 
 For the authoritative “what works today”, prefer:
 
-- `STATUS.md` (implementation status), and
 - any “Implementation Status” sections inside the relevant concept documents.
 
 In particular, features such as regions (beyond the current `with` + `new`

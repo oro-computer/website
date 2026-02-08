@@ -109,5 +109,5 @@ The Zig embedding API is intended to remain stable in lockstep with the C ABI
 and the `docs/` specification. Any change to this API must update:
 
 - this document,
-- `PLAN.md` and `STATUS.md`,
+- the corresponding ABI documentation (for example `docs/compiler/abi-libsilk.md`),
 - and add/adjust Zig tests that exercise the affected surface.

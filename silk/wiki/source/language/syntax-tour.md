@@ -12,7 +12,7 @@ next when you want precise rules.
 
 ```silk
 fn main () -> int {
-  return 0;
+ return 0;
 }
 ```
 

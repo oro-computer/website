@@ -11,25 +11,25 @@ Canonical doc: `docs/std/interfaces.md`.
 import std::interfaces;
 
 struct CounterIter {
-  cur: int,
-  end: int,
+ cur: int,
+ end: int,
 }
 
 impl CounterIter {
-  public fn init (end: int) -> CounterIter {
-    return { cur: 0, end: end };
-  }
+ public fn init (end: int) -> CounterIter {
+ return { cur: 0, end: end };
+ }
 }
 
 impl CounterIter as std::interfaces::Iterator(int) {
-  public fn next (mut self: &CounterIter) -> int? {
-    if self.cur >= self.end {
-      return None;
-    }
-    let v: int = self.cur;
-    self.cur = self.cur + 1;
-    return Some(v);
-  }
+ public fn next (mut self: &CounterIter) -> int? {
+ if self.cur >= self.end {
+ return None;
+ }
+ let v: int = self.cur;
+ self.cur = self.cur + 1;
+ return Some(v);
+ }
 }
 ```
 

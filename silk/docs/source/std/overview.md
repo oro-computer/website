@@ -57,6 +57,7 @@ distribution:
   see `docs/std/json.md`).
 - `std::toml` — TOML parsing (borrowed and owned DOM parsing;
   see `docs/std/toml.md`).
+- `std::xml` — XML parsing and traversal (via libxml2; see `docs/std/xml.md`).
 - `std::idl::web` — Web IDL parsing and query API (see `docs/std/idl-web.md`).
 - `std::js::ecma` — ECMAScript FFI surface for JS/WASM interop (see `docs/std/js-ecma.md`).
 - `std::wasm` — WebAssembly runtime API (MVP wasm32 interpreter; see `docs/std/wasm.md`).

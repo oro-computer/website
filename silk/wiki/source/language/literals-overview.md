@@ -1,7 +1,7 @@
 # Literals
 
 Literals are the simplest way to write values directly in source code:
-numbers, booleans, chars, strings, durations, and aggregates like arrays and
+numbers, booleans, chars, strings, durations, and aggregates like arrays
 struct literals.
 
 This wiki page is a learning-oriented companion to the canonical spec:
@@ -10,7 +10,6 @@ This wiki page is a learning-oriented companion to the canonical spec:
 ## Status
 
 - Detailed rules and edge cases: `docs/language/literals-*.md`
-- Implemented-subset notes: `STATUS.md`
 
 ## Syntax (Selected)
 
@@ -35,8 +34,8 @@ let xs: int[3] = [1, 2, 3];
 
 ```silk
 fn main () -> int {
-  let xs: int[3] = [10, 20, 30];
-  return xs[1];
+ let xs: int[3] = [10, 20, 30];
+ return xs[1];
 }
 ```
 
@@ -46,8 +45,8 @@ fn main () -> int {
 import std::io;
 
 fn main () -> int {
-  std::io::println("line1\\nline2");
-  return 0;
+ std::io::println("line1\\nline2");
+ return 0;
 }
 ```
 

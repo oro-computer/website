@@ -10,13 +10,13 @@ Canonical doc: `docs/language/duration-instant.md`.
 
 ```silk
 fn main () -> int {
-  let a: Duration = 10ms;
-  let b: Duration = 2s;
-  let c: Duration = a + b;
-  if c > a {
-    return 0;
-  }
-  return 1;
+ let a: Duration = 10ms;
+ let b: Duration = 2s;
+ let c: Duration = a + b;
+ if c > a {
+ return 0;
+ }
+ return 1;
 }
 ```
 

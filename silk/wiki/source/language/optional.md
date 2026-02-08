@@ -6,14 +6,13 @@ Optionals represent “maybe a value” without sentinel `null`s.
 - The idiomatic form is suffix `T?`.
 - Values are `None` (empty) or `Some(value)` (present).
 - Use `??` (coalescing), `?.` (optional field access), and `match` to consume
-  optionals.
+ optionals.
 
 Canonical spec: `docs/language/optional.md`.
 
 ## Status
 
 - Implemented subset + backend payload limits: `docs/language/optional.md`
-- End-to-end support snapshot: `STATUS.md`
 
 ## Syntax (Selected)
 
@@ -23,8 +22,8 @@ let b: int? = Some(123);
 
 let x: int = b ?? 0;
 let y: int = match b {
-  None => 0,
-  Some(v) => v,
+ None => 0,
+ Some(v) => v,
 };
 ```
 
@@ -34,13 +33,13 @@ let y: int = match b {
 
 ```silk
 fn main () -> int {
-  let x: int? = Some(7);
-  let y: int = x ?? 0;
-  let z: int = match x {
-    None => 1,
-    Some(v) => v,
-  };
-  return y + z;
+ let x: int? = Some(7);
+ let y: int = x ?? 0;
+ let z: int = match x {
+ None => 1,
+ Some(v) => v,
+ };
+ return y + z;
 }
 ```
 
@@ -48,20 +47,20 @@ fn main () -> int {
 
 ```silk
 struct Profile {
-  email: string,
+ email: string,
 }
 
 struct User {
-  profile: Profile?,
+ profile: Profile?,
 }
 
 fn main () -> int {
-  let u: User = User{ profile: Some(Profile{ email: "a@b" }) };
-  let email: string = u.profile?.email ?? "no-email";
-  if email == "a@b" {
-    return 0;
-  }
-  return 1;
+ let u: User = User{ profile: Some(Profile{ email: "a@b" }) };
+ let email: string = u.profile?.email ?? "no-email";
+ if email == "a@b" {
+ return 0;
+ }
+ return 1;
 }
 ```
 

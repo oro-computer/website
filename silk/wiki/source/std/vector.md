@@ -8,7 +8,7 @@ Canonical doc: `docs/std/vector.md`.
 ## Status
 
 - Implemented subset + design: a usable subset is implemented in `std/vector.slk`.
-- Details: `docs/std/vector.md` and `STATUS.md`
+- Details: `docs/std/vector.md`
 
 ## Importing
 
@@ -26,17 +26,17 @@ import std::vector;
 type Vec = std::vector::Vector(int);
 
 fn main () -> int {
-  let v_r = Vec.init(4);
-  if v_r.is_err() { return 0; }
-  let mut v: Vec = match (v_r) {
-    Ok(v) => v,
-    Err(_) => Vec.empty(),
-  };
-  (mut v).push(1);
-  (mut v).push(2);
-  let x: int = (mut v).pop() ?? 0;
-  (mut v).drop();
-  return x;
+ let v_r = Vec.init(4);
+ if v_r.is_err() { return 0; }
+ let mut v: Vec = match (v_r) {
+ Ok(v) => v,
+ Err(_) => Vec.empty(),
+ };
+ (mut v).push(1);
+ (mut v).push(2);
+ let x: int = (mut v).pop() ?? 0;
+ (mut v).drop();
+ return x;
 }
 ```
 

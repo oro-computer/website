@@ -18,20 +18,20 @@ import std::buffer;
 import std::buffer;
 
 fn main () -> int {
-  let b_r = BufferU8.init(4);
-  if b_r.is_err() { return 1; }
-  let mut b: BufferU8 = match (b_r) {
-    Ok(v) => v,
-    Err(_) => BufferU8.empty(),
-  };
-  (mut b).push(1 as u8);
-  (mut b).push(2 as u8);
-  if (mut b).pop() != Some(2 as u8) {
-    (mut b).drop();
-    return 1;
-  }
-  (mut b).drop();
-  return 0;
+ let b_r = BufferU8.init(4);
+ if b_r.is_err() { return 1; }
+ let mut b: BufferU8 = match (b_r) {
+ Ok(v) => v,
+ Err(_) => BufferU8.empty(),
+ };
+ (mut b).push(1 as u8);
+ (mut b).push(2 as u8);
+ if (mut b).pop() != Some(2 as u8) {
+ (mut b).drop();
+ return 1;
+ }
+ (mut b).drop();
+ return 0;
 }
 ```
 

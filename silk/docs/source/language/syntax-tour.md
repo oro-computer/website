@@ -8,7 +8,6 @@ This guide complements (not replaces):
 
 - `docs/language/grammar.md` (the exact grammar the parser accepts),
 - the concept documents under `docs/language/` (semantics and checker rules),
-- `STATUS.md` (what works end-to-end today),
 - and `docs/compiler/diagnostics.md` (error codes for unsupported forms).
 
 ## Implementation Status (Read This First)
@@ -26,7 +25,7 @@ This tour follows the same approach:
 When in doubt, prefer:
 
 - `docs/language/grammar.md` for syntax,
-- `STATUS.md` for current end-to-end support,
+- `docs/compiler/diagnostics.md` for unsupported forms and error codes,
 - `tests/silk/pass_*.slk` for working example programs.
 
 ## 0. Minimal Executable Module

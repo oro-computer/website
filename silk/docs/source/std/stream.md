@@ -58,6 +58,7 @@ export type BytesResult = std::result::Result(Bytes, std::memory::AllocFailed);
 
 impl Bytes {
   public fn empty () -> Bytes;
+  public fn from_handle (handle: u64) -> Bytes;
   public fn is_empty (self: &Bytes) -> bool;
   public fn len (self: &Bytes) -> i64;
   public fn as_slice (self: &Bytes) -> std::arrays::ByteSlice;
@@ -70,7 +71,8 @@ impl Bytes {
 export enum Read {
   Done,
   Pending,
-  Chunk(Bytes),
+  // Bytes are transferred as raw handles; wrap with `Bytes.from_handle(handle)`.
+  Chunk(u64),
 }
 
 export type ReadResult = std::result::Result(Read, StreamFailed);
@@ -222,8 +224,8 @@ async fn main () -> int {
     let hp = producer(w);
     let hc = consumer(r);
 
-    let rp: int = (yield * hp)[0];
-    let rc: int = (yield * hc)[0];
+    let rp: int = yield hp;
+    let rc: int = yield hc;
     if rp != 0 { return rp; }
     if rc != 0 { return rc; }
     return 0;
@@ -240,6 +242,42 @@ Typical wiring:
 - transformer reads from `take_transform_readable()` and writes to
   `take_transform_writable()`,
 - consumer reads from `take_readable()`.
+
+### File I/O adapters (`std::fs`)
+
+`std::fs` provides task-based helpers for piping files into/out of streams:
+
+```silk
+import std::fs;
+import std::fs::stream;
+import std::stream;
+
+async fn main () -> int {
+  task {
+    let pt_r: std::stream::PassThroughResult = std::stream::PassThroughStream.init(2);
+    if pt_r.is_err() { return 1; }
+    let mut pt: std::stream::PassThroughStream = match (pt_r) {
+      Ok(v) => v,
+      Err(_) => std::stream::PassThroughStream{
+        readable: std::stream::ReadableStream.invalid(),
+        writable: std::stream::WritableStream.invalid(),
+      },
+    };
+
+    let w = (mut pt).take_writable();
+    let r = (mut pt).take_readable();
+
+    let hr = std::fs::stream::pipe_file_to_stream("input.txt", w, 4096);
+    let hw = std::fs::stream::pipe_stream_to_file(r, "output.txt", 420);
+
+    let rr: std::stream::PipeResult = yield hr;
+    let rw: std::stream::PipeResult = yield hw;
+    if rr.is_err() { return 2; }
+    if rw.is_err() { return 3; }
+    return 0;
+  }
+}
+```
 
 ### Piping
 

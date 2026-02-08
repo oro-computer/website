@@ -7,13 +7,12 @@ Canonical spec: `docs/language/flow-while.md`.
 ## Status
 
 - Implemented subset + tests: `docs/language/flow-while.md`
-- End-to-end support snapshot: `STATUS.md`
 
 ## Syntax
 
 ```silk
 while condition {
-  // ...
+ // ...
 }
 ```
 
@@ -21,15 +20,15 @@ while condition {
 
 ```silk
 fn main () -> int {
-  let mut i: int = 0;
-  let mut sum: int = 0;
+ let mut i: int = 0;
+ let mut sum: int = 0;
 
-  while i < 3 {
-    sum += i;
-    i += 1;
-  }
+ while i < 3 {
+ sum += i;
+ i += 1;
+ }
 
-  return sum; // 0 + 1 + 2 = 3
+ return sum; // 0 + 1 + 2 = 3
 }
 ```
 

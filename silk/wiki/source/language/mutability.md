@@ -8,7 +8,6 @@ Canonical spec: `docs/language/mutability.md`.
 ## Status
 
 - Implemented subset + borrow rules: `docs/language/mutability.md`
-- End-to-end support snapshot: `STATUS.md`
 
 ## Syntax (Selected)
 
@@ -17,7 +16,7 @@ let mut x: int = 0;
 x += 1;
 
 // Two-part mut borrow contract:
-// - parameter declared `mut`, and
+// - parameter declared `mut`,
 // - call site uses `mut <expr>`.
 // fn bump(mut p: &Pair) -> void { ... }
 // bump(mut pair);
@@ -27,18 +26,18 @@ x += 1;
 
 ```silk
 struct Pair {
-  a: int,
-  b: int,
+ a: int,
+ b: int,
 }
 
 fn bump_a (mut p: &Pair) -> void {
-  p.a += 1;
+ p.a += 1;
 }
 
 fn main () -> int {
-  let mut p: Pair = Pair{ a: 1, b: 2 };
-  bump_a(mut p);
-  return p.a;
+ let mut p: Pair = Pair{ a: 1, b: 2 };
+ bump_a(mut p);
+ return p.a;
 }
 ```
 

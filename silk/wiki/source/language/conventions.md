@@ -9,11 +9,11 @@ Canonical doc: `docs/language/conventions.md`.
 
 ```silk
 fn main () -> int {
-  let x: int = 1;
-  if x == 1 {
-    return 0;
-  }
-  return 1;
+ let x: int = 1;
+ if x == 1 {
+ return 0;
+ }
+ return 1;
 }
 ```
 

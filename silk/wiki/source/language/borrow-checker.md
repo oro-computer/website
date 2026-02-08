@@ -10,17 +10,17 @@ Canonical design doc: `docs/language/borrow-checker.md`.
 
 ```silk
 struct Counter {
-  value: int,
+ value: int,
 }
 
 fn inc (mut c: &Counter) -> void {
-  c.value += 1;
+ c.value += 1;
 }
 
 fn main () -> int {
-  let mut c: Counter = Counter{ value: 0 };
-  inc(mut c);
-  return c.value;
+ let mut c: Counter = Counter{ value: 0 };
+ inc(mut c);
+ return c.value;
 }
 ```
 

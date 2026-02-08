@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-07T21:29:52+00:00",
+  "generatedAt": "2026-02-08T02:44:56+00:00",
   "kind": "wiki",
   "count": 84,
   "items": [
@@ -134,7 +134,7 @@
       "title": "Concurrency (`async`, `task`, `await`, `yield`)",
       "section": "language",
       "summary": "Silk concurrency is built around:",
-      "text": "Concurrency (async, task, await, yield) Silk concurrency is built around: async fn (pausable/awaitable concurrency), task fn (parallelizable work), await for promises, and yield/yield for task values. Examples task inside async fn + yield task fn worker (x: int) -> int { return x + 1; } async fn main () -> int { task { let a = worker(10); let values: int[] = yield a; return values[0]; } } Task(Promise(T)) composition: await yield async fn add1 (x: int) -> int { return x + 1; } task fn producepromises (n: int) -> Promise(int) { var i: int = 0; while i < n { yield add1(i); i = i + 1; } return add1(n); } async fn main () -> int { task { let t = producepromises(3); let values: int[] = await yield t; return values[0]; } } See also"
+      "text": "Concurrency (async, task, await, yield) Silk concurrency is built around: async fn (pausable/awaitable concurrency), task fn (parallelizable work), await for promises, yield/yield for task values. Examples task inside async fn + yield task fn worker (x: int) -> int { return x + 1; } async fn main () -> int { task { let a = worker(10); let values: int[] = yield a; return values[0]; } } Task(Promise(T)) composition: await yield async fn add1 (x: int) -> int { return x + 1; } task fn producepromises (n: int) -> Promise(int) { var i: int = 0; while i < n { yield add1(i); i = i + 1; } return add1(n); } async fn main () -> int { task { let t = producepromises(3); let values: int[] = await yield t; return values[0]; } } See also"
     },
     {
       "id": "language/const-functions",
@@ -162,7 +162,7 @@
       "title": "Doc comments",
       "section": "language",
       "summary": "Silk supports both line and block doc comments. They attach to the following declaration (like many C/Rust-style doc systems).",
-      "text": "Doc comments Silk supports both line and block doc comments. They attach to the following declaration (like many C/Rust-style doc systems). Syntax /// Line doc comment fn main () -> int { return 0; } / Block doc comment @example silk fn main -> int { return 0; } / fn other () -> int { return 0; } See also"
+      "text": "Doc comments Silk supports both line and block doc comments. They attach to the following declaration (like many C/Rust-style doc systems). Syntax /// Line doc comment fn main () -> int { return 0; } / Block doc comment @example silk fn main -> int { return 0; } fn other () -> int { return 0; } See also"
     },
     {
       "id": "language/literals-duration",
@@ -196,8 +196,8 @@
       "id": "language/ext",
       "title": "External declarations (`ext`)",
       "section": "language",
-      "summary": "`ext` declares foreign symbols so Silk code can call C (or wasm imports) and access foreign variables.",
-      "text": "External declarations (ext) ext declares foreign symbols so Silk code can call C (or wasm imports) and access foreign variables. Syntax // C function named puts. ext puts = fn (string) -> i32; // Bind a different symbol name. ext cmalloc \"malloc\" = fn (i64) -> u64; ext cfree \"free\" = fn (u64) -> void; // External variable. ext errno = i32; Examples Example: call a C symbol import std::io; ext puts = fn (string) -> i32; fn main () -> int { puts(\"hello from ext\"); std::io::println(\"ok\"); return 0; } Example: opaque handle pattern (FFI-safe pointers) struct Thing; ext thingnew = fn () -> &Thing; ext thingfree = fn (&Thing) -> void; fn main () -> int { let t: &Thing = thingnew(); thingfree(t); return 0; } See also"
+      "summary": "`ext` declares foreign symbols so Silk code can call C (or wasm imports) access foreign variables.",
+      "text": "External declarations (ext) ext declares foreign symbols so Silk code can call C (or wasm imports) access foreign variables. Syntax // C function named puts. ext puts = fn (string) -> i32; // Bind a different symbol name. ext cmalloc \"malloc\" = fn (i64) -> u64; ext cfree \"free\" = fn (u64) -> void; // External variable. ext errno = i32; Examples Example: call a C symbol import std::io; ext puts = fn (string) -> i32; fn main () -> int { puts(\"hello from ext\"); std::io::println(\"ok\"); return 0; } Example: opaque handle pattern (FFI-safe pointers) struct Thing; ext thingnew = fn () -> &Thing; ext thingfree = fn (&Thing) -> void; fn main () -> int { let t: &Thing = thingnew(); thingfree(t); return 0; } See also"
     },
     {
       "id": "language/flow-overview",
@@ -245,8 +245,8 @@
       "id": "language/literals-overview",
       "title": "Literals",
       "section": "language",
-      "summary": "Literals are the simplest way to write values directly in source code: numbers, booleans, chars, strings, durations, and aggregates like arrays and struct literals.",
-      "text": "Literals Literals are the simplest way to write values directly in source code: numbers, booleans, chars, strings, durations, and aggregates like arrays and struct literals. This wiki page is a learning-oriented companion to the canonical spec: Syntax let n: int = 42; let pi: f64 = 3.14159; let ok: bool = true; let c: char = '\\\\n'; let s: string = \"hello\"; // Duration literals let d: Duration = 10ms; // Aggregates let xs: int[3] = [1, 2, 3]; // let p: Point = Point{ x: 1, y: 2 }; Examples Example: array literal + indexing fn main () -> int { let xs: int[3] = [10, 20, 30]; return xs[1]; } Example: strings and escapes import std::io; fn main () -> int { std::io::println(\"line1\\\\nline2\"); return 0; } See also"
+      "summary": "Literals are the simplest way to write values directly in source code: numbers, booleans, chars, strings, durations, and aggregates like arrays struct literals.",
+      "text": "Literals Literals are the simplest way to write values directly in source code: numbers, booleans, chars, strings, durations, and aggregates like arrays struct literals. This wiki page is a learning-oriented companion to the canonical spec: Syntax let n: int = 42; let pi: f64 = 3.14159; let ok: bool = true; let c: char = '\\\\n'; let s: string = \"hello\"; // Duration literals let d: Duration = 10ms; // Aggregates let xs: int[3] = [1, 2, 3]; // let p: Point = Point{ x: 1, y: 2 }; Examples Example: array literal + indexing fn main () -> int { let xs: int[3] = [10, 20, 30]; return xs[1]; } Example: strings and escapes import std::io; fn main () -> int { std::io::println(\"line1\\\\nline2\"); return 0; } See also"
     },
     {
       "id": "language/memory-model",
@@ -260,14 +260,14 @@
       "title": "Mutability (`mut`)",
       "section": "language",
       "summary": "Silk is safe-by-default: bindings and borrows are immutable unless you opt in to mutation.",
-      "text": "Mutability (mut) Silk is safe-by-default: bindings and borrows are immutable unless you opt in to mutation. Syntax let mut x: int = 0; x += 1; // Two-part mut borrow contract: // - parameter declared mut, and // - call site uses mut <expr>. // fn bump(mut p: &Pair) -> void { ... } // bump(mut pair); Example: mutable local + mutable borrow struct Pair { a: int, b: int, } fn bumpa (mut p: &Pair) -> void { p.a += 1; } fn main () -> int { let mut p: Pair = Pair{ a: 1, b: 2 }; bumpa(mut p); return p.a; } See also"
+      "text": "Mutability (mut) Silk is safe-by-default: bindings and borrows are immutable unless you opt in to mutation. Syntax let mut x: int = 0; x += 1; // Two-part mut borrow contract: // - parameter declared mut, // - call site uses mut <expr>. // fn bump(mut p: &Pair) -> void { ... } // bump(mut pair); Example: mutable local + mutable borrow struct Pair { a: int, b: int, } fn bumpa (mut p: &Pair) -> void { p.a += 1; } fn main () -> int { let mut p: Pair = Pair{ a: 1, b: 2 }; bumpa(mut p); return p.a; } See also"
     },
     {
       "id": "language/literals-numeric",
       "title": "Numeric literals",
       "section": "language",
-      "summary": "Silk supports integer and floating-point literals, including base prefixes and suffixes as defined in the canonical spec.",
-      "text": "Numeric literals Silk supports integer and floating-point literals, including base prefixes and suffixes as defined in the canonical spec. Example fn main () -> int { let a: int = 42; let b: u64 = 0xff as u64; let c: f64 = 1.5; if a + (b as int) > 0 && c > 0.0 { return 0; } return 1; } See also"
+      "summary": "Silk supports integer and floating-point literals, including base prefixes suffixes as defined in the canonical spec.",
+      "text": "Numeric literals Silk supports integer and floating-point literals, including base prefixes suffixes as defined in the canonical spec. Example fn main () -> int { let a: int = 42; let b: u64 = 0xff as u64; let c: f64 = 1.5; if a + (b as int) > 0 && c > 0.0 { return 0; } return 1; } See also"
     },
     {
       "id": "language/operators",
@@ -288,14 +288,14 @@
       "title": "Packages, imports, and exports",
       "section": "language",
       "summary": "Silk has explicit module/package structure:",
-      "text": "Packages, imports, and exports Silk has explicit module/package structure: a source file may declare package ...; or header-form module ...; (mutually exclusive), imports come next as a contiguous block, then declarations (fn, let, struct, enum, impl, ...). Silk supports both: package imports (import std::io;, import ui;), and file imports (import { Name } from \"./module.slk\";). Syntax package myapp; import std::io; import { add } from \"./math.slk\"; import helpers from \"./helpers.slk\"; // default import / namespace import export fn main () -> int { return 0; } Examples Example: named file import // math.slk package app; export fn add (x: int, y: int) -> int { return x + y; } // main.slk package app; import { add } from \"./math.slk\"; fn main () -> int { return add(40, 2); } Example: default export and default import // module.slk package module; export default fn () -> int { return 1 + 2; } // main.slk import foo from \"./module.slk\"; fn main () -> int { return foo(); } See also"
+      "text": "Packages, imports, and exports Silk has explicit module/package structure: a source file may declare package ...; or header-form module ...; (mutually exclusive), imports come next as a contiguous block, then declarations (fn, let, struct, enum, impl, ...). Silk supports both: package imports (import std::io;, import ui;), file imports (import { Name } from \"./module.slk\";). Syntax package myapp; import std::io; import { add } from \"./math.slk\"; import helpers from \"./helpers.slk\"; // default import / namespace import export fn main () -> int { return 0; } Examples Example: named file import // math.slk package app; export fn add (x: int, y: int) -> int { return x + y; } // main.slk package app; import { add } from \"./math.slk\"; fn main () -> int { return add(40, 2); } Example: default export and default import // module.slk package module; export default fn () -> int { return 1 + 2; } // main.slk import foo from \"./module.slk\"; fn main () -> int { return foo(); } See also"
     },
     {
       "id": "language/refinement-types",
       "title": "Refinement types (removed)",
       "section": "language",
       "summary": "The earlier refinement-type design (types annotated with `where` predicates) is removed.",
-      "text": "Refinement types (removed) The earlier refinement-type design (types annotated with where predicates) is removed. Use Formal Silk instead: #require / #assure on functions, and #require on struct declarations (struct requirements proved at construction sites)."
+      "text": "Refinement types (removed) The earlier refinement-type design (types annotated with where predicates) is removed. Use Formal Silk instead: #require / #assure on functions, #require on struct declarations (struct requirements proved at construction sites)."
     },
     {
       "id": "language/regions",
@@ -357,8 +357,8 @@
       "id": "std/conventions",
       "title": "`std::` conventions",
       "section": "std",
-      "summary": "`std::` modules follow shared conventions for naming, ownership/allocation, and error reporting.",
-      "text": "std:: conventions std:: modules follow shared conventions for naming, ownership/allocation, and error reporting. Key conventions Naming: packages are std::area; types are PascalCase; functions/methods are snakecase. Ownership: allocating APIs return owned containers (for example std::strings::String) and callers drop them. Errors: use T? for \u201cabsence\u201d (None) without extra error information, use typed errors (T SomeError) for recoverable runtime errors with meaning, use std::result::Result(T, E) when callers need to distinguish multiple error causes and propagate them cleanly. Examples Example: optionals + typed errors + dropping owned values import std::process; import std::strings; fn main () -> int { // Optional: T? indicates a value may be absent. let missing: int? = None; let v: int = missing ?? 123; if v != 123 { return 1; } // Typed errors: handle T E with match. let mut cwd: std::strings::String = std::strings::String.empty(); match (std::process::getcwd()) { s => { cwd = s; }, : std::process::GetCwdFailed => { return 2; }, } // Owned std values are explicitly dropped in the . (mut cwd).drop(); return 0; } See also"
+      "summary": "`std::` modules follow shared conventions for naming, ownership/allocation, error reporting.",
+      "text": "std:: conventions std:: modules follow shared conventions for naming, ownership/allocation, error reporting. Key conventions Naming: packages are std::area; types are PascalCase; functions/methods are snakecase. Ownership: allocating APIs return owned containers (for example std::strings::String) and callers drop them. Errors: use T? for \u201cabsence\u201d (None) without extra error information, use typed errors (T SomeError) for recoverable runtime errors with meaning, use std::result::Result(T, E) when callers need to distinguish multiple error causes and propagate them cleanly. Examples Example: optionals + typed errors + dropping owned values import std::process; import std::strings; fn main () -> int { // Optional: T? indicates a value may be absent. let missing: int? = None; let v: int = missing ?? 123; if v != 123 { return 1; } // Typed errors: handle T E with match. let mut cwd: std::strings::String = std::strings::String.empty(); match (std::process::getcwd()) { s => { cwd = s; }, : std::process::GetCwdFailed => { return 2; }, } // Owned std values are explicitly dropped in the . (mut cwd).drop(); return 0; } See also"
     },
     {
       "id": "std/package-structure",
@@ -420,8 +420,8 @@
       "id": "std/fmt",
       "title": "`std::fmt`",
       "section": "std",
-      "summary": "`std::fmt` defines the formatting model used by `std::io::print`/`println` and by string-building helpers. It follows a Zig-`std.fmt`-style format-string syntax.",
-      "text": "std::fmt std::fmt defines the formatting model used by std::io::print/println and by string-building helpers. It follows a Zig-std.fmt-style format-string syntax. Examples Example: println formatting import std::io; fn main () -> int { std::io::println(\"name={s} ok={}\", \"silk\", true); return 0; } See also"
+      "summary": "`std::fmt` defines the formatting model used by `std::io::print`/`println` by string-building helpers. It follows a Zig-`std.fmt`-style format-string syntax.",
+      "text": "std::fmt std::fmt defines the formatting model used by std::io::print/println by string-building helpers. It follows a Zig-std.fmt-style format-string syntax. Examples Example: println formatting import std::io; fn main () -> int { std::io::println(\"name={s} ok={}\", \"silk\", true); return 0; } See also"
     },
     {
       "id": "std/formal",

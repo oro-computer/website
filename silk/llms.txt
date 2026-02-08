@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-02-07T21:29:55+00:00
+Generated: 2026-02-08T02:44:59+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -130,6 +130,7 @@ Silk Docs
   - std/uuid — `std::uuid` — /silk/docs/?p=std/uuid
   - std/vector — `std::vector` — /silk/docs/?p=std/vector
   - std/websocket — `std::websocket` — /silk/docs/?p=std/websocket
+  - std/xml — `std::xml` — XML Parsing (libxml2) — /silk/docs/?p=std/xml
   - std/js-ecma — ECMAScript FFI (`std::js::ecma`) — /silk/docs/?p=std/js-ecma
   - std/overview — Standard Library Overview (`std::`) — /silk/docs/?p=std/overview
   - std/idl-web — Web IDL (`std::idl::web`) — /silk/docs/?p=std/idl-web
@@ -1991,6 +1992,7 @@ URL: /silk/docs/?p=language/flow-for
 The `for` loop iterates over a range or iterable and executes a block once per
 element.
 
+integer range iteration (`start..end` and
 `start..=end`), array/slice iteration (`for x in xs { ... }` for `T[N]` and
 `T[]`), iterator iteration (`for x in it { ... }` when `it.next() -> T?`), and
 C-style `for (init; condition; step) { ... }` loops.
@@ -2384,6 +2386,7 @@ URL: /silk/docs/?p=language/flow-loop
 The `loop` statement executes a block repeatedly until it is terminated by a
 `break` or `return`.
 
+`loop { ... }`, plus `async loop { ... }` and
 `task loop { ... }`.
 
 ## Surface Syntax
@@ -2807,12 +2810,14 @@ field types in the same order (field names do not matter).
 If the source and target struct layouts are not compatible, the `using`
 declaration is rejected.
 
+This layout rule applies equally to immutable and mutable borrows: importing
+methods with `mut self: &Self` (or other `mut &Self` parameters) is permitted
+when the source and target layouts are compatible.
+
 ##  Limitations
 
 - `using` does not accept `public` / `private` modifiers yet (imported methods
   inherit the source method’s visibility).
-- Imported methods whose `Self`-dependent parameters require a mutable borrow
-  (`mut` `&Self`) are rejected in Silk.
 - Constructor reuse (`constructor`) via `using` is not supported yet.
 
 ==============================================================================
@@ -3408,6 +3413,7 @@ URL: /silk/docs/?p=language/borrow-checker
 
 This document specifies Silk’s intended borrow-checking model for references.
 
+the compiler implements:
 
 - call-scoped alias checks for mutable borrows (including slice range borrows),
 - lexical lifetime checks for slice and reference borrows (no escaping borrows
@@ -4060,6 +4066,7 @@ URL: /silk/docs/?p=language/dependent-types
 This document specifies Silk’s intended support for “dependent-type-like”
 patterns where types mention compile-time values (most notably integers).
 
+The front-end can parse and preserve:
 
 - declaration parameter lists on `struct`, `impl`, and `fn`,
 - type application in type positions (for example `VectorN(int, 1024)`),
@@ -4886,8 +4893,8 @@ At a high level, the language can be structured as:
 
 - Packages and imports:
 
-  The surface syntax for packages, imports, and exports is specified in detail in
-  the currently implemented subset:
+	  The surface syntax for packages, imports, and exports is specified in detail in
+	  the implemented subset:
 
   - `PackageDecl ::= 'package' PackagePath ';'`
   - `ModuleDecl ::= 'module' PackagePath ModuleAsOpt ';'`
@@ -5988,6 +5995,7 @@ URL: /silk/docs/?p=language/generics
 
 This document specifies Silk’s parameterized type and declaration syntax.
 
+Silk’s generics are **compile-time** features:
 parameterized declarations are **monomorphized** into concrete, fully specified
 types and functions at build time (there are no runtime type parameters).
 
@@ -6444,6 +6452,7 @@ Generic module conformance:
 
 ## Dispatch model (status)
 
+Dynamic interface dispatch (trait
 objects / vtables) is part of the language design, but is not implemented yet.
 
 For the initial compiler/backend subset, interface use is limited to:
@@ -6712,7 +6721,7 @@ these layers:
 - Lowering/backends: which forms code-generate end-to-end on supported targets.
 - C ABI / FFI: whether the feature is permitted at exported boundaries.
 
-When something is rejected in Silk, include the diagnostic code
+When something is rejected by the compiler, include the diagnostic code
 
 ## Examples
 
@@ -6808,8 +6817,8 @@ URL: /silk/docs/?p=language/memory-model
 This document specifies Silk’s intended memory model: how values are allocated,
 passed, and how (future) heap-managed values interact with the type system.
 
-minimal heap model for `new` on `linux/x86_64` and a small lexical
-move/cleanup model for droppable values:
+The compiler implements a minimal heap model for `new` on `linux/x86_64` and a
+small lexical move/cleanup model for droppable values:
 
 - `new` is supported for allocating non-opaque `struct` values on the heap and
   producing an `&Struct` reference.
@@ -6817,7 +6826,6 @@ move/cleanup model for droppable values:
   compiler during lowering.
 
 Regions and a richer move/borrow model remain design-in-progress. See
-for current scope.
 
 ## Goals
 
@@ -11001,8 +11009,11 @@ Rules:
 - Multiple `impl` blocks may exist for the same type name; the compiler merges
   their methods (subject to duplicate-name rules).
 - Methods inside an `impl` block are `fn` declarations (with bodies).
-- The receiver, when present, is the first parameter and must be a borrowed
-  reference to the `impl` type (`self: &Type` or `mut self: &Type`).
+- The receiver, when present, is the first parameter named `self` and must be
+  either:
+  - a borrowed reference to the `impl` type (`self: &Type` / `mut self: &Type`),
+    or
+  - an owned value of the `impl` type (`self: Type` / `mut self: Type`).
 - Within an `impl` block, the special type name `Self` may be used anywhere a
   type name is accepted, and is treated as an alias for the `impl` type.
   For example, `self: &Self` is equivalent to `self: &Type`, and `-> Self` is
@@ -11076,11 +11087,16 @@ Mutability rule ():
     `(mut value)` wrapper required).
   - The explicit `(mut value).method(...)` form is permitted but is no longer
     required for name receivers.
+- If the method receiver is `self: Type` or `mut self: Type`, the call site
+  passes the receiver **by value**. For ownership-tracked values (for example
+  types with `Drop`), this consumes the receiver binding (use after move is
+  rejected); for plain scalars and POD structs it behaves like a copy.
 
  limitations:
 
-- Mutable receiver calls must use a name receiver; mutable borrows from
-  non-name receiver expressions (for example `make().push(1)`) are rejected.
+- Mutable **borrow** receiver calls (`mut self: &Type`) must use a name receiver;
+  mutable borrows from non-name receiver expressions (for example `make().push(1)`)
+  are rejected.
 - Non-`mut` receivers may be arbitrary expressions (including calls), so
   chaining like `url.href().as_string()` is permitted.
 
@@ -12160,6 +12176,7 @@ URL: /silk/docs/?p=std/conventions
 
 # `std::` Conventions
 
+This defines the intended
 conventions for the Silk standard library. New and refactored `std::` APIs must
 follow this document; older surfaces may temporarily diverge but
 must be migrated as they are touched.
@@ -12299,6 +12316,7 @@ URL: /silk/docs/?p=std/package-structure
 
 # `std::` Module Structure
 
+This describes the intended organization and
 build integration for `std::`. A first, minimal slice of the build integration
 is implemented (auto-resolving `std::...` imports from a configurable stdlib
 root), while most std APIs remain unimplemented.
@@ -12479,6 +12497,7 @@ URL: /silk/docs/?p=std/algorithms
 
 # `std::algorithms`
 
+This describes intended algorithm APIs; it is not
 implemented yet.
 
 `std::algorithms` provides common algorithms over collections (primarily
@@ -12563,6 +12582,7 @@ URL: /silk/docs/?p=std/args
 
 # `std::args`
 
+A small native-argv helper surface is implemented in
 `std/args.slk` to make early programs ergonomic while `string[]` parameters and
 richer slice/iterator features are still future work.
 
@@ -12637,6 +12657,7 @@ URL: /silk/docs/?p=std/arrays
 
 # `std::arrays`
 
+A generic `Slice(T)` view type is provided
 for early FFI-friendly bridging; higher-level owning containers live in
 `std::vector`.
 
@@ -12795,6 +12816,7 @@ URL: /silk/docs/?p=std/bits
 
 # `std::bits`
 
+A small bit-manipulation
 and byte-order helper subset is implemented in `std/bits.slk` for the current
 backend subset.
 
@@ -12875,6 +12897,7 @@ URL: /silk/docs/?p=std/buffer
 
 # `std::buffer`
 
+In the long-term design, Silk exposes an
 intrinsic `Buffer(T)` type for low-level, unsafe contiguous memory access (see
 
 In the current stdlib, `std::buffer` provides a packed byte
@@ -12969,6 +12992,7 @@ URL: /silk/docs/?p=std/crypto
 
 # `std::crypto`
 
+`std::crypto` provides cryptographic
 primitives backed by the system `libsodium` library on the hosted
 `linux/x86_64` baseline.
 
@@ -13063,6 +13087,7 @@ For each construction:
 
 Associated data is optional: callers may pass `ad = { ptr: 0, len: 0 }`.
 
+Planned expansion:
 
 - key derivation (`kdf`, `pwhash`),
 - streaming (`secretstream`),
@@ -13242,6 +13267,7 @@ URL: /silk/docs/?p=std/flag
 
 # `std::flag`
 
+`std::flag` provides a small, robust command
 line argument parser modeled after Go’s `flag` package, but shaped to match
 `std::` conventions (explicit `Result(...)` errors, no leaky out-params, and a
 clear separation between flags, positionals, and `--` rest arguments).
@@ -13428,6 +13454,7 @@ URL: /silk/docs/?p=std/fmt
 
 # `std::fmt`
 
+The initial formatting engine is implemented
 in `std/fmt.slk` and is intentionally scoped to the current compiler/backend
 subset (no generics, no runtime interface dispatch).
 
@@ -13618,6 +13645,7 @@ URL: /silk/docs/?p=std/formal
 
 # `std::formal`
 
+This module provides reusable Formal Silk theories
 that encode common proof obligations (non-negativity, bounds checks, and basic
 container invariants).
 
@@ -13668,6 +13696,7 @@ URL: /silk/docs/?p=std/filesystem
 
 # `std::fs`
 
+`std::fs` provides a small hosted
 filesystem API backed by `std::runtime::fs`. It exposes a low-level `File`
 handle and byte-oriented I/O primitives, staying within the current compiler’s
 feature set.
@@ -13806,6 +13835,32 @@ export fn write_file_string (path: string, contents: string, mode: int) -> FSInt
 export fn append_file_string (path: string, contents: string, mode: int) -> FSIntResult;
 export fn copy_file (src: string, dst: string, mode: int) -> FSErrorIntResult;
 
+// Directory iteration.
+struct Dir { handle: u64 }
+
+struct DirEntry { name: std::strings::String }
+
+export type DirResult = std::result::Result(Dir, FSFailed);
+export type DirEntryResult = std::result::Result(DirEntry?, FSFailed);
+
+impl DirEntry {
+  public fn name (self: &DirEntry) -> string;
+}
+
+impl Dir {
+  public fn invalid () -> Dir;
+  public fn open (path: string) -> DirResult;
+  public fn is_valid (self: &Dir) -> bool;
+  public fn close (mut self: &Dir) -> FSFailed?;
+  public fn next (self: &Dir) -> DirEntryResult;
+}
+
+impl Dir as std::interfaces::Drop {
+  public fn drop (mut self: &Dir) -> void;
+}
+
+export fn read_dir (path: string) -> DirResult;
+
 // Path-based helpers (`None` on success).
 export fn unlink (path: string) -> FSFailed?;
 export fn rename (old_path: string, new_path: string) -> FSFailed?;
@@ -13830,6 +13885,14 @@ Notes:
   - `mkdir_all` is a convenience helper for `mkdir -p` behavior. In the current
     hosted subset it treats `EEXIST` as success and does not distinguish an
     existing directory from an existing non-directory at the same path.
+  - `read_dir` returns a `Dir` handle for iteration. `Dir.next()` yields
+    `Ok(Some(DirEntry))` for entries and `Ok(None)` on end-of-directory.
+    `std::fs` skips `"."` and `".."`.
+  - `std::fs::stream` provides task-based adapters that connect `std::fs` with
+    `std::stream` using producer/consumer loops
+    (`std::fs::stream::pipe_file_to_stream` and
+    `std::fs::stream::pipe_stream_to_file`). These are blocking OS-thread
+    operations in the current runtime subset.
 
 ## Scope
 
@@ -13971,6 +14034,7 @@ URL: /silk/docs/?p=std/graphics
 
 # `std::graphics` — Graphics API Bindings
 
+`std::graphics` is a namespace for
 low-level, FFI-oriented bindings to common graphics APIs.
 
 This layer intentionally does **not** include:
@@ -14032,6 +14096,7 @@ URL: /silk/docs/?p=std/http
 
 # `std::http`
 
+`std::http` provides
 HTTP/1.1 request/response parsing and a small blocking client/server connection
 API on top of `std::net::TcpStream`.
 
@@ -14184,6 +14249,7 @@ URL: /silk/docs/?p=std/https
 
 # `std::https`
 
+`std::https` provides a
 small HTTPS client/server connection API on top of `std::tls` (mbedTLS) and
 `std::net::TcpStream`.
 
@@ -14263,6 +14329,7 @@ URL: /silk/docs/?p=std/image
 
 # `std::image` — Image Codecs + Color
 
+`std::image` provides:
 
 - `std::image::color` — color value types and conversion helpers (pure Silk),
 - `std::image::png` — PNG decode/encode backed by libpng,
@@ -14323,6 +14390,7 @@ URL: /silk/docs/?p=std/interfaces
 
 # `std::interfaces`
 
+This module defines small,
 non-generic standard-library interfaces (“protocols”) that can be used today to
 express common capabilities across `std::` types.
 
@@ -14480,6 +14548,7 @@ URL: /silk/docs/?p=std/io
 
 # `std::io`
 
+Basic stdin reads and stdout/stderr writes
 are implemented in `std/io.slk` via `std::runtime::io`; buffered and
 async I/O remain future work.
 
@@ -14667,6 +14736,7 @@ URL: /silk/docs/?p=std/json
 
 # `std::json`
 
+`std::json` provides a robust JSON parser and
 stringifier suitable for Silk programs.
 
 Primary goals:
@@ -14760,6 +14830,7 @@ let root_r: std::json::ParseResult = (mut doc).parse(`{"a":1}`);
 - `stringify_pretty(doc, value, indent)` returns `Result(String, OutOfMemory)` containing
   pretty-printed JSON with a fixed number of spaces per indent level.
 
+Planned follow-ups:
 
 - streaming tokenization (SAX-style) for very large inputs,
 - a writer interface that can stream output without building a whole string,
@@ -14832,6 +14903,7 @@ URL: /silk/docs/?p=std/map
 - `HashMap(K, V)` — an unordered map backed by a hash table.
 - `TreeMap(K, V)` — an ordered map backed by a red-black tree.
 
+The API is specified here; it
 targets the compiler and will grow as the language gains
 first-class move/Drop semantics for values stored inside heap-backed data
 structures.
@@ -15025,6 +15097,7 @@ URL: /silk/docs/?p=std/math
 
 # `std::math`
 
+This module provides linear
 algebra utilities intended for graphics and general-purpose computation.
 
 The initial focus is:
@@ -15379,6 +15452,7 @@ URL: /silk/docs/?p=std/memory
 
 # `std::memory`
 
+This describes intended memory APIs; it is not
 implemented yet.
 
 `std::memory` provides allocation interfaces and low-level memory utilities.
@@ -15511,6 +15585,7 @@ URL: /silk/docs/?p=std/networking
 
 # `std::net`
 
+A small endian/byte-order
 helper subset plus hosted **IPv4/IPv6 TCP** and **IPv4/IPv6 UDP** socket APIs
 are implemented in `std/net.slk`. Async/event-loop integration remains future
 work.
@@ -16672,6 +16747,7 @@ URL: /silk/docs/?p=std/semver
 
 # `std::semver`
 
+`std::semver` provides a SemVer 2.0.0 parser and
 precedence comparison.
 
 This module is intentionally strict and focused:
@@ -16768,6 +16844,7 @@ URL: /silk/docs/?p=std/set
 - `SetMap(T)` — an unordered set backed by an open-addressing hash table.
 - `TreeSet(T)` — an ordered set backed by a red-black tree.
 
+The API is specified here; it
 targets the compiler and will grow as the language gains
 first-class move/Drop semantics for values stored inside heap-backed data
 structures.
@@ -16882,6 +16959,7 @@ URL: /silk/docs/?p=std/sqlite
 
 # `std::sqlite`
 
+`std::sqlite` provides SQLite database
 primitives for the hosted POSIX baseline using the system `libsqlite3` shared
 library.
 
@@ -16960,6 +17038,7 @@ URL: /silk/docs/?p=std/ssh2
 
 # `std::ssh2`
 
+`std::ssh2` provides SSH2 client primitives
 for the hosted POSIX baseline using the system `libssh2` shared library.
 
 The initial goals are:
@@ -17077,6 +17156,7 @@ URL: /silk/docs/?p=std/stream
 
 # `std::stream`
 
+This module provides a Web Streams-inspired API
 for **byte streams** designed to work well with Silk’s `async`/`task` model.
 
 The core goals of the  are:
@@ -17132,6 +17212,7 @@ export type BytesResult = std::result::Result(Bytes, std::memory::AllocFailed);
 
 impl Bytes {
   public fn empty () -> Bytes;
+  public fn from_handle (handle: u64) -> Bytes;
   public fn is_empty (self: &Bytes) -> bool;
   public fn len (self: &Bytes) -> i64;
   public fn as_slice (self: &Bytes) -> std::arrays::ByteSlice;
@@ -17144,7 +17225,8 @@ impl Bytes {
 export enum Read {
   Done,
   Pending,
-  Chunk(Bytes),
+  // Bytes are transferred as raw handles; wrap with `Bytes.from_handle(handle)`.
+  Chunk(u64),
 }
 
 export type ReadResult = std::result::Result(Read, StreamFailed);
@@ -17296,8 +17378,8 @@ async fn main () -> int {
     let hp = producer(w);
     let hc = consumer(r);
 
-    let rp: int = (yield * hp)[0];
-    let rc: int = (yield * hc)[0];
+    let rp: int = yield hp;
+    let rc: int = yield hc;
     if rp != 0 { return rp; }
     if rc != 0 { return rc; }
     return 0;
@@ -17314,6 +17396,42 @@ Typical wiring:
 - transformer reads from `take_transform_readable()` and writes to
   `take_transform_writable()`,
 - consumer reads from `take_readable()`.
+
+### File I/O adapters (`std::fs`)
+
+`std::fs` provides task-based helpers for piping files into/out of streams:
+
+```silk
+import std::fs;
+import std::fs::stream;
+import std::stream;
+
+async fn main () -> int {
+  task {
+    let pt_r: std::stream::PassThroughResult = std::stream::PassThroughStream.init(2);
+    if pt_r.is_err() { return 1; }
+    let mut pt: std::stream::PassThroughStream = match (pt_r) {
+      Ok(v) => v,
+      Err(_) => std::stream::PassThroughStream{
+        readable: std::stream::ReadableStream.invalid(),
+        writable: std::stream::WritableStream.invalid(),
+      },
+    };
+
+    let w = (mut pt).take_writable();
+    let r = (mut pt).take_readable();
+
+    let hr = std::fs::stream::pipe_file_to_stream("input.txt", w, 4096);
+    let hw = std::fs::stream::pipe_stream_to_file(r, "output.txt", 420);
+
+    let rr: std::stream::PipeResult = yield hr;
+    let rw: std::stream::PipeResult = yield hw;
+    if rr.is_err() { return 2; }
+    if rw.is_err() { return 3; }
+    return 0;
+  }
+}
+```
 
 ### Piping
 
@@ -17353,6 +17471,7 @@ URL: /silk/docs/?p=std/strings
 
 # `std::strings`
 
+A small but growing subset is
 implemented in `std/strings.slk` to support early toolchain bring-up; the rest
 of this document describes the intended long-term API.
 
@@ -17562,6 +17681,7 @@ URL: /silk/docs/?p=std/sync
 
 # `std::sync`
 
+This module provides a small hosted baseline for
 synchronization primitives used by the current `task` lowering on
 `linux/x86_64`.
 
@@ -17716,6 +17836,7 @@ URL: /silk/docs/?p=std/task
 
 # `std::task`
 
+This module provides a small hosted baseline for
 task/runtime utilities on `linux/x86_64`.
 
 This is **not** the full async runtime design. There is not yet a coroutine
@@ -17778,6 +17899,7 @@ URL: /silk/docs/?p=std/temporal
 
 # `std::temporal`
 
+A small, ergonomic subset
 is implemented in `std/temporal.slk`:
 
 - `Instant`/`Duration` convenience helpers, plus
@@ -17917,6 +18039,7 @@ URL: /silk/docs/?p=std/test
 
 # `std::test`
 
+This module provides test-only helpers that
 record test failures without aborting the process.
 
 These helpers are intended to be used under `silk test` and integrate with the
@@ -17972,6 +18095,7 @@ URL: /silk/docs/?p=std/tls
 
 # `std::tls`
 
+`std::tls` provides TLS client/server
 primitives for the hosted POSIX baseline using the system `mbedTLS` shared
 libraries.
 
@@ -18096,6 +18220,7 @@ URL: /silk/docs/?p=std/toml
 
 # `std::toml`
 
+`std::toml` provides a TOML v1.0 parser that
 builds an index-based DOM suitable for the compiler.
 
 Primary goals:
@@ -18237,6 +18362,7 @@ URL: /silk/docs/?p=std/url
 
 # `std::url`
 
+`std::url` provides a WHATWG-URL-compatible URL parser and serializer plus `URLSearchParams` behavior (`application/x-www-form-urlencoded`).
 
 This module focuses on:
 
@@ -18311,6 +18437,7 @@ which forwards to `std::url::parse`.
 ## Notes
 
 - This module does not implement the JavaScript `URL` object API (setters, live `searchParams` binding, etc.); it provides a low-level URL record plus helpers that follow the WHATWG parsing and serialization rules.
+- Domain processing uses a UTF-8 + punycode-based `domain_to_ascii` implementation and supports common Unicode dot separators; full UTS46 mapping and normalization requires additional Unicode data.
 
 ==============================================================================
 DOCS: `std::uuid` (std/uuid)
@@ -18319,6 +18446,7 @@ URL: /silk/docs/?p=std/uuid
 
 # `std::uuid`
 
+`std::uuid` provides a robust UUID/ULID-like
 identifier primitive with full support for UUID versions **1, 3, 4, 5, 6, 7,
 and 8** (RFC 4122 + RFC 9562 family).
 
@@ -18395,6 +18523,7 @@ Fallibility:
 `std::runtime::time::unix_now_ns` / `unix_now_ms` so callers can generate UUIDs
 without passing explicit timestamps.
 
+Planned follow-ups:
 
 - richer formatting options (uppercase, simple hex, braced form, URN form),
 - UUIDv2 (DCE Security) if/when `std::process` exposes stable UID/GID APIs.
@@ -18406,6 +18535,7 @@ URL: /silk/docs/?p=std/vector
 
 # `std::vector`
 
+This module provides a generic, growable
 vector type `Vector(T)` used broadly across `std::`.
 
 `Vector(T)` is an owning container with:
@@ -18510,6 +18640,7 @@ URL: /silk/docs/?p=std/websocket
 
 # `std::websocket`
 
+`std::websocket` provides an RFC 6455
 WebSocket implementation on top of `std::net::TcpStream` (client + server
 handshake, framing, ping/pong, close, fragmentation).
 
@@ -18641,6 +18772,61 @@ The implementation enforces the following RFC 6455 requirements:
   - must have payload length ≤ 125.
 - Close frames trigger an attempted close reply and then the connection is
   treated as closed from the API’s perspective.
+
+==============================================================================
+DOCS: `std::xml` — XML Parsing (libxml2) (std/xml)
+URL: /silk/docs/?p=std/xml
+==============================================================================
+
+# `std::xml` — XML Parsing (libxml2)
+
+`std::xml` provides a small,
+DOM-style XML parsing and traversal API backed by libxml2.
+
+## Vendored Dependencies + Linking
+
+On the hosted `linux/x86_64` baseline, `std::xml` relies on a vendored libxml2
+build produced by the repo dependency workflow.
+
+- libxml2 tag `v2.15.1`
+
+Run:
+
+```sh
+zig build deps
+```
+
+When the vendored archives are present, `silk build` auto-links:
+
+- `vendor/lib/x64-linux/libxml2.a`
+- `vendor/lib/x64-linux/libsilk_xml_shims.a`
+
+when `std::xml` is present in the module set, and also when linking `.o`/`.a`
+inputs that reference the shim symbols.
+
+Note: libxml2 requires libm at link/runtime (typically `libm.so.6`).
+
+## API Summary (Current)
+
+- `Document.parse(xml: string) -> Result(Document, XmlFailed)`
+- `Document.parse_with_options(xml: string, options: int) -> Result(Document, XmlFailed)`
+- `Document.root() -> Node?`
+- `Node.name() -> string` (borrowed view; valid while the `Document` is alive)
+- `Node.first_child_element() -> Node?`
+- `Node.next_element_sibling() -> Node?`
+- `Node.content() -> Result(std::strings::String, XmlFailed)` (owned copy)
+- `Node.attr(name: string) -> Result(std::strings::String?, XmlFailed)` (owned copy)
+- `cleanup()` — optional libxml2 global cleanup
+
+## Parse Safety Defaults
+
+`Document.parse` uses safe defaults:
+
+- `PARSE_NONET` (disable network access)
+- `PARSE_NO_XXE` (disable loading external DTDs/entities)
+- `PARSE_NOERROR` / `PARSE_NOWARNING` (silence libxml2 default error handlers)
+
+Callers can override the libxml2 option bits via `Document.parse_with_options`.
 
 ==============================================================================
 DOCS: ECMAScript FFI (`std::js::ecma`) (std/js-ecma)
@@ -20959,8 +21145,8 @@ Top-level commands:
   - Debug builds:
     - `--debug` (or `-g`) enables runtime stack traces for failed `assert` statements on `linux/x86_64` by printing a stack trace to stderr before aborting, and preserves internal function symbols in `.dynsym` for better symbolization.
     - when Formal Silk verification fails, `--debug` also emits Z3 debugging output and writes an SMT-LIB2 reproduction script under `.silk/z3/` (or `$SILK_WORK_DIR/z3`).
-  - Heap control ():
-    - `--noheap` disables heap allocation for the :
+  - Heap control:
+    - `--noheap` disables heap allocation:
       - heap-backed `new` (outside a `with` region) is rejected with `E2027`,
       - `ext` bindings to libc heap primitives (`malloc`/`calloc`/`realloc`/`free`/etc) are rejected with `E2027` in non-stdlib modules,
       - `std::runtime::mem::{alloc,realloc,free}` traps when called without an active `with` region (no implicit heap fallback),
@@ -22112,7 +22298,7 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2097` — `using` alias conflicts with an existing name.
 - `E2098` — `using` target is ambiguous.
 - `E2099` — `using` cannot import `constructor` in Silk.
-- `E2100` — `using` may not import methods that require mutable `Self` borrows in Silk.
+- `E2100` — reserved (previously: `using` may not import methods that require mutable `Self` borrows in Silk).
 - `E2101` — `using` method reuse requires compatible struct layouts.
 - `E2102` — cannot move value while it is borrowed.
 - `E2103` — invalid regexp flags (unknown or duplicate).
@@ -23311,6 +23497,7 @@ This document defines how we validate the compiler, ABI, and standard library.
   so obvious regressions (exploding instruction counts, excessive spills) are caught early.
 - When a bug is found:
   - add a regression test in Zig and, where relevant, in C,
+  - record any observed differences or limitations in the docs,
 
 ## Silk Tests
 
@@ -23349,13 +23536,16 @@ URL: /silk/docs/?p=compiler/vendored-deps
 # Vendored Dependencies
 
 Silk aims to be buildable with minimal reliance on system-installed
-cryptography/TLS libraries. For the hosted POSIX baseline, Silk vendors:
+dependencies. For the hosted POSIX baseline, Silk vendors:
 
 - libsodium (`jedisct1/libsodium`) at tag `1.0.20-RELEASE`
 - mbedTLS (`Mbed-TLS/mbedtls`) at tag `mbedtls-4.0.0`
 - libssh2 (`libssh2/libssh2`) at tag `libssh2-1.11.1`
 - SQLite amalgamation at version `3510200` (downloaded from sqlite.org)
 - ggml (`ggml-org/ggml`) at tag `v0.9.5`
+- libpng (`pnggroup/libpng`) at tag `v1.6.54`
+- libjpeg-turbo (`libjpeg-turbo/libjpeg-turbo`) at tag `3.1.3`
+- libxml2 (`GNOME/libxml2`) at tag `v2.15.1`
 
 These dependencies are fetched as shallow clones (`--depth 1`) and built as
 static libraries for `linux/x86_64`.
@@ -23393,6 +23583,13 @@ This populates:
   - `libggml-base.a`
   - `libggml-cpu.a`
   - `libsilk_ggml_shims.a` (ABI-safe Silk wrappers for by-value ggml APIs)
+  - `libpng16.a`
+  - `libsilk_png_shims.a` (ABI-safe Silk wrappers for libpng)
+  - `libturbojpeg.a`
+  - `libjpeg.a`
+  - `libsilk_jpeg_shims.a` (ABI-safe Silk wrappers for libjpeg-turbo)
+  - `libxml2.a`
+  - `libsilk_xml_shims.a` (ABI-safe Silk wrappers for libxml2 struct access)
 
 These directories and generated `.a` files are ignored by git.
 
@@ -23419,6 +23616,8 @@ zig build -Drequire-vendored-crypto=true
 - `zig build deps` configures `mbedTLS` with `ENABLE_TESTING=OFF` and `ENABLE_PROGRAMS=OFF` (we only need the static libraries).
 - The `deps` step requires `git`, `cmake`, `perl`, and a working C build toolchain (`make` + a C compiler).
 - Building libssh2 currently requires system OpenSSL development files (headers + libraries) due to the OpenSSL backend configuration.
+- libpng requires zlib at link/runtime (typically `libz.so.1`).
+- libxml2 is configured without iconv/zlib/modules/threads in the default deps workflow; it still requires libm at link/runtime (typically `libm.so.6`).
 - `mbedTLS`/TF-PSA-Crypto generation requires `python3` with `jinja2` available; `jsonschema` is optional (validation is skipped when it is missing).
 
 ==============================================================================
@@ -23616,6 +23815,8 @@ eventually target WASI syscalls rather than libc symbols. This implies:
 4. **WASI `_start`**: add the `_start` wrapper and `proc_exit` import for
    `wasm32-wasi`.
 5. **wasm64 exploration**: validate pointer-width changes and ABI decisions.
+
+Each phase should be reflected in the docs, and any new CLI surface must be
 
 ==============================================================================
 DOCS: Zig Embedding API (Programmatic Compilation) (compiler/zig-api)
@@ -25284,7 +25485,7 @@ For the initial implementation, the supported options are:
       - when Formal Silk verification fails, `--debug` also emits Z3 debugging output and writes an SMT-LIB2 reproduction script under `.silk/z3/` (or `$SILK_WORK_DIR/z3`).
       - compiled code can query this mode at runtime via `std::runtime::build::is_debug()`.
     - `-O <0-3>` — set optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`). `-O1`+ prunes unused extern symbols before code generation and prunes unreachable functions in executable builds (typically reducing output size).
-    - `--noheap` — disable heap allocation for the :
+    - `--noheap` — disable heap allocation:
       - heap-backed `new` (outside a `with` region) is rejected with `E2027`,
       - `ext` bindings to libc heap primitives (`malloc`/`calloc`/`realloc`/`free`/etc) are rejected with `E2027` in non-stdlib modules,
       - `std::runtime::mem::{alloc,realloc,free}` traps when called without an active `with` region (no implicit heap fallback),
@@ -25612,7 +25813,7 @@ This is the single-file edition of the Silk language specification for 2026.
 ---
 ## Language Cheat Sheet
 
-This document summarizes the key syntax and concepts from the Silk language in a condensed form. It is meant as a quick reference; detailed semantics live in the other `this specification` files.
+This document summarizes the key syntax and concepts from the Silk language in a condensed form. It is meant as a quick reference; detailed semantics live in the other chapters of this specification.
 
 ### Types (Surface Forms)
 
@@ -25685,7 +25886,7 @@ Operator precedence and associativity follow the rules in `Operators`.
 - Blocks: `{ stmt* }`.
 - Expression statements: `expr;` (where allowed).
 
-See `the relevant chapters of this specification` for details.
+See the relevant chapters of this specification for details.
 
 Executable entrypoint (initial rule):
 
@@ -25827,8 +26028,7 @@ expressions, and the Formal Silk verification directives.
 This guide complements (not replaces):
 
 - `Formal Grammar Spec` (the exact grammar the parser accepts),
-- the concept documents under `this specification` (semantics and checker rules),
-- `the implementation status` (what works end-to-end today),
+- the concept documents in this specification (semantics and checker rules),
 - and `Compiler Diagnostics` (error codes for unsupported forms).
 
 ### 0. Minimal Executable Module
@@ -26518,7 +26718,7 @@ const parameters/arguments and generic functions).
 ### 6. Statements (Inside Blocks)
 
 The statement grammar is summarized in `Formal Grammar Spec` and detailed
-in `the relevant chapters of this specification`.
+in the relevant chapters of this specification.
 
 #### `if` / `else`
 
@@ -26681,7 +26881,7 @@ productions, see `Formal Grammar Spec`.
 
 #### Literals and other primary expressions
 
-See the `the relevant chapters of this specification` concept documents for precise rules.
+See the relevant concept documents in this specification for precise rules.
 
 ```silk
 fn main () -> int {
@@ -26881,7 +27081,7 @@ If you want more detail on a specific construct, jump to:
 - Syntax: `Formal Grammar Spec`
 - Types: `Types`, `Generics (Monomorphized)`
 - Operators: `Operators`
-- Flow control: `Flow Control Overview` and `the relevant chapters of this specification`
+- Flow control: `Flow Control Overview` and the relevant chapters of this specification
 - Modules/imports/exports: `Packages, Imports, and Exports`
 - Optionals: `Optional`
 - Typed errors: `Typed Errors (`error`, `panic`, and `T | ErrorType...`)`
@@ -26984,9 +27184,9 @@ At a high level, the language can be structured as:
 
 - Packages and imports:
 
-  The surface syntax for packages, imports, and exports is specified in detail in
-  `Packages, Imports, and Exports`. The grammar in this file mirrors
-  the currently implemented subset:
+	  The surface syntax for packages, imports, and exports is specified in detail in
+	  `Packages, Imports, and Exports`. The grammar in this file mirrors
+	  the implemented subset:
 
   - `PackageDecl ::= 'package' PackagePath ';'`
   - `ModuleDecl ::= 'module' PackagePath ModuleAsOpt ';'`
@@ -27319,7 +27519,7 @@ At a high level, the language can be structured as:
 - Expressions:
 
   Expressions follow a conventional precedence hierarchy, as implemented in
-  `the implementation`:
+  the compiler:
 
   - `Expr ::= Assign`
   - `Assign ::= Coalesce (AssignOp Assign)?`
@@ -28145,25 +28345,6 @@ fn main () -> int {
 - `Operators` (unary `-`, arithmetic, and `as` casts)
 - `Types` (primitive numeric type names)
 
-### Tests
-
-- Integer literal contextual typing (`u8` parameters):
-  - `the runnable fixtures`
-- Integer wrap behavior in arithmetic:
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-- Float literal contextual typing (`f32` parameters):
-  - `the runnable fixtures`
-- Float literal default type (`f64`):
-  - `the runnable fixtures`
-- Float arithmetic and comparisons:
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-- Duration literals (numeric + unit suffix):
-  - `the runnable fixtures`
-- Integer literal base prefixes and legacy octal:
-  - `the runnable fixtures`
-
 ## String Literals
 
 String literals represent `string` values: immutable, length-tracked sequences of
@@ -28328,16 +28509,6 @@ b`;
 - `Types` (primitive `string` and `char`)
 - `Character Literals` (shared escape spellings)
 - `C99 ABI and `libsilk.a`` (C ABI string representation)
-
-### Tests
-
-- Core string equality and ordering:
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-- Escape coverage:
-  - `the runnable fixtures`
-- Raw/backtick coverage:
-  - `the runnable fixtures`
 
 The compiler must:
 
@@ -28535,15 +28706,6 @@ fn main () -> int {
 - `Types` (primitive `char` and `string`)
 - `String Literals` (string literals and escape sequences)
 - `Operators` (`as` casts for int-like types, including `char`)
-
-### Tests
-
-- Unicode char equality and `\u{...}` escape:
-  - `the runnable fixtures`
-- Returning and comparing `char` values:
-  - `the runnable fixtures`
-- Escape coverage:
-  - `the runnable fixtures`
 
 ## Aggregate Literals
 
@@ -28776,17 +28938,6 @@ fn main () -> int {
 - `Operators` (`!`, `&&`, `||`)
 - ``if` / `else`` (`if` statement semantics)
 - ``while` Loop` (`while` statement semantics)
-
-### Tests
-
-- Boolean control flow:
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-- Short-circuit semantics:
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-- Unary `!`:
-  - `the runnable fixtures`
 
 ## Duration Literals
 
@@ -29396,7 +29547,7 @@ The `match` expression provides structured pattern matching.
 Key ideas:
 
 - A `match` selects one of several branches based on a scrutinee expression.
-- Patterns and guards are defined as per the language specification in `this specification`.
+- Patterns and guards are defined as per the language specification in this specification.
 - `match` is an expression; all arms must be compatible in type.
 
 The compiler must:
@@ -29574,31 +29725,6 @@ fn main () -> int {
   return s.len as int;
 }
 ```
-
-### Tests
-
-- Optional `match` expressions:
-  - `the runnable fixtures`
-- Enum `match` expressions:
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-- Union `match` expressions:
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-- Result-like `match` expressions:
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-- Typed error-handling `match` statements:
-  - `the runnable fixtures`
-  - `the runnable fixtures`
 
 ## Structs, Impl Blocks, and Memory Layout
 
@@ -30295,17 +30421,6 @@ ABI mature.
 - `Packages, Imports, and Exports` (namespaces and imports)
 - `Typed Errors (`error`, `panic`, and `T | ErrorType...`)` (typed errors, not enums)
 
-### Tests
-
-- Enum matches (end-to-end):
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-- Namespaced enum references (module-set build):
-  - `the runnable fixtures` (built with `the runnable fixtures`)
-
 ## Interfaces
 
 Interfaces allow types to declare that they implement a particular contract.
@@ -30498,6 +30613,7 @@ Generic module conformance:
 
 ### Dispatch model (status)
 
+Dynamic interface dispatch (trait
 objects / vtables) is part of the language design, but is not implemented yet.
 
 For the initial compiler/backend subset, interface use is limited to:
@@ -31209,25 +31325,6 @@ Rules (current compiler subset):
 - **Name collisions with named imports**: when importing from multiple modules, use
   `as` to rename one binding (`E2004`).
 
-### Tests
-
-- Package import + unqualified/qualified access:
-  - `the runnable fixtures`
-  - `the runnable fixtures` (module-set package import; built with `the runnable fixtures`)
-- Namespace imports (file and package):
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-- Named imports + aliasing:
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-- Re-exports (`export { ... };`):
-  - `the runnable fixtures` (built with `the runnable fixtures` and `the runnable fixtures`)
-  - `the runnable fixtures` (built with `the runnable fixtures`)
-- Default exports:
-  - `the runnable fixtures`
-- Importing types and using exported methods:
-  - `the runnable fixtures`
-
 ## Optional
 
 The `Optional` type provides a safe way to represent values that may or may not
@@ -31251,7 +31348,7 @@ You can declare variables or fields as optional using either:
 The language design treats these as equivalent.
 
 
-- The type system (`the implementation`) models optional types, and the parser
+- The compiler’s type system models optional types, and the parser
   now accepts both:
   - the suffix form `T?` in type annotations, and
   - the nominal form `Option(T)` for simple cases (a single type argument),
@@ -31405,7 +31502,7 @@ The compiler must:
 
 ## Errors
 
-This document summarizes the Silk error-handling model at a level suitable for compiler implementation. It is based on the language design captured in `this specification` (optionals, verification, `ext`, ABI).
+This document summarizes the Silk error-handling model at a level suitable for compiler implementation. It is based on the language design captured in this specification (optionals, verification, `ext`, ABI).
 
 For unrecoverable logic bugs and contract violations, Silk uses **typed
 errors** (`error`, `panic`, and `T | ErrorType...`), specified in
@@ -32049,6 +32146,7 @@ are not ABI-stable; see the ABI and struct layout docs for the current rules.
 This document specifies Silk’s intended memory model: how values are allocated,
 passed, and how (future) heap-managed values interact with the type system.
 
+the compiler implements a
 minimal heap model for `new` on `linux/x86_64` and a small lexical
 move/cleanup model for droppable values:
 
@@ -32057,9 +32155,8 @@ move/cleanup model for droppable values:
 - These heap allocations are managed via reference counting (RC) inserted by the
   compiler during lowering.
 
-Regions and a richer move/borrow model remain design-in-progress. See
-`Regions`, `Borrow Checking (Static Alias and Lifetime Safety)`, and `the implementation status`
-for current scope.
+Regions and a richer move/borrow model remain design-in-progress. See `Regions`
+and `Borrow Checking (Static Alias and Lifetime Safety)` for current scope.
 
 ### Goals
 
@@ -32247,6 +32344,7 @@ Limitations:
 
 This document specifies Silk’s intended borrow-checking model for references.
 
+the compiler implements:
 
 - call-scoped alias checks for mutable borrows (including slice range borrows),
 - lexical lifetime checks for slice and reference borrows (no escaping borrows
@@ -33181,6 +33279,7 @@ The theory form is compile-time-only and has no runtime semantics.
 
 This document specifies Silk’s parameterized type and declaration syntax.
 
+Silk’s generics are **compile-time** features:
 parameterized declarations are **monomorphized** into concrete, fully specified
 types and functions at build time (there are no runtime type parameters).
 
@@ -33448,6 +33547,7 @@ set of values they may represent. They are a tool for making illegal states
 unrepresentable and for turning certain classes of bugs into compile-time
 errors.
 
+Refinement types are not implemented in the
 current compiler subset. Today, Silk provides verification annotations
 (`#require`, `#assure`, `#assert`, `#invariant`, `#variant`, `#monovariant`) and formal Silk declarations (`#const`)
 as compile-time-only metadata; see `Formal Silk`.
@@ -33530,6 +33630,7 @@ as metadata, but they do not yet affect code generation.
 This document specifies Silk’s intended support for “dependent-type-like”
 patterns where types mention compile-time values (most notably integers).
 
+The front-end can parse and preserve:
 
 - declaration parameter lists on `struct`, `impl`, and `fn`,
 - type application in type positions (for example `VectorN(int, 1024)`),
@@ -33933,7 +34034,7 @@ In Silk.
 
 ## Language Spec Conventions
 
-This document defines conventions used across `this specification`. It exists to
+This document defines conventions used across this specification. It exists to
 keep the language specification consistent and easy to navigate for both:
 
 - first-time readers learning Silk, and
@@ -33962,7 +34063,7 @@ Recommended sections:
    - realistic examples (how the feature is used in real code)
 7. **Common pitfalls**
 8. **Related documents**
-9. **Tests** (links to `the runnable fixtures` and `the runnable fixtures`)
+9. **Tests** (optional)
 
 Not every concept needs every section, but the goal is that a reader should
 never have to infer critical rules from examples.
@@ -34027,7 +34128,7 @@ restating it everywhere. Common cross-links include:
 - `Types` for type-system rules and special cases,
 - `Mutability` for `mut` and borrowing rules,
 - `Compiler Diagnostics` for error codes,
-- `the implementation status` for a high-level implementation snapshot.
+- and “Implementation Status” sections for high-level implementation snapshots.
 
 ## Operators
 
@@ -35773,6 +35874,7 @@ The compiler must:
 The `for` loop iterates over a range or iterable and executes a block once per
 element.
 
+integer range iteration (`start..end` and
 `start..=end`), array/slice iteration (`for x in xs { ... }` for `T[N]` and
 `T[]`), iterator iteration (`for x in it { ... }` when `it.next() -> T?`), and
 C-style `for (init; condition; step) { ... }` loops.
@@ -35994,6 +36096,7 @@ Compiler requirements:
 The `loop` statement executes a block repeatedly until it is terminated by a
 `break` or `return`.
 
+`loop { ... }`, plus `async loop { ... }` and
 `task loop { ... }`.
 
 ### Surface Syntax
@@ -36743,7 +36846,7 @@ The initial C header provided in this repository defines:
 
   For `wasm32` targets, only `SILK_OUTPUT_EXECUTABLE` is supported. The output
   bytes are a final WebAssembly module (`.wasm`) produced by the IR-backed wasm
-  backend (`the implementation`), with a smaller constant-only fallback for
+  backend (the compiler), with a smaller constant-only fallback for
   programs that fit the constant subset.
 
   The wasm backend is still early-stage, but it is no longer limited
@@ -36861,7 +36964,7 @@ The initial C header provided in this repository defines:
     - it lexes and parses each module into an internal representation,
     - it then type‑checks the *set* of modules as a unit, taking into account
       package/import relationships and exported constants, according to the
-      language grammar and semantics documented under `this specification`,
+      language grammar and semantics documented in this specification,
     - if Formal Silk syntax is present (for example `#require`, `#assure`,
       `#assert`, `#invariant`, `#variant`, `#monovariant`, `#const`), it also runs the Z3-backed verifier
       and fails the build if verification fails (`E3001`..`E3008`),
@@ -37080,7 +37183,7 @@ The initial C header provided in this repository defines:
               scalars in `rdi`..`r9`, `f32`/`f64` in `xmm0`..`xmm7`, with
               additional arguments spilled to the stack); helpers may have
               more than six integer parameters, and this path is exercised
-              in both Zig tests and C tests (see `the C ABI test harness`), or
+              in both Zig tests and C tests (see the C ABI test harness), or
           - a final `if` statement whose condition is a boolean expression:
             - for the purely constant subset, the condition is a
               **compile‑time boolean literal** (`true` or `false`) and each
@@ -37266,14 +37369,14 @@ break;
 
 ```silk
 fn main () -> int {
-  let mut i: int = 0;
-  while true {
-    i += 1;
-    if i == 3 {
-      break;
-    }
-  }
-  return i;
+ let mut i: int = 0;
+ while true {
+ i += 1;
+ if i == 3 {
+ break;
+ }
+ }
+ return i;
 }
 ```
 
@@ -37300,14 +37403,14 @@ continue;
 
 ```silk
 fn main () -> int {
-  let mut sum: int = 0;
-  for i in 0..5 {
-    if i == 3 {
-      continue;
-    }
-    sum += i;
-  }
-  return sum; // 0 + 1 + 2 + 4 = 7
+ let mut sum: int = 0;
+ for i in 0..5 {
+ if i == 3 {
+ continue;
+ }
+ sum += i;
+ }
+ return sum; // 0 + 1 + 2 + 4 = 7
 }
 ```
 
@@ -37329,13 +37432,13 @@ as distinct Silk types that lower to `i64` nanoseconds.
 
 ```silk
 fn main () -> int {
-  let a: Duration = 10ms;
-  let b: Duration = 2s;
-  let c: Duration = a + b;
-  if c > a {
-    return 0;
-  }
-  return 1;
+ let a: Duration = 10ms;
+ let b: Duration = 2s;
+ let c: Duration = a + b;
+ if c > a {
+ return 0;
+ }
+ return 1;
 }
 ```
 
@@ -37360,11 +37463,11 @@ URL: /silk/wiki/?p=language/flow-for
 
 ```silk
 for x in xs {
-  // ...
+ // ...
 }
 
 for (let i = 0; i < 10; ++i) {
-  // ...
+ // ...
 }
 ```
 
@@ -37374,11 +37477,11 @@ for (let i = 0; i < 10; ++i) {
 
 ```silk
 fn main () -> int {
-  let mut sum: int = 0;
-  for i in 0..3 {
-    sum += i; // 0, 1, 2
-  }
-  return sum;
+ let mut sum: int = 0;
+ for i in 0..3 {
+ sum += i; // 0, 1, 2
+ }
+ return sum;
 }
 ```
 
@@ -37386,12 +37489,12 @@ fn main () -> int {
 
 ```silk
 fn main () -> int {
-  let xs: int[3] = [1, 2, 3];
-  let mut sum: int = 0;
-  for x in xs {
-    sum += x;
-  }
-  return sum;
+ let xs: int[3] = [1, 2, 3];
+ let mut sum: int = 0;
+ for x in xs {
+ sum += x;
+ }
+ return sum;
 }
 ```
 
@@ -37415,9 +37518,9 @@ the canonical spec for details.
 
 ```silk
 if condition {
-  // ...
+ // ...
 } else {
-  // ...
+ // ...
 }
 ```
 
@@ -37427,11 +37530,11 @@ if condition {
 
 ```silk
 fn main () -> int {
-  if true {
-    return 0;
-  } else {
-    return 1;
-  }
+ if true {
+ return 0;
+ } else {
+ return 1;
+ }
 }
 ```
 
@@ -37442,14 +37545,14 @@ the `else` branch.
 
 ```silk
 fn main () -> int {
-  let x: int = 1;
-  if x == 0 {
-    return 0;
-  } else if x == 1 {
-    return 1;
-  } else {
-    return 2;
-  }
+ let x: int = 1;
+ if x == 0 {
+ return 0;
+ } else if x == 1 {
+ return 1;
+ } else {
+ return 2;
+ }
 }
 ```
 
@@ -37469,7 +37572,7 @@ URL: /silk/wiki/?p=language/flow-loop
 
 ```silk
 loop {
-  // ...
+ // ...
 }
 ```
 
@@ -37477,14 +37580,14 @@ loop {
 
 ```silk
 fn main () -> int {
-  let mut i: int = 0;
-  loop {
-    if i == 3 {
-      break;
-    }
-    i += 1;
-  }
-  return i;
+ let mut i: int = 0;
+ loop {
+ if i == 3 {
+ break;
+ }
+ i += 1;
+ }
+ return i;
 }
 ```
 
@@ -37510,8 +37613,8 @@ Currently:
 
 ```silk
 match value {
-  Pattern => expr,
-  Pattern => expr,
+ Pattern => expr,
+ Pattern => expr,
 }
 ```
 
@@ -37521,12 +37624,12 @@ match value {
 
 ```silk
 fn main () -> int {
-  let x: int? = Some(7);
-  let y: int = match x {
-    None => 5,
-    Some(v) => v,
-  };
-  return y;
+ let x: int? = Some(7);
+ let y: int = match x {
+ None => 5,
+ Some(v) => v,
+ };
+ return y;
 }
 ```
 
@@ -37534,16 +37637,16 @@ fn main () -> int {
 
 ```silk
 enum Msg {
-  Quit,
-  Add(int),
+ Quit,
+ Add(int),
 }
 
 fn main () -> int {
-  let m: Msg = Msg::Add(5);
-  return match m {
-    Msg::Quit => 0,
-    Msg::Add(n) => n,
-  };
+ let m: Msg = Msg::Add(5);
+ return match m {
+ Msg::Quit => 0,
+ Msg::Add(n) => n,
+ };
 }
 ```
 
@@ -37570,11 +37673,11 @@ return expr;
 
 ```silk
 fn add1 (x: int) -> int {
-  return x + 1;
+ return x + 1;
 }
 
 fn main () -> int {
-  return add1(41);
+ return add1(41);
 }
 ```
 
@@ -37594,7 +37697,7 @@ Use `while` for condition-controlled looping.
 
 ```silk
 while condition {
-  // ...
+ // ...
 }
 ```
 
@@ -37602,15 +37705,15 @@ while condition {
 
 ```silk
 fn main () -> int {
-  let mut i: int = 0;
-  let mut sum: int = 0;
+ let mut i: int = 0;
+ let mut sum: int = 0;
 
-  while i < 3 {
-    sum += i;
-    i += 1;
-  }
+ while i < 3 {
+ sum += i;
+ i += 1;
+ }
 
-  return sum; // 0 + 1 + 2 = 3
+ return sum; // 0 + 1 + 2 = 3
 }
 ```
 
@@ -37633,14 +37736,14 @@ Aggregate literals build compound values directly in source code:
 
 ```silk
 struct Pair {
-  a: int,
-  b: int,
+ a: int,
+ b: int,
 }
 
 fn main () -> int {
-  let xs: int[3] = [1, 2, 3];
-  let p: Pair = Pair{ a: xs[0], b: xs[2] };
-  return p.a + p.b;
+ let xs: int[3] = [1, 2, 3];
+ let p: Pair = Pair{ a: xs[0], b: xs[2] };
+ return p.a + p.b;
 }
 ```
 
@@ -37669,15 +37772,15 @@ Blocks (`{ ... }`) group statements and introduce a new scope.
 
 ```silk
 fn main () -> int {
-  let x: int = 1;
-  {
-    let y: int = 2;
-    if x + y != 3 {
-      return 1;
-    }
-  }
-  // `y` is not in scope here.
-  return 0;
+ let x: int = 1;
+ {
+ let y: int = 2;
+ if x + y != 3 {
+ return 1;
+ }
+ }
+ // `y` is not in scope here.
+ return 0;
 }
 ```
 
@@ -37697,11 +37800,11 @@ Silk has the boolean type `bool` with literals `true` and `false`.
 
 ```silk
 fn main () -> int {
-  let ok: bool = true;
-  if ok && !false {
-    return 0;
-  }
-  return 1;
+ let ok: bool = true;
+ if ok && !false {
+ return 0;
+ }
+ return 1;
 }
 ```
 
@@ -37721,17 +37824,17 @@ explicit `mut` borrow contract (see mutability).
 
 ```silk
 struct Counter {
-  value: int,
+ value: int,
 }
 
 fn inc (mut c: &Counter) -> void {
-  c.value += 1;
+ c.value += 1;
 }
 
 fn main () -> int {
-  let mut c: Counter = Counter{ value: 0 };
-  inc(mut c);
-  return c.value;
+ let mut c: Counter = Counter{ value: 0 };
+ inc(mut c);
+ return c.value;
 }
 ```
 
@@ -37752,7 +37855,7 @@ In the current toolchain, buffer-like functionality is provided via `std::`:
 
 - `std::vector::Vector(T)` for owning growable storage
 - `std::buffer::BufferU8` as an owning packed byte buffer, plus width-oriented
-  scalar buffer aliases (`BufferI32`, etc.)
+ scalar buffer aliases (`BufferI32`, etc.)
 
 ## Example: buffer aliases
 
@@ -37760,15 +37863,15 @@ In the current toolchain, buffer-like functionality is provided via `std::`:
 import std::buffer;
 
 fn main () -> int {
-  let b_r = BufferU8.init(4);
-  if b_r.is_err() { return 1; }
-  let mut b: BufferU8 = match (b_r) {
-    Ok(v) => v,
-    Err(_) => BufferU8.empty(),
-  };
-  (mut b).push(1 as u8);
-  (mut b).drop();
-  return 0;
+ let b_r = BufferU8.init(4);
+ if b_r.is_err() { return 1; }
+ let mut b: BufferU8 = match (b_r) {
+ Ok(v) => v,
+ Err(_) => BufferU8.empty(),
+ };
+ (mut b).push(1 as u8);
+ (mut b).drop();
+ return 0;
 }
 ```
 
@@ -37789,11 +37892,11 @@ value directly in source code.
 
 ```silk
 fn main () -> int {
-  let a: char = 'A';
-  let nl: char = '\\n';
-  if a != 'A' { return 1; }
-  if nl != '\\n' { return 2; }
-  return 0;
+ let a: char = 'A';
+ let nl: char = '\\n';
+ if a != 'A' { return 1; }
+ if nl != '\\n' { return 2; }
+ return 0;
 }
 ```
 
@@ -37817,7 +37920,7 @@ itself is already concise and example-heavy.
 
 ```silk
 fn main () -> int {
-  return 0;
+ return 0;
 }
 ```
 
@@ -37832,7 +37935,7 @@ Silk concurrency is built around:
 
 - `async fn` (pausable/awaitable concurrency),
 - `task fn` (parallelizable work),
-- `await` for promises, and
+- `await` for promises,
 - `yield`/`yield *` for task values.
 
 
@@ -37842,15 +37945,15 @@ Silk concurrency is built around:
 
 ```silk
 task fn worker (x: int) -> int {
-  return x + 1;
+ return x + 1;
 }
 
 async fn main () -> int {
-  task {
-    let a = worker(10);
-    let values: int[] = yield * a;
-    return values[0];
-  }
+ task {
+ let a = worker(10);
+ let values: int[] = yield * a;
+ return values[0];
+ }
 }
 ```
 
@@ -37858,24 +37961,24 @@ async fn main () -> int {
 
 ```silk
 async fn add1 (x: int) -> int {
-  return x + 1;
+ return x + 1;
 }
 
 task fn produce_promises (n: int) -> Promise(int) {
-  var i: int = 0;
-  while i < n {
-    yield add1(i);
-    i = i + 1;
-  }
-  return add1(n);
+ var i: int = 0;
+ while i < n {
+ yield add1(i);
+ i = i + 1;
+ }
+ return add1(n);
 }
 
 async fn main () -> int {
-  task {
-    let t = produce_promises(3);
-    let values: int[] = await * yield * t;
-    return values[0];
-  }
+ task {
+ let t = produce_promises(3);
+ let values: int[] = await * yield * t;
+ return values[0];
+ }
 }
 ```
 
@@ -37896,13 +37999,13 @@ This wiki page is an overview. The canonical specification is
 
 ```silk
 const fn add (a: int, b: int) -> int {
-  return a + b;
+ return a + b;
 }
 
 const answer: int = add(20, 22);
 
 fn main () -> int {
-  return answer;
+ return answer;
 }
 ```
 
@@ -37910,12 +38013,12 @@ fn main () -> int {
 
 - Const functions are intended for `const` initializer evaluation.
 - Const functions are compile-time-only: they are not callable from runtime
-  code and are not emitted as runtime/linkable symbols.
+ code and are not emitted as runtime/linkable symbols.
 - The  targets scalar-only const evaluation; `string`/aggregate
-  return values and higher-order const evaluation are planned.
+ return values and higher-order const evaluation are planned.
 - In Silk, `const fn` bodies must not allocate (`new`) or use
-  regions/`with`, must not contain `panic`, and may only call other `const fn`
-  declarations.
+ regions/`with`, must not contain `panic`, and may only call other `const fn`
+ declarations.
 
 ## See also
 
@@ -37934,11 +38037,11 @@ notation, naming, and the “implementation status” pattern.
 
 ```silk
 fn main () -> int {
-  let x: int = 1;
-  if x == 1 {
-    return 0;
-  }
-  return 1;
+ let x: int = 1;
+ if x == 1 {
+ return 0;
+ }
+ return 1;
 }
 ```
 
@@ -37983,10 +38086,8 @@ fn main () -> int { return 0; }
 
 /**
  * Block doc comment
- *
  * @example silk
  * fn main () -> int { return 0; }
- */
 fn other () -> int { return 0; }
 ```
 
@@ -38007,11 +38108,11 @@ etc) and produce a `Duration` value.
 
 ```silk
 fn main () -> int {
-  let a: Duration = 10ms;
-  let b: Duration = 2s;
-  let c: Duration = a + b;
-  if c > a { return 0; }
-  return 1;
+ let a: Duration = 10ms;
+ let b: Duration = 2s;
+ let c: Duration = a + b;
+ if c > a { return 0; }
+ return 1;
 }
 ```
 
@@ -38037,8 +38138,8 @@ Currently, enums support:
 
 ```silk
 enum Msg {
-  Quit,
-  Add(int),
+ Quit,
+ Add(int),
 }
 ```
 
@@ -38048,16 +38149,16 @@ enum Msg {
 
 ```silk
 enum Msg {
-  Quit,
-  Add(int),
+ Quit,
+ Add(int),
 }
 
 fn main () -> int {
-  let m: Msg = Msg::Add(5);
-  return match m {
-    Msg::Quit => 0,
-    Msg::Add(n) => n,
-  };
+ let m: Msg = Msg::Add(5);
+ return match m {
+ Msg::Quit => 0,
+ Msg::Add(n) => n,
+ };
 }
 ```
 
@@ -38082,8 +38183,8 @@ the full rules.
 
 ```silk
 fn main () -> int {
-  assert (1 + 2) == 3;
-  return 0;
+ assert (1 + 2) == 3;
+ return 0;
 }
 ```
 
@@ -38104,10 +38205,10 @@ Many expressions can appear as standalone statements when followed by `;`
 
 ```silk
 fn main () -> int {
-  let mut x: int = 0;
-  x += 1;
-  ++x;
-  return x;
+ let mut x: int = 0;
+ x += 1;
+ ++x;
+ return x;
 }
 ```
 
@@ -38120,7 +38221,7 @@ URL: /silk/wiki/?p=language/ext
 
 # External declarations (`ext`)
 
-`ext` declares foreign symbols so Silk code can call C (or wasm imports) and
+`ext` declares foreign symbols so Silk code can call C (or wasm imports)
 access foreign variables.
 
 
@@ -38148,9 +38249,9 @@ import std::io;
 ext puts = fn (string) -> i32;
 
 fn main () -> int {
-  puts("hello from ext");
-  std::io::println("ok");
-  return 0;
+ puts("hello from ext");
+ std::io::println("ok");
+ return 0;
 }
 ```
 
@@ -38163,9 +38264,9 @@ ext thing_new = fn () -> &Thing;
 ext thing_free = fn (&Thing) -> void;
 
 fn main () -> int {
-  let t: &Thing = thing_new();
-  thing_free(t);
-  return 0;
+ let t: &Thing = thing_new();
+ thing_free(t);
+ return 0;
 }
 ```
 
@@ -38190,19 +38291,19 @@ Silk has familiar structured control flow:
 
 ```silk
 fn main () -> int {
-  let mut sum: int = 0;
+ let mut sum: int = 0;
 
-  for i in 0..5 {
-    if i == 3 {
-      continue;
-    }
-    sum += i;
-  }
+ for i in 0..5 {
+ if i == 3 {
+ continue;
+ }
+ sum += i;
+ }
 
-  if sum > 0 {
-    return sum;
-  }
-  return 0;
+ if sum > 0 {
+ return sum;
+ }
+ return 0;
 }
 ```
 
@@ -38228,7 +38329,7 @@ Silk includes syntax for writing contracts and verification metadata:
 #require x >= 0;
 #assure result == x + 1;
 fn inc (x: int) -> int {
-  return x + 1;
+ return x + 1;
 }
 ```
 
@@ -38252,11 +38353,11 @@ Function modifiers declare constraints and concurrency behavior:
 
 ```silk
 pure fn add (x: int, y: int) -> int {
-  return x + y;
+ return x + y;
 }
 
 task fn worker (x: int) -> int {
-  return x + 1;
+ return x + 1;
 }
 ```
 
@@ -38278,12 +38379,12 @@ parameters).
 
 ```silk
 struct Pair(T) {
-  a: T,
-  b: T,
+ a: T,
+ b: T,
 }
 
 impl Pair(T) {
-  public fn first (self: &Pair(T)) -> T { return self.a; }
+ public fn first (self: &Pair(T)) -> T { return self.a; }
 }
 ```
 
@@ -38293,17 +38394,17 @@ impl Pair(T) {
 
 ```silk
 struct Pair(T) {
-  a: T,
-  b: T,
+ a: T,
+ b: T,
 }
 
 impl Pair(T) {
-  public fn first (self: &Pair(T)) -> T { return self.a; }
+ public fn first (self: &Pair(T)) -> T { return self.a; }
 }
 
 fn main () -> int {
-  let p: Pair(int) = { a: 1, b: 2 };
-  return p.first();
+ let p: Pair(int) = { a: 1, b: 2 };
+ return p.first();
 }
 ```
 
@@ -38330,8 +38431,8 @@ This wiki page is a reading guide, not a replacement for the grammar itself.
 import std::io;
 
 fn main () -> int {
-  std::io::println("hello {s}", "world");
-  return 0;
+ std::io::println("hello {s}", "world");
+ return 0;
 }
 ```
 
@@ -38353,15 +38454,15 @@ surfaces such as iterators and Drop.
 
 ```silk
 interface Len {
-  fn len() -> i64;
+ fn len() -> i64;
 }
 
 struct Counter {
-  n: i64,
+ n: i64,
 }
 
 impl Counter as Len {
-  fn len (self: &Counter) -> i64 { return self.n; }
+ fn len (self: &Counter) -> i64 { return self.n; }
 }
 ```
 
@@ -38371,20 +38472,20 @@ impl Counter as Len {
 
 ```silk
 interface Len {
-  fn len() -> i64;
+ fn len() -> i64;
 }
 
 struct Counter {
-  n: i64,
+ n: i64,
 }
 
 impl Counter as Len {
-  fn len (self: &Counter) -> i64 { return self.n; }
+ fn len (self: &Counter) -> i64 { return self.n; }
 }
 
 fn main () -> int {
-  let c: Counter = Counter{ n: 3 };
-  return c.len() as int;
+ let c: Counter = Counter{ n: 3 };
+ return c.len() as int;
 }
 ```
 
@@ -38398,7 +38499,7 @@ URL: /silk/wiki/?p=language/literals-overview
 # Literals
 
 Literals are the simplest way to write values directly in source code:
-numbers, booleans, chars, strings, durations, and aggregates like arrays and
+numbers, booleans, chars, strings, durations, and aggregates like arrays
 struct literals.
 
 This wiki page is a learning-oriented companion to the canonical spec:
@@ -38426,8 +38527,8 @@ let xs: int[3] = [1, 2, 3];
 
 ```silk
 fn main () -> int {
-  let xs: int[3] = [10, 20, 30];
-  return xs[1];
+ let xs: int[3] = [10, 20, 30];
+ return xs[1];
 }
 ```
 
@@ -38437,8 +38538,8 @@ fn main () -> int {
 import std::io;
 
 fn main () -> int {
-  std::io::println("line1\\nline2");
-  return 0;
+ std::io::println("line1\\nline2");
+ return 0;
 }
 ```
 
@@ -38456,7 +38557,7 @@ This page is a learning-oriented companion to the canonical memory model:
 At a high level:
 
 - Most values are plain, copyable scalars (or structs that lower to a fixed set
-  of scalar slots in Silk).
+ of scalar slots in Silk).
 - Heap allocation is introduced via `new`, producing `&Struct` references.
 - `with` regions can redirect `new` allocations away from the heap (see regions).
 
@@ -38464,13 +38565,13 @@ At a high level:
 
 ```silk
 struct Point {
-  x: int,
-  y: int,
+ x: int,
+ y: int,
 }
 
 fn main () -> int {
-  let p: &Point = new Point{ x: 1, y: 2 };
-  return p.x + p.y;
+ let p: &Point = new Point{ x: 1, y: 2 };
+ return p.x + p.y;
 }
 ```
 
@@ -38494,7 +38595,7 @@ let mut x: int = 0;
 x += 1;
 
 // Two-part mut borrow contract:
-// - parameter declared `mut`, and
+// - parameter declared `mut`,
 // - call site uses `mut <expr>`.
 // fn bump(mut p: &Pair) -> void { ... }
 // bump(mut pair);
@@ -38504,18 +38605,18 @@ x += 1;
 
 ```silk
 struct Pair {
-  a: int,
-  b: int,
+ a: int,
+ b: int,
 }
 
 fn bump_a (mut p: &Pair) -> void {
-  p.a += 1;
+ p.a += 1;
 }
 
 fn main () -> int {
-  let mut p: Pair = Pair{ a: 1, b: 2 };
-  bump_a(mut p);
-  return p.a;
+ let mut p: Pair = Pair{ a: 1, b: 2 };
+ bump_a(mut p);
+ return p.a;
 }
 ```
 
@@ -38528,7 +38629,7 @@ URL: /silk/wiki/?p=language/literals-numeric
 
 # Numeric literals
 
-Silk supports integer and floating-point literals, including base prefixes and
+Silk supports integer and floating-point literals, including base prefixes
 suffixes as defined in the canonical spec.
 
 
@@ -38536,13 +38637,13 @@ suffixes as defined in the canonical spec.
 
 ```silk
 fn main () -> int {
-  let a: int = 42;
-  let b: u64 = 0xff as u64;
-  let c: f64 = 1.5;
-  if a + (b as int) > 0 && c > 0.0 {
-    return 0;
-  }
-  return 1;
+ let a: int = 42;
+ let b: u64 = 0xff as u64;
+ let c: f64 = 1.5;
+ if a + (b as int) > 0 && c > 0.0 {
+ return 0;
+ }
+ return 1;
 }
 ```
 
@@ -38585,12 +38686,12 @@ let x: u64 = 123 as u64;
 
 ```silk
 fn main () -> int {
-  let a: int = 10;
-  let b: int = 3;
-  if a % b == 1 {
-    return a + b; // 13
-  }
-  return 0;
+ let a: int = 10;
+ let b: int = 3;
+ if a % b == 1 {
+ return a + b; // 13
+ }
+ return 0;
 }
 ```
 
@@ -38598,8 +38699,8 @@ fn main () -> int {
 
 ```silk
 fn main () -> int {
-  let x: int? = None;
-  return x ?? 42;
+ let x: int? = None;
+ return x ?? 42;
 }
 ```
 
@@ -38618,7 +38719,7 @@ Optionals represent “maybe a value” without sentinel `null`s.
 - The idiomatic form is suffix `T?`.
 - Values are `None` (empty) or `Some(value)` (present).
 - Use `??` (coalescing), `?.` (optional field access), and `match` to consume
-  optionals.
+ optionals.
 
 
 ## Syntax
@@ -38629,8 +38730,8 @@ let b: int? = Some(123);
 
 let x: int = b ?? 0;
 let y: int = match b {
-  None => 0,
-  Some(v) => v,
+ None => 0,
+ Some(v) => v,
 };
 ```
 
@@ -38640,13 +38741,13 @@ let y: int = match b {
 
 ```silk
 fn main () -> int {
-  let x: int? = Some(7);
-  let y: int = x ?? 0;
-  let z: int = match x {
-    None => 1,
-    Some(v) => v,
-  };
-  return y + z;
+ let x: int? = Some(7);
+ let y: int = x ?? 0;
+ let z: int = match x {
+ None => 1,
+ Some(v) => v,
+ };
+ return y + z;
 }
 ```
 
@@ -38654,20 +38755,20 @@ fn main () -> int {
 
 ```silk
 struct Profile {
-  email: string,
+ email: string,
 }
 
 struct User {
-  profile: Profile?,
+ profile: Profile?,
 }
 
 fn main () -> int {
-  let u: User = User{ profile: Some(Profile{ email: "a@b" }) };
-  let email: string = u.profile?.email ?? "no-email";
-  if email == "a@b" {
-    return 0;
-  }
-  return 1;
+ let u: User = User{ profile: Some(Profile{ email: "a@b" }) };
+ let email: string = u.profile?.email ?? "no-email";
+ if email == "a@b" {
+ return 0;
+ }
+ return 1;
 }
 ```
 
@@ -38688,7 +38789,7 @@ Silk has explicit module/package structure:
 
 Silk supports both:
 
-- package imports (`import std::io;`, `import ui;`), and
+- package imports (`import std::io;`, `import ui;`),
 - file imports (`import { Name } from "./module.slk";`).
 
 
@@ -38713,7 +38814,7 @@ export fn main () -> int { return 0; }
 package app;
 
 export fn add (x: int, y: int) -> int {
-  return x + y;
+ return x + y;
 }
 ```
 
@@ -38724,7 +38825,7 @@ package app;
 import { add } from "./math.slk";
 
 fn main () -> int {
-  return add(40, 2);
+ return add(40, 2);
 }
 ```
 
@@ -38735,7 +38836,7 @@ fn main () -> int {
 package module;
 
 export default fn () -> int {
-  return 1 + 2;
+ return 1 + 2;
 }
 ```
 
@@ -38744,7 +38845,7 @@ export default fn () -> int {
 import foo from "./module.slk";
 
 fn main () -> int {
-  return foo();
+ return foo();
 }
 ```
 
@@ -38762,9 +38863,9 @@ removed.
 
 Use Formal Silk instead:
 
-- `#require` / `#assure` on functions, and
+- `#require` / `#assure` on functions,
 - `#require` on `struct` declarations (struct requirements proved at
-  construction sites).
+ construction sites).
 
 ==============================================================================
 WIKI: Regions (`with`) (language/regions)
@@ -38783,7 +38884,7 @@ used as an allocation context for `new`.
 const region arena: u8[1024];
 
 with arena {
-  // `new` allocations use `arena` as backing storage.
+ // `new` allocations use `arena` as backing storage.
 }
 ```
 
@@ -38791,16 +38892,16 @@ with arena {
 
 ```silk
 struct Point {
-  x: int,
-  y: int,
+ x: int,
+ y: int,
 }
 
 fn main () -> int {
-  const region arena: u8[1024];
-  with arena {
-    let p: &Point = new Point{ x: 1, y: 2 };
-    return p.x + p.y;
-  }
+ const region arena: u8[1024];
+ with arena {
+ let p: &Point = new Point{ x: 1, y: 2 };
+ return p.x + p.y;
+ }
 }
 ```
 
@@ -38823,9 +38924,9 @@ URL: /silk/wiki/?p=language/literals-string
 import std::io;
 
 fn main () -> int {
-  std::io::println("line1\\nline2");
-  std::io::println("quote=\\\" backslash=\\\\");
-  return 0;
+ std::io::println("line1\\nline2");
+ std::io::println("quote=\\\" backslash=\\\\");
+ return 0;
 }
 ```
 
@@ -38847,14 +38948,14 @@ and `drop`) to a type.
 
 ```silk
 struct Point {
-  x: int,
-  y: int,
+ x: int,
+ y: int,
 }
 
 impl Point {
-  public fn sum (self: &Point) -> int {
-    return self.x + self.y;
-  }
+ public fn sum (self: &Point) -> int {
+ return self.x + self.y;
+ }
 }
 ```
 
@@ -38864,24 +38965,24 @@ impl Point {
 
 ```silk
 struct Point {
-  x: int,
-  y: int,
+ x: int,
+ y: int,
 }
 
 impl Point {
-  public fn add (self: &Point, other: Point) -> Point {
-    return Point{
-      x: self.x + other.x,
-      y: self.y + other.y,
-    };
-  }
+ public fn add (self: &Point, other: Point) -> Point {
+ return Point{
+ x: self.x + other.x,
+ y: self.y + other.y,
+ };
+ }
 }
 
 fn main () -> int {
-  let p: Point = Point{ x: 1, y: 2 };
-  let q: Point = Point{ x: 3, y: 4 };
-  let r: Point = p.add(q);
-  return r.x + r.y; // 10
+ let p: Point = Point{ x: 1, y: 2 };
+ let q: Point = Point{ x: 3, y: 4 };
+ let r: Point = p.add(q);
+ return r.x + r.y; // 10
 }
 ```
 
@@ -38905,7 +39006,7 @@ next when you want precise rules.
 
 ```silk
 fn main () -> int {
-  return 0;
+ return 0;
 }
 ```
 
@@ -38926,9 +39027,9 @@ Silk supports top-level `test` declarations that are discovered and executed by
 
 ```silk
 test "addition works" {
-  if (1 + 2) != 3 {
-    std::abort();
-  }
+ if (1 + 2) != 3 {
+ std::abort();
+ }
 }
 ```
 
@@ -38956,13 +39057,13 @@ Typed errors make “this function can fail” explicit in the type system:
 error OutOfBounds { index: int, len: int }
 
 fn get_at (xs: &u8[], index: int) -> u8 | OutOfBounds {
-  if index < 0 { panic OutOfBounds{ index: index, len: 0 }; }
-  return 0;
+ if index < 0 { panic OutOfBounds{ index: index, len: 0 }; }
+ return 0;
 }
 
 fn caller (xs: &u8[]) -> u8 | OutOfBounds {
-  let x: u8 = get_at(xs, 0)?;
-  return x;
+ let x: u8 = get_at(xs, 0)?;
+ return x;
 }
 ```
 
@@ -38974,12 +39075,12 @@ fn caller (xs: &u8[]) -> u8 | OutOfBounds {
 error Boom { code: int }
 
 fn may_boom () -> int | Boom {
-  panic Boom{ code: 7 };
+ panic Boom{ code: 7 };
 }
 
 fn main () -> int | Boom {
-  let x: int = may_boom()?;
-  return x;
+ let x: int = may_boom()?;
+ return x;
 }
 ```
 
@@ -38989,21 +39090,21 @@ fn main () -> int | Boom {
 error Boom { code: int }
 
 fn may_boom (x: int) -> int | Boom {
-  if x == 0 {
-    panic Boom{ code: 123 };
-  }
-  return 7;
+ if x == 0 {
+ panic Boom{ code: 123 };
+ }
+ return 7;
 }
 
 fn main () -> int {
-  match (may_boom(0)) {
-    value => {
-      return value;
-    },
-    err: Boom => {
-      std::abort();
-    },
-  }
+ match (may_boom(0)) {
+ value => {
+ return value;
+ },
+ err: Boom => {
+ std::abort();
+ },
+ }
 }
 ```
 
@@ -39054,8 +39155,8 @@ type IntAdder = fn (int, int) -> int;
 type IntAdder = fn (int, int) -> int;
 
 fn main () -> int {
-  let add: IntAdder = fn (x: int, y: int) -> x + y;
-  return add(40, 2);
+ let add: IntAdder = fn (x: int, y: int) -> x + y;
+ return add(40, 2);
 }
 ```
 
@@ -39063,12 +39164,12 @@ fn main () -> int {
 
 ```silk
 fn main () -> int {
-  let xs: int[3] = [1, 2, 3];
-  let mut sum: int = 0;
-  for x in xs {
-    sum += x;
-  }
-  return sum;
+ let xs: int[3] = [1, 2, 3];
+ let mut sum: int = 0;
+ for x in xs {
+ sum += x;
+ }
+ return sum;
 }
 ```
 
@@ -39089,7 +39190,7 @@ arguments, used by `std::io::print` / `std::io::println`.
 
 ```silk
 fn log (fmt: string, ...args: std::fmt::Arg) -> void {
-  std::io::println(fmt, args);
+ std::io::println(fmt, args);
 }
 ```
 
@@ -39099,8 +39200,8 @@ fn log (fmt: string, ...args: std::fmt::Arg) -> void {
 import std::io;
 
 fn main () -> int {
-  std::io::println("hello {s} answer={d}", "world", 42);
-  return 0;
+ std::io::println("hello {s} answer={d}", "world", 42);
+ return 0;
 }
 ```
 
@@ -39113,7 +39214,7 @@ URL: /silk/wiki/?p=std/conventions
 
 # `std::` conventions
 
-`std::` modules follow shared conventions for naming, ownership/allocation, and
+`std::` modules follow shared conventions for naming, ownership/allocation,
 error reporting.
 
 
@@ -39122,9 +39223,9 @@ error reporting.
 - **Naming**: packages are `std::area`; types are `PascalCase`; functions/methods are `snake_case`.
 - **Ownership**: allocating APIs return owned containers (for example `std::strings::String`) and callers drop them.
 - **Errors**:
-  - use `T?` for “absence” (`None`) without extra error information,
-  - use typed errors (`T | SomeError`) for recoverable runtime errors with meaning,
-  - use `std::result::Result(T, E)` when callers need to distinguish multiple error causes and propagate them cleanly.
+ - use `T?` for “absence” (`None`) without extra error information,
+ - use typed errors (`T | SomeError`) for recoverable runtime errors with meaning,
+ - use `std::result::Result(T, E)` when callers need to distinguish multiple error causes and propagate them cleanly.
 
 ## Examples
 
@@ -39135,21 +39236,21 @@ import std::process;
 import std::strings;
 
 fn main () -> int {
-  // Optional: `T?` indicates a value may be absent.
-  let missing: int? = None;
-  let v: int = missing ?? 123;
-  if v != 123 { return 1; }
+ // Optional: `T?` indicates a value may be absent.
+ let missing: int? = None;
+ let v: int = missing ?? 123;
+ if v != 123 { return 1; }
 
-  // Typed errors: handle `T | E` with `match`.
-  let mut cwd: std::strings::String = std::strings::String.empty();
-  match (std::process::getcwd()) {
-    s => { cwd = s; },
-    _: std::process::GetCwdFailed => { return 2; },
-  }
+ // Typed errors: handle `T | E` with `match`.
+ let mut cwd: std::strings::String = std::strings::String.empty();
+ match (std::process::getcwd()) {
+ s => { cwd = s; },
+ _: std::process::GetCwdFailed => { return 2; },
+ }
 
-  // Owned std values are explicitly dropped in the .
-  (mut cwd).drop();
-  return 0;
+ // Owned std values are explicitly dropped in the .
+ (mut cwd).drop();
+ return 0;
 }
 ```
 
@@ -39181,11 +39282,11 @@ import std::io;
 import std::strings;
 
 fn main () -> int {
-  if std::strings::eq("a", "a") {
-    std::io::println("ok");
-    return 0;
-  }
-  return 1;
+ if std::strings::eq("a", "a") {
+ std::io::println("ok");
+ return 0;
+ }
+ return 1;
 }
 ```
 
@@ -39222,9 +39323,9 @@ import std::algorithms;
 import std::algorithms;
 
 fn main () -> int {
-  if std::algorithms::clamp_int(10, 0, 5) != 5 { return 1; }
-  if std::algorithms::clamp_int(-1, 0, 5) != 0 { return 2; }
-  return 0;
+ if std::algorithms::clamp_int(10, 0, 5) != 5 { return 1; }
+ if std::algorithms::clamp_int(-1, 0, 5) != 0 { return 2; }
+ return 0;
 }
 ```
 
@@ -39248,14 +39349,14 @@ import args from "std/args";
 import { println } from "std/io";
 
 fn main (argc: int, argv: u64) -> int {
-  let a = args::Args.init(argc, argv);
-  if (a.count() != argc) {
-    return 1;
-  }
-  if argc > 0 {
-    println("argv[0]={}", a.get(0));
-  }
-  return 0;
+ let a = args::Args.init(argc, argv);
+ if (a.count() != argc) {
+ return 1;
+ }
+ if argc > 0 {
+ println("argv[0]={}", a.get(0));
+ }
+ return 0;
 }
 ```
 
@@ -39287,27 +39388,27 @@ import std::arrays;
 import std::buffer;
 
 fn main () -> int {
-  let mut buf: BufferU64 = BufferU64.init(4);
-  (mut buf).push(10);
-  (mut buf).push(11);
-  (mut buf).push(12);
+ let mut buf: BufferU64 = BufferU64.init(4);
+ (mut buf).push(10);
+ (mut buf).push(11);
+ (mut buf).push(12);
 
-  let s: std::arrays::Slice(u64) = { ptr: buf.ptr, len: buf.len() };
-  let mut it = s.iter();
-  let mut sum: u64 = 0;
-  while true {
-    let v: u64? = (mut it).next();
-    if v == None {
-      break;
-    }
-    sum += (v ?? 0 as u64);
-  }
+ let s: std::arrays::Slice(u64) = { ptr: buf.ptr, len: buf.len() };
+ let mut it = s.iter();
+ let mut sum: u64 = 0;
+ while true {
+ let v: u64? = (mut it).next();
+ if v == None {
+ break;
+ }
+ sum += (v ?? 0 as u64);
+ }
 
-  (mut buf).drop();
-  if sum != 33 {
-    return 1;
-  }
-  return 0;
+ (mut buf).drop();
+ if sum != 33 {
+ return 1;
+ }
+ return 0;
 }
 ```
 
@@ -39328,15 +39429,15 @@ URL: /silk/wiki/?p=std/bits
 Defined in `std/bits.slk`:
 
 - Byte swaps:
-  - `std::bits::bswap_u16`
-  - `std::bits::bswap_u32`
-  - `std::bits::bswap_u64`
+ - `std::bits::bswap_u16`
+ - `std::bits::bswap_u32`
+ - `std::bits::bswap_u64`
 - Rotations:
-  - `std::bits::rotl_u32`, `std::bits::rotr_u32`
-  - `std::bits::rotl_u64`, `std::bits::rotr_u64`
+ - `std::bits::rotl_u32`, `std::bits::rotr_u32`
+ - `std::bits::rotl_u64`, `std::bits::rotr_u64`
 - Bit counts:
-  - `std::bits::popcount_u32`, `std::bits::clz_u32`, `std::bits::ctz_u32`
-  - `std::bits::popcount_u64`, `std::bits::clz_u64`, `std::bits::ctz_u64`
+ - `std::bits::popcount_u32`, `std::bits::clz_u32`, `std::bits::ctz_u32`
+ - `std::bits::popcount_u64`, `std::bits::clz_u64`, `std::bits::ctz_u64`
 
 ## Example
 
@@ -39344,17 +39445,17 @@ Defined in `std/bits.slk`:
 import std::bits;
 
 fn main () -> int {
-  let v: u32 = 1;
-  let r: u32 = std::bits::rotl_u32(v, 5);
-  if r != ((1 as u32) << 5) {
-    return 1;
-  }
+ let v: u32 = 1;
+ let r: u32 = std::bits::rotl_u32(v, 5);
+ if r != ((1 as u32) << 5) {
+ return 1;
+ }
 
-  if std::bits::popcount_u32(r) != 1 {
-    return 2;
-  }
+ if std::bits::popcount_u32(r) != 1 {
+ return 2;
+ }
 
-  return 0;
+ return 0;
 }
 ```
 
@@ -39382,20 +39483,20 @@ import std::buffer;
 import std::buffer;
 
 fn main () -> int {
-  let b_r = BufferU8.init(4);
-  if b_r.is_err() { return 1; }
-  let mut b: BufferU8 = match (b_r) {
-    Ok(v) => v,
-    Err(_) => BufferU8.empty(),
-  };
-  (mut b).push(1 as u8);
-  (mut b).push(2 as u8);
-  if (mut b).pop() != Some(2 as u8) {
-    (mut b).drop();
-    return 1;
-  }
-  (mut b).drop();
-  return 0;
+ let b_r = BufferU8.init(4);
+ if b_r.is_err() { return 1; }
+ let mut b: BufferU8 = match (b_r) {
+ Ok(v) => v,
+ Err(_) => BufferU8.empty(),
+ };
+ (mut b).push(1 as u8);
+ (mut b).push(2 as u8);
+ if (mut b).pop() != Some(2 as u8) {
+ (mut b).drop();
+ return 1;
+ }
+ (mut b).drop();
+ return 0;
 }
 ```
 
@@ -39433,117 +39534,117 @@ import std::buffer;
 import std::runtime::mem;
 
 fn main () -> int {
-  if std::crypto::init() != None {
-    return 1;
-  }
+ if std::crypto::init() != None {
+ return 1;
+ }
 
-  // memzero: wipe a buffer in place.
-  let wipe_r = std::buffer::BufferU8.init(16);
-  if wipe_r.is_err() { return 2; }
-  let mut wipe: std::buffer::BufferU8 = match (wipe_r) {
-    Ok(v) => v,
-    Err(_) => std::buffer::BufferU8.empty(),
-  };
+ // memzero: wipe a buffer in place.
+ let wipe_r = std::buffer::BufferU8.init(16);
+ if wipe_r.is_err() { return 2; }
+ let mut wipe: std::buffer::BufferU8 = match (wipe_r) {
+ Ok(v) => v,
+ Err(_) => std::buffer::BufferU8.empty(),
+ };
 
-  var i: i64 = 0;
-  while i < 16 {
-    (mut wipe).push(std::runtime::mem::trunc_u8(100 + (i as int)));
-    i = i + 1;
-  }
+ var i: i64 = 0;
+ while i < 16 {
+ (mut wipe).push(std::runtime::mem::trunc_u8(100 + (i as int)));
+ i = i + 1;
+ }
 
-  let wipe_err: std::crypto::CryptoFailed? = std::crypto::memzero(wipe.as_bytes());
-  if wipe_err != None {
-    (mut wipe).drop();
-    return 3;
-  }
+ let wipe_err: std::crypto::CryptoFailed? = std::crypto::memzero(wipe.as_bytes());
+ if wipe_err != None {
+ (mut wipe).drop();
+ return 3;
+ }
 
-  var j: i64 = 0;
-  while j < 16 {
-    if wipe.get(j) != 0 {
-      (mut wipe).drop();
-      return 4;
-    }
-    j = j + 1;
-  }
-  (mut wipe).drop();
+ var j: i64 = 0;
+ while j < 16 {
+ if wipe.get(j) != 0 {
+ (mut wipe).drop();
+ return 4;
+ }
+ j = j + 1;
+ }
+ (mut wipe).drop();
 
-  // blake2b("abc") with digest_size=32.
-  let msg: string = "abc";
-  let msg_ptr: u64 = std::runtime::mem::string_ptr(msg);
-  let msg_len: i64 = std::runtime::mem::string_len(msg);
+ // blake2b("abc") with digest_size=32.
+ let msg: string = "abc";
+ let msg_ptr: u64 = std::runtime::mem::string_ptr(msg);
+ let msg_len: i64 = std::runtime::mem::string_len(msg);
 
-  let out_r = std::buffer::BufferU8.init(32);
-  let expected_r = std::buffer::BufferU8.init(32);
-  if out_r.is_err() || expected_r.is_err() { return 2; }
-  let mut out: std::buffer::BufferU8 = match (out_r) {
-    Ok(v) => v,
-    Err(_) => std::buffer::BufferU8.empty(),
-  };
-  let mut expected: std::buffer::BufferU8 = match (expected_r) {
-    Ok(v) => v,
-    Err(_) => std::buffer::BufferU8.empty(),
-  };
+ let out_r = std::buffer::BufferU8.init(32);
+ let expected_r = std::buffer::BufferU8.init(32);
+ if out_r.is_err() || expected_r.is_err() { return 2; }
+ let mut out: std::buffer::BufferU8 = match (out_r) {
+ Ok(v) => v,
+ Err(_) => std::buffer::BufferU8.empty(),
+ };
+ let mut expected: std::buffer::BufferU8 = match (expected_r) {
+ Ok(v) => v,
+ Err(_) => std::buffer::BufferU8.empty(),
+ };
 
-  // Expected digest: bddd813c634239723171ef3fee98579b94964e3bb1cb3e427262c8c068d52319
-  (mut expected).push(189);
-  (mut expected).push(221);
-  (mut expected).push(129);
-  (mut expected).push(60);
-  (mut expected).push(99);
-  (mut expected).push(66);
-  (mut expected).push(57);
-  (mut expected).push(114);
-  (mut expected).push(49);
-  (mut expected).push(113);
-  (mut expected).push(239);
-  (mut expected).push(63);
-  (mut expected).push(238);
-  (mut expected).push(152);
-  (mut expected).push(87);
-  (mut expected).push(155);
-  (mut expected).push(148);
-  (mut expected).push(150);
-  (mut expected).push(78);
-  (mut expected).push(59);
-  (mut expected).push(177);
-  (mut expected).push(203);
-  (mut expected).push(62);
-  (mut expected).push(66);
-  (mut expected).push(114);
-  (mut expected).push(98);
-  (mut expected).push(200);
-  (mut expected).push(192);
-  (mut expected).push(104);
-  (mut expected).push(213);
-  (mut expected).push(35);
-  (mut expected).push(25);
+ // Expected digest: bddd813c634239723171ef3fee98579b94964e3bb1cb3e427262c8c068d52319
+ (mut expected).push(189);
+ (mut expected).push(221);
+ (mut expected).push(129);
+ (mut expected).push(60);
+ (mut expected).push(99);
+ (mut expected).push(66);
+ (mut expected).push(57);
+ (mut expected).push(114);
+ (mut expected).push(49);
+ (mut expected).push(113);
+ (mut expected).push(239);
+ (mut expected).push(63);
+ (mut expected).push(238);
+ (mut expected).push(152);
+ (mut expected).push(87);
+ (mut expected).push(155);
+ (mut expected).push(148);
+ (mut expected).push(150);
+ (mut expected).push(78);
+ (mut expected).push(59);
+ (mut expected).push(177);
+ (mut expected).push(203);
+ (mut expected).push(62);
+ (mut expected).push(66);
+ (mut expected).push(114);
+ (mut expected).push(98);
+ (mut expected).push(200);
+ (mut expected).push(192);
+ (mut expected).push(104);
+ (mut expected).push(213);
+ (mut expected).push(35);
+ (mut expected).push(25);
 
-  let hash_err: std::crypto::CryptoError? = std::crypto::hash::blake2b(
-    mut out,
-    32,
-    std::arrays::ByteSlice{ ptr: msg_ptr, len: msg_len }
-  );
-  if hash_err != None {
-    (mut out).drop();
-    (mut expected).drop();
-    return 6;
-  }
-  let eq_r: std::crypto::CryptoBoolResult = std::crypto::equal(out.as_bytes(), expected.as_bytes());
-  let eq_opt: bool? = std::crypto::CryptoBoolResult.ok_value(eq_r);
-  if eq_opt == None {
-    (mut out).drop();
-    (mut expected).drop();
-    return 7;
-  }
-  if !(eq_opt ?? false) {
-    (mut out).drop();
-    (mut expected).drop();
-    return 7;
-  }
+ let hash_err: std::crypto::CryptoError? = std::crypto::hash::blake2b(
+ mut out,
+ 32,
+ std::arrays::ByteSlice{ ptr: msg_ptr, len: msg_len }
+ );
+ if hash_err != None {
+ (mut out).drop();
+ (mut expected).drop();
+ return 6;
+ }
+ let eq_r: std::crypto::CryptoBoolResult = std::crypto::equal(out.as_bytes(), expected.as_bytes());
+ let eq_opt: bool? = std::crypto::CryptoBoolResult.ok_value(eq_r);
+ if eq_opt == None {
+ (mut out).drop();
+ (mut expected).drop();
+ return 7;
+ }
+ if !(eq_opt ?? false) {
+ (mut out).drop();
+ (mut expected).drop();
+ return 7;
+ }
 
-  (mut out).drop();
-  (mut expected).drop();
-  return 0;
+ (mut out).drop();
+ (mut expected).drop();
+ return 0;
 }
 ```
 
@@ -39569,12 +39670,12 @@ import std::env;
 import { println } from "std/io";
 
 fn main () -> int {
-  let v_opt = std::env::get("HOME");
-  match (v_opt) {
-    Some(v) => println("HOME = {}", v),
-    None => println("HOME is not set"),
-  };
-  return 0;
+ let v_opt = std::env::get("HOME");
+ match (v_opt) {
+ Some(v) => println("HOME = {}", v),
+ None => println("HOME is not set"),
+ };
+ return 0;
 }
 ```
 
@@ -39587,7 +39688,7 @@ URL: /silk/wiki/?p=std/fmt
 
 # `std::fmt`
 
-`std::fmt` defines the formatting model used by `std::io::print`/`println` and
+`std::fmt` defines the formatting model used by `std::io::print`/`println`
 by string-building helpers. It follows a Zig-`std.fmt`-style format-string
 syntax.
 
@@ -39600,8 +39701,8 @@ syntax.
 import std::io;
 
 fn main () -> int {
-  std::io::println("name={s} ok={}", "silk", true);
-  return 0;
+ std::io::println("name={s} ok={}", "silk", true);
+ return 0;
 }
 ```
 
@@ -39636,7 +39737,7 @@ import { nonnegative_i64, bounds_i64 } from "std/formal";
 #theory nonnegative_i64(len);
 #theory bounds_i64(index, len);
 fn get_at (index: i64, len: i64) -> i64 {
-  return index;
+ return index;
 }
 ```
 
@@ -39659,10 +39760,10 @@ subset).
 import std::fs;
 
 fn main () -> int {
-  if !std::fs::exists("docs") { return 1; }
-  if !std::fs::can_read("docs") { return 2; }
-  if std::fs::exists("this_file_should_not_exist___silk_std_fs") { return 3; }
-  return 0;
+ if !std::fs::exists("docs") { return 1; }
+ if !std::fs::can_read("docs") { return 2; }
+ if std::fs::exists("this_file_should_not_exist___silk_std_fs") { return 3; }
+ return 0;
 }
 ```
 
@@ -39685,25 +39786,25 @@ URL: /silk/wiki/?p=std/interfaces
 import std::interfaces;
 
 struct CounterIter {
-  cur: int,
-  end: int,
+ cur: int,
+ end: int,
 }
 
 impl CounterIter {
-  public fn init (end: int) -> CounterIter {
-    return { cur: 0, end: end };
-  }
+ public fn init (end: int) -> CounterIter {
+ return { cur: 0, end: end };
+ }
 }
 
 impl CounterIter as std::interfaces::Iterator(int) {
-  public fn next (mut self: &CounterIter) -> int? {
-    if self.cur >= self.end {
-      return None;
-    }
-    let v: int = self.cur;
-    self.cur = self.cur + 1;
-    return Some(v);
-  }
+ public fn next (mut self: &CounterIter) -> int? {
+ if self.cur >= self.end {
+ return None;
+ }
+ let v: int = self.cur;
+ self.cur = self.cur + 1;
+ return Some(v);
+ }
 }
 ```
 
@@ -39734,8 +39835,8 @@ import std::io;
 import std::io;
 
 fn main () -> int {
-  std::io::println("hello {s} answer={d}", "world", 42);
-  return 0;
+ std::io::println("hello {s} answer={d}", "world", 42);
+ return 0;
 }
 ```
 
@@ -39783,75 +39884,75 @@ import std::memory;
 type StringAllocResult = std::result::Result(std::strings::String, std::memory::OutOfMemory);
 
 fn main () -> int {
-  let mut doc: Document = Document{};
-  let input: string = `{"a":1,"b":true,"c":null,"d":["x","y"],"u":"\u0041"}`;
+ let mut doc: Document = Document{};
+ let input: string = `{"a":1,"b":true,"c":null,"d":["x","y"],"u":"\u0041"}`;
 
-  let root_r: std::json::ParseResult = (mut doc).parse(input);
-  if root_r.is_err() {
-    (mut doc).drop();
-    return 1;
-  }
-  if !doc.is_ok() {
-    (mut doc).drop();
-    return 2;
-  }
+ let root_r: std::json::ParseResult = (mut doc).parse(input);
+ if root_r.is_err() {
+ (mut doc).drop();
+ return 1;
+ }
+ if !doc.is_ok() {
+ (mut doc).drop();
+ return 2;
+ }
 
-  let root: i64 = match (root_r) {
-    Ok(v) => v,
-    Err(_) => 0 as i64,
-  };
+ let root: i64 = match (root_r) {
+ Ok(v) => v,
+ Err(_) => 0 as i64,
+ };
 
-  let u_id_opt = doc.object_get(root, "u");
-  if u_id_opt == None {
-    (mut doc).drop();
-    return 3;
-  }
-  let u_id: i64 = u_id_opt ?? 0 as i64;
-  let u_opt = doc.as_string(u_id);
-  if u_opt == None {
-    (mut doc).drop();
-    return 4;
-  }
-  if (u_opt ?? "") != "A" {
-    (mut doc).drop();
-    return 5;
-  }
+ let u_id_opt = doc.object_get(root, "u");
+ if u_id_opt == None {
+ (mut doc).drop();
+ return 3;
+ }
+ let u_id: i64 = u_id_opt ?? 0 as i64;
+ let u_opt = doc.as_string(u_id);
+ if u_opt == None {
+ (mut doc).drop();
+ return 4;
+ }
+ if (u_opt ?? "") != "A" {
+ (mut doc).drop();
+ return 5;
+ }
 
-  let a_id_opt = doc.object_get(root, "a");
-  if a_id_opt == None {
-    (mut doc).drop();
-    return 6;
-  }
-  let a_id: i64 = a_id_opt ?? 0 as i64;
-  let a_num_opt = std::json::number_as_i64(doc, a_id);
-  if a_num_opt == None {
-    (mut doc).drop();
-    return 7;
-  }
-  if (a_num_opt ?? 0 as i64) != 1 {
-    (mut doc).drop();
-    return 8;
-  }
+ let a_id_opt = doc.object_get(root, "a");
+ if a_id_opt == None {
+ (mut doc).drop();
+ return 6;
+ }
+ let a_id: i64 = a_id_opt ?? 0 as i64;
+ let a_num_opt = std::json::number_as_i64(doc, a_id);
+ if a_num_opt == None {
+ (mut doc).drop();
+ return 7;
+ }
+ if (a_num_opt ?? 0 as i64) != 1 {
+ (mut doc).drop();
+ return 8;
+ }
 
-  let compact_r: StringAllocResult = std::json::stringify(doc, root);
-  if compact_r.is_err() {
-    (mut doc).drop();
-    return 9;
-  }
-  let mut compact: std::strings::String = match (compact_r) {
-    StringAllocResult::Ok(v) => v,
-    StringAllocResult::Err(_) => std::strings::String.empty(),
-  };
-  let expected: string = `{"a":1,"b":true,"c":null,"d":["x","y"],"u":"A"}`;
-  if compact.as_string() != expected {
-    (mut compact).drop();
-    (mut doc).drop();
-    return 10;
-  }
+ let compact_r: StringAllocResult = std::json::stringify(doc, root);
+ if compact_r.is_err() {
+ (mut doc).drop();
+ return 9;
+ }
+ let mut compact: std::strings::String = match (compact_r) {
+ StringAllocResult::Ok(v) => v,
+ StringAllocResult::Err(_) => std::strings::String.empty(),
+ };
+ let expected: string = `{"a":1,"b":true,"c":null,"d":["x","y"],"u":"A"}`;
+ if compact.as_string() != expected {
+ (mut compact).drop();
+ (mut doc).drop();
+ return 10;
+ }
 
-  (mut compact).drop();
-  (mut doc).drop();
-  return 0;
+ (mut compact).drop();
+ (mut doc).drop();
+ return 0;
 }
 ```
 
@@ -39889,16 +39990,16 @@ type Map = std::map::HashMap(u64, int);
 type InitResult = std::result::Result(Map, std::memory::AllocFailed);
 
 fn main () -> int {
-  let init_r: InitResult = Map.init(16, std::map::hash_u64, std::map::eq_u64);
-  if init_r.is_err() { return 2; }
-  let mut m: Map = match (init_r) {
-    InitResult::Ok(v) => v,
-    InitResult::Err(_) => Map.empty(std::map::hash_u64, std::map::eq_u64),
-  };
-  (mut m).put(1, 10);
-  let v: int = m.get(1) ?? 0;
-  (mut m).drop();
-  return v;
+ let init_r: InitResult = Map.init(16, std::map::hash_u64, std::map::eq_u64);
+ if init_r.is_err() { return 2; }
+ let mut m: Map = match (init_r) {
+ InitResult::Ok(v) => v,
+ InitResult::Err(_) => Map.empty(std::map::hash_u64, std::map::eq_u64),
+ };
+ (mut m).put(1, 10);
+ let v: int = m.get(1) ?? 0;
+ (mut m).drop();
+ return v;
 }
 ```
 
@@ -39926,9 +40027,9 @@ import std::memory;
 import std::memory;
 
 fn main () -> int {
-  if !std::memory::is_power_of_two_u64(8) { return 1; }
-  if std::memory::align_up_u64(9, 8) != 16 { return 2; }
-  return 0;
+ if !std::memory::is_power_of_two_u64(8) { return 1; }
+ if std::memory::align_up_u64(9, 8) != 16 { return 2; }
+ return 0;
 }
 ```
 
@@ -39950,9 +40051,9 @@ URL: /silk/wiki/?p=std/networking
 import std::net;
 
 fn main () -> int {
-  let a = ipv4(127, 0, 0, 1);
-  if !ipv4_is_loopback(a) { return 1; }
-  return 0;
+ let a = ipv4(127, 0, 0, 1);
+ if !ipv4_is_loopback(a) { return 1; }
+ return 0;
 }
 ```
 
@@ -39984,31 +40085,31 @@ import std::path;
 import std::strings;
 
 fn main () -> int {
-  let mut n: std::strings::String = std::path::normalize("/a//b/");
-  if n.as_string() != "/a/b" {
-    (mut n).drop();
-    return 1;
-  }
-  (mut n).drop();
+ let mut n: std::strings::String = std::path::normalize("/a//b/");
+ if n.as_string() != "/a/b" {
+ (mut n).drop();
+ return 1;
+ }
+ (mut n).drop();
 
-  let mut pb: std::path::PathBuf = std::path::PathBuf.empty();
-  (mut pb).push("a");
-  (mut pb).push("b");
-  if pb.as_string() != "a/b" {
-    (mut pb).drop();
-    return 2;
-  }
-  if !(mut pb).pop() {
-    (mut pb).drop();
-    return 3;
-  }
-  if pb.as_string() != "a" {
-    (mut pb).drop();
-    return 4;
-  }
+ let mut pb: std::path::PathBuf = std::path::PathBuf.empty();
+ (mut pb).push("a");
+ (mut pb).push("b");
+ if pb.as_string() != "a/b" {
+ (mut pb).drop();
+ return 2;
+ }
+ if !(mut pb).pop() {
+ (mut pb).drop();
+ return 3;
+ }
+ if pb.as_string() != "a" {
+ (mut pb).drop();
+ return 4;
+ }
 
-  (mut pb).drop();
-  return 0;
+ (mut pb).drop();
+ return 0;
 }
 ```
 
@@ -40040,29 +40141,29 @@ import std::process;
 import std::strings;
 
 fn main () -> int {
-  let cwd_r: std::process::GetCwdResult = std::process::getcwd();
-  if cwd_r.is_err() {
-    return 1;
-  }
-  let mut cwd: std::strings::String = match (cwd_r) {
-    std::process::GetCwdResult::Ok(v) => v,
-    std::process::GetCwdResult::Err(_) => std::strings::String.empty(),
-  };
+ let cwd_r: std::process::GetCwdResult = std::process::getcwd();
+ if cwd_r.is_err() {
+ return 1;
+ }
+ let mut cwd: std::strings::String = match (cwd_r) {
+ std::process::GetCwdResult::Ok(v) => v,
+ std::process::GetCwdResult::Err(_) => std::strings::String.empty(),
+ };
 
-  let err1: std::process::ChdirFailed? = std::process::chdir("/");
-  if err1 != None {
-    (mut cwd).drop();
-    return 2;
-  }
+ let err1: std::process::ChdirFailed? = std::process::chdir("/");
+ if err1 != None {
+ (mut cwd).drop();
+ return 2;
+ }
 
-  let err2: std::process::ChdirFailed? = std::process::chdir(cwd.as_string());
-  if err2 != None {
-    (mut cwd).drop();
-    return 3;
-  }
+ let err2: std::process::ChdirFailed? = std::process::chdir(cwd.as_string());
+ if err2 != None {
+ (mut cwd).drop();
+ return 3;
+ }
 
-  (mut cwd).drop();
-  return 0;
+ (mut cwd).drop();
+ return 0;
 }
 ```
 
@@ -40095,10 +40196,10 @@ import std::result;
 type R = std::result::Result(int, string);
 
 fn main () -> int {
-  let x: R = R.ok(123);
-  if x.is_err() { return 1; }
-  if R.unwrap_or(x, 0) != 123 { return 2; }
-  return 0;
+ let x: R = R.ok(123);
+ if x.is_err() { return 1; }
+ if R.unwrap_or(x, 0) != 123 { return 2; }
+ return 0;
 }
 ```
 
@@ -40132,25 +40233,25 @@ import std::runtime::build;
 import std::runtime::mem;
 
 fn main () -> int {
-  // This reports whether the current artifact was built with `--debug` / `-g`.
-  if std::runtime::build::is_debug() {
-    return 1;
-  }
+ // This reports whether the current artifact was built with `--debug` / `-g`.
+ if std::runtime::build::is_debug() {
+ return 1;
+ }
 
-  // `std::runtime::mem` provides low-level allocation and raw load/store.
-  let ptr: u64 = std::runtime::mem::alloc(4);
-  if ptr == 0 { return 2; }
+ // `std::runtime::mem` provides low-level allocation and raw load/store.
+ let ptr: u64 = std::runtime::mem::alloc(4);
+ if ptr == 0 { return 2; }
 
-  std::runtime::mem::store_u8(ptr, 0, std::runtime::mem::trunc_u8(65));
-  std::runtime::mem::store_u8(ptr, 1, std::runtime::mem::trunc_u8(66));
+ std::runtime::mem::store_u8(ptr, 0, std::runtime::mem::trunc_u8(65));
+ std::runtime::mem::store_u8(ptr, 1, std::runtime::mem::trunc_u8(66));
 
-  if std::runtime::mem::load_u8(ptr, 0) != 65 {
-    std::runtime::mem::free(ptr);
-    return 3;
-  }
+ if std::runtime::mem::load_u8(ptr, 0) != 65 {
+ std::runtime::mem::free(ptr);
+ return 3;
+ }
 
-  std::runtime::mem::free(ptr);
-  return 0;
+ std::runtime::mem::free(ptr);
+ return 0;
 }
 ```
 
@@ -40175,23 +40276,23 @@ URL: /silk/wiki/?p=std/semver
 import std::semver;
 
 fn main () -> int {
-  let r = std::semver::parse("1.2.3-alpha.1+build.5");
-  if r.is_err() { return 1; }
-  let v: std::semver::Version = match (r) {
-    Ok(v) => v,
-    Err(_) => std::semver::Version{ major: 0, minor: 0, patch: 0, prerelease: None, build: None },
-  };
+ let r = std::semver::parse("1.2.3-alpha.1+build.5");
+ if r.is_err() { return 1; }
+ let v: std::semver::Version = match (r) {
+ Ok(v) => v,
+ Err(_) => std::semver::Version{ major: 0, minor: 0, patch: 0, prerelease: None, build: None },
+ };
 
-  // Precedence comparison ignores build metadata.
-  let ar = std::semver::parse("1.0.0-alpha");
-  let br = std::semver::parse("1.0.0");
-  if ar.is_err() { return 2; }
-  if br.is_err() { return 3; }
-  let a: std::semver::Version = match (ar) { Ok(v) => v, Err(_) => std::semver::Version{ major: 0, minor: 0, patch: 0, prerelease: None, build: None } };
-  let b: std::semver::Version = match (br) { Ok(v) => v, Err(_) => std::semver::Version{ major: 0, minor: 0, patch: 0, prerelease: None, build: None } };
-  if a.cmp(b) >= 0 { return 4; }
+ // Precedence comparison ignores build metadata.
+ let ar = std::semver::parse("1.0.0-alpha");
+ let br = std::semver::parse("1.0.0");
+ if ar.is_err() { return 2; }
+ if br.is_err() { return 3; }
+ let a: std::semver::Version = match (ar) { Ok(v) => v, Err(_) => std::semver::Version{ major: 0, minor: 0, patch: 0, prerelease: None, build: None } };
+ let b: std::semver::Version = match (br) { Ok(v) => v, Err(_) => std::semver::Version{ major: 0, minor: 0, patch: 0, prerelease: None, build: None } };
+ if a.cmp(b) >= 0 { return 4; }
 
-  return 0;
+ return 0;
 }
 ```
 
@@ -40228,19 +40329,19 @@ type InitResult = std::result::Result(Set, std::memory::AllocFailed);
 type InsertResult = std::result::Result(bool, std::memory::OutOfMemory);
 
 fn main () -> int {
-  let init_r: InitResult = Set.init(4, std::set::hash_u64, std::set::eq_u64);
-  if init_r.is_err() { return 1; }
-  let mut s: Set = match (init_r) {
-    InitResult::Ok(v) => v,
-    InitResult::Err(_) => Set.empty(std::set::hash_u64, std::set::eq_u64),
-  };
+ let init_r: InitResult = Set.init(4, std::set::hash_u64, std::set::eq_u64);
+ if init_r.is_err() { return 1; }
+ let mut s: Set = match (init_r) {
+ InitResult::Ok(v) => v,
+ InitResult::Err(_) => Set.empty(std::set::hash_u64, std::set::eq_u64),
+ };
 
-  let insert_r: InsertResult = (mut s).insert(1);
-  if insert_r.is_err() { (mut s).drop(); return 2; }
-  let ok: bool = s.contains(1);
-  (mut s).drop();
-  if ok { return 0; }
-  return 1;
+ let insert_r: InsertResult = (mut s).insert(1);
+ if insert_r.is_err() { (mut s).drop(); return 2; }
+ let ok: bool = s.contains(1);
+ (mut s).drop();
+ if ok { return 0; }
+ return 1;
 }
 ```
 
@@ -40282,13 +40383,13 @@ export fn or_empty (s: string?) -> string;
 import std::strings;
 
 fn main () -> int {
-  let a: string = "hi";
-  let b: string? = None;
+ let a: string = "hi";
+ let b: string? = None;
 
-  if std::strings::eq(a, "hi") && std::strings::is_empty(std::strings::or_empty(b)) {
-    return 0;
-  }
-  return 1;
+ if std::strings::eq(a, "hi") && std::strings::is_empty(std::strings::or_empty(b)) {
+ return 0;
+ }
+ return 1;
 }
 ```
 
@@ -40320,37 +40421,37 @@ import sync from "std/sync";
 type ChanU64 = sync::Channel(u64);
 
 task fn producer (c: sync::ChannelBorrow(u64)) -> int {
-  let err: sync::SyncFailed? = c.send(42);
-  if err != None { return 10; }
-  return 0;
+ let err: sync::SyncFailed? = c.send(42);
+ if err != None { return 10; }
+ return 0;
 }
 
 async fn main () -> int {
-  task {
-    let c_r = ChanU64.init(1);
-    if c_r.is_err() {
-      return 100;
-    }
-    let mut c: ChanU64 = match (c_r) {
-      Ok(v) => v,
-      Err(_) => ChanU64.invalid(),
-    };
+ task {
+ let c_r = ChanU64.init(1);
+ if c_r.is_err() {
+ return 100;
+ }
+ let mut c: ChanU64 = match (c_r) {
+ Ok(v) => v,
+ Err(_) => ChanU64.invalid(),
+ };
 
-    let h = producer(c.borrow());
+ let h = producer(c.borrow());
 
-    let v1: u64 = (c.recv() ?? 0);
-    c.close();
-    let v2: u64 = (c.recv() ?? 99);
+ let v1: u64 = (c.recv() ?? 0);
+ c.close();
+ let v2: u64 = (c.recv() ?? 99);
 
-    let rc_values: int[] = yield * h;
-    let rc: int = rc_values[0];
-    (mut c).destroy();
+ let rc_values: int[] = yield * h;
+ let rc: int = rc_values[0];
+ (mut c).destroy();
 
-    if rc != 0 { return 11; }
-    if v1 != 42 { return 1; }
-    if v2 != 99 { return 2; }
-    return 0;
-  }
+ if rc != 0 { return 11; }
+ if v1 != 42 { return 1; }
+ if v2 != 99 { return 2; }
+ return 0;
+ }
 }
 ```
 
@@ -40375,11 +40476,11 @@ operations.
 import std::task;
 
 fn main () -> int {
-  let n: int = available_parallelism();
-  yield_now();
-  sleep_ms(0);
-  if n < 1 { return 1; }
-  return 0;
+ let n: int = available_parallelism();
+ yield_now();
+ sleep_ms(0);
+ if n < 1 { return 1; }
+ return 0;
 }
 ```
 
@@ -40402,11 +40503,11 @@ utilities.
 import std::temporal;
 
 fn main () -> int {
-  let z: Duration = std::temporal::duration_zero();
-  if !std::temporal::is_zero(z) { return 1; }
-  if std::temporal::is_negative(1s) { return 2; }
-  if !std::temporal::is_negative(-1s) { return 3; }
-  return 0;
+ let z: Duration = std::temporal::duration_zero();
+ if !std::temporal::is_zero(z) { return 1; }
+ if std::temporal::is_negative(1s) { return 2; }
+ if !std::temporal::is_negative(-1s) { return 3; }
+ return 0;
 }
 ```
 
@@ -40440,7 +40541,7 @@ import std::arrays;
 import std::tls;
 
 fn test_cert () -> string {
-  return `-----BEGIN CERTIFICATE-----
+ return `-----BEGIN CERTIFICATE-----
 MIIDCTCCAfGgAwIBAgIUZGlB8Eq9CXntm2xyJOT1X1eNCjMwDQYJKoZIhvcNAQEL
 BQAwFDESMBAGA1UEAwwJbG9jYWxob3N0MB4XDTI2MDEwMzAyMDUyM1oXDTM2MDEw
 MTAyMDUyM1owFDESMBAGA1UEAwwJbG9jYWxob3N0MIIBIjANBgkqhkiG9w0BAQEF
@@ -40463,7 +40564,7 @@ y4hZQtsSHGmUJs8T57aW3TKW0mFs/jUAISkeLBoBO84tu7Gzu+QeFGYAgHWR8wp2
 }
 
 fn test_key () -> string {
-  return `-----BEGIN PRIVATE KEY-----
+ return `-----BEGIN PRIVATE KEY-----
 MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDRG9DE5YYB7Zri
 qH3+VQWkh4Q51AUqsZ/nr0DA/ABtwuj8CH3/AFJfNcv+MLLyh96ZZLseY/3giSbX
 XMnGM5659cJsZL5f4zY6uFFgkPHkIK8XCNmxKk2NORb/B4Ov3KxWBN2y44RWeced
@@ -40495,152 +40596,152 @@ GSDCV/JoUBg4iPwQ0rK0Tlo=
 }
 
 fn drive_handshake (mut client: &Session, mut server: &Session) -> bool {
-  var client_done: bool = false;
-  var server_done: bool = false;
+ var client_done: bool = false;
+ var server_done: bool = false;
 
-  var steps: int = 0;
-  while steps < 100000 {
-    steps += 1;
+ var steps: int = 0;
+ while steps < 100000 {
+ steps += 1;
 
-    if !client_done {
-      let rc = client.handshake_step();
-      if rc == 0 {
-        client_done = true;
-      } else {
-        if rc != ERR_WANT_READ && rc != ERR_WANT_WRITE {
-          return false;
-        }
-      }
-    }
+ if !client_done {
+ let rc = client.handshake_step();
+ if rc == 0 {
+ client_done = true;
+ } else {
+ if rc != ERR_WANT_READ && rc != ERR_WANT_WRITE {
+ return false;
+ }
+ }
+ }
 
-    if !server_done {
-      let rc = server.handshake_step();
-      if rc == 0 {
-        server_done = true;
-      } else {
-        if rc != ERR_WANT_READ && rc != ERR_WANT_WRITE {
-          return false;
-        }
-      }
-    }
+ if !server_done {
+ let rc = server.handshake_step();
+ if rc == 0 {
+ server_done = true;
+ } else {
+ if rc != ERR_WANT_READ && rc != ERR_WANT_WRITE {
+ return false;
+ }
+ }
+ }
 
-    if client_done && server_done {
-      return true;
-    }
-  }
+ if client_done && server_done {
+ return true;
+ }
+ }
 
-  return false;
+ return false;
 }
 
 fn read_some (mut sess: &Session, ptr: u64, cap: u64) -> i32 {
-  var tries: int = 0;
-  while tries < 100000 {
-    tries += 1;
-    let rc = sess.read(std::arrays::ByteSlice{ ptr: ptr, len: cap as i64 });
-    if rc > 0 {
-      return rc;
-    }
-    if rc == ERR_WANT_READ || rc == ERR_WANT_WRITE {
-      continue;
-    }
-    return rc;
-  }
-  return -1 as i32;
+ var tries: int = 0;
+ while tries < 100000 {
+ tries += 1;
+ let rc = sess.read(std::arrays::ByteSlice{ ptr: ptr, len: cap as i64 });
+ if rc > 0 {
+ return rc;
+ }
+ if rc == ERR_WANT_READ || rc == ERR_WANT_WRITE {
+ continue;
+ }
+ return rc;
+ }
+ return -1 as i32;
 }
 
 fn main () -> int {
-  var pipe = MemPipe.init(65536);
-  if !pipe.is_valid() {
-    return 1;
-  }
+ var pipe = MemPipe.init(65536);
+ if !pipe.is_valid() {
+ return 1;
+ }
 
-  var client: Session = Session.client() ?? Session.invalid();
-  if !client.is_valid() {
-    (mut pipe).drop();
-    return 2;
-  }
+ var client: Session = Session.client() ?? Session.invalid();
+ if !client.is_valid() {
+ (mut pipe).drop();
+ return 2;
+ }
 
-  var server: Session = Session.server(test_cert(), test_key()) ?? Session.invalid();
-  if !server.is_valid() {
-    (mut client).drop();
-    (mut pipe).drop();
-    return 3;
-  }
+ var server: Session = Session.server(test_cert(), test_key()) ?? Session.invalid();
+ if !server.is_valid() {
+ (mut client).drop();
+ (mut pipe).drop();
+ return 3;
+ }
 
-  client.set_bio_mempipe(pipe.client_ctx());
-  server.set_bio_mempipe(pipe.server_ctx());
+ client.set_bio_mempipe(pipe.client_ctx());
+ server.set_bio_mempipe(pipe.server_ctx());
 
-  if !drive_handshake(mut client, mut server) {
-    (mut server).drop();
-    (mut client).drop();
-    (mut pipe).drop();
-    return 4;
-  }
+ if !drive_handshake(mut client, mut server) {
+ (mut server).drop();
+ (mut client).drop();
+ (mut pipe).drop();
+ return 4;
+ }
 
-  if !client.write_string("ping") {
-    (mut server).drop();
-    (mut client).drop();
-    (mut pipe).drop();
-    return 5;
-  }
+ if !client.write_string("ping") {
+ (mut server).drop();
+ (mut client).drop();
+ (mut pipe).drop();
+ return 5;
+ }
 
-  let buf_ptr = mem::alloc(64);
-  if buf_ptr == 0 {
-    (mut server).drop();
-    (mut client).drop();
-    (mut pipe).drop();
-    return 6;
-  }
+ let buf_ptr = mem::alloc(64);
+ if buf_ptr == 0 {
+ (mut server).drop();
+ (mut client).drop();
+ (mut pipe).drop();
+ return 6;
+ }
 
-  let n = read_some(mut server, buf_ptr, 64);
-  if n <= 0 {
-    mem::free(buf_ptr);
-    (mut server).drop();
-    (mut client).drop();
-    (mut pipe).drop();
-    return 7;
-  }
+ let n = read_some(mut server, buf_ptr, 64);
+ if n <= 0 {
+ mem::free(buf_ptr);
+ (mut server).drop();
+ (mut client).drop();
+ (mut pipe).drop();
+ return 7;
+ }
 
-  let got = mem::string_from_ptr_len(buf_ptr, n as int);
-  if got != "ping" {
-    mem::free(buf_ptr);
-    (mut server).drop();
-    (mut client).drop();
-    (mut pipe).drop();
-    return 8;
-  }
+ let got = mem::string_from_ptr_len(buf_ptr, n as int);
+ if got != "ping" {
+ mem::free(buf_ptr);
+ (mut server).drop();
+ (mut client).drop();
+ (mut pipe).drop();
+ return 8;
+ }
 
-  if !server.write_string("pong") {
-    mem::free(buf_ptr);
-    (mut server).drop();
-    (mut client).drop();
-    (mut pipe).drop();
-    return 9;
-  }
+ if !server.write_string("pong") {
+ mem::free(buf_ptr);
+ (mut server).drop();
+ (mut client).drop();
+ (mut pipe).drop();
+ return 9;
+ }
 
-  let n2 = read_some(mut client, buf_ptr, 64);
-  if n2 <= 0 {
-    mem::free(buf_ptr);
-    (mut server).drop();
-    (mut client).drop();
-    (mut pipe).drop();
-    return 10;
-  }
+ let n2 = read_some(mut client, buf_ptr, 64);
+ if n2 <= 0 {
+ mem::free(buf_ptr);
+ (mut server).drop();
+ (mut client).drop();
+ (mut pipe).drop();
+ return 10;
+ }
 
-  let got2 = mem::string_from_ptr_len(buf_ptr, n2 as int);
-  if got2 != "pong" {
-    mem::free(buf_ptr);
-    (mut server).drop();
-    (mut client).drop();
-    (mut pipe).drop();
-    return 11;
-  }
+ let got2 = mem::string_from_ptr_len(buf_ptr, n2 as int);
+ if got2 != "pong" {
+ mem::free(buf_ptr);
+ (mut server).drop();
+ (mut client).drop();
+ (mut pipe).drop();
+ return 11;
+ }
 
-  mem::free(buf_ptr);
-  (mut server).drop();
-  (mut client).drop();
-  (mut pipe).drop();
-  return 0;
+ mem::free(buf_ptr);
+ (mut server).drop();
+ (mut client).drop();
+ (mut pipe).drop();
+ return 0;
 }
 ```
 
@@ -40678,59 +40779,59 @@ import std::toml;
 import std::toml;
 
 fn main () -> int {
-  let mut doc: Document = Document{};
-  let input: string = `title = "TOML Example"
+ let mut doc: Document = Document{};
+ let input: string = `title = "TOML Example"
 answer = 42
 `;
 
-  let root_r: std::toml::ParseResult = (mut doc).parse(input);
-  if root_r.is_err() {
-    (mut doc).drop();
-    return 1;
-  }
-  if !doc.is_ok() {
-    (mut doc).drop();
-    return 2;
-  }
-  let root: i64 = match (root_r) {
-    Ok(v) => v,
-    Err(_) => 0 as i64,
-  };
+ let root_r: std::toml::ParseResult = (mut doc).parse(input);
+ if root_r.is_err() {
+ (mut doc).drop();
+ return 1;
+ }
+ if !doc.is_ok() {
+ (mut doc).drop();
+ return 2;
+ }
+ let root: i64 = match (root_r) {
+ Ok(v) => v,
+ Err(_) => 0 as i64,
+ };
 
-  let title_id_opt = doc.table_get(root, "title");
-  if title_id_opt == None {
-    (mut doc).drop();
-    return 3;
-  }
-  let title_id: i64 = title_id_opt ?? 0 as i64;
-  let title_opt = doc.as_string(title_id);
-  if title_opt == None {
-    (mut doc).drop();
-    return 4;
-  }
-  if (title_opt ?? "") != "TOML Example" {
-    (mut doc).drop();
-    return 5;
-  }
+ let title_id_opt = doc.table_get(root, "title");
+ if title_id_opt == None {
+ (mut doc).drop();
+ return 3;
+ }
+ let title_id: i64 = title_id_opt ?? 0 as i64;
+ let title_opt = doc.as_string(title_id);
+ if title_opt == None {
+ (mut doc).drop();
+ return 4;
+ }
+ if (title_opt ?? "") != "TOML Example" {
+ (mut doc).drop();
+ return 5;
+ }
 
-  let answer_id_opt = doc.table_get(root, "answer");
-  if answer_id_opt == None {
-    (mut doc).drop();
-    return 6;
-  }
-  let answer_id: i64 = answer_id_opt ?? 0 as i64;
-  let answer_opt = std::toml::int_as_i64(doc, answer_id);
-  if answer_opt == None {
-    (mut doc).drop();
-    return 7;
-  }
-  if (answer_opt ?? 0 as i64) != 42 {
-    (mut doc).drop();
-    return 8;
-  }
+ let answer_id_opt = doc.table_get(root, "answer");
+ if answer_id_opt == None {
+ (mut doc).drop();
+ return 6;
+ }
+ let answer_id: i64 = answer_id_opt ?? 0 as i64;
+ let answer_opt = std::toml::int_as_i64(doc, answer_id);
+ if answer_opt == None {
+ (mut doc).drop();
+ return 7;
+ }
+ if (answer_opt ?? 0 as i64) != 42 {
+ (mut doc).drop();
+ return 8;
+ }
 
-  (mut doc).drop();
-  return 0;
+ (mut doc).drop();
+ return 0;
 }
 ```
 
@@ -40775,160 +40876,160 @@ import std::url;
 import std::strings;
 
 fn dummy_url () -> URL {
-  return URL{
-    scheme: std::strings::String.empty(),
-    username: std::strings::String.empty(),
-    password: std::strings::String.empty(),
-    host_kind: 0,
-    host_str: std::strings::String.empty(),
-    ipv4: 0,
-    ipv6_s0: 0,
-    ipv6_s1: 0,
-    ipv6_s2: 0,
-    ipv6_s3: 0,
-    ipv6_s4: 0,
-    ipv6_s5: 0,
-    ipv6_s6: 0,
-    ipv6_s7: 0,
-    port: None,
-    path: std::strings::String.empty(),
-    query: std::strings::String.empty(),
-    has_query: false,
-    fragment: std::strings::String.empty(),
-    has_fragment: false,
-    cannot_be_a_base: false,
-  };
+ return URL{
+ scheme: std::strings::String.empty(),
+ username: std::strings::String.empty(),
+ password: std::strings::String.empty(),
+ host_kind: 0,
+ host_str: std::strings::String.empty(),
+ ipv4: 0,
+ ipv6_s0: 0,
+ ipv6_s1: 0,
+ ipv6_s2: 0,
+ ipv6_s3: 0,
+ ipv6_s4: 0,
+ ipv6_s5: 0,
+ ipv6_s6: 0,
+ ipv6_s7: 0,
+ port: None,
+ path: std::strings::String.empty(),
+ query: std::strings::String.empty(),
+ has_query: false,
+ fragment: std::strings::String.empty(),
+ has_fragment: false,
+ cannot_be_a_base: false,
+ };
 }
 
 fn main () -> int {
-  let abs: URLResult = std::url::parse("https://example.com:443/a/./b/../c?x=1#frag");
-  if abs.value == None { return 1; }
+ let abs: URLResult = std::url::parse("https://example.com:443/a/./b/../c?x=1#frag");
+ if abs.value == None { return 1; }
 
-  let mut url: URL = abs.value ?? dummy_url();
-  let mut href_r = url.href();
-  if href_r.err != None {
-    (mut url).drop();
-    return 2;
-  }
-  href_r.err = None;
-  let mut href: std::strings::String = href_r.value ?? std::strings::String.empty();
-  href_r.value = None;
-  if href.as_string() != "https://example.com/a/c?x=1#frag" {
-    (mut href).drop();
-    (mut url).drop();
-    return 2;
-  }
-  (mut href).drop();
+ let mut url: URL = abs.value ?? dummy_url();
+ let mut href_r = url.href();
+ if href_r.err != None {
+ (mut url).drop();
+ return 2;
+ }
+ href_r.err = None;
+ let mut href: std::strings::String = href_r.value ?? std::strings::String.empty();
+ href_r.value = None;
+ if href.as_string() != "https://example.com/a/c?x=1#frag" {
+ (mut href).drop();
+ (mut url).drop();
+ return 2;
+ }
+ (mut href).drop();
 
-  let base_res: URLResult = std::url::parse("https://example.com/dir/file");
-  if base_res.value == None {
-    (mut url).drop();
-    return 3;
-  }
-  let mut base: URL = base_res.value ?? dummy_url();
-  let rel_res: URLResult = std::url::parse_with_base("../x?y=z", base);
-  (mut base).drop();
-  if rel_res.value == None {
-    (mut url).drop();
-    return 4;
-  }
+ let base_res: URLResult = std::url::parse("https://example.com/dir/file");
+ if base_res.value == None {
+ (mut url).drop();
+ return 3;
+ }
+ let mut base: URL = base_res.value ?? dummy_url();
+ let rel_res: URLResult = std::url::parse_with_base("../x?y=z", base);
+ (mut base).drop();
+ if rel_res.value == None {
+ (mut url).drop();
+ return 4;
+ }
 
-  let mut rel: URL = rel_res.value ?? dummy_url();
-  let mut href2_r = rel.href();
-  if href2_r.err != None {
-    (mut rel).drop();
-    (mut url).drop();
-    return 5;
-  }
-  href2_r.err = None;
-  let mut href2: std::strings::String = href2_r.value ?? std::strings::String.empty();
-  href2_r.value = None;
-  if href2.as_string() != "https://example.com/x?y=z" {
-    (mut href2).drop();
-    (mut rel).drop();
-    (mut url).drop();
-    return 5;
-  }
-  (mut href2).drop();
-  (mut rel).drop();
+ let mut rel: URL = rel_res.value ?? dummy_url();
+ let mut href2_r = rel.href();
+ if href2_r.err != None {
+ (mut rel).drop();
+ (mut url).drop();
+ return 5;
+ }
+ href2_r.err = None;
+ let mut href2: std::strings::String = href2_r.value ?? std::strings::String.empty();
+ href2_r.value = None;
+ if href2.as_string() != "https://example.com/x?y=z" {
+ (mut href2).drop();
+ (mut rel).drop();
+ (mut url).drop();
+ return 5;
+ }
+ (mut href2).drop();
+ (mut rel).drop();
 
-  let mut params_r = URLSearchParams.from_string("?a=b%20c&d=e");
-  if params_r.err != None {
-    (mut url).drop();
-    return 6;
-  }
-  params_r.err = None;
-  let mut params: URLSearchParams = params_r.value ?? URLSearchParams.empty();
-  params_r.value = None;
+ let mut params_r = URLSearchParams.from_string("?a=b%20c&d=e");
+ if params_r.err != None {
+ (mut url).drop();
+ return 6;
+ }
+ params_r.err = None;
+ let mut params: URLSearchParams = params_r.value ?? URLSearchParams.empty();
+ params_r.value = None;
 
-  let mut qs_r = params.to_string();
-  if qs_r.err != None {
-    (mut params).drop();
-    (mut url).drop();
-    return 6;
-  }
-  qs_r.err = None;
-  let mut qs: std::strings::String = qs_r.value ?? std::strings::String.empty();
-  qs_r.value = None;
-  if qs.as_string() != "a=b+c&d=e" {
-    (mut qs).drop();
-    (mut params).drop();
-    (mut url).drop();
-    return 6;
-  }
-  (mut qs).drop();
+ let mut qs_r = params.to_string();
+ if qs_r.err != None {
+ (mut params).drop();
+ (mut url).drop();
+ return 6;
+ }
+ qs_r.err = None;
+ let mut qs: std::strings::String = qs_r.value ?? std::strings::String.empty();
+ qs_r.value = None;
+ if qs.as_string() != "a=b+c&d=e" {
+ (mut qs).drop();
+ (mut params).drop();
+ (mut url).drop();
+ return 6;
+ }
+ (mut qs).drop();
 
-  let mut v_r = params.get("a");
-  if v_r.err != None {
-    (mut params).drop();
-    (mut url).drop();
-    return 7;
-  }
-  v_r.err = None;
-  let mut v_opt: std::strings::String? = v_r.value ?? None;
-  v_r.value = None;
-  if v_opt == None {
-    (mut params).drop();
-    (mut url).drop();
-    return 7;
-  }
+ let mut v_r = params.get("a");
+ if v_r.err != None {
+ (mut params).drop();
+ (mut url).drop();
+ return 7;
+ }
+ v_r.err = None;
+ let mut v_opt: std::strings::String? = v_r.value ?? None;
+ v_r.value = None;
+ if v_opt == None {
+ (mut params).drop();
+ (mut url).drop();
+ return 7;
+ }
 
-  let mut v: std::strings::String = v_opt ?? std::strings::String.empty();
-  v_opt = None;
-  if v.as_string() != "b c" {
-    (mut v).drop();
-    (mut params).drop();
-    (mut url).drop();
-    return 8;
-  }
-  (mut v).drop();
+ let mut v: std::strings::String = v_opt ?? std::strings::String.empty();
+ v_opt = None;
+ if v.as_string() != "b c" {
+ (mut v).drop();
+ (mut params).drop();
+ (mut url).drop();
+ return 8;
+ }
+ (mut v).drop();
 
-  if (mut params).delete("d") != None {
-    (mut params).drop();
-    (mut url).drop();
-    return 9;
-  }
+ if (mut params).delete("d") != None {
+ (mut params).drop();
+ (mut url).drop();
+ return 9;
+ }
 
-  let mut qs2_r = params.to_string();
-  if qs2_r.err != None {
-    (mut params).drop();
-    (mut url).drop();
-    return 9;
-  }
-  qs2_r.err = None;
-  let mut qs2: std::strings::String = qs2_r.value ?? std::strings::String.empty();
-  qs2_r.value = None;
-  if qs2.as_string() != "a=b+c" {
-    (mut qs2).drop();
-    (mut params).drop();
-    (mut url).drop();
-    return 9;
-  }
-  (mut qs2).drop();
+ let mut qs2_r = params.to_string();
+ if qs2_r.err != None {
+ (mut params).drop();
+ (mut url).drop();
+ return 9;
+ }
+ qs2_r.err = None;
+ let mut qs2: std::strings::String = qs2_r.value ?? std::strings::String.empty();
+ qs2_r.value = None;
+ if qs2.as_string() != "a=b+c" {
+ (mut qs2).drop();
+ (mut params).drop();
+ (mut url).drop();
+ return 9;
+ }
+ (mut qs2).drop();
 
-  (mut params).drop();
-  (mut url).drop();
-  return 0;
+ (mut params).drop();
+ (mut url).drop();
+ return 0;
 }
 ```
 
@@ -40964,41 +41065,41 @@ import std::memory;
 type StringAllocResult = std::result::Result(std::strings::String, std::memory::OutOfMemory);
 
 fn uuid_string_eq (u: UUID, expected: string) -> bool {
-  let r: StringAllocResult = u.to_string_lower();
-  if r.is_err() {
-    return false;
-  }
-  let mut s: std::strings::String = match (r) {
-    Ok(v) => v,
-    Err(_) => std::strings::String.empty(),
-  };
-  let ok: bool = s.as_string() == expected;
-  (mut s).drop();
-  return ok;
+ let r: StringAllocResult = u.to_string_lower();
+ if r.is_err() {
+ return false;
+ }
+ let mut s: std::strings::String = match (r) {
+ Ok(v) => v,
+ Err(_) => std::strings::String.empty(),
+ };
+ let ok: bool = s.as_string() == expected;
+ (mut s).drop();
+ return ok;
 }
 
 fn main () -> int {
-  let s0: string = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
-  let u0_r: std::uuid::ParseResult = std::uuid::parse(s0);
-  if u0_r.is_err() { return 1; }
-  let u0: UUID = match (u0_r) {
-    Ok(v) => v,
-    Err(_) => { hi: 0, lo: 0 },
-  };
-  if !uuid_string_eq(u0, s0) { return 2; }
+ let s0: string = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
+ let u0_r: std::uuid::ParseResult = std::uuid::parse(s0);
+ if u0_r.is_err() { return 1; }
+ let u0: UUID = match (u0_r) {
+ Ok(v) => v,
+ Err(_) => { hi: 0, lo: 0 },
+ };
+ if !uuid_string_eq(u0, s0) { return 2; }
 
-  let dns: UUID = std::uuid::namespace_dns();
-  let v5_dns_r: std::uuid::UUIDResult = std::uuid::v5(dns, "www.widgets.com");
-  if v5_dns_r.is_err() { return 3; }
-  let v5_dns: UUID = match (v5_dns_r) {
-    Ok(v) => v,
-    Err(_) => { hi: 0, lo: 0 },
-  };
-  if !uuid_string_eq(v5_dns, "21f7f8de-8051-5b89-8680-0195ef798b6a") { return 4; }
+ let dns: UUID = std::uuid::namespace_dns();
+ let v5_dns_r: std::uuid::UUIDResult = std::uuid::v5(dns, "www.widgets.com");
+ if v5_dns_r.is_err() { return 3; }
+ let v5_dns: UUID = match (v5_dns_r) {
+ Ok(v) => v,
+ Err(_) => { hi: 0, lo: 0 },
+ };
+ if !uuid_string_eq(v5_dns, "21f7f8de-8051-5b89-8680-0195ef798b6a") { return 4; }
 
-  if v5_dns.version() != 5 { return 5; }
-  if !v5_dns.is_rfc4122() { return 6; }
-  return 0;
+ if v5_dns.version() != 5 { return 5; }
+ if !v5_dns.is_rfc4122() { return 6; }
+ return 0;
 }
 ```
 
@@ -41031,17 +41132,17 @@ import std::vector;
 type Vec = std::vector::Vector(int);
 
 fn main () -> int {
-  let v_r = Vec.init(4);
-  if v_r.is_err() { return 0; }
-  let mut v: Vec = match (v_r) {
-    Ok(v) => v,
-    Err(_) => Vec.empty(),
-  };
-  (mut v).push(1);
-  (mut v).push(2);
-  let x: int = (mut v).pop() ?? 0;
-  (mut v).drop();
-  return x;
+ let v_r = Vec.init(4);
+ if v_r.is_err() { return 0; }
+ let mut v: Vec = match (v_r) {
+ Ok(v) => v,
+ Err(_) => Vec.empty(),
+ };
+ (mut v).push(1);
+ (mut v).push(2);
+ let x: int = (mut v).pop() ?? 0;
+ (mut v).drop();
+ return x;
 }
 ```
 
@@ -41078,13 +41179,13 @@ import std::vector;
 type VecInt = std::vector::Vector(int);
 
 fn main () -> int {
-  let mut v: VecInt = VecInt.init(4);
-  (mut v).push(10);
-  (mut v).push(32);
+ let mut v: VecInt = VecInt.init(4);
+ (mut v).push(10);
+ (mut v).push(32);
 
-  std::io::println("len={d} first_pop={d}", v.len() as int, (mut v).pop() ?? 0);
-  (mut v).drop();
-  return 0;
+ std::io::println("len={d} first_pop={d}", v.len() as int, (mut v).pop() ?? 0);
+ (mut v).drop();
+ return 0;
 }
 ```
 

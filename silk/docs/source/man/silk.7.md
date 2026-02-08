@@ -32,7 +32,7 @@ The supported subset is documented in:
 
 - `silk` (1) (see the `build` command and its notes),
 - `docs/compiler/cli-silk.md`,
-- and runnable fixtures under `tests/silk/`.
+- and end-to-end test programs under `tests/silk/`.
 
 ## Source Layout
 

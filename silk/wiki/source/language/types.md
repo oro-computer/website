@@ -9,7 +9,6 @@ This wiki page is a learning-oriented companion to the canonical spec:
 ## Status
 
 - Implemented-subset details and current limitations: `docs/language/types.md`
-- End-to-end support snapshot: `STATUS.md`
 
 ## Common Type Forms
 
@@ -44,8 +43,8 @@ type IntAdder = fn (int, int) -> int;
 type IntAdder = fn (int, int) -> int;
 
 fn main () -> int {
-  let add: IntAdder = fn (x: int, y: int) -> x + y;
-  return add(40, 2);
+ let add: IntAdder = fn (x: int, y: int) -> x + y;
+ return add(40, 2);
 }
 ```
 
@@ -53,12 +52,12 @@ fn main () -> int {
 
 ```silk
 fn main () -> int {
-  let xs: int[3] = [1, 2, 3];
-  let mut sum: int = 0;
-  for x in xs {
-    sum += x;
-  }
-  return sum;
+ let xs: int[3] = [1, 2, 3];
+ let mut sum: int = 0;
+ for x in xs {
+ sum += x;
+ }
+ return sum;
 }
 ```
 

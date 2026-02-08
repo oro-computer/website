@@ -790,7 +790,7 @@ export tables:
 - these export tables are currently used only for consistency checks; the
   type checker does not yet use them for cross-package name resolution.
 
-Future work (tracked in `PLAN.md`) will:
+Future work will:
 
 - extend the resolver and checker to:
   - map imports to concrete modules and exported symbols,

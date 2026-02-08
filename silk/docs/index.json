@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-02-07T21:29:52+00:00",
+  "generatedAt": "2026-02-08T02:44:56+00:00",
   "kind": "docs",
-  "count": 161,
+  "count": 162,
   "sections": [
     {
       "name": "overview",
@@ -580,6 +580,11 @@
           "id": "std/websocket",
           "title": "`std::websocket`",
           "file": "std/websocket.md"
+        },
+        {
+          "id": "std/xml",
+          "title": "`std::xml` \u2014 XML Parsing (libxml2)",
+          "file": "std/xml.md"
         },
         {
           "id": "std/js-ecma",

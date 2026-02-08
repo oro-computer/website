@@ -87,6 +87,25 @@ def first_heading(markdown: str) -> str | None:
 
 
 def first_paragraph(markdown: str) -> str:
+    status_prefix = re.compile(r"^(\s*)(Status:|Implementation status:)\s*", flags=re.I)
+
+    def strip_status_line(line: str) -> str:
+        m = status_prefix.match(line)
+        if not m:
+            return line
+        leading = m.group(1)
+        rest = line[m.end() :]
+        delims = [". ", ": ", "— ", "– "]
+        cuts: list[tuple[int, int]] = []
+        for d in delims:
+            idx = rest.find(d)
+            if idx != -1:
+                cuts.append((idx, len(d)))
+        if not cuts:
+            return ""
+        idx, dlen = min(cuts, key=lambda x: x[0])
+        return leading + rest[idx + dlen :]
+
     in_code = False
     in_comment = False
     buf: list[str] = []
@@ -103,8 +122,10 @@ def first_paragraph(markdown: str) -> str:
             continue
         if in_code:
             continue
-        if re.match(r"^(Status:|Implementation status:)\s*", line, flags=re.I):
-            continue
+        if status_prefix.match(line):
+            line = strip_status_line(line)
+            if not line.strip():
+                continue
         if line.startswith("#"):
             continue
         if line.startswith(("-", "*", "|")):
@@ -158,6 +179,24 @@ def strip_internal_refs(markdown: str) -> str:
     )
     status_line = re.compile(r"^(Status:|Implementation status:)\s*", flags=re.I)
     status_heading = re.compile(r"^(#{1,6})\s+(Status|Implementation status)\b", flags=re.I)
+    status_prefix = re.compile(r"^(\s*)(Status:|Implementation status:)\s*", flags=re.I)
+
+    def strip_status_line(line: str) -> str:
+        m = status_prefix.match(line)
+        if not m:
+            return line
+        leading = m.group(1)
+        rest = line[m.end() :]
+        delims = [". ", ": ", "— ", "– "]
+        cuts: list[tuple[int, int]] = []
+        for d in delims:
+            idx = rest.find(d)
+            if idx != -1:
+                cuts.append((idx, len(d)))
+        if not cuts:
+            return ""
+        idx, dlen = min(cuts, key=lambda x: x[0])
+        return leading + rest[idx + dlen :]
 
     def rewrite_outside_code(text: str) -> str:
         out = text
@@ -315,7 +354,12 @@ def strip_internal_refs(markdown: str) -> str:
         if skip_level is not None:
             continue
 
-        if not in_code and (drop_line.search(raw) or status_line.match(raw)):
+        if not in_code and status_line.match(raw):
+            raw = strip_status_line(raw)
+            if not raw.strip():
+                continue
+
+        if not in_code and drop_line.search(raw):
             continue
 
         if not in_code:

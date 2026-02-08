@@ -47,7 +47,7 @@ these layers:
 - Lowering/backends: which forms code-generate end-to-end on supported targets.
 - C ABI / FFI: whether the feature is permitted at exported boundaries.
 
-When something is rejected in the current subset, include the diagnostic code
+When something is rejected by the compiler, include the diagnostic code
 from `docs/compiler/diagnostics.md` when one exists.
 
 ## Examples

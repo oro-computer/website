@@ -33,6 +33,7 @@ available to user programs.
   - `std::temporal`
   - `std::semver`
   - `std::url`
+  - `std::xml` (XML parsing; see `docs/std/xml.md`)
   - `std::idl::web` (current Web IDL parser; see `docs/std/idl-web.md`)
   - `std::js::ecma` (current ECMAScript FFI surface; see `docs/std/js-ecma.md`)
   - `std::wasm` (WebAssembly runtime API; see `docs/std/wasm.md`)

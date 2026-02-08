@@ -113,7 +113,7 @@ For the initial implementation, the supported options are:
       - when Formal Silk verification fails, `--debug` also emits Z3 debugging output and writes an SMT-LIB2 reproduction script under `.silk/z3/` (or `$SILK_WORK_DIR/z3`).
       - compiled code can query this mode at runtime via `std::runtime::build::is_debug()`.
     - `-O <0-3>` — set optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`). `-O1`+ prunes unused extern symbols before code generation and prunes unreachable functions in executable builds (typically reducing output size).
-    - `--noheap` — disable heap allocation for the current subset:
+    - `--noheap` — disable heap allocation:
       - heap-backed `new` (outside a `with` region) is rejected with `E2027`,
       - `ext` bindings to libc heap primitives (`malloc`/`calloc`/`realloc`/`free`/etc) are rejected with `E2027` in non-stdlib modules,
       - `std::runtime::mem::{alloc,realloc,free}` traps when called without an active `with` region (no implicit heap fallback),

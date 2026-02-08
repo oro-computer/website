@@ -77,7 +77,7 @@ Fallibility:
 `std::runtime::time::unix_now_ns` / `unix_now_ms` so callers can generate UUIDs
 without passing explicit timestamps.
 
-Planned follow-ups (tracked in `PLAN.md`):
+Planned follow-ups:
 
 - richer formatting options (uppercase, simple hex, braced form, URN form),
 - UUIDv2 (DCE Security) if/when `std::process` exposes stable UID/GID APIs.

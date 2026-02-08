@@ -94,7 +94,7 @@ let root_r: std::json::ParseResult = (mut doc).parse(`{"a":1}`);
 - `stringify_pretty(doc, value, indent)` returns `Result(String, OutOfMemory)` containing
   pretty-printed JSON with a fixed number of spaces per indent level.
 
-Planned follow-ups (tracked in `PLAN.md`):
+Planned follow-ups:
 
 - streaming tokenization (SAX-style) for very large inputs,
 - a writer interface that can stream output without building a whole string,

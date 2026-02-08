@@ -11,9 +11,9 @@ Canonical doc: `docs/language/literals-string.md`.
 import std::io;
 
 fn main () -> int {
-  std::io::println("line1\\nline2");
-  std::io::println("quote=\\\" backslash=\\\\");
-  return 0;
+ std::io::println("line1\\nline2");
+ std::io::println("quote=\\\" backslash=\\\\");
+ return 0;
 }
 ```
 

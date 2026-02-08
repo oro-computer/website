@@ -102,10 +102,12 @@ field types in the same order (field names do not matter).
 If the source and target struct layouts are not compatible, the `using`
 declaration is rejected.
 
+This layout rule applies equally to immutable and mutable borrows: importing
+methods with `mut self: &Self` (or other `mut &Self` parameters) is permitted
+when the source and target layouts are compatible.
+
 ## Current Subset Limitations
 
 - `using` does not accept `public` / `private` modifiers yet (imported methods
   inherit the source method’s visibility).
-- Imported methods whose `Self`-dependent parameters require a mutable borrow
-  (`mut` `&Self`) are rejected in the current subset.
 - Constructor reuse (`constructor`) via `using` is not supported yet.

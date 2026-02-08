@@ -209,7 +209,7 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2097` — `using` alias conflicts with an existing name.
 - `E2098` — `using` target is ambiguous.
 - `E2099` — `using` cannot import `constructor` in the current subset.
-- `E2100` — `using` may not import methods that require mutable `Self` borrows in the current subset.
+- `E2100` — reserved (previously: `using` may not import methods that require mutable `Self` borrows in the current subset).
 - `E2101` — `using` method reuse requires compatible struct layouts.
 - `E2102` — cannot move value while it is borrowed.
 - `E2103` — invalid regexp flags (unknown or duplicate).

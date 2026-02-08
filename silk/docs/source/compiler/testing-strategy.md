@@ -39,7 +39,7 @@ This document defines how we validate the compiler, ABI, and standard library.
   so obvious regressions (exploding instruction counts, excessive spills) are caught early.
 - When a bug is found:
   - add a regression test in Zig and, where relevant, in C,
-  - record any observed differences or limitations in `STATUS.md`,
+  - record any observed differences or limitations in the docs,
   - update `docs/` before or alongside the fix so that behavior stays spec‑driven.
 
 ## Silk Tests

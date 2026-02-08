@@ -52,6 +52,26 @@
     const statusLine = /^(Status:|Implementation status:)\s*/i;
     const statusHeading = /^(#{1,6})\s+(Status|Implementation status)\b/i;
 
+    function rewriteStatusLine(line) {
+      const m = String(line).match(/^(\s*)(Status:|Implementation status:)\s*/i);
+      if (!m) return null;
+      const leading = m[1] || "";
+      const rest = line.slice(m[0].length);
+      const delims = [". ", ": ", "— ", "– "];
+      let cut = -1;
+      let cutLen = 0;
+      for (const d of delims) {
+        const idx = rest.indexOf(d);
+        if (idx === -1) continue;
+        if (cut === -1 || idx < cut) {
+          cut = idx;
+          cutLen = d.length;
+        }
+      }
+      if (cut === -1) return "";
+      return leading + rest.slice(cut + cutLen);
+    }
+
     function rewriteOutsideCode(text) {
       let out = text;
 
@@ -163,9 +183,13 @@
 
       if (skipLevel !== null) continue;
 
-      if (!inCode && (banned.test(line) || statusLine.test(line))) {
-        continue;
+      if (!inCode && statusLine.test(line)) {
+        const rewritten = rewriteStatusLine(line);
+        if (!rewritten || !rewritten.trim()) continue;
+        line = rewritten;
       }
+
+      if (!inCode && banned.test(line)) continue;
 
       if (!inCode) {
         const parts = line.split("`");

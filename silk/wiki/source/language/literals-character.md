@@ -9,11 +9,11 @@ Canonical doc: `docs/language/literals-character.md`.
 
 ```silk
 fn main () -> int {
-  let a: char = 'A';
-  let nl: char = '\\n';
-  if a != 'A' { return 1; }
-  if nl != '\\n' { return 2; }
-  return 0;
+ let a: char = 'A';
+ let nl: char = '\\n';
+ if a != 'A' { return 1; }
+ if nl != '\\n' { return 2; }
+ return 0;
 }
 ```
 

@@ -8,7 +8,7 @@ Canonical doc: `docs/std/formal.md`.
 ## Status
 
 - Implemented subset is available (initial theory set).
-- Details: `docs/std/formal.md` and `STATUS.md`
+- Details: `docs/std/formal.md`
 
 ## Importing
 
@@ -28,7 +28,7 @@ import { nonnegative_i64, bounds_i64 } from "std/formal";
 #theory nonnegative_i64(len);
 #theory bounds_i64(index, len);
 fn get_at (index: i64, len: i64) -> i64 {
-  return index;
+ return index;
 }
 ```
 

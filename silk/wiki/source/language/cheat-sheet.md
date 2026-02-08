@@ -12,6 +12,6 @@ itself is already concise and example-heavy.
 
 ```silk
 fn main () -> int {
-  return 0;
+ return 0;
 }
 ```

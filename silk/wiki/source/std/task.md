@@ -11,11 +11,11 @@ Canonical doc: `docs/std/task.md`.
 import std::task;
 
 fn main () -> int {
-  let n: int = available_parallelism();
-  yield_now();
-  sleep_ms(0);
-  if n < 1 { return 1; }
-  return 0;
+ let n: int = available_parallelism();
+ yield_now();
+ sleep_ms(0);
+ if n < 1 { return 1; }
+ return 0;
 }
 ```
 

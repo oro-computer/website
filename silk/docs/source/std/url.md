@@ -75,4 +75,4 @@ which forwards to `std::url::parse`.
 ## Notes
 
 - This module does not implement the JavaScript `URL` object API (setters, live `searchParams` binding, etc.); it provides a low-level URL record plus helpers that follow the WHATWG parsing and serialization rules.
-- Domain processing uses a UTF-8 + punycode-based `domain_to_ascii` implementation and supports common Unicode dot separators; full UTS46 mapping and normalization requires additional Unicode data (tracked as follow-up work in `PLAN.md`).
+- Domain processing uses a UTF-8 + punycode-based `domain_to_ascii` implementation and supports common Unicode dot separators; full UTS46 mapping and normalization requires additional Unicode data.

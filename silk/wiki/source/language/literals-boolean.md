@@ -8,10 +8,10 @@ Canonical doc: `docs/language/literals-boolean.md`.
 
 ```silk
 fn main () -> int {
-  let ok: bool = true;
-  if ok && !false {
-    return 0;
-  }
-  return 1;
+ let ok: bool = true;
+ if ok && !false {
+ return 0;
+ }
+ return 1;
 }
 ```

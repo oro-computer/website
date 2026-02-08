@@ -44,7 +44,6 @@ accept these end-to-end):
 
 When in doubt, consult:
 
-- `STATUS.md` (implementation snapshot)
 - `docs/compiler/diagnostics.md` (error codes)
 - `tests/silk/pass_*.slk` (working examples)
 
