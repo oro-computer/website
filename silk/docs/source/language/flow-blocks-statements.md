@@ -31,7 +31,7 @@ The current compiler subset supports these statement forms (see
 - Expression statements: limited to calls, assignments, and increment/decrement
   in the current subset (`docs/language/flow-expression-statements.md`).
 - Flow control:
-  - `if` / `else` statements,
+  - `if` / `else` statements (including `if let` pattern destructuring),
   - `while` loops,
   - `break`, `continue`,
   - `return`,

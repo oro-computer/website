@@ -1,12 +1,12 @@
 # Vim Integration for Silk
 
-This document describes the built-in Vim support for the Silk language shipped with this repository.
+This document describes the built-in Vim support for Silk shipped with the Silk compiler repository.
 
 The goal of the Vim plugin is to provide a lightweight, spec-aligned editing experience that:
 
 - recognizes Silk source files by extension,
 - highlights the core language constructs described in `docs/language/`,
-- respects this repository’s indentation and comment style guidelines.
+- respects the Silk repository’s indentation and comment style guidelines.
 
 ## Files and Layout
 
@@ -18,7 +18,8 @@ The Vim plugin lives under the top-level `vim/` directory:
 - `vim/ftplugin/silk.vim` – filetype-specific editor defaults for Silk buffers.
 - `vim/indent/silk.vim` – indentation rules for Silk buffers.
 
-These files follow Vim’s standard runtime layout and can be copied into a user’s `~/.vim` (or Neovim) configuration or used directly from this repository via the `runtimepath`.
+These files follow Vim’s standard runtime layout and can be copied into a user’s `~/.vim` (or Neovim) configuration or
+used directly from the Silk repository via the `runtimepath`.
 
 ## Filetype Detection
 
@@ -120,10 +121,10 @@ If you want to distribute or install the `vim/` directory as a standalone Vim pl
 
 ### Option C: Add `vim/` to `runtimepath` Manually
 
-You can use the plugin directly from this repository by adding `vim/` to Vim’s `runtimepath`, for example:
+You can use the plugin directly from the Silk repository by adding `vim/` to Vim’s `runtimepath`, for example:
 
 ```vim
-set runtimepath^=/path/to/silk/compiler/vim
+set runtimepath^=/path/to/silk/vim
 ```
 
 If you prefer to copy the files into your own configuration:

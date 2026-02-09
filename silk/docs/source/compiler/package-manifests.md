@@ -79,6 +79,33 @@ Additional optional metadata fields MAY be present under `[package]` (for
 example `description`, `license`, `authors`, `repository`), but the current
 compiler only uses `name` and `version`.
 
+### `package.definitions` (optional)
+
+Optional list of *definition files* (header-style prototype modules) for this
+package:
+
+```toml
+[package]
+name = "my_lib"
+definitions = ["defs/api.slk"]
+```
+
+Rules:
+
+- Each entry MUST be a path to a `.slk` (or `.silk`) file, relative to the
+  manifest directory.
+- Definition files SHOULD consist of:
+  - exported type declarations, and
+  - declaration-only exported function prototypes (`export fn name(...) -> T;`)
+    that describe the public API surface.
+  See `docs/language/packages-imports-exports.md` (“Prototype exports”).
+- The compiler does not treat definition files specially during ordinary
+  builds; this field exists so tooling can locate an explicit “API surface”
+  without scanning arbitrary source files.
+- `silk build install` uses this list when installing libraries into
+  `PREFIX/lib/silk` so that the installed package remains importable (for
+  example `import my_lib from "my_lib";`) via the system package search root.
+
 ## Source Layout (`[sources]`: `include` / `exclude`)
 
 Packages may specify which `.slk` files belong to the package with glob patterns:
@@ -142,11 +169,18 @@ Current limitations:
 ## Dependency discovery via `SILK_PACKAGE_PATH`
 
 When a dependency entry omits `path`, the compiler resolves it by searching a
-PATH-like list of package roots provided by `SILK_PACKAGE_PATH`.
+PATH-like list of package roots.
 
 Rules:
 
-- `SILK_PACKAGE_PATH` is a list of directories separated by `:` (POSIX).
+- The primary search path is `SILK_PACKAGE_PATH` when set (a list of
+  directories separated by `:` on POSIX).
+- When `SILK_PACKAGE_PATH` is not set, the compiler uses a small default set:
+  - `./packages` when it exists (development convenience),
+  - `../share/silk/packages` relative to the `silk` executable (installed layout),
+  - `$HOME/.local/share/silk/packages` when it exists (user-local installs).
+- Finally, the compiler appends a system library root at `PREFIX/lib/silk`
+  (default `PREFIX=/usr/local`) as the last search path entry when it exists.
 - For a dependency named `my_api::core`, each root directory contributes a
   candidate package root:
   - `<root>/my_api/core` (where `::` maps to `/`)

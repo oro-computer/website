@@ -26,6 +26,63 @@ if <condition> {
 }
 ```
 
+## `if let` (Pattern-Destructuring Statement Form)
+
+Silk also supports an `if let` statement form for refutable pattern matching
+without introducing a separate `match` expression:
+
+```silk
+if let <pattern> = <scrutinee> {
+  ...
+} else {
+  ...
+}
+```
+
+Notes:
+
+- The scrutinee expression is evaluated exactly once.
+- The pattern binders (for example `Some(v)` binds `v`) are in scope only in
+  the `then` block.
+- `else` is optional (when omitted, a non-matching scrutinee executes no block).
+- `else if let ...` chains are supported and parse as nesting in the same way
+  as `else if ...`.
+
+Supported patterns in the current subset (same as `match` expressions; see
+`docs/language/flow-match.md`):
+
+- optionals: `None`, `Some(name)`, `Some(_)`
+- recoverable results: `Ok(name)`, `Err(name)` (and `_` binders)
+- enums: `Variant(...)` / `E::Variant(...)` / qualified variants
+- type unions: `name: Type` / `_: Type`
+
+Example (optional):
+
+```silk
+fn main () -> int {
+  let maybe: int? = Some(7);
+
+  if let Some(v) = maybe {
+    return v;
+  }
+  return 0;
+}
+```
+
+Example (recoverable `Result`):
+
+```silk
+import std::result;
+
+fn main () -> int {
+  let r: std::result::Result(int, string) = Ok(42);
+  if let Ok(v) = r {
+    return v;
+  }
+  return 0;
+}
+```
+
 Notes:
 
 - `<condition>` is an expression; parentheses are optional because the normal
@@ -167,6 +224,7 @@ fn main () -> int {
 Implemented end-to-end:
 
 - `if <expr> { ... }` and `if <expr> { ... } else { ... }` statement forms.
+- `if let <pattern> = <expr> { ... }` statement form (and `else if let` chains).
 - Boolean type-checking for conditions.
 - `if` expressions of the form `if <cond> { <expr> } else { <expr> }`.
 

@@ -12,6 +12,7 @@ If you want the canonical, detailed specification and toolchain reference, use: 
 
 ## Start here
 
+- New project: [Getting started](../docs/?p=usage/getting-started)
 - Language: [Overview](?p=language/cheat-sheet)
 - Standard library: [Overview](?p=std/overview)
 - Tooling: [CLI](../docs/?p=guides/cli)

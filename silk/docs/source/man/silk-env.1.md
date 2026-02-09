@@ -30,6 +30,7 @@ The output includes, at minimum:
 - `SILK_STD_LIB` — override stdlib archive used for linking (`libsilk_std.a`).
 - `SILK_Z3_LIB` — override Z3 dynamic library path used for Formal Silk verification.
 - `SILK_PACKAGE_PATH` — package search path for bare-specifier imports.
+- `PREFIX` — installation prefix used for the system package search root (`PREFIX/lib/silk`) and as the default prefix for `silk build install` / `silk build uninstall` when `-p/--prefix` is not provided.
 - `SILK_WORK_DIR` — override compiler work directory root (defaults to `.silk`).
 - `SILK_REPL_HISTORY` — override REPL history path.
 - `SILK_RT_LIBDIR` — override search directory for bundled runtime archives (`libsilk_rt*.a`).

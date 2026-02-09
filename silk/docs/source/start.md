@@ -8,6 +8,8 @@ This documentation site is written for downstream users. It is organized into:
 - **Guides** — purpose, mental model, hello worlds, and practical workflows.
 - **Reference** — the detailed language, standard library, CLI, and ABI surfaces.
 
+If you’re setting up a workspace, start with: [Getting started](?p=usage/getting-started).
+
 ## A minimal “hello world”
 
 Silk programs are ordinary `.slk` files. A small program can look like this:
@@ -42,8 +44,9 @@ If you’re new to Silk, this is a good order:
 
 Start here:
 
+- Usage: [Getting started](?p=usage/getting-started)
 - Guides: [What Silk is for](?p=guides/purpose)
 - Guides: [Hello world](?p=guides/hello-world) · [Language tour](?p=guides/language-tour) · [Modules & packages](?p=guides/modules-and-packages)
 - Guides: [Standard library](?p=guides/standard-library) · [CLI and toolchain](?p=guides/cli)
 - Guides: [Testing](?p=guides/testing) · [Formal Silk](?p=guides/formal-silk)
-- Spec: [Silk Spec (2026)](../spec/2026/)
+- Spec: [Silk Spec (2026)](/silk/spec/2026/)

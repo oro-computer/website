@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-02-08T14:37:51+00:00",
+  "generatedAt": "2026-02-09T15:30:32+00:00",
   "kind": "docs",
-  "count": 166,
+  "count": 167,
   "sections": [
     {
       "name": "overview",
@@ -638,7 +638,7 @@
         },
         {
           "id": "usage/getting-started",
-          "title": "Getting Started (Repo Workflow)",
+          "title": "Getting started",
           "file": "usage/getting-started.md"
         },
         {
@@ -805,6 +805,11 @@
           "id": "man/silk-env.1",
           "title": "`silk-env` (1) \u2014 Print `silk` CLI Environment",
           "file": "man/silk-env.1.md"
+        },
+        {
+          "id": "man/silk-format.1",
+          "title": "`silk-format` (1) \u2014 Format Silk Source Files",
+          "file": "man/silk-format.1.md"
         },
         {
           "id": "man/silk-lsp.1",

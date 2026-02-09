@@ -1,8 +1,9 @@
 # coc.nvim Integration for Silk
 
-This document describes the coc.nvim extension shipped in this repository under `coc/`.
+This page describes the coc.nvim client for the `silk-lsp` language server.
 
-The extension is a thin wrapper around `silk-lsp` and should stay aligned with the LSP capabilities documented in `docs/compiler/lsp-silk.md`.
+The Silk compiler repository includes a coc.nvim extension under `coc/`. It is a thin wrapper around `silk-lsp` and
+should stay aligned with the LSP capabilities documented in `docs/compiler/lsp-silk.md`.
 
 ## Location and Layout
 
@@ -21,14 +22,14 @@ The extension is a thin wrapper around `silk-lsp` and should stay aligned with t
 1. Build the language server:
 
    ```sh
-   cd /path/to/silk/compiler
+   cd /path/to/silk
    zig build
    ```
 
 2. Build the extension:
 
    ```sh
-   cd /path/to/silk/compiler/coc
+   cd /path/to/silk/coc
    npm install
    npm run build
    ```
@@ -37,7 +38,7 @@ The extension is a thin wrapper around `silk-lsp` and should stay aligned with t
 
    ```sh
    mkdir -p ~/.config/coc/extensions/node_modules
-   ln -s /path/to/silk/compiler/coc ~/.config/coc/extensions/node_modules/coc-silk
+   ln -s /path/to/silk/coc ~/.config/coc/extensions/node_modules/coc-silk
    ```
 
 4. Restart Neovim.

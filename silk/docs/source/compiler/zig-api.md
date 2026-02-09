@@ -29,7 +29,7 @@ The Zig embedding API is a thin wrapper over the same implementation that backs
 Practical implications:
 
 - The supported language subset and backend constraints are the same as the
-  CLI and C API for a given build of this repo.
+  CLI and C API for a given build of the compiler.
 - When an operation fails, the compiler records a human-readable last error.
   Zig callers can retrieve it via `Compiler.lastErrorAlloc`.
 - The Zig API does not require `@cImport`; it reuses the Zig implementation
@@ -37,8 +37,8 @@ Practical implications:
 
 ## Public Module
 
-This repository exports a Zig module named `silk` from `build.zig` for
-downstream dependencies.
+The Silk compiler repository exports a Zig module named `silk` from `build.zig`
+for downstream dependencies.
 
 Downstream build snippet (illustrative):
 

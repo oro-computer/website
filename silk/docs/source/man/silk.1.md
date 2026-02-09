@@ -15,16 +15,20 @@
 - `silk check [--nostd] [--std-root <path>] [--z3-lib <path>] [--debug] [--package <dir|manifest>] <file> [<file> ...]`
 - `silk test [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--filter <pattern>] [--package <dir|manifest>] <file> [<file> ...]`
 - `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--emit bin|asm] [-S] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]`
+- `silk build install [--package <dir|manifest>] [--build-script] [--package-target <name> ...] [-p <path>|--prefix <path>]`
+- `silk build uninstall [--package <dir|manifest>] [--build-script] [-p <path>|--prefix <path>]`
 - `silk doc [--all] <file> [<file> ...] [-o <path>]`
 - `silk doc --man [--package <dir|manifest>] [--std-root <path>] <query> [-o <path>]`
-- `silk man <query>`
+- `silk man [--section <n>|-s <n>] <query>`
 - `silk cc <cc args...>`
+- `silk env`
+- `silk format [--check] <path> [<path> ...]`
 
 ## Description
 
 `silk` is the command-line compiler for the Silk language. It reads Silk source files, performs parsing and type checking, and (in the initial implementation) can build simple executable programs for a small, documented subset of the language. As the compiler matures, `silk` will grow to support full code generation for executables, static libraries, and shared libraries.
 
-For command-specific help, run `silk help <command>` or see the corresponding manpages (`silk-build` (1), `silk-check` (1), `silk-test` (1), `silk-doc` (1), `silk-man` (1), `silk-cc` (1)). The full CLI reference lives in `docs/compiler/cli-silk.md`.
+For command-specific help, run `silk help <command>` or see the corresponding manpages (`silk-build` (1), `silk-check` (1), `silk-test` (1), `silk-doc` (1), `silk-man` (1), `silk-cc` (1), `silk-env` (1), `silk-format` (1)). The full CLI reference lives in `docs/compiler/cli-silk.md`.
 
 Convenience entrypoints:
 
@@ -78,6 +82,7 @@ For the initial implementation, the supported options are:
     - `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`).
     - `--debug`, `-g` — when Formal Silk verification fails, emit Z3 debugging output and write an SMT-LIB2 reproduction script under `.silk/z3/` (or `$SILK_WORK_DIR/z3`).
     - `--package <dir|manifest>` (or `--pkg`) — load the module set from a package manifest (`silk.toml`) instead of explicit input files. When `--package` is provided, `<file> ...` inputs must be omitted.
+    - When `<file> ...` inputs are omitted and `--package` / `--pkg` is also omitted, but `./silk.toml` exists, `silk check` behaves as if `--package .` was provided.
     - `--` — end of options; treat remaining args as file paths (even if they begin with `-`).
 
 - **Test command:**
@@ -106,6 +111,9 @@ For the initial implementation, the supported options are:
     - `--package-target <name>` — select one or more manifest `[[target]]` entries by name (repeatable; `--pkg-target` is accepted as an alias).
       - when omitted, `silk build --package ...` builds every manifest `[[target]]` entry by default.
       - when building multiple targets, per-output flags are rejected (`-o/--out`, `--kind`, `--emit`, `--arch`, `--target`, `--c-header`, `--needed`, `--runpath`, `--soname`).
+    - `-p <path>`, `--prefix <path>` — install/uninstall prefix (default: `$PREFIX` when set, otherwise `/usr/local`).
+    - `silk build install` installs package artifacts and writes an uninstall receipt (see `silk-build` (1)).
+    - `silk build uninstall` removes files listed in the uninstall receipt (see `silk-build` (1)).
     - `--` — end of options; treat remaining args as file paths (even if they begin with `-`).
     - `--debug`, `-g` — enable debug build mode (supported subset, `linux/x86_64`):
       - failed `assert` prints a panic header + optional message + stack trace to stderr (via glibc `backtrace_symbols_fd`) before aborting, and
@@ -291,13 +299,21 @@ As the CLI is extended (additional flags, subcommands, and fully-featured backen
 - `SILK_STD_LIB` — path to a target-specific stdlib static archive (`libsilk_std.a`).
   When present, supported executable builds treat auto-loaded `std::...` modules as
   external and resolve their exported functions from this archive.
+- `PREFIX` — installation prefix used for:
+  - the system package search root at `PREFIX/lib/silk` (searched last when it exists), and
+  - `silk build install` / `silk build uninstall` when `-p/--prefix` is not provided.
+  Default: `/usr/local`.
 - `SILK_PACKAGE_PATH` — PATH-like list of package root directories used to resolve
   bare-specifier package imports (non-`std::`) in file-list workflows (when `--package`
-  is not used). Entries are separated by `:` (POSIX).
+  is not used).
+  - When `SILK_PACKAGE_PATH` is set, it is the primary search path (entries separated by `:` on POSIX, `;` on Windows).
+  - When `SILK_PACKAGE_PATH` is not set, `silk` uses a small default set:
+    - `./packages` when it exists (development convenience),
+    - `../share/silk/packages` relative to the `silk` executable (installed layout),
+    - `$HOME/.local/share/silk/packages` when it exists (user-local installs).
+  - Finally, `silk` appends a system library root at `PREFIX/lib/silk` as the last search path entry when it exists.
   - A package like `my_api::core` maps to the candidate manifest
     `<root>/my_api/core/silk.toml` (where `::` maps to `/`).
-  - When `SILK_PACKAGE_PATH` is not set, `silk` also checks `./packages` when it exists
-    (development convenience).
 - `SILK_Z3_LIB` — path to a dynamic Z3 library used by the Formal Silk verifier. When `--z3-lib` is not provided, the verifier will use this value when set.
 - `SILK_CC` — the host C compiler executable used by `silk cc` (defaults to `cc` when unset).
 

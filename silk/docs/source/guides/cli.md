@@ -109,6 +109,17 @@ silk test --filter add         # run only matching tests
 
 The runner emits TAP v13 output so it drops into existing tooling without special adapters.
 
+## `silk fmt`: formatting
+
+Silk includes a formatter for `.slk` and `.silk` files:
+
+```bash
+silk fmt src
+silk fmt --check .
+```
+
+Reference: [`silk-format` (1)](?p=man/silk-format.1)
+
 ## `silk doc` and `silk man`: documentation as part of the toolchain
 
 Silk treats documentation as something the compiler can *extract* and *render*:
@@ -146,4 +157,3 @@ Reference: `Diagnostics` (sidebar → compiler).
 
 - [Testing](?p=guides/testing)
 - [Formal Silk](?p=guides/formal-silk)
-

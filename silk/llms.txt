@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-02-08T14:37:51+00:00
+Generated: 2026-02-09T15:30:32+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -141,7 +141,7 @@ Silk Docs
 - Usage
   - usage/cli-examples — CLI usage examples — /silk/docs/?p=usage/cli-examples
   - usage/editor-coc-nvim — coc.nvim Integration for Silk — /silk/docs/?p=usage/editor-coc-nvim
-  - usage/getting-started — Getting Started (Repo Workflow) — /silk/docs/?p=usage/getting-started
+  - usage/getting-started — Getting started — /silk/docs/?p=usage/getting-started
   - usage/github-linguist — GitHub Linguist Support — /silk/docs/?p=usage/github-linguist
   - usage/howto-run-wasi-node — How-To: Run `wasm32-wasi` Output in Node.js — /silk/docs/?p=usage/howto-run-wasi-node
   - usage/howto-custom-stdlib-root — How-To: Use a Custom Stdlib Root (and Runtime) — /silk/docs/?p=usage/howto-custom-stdlib-root
@@ -175,6 +175,7 @@ Silk Docs
   - man/silk-check.1 — `silk-check` (1) — Parse and Type-Check — /silk/docs/?p=man/silk-check.1
   - man/silk-doc.1 — `silk-doc` (1) — Generate Documentation (Markdown or Manpages) — /silk/docs/?p=man/silk-doc.1
   - man/silk-env.1 — `silk-env` (1) — Print `silk` CLI Environment — /silk/docs/?p=man/silk-env.1
+  - man/silk-format.1 — `silk-format` (1) — Format Silk Source Files — /silk/docs/?p=man/silk-format.1
   - man/silk-lsp.1 — `silk-lsp` (1) — Language Server Protocol (LSP) Server — /silk/docs/?p=man/silk-lsp.1
   - man/silk-man.1 — `silk-man` (1) — View Manpages Derived from Source Docs — /silk/docs/?p=man/silk-man.1
   - man/silk-test.1 — `silk-test` (1) — Run Language-Level Tests — /silk/docs/?p=man/silk-test.1
@@ -297,6 +298,8 @@ This documentation site is written for downstream users. It is organized into:
 - **Guides** — purpose, mental model, hello worlds, and practical workflows.
 - **Reference** — the detailed language, standard library, CLI, and ABI surfaces.
 
+If you’re setting up a workspace, start with: [Getting started](?p=usage/getting-started).
+
 ## A minimal “hello world”
 
 Silk programs are ordinary `.slk` files. A small program can look like this:
@@ -330,11 +333,12 @@ If you’re new to Silk, this is a good order:
 
 Start here:
 
+- Usage: [Getting started](?p=usage/getting-started)
 - Guides: [What Silk is for](?p=guides/purpose)
 - Guides: [Hello world](?p=guides/hello-world) · [Language tour](?p=guides/language-tour) · [Modules & packages](?p=guides/modules-and-packages)
 - Guides: [Standard library](?p=guides/standard-library) · [CLI and toolchain](?p=guides/cli)
 - Guides: [Testing](?p=guides/testing) · [Formal Silk](?p=guides/formal-silk)
-- Spec: [Silk Spec (2026)](../spec/2026/)
+- Spec: [Silk Spec (2026)](/silk/spec/2026/)
 
 ==============================================================================
 DOCS: What Silk is for (guides/purpose)
@@ -1225,6 +1229,17 @@ silk test --filter add         # run only matching tests
 ```
 
 The runner emits TAP v13 output so it drops into existing tooling without special adapters.
+
+## `silk fmt`: formatting
+
+Silk includes a formatter for `.slk` and `.silk` files:
+
+```bash
+silk fmt src
+silk fmt --check .
+```
+
+Reference: [`silk-format` (1)](?p=man/silk-format.1)
 
 ## `silk doc` and `silk man`: documentation as part of the toolchain
 
@@ -2246,6 +2261,62 @@ if <condition> {
 }
 ```
 
+## `if let` (Pattern-Destructuring Statement Form)
+
+Silk also supports an `if let` statement form for refutable pattern matching
+without introducing a separate `match` expression:
+
+```silk
+if let <pattern> = <scrutinee> {
+  ...
+} else {
+  ...
+}
+```
+
+Notes:
+
+- The scrutinee expression is evaluated exactly once.
+- The pattern binders (for example `Some(v)` binds `v`) are in scope only in
+  the `then` block.
+- `else` is optional (when omitted, a non-matching scrutinee executes no block).
+- `else if let ...` chains are supported and parse as nesting in the same way
+  as `else if ...`.
+
+Supported patterns in Silk (same as `match` expressions; see
+
+- optionals: `None`, `Some(name)`, `Some(_)`
+- recoverable results: `Ok(name)`, `Err(name)` (and `_` binders)
+- enums: `Variant(...)` / `E::Variant(...)` / qualified variants
+- type unions: `name: Type` / `_: Type`
+
+Example (optional):
+
+```silk
+fn main () -> int {
+  let maybe: int? = Some(7);
+
+  if let Some(v) = maybe {
+    return v;
+  }
+  return 0;
+}
+```
+
+Example (recoverable `Result`):
+
+```silk
+import std::result;
+
+fn main () -> int {
+  let r: std::result::Result(int, string) = Ok(42);
+  if let Ok(v) = r {
+    return v;
+  }
+  return 0;
+}
+```
+
 Notes:
 
 - `<condition>` is an expression; parentheses are optional because the normal
@@ -3148,7 +3219,7 @@ the compiler supports these statement forms (see
 - Specification-only declarations: `#const` (Formal Silk; not usable in runtime expressions).
 - Expression statements: limited to calls, assignments, and increment/decrement
 - Flow control:
-  - `if` / `else` statements,
+  - `if` / `else` statements (including `if let` pattern destructuring),
   - `while` loops,
   - `break`, `continue`,
   - `return`,
@@ -19893,6 +19964,17 @@ silk build hello.slk -o build/hello
 
 This loop is intentionally boring: each command has one job, and it scales from a single file to large packages.
 
+## Formatting
+
+Format files or directories:
+
+```bash
+silk fmt src
+silk fmt --check .
+```
+
+Reference: [`silk-format` (1)](?p=man/silk-format.1)
+
 ## Explicit module sets (multiple files)
 
 Passing multiple files defines the module set explicitly:
@@ -20016,8 +20098,9 @@ URL: /silk/docs/?p=usage/editor-coc-nvim
 
 # coc.nvim Integration for Silk
 
-This document describes the coc.nvim extension shipped in this repository under `coc/`.
+This page describes the coc.nvim client for the `silk-lsp` language server.
 
+The Silk compiler repository includes a coc.nvim extension under `coc/`. It is a thin wrapper around `silk-lsp` and
 
 ## Location and Layout
 
@@ -20036,14 +20119,14 @@ This document describes the coc.nvim extension shipped in this repository under 
 1. Build the language server:
 
    ```sh
-   cd /path/to/silk/compiler
+   cd /path/to/silk
    zig build
    ```
 
 2. Build the extension:
 
    ```sh
-   cd /path/to/silk/compiler/coc
+   cd /path/to/silk/coc
    npm install
    npm run build
    ```
@@ -20052,7 +20135,7 @@ This document describes the coc.nvim extension shipped in this repository under 
 
    ```sh
    mkdir -p ~/.config/coc/extensions/node_modules
-   ln -s /path/to/silk/compiler/coc ~/.config/coc/extensions/node_modules/coc-silk
+   ln -s /path/to/silk/coc ~/.config/coc/extensions/node_modules/coc-silk
    ```
 
 4. Restart Neovim.
@@ -20113,93 +20196,101 @@ Reference: [LSP protocol and server](?p=compiler/lsp-silk).
 - Use `:CocList outputs` and open the `Silk Language Server` channel for logs.
 
 ==============================================================================
-DOCS: Getting Started (Repo Workflow) (usage/getting-started)
+DOCS: Getting started (usage/getting-started)
 URL: /silk/docs/?p=usage/getting-started
 ==============================================================================
 
-# Getting Started (Repo Workflow)
+# Getting started
 
-This document is a practical starting point for working with the Silk compiler
-repository: building the `silk` CLI, running a minimal program, and finding the
-right documentation for deeper language and ABI details.
+This page gets you from “a file” to “a runnable program”, and points you at the docs you’ll use most often.
 
+If you already have a `silk` binary on your `PATH`, start with “Write a program”.
 
+If you don’t, see “Build from source” for the reference compiler workflow.
 
-## Build `silk`
+## Write a program
 
-This repository is built with Zig.
-
-From the repo root:
-
-```sh
-make build
-```
-
-If you want to fetch/build the pinned vendored crypto/TLS dependencies
-(libsodium + mbedTLS) for `linux/x86_64`, run:
-
-```sh
-make deps
-```
-
-
-This produces:
-
-- `zig-out/bin/silk` (the compiler CLI)
-- `zig-out/lib/libsilk.a` (the C99 static library)
-- `zig-out/lib/libsilk_std.a` (a stdlib archive for supported targets)
-
-You can also run the Zig build directly:
-
-```sh
-zig build
-```
-
-## Run a Minimal Program
-
-Create a file `hello.slk`:
+Create `hello.slk`:
 
 ```silk
+import std::io::println;
+
 fn main () -> int {
+  println("hello from silk");
   return 0;
 }
 ```
 
-Then:
+Run the normal loop:
 
-```sh
-./zig-out/bin/silk check hello.slk
-./zig-out/bin/silk build hello.slk -o hello
-./hello
+```bash
+silk check hello.slk
+silk test hello.slk
+silk build hello.slk -o build/hello
+./build/hello
 ```
 
-For more CLI examples (including stdlib use, wasm outputs, and library/object
+If you prefer a step-by-step walkthrough, start here:
 
+- Tutorial 1: [your first program](?p=usage/tutorials/01-first-program)
 
-## Supported Behavior vs Full Design
+## Packages (`silk.toml`)
 
-The language docs describe both:
+For larger projects, describe the module set in `silk.toml` and use `--package`:
 
-- the full language design, and
-- the implemented subset.
-
-For supported behavior:
-
-  unsupported features.
-
-## Run Tests
-
-From the repo root:
-
-```sh
-make test
+```bash
+silk check --package .
+silk test  --package .
+silk build --package .
 ```
 
-This runs:
+Reference:
 
-- Zig unit tests (`zig build test`)
+- [Package manifests](?p=compiler/package-manifests)
+- [CLI examples](?p=usage/cli-examples)
 
-## Where To Go Next
+## Build from source (reference compiler)
+
+The reference Silk compiler/toolchain is built with Zig.
+
+From the Silk compiler repository root:
+
+```bash
+zig build
+```
+
+This produces (among other artifacts):
+
+- `zig-out/bin/silk` (the CLI)
+- `zig-out/lib/libsilk.a` (the C ABI library)
+
+If you use the Make wrapper:
+
+```bash
+make build
+```
+
+Some features use pinned vendored dependencies (for example crypto/TLS on hosted targets). To fetch/build them for the
+supported host platform:
+
+```bash
+make deps
+```
+
+Reference: [Vendored deps](?p=compiler/vendored-deps)
+
+## Troubleshooting
+
+- If a command fails, look up the error code in: [Diagnostics](?p=compiler/diagnostics)
+- If you hit backend/toolchain limits, start with: [Limits](?p=compiler/limits)
+
+## Where to go next
+
+- Guides: [What Silk is for](?p=guides/purpose) · [Hello world](?p=guides/hello-world) · [Language tour](?p=guides/language-tour)
+- Language quick reference: [Cheat sheet](?p=language/cheat-sheet)
+- Standard library: [Overview](?p=std/overview)
+- Embedding: [C ABI (`libsilk`)](?p=compiler/abi-libsilk) · [Zig embedding API](?p=compiler/zig-api)
+- Spec: [Silk Spec (2026)](/silk/spec/2026/)
 
 ==============================================================================
 DOCS: GitHub Linguist Support (usage/github-linguist)
@@ -20388,7 +20479,8 @@ URL: /silk/docs/?p=usage/editor-textmate
 
 # TextMate Grammar (tmLanguage)
 
-This repository ships a TextMate grammar for Silk under `textmate/silk.tmLanguage.json`. It provides syntax highlighting for editors that consume tmLanguage grammars (TextMate, VS Code, Sublime Text, Nova, and others).
+The Silk compiler repository ships a TextMate grammar for Silk under `textmate/silk.tmLanguage.json`. It provides syntax
+highlighting for editors that consume tmLanguage grammars (TextMate, VS Code, Sublime Text, Nova, and others).
 
 ## Scope and File Extension
 
@@ -20405,6 +20497,9 @@ This repository ships a TextMate grammar for Silk under `textmate/silk.tmLanguag
 ## VS Code
 
 A grammar-only VS Code extension is included under `textmate/vscode/`. To try it, open that directory in VS Code and press `F5` to launch an Extension Development Host.
+
+For LSP-backed features (diagnostics, hover, go-to-definition), use the `silk-lsp` language server with an appropriate
+client (see [LSP protocol and server](?p=compiler/lsp-silk) and [Vim integration](?p=usage/editor-vim)).
 
 ==============================================================================
 DOCS: Tutorial 1: your first program (usage/tutorials/01-first-program)
@@ -20866,12 +20961,12 @@ URL: /silk/docs/?p=usage/editor-vim
 
 # Vim Integration for Silk
 
-This document describes the built-in Vim support for the Silk language shipped with this repository.
+This document describes the built-in Vim support for Silk shipped with the Silk compiler repository.
 
 The goal of the Vim plugin is to provide a lightweight, spec-aligned editing experience that:
 
 - recognizes Silk source files by extension,
-- respects this repository’s indentation and comment style guidelines.
+- respects the Silk repository’s indentation and comment style guidelines.
 
 ## Files and Layout
 
@@ -20883,7 +20978,8 @@ The Vim plugin lives under the top-level `vim/` directory:
 - `vim/ftplugin/silk.vim` – filetype-specific editor defaults for Silk buffers.
 - `vim/indent/silk.vim` – indentation rules for Silk buffers.
 
-These files follow Vim’s standard runtime layout and can be copied into a user’s `~/.vim` (or Neovim) configuration or used directly from this repository via the `runtimepath`.
+These files follow Vim’s standard runtime layout and can be copied into a user’s `~/.vim` (or Neovim) configuration or
+used directly from the Silk repository via the `runtimepath`.
 
 ## Filetype Detection
 
@@ -20976,10 +21072,10 @@ If you want to distribute or install the `vim/` directory as a standalone Vim pl
 
 ### Option C: Add `vim/` to `runtimepath` Manually
 
-You can use the plugin directly from this repository by adding `vim/` to Vim’s `runtimepath`, for example:
+You can use the plugin directly from the Silk repository by adding `vim/` to Vim’s `runtimepath`, for example:
 
 ```vim
-set runtimepath^=/path/to/silk/compiler/vim
+set runtimepath^=/path/to/silk/vim
 ```
 
 If you prefer to copy the files into your own configuration:
@@ -23285,6 +23381,32 @@ Additional optional metadata fields MAY be present under `[package]` (for
 example `description`, `license`, `authors`, `repository`), but the current
 compiler only uses `name` and `version`.
 
+### `package.definitions` (optional)
+
+Optional list of *definition files* (header-style prototype modules) for this
+package:
+
+```toml
+[package]
+name = "my_lib"
+definitions = ["defs/api.slk"]
+```
+
+Rules:
+
+- Each entry MUST be a path to a `.slk` (or `.silk`) file, relative to the
+  manifest directory.
+- Definition files SHOULD consist of:
+  - exported type declarations, and
+  - declaration-only exported function prototypes (`export fn name(...) -> T;`)
+    that describe the public API surface.
+- The compiler does not treat definition files specially during ordinary
+  builds; this field exists so tooling can locate an explicit “API surface”
+  without scanning arbitrary source files.
+- `silk build install` uses this list when installing libraries into
+  `PREFIX/lib/silk` so that the installed package remains importable (for
+  example `import my_lib from "my_lib";`) via the system package search root.
+
 ## Source Layout (`[sources]`: `include` / `exclude`)
 
 Packages may specify which `.slk` files belong to the package with glob patterns:
@@ -23348,11 +23470,18 @@ Limitations:
 ## Dependency discovery via `SILK_PACKAGE_PATH`
 
 When a dependency entry omits `path`, the compiler resolves it by searching a
-PATH-like list of package roots provided by `SILK_PACKAGE_PATH`.
+PATH-like list of package roots.
 
 Rules:
 
-- `SILK_PACKAGE_PATH` is a list of directories separated by `:` (POSIX).
+- The primary search path is `SILK_PACKAGE_PATH` when set (a list of
+  directories separated by `:` on POSIX).
+- When `SILK_PACKAGE_PATH` is not set, the compiler uses a small default set:
+  - `./packages` when it exists (development convenience),
+  - `../share/silk/packages` relative to the `silk` executable (installed layout),
+  - `$HOME/.local/share/silk/packages` when it exists (user-local installs).
+- Finally, the compiler appends a system library root at `PREFIX/lib/silk`
+  (default `PREFIX=/usr/local`) as the last search path entry when it exists.
 - For a dependency named `my_api::core`, each root directory contributes a
   candidate package root:
   - `<root>/my_api/core` (where `::` maps to `/`)
@@ -24176,7 +24305,7 @@ The Zig embedding API is a thin wrapper over the same implementation that backs
 Practical implications:
 
 - The supported language subset and backend constraints are the same as the
-  CLI and C API for a given build of this repo.
+  CLI and C API for a given build of the compiler.
 - When an operation fails, the compiler records a human-readable last error.
   Zig callers can retrieve it via `Compiler.lastErrorAlloc`.
 - The Zig API does not require `@cImport`; it reuses the Zig implementation
@@ -24184,8 +24313,8 @@ Practical implications:
 
 ## Public Module
 
-This repository exports a Zig module named `silk` from `build.zig` for
-downstream dependencies.
+The Silk compiler repository exports a Zig module named `silk` from `build.zig`
+for downstream dependencies.
 
 Downstream build snippet (illustrative):
 
@@ -24970,6 +25099,8 @@ URL: /silk/docs/?p=man/silk-build.1
 - `silk build [options] <input> [<input> ...] -o <output>`
 - `silk build [options] --package <dir|manifest> [--build-script] [--package-target <name> ...]`
 - `silk build [options]` (when `./silk.toml` exists, behaves as if `--package .` was provided)
+- `silk build install [options] --package <dir|manifest> [--build-script] [--package-target <name> ...]`
+- `silk build uninstall [options] --package <dir|manifest> [--build-script]`
 
 ## Description
 
@@ -24991,6 +25122,19 @@ Input kinds (by extension):
 
 Package builds: when `--package` is provided, `.slk` inputs must be omitted, but non-`.slk` link inputs (`.c`, `.o`, `.a`, `.so`) may still be provided.
 
+Package installation:
+
+- `silk build install` builds the selected package target(s) and installs:
+  - executables to `<prefix>/bin`,
+  - objects/static/shared libraries to `<prefix>/lib/silk`,
+  - emitted C headers (when present) to `<prefix>/include/silk/<package>/`,
+  - and, when `[package].definitions` is set, installs those definition files
+    plus an installed `silk.toml` under `<prefix>/lib/silk/<package>/` so the
+    package is importable via the system package search root (`PREFIX/lib/silk`).
+  It writes an uninstall receipt at `<prefix>/lib/silk/<package>/.silk_install_receipt`.
+- `silk build uninstall` removes files listed in the uninstall receipt (same
+  prefix selection rules as install).
+
 Notes:
 
 - `.o`/`.a`/`.c` link inputs are currently supported only for `linux/x86_64` outputs.
@@ -25009,6 +25153,7 @@ Notes:
 - `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`).
 - `--debug`, `-g` — enable debug build mode (also enables extra Formal Silk debug output when verification fails).
 - `-O <0-3>` — set optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`). `-O1`+ prunes unused extern symbols before code generation and prunes unreachable functions in executable builds (typically reducing output size).
+- `-p <path>`, `--prefix <path>` — install/uninstall prefix (default: `$PREFIX` when set, otherwise `/usr/local`).
 
 Output selection:
 
@@ -25068,11 +25213,21 @@ silk build
 
 # Build a specific target from a manifest.
 silk build --package . --package-target app
+
+# Install the current package to /usr/local.
+silk build install
+
+# Install to a custom prefix.
+silk build install -p /tmp/silk-prefix
+
+# Uninstall from a custom prefix.
+silk build uninstall -p /tmp/silk-prefix
 ```
 
 ## Environment
 
-- `SILK_PACKAGE_PATH` — PATH-like list of package root directories used to resolve bare-specifier package imports (entries separated by `:` on POSIX).
+- `PREFIX` — installation prefix used by `silk build install` / `silk build uninstall` when `-p/--prefix` is not provided (default: `/usr/local`).
+- `SILK_PACKAGE_PATH` — PATH-like list of package root directories used to resolve bare-specifier package imports (entries separated by `:` on POSIX). The compiler appends a system library root at `PREFIX/lib/silk` as the last search path entry when it exists.
 - `SILK_CC` — host C compiler used by `silk cc` (also used when compiling `.c` inputs passed to `silk build`).
 
 ## Exit status
@@ -25191,7 +25346,8 @@ silk check --package .
 
 ## Environment
 
-- `SILK_PACKAGE_PATH` — PATH-like list of package root directories used to resolve bare-specifier package imports (entries separated by `:` on POSIX).
+- `PREFIX` — installation prefix used for the system package search root at `PREFIX/lib/silk` (searched last when it exists). Default: `/usr/local`.
+- `SILK_PACKAGE_PATH` — primary package search path for bare-specifier imports (entries separated by `:` on POSIX, `;` on Windows). The compiler appends `PREFIX/lib/silk` as the last search path entry when it exists.
 
 ## Exit status
 
@@ -25314,6 +25470,7 @@ The output includes, at minimum:
 - `SILK_STD_LIB` — override stdlib archive used for linking (`libsilk_std.a`).
 - `SILK_Z3_LIB` — override Z3 dynamic library path used for Formal Silk verification.
 - `SILK_PACKAGE_PATH` — package search path for bare-specifier imports.
+- `PREFIX` — installation prefix used for the system package search root (`PREFIX/lib/silk`) and as the default prefix for `silk build install` / `silk build uninstall` when `-p/--prefix` is not provided.
 - `SILK_WORK_DIR` — override compiler work directory root (defaults to `.silk`).
 - `SILK_REPL_HISTORY` — override REPL history path.
 - `SILK_RT_LIBDIR` — override search directory for bundled runtime archives (`libsilk_rt*.a`).
@@ -25331,6 +25488,70 @@ silk env
 - `silk` (1)
 - `silk-cc` (1)
 - `silk-build` (1)
+
+==============================================================================
+DOCS: `silk-format` (1) — Format Silk Source Files (man/silk-format.1)
+URL: /silk/docs/?p=man/silk-format.1
+==============================================================================
+
+# `silk-format` (1) — Format Silk Source Files
+
+> NOTE: This is the Markdown source for the eventual man 1 page for `silk format`. The roff-formatted manpage should be generated from this content.
+
+## Name
+
+`silk-format` — format Silk source files.
+
+## Synopsis
+
+- `silk format [options] <path> [<path> ...]`
+- `silk fmt [options] <path> [<path> ...]`
+
+## Description
+
+`silk format` rewrites Silk source files (`.slk` and `.silk`) to the canonical formatting style.
+
+The formatter discovers project configuration by searching for `.silk/format.toml`, starting from each formatted file’s directory and walking upward to the filesystem root. The first config file found applies to that file.
+
+## Options
+
+- `--check` — do not write any files; exit non-zero if any file would change.
+- `--help`, `-h` — show command usage and exit.
+- `--` — end of options (treat following args as paths, even if they begin with `-`).
+
+## Configuration (`.silk/format.toml`)
+
+The formatter reads configuration from a TOML file at `.silk/format.toml`.
+
+Supported keys (under the `[format]` table):
+
+- `indent_style = "space" | "tab"` (default: `"space"`)
+- `indent_width = <int>` (default: `2`; used only when `indent_style = "space"`)
+
+Example:
+
+```toml
+[format]
+indent_style = "space"
+indent_width = 2
+```
+
+## Notes
+
+- Multi-line string literals (including raw backtick strings) are preserved verbatim.
+- The formatter does not type-check inputs; use `silk check` to validate code.
+
+## Examples
+
+```sh
+silk fmt src
+silk format --check .
+```
+
+## See Also
+
+- `silk` (1)
+- `silk-check` (1)
 
 ==============================================================================
 DOCS: `silk-lsp` (1) — Language Server Protocol (LSP) Server (man/silk-lsp.1)
@@ -25413,7 +25634,8 @@ Notes:
 ## Environment
 
 - `MANPAGER` / `PAGER` — controls the pager used to display the rendered output (when `man -l` is unavailable).
-- `SILK_PACKAGE_PATH` — PATH-like list of package root directories used to resolve non-`std::` queries when no package manifest is selected or discoverable.
+- `PREFIX` — installation prefix used for the system package search root at `PREFIX/lib/silk` (searched last when it exists). Default: `/usr/local`.
+- `SILK_PACKAGE_PATH` — primary package search path used to resolve non-`std::` queries when no package manifest is selected or discoverable (entries separated by `:` on POSIX, `;` on Windows). The compiler appends `PREFIX/lib/silk` as the last search path entry when it exists.
 
 ## Examples
 
@@ -25499,7 +25721,8 @@ silk test --package . --filter url
 
 ## Environment
 
-- `SILK_PACKAGE_PATH` — PATH-like list of package root directories used to resolve bare-specifier package imports (entries separated by `:` on POSIX).
+- `PREFIX` — installation prefix used for the system package search root at `PREFIX/lib/silk` (searched last when it exists). Default: `/usr/local`.
+- `SILK_PACKAGE_PATH` — primary package search path for bare-specifier imports (entries separated by `:` on POSIX, `;` on Windows). The compiler appends `PREFIX/lib/silk` as the last search path entry when it exists.
 
 ## Exit status
 
@@ -25784,10 +26007,14 @@ URL: /silk/docs/?p=man/silk.1
 - `silk check [--nostd] [--std-root <path>] [--z3-lib <path>] [--debug] [--package <dir|manifest>] <file> [<file> ...]`
 - `silk test [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--filter <pattern>] [--package <dir|manifest>] <file> [<file> ...]`
 - `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--emit bin|asm] [-S] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]`
+- `silk build install [--package <dir|manifest>] [--build-script] [--package-target <name> ...] [-p <path>|--prefix <path>]`
+- `silk build uninstall [--package <dir|manifest>] [--build-script] [-p <path>|--prefix <path>]`
 - `silk doc [--all] <file> [<file> ...] [-o <path>]`
 - `silk doc --man [--package <dir|manifest>] [--std-root <path>] <query> [-o <path>]`
-- `silk man <query>`
+- `silk man [--section <n>|-s <n>] <query>`
 - `silk cc <cc args...>`
+- `silk env`
+- `silk format [--check] <path> [<path> ...]`
 
 ## Description
 
@@ -25845,6 +26072,7 @@ For the initial implementation, the supported options are:
     - `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`).
     - `--debug`, `-g` — when Formal Silk verification fails, emit Z3 debugging output and write an SMT-LIB2 reproduction script under `.silk/z3/` (or `$SILK_WORK_DIR/z3`).
     - `--package <dir|manifest>` (or `--pkg`) — load the module set from a package manifest (`silk.toml`) instead of explicit input files. When `--package` is provided, `<file> ...` inputs must be omitted.
+    - When `<file> ...` inputs are omitted and `--package` / `--pkg` is also omitted, but `./silk.toml` exists, `silk check` behaves as if `--package .` was provided.
     - `--` — end of options; treat remaining args as file paths (even if they begin with `-`).
 
 - **Test command:**
@@ -25871,6 +26099,9 @@ For the initial implementation, the supported options are:
     - `--package-target <name>` — select one or more manifest `[[target]]` entries by name (repeatable; `--pkg-target` is accepted as an alias).
       - when omitted, `silk build --package ...` builds every manifest `[[target]]` entry by default.
       - when building multiple targets, per-output flags are rejected (`-o/--out`, `--kind`, `--emit`, `--arch`, `--target`, `--c-header`, `--needed`, `--runpath`, `--soname`).
+    - `-p <path>`, `--prefix <path>` — install/uninstall prefix (default: `$PREFIX` when set, otherwise `/usr/local`).
+    - `silk build install` installs package artifacts and writes an uninstall receipt (see `silk-build` (1)).
+    - `silk build uninstall` removes files listed in the uninstall receipt (see `silk-build` (1)).
     - `--` — end of options; treat remaining args as file paths (even if they begin with `-`).
     - `--debug`, `-g` — enable debug build mode (supported subset, `linux/x86_64`):
       - failed `assert` prints a panic header + optional message + stack trace to stderr (via glibc `backtrace_symbols_fd`) before aborting, and
@@ -26052,13 +26283,21 @@ For the initial implementation, the supported options are:
 - `SILK_STD_LIB` — path to a target-specific stdlib static archive (`libsilk_std.a`).
   When present, supported executable builds treat auto-loaded `std::...` modules as
   external and resolve their exported functions from this archive.
+- `PREFIX` — installation prefix used for:
+  - the system package search root at `PREFIX/lib/silk` (searched last when it exists), and
+  - `silk build install` / `silk build uninstall` when `-p/--prefix` is not provided.
+  Default: `/usr/local`.
 - `SILK_PACKAGE_PATH` — PATH-like list of package root directories used to resolve
   bare-specifier package imports (non-`std::`) in file-list workflows (when `--package`
-  is not used). Entries are separated by `:` (POSIX).
+  is not used).
+  - When `SILK_PACKAGE_PATH` is set, it is the primary search path (entries separated by `:` on POSIX, `;` on Windows).
+  - When `SILK_PACKAGE_PATH` is not set, `silk` uses a small default set:
+    - `./packages` when it exists (development convenience),
+    - `../share/silk/packages` relative to the `silk` executable (installed layout),
+    - `$HOME/.local/share/silk/packages` when it exists (user-local installs).
+  - Finally, `silk` appends a system library root at `PREFIX/lib/silk` as the last search path entry when it exists.
   - A package like `my_api::core` maps to the candidate manifest
     `<root>/my_api/core/silk.toml` (where `::` maps to `/`).
-  - When `SILK_PACKAGE_PATH` is not set, `silk` also checks `./packages` when it exists
-    (development convenience).
 - `SILK_Z3_LIB` — path to a dynamic Z3 library used by the Formal Silk verifier. When `--z3-lib` is not provided, the verifier will use this value when set.
 - `SILK_CC` — the host C compiler executable used by `silk cc` (defaults to `cc` when unset).
 

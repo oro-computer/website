@@ -11,6 +11,8 @@
 - `silk build [options] <input> [<input> ...] -o <output>`
 - `silk build [options] --package <dir|manifest> [--build-script] [--package-target <name> ...]`
 - `silk build [options]` (when `./silk.toml` exists, behaves as if `--package .` was provided)
+- `silk build install [options] --package <dir|manifest> [--build-script] [--package-target <name> ...]`
+- `silk build uninstall [options] --package <dir|manifest> [--build-script]`
 
 ## Description
 
@@ -32,6 +34,19 @@ Input kinds (by extension):
 - `.c` — C source file; compiled to an object via the host C compiler (see `silk-cc` (1) / `SILK_CC`) and then treated like a `.o` input.
 
 Package builds: when `--package` is provided, `.slk` inputs must be omitted, but non-`.slk` link inputs (`.c`, `.o`, `.a`, `.so`) may still be provided.
+
+Package installation:
+
+- `silk build install` builds the selected package target(s) and installs:
+  - executables to `<prefix>/bin`,
+  - objects/static/shared libraries to `<prefix>/lib/silk`,
+  - emitted C headers (when present) to `<prefix>/include/silk/<package>/`,
+  - and, when `[package].definitions` is set, installs those definition files
+    plus an installed `silk.toml` under `<prefix>/lib/silk/<package>/` so the
+    package is importable via the system package search root (`PREFIX/lib/silk`).
+  It writes an uninstall receipt at `<prefix>/lib/silk/<package>/.silk_install_receipt`.
+- `silk build uninstall` removes files listed in the uninstall receipt (same
+  prefix selection rules as install).
 
 Notes:
 
@@ -55,6 +70,7 @@ Notes:
 - `--debug`, `-g` — enable debug build mode (also enables extra Formal Silk debug output when verification fails).
 - `-O <0-3>` — set optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`). `-O1`+ prunes unused extern symbols before code generation and prunes unreachable functions in executable builds (typically reducing output size).
 - `--noheap` — reject heap allocation in the supported subset (see `docs/language/memory-model.md` and `docs/compiler/cli-silk.md`).
+- `-p <path>`, `--prefix <path>` — install/uninstall prefix (default: `$PREFIX` when set, otherwise `/usr/local`).
 
 Output selection:
 
@@ -114,11 +130,21 @@ silk build
 
 # Build a specific target from a manifest.
 silk build --package . --package-target app
+
+# Install the current package to /usr/local.
+silk build install
+
+# Install to a custom prefix.
+silk build install -p /tmp/silk-prefix
+
+# Uninstall from a custom prefix.
+silk build uninstall -p /tmp/silk-prefix
 ```
 
 ## Environment
 
-- `SILK_PACKAGE_PATH` — PATH-like list of package root directories used to resolve bare-specifier package imports (entries separated by `:` on POSIX).
+- `PREFIX` — installation prefix used by `silk build install` / `silk build uninstall` when `-p/--prefix` is not provided (default: `/usr/local`).
+- `SILK_PACKAGE_PATH` — PATH-like list of package root directories used to resolve bare-specifier package imports (entries separated by `:` on POSIX). The compiler appends a system library root at `PREFIX/lib/silk` as the last search path entry when it exists.
 - `SILK_CC` — host C compiler used by `silk cc` (also used when compiling `.c` inputs passed to `silk build`).
 
 ## Exit status

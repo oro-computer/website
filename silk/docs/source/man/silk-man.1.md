@@ -40,7 +40,8 @@ Notes:
 ## Environment
 
 - `MANPAGER` / `PAGER` — controls the pager used to display the rendered output (when `man -l` is unavailable).
-- `SILK_PACKAGE_PATH` — PATH-like list of package root directories used to resolve non-`std::` queries when no package manifest is selected or discoverable.
+- `PREFIX` — installation prefix used for the system package search root at `PREFIX/lib/silk` (searched last when it exists). Default: `/usr/local`.
+- `SILK_PACKAGE_PATH` — primary package search path used to resolve non-`std::` queries when no package manifest is selected or discoverable (entries separated by `:` on POSIX, `;` on Windows). The compiler appends `PREFIX/lib/silk` as the last search path entry when it exists.
 
 ## Examples
 

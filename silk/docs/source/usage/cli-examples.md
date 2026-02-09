@@ -30,6 +30,17 @@ silk build hello.slk -o build/hello
 
 This loop is intentionally boring: each command has one job, and it scales from a single file to large packages.
 
+## Formatting
+
+Format files or directories:
+
+```bash
+silk fmt src
+silk fmt --check .
+```
+
+Reference: [`silk-format` (1)](?p=man/silk-format.1)
+
 ## Explicit module sets (multiple files)
 
 Passing multiple files defines the module set explicitly:
@@ -145,4 +156,3 @@ silk cc -std=c99 -Wall -Wextra my_program.c -o build/my_program
 ```
 
 Reference: `libsilk` (sidebar → man → `libsilk` (7)).
-

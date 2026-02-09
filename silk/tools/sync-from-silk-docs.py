@@ -35,6 +35,7 @@ KEEP_DOCS_FILES = {
     "usage/howto-custom-stdlib-root.md",
     "usage/howto-run-wasi-node.md",
     "usage/editor-coc-nvim.md",
+    "usage/editor-vim.md",
     "usage/editor-textmate.md",
     "usage/getting-started.md",
     # Website-owned tutorial rewrites (avoid repo-build steps).

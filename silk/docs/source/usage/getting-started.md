@@ -1,98 +1,91 @@
-# Getting Started (Repo Workflow)
+# Getting started
 
-This document is a practical starting point for working with the Silk compiler
-repository: building the `silk` CLI, running a minimal program, and finding the
-right documentation for deeper language and ABI details.
+This page gets you from “a file” to “a runnable program”, and points you at the docs you’ll use most often.
 
-If you want language semantics, start with `docs/guides/language-tour.md`.
+If you already have a `silk` binary on your `PATH`, start with “Write a program”.
 
-For step-by-step walkthroughs, start with `docs/usage/tutorials/01-first-program.md`.
+If you don’t, see “Build from source” for the reference compiler workflow.
 
-## Build `silk`
+## Write a program
 
-This repository is built with Zig.
-
-From the repo root:
-
-```sh
-make build
-```
-
-If you want to fetch/build the pinned vendored crypto/TLS dependencies
-(libsodium + mbedTLS) for `linux/x86_64`, run:
-
-```sh
-make deps
-```
-
-See `docs/compiler/vendored-deps.md` for details.
-
-This produces:
-
-- `zig-out/bin/silk` (the compiler CLI)
-- `zig-out/lib/libsilk.a` (the C99 static library)
-- `zig-out/lib/libsilk_std.a` (a stdlib archive for supported targets)
-
-You can also run the Zig build directly:
-
-```sh
-zig build
-```
-
-## Run a Minimal Program
-
-Create a file `hello.slk`:
+Create `hello.slk`:
 
 ```silk
+import std::io::println;
+
 fn main () -> int {
+  println("hello from silk");
   return 0;
 }
 ```
 
-Then:
+Run the normal loop:
 
-```sh
-./zig-out/bin/silk check hello.slk
-./zig-out/bin/silk build hello.slk -o hello
-./hello
+```bash
+silk check hello.slk
+silk test hello.slk
+silk build hello.slk -o build/hello
+./build/hello
 ```
 
-For more CLI examples (including stdlib use, wasm outputs, and library/object
-builds), see `docs/usage/cli-examples.md`.
+If you prefer a step-by-step walkthrough, start here:
 
-For step-by-step walkthroughs, see `docs/usage/tutorials/01-first-program.md`.
+- Tutorial 1: [your first program](?p=usage/tutorials/01-first-program)
 
-## Supported Behavior vs Full Design
+## Packages (`silk.toml`)
 
-The language docs describe both:
+For larger projects, describe the module set in `silk.toml` and use `--package`:
 
-- the full language design, and
-- the implemented subset.
-
-For supported behavior:
-
-- Many `docs/language/*.md` files include “Implementation status” sections.
-- `tests/silk/pass_*.slk` are the most reliable working language examples.
-- `docs/compiler/diagnostics.md` lists the stable error codes you will see for
-  unsupported features.
-
-## Run Tests
-
-From the repo root:
-
-```sh
-make test
+```bash
+silk check --package .
+silk test  --package .
+silk build --package .
 ```
 
-This runs:
+Reference:
 
-- Zig unit tests (`zig build test`)
-- C99 test harnesses under `c-tests/` that link against `libsilk.a`
+- [Package manifests](?p=compiler/package-manifests)
+- [CLI examples](?p=usage/cli-examples)
 
-## Where To Go Next
+## Build from source (reference compiler)
 
-- Language tour: `docs/guides/language-tour.md`
-- Language quick reference: `docs/language/cheat-sheet.md`
-- Compiler CLI design: `docs/compiler/cli-silk.md` and `docs/man/silk.1.md`
-- C99 ABI contract for embedding: `docs/compiler/abi-libsilk.md` and `docs/man/libsilk.7.md`
-- Standard library overview: `docs/std/overview.md`
+The reference Silk compiler/toolchain is built with Zig.
+
+From the Silk compiler repository root:
+
+```bash
+zig build
+```
+
+This produces (among other artifacts):
+
+- `zig-out/bin/silk` (the CLI)
+- `zig-out/lib/libsilk.a` (the C ABI library)
+
+If you use the Make wrapper:
+
+```bash
+make build
+```
+
+Some features use pinned vendored dependencies (for example crypto/TLS on hosted targets). To fetch/build them for the
+supported host platform:
+
+```bash
+make deps
+```
+
+Reference: [Vendored deps](?p=compiler/vendored-deps)
+
+## Troubleshooting
+
+- If a command fails, look up the error code in: [Diagnostics](?p=compiler/diagnostics)
+- If you hit backend/toolchain limits, start with: [Limits](?p=compiler/limits)
+
+## Where to go next
+
+- Guides: [What Silk is for](?p=guides/purpose) · [Hello world](?p=guides/hello-world) · [Language tour](?p=guides/language-tour)
+- Language quick reference: [Cheat sheet](?p=language/cheat-sheet)
+- Standard library: [Overview](?p=std/overview)
+- Embedding: [C ABI (`libsilk`)](?p=compiler/abi-libsilk) · [Zig embedding API](?p=compiler/zig-api)
+- Spec: [Silk Spec (2026)](/silk/spec/2026/)
