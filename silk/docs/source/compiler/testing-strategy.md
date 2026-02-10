@@ -47,7 +47,7 @@ This document defines how we validate the compiler, ABI, and standard library.
 In addition to Zig and C99 tests, we maintain **Silk-written test programs**:
 
 - Location:
-  - Silk test sources live under `tests/silk/` in this repository.
+  - Silk test sources live under `tests/silk/` in the Silk compiler repository.
   - They are regular Silk modules and are intended to be readable examples of language features.
 - Categories:
   - **Passing tests** (e.g. `tests/silk/pass_if_bool.slk`, `tests/silk/pass_while_bool.slk`, `tests/silk/pass_requires_ensures.slk`):
@@ -75,7 +75,7 @@ In addition to Zig and C99 tests, we maintain **Silk-written test programs**:
     - run `pkg_*.slk` fixtures via explicit `silk check` module-set invocations (some are expected to fail),
     - include a small guard test that rejects unknown `tests/silk/*.slk` filename prefixes so new fixtures cannot silently land without harness coverage.
     - for a growing subset of `pass_*.slk` programs whose `main` fits the current constant-expression backend (e.g. `pass_let_locals.slk`, `pass_top_level_let.slk`), invoke the `silk` CLI to `build` them to native executables and run those executables, asserting on their exit codes; this keeps Silk-written tests participating in both front-end and back-end validation as code generation matures.
-  - The `silk test` CLI subcommand runs **language-level** `test` declarations embedded in Silk source files (see `docs/language/testing.md`), emitting TAP output. This is complementary to the repository’s `tests/silk/pass_*` / `tests/silk/fail_*` suite, which is driven from Zig tests today.
+  - The `silk test` CLI subcommand runs **language-level** `test` declarations embedded in Silk source files (see `docs/language/testing.md`), emitting TAP output. This is complementary to the Silk compiler repository’s `tests/silk/pass_*` / `tests/silk/fail_*` suite, which is driven from Zig tests today.
   - As the backend matures, additional Silk tests will be added that:
     - build and run executables beyond the constant-expression subset,
     - exercise libraries and FFI,

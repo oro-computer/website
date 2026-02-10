@@ -183,5 +183,11 @@ key point is that `std::fs` and `std::net` can reuse the same I/O traits.
 ## Future Work
 
 - Buffered I/O wrappers (`BufReader`, `BufWriter`).
-- Async-aware adapters once the async runtime (event loop + coroutine lowering)
-  is implemented; `std::task` exists today but provides only blocking helpers.
+- Async-aware adapters:
+  - the hosted `linux/x86_64` toolchain now ships a bring-up async executor and
+    exposes timers + fd readiness via `std::runtime::event_loop`,
+  - `std::task` includes awaitable sleep helpers (`sleep_ms_async`, `sleep_async`),
+  - `std::io::async` provides minimal `async fn` wrappers over fd-based
+    `read`/`write` using the event loop readiness waits.
+  Broader async I/O surface (buffered async I/O, sockets, filesystem streams,
+  cancellation, and `select`-style waiting) remains future work.

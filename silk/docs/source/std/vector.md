@@ -30,6 +30,44 @@ See also:
 - `docs/std/buffer.md` (width-oriented buffer helpers built on vectors)
 - `docs/language/generics.md` (generic syntax and rules)
 
+## Example (Struct Elements)
+
+`Vector(T)` is the stdlib’s default growable container for typed elements. When
+you see code manually managing `{ ptr, len, cap }` for a typed array, it is
+often a sign that a `Vector(T)` (or a small wrapper around it) is the intended
+tool.
+
+This example collects `TabState` values into a `Vector(TabState)`:
+
+```silk
+import std::arrays;
+import std::vector;
+
+struct TabState {
+  path: string,
+  top_off: i64,
+  gutter_on: bool,
+}
+
+type Tabs = std::vector::Vector(TabState);
+
+fn tabs_collect (paths: std::arrays::Slice(string)) -> Tabs? {
+  let cap: i64 = paths.len;
+  let mut tabs: Tabs = Tabs.try_init(cap) ?? Tabs.empty();
+
+  var i: i64 = 0;
+  while i < paths.len {
+    let err = tabs.push(TabState{ path: paths.get(i), top_off: 0, gutter_on: false });
+    if err != None {
+      return None; // `tabs` is dropped on scope exit (frees its allocation).
+    }
+    i = i + 1;
+  }
+
+  return Some(tabs);
+}
+```
+
 ## Current API (Implemented)
 
 ```silk
@@ -46,6 +84,7 @@ struct Vector(T) {
 
 impl Vector(T) {
   public fn init (cap: i64) -> std::result::Result(Vector(T), std::memory::AllocFailed);
+  public fn try_init (cap: i64) -> Vector(T)?;
   public fn empty () -> Vector(T);
   public fn push (mut self: &Vector(T), value: T) -> std::memory::OutOfMemory?;
   public fn pop (mut self: &Vector(T)) -> T?;
@@ -89,6 +128,7 @@ Notes:
 - `Vector(T)` is intentionally low-level in the current subset:
   - `init(cap)` returns `Err(AllocFailed)` when allocation fails or when `cap`
     is invalid.
+  - `try_init(cap)` returns `None` on any allocation/validation failure.
   - prefer `Vector.empty()` over `Vector.init(0)` for a clear “default” constructor.
   - growth paths (`reserve_additional`, `push`, `extend_from_slice`) surface
     allocation failure as `std::memory::OutOfMemory?` (including internal size

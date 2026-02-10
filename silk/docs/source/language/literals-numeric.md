@@ -11,6 +11,8 @@ integer literal token `1`, not a distinct “negative literal” token.
 What works end-to-end today (lexer → parser → checker → lowering → codegen):
 
 - Decimal integer literals: `0`, `42`, `255`.
+- Digit separators (`_`) within numeric literal digits: `1_000_000`,
+  `0b0000_1111_0000`, `0xFFFF_FFFF`, `1_000.25`, `1_000ms`.
 - Integer base prefixes:
   - binary: `0b1010` / `0B1010`,
   - octal: `0o17` / `0O17`,
@@ -31,7 +33,6 @@ What works end-to-end today (lexer → parser → checker → lowering → codeg
 
 Not implemented yet:
 
-- Digit separators (`1_000`).
 - Exponent notation (`1e6`, `1.0e-3`).
 - Numeric type suffixes (`42u8`, `1.5f32`).
 - Numeric suffixes for 128-bit types (`1u128`, `1.0f128`) are not implemented;
@@ -64,10 +65,15 @@ Numeric literal tokens are recognized as:
   - octal prefix: `0o` / `0O` followed by octal digits (`[0-7]+`),
   - hex prefix: `0x` / `0X` followed by hex digits (`[0-9a-fA-F]+`),
   - legacy octal: `0[0-7]+` (for example `017`).
-- **Float literal**: digits, `.`, digits (`[0-9]+ '.' [0-9]+`)
+- **Float literal**: digits, `.`, digits (`[0-9]+ '.' [0-9]+`).
 
 Notes:
 
+- Integer and float literals may use `_` as a digit separator. Separators are
+  ignored when parsing the numeric value, but must appear **between** digits.
+  For example:
+  - valid: `1_000`, `0xFFFF_FFFF`, `0b0000_1111_0000`, `1_000.2_5`,
+  - invalid: `_1`, `1_`, `1__0`, `0x_FF`.
 - A float literal must have digits on both sides of the `.`:
   - `1.0` is a float literal.
   - `1.` is not a float literal in the current lexer.
@@ -159,7 +165,6 @@ fn main () -> int {
 
 - **Trying to use suffixes**: `42u8` / `1.5f32` are not supported. Use type
   annotations (`let x: u8 = 42;`) or casts (`42 as u8`).
-- **Using digit separators**: `1_000` is not supported yet.
 - **Using exponent notation**: `1e6` is not supported yet.
 - **Writing incomplete floats**: write `1.0` (not `1.`) and `0.5` (not `.5`).
 - **Mixing integers and floats implicitly**: use `as` casts (`docs/language/operators.md`)
@@ -190,3 +195,5 @@ fn main () -> int {
   - `tests/silk/pass_duration_literals.slk`
 - Integer literal base prefixes and legacy octal:
   - `tests/silk/pass_numeric_literal_prefixes.slk`
+- Integer/float/duration digit separators (`_`):
+  - `tests/silk/pass_numeric_literal_separators.slk`

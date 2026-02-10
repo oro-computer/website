@@ -71,6 +71,11 @@ In `silk test` builds, failed assertions do not abort the process. Instead:
 - A failed `assert` records a test failure and execution continues.
 - If the assertion has no explicit message, the compiler uses the assertion
   condition text as the message (e.g. `assert value != 123;` uses `value != 123`).
+- Failed assertions also emit a one-line detail message to stderr so failures are
+  visible in `silk test` output without requiring `--debug`, formatted like:
+  - `assertion failed: <message>` when not inside a nested `test` block, or
+  - `assertion failed [test: a/b]: <message>` when inside nested `test` blocks
+    (the nested `a/b` path reflects the active nested test name stack).
 - The test executable exits non-zero if any failures were recorded so TAP output
   reflects failures.
 

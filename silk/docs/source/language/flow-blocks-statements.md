@@ -143,6 +143,53 @@ Rules (current subset):
 - Binder arity must match the variant payload arity (use `_` to discard payload elements).
 - If the runtime value is not the matched variant, execution traps.
 
+### Refutable bindings: `let ... else { ... };`
+
+For refutable patterns where you want explicit control-flow on mismatch (instead
+of trapping), Silk provides a `let ... else` statement form:
+
+```silk
+let <pattern> = <expr> else {
+  // must end with a terminal statement
+};
+```
+
+Semantics (current subset):
+
+- The initializer expression is evaluated exactly once.
+- If the pattern matches, the pattern binders are introduced into the **current
+  scope** for the remainder of the block (like a normal `let` binding).
+- If the pattern does not match, the `else` block executes.
+- The `else` block must be **terminal** (it must not fall through), so the
+  binders are always available after the statement on any path that continues.
+- The binders are **not** in scope inside the `else` block.
+
+Examples:
+
+```silk
+fn main () -> int {
+  let maybe: int? = Some(7);
+  let Some(v) = maybe else { return 0; };
+  return v;
+}
+```
+
+```silk
+import std::result;
+
+error Oops { code: int }
+
+fn foo (ok: bool) -> std::result::Result(int, Oops) {
+  if ok { return Ok(7); }
+  return Err(Oops{ code: 123 });
+}
+
+fn main () -> int {
+  let Ok(v) = foo(true) else { return 1; };
+  return v;
+}
+```
+
 `const` bindings are compile-time constants:
 
 - their initializer expression must be compile-time evaluable (otherwise the

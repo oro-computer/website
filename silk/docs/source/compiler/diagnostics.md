@@ -225,6 +225,8 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2113` — enum destructuring pattern does not match the enum type (unknown variant or wrong arity).
 - `E2114` — reserved (previously: `u128` not supported in the subset).
 - `E2115` — reserved (previously: `f128` not supported in the subset).
+- `E2116` — invalid inline assembly (inline asm failed to assemble, or uses unsupported features in the current implementation).
+- `E2117` — `let ... else { ... };` requires the `else` block to end with a terminal statement.
 
 ### Formal Silk Verification
 

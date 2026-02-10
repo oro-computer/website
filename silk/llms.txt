@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-02-09T15:30:32+00:00
+Generated: 2026-02-10T20:02:06+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -57,6 +57,7 @@ Silk Docs
   - language/formal-verification — Formal Silk — /silk/docs/?p=language/formal-verification
   - language/function-disciplines — Function Disciplines (`pure`, `task`, `async`) — /silk/docs/?p=language/function-disciplines
   - language/generics — Generics (Monomorphized) — /silk/docs/?p=language/generics
+  - language/asm — Inline Assembly (`asm`) — /silk/docs/?p=language/asm
   - language/interfaces — Interfaces — /silk/docs/?p=language/interfaces
   - language/cheat-sheet — Language Cheat Sheet — /silk/docs/?p=language/cheat-sheet
   - language/conventions — Language Spec Conventions — /silk/docs/?p=language/conventions
@@ -123,6 +124,7 @@ Silk Docs
   - std/stream — `std::stream` — /silk/docs/?p=std/stream
   - std/strings — `std::strings` — /silk/docs/?p=std/strings
   - std/sync — `std::sync` — /silk/docs/?p=std/sync
+  - std/tar — `std::tar` — /silk/docs/?p=std/tar
   - std/task — `std::task` — /silk/docs/?p=std/task
   - std/temporal — `std::temporal` — /silk/docs/?p=std/temporal
   - std/test — `std::test` — /silk/docs/?p=std/test
@@ -155,6 +157,7 @@ Silk Docs
   - usage/editor-vim — Vim Integration for Silk — /silk/docs/?p=usage/editor-vim
 - Compiler
   - compiler/cli-silk — `silk` CLI — /silk/docs/?p=compiler/cli-silk
+  - compiler/async-runtime — Async Runtime (Hosted) — /silk/docs/?p=compiler/async-runtime
   - compiler/build-scripts — Build Scripts (`build.silk`) — /silk/docs/?p=compiler/build-scripts
   - compiler/abi-libsilk — C99 ABI and `libsilk.a` — /silk/docs/?p=compiler/abi-libsilk
   - compiler/architecture — Compiler Architecture — /silk/docs/?p=compiler/architecture
@@ -2282,6 +2285,24 @@ Notes:
 - `else` is optional (when omitted, a non-matching scrutinee executes no block).
 - `else if let ...` chains are supported and parse as nesting in the same way
   as `else if ...`.
+- `else let ...` is supported as shorthand for `else if let ...`.
+
+Example (`else let` shorthand):
+
+```silk
+fn main () -> int {
+  let a: int? = None;
+  let b: int? = Some(3);
+
+  if let Some(v) = a {
+    return v;
+  } else let Some(v) = b {
+    return v;
+  } else {
+    return 0;
+  }
+}
+```
 
 Supported patterns in Silk (same as `match` expressions; see
 
@@ -2924,6 +2945,45 @@ while (x < y && y < 10) {
 }
 ```
 
+## `while let` (Pattern-Destructuring Loop Form)
+
+Silk supports a `while let` loop form for iterating while a refutable pattern
+matches:
+
+```silk
+while let <pattern> = <scrutinee> {
+  ...
+}
+```
+
+Notes:
+
+- The scrutinee expression is evaluated once per iteration.
+- The pattern binders (for example `Some(v)` binds `v`) are in scope only in
+  the loop body.
+- The loop exits when the scrutinee does not match the pattern.
+
+Example (optional countdown):
+
+```silk
+fn main () -> int {
+  var x: int? = Some(3);
+  var sum: int = 0;
+
+  while let Some(v) = x {
+    sum = sum + v;
+    if v <= 1 {
+      x = None;
+    } else {
+      x = Some(v - 1);
+    }
+  }
+
+  // 3 + 2 + 1 = 6
+  return sum;
+}
+```
+
 ### Loop Specifications (`#invariant` / `#variant` / `#monovariant`)
 
 The language supports attaching loop specifications immediately before a
@@ -3329,6 +3389,53 @@ Rules ():
   - `E::Variant(...)` / `pkg::E::Variant(...)` / `::pkg::E::Variant(...)`.
 - Binder arity must match the variant payload arity (use `_` to discard payload elements).
 - If the runtime value is not the matched variant, execution traps.
+
+### Refutable bindings: `let ... else { ... };`
+
+For refutable patterns where you want explicit control-flow on mismatch (instead
+of trapping), Silk provides a `let ... else` statement form:
+
+```silk
+let <pattern> = <expr> else {
+  // must end with a terminal statement
+};
+```
+
+Semantics ():
+
+- The initializer expression is evaluated exactly once.
+- If the pattern matches, the pattern binders are introduced into the **current
+  scope** for the remainder of the block (like a normal `let` binding).
+- If the pattern does not match, the `else` block executes.
+- The `else` block must be **terminal** (it must not fall through), so the
+  binders are always available after the statement on any path that continues.
+- The binders are **not** in scope inside the `else` block.
+
+Examples:
+
+```silk
+fn main () -> int {
+  let maybe: int? = Some(7);
+  let Some(v) = maybe else { return 0; };
+  return v;
+}
+```
+
+```silk
+import std::result;
+
+error Oops { code: int }
+
+fn foo (ok: bool) -> std::result::Result(int, Oops) {
+  if ok { return Ok(7); }
+  return Err(Oops{ code: 123 });
+}
+
+fn main () -> int {
+  let Ok(v) = foo(true) else { return 1; };
+  return v;
+}
+```
 
 `const` bindings are compile-time constants:
 
@@ -3929,9 +4036,11 @@ heap-allocated handle memory:
   - `Task(T)` cleanup joins the worker thread and then frees the handle storage.
   - `Promise(T)` cleanup frees the handle storage.
 
-Because the current runtime subset uses OS threads (no coroutine transform or
-event loop), this automatic cleanup can block the current OS thread when it
-joins a task.
+Because tasks are implemented using OS threads in Silk, this
+automatic cleanup can block the current OS thread when it joins a task. Promise
+cleanup uses the hosted async runtime’s destroy helper and may suspend the
+current coroutine while waiting for a pending promise to resolve when running
+under an executor.
 
 ### `yield`
 
@@ -5959,9 +6068,12 @@ discipline system described here (a `const fn` may also be declared `pure`).
 `pure fn` parsing and a strict purity checker. Concurrency disciplines (`task` /
 `async`) are parsed and `Task(T)` / `Promise(T)` handles plus `yield` (task
 values) and `await` (promise values) are implemented in Silk
-(`await Task(T)` is rejected), but the compiler does not yet implement an async
-event loop, coroutine lowering, or task-safety (`Send`/`Sync`) rules. See
-status.
+(`await Task(T)` is rejected). On the hosted `linux/x86_64` target, the compiler
+now ships a bring-up async runtime (single-threaded executor + stackful
+coroutines in `libsilk_rt`) so `await` can suspend and resume without blocking
+the OS thread. A compiler state-machine coroutine transform, structured
+concurrency scope semantics, and task-safety (`Send`/`Sync`)-like rules remain
+implementation status.
 
 ## Overview
 
@@ -6330,6 +6442,73 @@ Rules:
 - Const parameters are currently restricted to integer primitive types; const
   values are usable in type positions (for example `T[N]`) but are not yet
   exposed as runtime values.
+
+==============================================================================
+DOCS: Inline Assembly (`asm`) (language/asm)
+URL: /silk/docs/?p=language/asm
+==============================================================================
+
+# Inline Assembly (`asm`)
+
+Silk provides an `asm` keyword for embedding inline assembly in a way that is
+explicit in source code and assembled at compile time.
+
+Inline assembly is inherently low-level and target-dependent. Use `asm` when
+you need precise control over emitted instructions that cannot be expressed
+with the standard library or `ext` bindings.
+
+## Syntax
+
+`asm` is an expression that takes a single string literal:
+
+```silk
+fn spin_pause () -> void {
+  asm "pause";
+}
+```
+
+The expression has type `void` and is intended to appear as an expression
+statement.
+
+## Semantics
+
+- `asm "<text>";` emits the machine instructions assembled from `<text>`.
+- The assembly text must be a **string literal**; it is not computed at
+  runtime.
+- Inline asm produces no values (type `void`).
+- Inline asm is treated as an explicit side-effecting operation (it is not
+  elided).
+
+### Assembly dialect
+
+In the current implementation, `<text>` is assembled by the system GNU
+assembler (`as`) using **Intel syntax** (`.intel_syntax noprefix`).
+
+The assembly may contain multiple instructions, for example:
+
+```silk
+fn main () -> int {
+  asm "mov rax, rax\nnop";
+  return 0;
+}
+```
+
+### Restrictions
+
+- `asm` is implemented only for the native `linux/x86_64` IR→ELF backend.
+- The assembled output must not require **relocations**. As a result, inline
+  asm may not refer to external symbols (for example `call foo` where `foo` is
+  not defined within the asm text).
+- Operands (inputs/outputs), clobbers, and options are not yet modeled in the
+  type system. Inline asm is therefore not suitable for expressing constraints
+  like “reads memory” / “clobbers rax”; it is raw instruction emission.
+
+## Portability and safety notes
+
+- `asm` is target-dependent by nature. The current implementation is supported
+  only for the native `linux/x86_64` IR→ELF backend.
+- Using `asm` can make programs non-portable. Prefer standard library
+  facilities and compiler-provided intrinsics when possible.
 
 ==============================================================================
 DOCS: Interfaces (language/interfaces)
@@ -7345,10 +7524,15 @@ Numeric literal tokens are recognized as:
   - octal prefix: `0o` / `0O` followed by octal digits (`[0-7]+`),
   - hex prefix: `0x` / `0X` followed by hex digits (`[0-9a-fA-F]+`),
   - legacy octal: `0[0-7]+` (for example `017`).
-- **Float literal**: digits, `.`, digits (`[0-9]+ '.' [0-9]+`)
+- **Float literal**: digits, `.`, digits (`[0-9]+ '.' [0-9]+`).
 
 Notes:
 
+- Integer and float literals may use `_` as a digit separator. Separators are
+  ignored when parsing the numeric value, but must appear **between** digits.
+  For example:
+  - valid: `1_000`, `0xFFFF_FFFF`, `0b0000_1111_0000`, `1_000.2_5`,
+  - invalid: `_1`, `1_`, `1__0`, `0x_FF`.
 - A float literal must have digits on both sides of the `.`:
   - `1.0` is a float literal.
   - `1.` is not a float literal in the current lexer.
@@ -7438,7 +7622,6 @@ fn main () -> int {
 
 - **Trying to use suffixes**: `42u8` / `1.5f32` are not supported. Use type
   annotations (`let x: u8 = 42;`) or casts (`42 as u8`).
-- **Using digit separators**: `1_000` is not supported yet.
 - **Using exponent notation**: `1e6` is not supported yet.
 - **Writing incomplete floats**: write `1.0` (not `1.`) and `0.5` (not `.5`).
   to convert explicitly when you need to combine integer and float values.
@@ -7455,6 +7638,7 @@ fn main () -> int {
 - Float arithmetic and comparisons:
 - Duration literals (numeric + unit suffix):
 - Integer literal base prefixes and legacy octal:
+- Integer/float/duration digit separators (`_`):
 
 ==============================================================================
 DOCS: Operators (language/operators)
@@ -7625,9 +7809,14 @@ Evaluation mode:
 
 `Sized` integration:
 
-- Planned: for runtime values, if the operand type provides an instance method
-  matching `std::interfaces::Sized` (`fn size(self: &Self) -> usize`),
-  `sizeof value` will lower to a call of that method.
+- Implemented (partial): `sizeof <string value>` produces the string’s **byte
+  length** (as `usize`). This is sugar over the current string ABI layout
+  (`{ ptr: u64, len: i64 }`) and corresponds to `std::runtime::mem::string_len`
+  (and the reserved intrinsic `__silk_string_len`).
+- Planned (general): for other runtime values, if the operand type provides an
+  instance method matching `std::interfaces::Sized`
+  (`fn size(self: &Self) -> usize`), `sizeof value` will lower to a call of
+  that method.
 - For type operands, if the operand type provides a static, pure method
   `pure fn size() -> usize`, the compiler may fold `sizeof Type` to that value
   when the method body is const-evaluable; otherwise it falls back to the
@@ -7642,6 +7831,12 @@ Built-in size model (current backend subset):
   is `16` in Silk.
 - A `T[N]` fixed array occupies `N * sizeof(T)` bytes in Silk,
   using the element’s scalar-slot size.
+
+Notes:
+
+- `sizeof string` (type operand) is the **representation** size (currently 16
+  bytes in the scalar-slot model), while `sizeof <string value>` is the
+  **content** size (byte length).
 
 Parsing note:
 
@@ -7980,8 +8175,12 @@ Rules ():
     `Duration`/`Instant` and `char`.
   - 128-bit wide primitives: `i128`/`u128`/`f128` (two 8-byte lanes; `f128`
     stores the raw IEEE-754 binary128 bit pattern).
-- `as raw` is not permitted for `string`, `void`, `&T`, optionals, arrays,
-  maps, function types, or structs/enums.
+- `as raw` is not permitted for `void`, `&T`, optionals, arrays, maps, function
+  types, or structs/enums.
+- Special-case: `string as raw u64` (and `string as raw usize`) is permitted
+  and extracts the string’s underlying **byte pointer**. This is sugar over
+  `std::runtime::mem::string_ptr` (and the reserved intrinsic
+  `__silk_string_ptr`).
 - Semantics:
   - The operand’s current canonical scalar bits are reinterpreted as the target
     type’s canonical scalar bits (bit-level truncation/masking for narrower
@@ -8001,6 +8200,13 @@ Examples:
 ```silk
 let bits: u64 = (1.0 as f32) as raw u64;
 let f: f32 = bits as raw f32;
+```
+
+```silk
+// Pointer + length extraction for low-level interop.
+let s: string = "hello";
+let ptr: u64 = s as raw u64;
+let len: usize = sizeof s;
 ```
 
 ==============================================================================
@@ -11422,6 +11628,11 @@ In `silk test` builds, failed assertions do not abort the process. Instead:
 - A failed `assert` records a test failure and execution continues.
 - If the assertion has no explicit message, the compiler uses the assertion
   condition text as the message (e.g. `assert value != 123;` uses `value != 123`).
+- Failed assertions also emit a one-line detail message to stderr so failures are
+  visible in `silk test` output without requiring `--debug`, formatted like:
+  - `assertion failed: <message>` when not inside a nested `test` block, or
+  - `assertion failed [test: a/b]: <message>` when inside nested `test` blocks
+    (the nested `a/b` path reflects the active nested test name stack).
 - The test executable exits non-zero if any failures were recorded so TAP output
   reflects failures.
 
@@ -11904,9 +12115,12 @@ Implementation status (current compiler subset):
     type positions (`Name(u8)`, `Name(string)`) for those declarations.
 - Reserved intrinsics: the compiler currently exposes reserved, stdlib
   bring-up intrinsics for working with the `string` ABI (`__silk_string_ptr`,
-  `__silk_string_len`, and `__silk_string_from_ptr_len`); these are not yet a
-  stable user API and exist primarily to unblock `std::fmt`, `std::io`, and
-  `std::args` while slice/iterator features are still evolving.
+  `__silk_string_len`, and `__silk_string_from_ptr_len`). User code should
+  generally prefer the language sugar:
+  - `s as raw u64` (extract the underlying byte pointer), and
+  - `sizeof s` (string byte length as `usize`)
+  over calling these helpers directly. The intrinsic names remain reserved and
+  are not a stable user API.
 - Special-case: the nominal optional form `Option(T)` is accepted and desugared
   to `T?` in type annotations (it is not a general generics feature).
 - Parsed but rejected by the current checker: const parameters and integer
@@ -12674,7 +12888,7 @@ static archive for a specific target ABI:
 
 - `make stdlib` compiles each `std/**/*.slk` module (including `std/runtime/...`)
   to an ELF object via
-  `silk build --kind object` and archives them into `zig-out/lib/libsilk_std.a`.
+  `silk build --kind object` and archives them into `build/lib/silk/std/libsilk_std.a`.
 - This archive is target-specific (e.g. `linux/x86_64` ELF objects) and should
   be treated as one artifact per supported target triple/ABI, not as a
   universally portable library.
@@ -12689,8 +12903,9 @@ Current toolchain behavior (`linux/x86_64`):
 - Archive discovery (in order):
   - `--std-lib <path>` (or `--std <path>.a` / `-std <path>.a`) when provided, otherwise
   - `SILK_STD_LIB` (environment variable) when set,
-  - `zig-out/lib/libsilk_std.a` when using the in-repo `std/` root (development),
-  - `../lib/libsilk_std.a` relative to the installed `silk` executable,
+  - `build/lib/silk/std/libsilk_std.a` when using the in-repo `std/` root (development),
+  - `../lib/silk/std/libsilk_std.a` relative to the installed `silk` executable,
+  - `../lib/libsilk_std.a` relative to the installed `silk` executable (legacy installed layout),
   - common installed-layout heuristics derived from the selected stdlib root.
 
 Archive member naming (scheme):
@@ -14240,6 +14455,12 @@ to expose ABI-safe wrapper functions for the few by-value-struct APIs.
 - static archives into `vendor/lib/x64-linux/` (for linking),
 
 
+In staged/installed toolchains, the auto-linked archives are expected under the
+compiler prefix:
+
+- `build/lib/silk/vendor/lib/x64-linux/` (repo build prefix)
+- `<prefix>/lib/silk/vendor/lib/x64-linux/` (installed)
+
 On `linux/x86_64`, `silk build` automatically links the staged ggml archives
 when `std::ggml` is included in the module set. If the archives are missing,
 the build fails with an actionable error pointing to `zig build deps`.
@@ -14747,8 +14968,10 @@ Notes:
 - Exception: `Deserialize(S)` is a static protocol used by `as` casts; its
   `impl` method does **not** take a `self` receiver and is called as
   `Type.deserialize(value)`.
-- Planned: `Sized` will be used by the `sizeof` operator for value operands:
-  when a concrete type provides `fn size(self: &T) -> usize`, `sizeof value`
+- Implemented (partial): `sizeof <string value>` yields the string byte length
+- Planned (general): `Sized` will be used by the `sizeof` operator for other
+  value operands: when a concrete type provides `fn size(self: &T) -> usize`,
+  `sizeof value` will lower to that method call.
 - `Serialize` is also recognized by the `as` cast operator:
   - when a type provides `serialize(self: &T) -> S`, an explicit cast
 - `Deserialize` is also recognized by the `as` cast operator:
@@ -14991,8 +15214,14 @@ key point is that `std::fs` and `std::net` can reuse the same I/O traits.
 ## Future Work
 
 - Buffered I/O wrappers (`BufReader`, `BufWriter`).
-- Async-aware adapters once the async runtime (event loop + coroutine lowering)
-  is implemented; `std::task` exists today but provides only blocking helpers.
+- Async-aware adapters:
+  - the hosted `linux/x86_64` toolchain now ships a bring-up async executor and
+    exposes timers + fd readiness via `std::runtime::event_loop`,
+  - `std::task` includes awaitable sleep helpers (`sleep_ms_async`, `sleep_async`),
+  - `std::io::async` provides minimal `async fn` wrappers over fd-based
+    `read`/`write` using the event loop readiness waits.
+  Broader async I/O surface (buffered async I/O, sockets, filesystem streams,
+  cancellation, and `select`-style waiting) remains future work.
 
 ==============================================================================
 DOCS: `std::json` (std/json)
@@ -17039,6 +17268,13 @@ Runtime areas in the shipped stdlib:
 
 Follow-ups are expected to introduce additional runtime areas:
 
+- Async event loop / executor integration (`std::runtime::event_loop`) for hosted `async`/`await`:
+  - the compiler already ships a bundled bring-up executor in `libsilk_rt`
+    (`src/silk_rt_async.c`) and lowers `async`/`await` to it on the hosted
+    `linux/x86_64` target,
+  - the `std::runtime::event_loop` module now exposes low-level awaitable
+    building blocks (timers + fd readiness), but the explicit `Handle`/`poll`
+    surface and higher-level async adapters are still follow-up work
 - WASI networking (via WASI sockets or similar proposals) when supported by the toolchain targets.
 
 ## Providing a Custom Runtime
@@ -17435,6 +17671,12 @@ To build the vendored static library artifact used for embedding and future
 bundling, run `zig build deps`. This stages `vendor/lib/x64-linux/libssh2.a`
 from `vendor/deps/libssh2` (tag `libssh2-1.11.1`). The current deps workflow
 builds libssh2 using the OpenSSL backend.
+
+In staged/installed toolchains, the vendored archive is expected under the
+compiler prefix:
+
+- `build/lib/silk/vendor/lib/x64-linux/` (repo build prefix)
+- `<prefix>/lib/silk/vendor/lib/x64-linux/` (installed)
 
 ## Error Model
 
@@ -18139,11 +18381,18 @@ struct ChannelBorrow(T) {
   handle: u64,
 }
 
+// A droppable, non-copyable producer handle for a channel.
+struct ChannelSender(T) {
+  handle: u64,
+  sender_state: u64,
+}
+
 impl Channel(T) {
   public fn invalid () -> Channel(T);
   public fn init_default () -> std::result::Result(Channel(T), SyncFailed);
   public fn init (cap: int) -> std::result::Result(Channel(T), SyncFailed);
   public fn borrow (self: &Channel(T)) -> ChannelBorrow(T);
+  public fn sender (self: &Channel(T)) -> std::result::Result(ChannelSender(T), SyncFailed);
   public fn cap (self: &Channel(T)) -> int;
   public fn is_closed (self: &Channel(T)) -> bool;
   public fn try_send (self: &Channel(T), value: T) -> SyncFailed?;
@@ -18168,6 +18417,11 @@ impl Channel(T) as std::interfaces::IsEmpty {
 
 impl ChannelBorrow(T) {
   public fn send (self: &ChannelBorrow(T), value: T) -> SyncFailed?;
+}
+
+impl ChannelSender(T) {
+  public fn clone (self: &ChannelSender(T)) -> std::result::Result(ChannelSender(T), SyncFailed);
+  public fn send (self: &ChannelSender(T), value: T) -> SyncFailed?;
 }
 
 // A simple cancellation token (blocking wait).
@@ -18210,6 +18464,12 @@ Notes:
 - When sending a channel handle across a `task` boundary, prefer passing a
   non-owning view (`ChannelBorrow(T)`) obtained via `c.borrow()` so ownership
   stays with the original `Channel(T)`.
+- For producer tasks, prefer using `ChannelSender(T)` created via
+  `c.sender()` and cloned explicitly via `sender.clone()`:
+  - `ChannelSender(T)` auto-closes the channel when the last sender is dropped,
+    which prevents a common class of “receiver blocks forever” bugs.
+  - `ChannelSender(T)` is non-copyable; cloning is explicit so the sender count
+    stays correct for multi-producer patterns.
 - When sending a cancellation token across a `task` boundary, prefer passing a
   non-owning view (`CancellationTokenBorrow`) obtained via `tok.borrow()` so
   ownership stays with the original `CancellationToken`.
@@ -18224,6 +18484,207 @@ Notes:
   needed.
 
 ==============================================================================
+DOCS: `std::tar` (std/tar)
+URL: /silk/docs/?p=std/tar
+==============================================================================
+
+# `std::tar`
+
+`std::tar` provides a portable,
+streaming tar reader/writer for building and inspecting tar archives without
+loading whole archives into memory.
+
+Key goals:
+
+- **Streaming**: iterate headers and stream entry data.
+- **Multiple backends**: in-memory bytes, `std::fs::File`, and `std::stream`.
+- **Portability**: tar format logic is pure Silk; the file/IO backends are
+  implemented in terms of `std::fs`, `std::io`, and `std::stream`.
+- **Large archives**: byte-slice inputs can be backed by an mmap mapping created
+  by the embedding program (or a future stdlib mmap API).
+- **Async-friendly**: fd-backed adapters are provided under `std::tar::async`
+  (built on the hosted event loop and `std::io::async`).
+
+## Supported tar formats
+
+Implemented subset (reader + writer):
+
+- POSIX ustar headers (`ustar` magic).
+- Pax extended headers (`x` and `g`) for:
+  - long `path` / `linkpath`,
+  - large numeric fields (`size`, `uid`, `gid`, `mtime`) when needed.
+- GNU long name / long linkname entries (`L` and `K`) for compatibility with
+  archives that use those extensions.
+- Base-256 (binary) numeric field decoding/encoding for large values when pax
+  is not used.
+
+Entry kinds:
+
+- regular files, directories, symlinks, hardlinks, FIFOs, and device nodes.
+
+Unsupported/unknown entry kinds return `TarErrorKind::Unsupported`.
+
+## API
+
+```silk
+module std::tar;
+
+enum TarErrorKind {
+  OutOfMemory,
+  InvalidInput,
+  InvalidHeader,
+  ChecksumMismatch,
+  UnexpectedEof,
+  Unsupported,
+  ReadFailed,
+  WriteFailed,
+  Closed,
+  Unknown,
+}
+
+struct TarFailed { code: int, requested: i64 }
+
+export type TarIntResult = std::result::Result(int, TarFailed);
+export type EntryResult = std::result::Result(Entry, TarFailed);
+
+export enum EntryKind {
+  Regular,
+  HardLink,
+  SymLink,
+  CharDevice,
+  BlockDevice,
+  Directory,
+  Fifo,
+  Contiguous,
+}
+
+// A borrowed header used when writing entries.
+export struct Header {
+  kind: EntryKind,
+  name: string,
+  link_name: string,
+  size: i64,
+  mode: i64,
+  uid: i64,
+  gid: i64,
+  mtime: i64,
+  uname: string,
+  gname: string,
+  devmajor: i64,
+  devminor: i64,
+}
+
+// An owned header produced by the tar reader.
+export struct Entry {
+  kind: EntryKind,
+  name: std::strings::String,
+  link_name: std::strings::String,
+  size: i64,
+  mode: i64,
+  uid: i64,
+  gid: i64,
+  mtime: i64,
+  uname: std::strings::String,
+  gname: std::strings::String,
+  devmajor: i64,
+  devminor: i64,
+}
+
+export struct Reader {
+  // Construct from bytes, a file, or a byte stream.
+  public fn from_bytes (bytes: std::arrays::ByteSlice) -> Reader;
+  public fn from_file (f: std::fs::File) -> Reader;
+  public fn from_stream (src: std::stream::ReadableStream) -> Reader;
+
+  // Iterate headers. The reader automatically skips any unread bytes from the
+  // previous entry when advancing.
+  public fn next (mut self: &Reader) -> EntryResult?;
+
+  // Stream entry data for the most recent header returned by `next()`.
+  public fn read (mut self: &Reader, buf: std::arrays::ByteSlice) -> TarIntResult;
+  public fn read_to_end (mut self: &Reader, mut out: &std::buffer::BufferU8) -> TarFailed?;
+  public fn skip (mut self: &Reader) -> TarFailed?;
+}
+
+export struct Writer {
+  // Construct a writer that emits to a buffer, file, or stream.
+  public fn to_buffer () -> Writer;
+  public fn to_file (f: std::fs::File) -> Writer;
+  public fn to_stream (dst: std::stream::WritableStream) -> Writer;
+
+  // Start an entry; then write exactly `header.size` bytes via `write`.
+  public fn write_header (mut self: &Writer, header: Header) -> TarFailed?;
+  public fn write (mut self: &Writer, bytes: std::arrays::ByteSlice) -> TarFailed?;
+  public fn finish_entry (mut self: &Writer) -> TarFailed?;
+
+  // Finish the archive (writes the two 512-byte zero blocks).
+  public fn finish (mut self: &Writer) -> TarFailed?;
+
+  // For `to_buffer()`: take ownership of the produced bytes.
+  public fn take_buffer (mut self: &Writer) -> std::buffer::BufferU8;
+}
+```
+
+## `std::tar::async` (fd adapters)
+
+`std::tar::async` provides `async fn` adapters for fd-backed reading and writing
+of tar archives. These are intended for event-loop-based programs:
+
+- waits for fd readiness (`std::runtime::event_loop` via `std::io::async`),
+- performs non-blocking reads/writes when possible,
+- keeps tar parsing/encoding streaming (no whole-archive buffering).
+
+See the module source: `std/tar/async.slk`.
+
+## Example: in-memory roundtrip
+
+```silk
+import std::arrays;
+import std::buffer;
+import std::tar;
+
+fn main () -> int {
+  let payload: string = "hello";
+
+  var w: std::tar::Writer = std::tar::Writer.to_buffer();
+  let h: std::tar::Header = std::tar::Header{
+    kind: std::tar::EntryKind::Regular,
+    name: "greeting.txt",
+    link_name: "",
+    size: (sizeof(payload)) as i64,
+    mode: 420,
+    uid: 0,
+    gid: 0,
+    mtime: 0,
+    uname: "",
+    gname: "",
+    devmajor: 0,
+    devminor: 0,
+  };
+
+  if w.write_header(h) != None { return 1; }
+  if w.write(std::arrays::ByteSlice{ ptr: payload as raw u64, len: (sizeof(payload)) as i64 }) != None { return 2; }
+  if w.finish_entry() != None { return 3; }
+  if w.finish() != None { return 4; }
+
+  let mut tar_bytes: std::buffer::BufferU8 = w.take_buffer();
+
+  var r: std::tar::Reader = std::tar::Reader.from_bytes(tar_bytes.as_bytes());
+  let e_r_opt: std::tar::EntryResult? = r.next();
+  if e_r_opt == None { tar_bytes.drop(); return 5; }
+  let e_r: std::tar::EntryResult = match (e_r_opt) { Some(v) => v, None => std::tar::EntryResult.err(std::tar::TarFailed{ code: 0, requested: 0 }) };
+  if e_r.is_err() { tar_bytes.drop(); return 6; }
+
+  var out: std::buffer::BufferU8 = std::buffer::BufferU8.empty();
+  if r.read_to_end(mut out) != None { out.drop(); tar_bytes.drop(); return 7; }
+
+  tar_bytes.drop();
+  out.drop();
+  return 0;
+}
+```
+
+==============================================================================
 DOCS: `std::task` (std/task)
 URL: /silk/docs/?p=std/task
 ==============================================================================
@@ -18233,9 +18694,15 @@ URL: /silk/docs/?p=std/task
 This module provides a small hosted baseline for
 task/runtime utilities on `linux/x86_64`.
 
-This is **not** the full async runtime design. There is not yet a coroutine
-transform or event loop in the compiler/runtime, so `yield`/`yield *`, `await`,
-and the helpers below may block the current OS thread.
+This is **not** the full structured-concurrency design, but the hosted
+`linux/x86_64` toolchain now ships a bring-up async executor (fibers) used to
+make `await` a true suspension point. in Silk:
+
+- `yield` / `yield *` are still blocking OS-thread operations (task runtime is thread-based).
+- Sleep helpers are split into:
+  - blocking thread sleeps (`sleep_ms`, `sleep`, `sleep_until`), and
+  - awaitable sleep promises (`sleep_ms_async`, `sleep_async`) that can park a coroutine
+    when running under the hosted executor.
 
 See also:
 
@@ -18257,8 +18724,14 @@ export fn yield_now () -> void;
 // Block the current OS thread for at least `ms` milliseconds.
 export fn sleep_ms (ms: int) -> void;
 
+// Return an awaitable sleep promise for at least `ms` milliseconds.
+export fn sleep_ms_async (ms: int) -> Promise(void);
+
 // Block the current OS thread for at least `d`.
 export fn sleep (d: Duration) -> void;
+
+// Return an awaitable sleep promise for at least `d` (millisecond resolution).
+export fn sleep_async (d: Duration) -> Promise(void);
 
 // Block the current OS thread until `deadline` (monotonic time).
 export fn sleep_until (deadline: Instant) -> SleepUntilFailed?;
@@ -18270,11 +18743,16 @@ Notes:
   higher-level concurrency utilities. It is implemented using a hosted libc
   query (`get_nprocs`) and clamps to `>= 1`.
 - `yield_now()` and `sleep_ms()` are blocking thread operations (they are not
-  async-aware until an event loop exists).
+  async-aware.
 - `sleep_ms(ms)` is implemented by converting `ms` to microseconds and calling
   `std::runtime::task::sleep_us`; large sleeps may be performed in chunks.
+- `sleep_ms_async(ms)` returns a `Promise(void)` that can be awaited inside
+  `async` code. Under the hosted executor, awaiting this promise parks the
+  current coroutine; outside an executor it may fall back to blocking sleep.
 - `sleep(d)` is a blocking thread operation and is implemented using `usleep`
   (microsecond resolution, rounded up).
+- `sleep_async(d)` returns a `Promise(void)` using millisecond resolution
+  (rounds up to the next millisecond).
 - `sleep_until(deadline)` is a blocking thread operation and is implemented by
   reading `std::temporal::now_monotonic()` and calling `sleep(deadline - now)`.
   - It returns `Some(SleepUntilFailed{ ... })` when a monotonic clock read fails
@@ -18956,6 +19434,44 @@ byte-addressed memory and whose `len`/`cap` are in bytes.
 See also:
 
 
+## Example (Struct Elements)
+
+`Vector(T)` is the stdlib’s default growable container for typed elements. When
+you see code manually managing `{ ptr, len, cap }` for a typed array, it is
+often a sign that a `Vector(T)` (or a small wrapper around it) is the intended
+tool.
+
+This example collects `TabState` values into a `Vector(TabState)`:
+
+```silk
+import std::arrays;
+import std::vector;
+
+struct TabState {
+  path: string,
+  top_off: i64,
+  gutter_on: bool,
+}
+
+type Tabs = std::vector::Vector(TabState);
+
+fn tabs_collect (paths: std::arrays::Slice(string)) -> Tabs? {
+  let cap: i64 = paths.len;
+  let mut tabs: Tabs = Tabs.try_init(cap) ?? Tabs.empty();
+
+  var i: i64 = 0;
+  while i < paths.len {
+    let err = tabs.push(TabState{ path: paths.get(i), top_off: 0, gutter_on: false });
+    if err != None {
+      return None; // `tabs` is dropped on scope exit (frees its allocation).
+    }
+    i = i + 1;
+  }
+
+  return Some(tabs);
+}
+```
+
 ## Current API
 
 ```silk
@@ -18972,6 +19488,7 @@ struct Vector(T) {
 
 impl Vector(T) {
   public fn init (cap: i64) -> std::result::Result(Vector(T), std::memory::AllocFailed);
+  public fn try_init (cap: i64) -> Vector(T)?;
   public fn empty () -> Vector(T);
   public fn push (mut self: &Vector(T), value: T) -> std::memory::OutOfMemory?;
   public fn pop (mut self: &Vector(T)) -> T?;
@@ -19015,6 +19532,7 @@ Notes:
 - `Vector(T)` is intentionally low-level in Silk:
   - `init(cap)` returns `Err(AllocFailed)` when allocation fails or when `cap`
     is invalid.
+  - `try_init(cap)` returns `None` on any allocation/validation failure.
   - prefer `Vector.empty()` over `Vector.init(0)` for a clear “default” constructor.
   - growth paths (`reserve_additional`, `push`, `extend_from_slice`) surface
     allocation failure as `std::memory::OutOfMemory?` (including internal size
@@ -19194,6 +19712,12 @@ When the vendored archives are present, `silk build` auto-links:
 
 - `vendor/lib/x64-linux/libxml2.a`
 - `vendor/lib/x64-linux/libsilk_xml_shims.a`
+
+In staged/installed toolchains, these archives are expected under the compiler
+prefix:
+
+- `build/lib/silk/vendor/lib/x64-linux/` (repo build prefix)
+- `<prefix>/lib/silk/vendor/lib/x64-linux/` (installed)
 
 when `std::xml` is present in the module set, and also when linking `.o`/`.a`
 inputs that reference the shim symbols.
@@ -20114,7 +20638,7 @@ The Silk compiler repository includes a coc.nvim extension under `coc/`. It is a
 - `silk-lsp` on your `PATH` or a configured absolute path.
 - `filetype=silk` for `*.slk` and `*.silk` buffers (including `build.silk`; use the Vim plugin under `vim/` or your own filetype setup).
 
-## Install (local, from this repo)
+## Install (local, from the Silk compiler repository)
 
 1. Build the language server:
 
@@ -20299,7 +20823,8 @@ URL: /silk/docs/?p=usage/github-linguist
 
 # GitHub Linguist Support
 
-This repository includes a `.gitattributes` file that tags `*.slk` files as Silk sources for GitHub Linguist.
+The Silk compiler repository includes a `.gitattributes` entry that tags `*.slk` files as Silk sources for GitHub
+Linguist.
 
 ## What This Does
 
@@ -20308,7 +20833,7 @@ This repository includes a `.gitattributes` file that tags `*.slk` files as Silk
 
 ## Reuse in Other Repositories
 
-If you maintain downstream Silk projects, copy the `.gitattributes` entry:
+If you maintain downstream Silk projects, copy these lines into your project’s `.gitattributes`:
 
 ```
 *.slk linguist-language=Silk
@@ -20919,7 +21444,7 @@ URL: /silk/docs/?p=usage/editor-ctags
 
 # Universal Ctags Support
 
-This repository ships a Universal Ctags configuration for Silk at the repo root in `.ctags`.
+The Silk compiler repository ships a Universal Ctags configuration for Silk at its root (`.ctags`).
 
 ## What It Tags
 
@@ -20935,7 +21460,10 @@ These tags are regex-based and intentionally conservative; they do not perform s
 
 ## Usage (Project-Local)
 
-From the repository root:
+To use the Silk rules in a single project:
+
+1. Copy the Silk `.ctags` file (from the Silk compiler repository root) into your project root.
+2. Run:
 
 ```sh
 ctags -R
@@ -20945,11 +21473,13 @@ Universal Ctags will read `.ctags` automatically and tag `*.slk` files as Silk.
 
 If your `ctags` binary is not Universal Ctags, install it first; Exuberant/etags do not support the same configuration format.
 
+If you are working in the Silk compiler repository itself, `.ctags` is already present at the repository root; you can run `ctags -R` directly.
+
 ## Usage (Global)
 
 To use the Silk rules across multiple projects:
 
-1. Copy `.ctags` to `~/.ctags.d/silk.ctags`.
+1. Copy the Silk `.ctags` rules (from the Silk compiler repository root) into your global config (for example `~/.ctags.d/silk.ctags`).
 2. Run `ctags -R` in any Silk project.
 
 If you already maintain a global ctags configuration, merge the Silk rules into it instead.
@@ -20966,7 +21496,6 @@ This document describes the built-in Vim support for Silk shipped with the Silk 
 The goal of the Vim plugin is to provide a lightweight, spec-aligned editing experience that:
 
 - recognizes Silk source files by extension,
-- respects the Silk repository’s indentation and comment style guidelines.
 
 ## Files and Layout
 
@@ -21010,7 +21539,6 @@ The `vim/ftplugin/silk.vim` file configures:
 
 - indentation defaults:
   - by default, Silk buffers inherit your Vim tab settings,
-  - if Vim is using its built-in defaults (`tabstop=8`, `shiftwidth=8`, `softtabstop=0`, `noexpandtab`), Silk buffers will use the repository’s preferred indentation (2 spaces with `expandtab`),
   - override via `g:silk_indent_style` (`'auto'`, `'inherit'`, `'repo'`),
 - a line comment style of `//` via `commentstring=// %s`,
 - C-style block comment metadata via `'comments'` / `'formatoptions'` so that
@@ -21032,9 +21560,8 @@ expression that:
 - indents lines that follow opening `{`, `(`, or `[` characters,
 - outdents lines that begin with closing `}`, `)`, or `]`.
 
-These settings mirror the mandatory style documented in `AGENTS.md` for code
-indentation and align the editor experience with the language’s comment
-syntax.
+These settings match the style used throughout the Silk examples (2-space indentation;
+comment syntax.
 
 Additional Silk-specific editor behaviors (such as formatting commands or motion/textobject helpers) can be layered on in future iterations once the language and CLI stabilize further.
 
@@ -21062,9 +21589,9 @@ Supported triggers include:
 
 ## Installation Examples
 
-### Option A: Install This Repo as a Vim Plugin (Recommended)
+### Option A: Install the Silk Compiler Repository as a Vim Plugin (Recommended)
 
-If you install the repository root as a Vim plugin (common with plugin managers), `plugin/silk.vim` will automatically add `vim/` to `'runtimepath'`, so Vim can discover the Silk runtime files without extra configuration.
+If you install the Silk compiler repository root as a Vim plugin (common with plugin managers), `plugin/silk.vim` will automatically add `vim/` to `'runtimepath'`, so Vim can discover the Silk runtime files without extra configuration.
 
 ### Option B: Install Only the `vim/` Subdirectory
 
@@ -21087,7 +21614,7 @@ If you prefer to copy the files into your own configuration:
 - copy `vim/autoload/silk/snippets.vim` into `~/.vim/autoload/silk/snippets.vim` (if you want the built-in snippets),
 - copy `vim/plugin/silk.vim` into `~/.vim/plugin/` (only needed if you want `.slk` filetype detection without enabling `:filetype on`).
 
-For Neovim, use the equivalent `~/.config/nvim/` directories or a plugin manager that can add this repository as a plugin source.
+For Neovim, use the equivalent `~/.config/nvim/` directories or a plugin manager that can add the Silk compiler repository as a plugin source.
 
 ## LSP Integration (Silk Language Server)
 
@@ -21608,6 +22135,293 @@ Future commands (not yet implemented, but documented for roadmap clarity):
 ## Documentation & Manpages
 
 ==============================================================================
+DOCS: Async Runtime (Hosted) (compiler/async-runtime)
+URL: /silk/docs/?p=compiler/async-runtime
+==============================================================================
+
+# Async Runtime (Hosted)
+
+
+This document now serves two roles:
+
+- Describe the **current shipped hosted async runtime** used by the compiler today.
+- Specify the longer-term architecture (compiler coroutine transform + richer event loop)
+  that the current implementation is expected to evolve toward.
+
+The current hosted async runtime is implemented in C in `src/silk_rt_async.c` and wired
+into lowering in `src/lower_ir.zig`. It provides:
+
+- stackful coroutines (fibers) using `ucontext`,
+- a single-threaded executor/event loop that can drive `async fn main () -> int`,
+- `await` as a true suspension point (parks the current fiber instead of blocking the OS thread),
+- basic async timers and fd readiness wait,
+- opportunistic Linux `io_uring` usage for timeouts and fd polling when available.
+
+Structured concurrency blocks (`async { ... }` / `task { ... }`) are still lexical-only today;
+they do not yet have cancellation/join semantics enforced by a runtime-backed scope.
+
+See also:
+
+
+## Current Implementation (Shipped)
+
+### Promise handle layout (ABI for runtime lowering)
+
+In the current implementation, `Promise(T)` values are lowered as a single `u64` handle
+that points at heap-allocated handle storage with this layout:
+
+- `[0] u64 kind`
+- `[8] u64 impl_ptr`
+- `[16..]` payload scalars (8 bytes each) for the result slots of `T`,
+  followed by the argument scalars captured for the spawned async entry.
+
+When a promise is pending, `impl_ptr` is non-zero and points at runtime-owned state
+(a coroutine/future). When resolved, `impl_ptr` is zero and the payload contains the result.
+
+### Runtime entrypoints (current)
+
+The compiler lowering currently uses these runtime functions (all bundled into the
+runtime C objects linked into hosted outputs):
+
+- `silk_rt_async_spawn(entry_ptr: u64, promise_handle: u64) -> i32`
+  - schedules a coroutine when an executor is active, otherwise runs it synchronously and
+    resolves the promise immediately.
+- `silk_rt_async_await(promise_handle: u64) -> void`
+  - if the promise is pending, parks the current coroutine and yields to the executor.
+- `silk_rt_async_destroy(promise_handle: u64) -> void`
+  - destroys a promise handle; if it is still pending, it awaits it first.
+- `silk_rt_async_block_on_main0/2(entry_ptr: u64, [argc: i64, argv: u64]) -> i64`
+  - creates an executor/event loop, spawns the async `main` promise, and drives it to completion.
+
+The runtime also exposes low-level awaitable building blocks:
+
+- `silk_rt_async_sleep_ms(ms: i64) -> u64`
+- `silk_rt_async_fd_wait_readable(fd: i64) -> u64`
+- `silk_rt_async_fd_wait_writable(fd: i64) -> u64`
+
+These are intended to be wrapped by stable `std::runtime::event_loop` / `std::task` /
+`std::io` surfaces as that layer is brought up. In the current stdlib snapshot,
+timers and fd readiness are exposed via `std::runtime::event_loop`, and sleep
+helpers are wrapped as `std::task::{sleep_ms_async,sleep_async}`.
+
+### Executor/event loop (current)
+
+The current executor is single-threaded and cooperative:
+
+- runnable coroutines are queued and resumed one at a time,
+- timers are managed with a deadline min-heap,
+- fd readiness is managed via `poll(2)` watchers,
+- cross-thread wake uses `eventfd`.
+
+On Linux, the runtime attempts to initialize an `io_uring` instance. When available, it
+uses:
+
+- `IORING_OP_TIMEOUT` for timers, and
+- `IORING_OP_POLL_ADD` for fd readiness wait,
+
+falling back to `poll(2)` when `io_uring` is unavailable.
+
+Limitations (current):
+
+- No async-aware stdlib surface yet: `std::runtime::event_loop` is still a stub placeholder.
+- No structured-concurrency scope semantics yet (cancellation/joining on early exit).
+- No completion-based `io_uring` I/O ops yet (read/write/accept/connect still use blocking paths).
+
+## Goals
+
+- Make `await` a **non-blocking suspension point** in hosted builds:
+  - awaiting a pending operation suspends the current async function and returns control to
+    the executor,
+  - the executor resumes it when the awaited operation completes.
+- Provide a high-performance hosted I/O backend:
+  - use **Linux `io_uring`** for completion-based I/O where available,
+  - provide a **portable POSIX fallback** (readiness-based) for non-Linux hosted targets.
+- Keep the runtime **pluggable** via the `std::runtime::...` layering:
+  - higher-level `std::...` modules should rely on stable `std::runtime::...` interfaces,
+  - alternative stdlib roots may provide alternate runtime backends.
+- Preserve **structured concurrency** as the default model:
+  - `async { ... }` / `task { ... }` scopes must ensure spawned work completes (or is cancelled)
+    before the scope exits.
+
+## Non-Goals (Initial Phases)
+
+- Preemptive scheduling of async functions (async is cooperative).
+- A fully general “async everywhere” rewrite of the standard library in one step.
+- Cross-platform parity for advanced kernel features (Linux-first for the initial hosted backend).
+
+## Terminology
+
+- **Coroutine lowering / transform**: compiler rewriting of `async fn` bodies into explicit
+  state machines that can be paused and resumed.
+- **Executor / event loop**: runtime component that drives async state machines and I/O
+  completion events.
+- **Promise(T)**: the surface handle returned by calling an `async fn` (already present in the
+  language model). In the full design it becomes a handle to a suspended/resumable coroutine
+  or an in-flight I/O operation.
+- **Waker**: an opaque handle used by awaited operations to request that a suspended coroutine
+  be resumed by the executor.
+
+## High-Level Model
+
+### `async fn` lowering
+
+Conceptually, each `async fn` lowers to:
+
+- a heap-allocated **frame** that stores:
+  - the current resume state (a small integer state id),
+  - live locals that must survive across suspension points,
+  - bookkeeping for completion (result storage, completion flag, waker link).
+- a `resume(frame, waker) -> Poll(T)` function:
+  - `Poll::Ready(value)` when complete,
+  - `Poll::Pending` when it must suspend (because it has awaited a pending operation).
+
+The compiler is responsible for:
+
+- identifying suspension points (`await`, and any future syntactic sugar that implies awaiting),
+- computing which locals must be stored in the frame across each suspension point,
+- preserving typed-error and `panic` semantics during the transform.
+
+Note: the current shipped bring-up does **not** yet implement this state-machine transform.
+Instead, `async fn` bodies execute on stackful coroutines provided by the runtime (`ucontext`)
+and suspension points yield back to the executor by swapping contexts. The long-term plan is
+to migrate from stackful coroutines to an explicit compiler transform once the async surface
+stabilizes.
+
+### `await` behavior
+
+`await <expr>` becomes:
+
+1. poll the awaited `Promise(T)` once,
+2. if `Ready(v)`, continue with `v`,
+3. if `Pending`, store enough state to resume later and return `Pending` to the caller.
+
+The key requirement is that `await` must not block an OS thread in hosted builds.
+
+### `async fn main`
+
+The CLI already permits `async fn main () -> int` as an executable entrypoint
+
+- create a default executor/event loop,
+- create the `Promise(int)` for `main`,
+- drive it to completion,
+- then exit with the returned integer.
+
+## Structured Concurrency and Cancellation
+
+Structured concurrency forms (`async { ... }`, `task { ... }`, and their `loop` variants)
+become **runtime-backed scopes** rather than lexical-only blocks.
+
+Initial requirements:
+
+- A structured scope tracks spawned child operations (async children and task children).
+- Exiting the scope normally requires joining/draining all children.
+- Exiting early (typed error propagation, `panic`, `break`, `return`) triggers cancellation
+  of children, followed by joining/draining them before control leaves the scope.
+
+Cancellation semantics must be explicit in the runtime and observable in `std::...` APIs
+(for example, async socket reads should become cancellable).
+
+## Runtime Layering (`std::runtime`)
+
+The async executor and event loop will be exposed under `std::runtime` as a new runtime area.
+
+### Proposed new runtime area
+
+- `std::runtime::event_loop` — stable interface used by the compiler-generated coroutine
+  runtime and by async-aware stdlib code.
+- Backends:
+  - `std::runtime::linux::event_loop` — Linux `io_uring` implementation (preferred).
+  - `std::runtime::posix::event_loop` — portable readiness-based fallback (poll/epoll).
+  - `std::runtime::wasi::event_loop` — WASI implementation (likely limited; may be timers +
+    host-provided polling when available).
+
+The interface must support:
+
+- timer scheduling (sleep/until deadlines),
+- a way to submit I/O operations and receive completions,
+- a way to wake the executor from other threads (task pool → event loop),
+- a polling primitive used by the executor’s main loop.
+
+The exact Silk-level signatures are specified in `std/runtime/event_loop.slk` and are expected
+to evolve during bring-up, but the long-term contract should avoid exposing raw platform
+struct layouts directly to user code.
+
+## Linux Backend: `io_uring`
+
+### Why `io_uring`
+
+Linux `io_uring` provides completion-based I/O with low syscall overhead, and supports a wide
+range of operations (reads/writes, accept/connect, timeouts, polling, file ops).
+
+Using `io_uring` allows:
+
+- fewer threads for large numbers of concurrent I/O operations,
+- a unified completion queue that naturally integrates with `await`,
+- efficient cancellation and timeouts via linked SQEs and cancellation ops.
+
+### Integration shape
+
+The `io_uring` backend will:
+
+- own the ring (SQ/CQ memory mappings),
+- assign a stable `user_data` id per submitted operation,
+- translate CQE completions into coroutine wakeups.
+
+Important implementation notes for later phases:
+
+- provide an internal submission queue abstraction that batches SQEs,
+- use `eventfd` (or `IORING_SETUP_SQPOLL` where appropriate) for cross-thread wakeups,
+- support operation timeouts and cancellation without leaking resources,
+- consider optional performance features only after correctness:
+  - fixed-file registration,
+  - buffer registration / buffer rings,
+  - multishot accept/recv where supported.
+
+## Fallback Backend: readiness-based POSIX loop
+
+For non-Linux hosted targets (or when `io_uring` is unavailable), the fallback backend will:
+
+- use `poll`/`epoll` (and eventually `kqueue` on BSD/macOS) to wait for readiness,
+- resume suspended coroutines when their fds become ready,
+- use a timer heap/wheel for timeouts and sleeps.
+
+This backend is expected to have higher per-op overhead than `io_uring` but must preserve the
+same language-level semantics.
+
+## Testing and Performance Guardrails
+
+Bringing up the async runtime requires:
+
+- end-to-end correctness tests:
+  - `async fn main` driving timers and I/O,
+  - cancellation behavior in structured scopes,
+  - concurrency + typed errors interaction (`-> T | Error...` + `await` + propagation).
+- performance regression guardrails:
+  - microbench-style fixtures that exercise “many concurrent sockets/timers” scenarios,
+  - optional hosted assembly/codegen comparisons (separate from correctness) to detect obvious
+    regressions in the `async` lowering and runtime calls.
+
+Performance tests must be designed so that they do not rely on unstable wall-clock timing in
+CI; prefer structural checks (operation counts, allocations, syscalls) where feasible.
+
+## Phased Bring-Up Plan (Summary)
+
+1. **Coroutine transform (no I/O)**:
+   - implement state machine lowering for `async fn` with `await` suspension,
+   - implement a minimal single-threaded executor that can drive `async fn main`,
+   - implement async timers (`sleep_ms`, `sleep_until`) on the event loop.
+2. **Portable I/O readiness backend**:
+   - expose async fd readiness in `std::runtime::event_loop`,
+   - add async wrappers in `std::io` / `std::net` (opt-in, minimal initial surface).
+3. **Linux `io_uring` backend**:
+   - implement submission/completion for core ops (read/write/accept/connect/timeout),
+   - wire completions to coroutine wakeups,
+   - add `io_uring`-specific tests and stress fixtures.
+4. **Structured concurrency semantics**:
+   - implement `async { ... }` / `task { ... }` as real scopes with cancellation/joining,
+   - ensure scope behavior is enforced consistently in the checker + runtime.
+
+==============================================================================
 DOCS: Build Scripts (`build.silk`) (compiler/build-scripts)
 URL: /silk/docs/?p=compiler/build-scripts
 ==============================================================================
@@ -21745,7 +22559,7 @@ The header must define:
 
 ### Initial C Header Shape (`include/silk.h`)
 
-The initial C header provided in this repository defines:
+The initial C header provided in the Silk compiler repository defines:
 
 - `SilkString` mirroring the internal Silk `string` layout:
   - Note: `SilkString` is also the C ABI shape for Silk `regexp` values
@@ -22053,10 +22867,11 @@ The initial C header provided in this repository defines:
         type-checking the std sources as part of the module set),
       - archive discovery (in order):
         - `SILK_STD_LIB` when set, otherwise
-        - `zig-out/lib/libsilk_std.a` when using the in-repo `std/` root, otherwise
-        - `../lib/libsilk_std.a` relative to the current executable, otherwise
+        - `build/lib/silk/std/libsilk_std.a` when using the in-repo `std/` root, otherwise
+        - `../lib/silk/std/libsilk_std.a` relative to the current executable, otherwise
+        - `../lib/libsilk_std.a` relative to the current executable (legacy installed layout), otherwise
         - common installed-layout heuristics derived from the selected stdlib root,
-        - walk up from the current working directory to find `libsilk_std.a` or `lib/libsilk_std.a`,
+        - walk up from the current working directory to find `libsilk_std.a`, `lib/libsilk_std.a`, or `lib/silk/std/libsilk_std.a`,
       - when no suitable archive is found (or on unsupported targets), the
         compiler falls back to compiling the reachable std sources into the
         build as part of module-set code generation.
@@ -22733,6 +23548,8 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2113` — enum destructuring pattern does not match the enum type (unknown variant or wrong arity).
 - `E2114` — reserved (previously: `u128` not supported in the subset).
 - `E2115` — reserved (previously: `f128` not supported in the subset).
+- `E2116` — invalid inline assembly (inline asm failed to assemble, or uses unsupported features in the current implementation).
+- `E2117` — `let ... else { ... };` requires the `else` block to end with a terminal statement.
 
 ### Formal Silk Verification
 
@@ -23879,7 +24696,7 @@ These features are intended as future extensions and must be:
 The language server is part of the broader tooling story described in:
 
 
-The `tmp/zls/` directory in this repository contains a vendored copy of the Zig Language Server (ZLS) for inspiration and experimentation only:
+The `tmp/zls/` directory in the Silk compiler repository contains a vendored copy of the Zig Language Server (ZLS) for inspiration and experimentation only:
 
 - it is **not** part of the supported Silk toolchain,
 - it must not be treated as authoritative for Silk semantics,
@@ -24008,7 +24825,7 @@ backend, so building libssh2 requires system OpenSSL headers and libraries
 
 ## Fetch + Build
 
-From the repo root:
+From the Silk compiler repository root:
 
 ```sh
 make deps
@@ -24044,6 +24861,19 @@ This populates:
   - `libsilk_xml_shims.a` (ABI-safe Silk wrappers for libxml2 struct access)
 
 These directories and generated `.a` files are ignored by git.
+
+## Staging and Installed Layout
+
+For distribution and `make install`, the hosted toolchain expects vendored
+archives under the compiler prefix:
+
+- staged (repo build prefix): `build/lib/silk/vendor/lib/x64-linux/`
+- installed: `<prefix>/lib/silk/vendor/lib/x64-linux/` (typically
+  `/usr/local/lib/silk/vendor/lib/x64-linux/`)
+
+`make build` copies `.a` files from `vendor/lib/x64-linux/` into the staged
+prefix under `build/lib/silk/vendor/lib/x64-linux/`, and `make install` copies
+the staged prefix into `<prefix>/`.
 
 ## Bundling Into `libsilk.a`
 
@@ -25603,8 +26433,11 @@ URL: /silk/docs/?p=man/silk-man.1
 
 ## Synopsis
 
+- `silk man [options]`
 - `silk man [options] <query>`
 - `silk man [options] <section> <name>`
+- `silk man --list`
+- `silk man --search <pattern>`
 
 ## Description
 
@@ -25621,10 +26454,15 @@ Notes:
 
 - You may also spell section selection as `name.<section>` (for example `silk.7`).
 - `name(<section>)` is accepted but must be quoted in most shells.
+- Shorthands:
+  - `silk man build` opens `silk-build(1)` (same for `check`, `test`, `doc`, `man`, `cc`, `env`, `format` / `fmt`).
+  - when no package is selected/resolvable, `silk man fs` is treated as `silk man std::fs` (and similarly for other top-level std modules).
 
 ## Options
 
 - `--help`, `-h` — show command help and exit.
+- `--list` — list shipped pages and common stdlib entrypoints, then exit.
+- `--search <pattern>` — search shipped pages and stdlib module names, then exit.
 - `--section <n>`, `-s <n>` — select the manpage section (`1`, `3`, or `7`).
 - `--package <dir|manifest>`, `--pkg <dir|manifest>` — load a module set from a package manifest (`silk.toml`) rooted at the provided directory (or from the provided manifest path).
   - when omitted, and the query is not `std::...`, `silk man` searches the current working directory and its parent directories for `silk.toml` and uses the nearest match.
@@ -25640,14 +26478,29 @@ Notes:
 ## Examples
 
 ```sh
+# Show a quick-start and list entrypoints.
+silk man
+
+# List shipped pages and common stdlib entrypoints.
+silk man --list
+
+# Search shipped pages + stdlib modules.
+silk man --search fs
+
 # View a shipped toolchain overview page (section 7).
 silk man 7 silk
 
 # View docs for a stdlib module.
 silk man std::flag
 
+# Shorthand for common stdlib modules (when no package is selected).
+silk man fs
+
 # View docs for a stdlib symbol.
 silk man std::sqlite::Database
+
+# Shorthand for CLI command pages.
+silk man build
 
 # View a conceptual page labeled via @misc.
 silk man std::result::design
@@ -37338,7 +38191,7 @@ The header must define:
 
 #### Initial C Header Shape (`include/silk.h`)
 
-The initial C header provided in this repository defines:
+The initial C header provided in the Silk compiler repository defines:
 
 - `SilkString` mirroring the internal Silk `string` layout:
   - Note: `SilkString` is also the C ABI shape for Silk `regexp` values

@@ -78,11 +78,18 @@ struct ChannelBorrow(T) {
   handle: u64,
 }
 
+// A droppable, non-copyable producer handle for a channel.
+struct ChannelSender(T) {
+  handle: u64,
+  sender_state: u64,
+}
+
 impl Channel(T) {
   public fn invalid () -> Channel(T);
   public fn init_default () -> std::result::Result(Channel(T), SyncFailed);
   public fn init (cap: int) -> std::result::Result(Channel(T), SyncFailed);
   public fn borrow (self: &Channel(T)) -> ChannelBorrow(T);
+  public fn sender (self: &Channel(T)) -> std::result::Result(ChannelSender(T), SyncFailed);
   public fn cap (self: &Channel(T)) -> int;
   public fn is_closed (self: &Channel(T)) -> bool;
   public fn try_send (self: &Channel(T), value: T) -> SyncFailed?;
@@ -107,6 +114,11 @@ impl Channel(T) as std::interfaces::IsEmpty {
 
 impl ChannelBorrow(T) {
   public fn send (self: &ChannelBorrow(T), value: T) -> SyncFailed?;
+}
+
+impl ChannelSender(T) {
+  public fn clone (self: &ChannelSender(T)) -> std::result::Result(ChannelSender(T), SyncFailed);
+  public fn send (self: &ChannelSender(T), value: T) -> SyncFailed?;
 }
 
 // A simple cancellation token (blocking wait).
@@ -149,6 +161,12 @@ Notes:
 - When sending a channel handle across a `task` boundary, prefer passing a
   non-owning view (`ChannelBorrow(T)`) obtained via `c.borrow()` so ownership
   stays with the original `Channel(T)`.
+- For producer tasks, prefer using `ChannelSender(T)` created via
+  `c.sender()` and cloned explicitly via `sender.clone()`:
+  - `ChannelSender(T)` auto-closes the channel when the last sender is dropped,
+    which prevents a common class of “receiver blocks forever” bugs.
+  - `ChannelSender(T)` is non-copyable; cloning is explicit so the sender count
+    stays correct for multi-producer patterns.
 - When sending a cancellation token across a `task` boundary, prefer passing a
   non-owning view (`CancellationTokenBorrow`) obtained via `tok.borrow()` so
   ownership stays with the original `CancellationToken`.

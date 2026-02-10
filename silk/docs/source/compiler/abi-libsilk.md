@@ -43,7 +43,7 @@ The header must define:
 
 ### Initial C Header Shape (`include/silk.h`)
 
-The initial C header provided in this repository defines:
+The initial C header provided in the Silk compiler repository defines:
 
 - `SilkString` mirroring the internal Silk `string` layout:
   - Note: `SilkString` is also the C ABI shape for Silk `regexp` values
@@ -352,10 +352,11 @@ The initial C header provided in this repository defines:
         type-checking the std sources as part of the module set),
       - archive discovery (in order):
         - `SILK_STD_LIB` when set, otherwise
-        - `zig-out/lib/libsilk_std.a` when using the in-repo `std/` root, otherwise
-        - `../lib/libsilk_std.a` relative to the current executable, otherwise
+        - `build/lib/silk/std/libsilk_std.a` when using the in-repo `std/` root, otherwise
+        - `../lib/silk/std/libsilk_std.a` relative to the current executable, otherwise
+        - `../lib/libsilk_std.a` relative to the current executable (legacy installed layout), otherwise
         - common installed-layout heuristics derived from the selected stdlib root,
-        - walk up from the current working directory to find `libsilk_std.a` or `lib/libsilk_std.a`,
+        - walk up from the current working directory to find `libsilk_std.a`, `lib/libsilk_std.a`, or `lib/silk/std/libsilk_std.a`,
       - when no suitable archive is found (or on unsupported targets), the
         compiler falls back to compiling the reachable std sources into the
         build as part of module-set code generation.

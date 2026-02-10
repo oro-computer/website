@@ -167,9 +167,14 @@ Evaluation mode:
 
 `Sized` integration:
 
-- Planned: for runtime values, if the operand type provides an instance method
-  matching `std::interfaces::Sized` (`fn size(self: &Self) -> usize`),
-  `sizeof value` will lower to a call of that method.
+- Implemented (partial): `sizeof <string value>` produces the string’s **byte
+  length** (as `usize`). This is sugar over the current string ABI layout
+  (`{ ptr: u64, len: i64 }`) and corresponds to `std::runtime::mem::string_len`
+  (and the reserved intrinsic `__silk_string_len`).
+- Planned (general): for other runtime values, if the operand type provides an
+  instance method matching `std::interfaces::Sized`
+  (`fn size(self: &Self) -> usize`), `sizeof value` will lower to a call of
+  that method.
 - For type operands, if the operand type provides a static, pure method
   `pure fn size() -> usize`, the compiler may fold `sizeof Type` to that value
   when the method body is const-evaluable; otherwise it falls back to the
@@ -185,6 +190,12 @@ Built-in size model (current backend subset):
   is `16` in the current subset.
 - A `T[N]` fixed array occupies `N * sizeof(T)` bytes in the current subset,
   using the element’s scalar-slot size.
+
+Notes:
+
+- `sizeof string` (type operand) is the **representation** size (currently 16
+  bytes in the scalar-slot model), while `sizeof <string value>` is the
+  **content** size (byte length).
 
 Parsing note:
 
@@ -527,8 +538,12 @@ Rules (current subset):
     `Duration`/`Instant` and `char`.
   - 128-bit wide primitives: `i128`/`u128`/`f128` (two 8-byte lanes; `f128`
     stores the raw IEEE-754 binary128 bit pattern).
-- `as raw` is not permitted for `string`, `void`, `&T`, optionals, arrays,
-  maps, function types, or structs/enums.
+- `as raw` is not permitted for `void`, `&T`, optionals, arrays, maps, function
+  types, or structs/enums.
+- Special-case: `string as raw u64` (and `string as raw usize`) is permitted
+  and extracts the string’s underlying **byte pointer**. This is sugar over
+  `std::runtime::mem::string_ptr` (and the reserved intrinsic
+  `__silk_string_ptr`).
 - Semantics:
   - The operand’s current canonical scalar bits are reinterpreted as the target
     type’s canonical scalar bits (bit-level truncation/masking for narrower
@@ -548,4 +563,11 @@ Examples:
 ```silk
 let bits: u64 = (1.0 as f32) as raw u64;
 let f: f32 = bits as raw f32;
+```
+
+```silk
+// Pointer + length extraction for low-level interop.
+let s: string = "hello";
+let ptr: u64 = s as raw u64;
+let len: usize = sizeof s;
 ```

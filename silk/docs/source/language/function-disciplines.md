@@ -12,10 +12,13 @@ Status: **design in progress**, but the current compiler subset now implements
 `pure fn` parsing and a strict purity checker. Concurrency disciplines (`task` /
 `async`) are parsed and `Task(T)` / `Promise(T)` handles plus `yield` (task
 values) and `await` (promise values) are implemented in the current subset
-(`await Task(T)` is rejected), but the compiler does not yet implement an async
-event loop, coroutine lowering, or task-safety (`Send`/`Sync`) rules. See
-`docs/language/concurrency.md` for the concurrency model and implementation
-status.
+(`await Task(T)` is rejected). On the hosted `linux/x86_64` target, the compiler
+now ships a bring-up async runtime (single-threaded executor + stackful
+coroutines in `libsilk_rt`) so `await` can suspend and resume without blocking
+the OS thread. A compiler state-machine coroutine transform, structured
+concurrency scope semantics, and task-safety (`Send`/`Sync`)-like rules remain
+future work. See `docs/language/concurrency.md` for the concurrency model and
+implementation status.
 
 ## Overview
 

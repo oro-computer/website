@@ -21,7 +21,7 @@ backend, so building libssh2 requires system OpenSSL headers and libraries
 
 ## Fetch + Build
 
-From the repo root:
+From the Silk compiler repository root:
 
 ```sh
 make deps
@@ -57,6 +57,19 @@ This populates:
   - `libsilk_xml_shims.a` (ABI-safe Silk wrappers for libxml2 struct access)
 
 These directories and generated `.a` files are ignored by git.
+
+## Staging and Installed Layout
+
+For distribution and `make install`, the hosted toolchain expects vendored
+archives under the compiler prefix:
+
+- staged (repo build prefix): `build/lib/silk/vendor/lib/x64-linux/`
+- installed: `<prefix>/lib/silk/vendor/lib/x64-linux/` (typically
+  `/usr/local/lib/silk/vendor/lib/x64-linux/`)
+
+`make build` copies `.a` files from `vendor/lib/x64-linux/` into the staged
+prefix under `build/lib/silk/vendor/lib/x64-linux/`, and `make install` copies
+the staged prefix into `<prefix>/`.
 
 ## Bundling Into `libsilk.a`
 

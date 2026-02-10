@@ -17,9 +17,12 @@ Implementation status (current compiler subset):
     type positions (`Name(u8)`, `Name(string)`) for those declarations.
 - Reserved intrinsics: the compiler currently exposes reserved, stdlib
   bring-up intrinsics for working with the `string` ABI (`__silk_string_ptr`,
-  `__silk_string_len`, and `__silk_string_from_ptr_len`); these are not yet a
-  stable user API and exist primarily to unblock `std::fmt`, `std::io`, and
-  `std::args` while slice/iterator features are still evolving.
+  `__silk_string_len`, and `__silk_string_from_ptr_len`). User code should
+  generally prefer the language sugar:
+  - `s as raw u64` (extract the underlying byte pointer), and
+  - `sizeof s` (string byte length as `usize`)
+  over calling these helpers directly. The intrinsic names remain reserved and
+  are not a stable user API.
 - Special-case: the nominal optional form `Option(T)` is accepted and desugared
   to `T?` in type annotations (it is not a general generics feature).
 - Parsed but rejected by the current checker: const parameters and integer

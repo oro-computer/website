@@ -297,7 +297,7 @@ The language server is part of the broader tooling story described in:
 - `docs/compiler/cli-silk.md` (CLI behavior for `silk`),
 - `docs/usage/` (editor integrations, including Vim and LSP-based workflows).
 
-The `tmp/zls/` directory in this repository contains a vendored copy of the Zig Language Server (ZLS) for inspiration and experimentation only:
+The `tmp/zls/` directory in the Silk compiler repository contains a vendored copy of the Zig Language Server (ZLS) for inspiration and experimentation only:
 
 - it is **not** part of the supported Silk toolchain,
 - it must not be treated as authoritative for Silk semantics,

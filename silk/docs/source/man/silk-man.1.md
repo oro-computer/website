@@ -8,8 +8,11 @@
 
 ## Synopsis
 
+- `silk man [options]`
 - `silk man [options] <query>`
 - `silk man [options] <section> <name>`
+- `silk man --list`
+- `silk man --search <pattern>`
 
 ## Description
 
@@ -27,10 +30,15 @@ Notes:
 
 - You may also spell section selection as `name.<section>` (for example `silk.7`).
 - `name(<section>)` is accepted but must be quoted in most shells.
+- Shorthands:
+  - `silk man build` opens `silk-build(1)` (same for `check`, `test`, `doc`, `man`, `cc`, `env`, `format` / `fmt`).
+  - when no package is selected/resolvable, `silk man fs` is treated as `silk man std::fs` (and similarly for other top-level std modules).
 
 ## Options
 
 - `--help`, `-h` — show command help and exit.
+- `--list` — list shipped pages and common stdlib entrypoints, then exit.
+- `--search <pattern>` — search shipped pages and stdlib module names, then exit.
 - `--section <n>`, `-s <n>` — select the manpage section (`1`, `3`, or `7`).
 - `--package <dir|manifest>`, `--pkg <dir|manifest>` — load a module set from a package manifest (`silk.toml`) rooted at the provided directory (or from the provided manifest path).
   - when omitted, and the query is not `std::...`, `silk man` searches the current working directory and its parent directories for `silk.toml` and uses the nearest match.
@@ -46,14 +54,29 @@ Notes:
 ## Examples
 
 ```sh
+# Show a quick-start and list entrypoints.
+silk man
+
+# List shipped pages and common stdlib entrypoints.
+silk man --list
+
+# Search shipped pages + stdlib modules.
+silk man --search fs
+
 # View a shipped toolchain overview page (section 7).
 silk man 7 silk
 
 # View docs for a stdlib module.
 silk man std::flag
 
+# Shorthand for common stdlib modules (when no package is selected).
+silk man fs
+
 # View docs for a stdlib symbol.
 silk man std::sqlite::Database
+
+# Shorthand for CLI command pages.
+silk man build
 
 # View a conceptual page labeled via @misc.
 silk man std::result::design

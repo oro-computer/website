@@ -47,6 +47,12 @@ to expose ABI-safe wrapper functions for the few by-value-struct APIs.
 
 alongside existing vendored deps. See `docs/compiler/vendored-deps.md`.
 
+In staged/installed toolchains, the auto-linked archives are expected under the
+compiler prefix:
+
+- `build/lib/silk/vendor/lib/x64-linux/` (repo build prefix)
+- `<prefix>/lib/silk/vendor/lib/x64-linux/` (installed)
+
 On `linux/x86_64`, `silk build` automatically links the staged ggml archives
 when `std::ggml` is included in the module set. If the archives are missing,
 the build fails with an actionable error pointing to `zig build deps`.

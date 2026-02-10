@@ -47,6 +47,24 @@ Notes:
 - `else` is optional (when omitted, a non-matching scrutinee executes no block).
 - `else if let ...` chains are supported and parse as nesting in the same way
   as `else if ...`.
+- `else let ...` is supported as shorthand for `else if let ...`.
+
+Example (`else let` shorthand):
+
+```silk
+fn main () -> int {
+  let a: int? = None;
+  let b: int? = Some(3);
+
+  if let Some(v) = a {
+    return v;
+  } else let Some(v) = b {
+    return v;
+  } else {
+    return 0;
+  }
+}
+```
 
 Supported patterns in the current subset (same as `match` expressions; see
 `docs/language/flow-match.md`):
@@ -224,7 +242,7 @@ fn main () -> int {
 Implemented end-to-end:
 
 - `if <expr> { ... }` and `if <expr> { ... } else { ... }` statement forms.
-- `if let <pattern> = <expr> { ... }` statement form (and `else if let` chains).
+- `if let <pattern> = <expr> { ... }` statement form (and `else if let` / `else let` chains).
 - Boolean type-checking for conditions.
 - `if` expressions of the form `if <cond> { <expr> } else { <expr> }`.
 

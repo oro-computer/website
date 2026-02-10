@@ -33,6 +33,7 @@ available to user programs.
   - `std::temporal`
   - `std::semver`
   - `std::url`
+  - `std::tar` (tar archives; see `docs/std/tar.md`)
   - `std::xml` (XML parsing; see `docs/std/xml.md`)
   - `std::idl::web` (current Web IDL parser; see `docs/std/idl-web.md`)
   - `std::js::ecma` (current ECMAScript FFI surface; see `docs/std/js-ecma.md`)
@@ -133,7 +134,7 @@ static archive for a specific target ABI:
 
 - `make stdlib` compiles each `std/**/*.slk` module (including `std/runtime/...`)
   to an ELF object via
-  `silk build --kind object` and archives them into `zig-out/lib/libsilk_std.a`.
+  `silk build --kind object` and archives them into `build/lib/silk/std/libsilk_std.a`.
 - This archive is target-specific (e.g. `linux/x86_64` ELF objects) and should
   be treated as one artifact per supported target triple/ABI, not as a
   universally portable library.
@@ -148,8 +149,9 @@ Current toolchain behavior (`linux/x86_64`):
 - Archive discovery (in order):
   - `--std-lib <path>` (or `--std <path>.a` / `-std <path>.a`) when provided, otherwise
   - `SILK_STD_LIB` (environment variable) when set,
-  - `zig-out/lib/libsilk_std.a` when using the in-repo `std/` root (development),
-  - `../lib/libsilk_std.a` relative to the installed `silk` executable,
+  - `build/lib/silk/std/libsilk_std.a` when using the in-repo `std/` root (development),
+  - `../lib/silk/std/libsilk_std.a` relative to the installed `silk` executable,
+  - `../lib/libsilk_std.a` relative to the installed `silk` executable (legacy installed layout),
   - common installed-layout heuristics derived from the selected stdlib root.
 
 Archive member naming (scheme):

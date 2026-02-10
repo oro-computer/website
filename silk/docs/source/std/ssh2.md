@@ -27,6 +27,12 @@ bundling, run `zig build deps`. This stages `vendor/lib/x64-linux/libssh2.a`
 from `vendor/deps/libssh2` (tag `libssh2-1.11.1`). The current deps workflow
 builds libssh2 using the OpenSSL backend.
 
+In staged/installed toolchains, the vendored archive is expected under the
+compiler prefix:
+
+- `build/lib/silk/vendor/lib/x64-linux/` (repo build prefix)
+- `<prefix>/lib/silk/vendor/lib/x64-linux/` (installed)
+
 ## Error Model
 
 The `std::ssh2` API uses `std::result::Result(T, E)` and a stable `Ssh2Failed`

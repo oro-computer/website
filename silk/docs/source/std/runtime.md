@@ -164,6 +164,14 @@ Implemented runtime areas in the shipped stdlib:
 
 Follow-ups are expected to introduce additional runtime areas:
 
+- Async event loop / executor integration (`std::runtime::event_loop`) for hosted `async`/`await`:
+  - the compiler already ships a bundled bring-up executor in `libsilk_rt`
+    (`src/silk_rt_async.c`) and lowers `async`/`await` to it on the hosted
+    `linux/x86_64` target,
+  - the `std::runtime::event_loop` module now exposes low-level awaitable
+    building blocks (timers + fd readiness), but the explicit `Handle`/`poll`
+    surface and higher-level async adapters are still follow-up work
+    (see `docs/compiler/async-runtime.md`).
 - WASI networking (via WASI sockets or similar proposals) when supported by the toolchain targets.
 
 ## Providing a Custom Runtime

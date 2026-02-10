@@ -32,7 +32,7 @@ Compiler requirements:
 The full generic intrinsic `Buffer(T)` surface is part of the language design
 but is not yet implemented end-to-end in the compiler and runtime.
 
-To support early stdlib bring-up in the current compiler subset, the repository
+To support early stdlib bring-up in the current compiler subset, the Silk compiler repository
 provides a minimal buffer surface in `std::`:
 
 - `std::vector::Vector(T)` provides growable, contiguous storage for scalar

@@ -21,6 +21,46 @@ while (x < y && y < 10) {
 }
 ```
 
+## `while let` (Pattern-Destructuring Loop Form)
+
+Silk supports a `while let` loop form for iterating while a refutable pattern
+matches:
+
+```silk
+while let <pattern> = <scrutinee> {
+  ...
+}
+```
+
+Notes:
+
+- The scrutinee expression is evaluated once per iteration.
+- The pattern binders (for example `Some(v)` binds `v`) are in scope only in
+  the loop body.
+- The loop exits when the scrutinee does not match the pattern.
+- Supported patterns are the same as `if let` (see `docs/language/flow-if-else.md`).
+
+Example (optional countdown):
+
+```silk
+fn main () -> int {
+  var x: int? = Some(3);
+  var sum: int = 0;
+
+  while let Some(v) = x {
+    sum = sum + v;
+    if v <= 1 {
+      x = None;
+    } else {
+      x = Some(v - 1);
+    }
+  }
+
+  // 3 + 2 + 1 = 6
+  return sum;
+}
+```
+
 ### Loop Specifications (`#invariant` / `#variant` / `#monovariant`)
 
 The language supports attaching loop specifications immediately before a
@@ -109,6 +149,7 @@ fn main () -> int {
 Implemented end-to-end:
 
 - `while` loops with boolean conditions.
+- `while let <pattern> = <expr> { ... }` pattern-destructuring loops.
 - `break` / `continue` inside `while` bodies.
 - `#invariant` (type-checked as `bool`), `#variant` (type-checked as an
   integer), and `#monovariant` (type-checked as an integer) attached to `while`.
@@ -119,3 +160,4 @@ Examples that exercise the implemented subset:
 - `tests/silk/pass_invariant_while.slk`
 - `tests/silk/pass_spec_const_while.slk`
 - `tests/silk/pass_nested_if_while.slk`
+- `tests/silk/pass_while_let_optional_countdown.slk`

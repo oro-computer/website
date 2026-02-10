@@ -77,9 +77,15 @@ implemented by the compiler/runtime today.
 
 ### Important Limitations
 
-- There is not yet an async event loop or coroutine lowering. `await` does not
-  currently “park” the function and yield the OS thread; awaiting a `Task(T)`
-  is rejected in the current model and must be expressed via `yield`/`yield *`.
+- Hosted async runtime bring-up exists on the hosted `linux/x86_64` target:
+  - `await` is a true suspension point backed by a single-threaded executor
+    (fibers), so awaiting a pending `Promise(T)` can park and resume without
+    blocking the OS thread.
+  - The current implementation uses stackful coroutines in `libsilk_rt`
+    (`src/silk_rt_async.c`) rather than a compiler state-machine coroutine
+    transform. The long-term design remains a compiler transform + stable
+    `std::runtime::event_loop` surface (see `docs/compiler/async-runtime.md`).
+  - Awaiting a `Task(T)` is still rejected; use `yield` / `yield *` for task values.
 - The runtime subset implements `task` execution using OS threads (via
   `pthread_create` on `linux/x86_64`); it is not yet a work-stealing pool.
 - `Send`/`Sync`-like task-safety rules are not yet enforced; all task boundary
@@ -87,7 +93,8 @@ implemented by the compiler/runtime today.
   signature-level restrictions described above.
 - A small initial set of standard-library primitives exists now under
   `std::task` and `std::sync` for the hosted `linux/x86_64` subset. These are
-  blocking (thread-based) primitives until the async runtime is implemented.
+  mostly blocking primitives today; integrating OS-facing std modules with the
+  async executor/event loop is follow-up work.
 
 ## Core Keywords: `async` and `task`
 
@@ -145,9 +152,11 @@ heap-allocated handle memory:
   - `Task(T)` cleanup joins the worker thread and then frees the handle storage.
   - `Promise(T)` cleanup frees the handle storage.
 
-Because the current runtime subset uses OS threads (no coroutine transform or
-event loop), this automatic cleanup can block the current OS thread when it
-joins a task.
+Because tasks are implemented using OS threads in the current subset, this
+automatic cleanup can block the current OS thread when it joins a task. Promise
+cleanup uses the hosted async runtime’s destroy helper and may suspend the
+current coroutine while waiting for a pending promise to resolve when running
+under an executor.
 
 ### `yield`
 

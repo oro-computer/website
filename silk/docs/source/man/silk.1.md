@@ -285,7 +285,7 @@ For the initial implementation, the supported options are:
     - on `linux/x86_64`, also adds `-lstdc++ -lpthread -lm` (vendored Z3 is built as C++),
     - passes through additional arguments verbatim to the underlying compiler (files, flags, `-o`, `-I`, `-L`, etc.); use `silk help cc` for wrapper usage.
 
-As the CLI is extended (additional flags, subcommands, and fully-featured backends), this manpage and `docs/compiler/cli-silk.md` MUST be updated in lockstep, per `AGENTS.md`.
+As the CLI is extended (additional flags, subcommands, and fully-featured backends), this manpage and `docs/compiler/cli-silk.md` MUST be updated in lockstep.
 
 ## Environment
 

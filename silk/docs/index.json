@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-02-09T15:30:32+00:00",
+  "generatedAt": "2026-02-10T20:02:06+00:00",
   "kind": "docs",
-  "count": 167,
+  "count": 170,
   "sections": [
     {
       "name": "overview",
@@ -215,6 +215,11 @@
           "id": "language/generics",
           "title": "Generics (Monomorphized)",
           "file": "language/generics.md"
+        },
+        {
+          "id": "language/asm",
+          "title": "Inline Assembly (`asm`)",
+          "file": "language/asm.md"
         },
         {
           "id": "language/interfaces",
@@ -547,6 +552,11 @@
           "file": "std/sync.md"
         },
         {
+          "id": "std/tar",
+          "title": "`std::tar`",
+          "file": "std/tar.md"
+        },
+        {
           "id": "std/task",
           "title": "`std::task`",
           "file": "std/task.md"
@@ -705,6 +715,11 @@
           "id": "compiler/cli-silk",
           "title": "`silk` CLI",
           "file": "compiler/cli-silk.md"
+        },
+        {
+          "id": "compiler/async-runtime",
+          "title": "Async Runtime (Hosted)",
+          "file": "compiler/async-runtime.md"
         },
         {
           "id": "compiler/build-scripts",

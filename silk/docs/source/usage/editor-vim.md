@@ -6,7 +6,7 @@ The goal of the Vim plugin is to provide a lightweight, spec-aligned editing exp
 
 - recognizes Silk source files by extension,
 - highlights the core language constructs described in `docs/language/`,
-- respects the Silk repository’s indentation and comment style guidelines.
+- matches the indentation and comment style used throughout the Silk docs (see `docs/language/conventions.md`).
 
 ## Files and Layout
 
@@ -59,7 +59,7 @@ The `vim/ftplugin/silk.vim` file configures:
 
 - indentation defaults:
   - by default, Silk buffers inherit your Vim tab settings,
-  - if Vim is using its built-in defaults (`tabstop=8`, `shiftwidth=8`, `softtabstop=0`, `noexpandtab`), Silk buffers will use the repository’s preferred indentation (2 spaces with `expandtab`),
+  - if Vim is using its built-in defaults (`tabstop=8`, `shiftwidth=8`, `softtabstop=0`, `noexpandtab`), Silk buffers will use Silk’s preferred indentation (2 spaces with `expandtab`; see `docs/language/conventions.md`),
   - override via `g:silk_indent_style` (`'auto'`, `'inherit'`, `'repo'`),
 - a line comment style of `//` via `commentstring=// %s`,
 - C-style block comment metadata via `'comments'` / `'formatoptions'` so that
@@ -81,9 +81,9 @@ expression that:
 - indents lines that follow opening `{`, `(`, or `[` characters,
 - outdents lines that begin with closing `}`, `)`, or `]`.
 
-These settings mirror the mandatory style documented in `AGENTS.md` for code
-indentation and align the editor experience with the language’s comment
-syntax.
+These settings match the style used throughout the Silk examples (2-space indentation;
+see `docs/language/conventions.md`) and align the editor experience with the language’s
+comment syntax.
 
 Additional Silk-specific editor behaviors (such as formatting commands or motion/textobject helpers) can be layered on in future iterations once the language and CLI stabilize further.
 
@@ -111,9 +111,9 @@ Supported triggers include:
 
 ## Installation Examples
 
-### Option A: Install This Repo as a Vim Plugin (Recommended)
+### Option A: Install the Silk Compiler Repository as a Vim Plugin (Recommended)
 
-If you install the repository root as a Vim plugin (common with plugin managers), `plugin/silk.vim` will automatically add `vim/` to `'runtimepath'`, so Vim can discover the Silk runtime files without extra configuration.
+If you install the Silk compiler repository root as a Vim plugin (common with plugin managers), `plugin/silk.vim` will automatically add `vim/` to `'runtimepath'`, so Vim can discover the Silk runtime files without extra configuration.
 
 ### Option B: Install Only the `vim/` Subdirectory
 
@@ -136,7 +136,7 @@ If you prefer to copy the files into your own configuration:
 - copy `vim/autoload/silk/snippets.vim` into `~/.vim/autoload/silk/snippets.vim` (if you want the built-in snippets),
 - copy `vim/plugin/silk.vim` into `~/.vim/plugin/` (only needed if you want `.slk` filetype detection without enabling `:filetype on`).
 
-For Neovim, use the equivalent `~/.config/nvim/` directories or a plugin manager that can add this repository as a plugin source.
+For Neovim, use the equivalent `~/.config/nvim/` directories or a plugin manager that can add the Silk compiler repository as a plugin source.
 
 ## LSP Integration (Silk Language Server)
 

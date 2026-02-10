@@ -96,9 +96,11 @@ Notes:
 - Exception: `Deserialize(S)` is a static protocol used by `as` casts; its
   `impl` method does **not** take a `self` receiver and is called as
   `Type.deserialize(value)`.
-- Planned: `Sized` will be used by the `sizeof` operator for value operands:
-  when a concrete type provides `fn size(self: &T) -> usize`, `sizeof value`
-  will lower to that method call (see `docs/language/operators.md`).
+- Implemented (partial): `sizeof <string value>` yields the string byte length
+  (see `docs/language/operators.md`).
+- Planned (general): `Sized` will be used by the `sizeof` operator for other
+  value operands: when a concrete type provides `fn size(self: &T) -> usize`,
+  `sizeof value` will lower to that method call.
 - `Serialize` is also recognized by the `as` cast operator:
   - when a type provides `serialize(self: &T) -> S`, an explicit cast
     `value as S` lowers to `value.serialize()` (see `docs/language/operators.md`).
