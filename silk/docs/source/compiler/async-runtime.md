@@ -87,7 +87,9 @@ falling back to `poll(2)` when `io_uring` is unavailable.
 
 Limitations (current):
 
-- No async-aware stdlib surface yet: `std::runtime::event_loop` is still a stub placeholder.
+- The stable `std::runtime::event_loop` surface is still incomplete:
+  - `sleep_ms` and `fd_wait_{readable,writable}` are implemented and wired to the hosted runtime,
+  - but the explicit `Handle`/`init`/`poll` API is still a stub placeholder.
 - No structured-concurrency scope semantics yet (cancellation/joining on early exit).
 - No completion-based `io_uring` I/O ops yet (read/write/accept/connect still use blocking paths).
 

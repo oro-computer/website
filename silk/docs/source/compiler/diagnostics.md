@@ -48,7 +48,7 @@ Rules:
 ## Manifest and Config Errors
 
 The CLI uses the same caret diagnostic format for errors in tooling/config inputs,
-including the package manifest `silk.toml` and build-script-generated manifests.
+including the package manifest `silk.toml` and build-module-generated manifests.
 These diagnostics may not yet have stable error codes.
 
 Example (missing `=` in `silk.toml`):

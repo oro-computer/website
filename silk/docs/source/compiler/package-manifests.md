@@ -28,15 +28,16 @@ When a manifest is malformed (invalid TOML syntax or an invalid manifest shape),
 the compiler reports a diagnostic with file, line, and column information and a
 caret snippet pointing at the offending token when possible.
 
-## Build Scripts (`build.silk`)
+## Build Modules (`build.slk`)
 
-A package root directory MAY also contain a build script:
+A package root directory MAY also contain a build module:
 
-- `build.silk`
+- `build.slk`
 
-When a build script is enabled via the CLI, the compiler compiles and runs the
-script and treats its stdout as a TOML manifest in this format (used in place
-of reading `silk.toml` for the root package).
+When a build module is enabled (via the CLI or `[build].build_module = true`),
+the compiler compiles and runs the
+module and parses the manifest it emits in this format (used in place of
+reading `silk.toml` for the root package).
 
 See `docs/compiler/build-scripts.md`.
 
@@ -226,6 +227,38 @@ Fields:
 - `kind` (required): one of `executable`, `object`, `static`, `shared`.
 - `entry` (required): path to the entry module, relative to the manifest
   directory.
+- `inputs` (optional): additional non-`.slk` build inputs for this target:
+  - entries are paths (relative to the manifest directory when not absolute),
+  - each entry MUST end with one of:
+    - `.c` — compiled via the host C compiler and linked as an object,
+    - `.h` — compiled via the host C compiler as a C translation unit (passed
+      as `-x c`) and linked as an object,
+    - `.o` — linked as an object (and included in static archives),
+    - `.a` — linked as a static archive,
+    - `.so` / `*.so.<ver>` — treated as a dynamic dependency (equivalent to
+      adding a `needed` entry for the library’s basename),
+  - `.slk` entries are rejected (use `[sources]` instead),
+  - note: non-`.slk` inputs are currently supported only for `linux/x86_64`
+    native targets (same limitation as `silk build` CLI inputs).
+- `cflags` (optional): additional C compiler arguments used when compiling any
+  `.c`/`.h` inputs for this target (from `inputs` and/or CLI native inputs when
+  building a single target).
+  - entries are single `cc` arguments (no shell splitting),
+  - include paths passed via `-I<rel>` or `-I`, `<rel>` are resolved relative
+    to the manifest directory.
+- `ldflags` (optional): additional link-related arguments for this target.
+  Note: `silk` does not invoke a system linker for native codegen; `ldflags`
+  are translated into existing manifest/CLI linkage knobs.
+  Supported forms:
+  - `-Wl,-rpath,<path>` / `-Wl,-rpath=<path>` → adds a `runpath` entry,
+  - `-Wl,-soname,<name>` / `-Wl,-soname=<name>` → sets `soname`,
+  - `-lfoo` / `-l`, `foo` → adds a `needed` entry:
+    - for common glibc-provided system libraries, `silk` maps to the versioned runtime soname
+      (for example `-lm` → `needed = ["libm.so.6"]`, `-lpthread` → `needed = ["libpthread.so.0"]`),
+    - otherwise, `silk` maps to `needed = ["libfoo.so"]` (note: some distros ship `libfoo.so` only in `*-dev`
+      packages, so prefer `-l:libfoo.so.<ver>` or an explicit `needed = ["libfoo.so.<ver>"]` when targeting
+      versioned shared libraries),
+  - `-l:libfoo.so.1` → adds `needed = ["libfoo.so.1"]`.
 - `output` (optional): output path relative to the manifest directory.
   If omitted, the compiler chooses a default under `build/` based on `name` and
   `kind`:
@@ -246,7 +279,19 @@ Fields:
   - `soname = "libfoo.so"` (for shared libraries).
   - Note: `needed` entries starting with `libsilk_rt` are rejected; bundled runtime helpers are linked statically by `silk build` when referenced.
 
-## Default Target (`[build]`)
+Example:
+
+```toml
+[[target]]
+name = "app"
+kind = "executable"
+entry = "src/main.slk"
+inputs = ["src/logger.c", "vendor/libextra.a", "build/helpers.o", "lib/libfoo.so"]
+cflags = ["-Isrc/include"]
+runpath = ["$ORIGIN"]
+```
+
+## Build Defaults (`[build]`)
 
 When a package defines multiple `[[target]]` entries, `silk build --package`
 needs to know which one to build.
@@ -254,6 +299,8 @@ needs to know which one to build.
 ```toml
 [build]
 default_target = "my_app"
+build_module = true            # optional opt-in (default: false)
+build_module_path = "build.slk" # optional; default "build.slk"
 ```
 
 Rules:
@@ -263,6 +310,27 @@ Rules:
   - if exactly one `[[target]]` exists, it is the default,
   - otherwise, `silk build --package` requires an explicit target selection
     flag (see `docs/compiler/cli-silk.md`).
+- `build.build_module` (optional; default `false`) enables build module
+  execution for package builds:
+  - when `true`, the build module runs for `silk build --package` (and
+    `silk build install` / `silk build uninstall`) without requiring
+    `--build-module` on the CLI.
+- `build.build_module_path` (optional) specifies the default build module path
+  used when a build module is executed and the CLI does not provide
+  `--build-module-path`.
+  - If the path is relative, it is resolved relative to `<package_root>`.
+  - If omitted, the default is `<package_root>/build.slk`.
+  - Note: setting `build_module_path` does not enable build module execution by
+    itself; use `build_module = true` or the CLI.
+- When a build module is executed:
+  - the manifest it emits replaces the root manifest for the remainder of the
+    build (see `docs/compiler/build-scripts.md`),
+  - the emitted manifest’s `[build].build_module` / `[build].build_module_path`
+    values are ignored for the current invocation to prevent recursive build
+    module execution,
+  - CLI overrides:
+    - `--build-module-path <path>` wins (and implies build module execution),
+    - otherwise `--build-module` wins.
 
 ## Interaction With `package` Declarations
 
@@ -279,5 +347,6 @@ repeat `package ...;` in every file.
 The manifest reserves additional fields for future build integration:
 
 - provenance / integrity metadata (`repo`, richer dependency sources),
-- native build configuration (`sources`, `link`, `compile`),
+- richer native build configuration (additional include path kinds, defines,
+  link search paths, platform selection),
 - embedded targets / budgets.

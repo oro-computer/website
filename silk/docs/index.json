@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-02-10T20:02:06+00:00",
+  "generatedAt": "2026-02-13T15:21:41+00:00",
   "kind": "docs",
-  "count": 170,
+  "count": 171,
   "sections": [
     {
       "name": "overview",
@@ -382,6 +382,11 @@
           "file": "std/buffer.md"
         },
         {
+          "id": "std/build",
+          "title": "`std::build`",
+          "file": "std/build.md"
+        },
+        {
           "id": "std/crypto",
           "title": "`std::crypto`",
           "file": "std/crypto.md"
@@ -723,7 +728,7 @@
         },
         {
           "id": "compiler/build-scripts",
-          "title": "Build Scripts (`build.silk`)",
+          "title": "Build Modules (`build.slk`)",
           "file": "compiler/build-scripts.md"
         },
         {

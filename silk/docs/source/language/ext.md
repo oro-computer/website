@@ -93,6 +93,15 @@ Currently supported:
     - a non-capturing `fn (...) -> ...` expression,
   - capturing closures (and arbitrary function-typed locals) are rejected for
     `ext` function-pointer parameters in the current subset,
+- `c_fn (...) -> R` types as explicit C callback pointers (implemented subset):
+  - `c_fn` is a code-pointer-only function pointer type intended for FFI,
+  - unlike `fn (...) -> R` function values, `c_fn (...) -> R` values do not carry a
+    closure environment and are safe to store in locals/struct fields and pass
+    through APIs,
+  - a `c_fn` value may be formed only from:
+    - a top-level function name, or
+    - a non-capturing `fn (...) -> ...` expression,
+  - capturing closures are rejected when a `c_fn` is required.
 - `ext` **variables** of scalar type (`ext name = T;` where `T` is a supported
   scalar such as `int`, fixed-width ints, `bool`, `char`, or `f32`/`f64`) as
   readable values in Silk,
@@ -124,6 +133,38 @@ Not implemented yet (documented design, future work):
 - calling back into Silk from foreign code with capturing closures or richer
   closure environments (only plain non-capturing function pointers are
   supported as `ext` parameters in the current subset).
+
+## Passing Callbacks to C (`c_fn`)
+
+Use `c_fn (...) -> R` to model C callback pointers you want to store and pass
+to foreign code.
+
+Example:
+
+```silk
+type I64BinOp = c_fn (i64, i64) -> i64;
+
+// C provides: int64_t call_i64_binop(int64_t (*cb)(int64_t, int64_t), int64_t a, int64_t b);
+ext call_i64_binop = fn (I64BinOp, i64, i64) -> i64;
+
+fn add (a: i64, b: i64) -> i64 {
+  return a + b;
+}
+
+fn main () -> int {
+  let cb: I64BinOp = add;
+  let out: i64 = call_i64_binop(cb, 40, 2);
+  if out != 42 { return 1; }
+  return 0;
+}
+```
+
+Notes:
+
+- `c_fn` values are code pointers only; they cannot capture local variables.
+- If a C API needs context, pass an explicit context pointer (e.g. a `u64` that
+  is a `void *` in C) alongside the callback and include that context parameter
+  in the callback signature.
 
 ## Opaque Struct Handles
 

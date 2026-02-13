@@ -6,7 +6,7 @@ DOM-style XML parsing and traversal API backed by libxml2.
 ## Vendored Dependencies + Linking
 
 On the hosted `linux/x86_64` baseline, `std::xml` relies on a vendored libxml2
-build produced by the repo dependency workflow.
+build produced by the Silk compiler repository’s vendored dependency workflow.
 
 - libxml2 tag `v2.15.1`
 

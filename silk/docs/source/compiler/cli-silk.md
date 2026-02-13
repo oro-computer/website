@@ -148,7 +148,7 @@ The initial implementation is intentionally smaller and focuses on:
     as ordinary source files),
 - user-provided `package std::...;` modules continue to override the default
   std implementation for the same package names.
-- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--emit bin|asm] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]` (or `--out <path>`) — for now:
+- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-module] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--emit bin|asm] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]` (or `--out <path>`) — for now:
   - inputs are classified by extension:
     - `.slk` — Silk source files (compiled as the module set),
     - `.o` — ELF relocatable objects linked into `--kind executable|shared` outputs (and included in `--kind static` archives),
@@ -162,8 +162,11 @@ The initial implementation is intentionally smaller and focuses on:
   - when no input files are provided and `--package` / `--pkg` is omitted, but `./silk.toml` exists, the compiler behaves as if `--package .` was provided (package builds from the current directory by default),
   - when `--package` is provided:
     - `.slk` input files must be omitted (the module set is loaded from the manifest), but non-`.slk` link inputs (`.c`, `.o`, `.a`, `.so`) may still be provided,
-    - `--build-script` runs `<package_root>/build.silk` and uses its stdout as
+    - `--build-module` compiles and runs the package build module and uses its stdout as
       the package manifest (see `docs/compiler/build-scripts.md`),
+      - when no path override is provided, the compiler looks for `<package_root>/build.slk`,
+      - `--build-module-path <path>` overrides the build module path (relative paths are resolved relative to `<package_root>`),
+      - legacy aliases are accepted for compatibility: `--build-script` and `--build-script-path`,
     - `--package-target <name>` selects one or more manifest `[[target]]` entries by name (repeatable; `--pkg-target` is accepted as an alias),
       - when omitted, the compiler builds every manifest `[[target]]` entry by default,
     - when building multiple targets (the default when `--package-target` is omitted, or when it is repeated), per-output flags are rejected:
@@ -391,7 +394,7 @@ Top-level commands:
     - For IR-backed native executable builds, `-O1`+ also prunes unreachable functions from the executable entrypoint (function-level dead-code elimination).
   - When `--filter <pattern>` is provided, only tests whose display name contains `<pattern>` are executed.
   - When `<file> ...` inputs are omitted and `--package` is also omitted, but `./silk.toml` exists, `silk test` behaves as if `--package .` was provided.
-- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <file> [<file> ...] -o <path> [--kind executable|object|static|shared] [--emit bin|asm] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]` (or `--out <path>`):
+- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-module] [--package-target <name> ...] <file> [<file> ...] -o <path> [--kind executable|object|static|shared] [--emit bin|asm] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]` (or `--out <path>`):
   - Reads one or more input files, runs the same front-end pipeline as `check`.
   - Optimization:
     - `-O <0-3>` selects the optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`).
@@ -399,8 +402,11 @@ Top-level commands:
     - For `--kind executable` builds, `-O1`+ also prunes unreachable functions from the executable entrypoint (function-level dead-code elimination), typically reducing output size.
   - When `--package` is provided:
     - input files must be omitted,
-    - `--build-script` runs `<package_root>/build.silk` and uses its stdout as
+    - `--build-module` compiles and runs the package build module and uses its stdout as
       the package manifest (see `docs/compiler/build-scripts.md`),
+      - when no path override is provided, the compiler looks for `<package_root>/build.slk`,
+      - `--build-module-path <path>` overrides the build module path (relative paths are resolved relative to `<package_root>`),
+      - legacy aliases are accepted for compatibility: `--build-script` and `--build-script-path`,
     - `--package-target <name>` selects one or more manifest `[[target]]` entries by name (repeatable; `--pkg-target` is accepted as an alias),
       - when omitted, the compiler builds every manifest `[[target]]` entry by default,
     - when building multiple targets (the default when `--package-target` is omitted, or when it is repeated), per-output flags are rejected:

@@ -146,6 +146,36 @@ Important notes:
   remain statement syntax (there is no general “block expression” in the current
   subset).
 
+### Default constructors (empty struct literals)
+
+If a `struct` defines a **default constructor** method with the signature:
+
+```silk
+fn constructor (mut self: &Self) -> void { ... }
+```
+
+then an **empty** struct literal invokes it as part of value construction:
+
+- `Type{}` (explicit empty literal)
+- `{}` when a struct type is expected from context (inferred empty literal)
+
+Construction order:
+
+1. All struct slots are zero-initialized.
+2. Field default expressions are evaluated for omitted fields (if present).
+3. The default constructor is invoked, allowing it to mutate `self`.
+
+Visibility rule:
+
+- The default constructor is invoked only when it is visible from the current
+  package (constructors are `public` by default; an explicitly `private`
+  constructor is not invoked implicitly).
+
+Current subset note:
+
+- Non-empty struct literals (for example `Type{ x: 1 }`) do **not** invoke
+  constructors implicitly.
+
 Compiler requirements:
 
 - Enforce that field names are valid and that each field is initialized at most once.

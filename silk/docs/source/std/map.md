@@ -136,13 +136,13 @@ fn main () -> int {
 - `fn capacity (self: &HashMap(K, V)) -> i64;`
 - `fn contains_key (self: &HashMap(K, V), key: K) -> bool;`
 - `fn get (self: &HashMap(K, V), key: K) -> V?;`
-- `fn put (mut self: &HashMap(K, V), key: K, value: V) -> std::result::Result(V?, std::memory::OutOfMemory);`  
+- `fn put (mut self: &HashMap(K, V), key: K, value: V) -> std::result::Result(V?, std::memory::OutOfMemory);`
   Inserts or replaces and returns the previous value, if present.
 - `fn remove (mut self: &HashMap(K, V), key: K) -> V?;`
 - `fn iter (self: &HashMap(K, V)) -> HashMapIter(K, V);`
 - `fn clear (mut self: &HashMap(K, V)) -> void;`
 - `fn reserve_additional (mut self: &HashMap(K, V), additional: i64) -> std::memory::OutOfMemory?;`
-- `fn drop (mut self: &HashMap(K, V)) -> void;`  
+- `fn drop (mut self: &HashMap(K, V)) -> void;`
   Releases the table backing memory.
 
 Complexity expectations:
@@ -158,7 +158,7 @@ Complexity expectations:
 
 `TreeMap(K, V)` provides:
 
-- `fn init (cmp: fn(K, K) -> int) -> TreeMap(K, V);`  
+- `fn init (cmp: fn(K, K) -> int) -> TreeMap(K, V);`
   Contract: `cmp(a, b) < 0` iff `a < b`; `cmp(a, b) == 0` iff keys are equal.
 - `fn len (self: &TreeMap(K, V)) -> i64;`
 - `fn is_empty (self: &TreeMap(K, V)) -> bool;`

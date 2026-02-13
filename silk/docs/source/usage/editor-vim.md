@@ -24,8 +24,8 @@ used directly from the Silk repository via the `runtimepath`.
 ## Filetype Detection
 
 - Silk source files use the `.slk` extension (as shown in `docs/usage/cli-examples.md`).
-- Build scripts use `build.silk` (see `docs/compiler/build-scripts.md`).
-- The plugin defines `filetype=silk` for `*.slk` and `*.silk` buffers (including `build.silk`).
+- Build modules use `build.slk` (see `docs/compiler/build-scripts.md`).
+- The plugin defines `filetype=silk` for `*.slk` and `*.silk` buffers (including `build.slk`).
 
 ## Syntax Highlighting
 

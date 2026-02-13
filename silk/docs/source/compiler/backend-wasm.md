@@ -8,7 +8,7 @@ implementation work and keep the compiler architecture spec-driven.
 
 ## Current Implementation (Phase 1, IR-backed wasm32)
 
-The repository now includes an initial `wasm32` back-end capable of emitting a
+The Silk compiler repository now includes an initial `wasm32` back-end capable of emitting a
 final `.wasm` module from the compiler’s IR (CFG-based lowering for the current
 subset), plus a smaller constant-only fallback:
 

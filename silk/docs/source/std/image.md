@@ -20,7 +20,7 @@ work with the current `ext` / C ABI subset.
 ## Vendored Dependencies + Linking
 
 On the hosted `linux/x86_64` baseline, the codec modules rely on vendored C
-libraries that are built via the repo dependency workflow:
+libraries that are built via the Silk compiler repository’s vendored dependency workflow:
 
 - libpng `v1.6.54`
 - libjpeg-turbo `3.1.3`

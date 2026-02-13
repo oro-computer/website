@@ -83,6 +83,7 @@ distribution:
   the bundled `linenoise` sources (see `docs/std/readline.md`).
 - `std::flag` — command line flag + positional parsing (current subset; see `docs/std/flag.md`).
 - `std::test` — test helpers for `silk test` (current subset; see `docs/std/test.md`).
+- `std::build` — build module helpers for generating `silk.toml` manifests (see `docs/std/build.md`).
 - `std::env` — environment variable access (hosted baseline; see `docs/std/env.md`).
 - `std::process` — process primitives (hosted baseline; see `docs/std/process.md`).
 - `std::os` — target OS/arch metadata and small OS helpers (see `docs/std/os.md`).

@@ -61,9 +61,9 @@ Default helper functions are provided for these element types:
 - `fn is_empty (self: &SetMap(T)) -> bool;`
 - `fn capacity (self: &SetMap(T)) -> i64;`
 - `fn contains (self: &SetMap(T), key: T) -> bool;`
-- `fn insert (mut self: &SetMap(T), key: T) -> std::result::Result(bool, std::memory::OutOfMemory);`  
+- `fn insert (mut self: &SetMap(T), key: T) -> std::result::Result(bool, std::memory::OutOfMemory);`
   Returns `true` when `key` was not already present.
-- `fn remove (mut self: &SetMap(T), key: T) -> bool;`  
+- `fn remove (mut self: &SetMap(T), key: T) -> bool;`
   Returns `true` when `key` was present and removed.
 - `fn iter (self: &SetMap(T)) -> SetMapIter(T);`
 - `fn clear (mut self: &SetMap(T)) -> void;`
@@ -89,7 +89,7 @@ Complexity expectations:
 
 `TreeSet(T)` provides:
 
-- `fn init (cmp: fn(T, T) -> int) -> TreeSet(T);`  
+- `fn init (cmp: fn(T, T) -> int) -> TreeSet(T);`
   Contract: `cmp(a, b) < 0` iff `a < b`; `cmp(a, b) == 0` iff keys are equal.
 - `fn len (self: &TreeSet(T)) -> i64;`
 - `fn is_empty (self: &TreeSet(T)) -> bool;`

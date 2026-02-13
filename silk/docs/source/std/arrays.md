@@ -75,6 +75,9 @@ impl ByteSlice {
   public fn first (self: &ByteSlice) -> u8?;
   public fn last (self: &ByteSlice) -> u8?;
   public fn iter (self: &ByteSlice) -> ByteSliceIter;
+  public fn find_u8 (self: &ByteSlice, needle: u8) -> i64?;
+  public fn rfind_u8 (self: &ByteSlice, needle: u8) -> i64?;
+  public fn find_bytes (self: &ByteSlice, needle: ByteSlice) -> i64?;
 }
 
 impl ByteSlice as std::interfaces::Len {
@@ -125,6 +128,7 @@ Notes:
   - `try_set` returns `false` when `index` is out of bounds.
 - `SliceIter(T)` provides a minimal sequential iterator for `Slice(T)` values.
   It implements `std::interfaces::Iterator(T)`; iteration is by value (copies).
+- `ByteSlice.find_bytes(empty)` returns `Some(0)` (matches `memmem(3)` semantics).
 
 ## Scope
 

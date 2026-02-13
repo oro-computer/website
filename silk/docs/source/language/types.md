@@ -20,6 +20,7 @@ Implementation status (current compiler subset):
   `__silk_string_len`, and `__silk_string_from_ptr_len`). User code should
   generally prefer the language sugar:
   - `s as raw u64` (extract the underlying byte pointer), and
+  - `p as raw u64` (extract the underlying address for `p: &T`), and
   - `sizeof s` (string byte length as `usize`)
   over calling these helpers directly. The intrinsic names remain reserved and
   are not a stable user API.
@@ -427,8 +428,11 @@ The current compiler subset:
 - Implements function expressions (lambdas) in expression positions:
   - expression body form: `fn (x: int, y: int) -> x + y`
   - block body form: `fn (x: int, y: int) -> int { return x + y; }`
+  - block body `void` shorthand: `fn (x: int, y: int) { ... }` (implicit `void`)
 - Function expressions may not declare `&T` parameters in the current subset.
-- Function expressions are inferred as `pure` when they are **non-capturing**:
+- Function expression bodies are checked under the `pure` rules in the current
+  subset. Non-capturing function expressions are inferred as `pure` function
+  types and are permitted in `pure` code:
   - they may call only `pure` functions,
   - they may not mutate (`let mut`/`var`, assignment),
   - they may not allocate (`new`),
@@ -442,8 +446,9 @@ The current compiler subset:
     environment,
   - in the current subset, only **scalar** captures are supported (`int`, fixed
     width ints, `bool`, `char`, `f32`, `f64`, `Instant`, `Duration`),
-  - capturing closures are not `pure` (they have an environment) and are
-    rejected in `pure` code in the current subset.
+  - forming captures inside `pure` code is rejected (capture environments
+    allocate), but closure *values* are still checked under the `pure` rules and
+    remain callable from `pure` code once constructed.
 - Function values are supported end-to-end for this subset (non-capturing and
   capturing):
   - they may be passed as arguments, returned from functions, stored in
@@ -453,3 +458,21 @@ The current compiler subset:
 - Discipline modifiers for function declarations (`pure` / `task` / `async`) are
   implemented. Function types in type positions do not currently include
   discipline modifiers.
+
+### C Function Pointers (`c_fn`) (Implemented Subset)
+
+Silk distinguishes between:
+
+- `fn (...) -> R` *function values* (which may carry a closure environment), and
+- `c_fn (...) -> R` *C callback pointers* (code pointers only; no environment).
+
+`c_fn` is intended for FFI: it is a safe, storable representation for passing
+callbacks to foreign code.
+
+Rules (current subset):
+
+- A `c_fn` value may be formed only from:
+  - a top-level function name, or
+  - a non-capturing `fn (...) -> ...` expression.
+- Capturing closures are rejected when a `c_fn` is required.
+- `c_fn` values are ABI-lowered as a single `u64` code pointer.

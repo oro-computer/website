@@ -171,12 +171,31 @@ export fn log (msg: string) -> void {
 }
 ```
 
+Name resolution:
+
+- The interface name in `module ... as Interface;` is resolved after the module’s
+  import block is processed, so it may refer to an interface imported later in
+  the file’s import section.
+  - This allows an unqualified, ergonomic module header form like:
+
+    ```silk
+    module hello::build as Builder;
+
+    import { Builder } from "std/interfaces";
+    ```
+
 Conformance rules:
 
 - For an `interface I { fn m(p0: T0, ...) -> R; }`, the corresponding module must
   provide a function `m` whose signature matches exactly:
   - there is no receiver parameter for module conformance, and
   - the parameter and result types must match the interface method.
+- Conformance compares the **call result type** of the exported function:
+  - `export async fn m (...) -> R` is treated as `m(...) -> Promise(R)`,
+  - `export task fn m (...) -> R` is treated as `m(...) -> Task(R)`,
+  - `export async task fn m (...) -> R` is treated as `m(...) -> Promise(Task(R))`.
+  This allows module interfaces to express async/task entrypoints by writing the
+  appropriate handle type in the interface method result.
 - In the current compiler subset, module conformance is checked against the
   module’s **exported** functions (written as `export fn ...`), since those are
   the module members that are visible across module boundaries.

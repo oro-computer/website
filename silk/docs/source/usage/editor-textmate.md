@@ -6,7 +6,7 @@ highlighting for editors that consume tmLanguage grammars (TextMate, VS Code, Su
 ## Scope and File Extension
 
 - Scope: `source.silk`
-- File extensions: `.slk` and `.silk` (including build scripts like `build.silk`)
+- File extensions: `.slk` and `.silk` (including build modules like `build.slk`)
 
 ## TextMate (macOS)
 

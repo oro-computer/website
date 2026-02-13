@@ -134,7 +134,7 @@ export fn main () -> int {
     http::ResponseResult::Ok(v) => v,
     http::ResponseResult::Err(_) => trap(http::Response;),
   };
-  _ = resp.status_code();
+  let _ = resp.status_code();
   conn.close();
   return 0;
 }

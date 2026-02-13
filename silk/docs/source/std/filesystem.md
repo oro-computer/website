@@ -101,6 +101,31 @@ struct File {
 
 export type FileResult = std::result::Result(File, FSFailed);
 
+// A read-only memory mapping (hosted baseline).
+struct MMap {
+  ptr: u64,
+  len: i64,
+}
+
+export type MMapResult = std::result::Result(MMap, FSFailed);
+
+impl MMap {
+  public fn empty () -> MMap;
+  public fn as_slice (self: &MMap) -> std::arrays::ByteSlice;
+}
+
+impl MMap as std::interfaces::Len {
+  public fn len (self: &MMap) -> i64;
+}
+
+impl MMap as std::interfaces::IsEmpty {
+  public fn is_empty (self: &MMap) -> bool;
+}
+
+impl MMap as std::interfaces::Drop {
+  public fn drop (mut self: &MMap) -> void;
+}
+
 impl File {
   // Construct an invalid/closed file handle (`fd = -1`).
   public fn invalid () -> File;
@@ -121,6 +146,8 @@ impl File {
   public fn seek (self: &File, offset: i64, whence: SeekWhence) -> FSI64Result;
   public fn tell (self: &File) -> FSI64Result;
   public fn size (self: &File) -> FSI64Result;
+  public fn mmap_readonly (self: &File) -> MMapResult;
+  public fn mmap_readonly_range (self: &File, offset: i64, len: i64) -> MMapResult;
   public fn sync (self: &File) -> FSFailed?;
   public fn truncate (self: &File, len: i64) -> FSFailed?;
 
@@ -193,6 +220,13 @@ Notes:
     platform error mechanism (for example POSIX `errno`) is not part of the
     public API. The mapping from the platform mechanism into stable
     `FSFailed.code` values is performed by `std::runtime::fs`.
+  - `MMap` is a hosted baseline feature backed by `mmap(2)` / `munmap(2)` via
+    `std::runtime::fs`. On WASI, mapping returns `InvalidInput` (unsupported).
+  - `File.mmap_readonly_range(offset, len)` does not require `offset` to be
+    page-aligned; it aligns internally (note: `MMap.ptr` may not be
+    page-aligned for range mappings).
+  - `File.mmap_readonly_range(offset, len)` does not validate the range against
+    the file size. Mapping beyond EOF may trap on access (for example SIGBUS).
   - `mkdir_all` is a convenience helper for `mkdir -p` behavior. In the current
     hosted subset it treats `EEXIST` as success and does not distinguish an
     existing directory from an existing non-directory at the same path.

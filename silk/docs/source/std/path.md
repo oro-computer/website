@@ -37,6 +37,7 @@ impl PathBuf {
   public fn clear (mut self: &PathBuf) -> void;
   public fn push (mut self: &PathBuf, part: string) -> std::memory::OutOfMemory?;
   public fn pop (mut self: &PathBuf) -> bool;
+  public fn truncate_len (mut self: &PathBuf, new_len: i64) -> bool;
 }
 
 // Inspection.
@@ -56,6 +57,8 @@ export fn stem (path: string) -> string;
 Notes:
 
 - On POSIX, the root path `"/"` has no basename, so `basename("/") == ""`.
+- `PathBuf` implements `std::interfaces::{Len,Capacity,IsEmpty}` for ergonomic use
+  in generic code (`pb.len()`, `pb.capacity()`, and `pb.is_empty()`).
 
 ## Separator and delimiter
 

@@ -368,8 +368,11 @@ Rules:
   - it may be declared multiple times in a single `impl` block (an overload set),
   - its overload set includes `constructor` declarations across all merged
     `impl` blocks for the type,
-  - it is invoked by heap allocation (`new Type(...)`) and by certain
-    call-argument coercions (see `docs/language/types.md`),
+  - it is invoked by:
+    - heap allocation (`new Type(...)`),
+    - empty struct literals (`Type{}` and contextual `{}`) when a visible
+      default constructor exists (see `docs/language/literals-aggregate.md`),
+    - and certain call-argument coercions (see `docs/language/types.md`),
   - `new Type(args...)` invokes the unique overload whose receiver is
     `mut self: &Type`, whose return type is `void`, and whose non-receiver
     parameter list matches `args...` after applying the normal call-argument

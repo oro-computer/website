@@ -38,9 +38,12 @@ enum IOErrorKind {
 }
 
 struct IOFailed { code: int, requested: i64 }
+struct TTYSize { rows: int, cols: int }
+struct TTYRawMode { handle: u64 }
 export type IOResult = std::result::Result(int, IOFailed);
 export type IOError = IOFailed;
 export type IOErrorIntResult = std::result::Result(int, IOError);
+export type TTYRawModeResult = std::result::Result(TTYRawMode, IOFailed);
 
 export fn read (fd: int, buf: std::arrays::ByteSlice) -> IOResult;
 export fn write (fd: int, buf: std::arrays::ByteSlice) -> IOResult;
@@ -50,6 +53,11 @@ export fn read_to_end (fd: int, mut out: &std::buffer::BufferU8) -> IOErrorIntRe
 export fn read_stdin (buf: std::arrays::ByteSlice) -> IOResult;
 export fn write_stdout (buf: std::arrays::ByteSlice) -> IOResult;
 export fn write_stderr (buf: std::arrays::ByteSlice) -> IOResult;
+
+export fn isatty (fd: int) -> bool;
+export fn tty_size (fd: int) -> TTYSize?;
+export fn tty_open () -> IOResult;
+export fn tty_raw_mode (fd: int) -> TTYRawModeResult;
 
 export fn puts (s: string) -> IOFailed?;
 
@@ -71,6 +79,13 @@ Notes:
 - `IOFailed.code` is a stable stdlib error code; callers should prefer `IOFailed.kind()`.
 - Invalid buffer arguments report `IOErrorKind::InvalidInput`.
 - `read_to_end` returns `IOErrorIntResult` (`Ok(total_bytes)` or `Err(IOFailed)`), where allocation failure is reported as `IOErrorKind::OutOfMemory` and `IOFailed.requested`.
+- `isatty(fd)` returns `true` when `fd` refers to a TTY, otherwise `false`.
+- `tty_size(fd)` returns `Some(TTYSize)` when the window size is available (TTY
+  mode), otherwise `None`.
+- `tty_open()` opens `/dev/tty` for interactive programs and returns `Ok(fd)` or
+  `Err(IOFailed)`.
+- `tty_raw_mode(fd)` enables termios raw mode and returns a `TTYRawMode` guard
+  that restores the previous state on drop.
 - For ergonomics, `std::fmt::Arg` opts into the compiler’s implicit
   call-argument coercion mechanism (see `docs/language/types.md`). This allows
   passing primitive values (`int`/fixed-width ints, `usize`/`size`, `f32`/`f64`,

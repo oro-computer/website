@@ -14,9 +14,9 @@
 - `silk repl`
 - `silk check [--nostd] [--std-root <path>] [--z3-lib <path>] [--debug] [--package <dir|manifest>] <file> [<file> ...]`
 - `silk test [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--filter <pattern>] [--package <dir|manifest>] <file> [<file> ...]`
-- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--emit bin|asm] [-S] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]`
-- `silk build install [--package <dir|manifest>] [--build-script] [--package-target <name> ...] [-p <path>|--prefix <path>]`
-- `silk build uninstall [--package <dir|manifest>] [--build-script] [-p <path>|--prefix <path>]`
+- `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-module] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--emit bin|asm] [-S] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]`
+- `silk build install [--package <dir|manifest>] [--build-module] [--package-target <name> ...] [-p <path>|--prefix <path>]`
+- `silk build uninstall [--package <dir|manifest>] [--build-module] [-p <path>|--prefix <path>]`
 - `silk doc [--all] <file> [<file> ...] [-o <path>]`
 - `silk doc --man [--package <dir|manifest>] [--std-root <path>] <query> [-o <path>]`
 - `silk man [--section <n>|-s <n>] <query>`
@@ -100,14 +100,16 @@ For the initial implementation, the supported options are:
     - `--` — end of options; treat remaining args as file paths (even if they begin with `-`).
 
 - **Build command:**
-  - `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-script] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--emit bin|asm] [-S] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]`:
+  - `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-module] [--package-target <name> ...] <input> [<input> ...] -o <path> [--kind executable|object|static|shared] [--emit bin|asm] [-S] [--arch <arch>] [--target <triple>] [--c-header <path>] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>]`:
     - `--help`, `-h` — show `build` usage and exit.
     - `-o <path>`, `--out <path>` — write the generated output to `<path>`.
       - if the parent directories of `<path>` do not exist, the compiler creates them (like `mkdir -p`).
     - `--package <dir|manifest>` (or `--pkg`) — load the module set from a package manifest (`silk.toml`) instead of explicit input files. When `--package` is provided:
       - `<file> ...` inputs must be omitted.
       - When `<file> ...` inputs are omitted and `--package` / `--pkg` is also omitted, but `./silk.toml` exists, `silk build` behaves as if `--package .` was provided.
-    - `--build-script` — compile and run `<package_root>/build.silk` and use its stdout as the package manifest (see `docs/compiler/build-scripts.md`).
+    - `--build-module` — compile and run `<package_root>/build.slk` and use its stdout as the package manifest (see `docs/compiler/build-scripts.md`).
+    - `--build-module-path <path>` — override the build module path (relative paths are resolved relative to `<package_root>`).
+      - legacy aliases are accepted for compatibility: `--build-script` and `--build-script-path`.
     - `--package-target <name>` — select one or more manifest `[[target]]` entries by name (repeatable; `--pkg-target` is accepted as an alias).
       - when omitted, `silk build --package ...` builds every manifest `[[target]]` entry by default.
       - when building multiple targets, per-output flags are rejected (`-o/--out`, `--kind`, `--emit`, `--arch`, `--target`, `--c-header`, `--needed`, `--runpath`, `--soname`).

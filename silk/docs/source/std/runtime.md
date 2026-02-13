@@ -94,7 +94,8 @@ Implemented runtime areas in the shipped stdlib:
 
 - `std::runtime::mem` — low-level allocation and compiler-backed intrinsics used by
   higher-level std modules (`alloc`/`realloc`/`free`, raw `load`/`store`, and
-  string view helpers).
+  string view helpers), plus basic environment queries used by higher-level
+  wrappers (for example `page_size()` for `mmap` alignment).
   - when an active region context is established with `with` (`docs/language/regions.md`),
     allocations are routed to that region for the dynamic extent of the `with`
     block (including calls into stdlib code):
@@ -115,6 +116,8 @@ Implemented runtime areas in the shipped stdlib:
   on `wasm32-wasi` the shipped backend supports a small subset using the first
   preopened directory as a sandbox root, and resolves relative paths against a
   virtual cwd (`std::runtime::wasi::cwd`)).
+  - includes read-only mapping helpers (`mmap_readonly` / `munmap`); on
+    `wasm32-wasi` mapping is currently unsupported and reports `InvalidInput`.
 - `std::runtime::io` — low-level stdio primitives used by `std::io` (on
   `wasm32-wasi`, rewritten to `std::runtime::wasi::io`, which maintains a
   POSIX-shaped `errno` cell for wrappers that still query `errno()`).

@@ -9,7 +9,7 @@
 ## Synopsis
 
 - `slc [options] <file> [<file> ...] -o <output>`
-- `slc [options] --package <dir|manifest> [--build-script] [--package-target <name> ...]`
+- `slc [options] --package <dir|manifest> [--build-module] [--package-target <name> ...]`
 
 ## Description
 

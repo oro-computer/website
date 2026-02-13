@@ -64,7 +64,6 @@ KEEP_DOCS_FILES = {
     "language/syntax-tour.md",
     "language/typed-errors.md",
     "man/silk.1.md",
-    "spec/2026.md",
     "std/crypto.md",
     "std/json.md",
     "std/url.md",
@@ -167,6 +166,56 @@ def sanitize_wiki_markdown(markdown: str) -> str:
     return "\n".join(out_lines) + ("\n" if markdown.endswith("\n") else "")
 
 
+def sanitize_docs_markdown(markdown: str) -> str:
+    """
+    The upstream Silk docs are written for the Silk compiler repository and may
+    use ambiguous phrasing like "this repository" or project-internal jargon
+    like "repo dependency workflow". When we sync into the website, we rewrite
+    a few phrases to be clearer to downstream readers.
+    """
+
+    def rewrite_outside_inline_code(text: str) -> str:
+        out = text
+
+        # Make references explicit.
+        out = re.sub(r"\bThe repository\b", "The Silk compiler repository", out)
+        out = re.sub(r"\bthe repository\b", "the Silk compiler repository", out)
+        out = re.sub(r"\bThis repository\b", "The Silk compiler repository", out)
+        out = re.sub(r"\bthis repository\b", "the Silk compiler repository", out)
+
+        # Prefer a clearer name for the dependency build flow.
+        out = re.sub(
+            r"\brepo dependency workflow\b",
+            "Silk compiler repository’s vendored dependency workflow",
+            out,
+            flags=re.I,
+        )
+
+        return out
+
+    out_lines: list[str] = []
+    in_code = False
+
+    for raw in markdown.splitlines():
+        trimmed = raw.lstrip()
+        if trimmed.startswith("```"):
+            in_code = not in_code
+            out_lines.append(raw.rstrip())
+            continue
+
+        if in_code:
+            out_lines.append(raw.rstrip())
+            continue
+
+        # Preserve inline-code spans (single-backtick) while rewriting prose.
+        parts = raw.split("`")
+        for i in range(0, len(parts), 2):
+            parts[i] = rewrite_outside_inline_code(parts[i])
+        out_lines.append("`".join(parts).rstrip())
+
+    return "\n".join(out_lines) + ("\n" if markdown.endswith("\n") else "")
+
+
 def sync_tree(
     src_root: Path,
     dst_root: Path,
@@ -230,6 +279,7 @@ def main() -> None:
         dst_docs,
         keep_files=KEEP_DOCS_FILES,
         keep_prefixes=KEEP_DOCS_PREFIXES + ("wiki/",),
+        sanitize=sanitize_docs_markdown,
     )
 
     # Wiki: copy everything under docs/wiki into website wiki source.

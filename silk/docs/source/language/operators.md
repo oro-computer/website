@@ -544,6 +544,12 @@ Rules (current subset):
   and extracts the string’s underlying **byte pointer**. This is sugar over
   `std::runtime::mem::string_ptr` (and the reserved intrinsic
   `__silk_string_ptr`).
+- Special-case: `&T as raw u64` (and `&T as raw usize`) is permitted and
+  extracts the reference’s underlying **address** as an integer. This is
+  intended for low-level interop (for example passing `&Struct` pointers to C
+  APIs that use `void *` / `T *` handles).
+  - This does not make integer→reference casts legal: `u64 as raw &T` remains
+    rejected in the current subset.
 - Semantics:
   - The operand’s current canonical scalar bits are reinterpreted as the target
     type’s canonical scalar bits (bit-level truncation/masking for narrower

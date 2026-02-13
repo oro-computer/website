@@ -98,15 +98,20 @@ Today:
     and inside `task { ... }` / `task loop { ... }` blocks.
 - Lowering/codegen implements `task` execution using OS threads on `linux/x86_64`
   and implements `yield`/`yield *` for task values plus `await` for promises.
-  - There is not yet a coroutine transformation or event loop; awaiting a
-    `Promise(T)` currently does not “park” the OS thread (it is still a
-    synchronous unwrap in the current subset).
+  - On hosted `linux/x86_64`, the compiler ships a bring-up async runtime
+    (`src/silk_rt_async.c`) so `await` is a true suspension point:
+    - awaiting a pending `Promise(T)` parks the current fiber and allows other
+      runnable fibers to execute (it does not block the OS thread),
+    - outside an active executor, awaiting may fall back to blocking behavior.
+    - the long-term design remains a compiler coroutine transform plus a stable
+      `std::runtime::event_loop` API; see `docs/compiler/async-runtime.md`.
   - `async { ... }` / `task { ... }` blocks are still lexical blocks in the
     current subset (they do not yet introduce scheduler behavior).
 - Function types are parsed in type positions (notably for `ext`).
 - Function expressions are implemented as first-class function values:
   - `fn (x: int) -> x + 1` (expression body),
   - `fn (x: int) -> int { return x + 1; }` (block body).
+  - `fn (x: int) { ... }` (block body, implicit `void` result).
   - Function expressions may not declare `&T` parameters.
   - Non-capturing function expressions are inferred as `pure` and are callable
     from `pure` code.
@@ -115,6 +120,8 @@ Today:
       enclosing scope,
     - captures are by-value copies into a heap environment (scalar-only in the
       current subset),
-    - capturing closures are not `pure` and are rejected in `pure` code.
+    - forming captures inside `pure` code is rejected (capture environments
+      allocate), but closure *values* are still checked under the `pure` rules
+      and remain callable from `pure` code once constructed.
   - Function values (both non-capturing and capturing) are supported end-to-end:
     they may be passed, returned, stored, and called indirectly.

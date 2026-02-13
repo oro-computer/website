@@ -9,10 +9,10 @@
 ## Synopsis
 
 - `silk build [options] <input> [<input> ...] -o <output>`
-- `silk build [options] --package <dir|manifest> [--build-script] [--package-target <name> ...]`
+- `silk build [options] --package <dir|manifest> [--build-module] [--package-target <name> ...]`
 - `silk build [options]` (when `./silk.toml` exists, behaves as if `--package .` was provided)
-- `silk build install [options] --package <dir|manifest> [--build-script] [--package-target <name> ...]`
-- `silk build uninstall [options] --package <dir|manifest> [--build-script]`
+- `silk build install [options] --package <dir|manifest> [--build-module] [--package-target <name> ...]`
+- `silk build uninstall [options] --package <dir|manifest> [--build-module]`
 
 ## Description
 
@@ -86,8 +86,13 @@ Target selection:
 - `--arch <arch>` — shorthand target selector (mutually exclusive with `--target`).
 - `--target <triple>` — target triple (mutually exclusive with `--arch`).
 
+Native compilation:
+
+- `--cflag <arg>` — add a host C compiler argument used when compiling `.c`/`.h` inputs (repeatable).
+
 Linker metadata (executable/shared only):
 
+- `--ldflag <arg>` — add a link-related argument (repeatable). In the current toolchain these are translated into `--needed`/`--runpath`/`--soname` effects (see `docs/compiler/package-manifests.md`).
 - `--needed <soname>` — add a `DT_NEEDED` entry (repeatable).
 - `--runpath <path>` — add a `DT_RUNPATH` entry (repeatable).
 - `--rpath <path>` — alias of `--runpath`.
@@ -100,10 +105,16 @@ C header emission:
 Package builds:
 
 - `--package <dir|manifest>`, `--pkg <dir|manifest>` — load the module set from a `silk.toml` manifest instead of explicit input files.
-- `--build-script` — compile and run `<package_root>/build.silk` and use its stdout as the manifest.
+- `--build-module` — compile and run the package build module and use the manifest it emits as the package manifest.
+  - when a build module is executed and no explicit path override is provided, the compiler looks for `<package_root>/build.slk` (or uses `[build].build_module_path` from `silk.toml` when set).
+  - the build module is invoked with `argv[1] = <package_root>` and `argv[2] = <action>` where `<action>` is `build`, `install`, or `uninstall`.
+- build modules are opt-in by default; to run one for `silk build --package` without passing `--build-module`, set `[build].build_module = true` in `silk.toml`.
+- `--build-module-path <path>` — override the build module path.
+  - if `<path>` is relative, it is resolved relative to `<package_root>`.
+- Legacy aliases (accepted for compatibility): `--build-script` and `--build-script-path`.
 - `--package-target <name>` — select one or more manifest `[[target]]` entries by name (repeatable; `--pkg-target` is accepted as an alias).
   - when omitted, `silk build --package ...` builds every manifest `[[target]]` entry by default.
-  - when building multiple targets, per-output flags are rejected (`-o/--out`, `--kind`, `--emit`, `--arch`, `--target`, `--c-header`, `--needed`, `--runpath`, `--soname`).
+  - when building multiple targets, per-output flags are rejected (`-o/--out`, `--kind`, `--emit`, `--arch`, `--target`, `--c-header`, `--cflag`, `--ldflag`, `--needed`, `--runpath`, `--soname`).
 
 Argument parsing:
 

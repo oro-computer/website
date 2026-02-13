@@ -13,7 +13,7 @@ Key goals:
 - **Large archives**: byte-slice inputs can be backed by an mmap mapping created
   by the embedding program (or a future stdlib mmap API).
 - **Async-friendly**: fd-backed adapters are provided under `std::tar::async`
-  (built on the hosted event loop and `std::io::async`).
+  (built on the hosted event loop and non-blocking `std::io`).
 
 ## Supported tar formats
 
@@ -140,11 +140,21 @@ export struct Writer {
 `std::tar::async` provides `async fn` adapters for fd-backed reading and writing
 of tar archives. These are intended for event-loop-based programs:
 
-- waits for fd readiness (`std::runtime::event_loop` via `std::io::async`),
+- waits for fd readiness (`std::runtime::event_loop`),
 - performs non-blocking reads/writes when possible,
 - keeps tar parsing/encoding streaming (no whole-archive buffering).
 
-See the module source: `std/tar/async.slk`.
+API surface:
+
+```silk
+module std::tar::async;
+
+export type Reader = std::tar::AsyncReader;
+export type Writer = std::tar::AsyncWriter;
+```
+
+Note: the implementations live in `std/tar.slk`; `std/tar/async.slk` is a thin
+re-export module so callers can `import std::tar::async;`.
 
 ## Example: in-memory roundtrip
 
@@ -193,4 +203,3 @@ fn main () -> int {
   return 0;
 }
 ```
-

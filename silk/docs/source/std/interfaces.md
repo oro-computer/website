@@ -72,6 +72,10 @@ interface Serialize(S = string) {
 interface Deserialize(S = string) {
   fn deserialize (value: S) -> Self;
 }
+
+interface Builder {
+  fn run (package_root: string, action: string) -> Promise(int);
+}
 ```
 
 Notes:
@@ -107,6 +111,13 @@ Notes:
 - `Deserialize` is also recognized by the `as` cast operator:
   - when a type provides `deserialize(value: S) -> Self`, an explicit cast
     `value as T` lowers to `T.deserialize(value)` (see `docs/language/operators.md`).
+- `Builder` is the standard interface for `build.slk` build modules used by the
+  `silk` CLI (see `docs/compiler/build-scripts.md`). It is a module-level
+  interface (used via `module ... as ...`) and defines a single `run` entrypoint
+  that may be implemented as `async` and `await`ed by the driver wrapper.
+  - Recommended build-module header style:
+    - `module my_pkg::build as Builder;` + `import { Builder } from "std/interfaces";`
+    - or `module my_pkg::build as std::interfaces::Builder;` (fully qualified)
 
 ## Drop semantics (Implemented subset)
 

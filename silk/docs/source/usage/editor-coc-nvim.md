@@ -15,7 +15,7 @@ should stay aligned with the LSP capabilities documented in `docs/compiler/lsp-s
 
 - Neovim with `coc.nvim` (engine version `^0.0.80`).
 - `silk-lsp` on your `PATH` or a configured absolute path.
-- `filetype=silk` for `*.slk` and `*.silk` buffers (including `build.silk`; use the Vim plugin under `vim/` or your own filetype setup).
+- `filetype=silk` for `*.slk` and `*.silk` buffers (including `build.slk`; use the Vim plugin under `vim/` or your own filetype setup).
 
 ## Install (local, from the Silk compiler repository)
 
@@ -58,7 +58,7 @@ Add settings to your `coc-settings.json`:
   "silk.noStd": false,
   "silk.filetypes": ["silk"],
   "silk.rootPatterns": [
-    "build.silk",
+    "build.slk",
     "silk.toml",
     "build.zig",
     "build.zig.zon",
