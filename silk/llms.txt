@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-02-17T14:41:34+00:00
+Generated: 2026-02-17T18:49:38+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -38,7 +38,6 @@ Silk Docs
   - language/using — `using` (Aliases and Method Reuse) — /silk/docs/?p=language/using
   - language/flow-while — `while` Loop — /silk/docs/?p=language/flow-while
   - language/literals-aggregate — Aggregate Literals — /silk/docs/?p=language/literals-aggregate
-  - language/arenas — Arenas — /silk/docs/?p=language/arenas
   - language/flow-blocks-statements — Blocks and Statement Composition — /silk/docs/?p=language/flow-blocks-statements
   - language/literals-boolean — Boolean Literals — /silk/docs/?p=language/literals-boolean
   - language/borrow-checker — Borrow Checking (Static Alias and Lifetime Safety) — /silk/docs/?p=language/borrow-checker
@@ -212,7 +211,6 @@ Silk Wiki
   - language/flow-return — `return` — /silk/wiki/?p=language/flow-return
   - language/flow-while — `while` — /silk/wiki/?p=language/flow-while
   - language/literals-aggregate — Aggregate literals (arrays and structs) — /silk/wiki/?p=language/literals-aggregate
-  - language/arenas — Arenas — /silk/wiki/?p=language/arenas
   - language/flow-blocks-statements — Blocks and statements — /silk/wiki/?p=language/flow-blocks-statements
   - language/literals-boolean — Boolean literals — /silk/wiki/?p=language/literals-boolean
   - language/borrow-checker — Borrow checker (design) — /silk/wiki/?p=language/borrow-checker
@@ -3269,15 +3267,6 @@ limited struct subset described in `structs-impls-layout.md`:
     subset,
 - no duplicate field initializers are permitted,
 - field order is not semantically significant.
-
-==============================================================================
-DOCS: Arenas (language/arenas)
-URL: /silk/docs/?p=language/arenas
-==============================================================================
-
-# Arenas
-
-Arenas are not part of the language surface. Use **regions** instead.
 
 ==============================================================================
 DOCS: Blocks and Statement Composition (language/flow-blocks-statements)
@@ -38721,12 +38710,6 @@ Note: `std::test` helpers carry a Formal Silk contract requiring
 `BUILD_MODE == "test"` via `std::formal.requires_test_mode()` so downstream
 verification can model them as test-only APIs.
 
-## Arenas
-
-Arenas are not part of the language surface. Use **regions** instead.
-
-See `Regions`.
-
 ## Silkdoc (Documentation Comments)
 
 This document specifies **Silkdoc**, Silk’s documentation-comment format.
@@ -40998,15 +40981,6 @@ fn main () -> int {
 ```
 
 ## See also
-
-==============================================================================
-WIKI: Arenas (language/arenas)
-URL: /silk/wiki/?p=language/arenas
-==============================================================================
-
-# Arenas
-
-This page has been removed. Use **regions** instead:
 
 ==============================================================================
 WIKI: Blocks and statements (language/flow-blocks-statements)

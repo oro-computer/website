@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-02-17T14:41:33+00:00",
+  "generatedAt": "2026-02-17T18:49:38+00:00",
   "kind": "docs",
-  "count": 175,
+  "count": 174,
   "sections": [
     {
       "name": "overview",
@@ -120,11 +120,6 @@
           "id": "language/literals-aggregate",
           "title": "Aggregate Literals",
           "file": "language/literals-aggregate.md"
-        },
-        {
-          "id": "language/arenas",
-          "title": "Arenas",
-          "file": "language/arenas.md"
         },
         {
           "id": "language/flow-blocks-statements",

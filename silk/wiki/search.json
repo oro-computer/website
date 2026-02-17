@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-02-17T14:41:34+00:00",
+  "generatedAt": "2026-02-17T18:49:38+00:00",
   "kind": "wiki",
-  "count": 85,
+  "count": 84,
   "items": [
     {
       "id": "start",
@@ -79,13 +79,6 @@
       "section": "language",
       "summary": "Aggregate literals build compound values directly in source code:",
       "text": "Aggregate literals (arrays and structs) Aggregate literals build compound values directly in source code: array literals: [a, b, c] struct literals: Type{ field: value, ... } Example struct Pair { a: int, b: int, } fn main () -> int { let xs: int[3] = [1, 2, 3]; let p: Pair = Pair{ a: xs[0], b: xs[2] }; return p.a + p.b; } See also"
-    },
-    {
-      "id": "language/arenas",
-      "title": "Arenas",
-      "section": "language",
-      "summary": "This page has been removed. Use **regions** instead:",
-      "text": "Arenas This page has been removed. Use regions instead:"
     },
     {
       "id": "language/flow-blocks-statements",

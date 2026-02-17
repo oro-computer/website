@@ -11,6 +11,8 @@ from typing import Callable
 
 
 EXCLUDE_BASENAMES = {
+    # Arenas were removed from the user-facing surface; use regions instead.
+    "arenas.md",
     "README.md",
     "PLAN.md",
     "STATUS.md",
@@ -180,6 +182,40 @@ def sanitize_docs_markdown(markdown: str) -> str:
     a few phrases to be clearer to downstream readers.
     """
 
+    def drop_named_section(md: str, heading: str) -> str:
+        target = heading.strip().lower()
+        out_lines: list[str] = []
+        in_code = False
+        skip_level: int | None = None
+
+        for raw in md.splitlines():
+            trimmed = raw.lstrip()
+            if trimmed.startswith("```"):
+                in_code = not in_code
+                if skip_level is None:
+                    out_lines.append(raw.rstrip())
+                continue
+
+            if not in_code and skip_level is not None:
+                heading_match = re.match(r"^(#{1,6})\s+(.+?)\s*$", raw)
+                if not heading_match:
+                    continue
+                level = len(heading_match.group(1))
+                if level > skip_level:
+                    continue
+                skip_level = None
+
+            if not in_code:
+                heading_match = re.match(r"^(#{1,6})\s+(.+?)\s*$", raw)
+                if heading_match and heading_match.group(2).strip().lower() == target:
+                    skip_level = len(heading_match.group(1))
+                    continue
+
+            if skip_level is None:
+                out_lines.append(raw.rstrip())
+
+        return "\n".join(out_lines) + ("\n" if md.endswith("\n") else "")
+
     def rewrite_outside_inline_code(text: str) -> str:
         out = text
 
@@ -198,6 +234,8 @@ def sanitize_docs_markdown(markdown: str) -> str:
         )
 
         return out
+
+    markdown = drop_named_section(markdown, "Arenas")
 
     out_lines: list[str] = []
     in_code = False
@@ -260,6 +298,12 @@ def sync_tree(
             continue
         if path.suffix not in (".md", ".txt"):
             continue
+
+        if path.name in EXCLUDE_BASENAMES:
+            path.unlink()
+            deleted += 1
+            continue
+
         rel = path.relative_to(dst_root).as_posix()
         if should_skip(rel, keep_files, keep_prefixes):
             continue
