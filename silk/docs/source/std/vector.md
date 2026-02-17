@@ -59,7 +59,8 @@ fn tabs_collect (paths: std::arrays::Slice(string)) -> Tabs? {
   while i < paths.len {
     let err = tabs.push(TabState{ path: paths.get(i), top_off: 0, gutter_on: false });
     if err != None {
-      return None; // `tabs` is dropped on scope exit (frees its allocation).
+      // `tabs` is dropped on scope exit (drops elements + frees its allocation).
+      return None;
     }
     i = i + 1;
   }
@@ -67,6 +68,29 @@ fn tabs_collect (paths: std::arrays::Slice(string)) -> Tabs? {
   return Some(tabs);
 }
 ```
+
+## Ownership and `Drop`
+
+`Vector(T)` is an owning container:
+
+- `push` moves a value into the vector.
+- `pop` / `swap_remove` move a value out of the vector (the caller owns the
+  returned value).
+- `set` overwrites an element and runs `Drop` for the overwritten element when
+  `T` requires drop.
+- `clear` runs `Drop` for all live elements and then sets `len = 0`.
+- `drop` runs `Drop` for all live elements, frees the backing allocation, and
+  resets the vector to an empty state.
+
+### Copy accessors (`get`, `iter`)
+
+`get`, `at`, and `iter` produce values by value without removing them. In other
+words, they copy element bytes out of the vector.
+
+These accessors are intended for plain value types (primitives, `string` views,
+and small POD structs). For `Drop`-managed element types, copying an element out
+creates duplicate ownership; use move-out operations like `pop` / `swap_remove`
+instead of `get`/`iter`.
 
 ## Current API (Implemented)
 

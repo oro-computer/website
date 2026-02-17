@@ -46,6 +46,7 @@ KEEP_DOCS_FILES = {
     "usage/tutorials/03-arrays-and-slices.md",
     "usage/tutorials/04-filesystem.md",
     "usage/tutorials/05-concurrency.md",
+    "usage/tutorials/06-async-io-streams-abort.md",
     # Website-owned copy edits to avoid repo-internal wording/refs.
     "compiler/backend-wasm.md",
     "compiler/abi-libsilk.md",
@@ -63,6 +64,8 @@ KEEP_DOCS_FILES = {
     "language/packages-imports-exports.md",
     "language/syntax-tour.md",
     "language/typed-errors.md",
+    # Removed feature stubs (kept for search + historical context).
+    "language/refinement-types.md",
     "man/silk.1.md",
     "std/crypto.md",
     "std/json.md",
@@ -74,6 +77,8 @@ KEEP_DOCS_FILES = {
 KEEP_WIKI_FILES = {
     # Website-owned wiki landing/start.
     "start.md",
+    # Removed feature stubs (kept for search + historical context).
+    "language/refinement-types.md",
 }
 
 
@@ -81,6 +86,7 @@ KEEP_WIKI_FILES = {
 class SyncStats:
     copied: int = 0
     skipped: int = 0
+    deleted: int = 0
 
 
 def should_skip(rel: str, keep_files: set[str], keep_prefixes: tuple[str, ...]) -> bool:
@@ -224,8 +230,9 @@ def sync_tree(
     keep_prefixes: tuple[str, ...],
     sanitize: Callable[[str], str] | None = None,
 ) -> SyncStats:
-    copied = 0
+    copied: set[str] = set()
     skipped = 0
+    deleted = 0
 
     for path in sorted(src_root.rglob("*")):
         if not path.is_file():
@@ -245,9 +252,23 @@ def sync_tree(
             dst.write_text(sanitize(path.read_text(encoding="utf-8")), encoding="utf-8")
         else:
             shutil.copyfile(path, dst)
-        copied += 1
+        copied.add(rel)
 
-    return SyncStats(copied=copied, skipped=skipped)
+    # Prune any previously-synced files that no longer exist upstream.
+    for path in sorted(dst_root.rglob("*")):
+        if not path.is_file():
+            continue
+        if path.suffix not in (".md", ".txt"):
+            continue
+        rel = path.relative_to(dst_root).as_posix()
+        if should_skip(rel, keep_files, keep_prefixes):
+            continue
+        if rel in copied:
+            continue
+        path.unlink()
+        deleted += 1
+
+    return SyncStats(copied=len(copied), skipped=skipped, deleted=deleted)
 
 
 def main() -> None:
@@ -295,8 +316,12 @@ def main() -> None:
         wiki_stats = SyncStats()
 
     print("Synced Silk docs to website:")
-    print(f"- Docs copied:   {docs_stats.copied} (skipped: {docs_stats.skipped})")
-    print(f"- Wiki copied:   {wiki_stats.copied} (skipped: {wiki_stats.skipped})")
+    print(
+        f"- Docs copied:   {docs_stats.copied} (skipped: {docs_stats.skipped}, deleted: {docs_stats.deleted})"
+    )
+    print(
+        f"- Wiki copied:   {wiki_stats.copied} (skipped: {wiki_stats.skipped}, deleted: {wiki_stats.deleted})"
+    )
 
 
 if __name__ == "__main__":

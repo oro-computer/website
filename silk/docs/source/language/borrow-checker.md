@@ -95,6 +95,10 @@ In the current subset, ownership transfer is intentionally conservative:
   views) in scope, including borrows stored in struct fields.
 - A by-value call argument that requires ownership tracking is treated as a
   move, and is rejected when the same binding is also borrowed in that call.
+- When a value type requires ownership tracking, binding initialization and
+  assignment from a name are also treated as moves:
+  - `let y = x;` consumes `x`,
+  - `y = x;` consumes `x`.
 
 ## Planned Expansion
 

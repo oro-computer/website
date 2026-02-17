@@ -190,7 +190,7 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2078` — `with` requires a region binding.
 - `E2079` — invalid `with ... from` region slice.
 - `E2080` — reserved (previously: indexing a slice cast from `u64` required an explicit length).
-- `E2081` — slice-length cast suffix requires a `u64` pointer operand.
+- `E2081` — slice-length cast suffix requires a `u64`/`usize` pointer operand.
 - `E2082` — `const fn` may not be `task` or `async`.
 - `E2083` — `const fn` may not have a typed-error contract (`|` in return type).
 - `E2084` — `const fn` parameter types must be compile-time value types.

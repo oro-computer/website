@@ -113,15 +113,19 @@ Today:
   - `fn (x: int) -> int { return x + 1; }` (block body).
   - `fn (x: int) { ... }` (block body, implicit `void` result).
   - Function expressions may not declare `&T` parameters.
-  - Non-capturing function expressions are inferred as `pure` and are callable
-    from `pure` code.
+  - Function expressions are eligible for purity inference (“auto-pure”):
+    - when the body satisfies the `pure` rules, the function value is treated
+      as `pure` for call checking (it may be called from `pure` code),
+    - otherwise the function value is impure and may not be called from `pure`
+      code.
   - Capturing closures are supported as a subset:
     - a function expression may reference immutable locals/parameters from an
       enclosing scope,
     - captures are by-value copies into a heap environment (scalar-only in the
       current subset),
     - forming captures inside `pure` code is rejected (capture environments
-      allocate), but closure *values* are still checked under the `pure` rules
-      and remain callable from `pure` code once constructed.
+      allocate),
+    - capturing closures are also eligible for purity inference (a closure
+      whose body satisfies the `pure` rules is callable from `pure` code).
   - Function values (both non-capturing and capturing) are supported end-to-end:
     they may be passed, returned, stored, and called indirectly.

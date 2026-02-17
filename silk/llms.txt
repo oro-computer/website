@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-02-13T15:21:44+00:00
+Generated: 2026-02-17T14:41:34+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -85,6 +85,7 @@ Silk Docs
 - Standard library
   - std/conventions — `std::` Conventions — /silk/docs/?p=std/conventions
   - std/package-structure — `std::` Module Structure — /silk/docs/?p=std/package-structure
+  - std/abort-controller — `std::abort_controller` — /silk/docs/?p=std/abort-controller
   - std/algorithms — `std::algorithms` — /silk/docs/?p=std/algorithms
   - std/args — `std::args` — /silk/docs/?p=std/args
   - std/arrays — `std::arrays` — /silk/docs/?p=std/arrays
@@ -93,6 +94,7 @@ Silk Docs
   - std/build — `std::build` — /silk/docs/?p=std/build
   - std/crypto — `std::crypto` — /silk/docs/?p=std/crypto
   - std/env — `std::env` — /silk/docs/?p=std/env
+  - std/ffi-c — `std::ffi::c` (C FFI helpers) — /silk/docs/?p=std/ffi-c
   - std/flag — `std::flag` — /silk/docs/?p=std/flag
   - std/fmt — `std::fmt` — /silk/docs/?p=std/fmt
   - std/formal — `std::formal` — /silk/docs/?p=std/formal
@@ -117,6 +119,7 @@ Silk Docs
   - std/readline — `std::readline` — /silk/docs/?p=std/readline
   - std/regex — `std::regex` — /silk/docs/?p=std/regex
   - std/result — `std::result` — /silk/docs/?p=std/result
+  - std/z3 — `std::runtime::z3` — Z3 SMT Solver (C API Bindings) — /silk/docs/?p=std/z3
   - std/runtime — `std::runtime` — /silk/docs/?p=std/runtime
   - std/semver — `std::semver` — /silk/docs/?p=std/semver
   - std/set — `std::set` — Sets — /silk/docs/?p=std/set
@@ -154,6 +157,7 @@ Silk Docs
   - usage/tutorials/03-arrays-and-slices — Tutorial 3: Arrays and Slices — /silk/docs/?p=usage/tutorials/03-arrays-and-slices
   - usage/tutorials/04-filesystem — Tutorial 4: filesystem basics (`std::fs`) — /silk/docs/?p=usage/tutorials/04-filesystem
   - usage/tutorials/05-concurrency — Tutorial 5: concurrency basics (`async`, `task`, `yield`, `await`) — /silk/docs/?p=usage/tutorials/05-concurrency
+  - usage/tutorials/06-async-io-streams-abort — Tutorial 6: Async I/O + Streams + Abort Signals — /silk/docs/?p=usage/tutorials/06-async-io-streams-abort
   - usage/editor-ctags — Universal Ctags Support — /silk/docs/?p=usage/editor-ctags
   - usage/editor-vim — Vim Integration for Silk — /silk/docs/?p=usage/editor-vim
 - Compiler
@@ -3480,17 +3484,28 @@ fn main () -> int {
 In Silk, compile-time evaluation for runtime `const`
 bindings is restricted to:
 
-- scalar primitive types (`bool`, integer/float scalars, `char`, `Instant`, `Duration`), and
-- pure scalar expressions composed of:
+- scalar primitive types (`bool`, integer/float scalars, `char`, `Instant`, `Duration`),
+- compile-time POD `struct` types whose fields are compile-time scalar value types and that do not require `Drop`, and
+- compile-time evaluable expressions composed of:
   - literals,
   - other `const` bindings,
   - calls to `const fn` functions where all arguments are themselves compile-time evaluable, and
+  - struct literals and field access when the struct type is a supported compile-time POD `struct`, and
   - `as` casts between supported scalar types, and
   - a small operator subset (notably `+`, `-`, `*`, bitwise ops, shifts; `/` and `%` are currently rejected for `const`).
 
 - `string` bindings whose initializer is either:
   - a string literal (`"..."` or `` `...` ``), or
   - another `const` string binding.
+
+Example:
+
+```silk
+struct Point { x: int, y: int }
+
+const origin: Point = Point{ x: 0, y: 0 };
+const ox: int = origin.x;
+```
 
 Formal Silk declarations (`#const`) are compile-time-only names intended for specifications
 (`#require`, `#assure`, `#assert`, `#invariant`, `#variant`, `#monovariant`). They must not be referenced
@@ -3720,6 +3735,10 @@ In Silk, ownership transfer is intentionally conservative:
   views) in scope, including borrows stored in struct fields.
 - A by-value call argument that requires ownership tracking is treated as a
   move, and is rejected when the same binding is also borrowed in that call.
+- When a value type requires ownership tracking, binding initialization and
+  assignment from a name are also treated as moves:
+  - `let y = x;` consumes `x`,
+  - `y = x;` consumes `x`.
 
 ## Planned Expansion
 
@@ -4186,10 +4205,20 @@ produce and manipulate during compile-time evaluation.
   - `char`
   - `Instant`, `Duration`
 
+- compile-time structures (POD `struct` values):
+  - a non-opaque `struct` type,
+  - with 1+ fields,
+  - where every field type is a compile-time scalar value type, and
+  - the struct does not require ownership tracking (`Drop`).
+
+  These values are lowered as a flattened sequence of scalar slots in
+  declaration order. They may be returned from and passed to `const fn`, and
+  used in `const` initializers.
+
 Planned (not yet supported for `const fn` in Silk):
 
 - `string` values (string literals are supported directly in `const` bindings),
-- aggregate values (struct/enum/optional/slice/array) as return values,
+- aggregate values beyond compile-time POD structs (enum/optional/slice/array),
 - function values as compile-time values (for higher-order const evaluation).
 
 ## Rules ()
@@ -4224,6 +4253,14 @@ In Silk, a `const fn`:
     - comparisons: `==`, `!=`, `<`, `<=`, `>`, `>=`,
   - `if` expressions (`if cond { a } else { b }`).
   - assignments to local names: `=`, `+=`, `-=`, `*=`, plus `++`/`--`.
+
+Additionally, `const fn` bodies may construct and use compile-time POD `struct`
+values:
+
+- struct literals (`T{ field: expr, ... }`) when `T` is a compile-time structure
+  and every field expression is compile-time evaluable,
+- field access (`value.field`) on compile-time structures, and
+- assignment to local struct-typed names (copies the flattened scalar slots).
 
 Control flow is limited to:
 
@@ -6230,16 +6267,20 @@ Today:
   - `fn (x: int) -> int { return x + 1; }` (block body).
   - `fn (x: int) { ... }` (block body, implicit `void` result).
   - Function expressions may not declare `&T` parameters.
-  - Non-capturing function expressions are inferred as `pure` and are callable
-    from `pure` code.
+  - Function expressions are eligible for purity inference (“auto-pure”):
+    - when the body satisfies the `pure` rules, the function value is treated
+      as `pure` for call checking (it may be called from `pure` code),
+    - otherwise the function value is impure and may not be called from `pure`
+      code.
   - Capturing closures are supported as a subset:
     - a function expression may reference immutable locals/parameters from an
       enclosing scope,
     - captures are by-value copies into a heap environment (scalar-only in the
       ),
     - forming captures inside `pure` code is rejected (capture environments
-      allocate), but closure *values* are still checked under the `pure` rules
-      and remain callable from `pure` code once constructed.
+      allocate),
+    - capturing closures are also eligible for purity inference (a closure
+      whose body satisfies the `pure` rules is callable from `pure` code).
   - Function values (both non-capturing and capturing) are supported end-to-end:
     they may be passed, returned, stored, and called indirectly.
 
@@ -6590,6 +6631,11 @@ Interfaces allow types to declare that they implement a particular contract.
 They are the foundation for standard-library “protocols” such as readers,
 writers, iterators, and allocators.
 
+When the standard library is enabled (the default), the compiler provides a
+In particular, the interface names from `std::interfaces` are available without
+an explicit `import std::interfaces;`. This prelude is specified by the stdlib
+module `std::runtime::globals`.
+
 Key components:
 
 - The `interface` declaration.
@@ -6767,6 +6813,8 @@ Name resolution:
     ```silk
     module hello::build as Builder;
 
+    // Optional: only needed with `--nostd` or when the active stdlib prelude
+    // does not include `Builder`.
     import { Builder } from "std/interfaces";
     ```
 
@@ -8146,10 +8194,11 @@ conversions:
     type level (same field types in the same order). It does **not** permit
     arbitrary “reinterpret pointer” casts.
 
-- `u64` ↔ `T[]` / `T[N]` (unsafe pointer/slice view cast):
-  - Silk’s  represents raw addresses as `u64`. For low-level
-    byte-copy routines and runtime interop, `as` supports explicit conversions
-    between raw addresses and array/slice views:
+- `u64`/`usize` ↔ `T[]` / `T[N]` (unsafe pointer/slice view cast):
+  - Silk’s  represents raw addresses as `u64` and permits
+    pointer-width unsigned `usize` values to be used as raw addresses in these
+    casts. For low-level byte-copy routines and runtime interop, `as` supports
+    explicit conversions between raw addresses and array/slice views:
     - `ptr as T[]` constructs a `T[]` slice view where the pointer component is
       `ptr` and the length component is a dedicated **unknown-length** sentinel
       (currently, `i64.min`). The compiler does not validate
@@ -8160,12 +8209,18 @@ conversions:
         unless an explicit length is provided.
     - `ptr as T[](len)` constructs a `T[]` slice view where the pointer
       component is `ptr` and the length component is `len` (element count).
-    - `slice as u64` extracts the pointer component of a `T[]` slice.
-    - `arr as u64` extracts the address of element `0` of a fixed array `T[N]`
-      (for `N == 0`, the result is `0`).
+    - `slice as u64` / `slice as usize` extracts the pointer component of a
+      `T[]` slice.
+    - `arr as u64` / `arr as usize` extracts the address of element `0` of a
+      fixed array `T[N]` (for `N == 0`, the result is `0`).
   - These casts remain **unsafe**:
     - the compiler does not validate pointer provenance (whether the address is
       valid for the claimed element type).
+    - in the current scalar-slot subset, `T[]` / `T[N]` indexing assumes the
+      pointed-to memory is laid out in Silk’s scalar-slot representation. This
+      is not a packed-byte view. For packed byte access (for example string
+      storage), use `std::runtime::mem::{load_u8,store_u8}` or
+      `std::arrays::ByteSlice`.
   - In Silk, indexed accesses through
     arrays/slices trap when:
     - the pointer is `0`,
@@ -12773,11 +12828,22 @@ This document exists to keep `std::` APIs consistent across modules.
 
 All user-facing `std::` APIs must be documented in source using doc comments
 
-- public types (`struct`, `enum`, `error`, `interface`),
-- public functions/methods (including constructors like `init`, `empty`,
-  `invalid`, `default`),
-- public Formal Silk theories exposed for reuse (for example under
-  `std::formal`).
+Documentation coverage rules:
+
+- Every **exported declaration** must have a non-empty doc comment:
+  - exported functions (`export fn ...`),
+  - exported bindings (`export let ...` / `export const ...`),
+  - exported `ext` declarations (`export ext ...`),
+  - exported type aliases (`export type ...`),
+  - exported types (`export struct` / `export enum` / `export error` /
+    `export interface`),
+  - exported Formal Silk theories intended for reuse (for example under
+    `std::formal`).
+- Every **public method** on a type must have a non-empty doc comment:
+  - instance and static methods declared `public fn ...` inside `impl`.
+
+This is enforced by the test suite so the stdlib can be fully documented via
+`silk doc` and surfaced consistently in editor tooling.
 
 source-level doc comments are the machine-consumable layer used by `silk doc`,
 `silk man`, and editor tooling (hover and completion documentation).
@@ -12847,6 +12913,27 @@ APIs should follow these rules:
 - Do not call `assert` / `std::abort()` from `std::` APIs. Malformed inputs,
   invariant violations, and resource exhaustion must be surfaced as recoverable
   errors.
+
+## Concurrency and Thread Safety
+
+Silk’s hosted `task` concurrency runs on OS threads. `std::` APIs must make it
+obvious when values can safely cross task/thread boundaries.
+
+Conventions:
+
+- Prefer **immutable value types** (no interior mutation) for data that will be
+  shared across tasks.
+- For shared mutable state, require explicit synchronization via `std::sync`
+  primitives (`Mutex`, `Condvar`, channels).
+- For handle types that own runtime state, use the `T` / `TBorrow` pattern:
+  - `T` is an owning, droppable handle (non-copyable in safe code),
+  - `TBorrow` is a non-owning, copyable view intended for passing across tasks
+    while keeping ownership with the creator.
+- Cancellation must be explicit:
+  - abortable operations should accept `std::abort_controller::AbortSignalBorrow`
+    (often as an optional parameter),
+  - callers should create and own an `AbortController` and call `abort()` to
+    request cancellation.
 
 ## Formal Silk Contracts
 
@@ -12971,8 +13058,13 @@ Design intent:
 
 Notes:
 
-- This does **not** imply an implicit `import std::...;` prelude; importing is
-  explicit. Linking-by-default means “`std::` is available to import”.
+- This does **not** imply an implicit `import std::...;` of all std modules;
+  importing remains explicit. Linking-by-default means “`std::` is available to
+  import”.
+- When the standard library is enabled (the default), the compiler provides a
+  small implicit std prelude of selected symbols (for example `Result` and the
+  `std::interfaces` interface names) as specified by `std::runtime::globals`.
+  Use `--nostd` to disable this behavior.
 - The compiler should only compile/link the std modules that are reachable from
   the user’s imports (and any internal dependencies), rather than eagerly
   compiling all of `std::`.
@@ -13062,6 +13154,145 @@ The standard library is shipped with the compiler and should be versioned:
 - Public, exported APIs under `std::...` should follow semantic versioning.
 - A compiler may require a minimum stdlib version, and should report a clear
   error when an incompatible stdlib root is selected.
+
+==============================================================================
+DOCS: `std::abort_controller` (std/abort-controller)
+URL: /silk/docs/?p=std/abort-controller
+==============================================================================
+
+# `std::abort_controller`
+
+This module provides a WHATWG-style
+`AbortController` / `AbortSignal` pair for cooperative cancellation across
+`async` functions and OS-thread-backed `task` concurrency.
+
+The goal is to make cancellation **obvious and uniform** across the standard
+library:
+
+- APIs that can be aborted accept an `AbortSignalBorrow` (usually as an optional
+  parameter).
+- Callers create and own an `AbortController`, and pass `controller.signal()`
+  to the operations they want to be able to abort.
+- When a signal is aborted, operations stop early and return an `Aborted`
+  error-kind in their module’s native error type.
+
+Thread-safety:
+
+- `AbortSignal` state is protected by a mutex + condition variable.
+- `AbortSignalBorrow` is a non-owning, copyable handle intended for sharing
+  across OS threads and `task` boundaries.
+
+## API
+
+```silk
+module std::abort_controller;
+
+import std::interfaces;
+import std::memory;
+import std::result;
+
+export enum AbortReasonKind {
+  Aborted,
+  Message,
+}
+
+export struct AbortReason {
+  kind: AbortReasonKind,
+  message: string,
+}
+
+// Owns the abort state.
+export struct AbortController {
+  signal: AbortSignal,
+}
+
+// Owns the abort state (dropped/destroyed by the last owner).
+export struct AbortSignal {
+  handle: u64,
+}
+
+// Non-owning, copyable view of an abort signal.
+export struct AbortSignalBorrow {
+  handle: u64,
+}
+
+export type AbortControllerResult = std::result::Result(AbortController, std::memory::OutOfMemory);
+
+impl AbortController {
+  public fn init () -> AbortControllerResult;
+  public fn signal (self: &AbortController) -> AbortSignalBorrow;
+  public fn abort (self: &AbortController) -> void;
+  public fn abort_with_message (self: &AbortController, message: string) -> std::memory::OutOfMemory?;
+  public fn destroy (mut self: &AbortController) -> void;
+}
+
+impl AbortSignal {
+  public fn invalid () -> AbortSignal;
+  public fn is_valid (self: &AbortSignal) -> bool;
+  public fn borrow (self: &AbortSignal) -> AbortSignalBorrow;
+  public fn is_aborted (self: &AbortSignal) -> bool;
+  public fn reason (self: &AbortSignal) -> AbortReason?;
+  public fn wait (self: &AbortSignal) -> void;
+  public fn destroy (mut self: &AbortSignal) -> void;
+}
+
+impl AbortSignalBorrow {
+  public fn is_aborted (self: &AbortSignalBorrow) -> bool;
+  public fn reason (self: &AbortSignalBorrow) -> AbortReason?;
+  public fn wait (self: &AbortSignalBorrow) -> void;
+}
+```
+
+## Semantics
+
+- `AbortController.init()` creates an un-aborted signal.
+- `AbortController.signal()` returns an `AbortSignalBorrow` that points to the
+  controller’s underlying signal state.
+- `AbortSignalBorrow` is non-owning:
+  - it is safe to copy and pass across tasks/threads,
+  - it becomes invalid once the owning `AbortController`/`AbortSignal` is
+    destroyed or dropped.
+- `AbortController.abort()` is idempotent: aborting an already-aborted signal
+  is a no-op (the original reason is preserved).
+- `abort_with_message` aborts with a user-provided message. If the message
+  cannot be copied due to allocation failure, the signal is still aborted, and
+  the method returns `Some(OutOfMemory{...})`.
+- `AbortSignal.reason()` returns an `AbortReason` whose `message: string` view
+  is backed by memory owned by the signal. Do not use the returned `message`
+  after the signal/controller has been destroyed or dropped.
+- `AbortSignal.wait()` blocks the current OS thread until the signal is aborted.
+  In Silk, this is a blocking synchronization primitive (it does
+  not integrate with a `select`-style event loop yet).
+
+## Using `AbortSignalBorrow` Across Tasks
+
+`AbortSignal` is an owning, droppable handle. To share a signal across tasks
+without transferring ownership, pass a borrow view:
+
+```silk
+let ctl_r = std::abort_controller::AbortController.init();
+if ctl_r.is_err() {
+  // Handle OutOfMemory.
+} else {
+  let ctl: std::abort_controller::AbortController = match (ctl_r) {
+    Ok(v) => v,
+    Err(_) => std::abort_controller::AbortController{
+      signal: std::abort_controller::AbortSignal{ handle: 0 },
+    },
+  };
+  let sig: std::abort_controller::AbortSignalBorrow = ctl.signal();
+  // Pass `sig` into tasks/operations.
+}
+
+task fn worker (sig: std::abort_controller::AbortSignalBorrow) -> int {
+  if sig.is_aborted() { return 0; }
+  // ...
+  return 1;
+}
+```
+
+This pattern keeps ownership with the creator while allowing other threads to
+observe and wait on the abort signal.
 
 ==============================================================================
 DOCS: `std::algorithms` (std/algorithms)
@@ -13571,7 +13802,7 @@ URL: /silk/docs/?p=std/build
 
 
 `std::build` provides helper APIs for writing Silk build modules (`build.slk`).
-and must print a TOML v1.0 package manifest (`silk.toml` format) to stdout.
+and must produce a TOML v1.0 package manifest in the `silk.toml` format.
 
 This module is intentionally a *tooling* surface:
 
@@ -13596,10 +13827,8 @@ The driver provides these values to the build module via the
 - `package_root` (string)
 - `action` (string)
 
-The build-module wrapper program also receives these as process arguments:
-
-- `argv[1]` is `package_root`
-- `argv[2]` is `action` (when omitted, treat as `"build"`)
+For standalone hosted tools (not build modules), `Context.from_args(argc, argv)`
+is available to parse `argv` into a `Context`.
 
 ### `Build`
 
@@ -13647,8 +13876,8 @@ export async fn run (package_root: string, action: string) -> int {
 
 Notes:
 
-- Build modules may still write TOML directly to stdout; `std::build` is a
-  convenience layer.
+- Build modules may still generate the TOML manifest directly; `std::build` is
+  a convenience layer.
 - Build modules are allowed to be `async` so they can `await` during manifest
   generation.
 - `build::context(argc, argv)` remains available for wrapper/legacy usage when
@@ -14021,6 +14250,95 @@ Current implementation:
 1. uses `TMPDIR` when set,
 2. otherwise uses `TMP` or `TEMP` when set,
 3. otherwise returns `"/tmp"`.
+
+==============================================================================
+DOCS: `std::ffi::c` (C FFI helpers) (std/ffi-c)
+URL: /silk/docs/?p=std/ffi-c
+==============================================================================
+
+# `std::ffi::c` (C FFI helpers)
+
+
+This module provides small, explicit helpers for interoperating with C APIs
+from Silk via `ext` declarations.
+
+The initial focus is **C strings** (`char*` / `const char*`): pointers to
+NUL-terminated bytes. In Silk, these pointers are represented as raw addresses
+(`u64`).
+
+## Canonical C scalar aliases
+
+Silk `int` is **not** C `int` (`int` is a 64-bit scalar in the current ABI; see
+aliases in your `ext` signatures:
+
+- `c_int` / `c_uint`
+- `c_long` / `c_ulong`
+- `size_t` / `ssize_t`
+- `intptr_t` / `uintptr_t` / `ptrdiff_t`
+
+These are POSIX-first mappings intended to match the common C ABI widths on our
+hosted targets.
+
+## C string helpers
+
+### Borrowed vs owned
+
+- `cstr_borrow` / `cstr_string` produces a **borrowed** Silk `string` view into
+  the original C memory. It does not allocate.
+- `cstr_copy` produces an **owned** `std::strings::String` copy (heap
+  allocation, NUL-terminated).
+- `std::ffi::c_owned::OwnedCStr` represents an **owned** C string pointer
+  (`char*`) paired with a user-provided release function and drops it
+  deterministically.
+
+Use `cstr_copy` when the C pointer is only valid temporarily (for example, when
+it is owned by a C library object that may be freed, or when the pointer is
+documented to be invalidated by the next API call).
+
+### Null pointers
+
+C APIs frequently use `NULL` as “no string”.
+
+- `cstr_string(ptr)` treats `ptr == 0` as `""`.
+- `cstr_string_opt(ptr)` returns `None` when `ptr == 0`.
+
+Choose the form that matches the C API contract you are binding.
+
+### Safety notes
+
+- `cstr_len` scans memory until it finds a `0` byte. If the pointer is invalid
+  or not NUL-terminated, behavior is undefined.
+- These helpers do not validate UTF-8. A C string may contain arbitrary bytes.
+
+## API
+
+- C scalar aliases: `c_int`, `size_t`, `ssize_t`, …
+- `cstr_len(ptr: u64) -> int`
+- `cstr_borrow(ptr: u64) -> string`
+- `cstr_string(ptr: u64) -> string` (alias of `cstr_borrow`)
+- `cstr_borrow_opt(ptr: u64) -> string?`
+- `cstr_string_opt(ptr: u64) -> string?` (alias of `cstr_borrow_opt`)
+- `cstr_copy(ptr: u64) -> Result(std::strings::String, std::memory::OutOfMemory)`
+
+## Owned pointers (`std::ffi::c_owned`)
+
+- `CFreeFn = fn (u64) -> void`
+- `cstr_copy_and_free(ptr: u64, free_fn: CFreeFn) -> Result(std::strings::String, std::memory::OutOfMemory)`
+- `OwnedCStr` (owned pointer + drop)
+
+## Example
+
+```silk
+import c from "std/ffi/c";
+
+ext lib_version = fn () -> u64; // returns `const char*`
+
+fn main () -> int {
+  let p: u64 = lib_version();
+  let v: string = c::cstr_string(p);
+  return if v == "" { 1 } else { 0 };
+}
+```
 
 ==============================================================================
 DOCS: `std::flag` (std/flag)
@@ -15231,6 +15549,10 @@ interfaces are used for:
 - one compiler-backed convention: `std::interfaces::Drop` is used for automatic
   cleanup of values at well-defined points (see “Drop semantics” below).
 
+When the standard library is enabled (the default), all interfaces in
+`std::interfaces` are available without explicit imports via the std prelude
+module `std::runtime::globals`, so you can write `impl T as Drop { ... }`.
+
 See also:
 
 
@@ -15326,7 +15648,7 @@ Notes:
   interface (used via `module ... as ...`) and defines a single `run` entrypoint
   that may be implemented as `async` and `await`ed by the driver wrapper.
   - Recommended build-module header style:
-    - `module my_pkg::build as Builder;` + `import { Builder } from "std/interfaces";`
+    - `module my_pkg::build as Builder;` (preferred; `Builder` is in the std prelude)
     - or `module my_pkg::build as std::interfaces::Builder;` (fully qualified)
 
 ## Drop semantics
@@ -15337,7 +15659,7 @@ handles, etc.). A type is considered “droppable” when it provides a method w
 this surface signature:
 
 ```silk
-impl T as std::interfaces::Drop {
+impl T as Drop {
   public fn drop (mut self: &T) -> void { ... }
 }
 ```
@@ -15368,13 +15690,11 @@ Notes and limitations ():
 ## Example (Conformance)
 
 ```silk
-import std::interfaces;
-
 struct Counter {
   value: i64,
 }
 
-impl Counter as std::interfaces::Len {
+impl Counter as Len {
   public fn len (self: &Counter) -> i64 {
     return self.value;
   }
@@ -15417,6 +15737,7 @@ enum IOErrorKind {
   PermissionDenied,
   WouldBlock,
   Interrupted,
+  Aborted,
   BrokenPipe,
   InvalidInput,
   Unknown,
@@ -15482,6 +15803,17 @@ Notes:
 - `string` parameters in `ext` calls are lowered as C-string pointers in the
   current backend subset (the backing bytes include a trailing NUL terminator;
   Silk `string` length excludes it).
+- `std::io::async` provides small async wrappers (`read`/`write`) on top of
+  `std::runtime::event_loop`. Abortable variants (`read_abortable` /
+  `write_abortable`) accept an optional `std::abort_controller::AbortSignalBorrow`
+  and return `IOErrorKind::Aborted` when cancelled.
+  Note: in Silk, aborts are observed only before/after an awaited
+  fd-wait; they do not yet interrupt an in-flight wait.
+- `std::io::stream` provides task-based adapters that connect POSIX/WASI file
+  descriptors (`fd`) with `std::stream` (`ReadableStream` / `WritableStream`):
+  - `std::io::stream::pipe_fd_to_stream` / `pipe_fd_to_stream_abortable`
+  - `std::io::stream::pipe_stream_to_fd` / `pipe_stream_to_fd_abortable`
+  These adapters take ownership of the `fd` and close it before returning.
 
 Example (formatted printing):
 
@@ -15766,8 +16098,8 @@ URL: /silk/docs/?p=std/map
 
 The API is specified here; it
 targets the compiler and will grow as the language gains
-first-class move/Drop semantics for values stored inside heap-backed data
-structures.
+first-class container ergonomics (in particular, more borrow- and move-aware
+iteration and accessors).
 
 ## Design Goals
 
@@ -15782,9 +16114,12 @@ structures.
 
 In Silk:
 
-- `HashMap(K, V)` and `TreeMap(K, V)` store keys and values by value, but do not
-  automatically run `Drop` for stored keys/values when entries are overwritten
-  or removed.
+- `HashMap(K, V)` owns keys and values by value:
+  - `clear` / `drop` run `Drop` for all live entries,
+  - `remove` drops the removed key and returns the removed value,
+  - `put` returns the previous value when replacing an existing entry.
+- `TreeMap(K, V)` does not run `Drop` for stored keys/values yet; it should be
+  treated as single-slot storage in Silk.
 - `HashMap(K, V)` stores keys and values in the compiler’s **scalar-slot**
   layout (`sizeof(K)` / `sizeof(V)` bytes, multiples of 8 in the current
   subset). This supports multi-slot value types such as `string` and non-opaque
@@ -15796,13 +16131,13 @@ In Silk:
   - primitive scalars,
   - `string` views,
   - and small POD structs over those primitives.
-- Avoid storing refcounted `&Struct` heap references or owned Drop-managed
-  structs (for example `std::strings::String`) as keys/values until the
-  compiler has complete Drop integration for values stored inside container
-  memory.
+- `get` and `iter` produce values by value (copy element bytes). For value types
+  that require `Drop`, copying out creates duplicate ownership. Prefer move-out
+  operations (`remove` and the returned previous value from `put`) for
+  `Drop`-managed values.
 
-These limits are expected to be relaxed as the compiler grows a complete memory
-model for container element drops.
+These limits are expected to be relaxed as the language gains borrow-aware
+accessors and iterators for container storage.
 
 ## HashMap (`HashMap(K, V)`)
 
@@ -16630,6 +16965,11 @@ Notes:
 - If you want to discard error details, prefer `match (r)` when the `Result`
   payload may implement `Drop` (for example `TcpStream` / `TcpListener`), since
   `ResultType.ok_value(r)` copies the `Result` payload in Silk.
+- `std::net::stream` provides task-based adapters that connect `TcpStream` with
+  `std::stream` using producer/consumer loops:
+  - `std::net::stream::pipe_tcpstream_to_stream` / `pipe_tcpstream_to_stream_abortable`
+  - `std::net::stream::pipe_stream_to_tcpstream` / `pipe_stream_to_tcpstream_abortable`
+  These adapters take ownership of the `TcpStream` and close it before returning.
 
 ## Hosted UDP API
 
@@ -17103,6 +17443,21 @@ let out_r = cmd.output();
 See the `std::process::child` source (`std/process/child.slk`) for the exact,
 current API surface.
 
+### Child stdio pipes and `std::stream`
+
+When a child is spawned with piped stdio (`Stdio::Pipe`), `std::process::child`
+exposes the pipes as POSIX file descriptors (`Child.take_stdin()` /
+`take_stdout()` / `take_stderr()`).
+
+To treat those file descriptors as `std::stream` byte streams, use the
+task-based adapters in `std::io::stream`:
+
+- `std::io::stream::pipe_fd_to_stream` / `pipe_fd_to_stream_abortable` (fd → `WritableStream`)
+- `std::io::stream::pipe_stream_to_fd` / `pipe_stream_to_fd_abortable` (`ReadableStream` → fd)
+
+This keeps the child-process API small and portable while still enabling
+stream-oriented composition.
+
 ## `getcwd`
 
 `std::process::getcwd()` returns the current working directory as an owned
@@ -17376,6 +17731,10 @@ URL: /silk/docs/?p=std/result
 `std::result` standardizes the common “success or error” return shape so that
 APIs across `std::` compose cleanly.
 
+When the standard library is enabled (the default), `Result` is available
+without explicit imports via the std prelude module `std::runtime::globals`.
+Import `std::result` only when you need other exports from the module.
+
 ## `Result(T, E)`
 
 `Result(T, E)` models a recoverable “success or error” outcome.
@@ -17439,9 +17798,7 @@ Notes:
   type context is not available:
 
 ```silk
-import std::result;
-
-type R = std::result::Result(int, string);
+type R = Result(int, string);
 
 fn main () -> int {
   let x: R = R.ok(123);
@@ -17455,19 +17812,86 @@ In type-directed contexts, `Ok(...)` / `Err(...)` can be used without a
 qualifier. For example:
 
 ```silk
-import std::result;
-
 error Oops {
   code: int
 }
 
-fn foo (oops: bool) -> std::result::Result(int, Oops) {
+fn foo (oops: bool) -> Result(int, Oops) {
   if (oops) {
     return Err(Oops{ code: 123 });
   }
   return Ok(0);
 }
 ```
+
+==============================================================================
+DOCS: `std::runtime::z3` — Z3 SMT Solver (C API Bindings) (std/z3)
+URL: /silk/docs/?p=std/z3
+==============================================================================
+
+# `std::runtime::z3` — Z3 SMT Solver (C API Bindings)
+
+
+`std::runtime::z3` provides low-level `ext` bindings for the Z3 C API.
+It is intended for user-space programs that want to call into Z3 directly.
+
+This module is a direct, unsafe FFI surface:
+
+- all Z3 opaque handles are represented as `u64` (raw pointers),
+- all Z3 `const char *` strings are represented as `u64`,
+- pointer parameters (including `T*` / `T const*` / `T[]`) are represented as `u64`.
+
+The module does **not** provide a safe, ownership-tracked wrapper. Callers are
+responsible for using the Z3 reference-counting APIs correctly.
+
+## Vendored Dependencies + Linking
+
+On the hosted `linux/x86_64` baseline, the Silk toolchain vendors:
+
+- Z3 headers under `vendor/include` (e.g. `z3.h`, `z3_api.h`, `z3_fixedpoint.h`, ...),
+- a pinned Z3 static archive: `vendor/lib/x64-linux/libz3.a`.
+
+When `std::runtime::z3` is present in the module set, `silk build` auto-links
+the vendored `libz3.a` into executable and shared-library outputs. Auto-linking
+also applies when linking `.o`/`.a` inputs that reference Z3 `Z3_*` symbols.
+
+In staged/installed toolchains, the vendored archive is expected under the
+compiler prefix:
+
+- `build/lib/silk/vendor/lib/x64-linux/` (repo build prefix)
+- `<prefix>/lib/silk/vendor/lib/x64-linux/` (installed)
+
+When linking the static archive into an executable/shared library, the driver
+also adds runtime dynamic dependencies:
+
+- `libstdc++.so.6`
+- `libpthread.so.0`
+- `libm.so.6`
+
+## Static Constructors
+
+The vendored Z3 static archive contains `.init_array` constructors (C++ static
+initialization).
+
+Silk executables do not use libc `crt1`, so the native backend runs linked
+`.init_array` constructors from the executable entry stub before calling user
+code.
+
+## C Strings Returned By Z3
+
+Many Z3 APIs return `Z3_string` (`const char *`). These are borrowed pointers
+managed by Z3. Convert them to a Silk `string` view using:
+
+- `std::ffi::c::cstr_borrow(ptr: u64) -> string` (from `std/ffi/c.slk`)
+
+The returned `string` is a borrowed view; it is valid only while the Z3-owned
+storage remains valid.
+
+## Platform Support
+
+The current toolchain auto-link behavior for `std::runtime::z3` is supported
+only on the hosted `linux/x86_64` backend (matching the shipped vendored Z3
+archive).
 
 ==============================================================================
 DOCS: `std::runtime` (std/runtime)
@@ -17621,7 +18045,8 @@ Runtime areas in the shipped stdlib:
   unsupported).
 - `std::runtime::net` — hosted networking primitives used by `std::net`
   (IPv4/IPv6 TCP + UDP sockets; delegates to `std::runtime::posix::net` in the shipped stdlib).
-  - `std::runtime::regex` / `std::runtime::unicode` / `std::runtime::number` / `std::runtime::readline` —
+- `std::runtime::z3` — low-level `ext` bindings for the Z3 C API (vendored on hosted `linux/x86_64`).
+- `std::runtime::regex` / `std::runtime::unicode` / `std::runtime::number` / `std::runtime::readline` —
   non-OS-specific runtime helpers used by `std::{regex,unicode,number,readline}`. These
   are implemented via `ext` bindings to a small bundled runtime support library
   (`libsilk_rt`) that ships alongside the compiler.
@@ -17648,6 +18073,12 @@ Follow-ups are expected to introduce additional runtime areas:
   - the `std::runtime::event_loop` module now exposes low-level awaitable
     building blocks (timers + fd readiness), but the explicit `Handle`/`poll`
     surface and higher-level async adapters are still follow-up work
+  - abort-aware wrappers exist for cooperative cancellation (`std::abort_controller`):
+    - `sleep_ms_abortable(ms, sig) -> bool`
+    - `fd_wait_readable_abortable(fd, sig) -> bool`
+    - `fd_wait_writable_abortable(fd, sig) -> bool`
+    In Silk, aborts are observed only before/after the awaited
+    operation; they do not yet interrupt an in-flight wait.
 - WASI networking (via WASI sockets or similar proposals) when supported by the toolchain targets.
 
 ## Providing a Custom Runtime
@@ -18303,6 +18734,13 @@ impl TransformStream {
 
 // Pipe a readable into a writable until done.
 export fn pipe_to (mut src: ReadableStream, mut dst: WritableStream) -> std::result::Result(int, StreamFailed);
+
+// Pipe until done or until aborted.
+export fn pipe_to_abortable (
+  mut src: ReadableStream,
+  mut dst: WritableStream,
+  sig: std::abort_controller::AbortSignalBorrow?
+) -> std::result::Result(int, StreamFailed);
 ```
 
 ## Semantics
@@ -18436,6 +18874,11 @@ async fn main () -> int {
 
 - closes `dst` when `src` ends,
 - aborts/cancels on error.
+
+To make piping cooperatively cancellable, use `pipe_to_abortable` with an
+`std::abort_controller::AbortSignalBorrow`. in Silk, aborts are
+observed between read/write steps; they do not yet interrupt a blocking
+`ReadableStream.read()` call.
 
 ```silk
 import std::stream;
@@ -18694,6 +19137,21 @@ This is an intentionally narrow subset intended for early bring-up:
 See also:
 
 
+## Thread Safety
+
+`std::sync` is used from OS-thread-backed `task` code. The core pattern is:
+
+- Owning handle types (`Mutex`, `Condvar`, `Channel(T)`, `CancellationToken`)
+  implement `Drop` and are **move-only** in safe code (ownership transfers by
+  value; they are not copyable).
+- To share a handle across tasks without transferring ownership, prefer the
+  `*Borrow` view types (for example `ChannelBorrow(T)`, `MutexBorrow`).
+  `*Borrow` values are non-owning, copyable views; the owner must keep the
+  backing handle alive for the duration of all borrows.
+- For multi-producer patterns, pass `ChannelSender(T)` to worker tasks and
+  clone it explicitly with `sender.clone()`; the channel auto-closes when the
+  last sender is dropped.
+
 ## API
 
 ```silk
@@ -18831,9 +19289,9 @@ Notes:
   `Result(...)`. `Channel(T).init` / `init_default` return `Result(...)`.
 - `Channel(T).invalid()` returns an inert handle (`handle == 0`); operations treat it as closed/empty and return `InvalidInput` for sends.
 - `CancellationToken.invalid()` returns an inert handle; it is treated as already cancelled so waits do not block.
-- Handle types are trivially copyable in the current language subset; copying a
-  handle duplicates the pointer. Destroying (or dropping) any copy invalidates
-  the others.
+- Owning handle types implement `Drop` and are moved by value (non-copyable).
+  `*Borrow` view types are copyable and may be passed across tasks/threads, but
+  do not manage lifetime.
 - When sending a channel handle across a `task` boundary, prefer passing a
   non-owning view (`ChannelBorrow(T)`) obtained via `c.borrow()` so ownership
   stays with the original `Channel(T)`.
@@ -19846,7 +20304,8 @@ fn tabs_collect (paths: std::arrays::Slice(string)) -> Tabs? {
   while i < paths.len {
     let err = tabs.push(TabState{ path: paths.get(i), top_off: 0, gutter_on: false });
     if err != None {
-      return None; // `tabs` is dropped on scope exit (frees its allocation).
+      // `tabs` is dropped on scope exit (drops elements + frees its allocation).
+      return None;
     }
     i = i + 1;
   }
@@ -19854,6 +20313,29 @@ fn tabs_collect (paths: std::arrays::Slice(string)) -> Tabs? {
   return Some(tabs);
 }
 ```
+
+## Ownership and `Drop`
+
+`Vector(T)` is an owning container:
+
+- `push` moves a value into the vector.
+- `pop` / `swap_remove` move a value out of the vector (the caller owns the
+  returned value).
+- `set` overwrites an element and runs `Drop` for the overwritten element when
+  `T` requires drop.
+- `clear` runs `Drop` for all live elements and then sets `len = 0`.
+- `drop` runs `Drop` for all live elements, frees the backing allocation, and
+  resets the vector to an empty state.
+
+### Copy accessors (`get`, `iter`)
+
+`get`, `at`, and `iter` produce values by value without removing them. In other
+words, they copy element bytes out of the vector.
+
+These accessors are intended for plain value types (primitives, `string` views,
+and small POD structs). For `Drop`-managed element types, copying an element out
+creates duplicate ownership; use move-out operations like `pop` / `swap_remove`
+instead of `get`/`iter`.
 
 ## Current API
 
@@ -20387,11 +20869,14 @@ distribution:
 - `std::set` — set containers (hash sets and ordered sets; see
 - `std::algorithms` — common algorithms over slices/collections.
 - `std::temporal` — `Instant`/`Duration` utilities and calendar/time helpers.
+- `std::abort_controller` — WHATWG-style abort signals for cancellation (see
 - `std::readline` — interactive line editor for CLI programs (TTY mode) built on
-- `std::io` — basic I/O (readers/writers, formatting, stdout/stderr).
+- `std::io` — basic I/O (unbuffered fd reads/writes, formatting, stdout/stderr;
 - `std::fmt` — shared formatting layer used by `std::io` and string builders.
-- `std::fs` — filesystem access (POSIX baseline).
-- `std::net` — networking primitives (POSIX baseline).
+- `std::fs` — filesystem access (POSIX baseline; stream adapters under
+  `std::fs::stream`).
+- `std::net` — networking primitives (POSIX baseline; stream adapters under
+  `std::net::stream`).
 - `std::http` — HTTP/1.1 parsing + blocking client/server on top of `std::net`
 - `std::https` — HTTPS (HTTP over TLS) on top of `std::tls` + `std::net`
 - `std::websocket` — RFC 6455 WebSocket (handshake + framing) on top of `std::net`
@@ -21821,6 +22306,119 @@ Silk’s concurrency keywords are intentionally explicit because they communicat
 - Reference: `std::task` and `std::sync` (sidebar → standard library)
 
 ==============================================================================
+DOCS: Tutorial 6: Async I/O + Streams + Abort Signals (usage/tutorials/06-async-io-streams-abort)
+URL: /silk/docs/?p=usage/tutorials/06-async-io-streams-abort
+==============================================================================
+
+# Tutorial 6: Async I/O + Streams + Abort Signals
+
+This tutorial shows how to compose the current concurrency + stdlib building
+blocks into practical I/O pipelines:
+
+- `async fn` / `await` for cooperative scheduling,
+- `task fn` / `yield` for OS-thread parallelism,
+- `std::io::async` for fd readiness + read/write loops,
+- `std::stream` for in-memory byte streams and transform stages,
+- `std::abort_controller` for cooperative cancellation.
+
+For full language semantics and limitations, see:
+
+
+## 1) AbortController: a single cancellation story
+
+`std::abort_controller` provides WHATWG-style `AbortController` /
+`AbortSignalBorrow` values:
+
+- own the controller in one place,
+- pass `AbortSignalBorrow` into work that should stop early,
+- abort once, from any thread/task.
+
+See a runnable program:
+
+- `examples/feature_concurrency_abort_controller.slk`
+
+Build and run (from a checkout of the Silk compiler repository):
+
+```bash
+silk build examples/feature_concurrency_abort_controller.slk -o build/abort_controller
+./build/abort_controller
+```
+
+## 2) High-quality async I/O (`std::io::async`)
+
+`std::io::async` is a small layer over the hosted event loop:
+
+1. wait for fd readability/writability (`std::runtime::event_loop`),
+2. call the existing synchronous `std::io::{read,write}` functions,
+3. retry on `WouldBlock` / `Interrupted`.
+
+Important rule: `write` may write fewer bytes than requested. “High-quality”
+I/O loops must handle partial writes (and partial reads when you need an exact
+length).
+
+See a runnable example that:
+
+- creates two pipes,
+- runs a pure-`async` producer/copy/consumer pipeline,
+- composes the pipeline with `await * [...]`,
+- aborts after a timeout using `AbortController` (cooperative cancellation),
+- uses a `write_all_abortable` loop to handle partial writes correctly.
+
+Example:
+
+- `examples/feature_io_async_pipe_copy_abortable.slk`
+
+Build and run (from a checkout of the Silk compiler repository):
+
+```bash
+silk build examples/feature_io_async_pipe_copy_abortable.slk -o build/async_copy
+./build/async_copy
+```
+
+Notes ():
+
+- Aborts are cooperative: they are checked before/after awaited waits.
+  Aborts do not yet interrupt an in-flight sleep or fd wait.
+- This example intentionally avoids `task fn` threads. In the current hosted
+  runtime, spawning stackful async coroutines in a multi-threaded process is
+  not reliable yet. Keep `std::io::async`-based I/O pipelines single-threaded
+  for now, and use `task fn` for thread-based parallelism in separate examples
+  (see section 1).
+
+## 3) Stream pipelines (`std::stream`) + fd adapters
+
+`std::stream` provides byte streams that are easy to compose:
+
+- `PassThroughStream` gives you a paired in-memory pipe (`WritableStream` → `ReadableStream`).
+- `TransformStream` gives you a paired transform stage:
+  - producers write to `writable`,
+  - a transformer task reads from `transform_readable` and writes to `transform_writable`,
+  - consumers read from `readable`.
+
+To connect OS resources to streams:
+
+- `std::io::stream` pipes fd ↔ stream (`ReadableStream` / `WritableStream`).
+
+See a runnable example that builds a pipeline:
+
+fd → stream → uppercase transform → stream → fd
+
+Example:
+
+- `examples/feature_stream_transform_uppercase_fd.slk`
+
+Build and run (from a checkout of the Silk compiler repository):
+
+```bash
+silk build examples/feature_stream_transform_uppercase_fd.slk -o build/stream_upper
+./build/stream_upper
+```
+
+## Next steps
+
+- For network I/O, start with `examples/std_net_tcp_loopback.slk` and
+
+==============================================================================
 DOCS: Universal Ctags Support (usage/editor-ctags)
 URL: /silk/docs/?p=usage/editor-ctags
 ==============================================================================
@@ -22831,9 +23429,8 @@ A build module is an optional file:
 
 - `build.slk` (in the package root directory)
 
-When enabled, `silk` compiles and runs a small wrapper program that imports the
-build module and parses the manifest it emits as a TOML v1.0 package manifest in
-the same format as `silk.toml`
+When enabled, `silk` executes the build module and consumes the manifest it
+produces as a TOML v1.0 package manifest in the same format as `silk.toml`
 
 This allows packages to compute targets, outputs, and dependency paths
 dynamically (for example from environment variables, host information, or local
@@ -22916,11 +23513,9 @@ qualified path:
 - `module <name> as std::interfaces::Builder;` (fully qualified), or
 - `module <name> as Builder;` with `import { Builder } from "std/interfaces";`
 
-The `silk` driver compiles and runs a wrapper program that:
+The `silk` driver invokes the build module as:
 
-- parses the build-module invocation arguments,
-- imports the build module by file path, and
-- calls `await build_module::run(package_root, action)`.
+- `await build_module::run(package_root, action)`.
 
 Build module requirements:
 
@@ -23998,7 +24593,7 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2078` — `with` requires a region binding.
 - `E2079` — invalid `with ... from` region slice.
 - `E2080` — reserved (previously: indexing a slice cast from `u64` required an explicit length).
-- `E2081` — slice-length cast suffix requires a `u64` pointer operand.
+- `E2081` — slice-length cast suffix requires a `u64`/`usize` pointer operand.
 - `E2082` — `const fn` may not be `task` or `async`.
 - `E2083` — `const fn` may not have a typed-error contract (`|` in return type).
 - `E2084` — `const fn` parameter types must be compile-time value types.
@@ -26778,7 +27373,7 @@ It supports two modes:
 - Markdown mode (default): emits Markdown documentation for one or more input files.
 - Manpage mode (`--man`): renders a single roff `man(7)` page derived from doc comments and displays or writes it.
 
-In Markdown mode, by default `silk doc` includes exported values and types, plus all `struct` and `interface` declarations. Use `--all` to include non-exported declarations.
+In Markdown mode, by default `silk doc` includes exported values, types, and Formal Silk theories, plus all `struct`/`enum`/`error`/`interface` declarations. Use `--all` to include non-exported declarations.
 
 In manpage mode, the rendered manpage section is derived from doc tags:
 
@@ -33228,7 +33823,11 @@ Global namespace (`::name`) rules (current compiler subset):
 - `::Outer::Inner::Name` resolves `Outer::Inner::Name` from that same global
   namespace (for example, names nested under inline modules in a global module).
 - Global names are only accessible via the explicit `::` prefix; there is no
-  implicit “prelude import” of global symbols.
+  implicit prelude import of the unnamed package.
+- Separately, when the standard library is enabled (the default), the compiler
+  provides a small implicit std prelude of selected standard symbols (for
+  example `Result` and the `std::interfaces` interface names) as specified by
+  `std::runtime::globals`. Use `--nostd` to disable this behavior.
 
 Future extensions may introduce aliasing (e.g. `import std::strings as str;`)
 and more fine-grained import forms. Such features will be documented here
@@ -36914,10 +37513,11 @@ conversions:
     type level (same field types in the same order). It does **not** permit
     arbitrary “reinterpret pointer” casts.
 
-- `u64` ↔ `T[]` / `T[N]` (unsafe pointer/slice view cast):
-  - Silk’s  represents raw addresses as `u64`. For low-level
-    byte-copy routines and runtime interop, `as` supports explicit conversions
-    between raw addresses and array/slice views:
+- `u64`/`usize` ↔ `T[]` / `T[N]` (unsafe pointer/slice view cast):
+  - Silk’s  represents raw addresses as `u64` and permits
+    pointer-width unsigned `usize` values to be used as raw addresses in these
+    casts. For low-level byte-copy routines and runtime interop, `as` supports
+    explicit conversions between raw addresses and array/slice views:
     - `ptr as T[]` constructs a `T[]` slice view where the pointer component is
       `ptr` and the length component is a dedicated **unknown-length** sentinel
       (currently, `i64.min`). The compiler does not validate
@@ -36928,12 +37528,18 @@ conversions:
         unless an explicit length is provided.
     - `ptr as T[](len)` constructs a `T[]` slice view where the pointer
       component is `ptr` and the length component is `len` (element count).
-    - `slice as u64` extracts the pointer component of a `T[]` slice.
-    - `arr as u64` extracts the address of element `0` of a fixed array `T[N]`
-      (for `N == 0`, the result is `0`).
+    - `slice as u64` / `slice as usize` extracts the pointer component of a
+      `T[]` slice.
+    - `arr as u64` / `arr as usize` extracts the address of element `0` of a
+      fixed array `T[N]` (for `N == 0`, the result is `0`).
   - These casts remain **unsafe**:
     - the compiler does not validate pointer provenance (whether the address is
       valid for the claimed element type).
+    - in the current scalar-slot subset, `T[]` / `T[N]` indexing assumes the
+      pointed-to memory is laid out in Silk’s scalar-slot representation. This
+      is not a packed-byte view. For packed byte access (for example string
+      storage), use `std::runtime::mem::{load_u8,store_u8}` or
+      `std::arrays::ByteSlice`.
   - In Silk, indexed accesses through
     arrays/slices trap when:
     - the pointer is `0`,

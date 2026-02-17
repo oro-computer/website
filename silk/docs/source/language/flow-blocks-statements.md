@@ -202,17 +202,28 @@ fn main () -> int {
 In the current compiler subset, compile-time evaluation for runtime `const`
 bindings is restricted to:
 
-- scalar primitive types (`bool`, integer/float scalars, `char`, `Instant`, `Duration`), and
-- pure scalar expressions composed of:
+- scalar primitive types (`bool`, integer/float scalars, `char`, `Instant`, `Duration`),
+- compile-time POD `struct` types whose fields are compile-time scalar value types and that do not require `Drop`, and
+- compile-time evaluable expressions composed of:
   - literals,
   - other `const` bindings,
   - calls to `const fn` functions where all arguments are themselves compile-time evaluable, and
+  - struct literals and field access when the struct type is a supported compile-time POD `struct`, and
   - `as` casts between supported scalar types, and
   - a small operator subset (notably `+`, `-`, `*`, bitwise ops, shifts; `/` and `%` are currently rejected for `const`).
 
 - `string` bindings whose initializer is either:
   - a string literal (`"..."` or `` `...` ``), or
   - another `const` string binding.
+
+Example:
+
+```silk
+struct Point { x: int, y: int }
+
+const origin: Point = Point{ x: 0, y: 0 };
+const ox: int = origin.x;
+```
 
 Formal Silk declarations (`#const`) are compile-time-only names intended for specifications
 (`#require`, `#assure`, `#assert`, `#invariant`, `#variant`, `#monovariant`). They must not be referenced

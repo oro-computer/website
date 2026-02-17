@@ -420,10 +420,11 @@ conversions:
     type level (same field types in the same order). It does **not** permit
     arbitrary “reinterpret pointer” casts.
 
-- `u64` ↔ `T[]` / `T[N]` (unsafe pointer/slice view cast):
-  - Silk’s current subset represents raw addresses as `u64`. For low-level
-    byte-copy routines and runtime interop, `as` supports explicit conversions
-    between raw addresses and array/slice views:
+- `u64`/`usize` ↔ `T[]` / `T[N]` (unsafe pointer/slice view cast):
+  - Silk’s current subset represents raw addresses as `u64` and permits
+    pointer-width unsigned `usize` values to be used as raw addresses in these
+    casts. For low-level byte-copy routines and runtime interop, `as` supports
+    explicit conversions between raw addresses and array/slice views:
     - `ptr as T[]` constructs a `T[]` slice view where the pointer component is
       `ptr` and the length component is a dedicated **unknown-length** sentinel
       (currently, `i64.min`). The compiler does not validate
@@ -434,12 +435,18 @@ conversions:
         unless an explicit length is provided.
     - `ptr as T[](len)` constructs a `T[]` slice view where the pointer
       component is `ptr` and the length component is `len` (element count).
-    - `slice as u64` extracts the pointer component of a `T[]` slice.
-    - `arr as u64` extracts the address of element `0` of a fixed array `T[N]`
-      (for `N == 0`, the result is `0`).
+    - `slice as u64` / `slice as usize` extracts the pointer component of a
+      `T[]` slice.
+    - `arr as u64` / `arr as usize` extracts the address of element `0` of a
+      fixed array `T[N]` (for `N == 0`, the result is `0`).
   - These casts remain **unsafe**:
     - the compiler does not validate pointer provenance (whether the address is
       valid for the claimed element type).
+    - in the current scalar-slot subset, `T[]` / `T[N]` indexing assumes the
+      pointed-to memory is laid out in Silk’s scalar-slot representation. This
+      is not a packed-byte view. For packed byte access (for example string
+      storage), use `std::runtime::mem::{load_u8,store_u8}` or
+      `std::arrays::ByteSlice`.
   - In the current scalar-slot backend subset, indexed accesses through
     arrays/slices trap when:
     - the pointer is `0`,

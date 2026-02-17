@@ -163,6 +163,13 @@ impl TransformStream {
 
 // Pipe a readable into a writable until done.
 export fn pipe_to (mut src: ReadableStream, mut dst: WritableStream) -> std::result::Result(int, StreamFailed);
+
+// Pipe until done or until aborted.
+export fn pipe_to_abortable (
+  mut src: ReadableStream,
+  mut dst: WritableStream,
+  sig: std::abort_controller::AbortSignalBorrow?
+) -> std::result::Result(int, StreamFailed);
 ```
 
 ## Semantics
@@ -296,6 +303,11 @@ async fn main () -> int {
 
 - closes `dst` when `src` ends,
 - aborts/cancels on error.
+
+To make piping cooperatively cancellable, use `pipe_to_abortable` with an
+`std::abort_controller::AbortSignalBorrow`. In the current subset, aborts are
+observed between read/write steps; they do not yet interrupt a blocking
+`ReadableStream.read()` call.
 
 ```silk
 import std::stream;

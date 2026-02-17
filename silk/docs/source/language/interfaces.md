@@ -4,6 +4,12 @@ Interfaces allow types to declare that they implement a particular contract.
 They are the foundation for standard-library “protocols” such as readers,
 writers, iterators, and allocators.
 
+When the standard library is enabled (the default), the compiler provides a
+small implicit std prelude (see `docs/language/packages-imports-exports.md`).
+In particular, the interface names from `std::interfaces` are available without
+an explicit `import std::interfaces;`. This prelude is specified by the stdlib
+module `std::runtime::globals`.
+
 Key components:
 
 - The `interface` declaration.
@@ -181,6 +187,8 @@ Name resolution:
     ```silk
     module hello::build as Builder;
 
+    // Optional: only needed with `--nostd` or when the active stdlib prelude
+    // does not include `Builder`.
     import { Builder } from "std/interfaces";
     ```
 

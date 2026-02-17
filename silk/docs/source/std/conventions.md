@@ -25,13 +25,24 @@ This document exists to keep `std::` APIs consistent across modules.
 ## Documentation
 
 All user-facing `std::` APIs must be documented in source using doc comments
-(`/** ... */` or `/// ...`) per `docs/language/doc-comments.md`:
+(`/** ... */` or `/// ...`) per `docs/language/doc-comments.md`.
 
-- public types (`struct`, `enum`, `error`, `interface`),
-- public functions/methods (including constructors like `init`, `empty`,
-  `invalid`, `default`),
-- public Formal Silk theories exposed for reuse (for example under
-  `std::formal`).
+Documentation coverage rules:
+
+- Every **exported declaration** must have a non-empty doc comment:
+  - exported functions (`export fn ...`),
+  - exported bindings (`export let ...` / `export const ...`),
+  - exported `ext` declarations (`export ext ...`),
+  - exported type aliases (`export type ...`),
+  - exported types (`export struct` / `export enum` / `export error` /
+    `export interface`),
+  - exported Formal Silk theories intended for reuse (for example under
+    `std::formal`).
+- Every **public method** on a type must have a non-empty doc comment:
+  - instance and static methods declared `public fn ...` inside `impl`.
+
+This is enforced by the test suite so the stdlib can be fully documented via
+`silk doc` and surfaced consistently in editor tooling.
 
 The canonical narrative/spec for each module lives under `docs/std/`. The
 source-level doc comments are the machine-consumable layer used by `silk doc`,
@@ -106,6 +117,27 @@ APIs should follow these rules:
 - Do not call `assert` / `std::abort()` from `std::` APIs. Malformed inputs,
   invariant violations, and resource exhaustion must be surfaced as recoverable
   errors.
+
+## Concurrency and Thread Safety
+
+Silk’s hosted `task` concurrency runs on OS threads. `std::` APIs must make it
+obvious when values can safely cross task/thread boundaries.
+
+Conventions:
+
+- Prefer **immutable value types** (no interior mutation) for data that will be
+  shared across tasks.
+- For shared mutable state, require explicit synchronization via `std::sync`
+  primitives (`Mutex`, `Condvar`, channels).
+- For handle types that own runtime state, use the `T` / `TBorrow` pattern:
+  - `T` is an owning, droppable handle (non-copyable in safe code),
+  - `TBorrow` is a non-owning, copyable view intended for passing across tasks
+    while keeping ownership with the creator.
+- Cancellation must be explicit:
+  - abortable operations should accept `std::abort_controller::AbortSignalBorrow`
+    (often as an optional parameter),
+  - callers should create and own an `AbortController` and call `abort()` to
+    request cancellation.
 
 ## Formal Silk Contracts
 

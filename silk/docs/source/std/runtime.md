@@ -147,7 +147,8 @@ Implemented runtime areas in the shipped stdlib:
   unsupported).
 - `std::runtime::net` — hosted networking primitives used by `std::net`
   (IPv4/IPv6 TCP + UDP sockets; delegates to `std::runtime::posix::net` in the shipped stdlib).
-  - `std::runtime::regex` / `std::runtime::unicode` / `std::runtime::number` / `std::runtime::readline` —
+- `std::runtime::z3` — low-level `ext` bindings for the Z3 C API (vendored on hosted `linux/x86_64`).
+- `std::runtime::regex` / `std::runtime::unicode` / `std::runtime::number` / `std::runtime::readline` —
   non-OS-specific runtime helpers used by `std::{regex,unicode,number,readline}`. These
   are implemented via `ext` bindings to a small bundled runtime support library
   (`libsilk_rt`) that ships alongside the compiler.
@@ -175,6 +176,12 @@ Follow-ups are expected to introduce additional runtime areas:
     building blocks (timers + fd readiness), but the explicit `Handle`/`poll`
     surface and higher-level async adapters are still follow-up work
     (see `docs/compiler/async-runtime.md`).
+  - abort-aware wrappers exist for cooperative cancellation (`std::abort_controller`):
+    - `sleep_ms_abortable(ms, sig) -> bool`
+    - `fd_wait_readable_abortable(fd, sig) -> bool`
+    - `fd_wait_writable_abortable(fd, sig) -> bool`
+    In the current subset, aborts are observed only before/after the awaited
+    operation; they do not yet interrupt an in-flight wait.
 - WASI networking (via WASI sockets or similar proposals) when supported by the toolchain targets.
 
 ## Providing a Custom Runtime

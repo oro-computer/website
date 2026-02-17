@@ -11,7 +11,7 @@ functions.
 
 In the current compiler subset, `const fn` (and `const pure fn`) can be called
 from `const` binding initializers when all arguments and the result are
-compile-time scalar values.
+compile-time values (scalar values and eligible POD `struct` values).
 
 ## Summary
 
@@ -59,10 +59,20 @@ Current subset (initial implementation target):
   - `char`
   - `Instant`, `Duration`
 
+- compile-time structures (POD `struct` values):
+  - a non-opaque `struct` type,
+  - with 1+ fields,
+  - where every field type is a compile-time scalar value type, and
+  - the struct does not require ownership tracking (`Drop`).
+
+  These values are lowered as a flattened sequence of scalar slots in
+  declaration order. They may be returned from and passed to `const fn`, and
+  used in `const` initializers.
+
 Planned (not yet supported for `const fn` in the current subset):
 
 - `string` values (string literals are supported directly in `const` bindings),
-- aggregate values (struct/enum/optional/slice/array) as return values,
+- aggregate values beyond compile-time POD structs (enum/optional/slice/array),
 - function values as compile-time values (for higher-order const evaluation).
 
 ## Rules (Current Subset)
@@ -97,6 +107,14 @@ In the current subset, a `const fn`:
     - comparisons: `==`, `!=`, `<`, `<=`, `>`, `>=`,
   - `if` expressions (`if cond { a } else { b }`).
   - assignments to local names: `=`, `+=`, `-=`, `*=`, plus `++`/`--`.
+
+Additionally, `const fn` bodies may construct and use compile-time POD `struct`
+values:
+
+- struct literals (`T{ field: expr, ... }`) when `T` is a compile-time structure
+  and every field expression is compile-time evaluable,
+- field access (`value.field`) on compile-time structures, and
+- assignment to local struct-typed names (copies the flattened scalar slots).
 
 Control flow is limited to:
 

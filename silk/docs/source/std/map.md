@@ -7,8 +7,8 @@
 
 Status: **initial implementation**. The API is specified here; it
 targets the current compiler/backend subset and will grow as the language gains
-first-class move/Drop semantics for values stored inside heap-backed data
-structures.
+first-class container ergonomics (in particular, more borrow- and move-aware
+iteration and accessors).
 
 ## Design Goals
 
@@ -23,9 +23,12 @@ structures.
 
 In the current subset:
 
-- `HashMap(K, V)` and `TreeMap(K, V)` store keys and values by value, but do not
-  automatically run `Drop` for stored keys/values when entries are overwritten
-  or removed.
+- `HashMap(K, V)` owns keys and values by value:
+  - `clear` / `drop` run `Drop` for all live entries,
+  - `remove` drops the removed key and returns the removed value,
+  - `put` returns the previous value when replacing an existing entry.
+- `TreeMap(K, V)` does not run `Drop` for stored keys/values yet; it should be
+  treated as single-slot storage in the current subset.
 - `HashMap(K, V)` stores keys and values in the compiler’s **scalar-slot**
   layout (`sizeof(K)` / `sizeof(V)` bytes, multiples of 8 in the current
   subset). This supports multi-slot value types such as `string` and non-opaque
@@ -37,13 +40,13 @@ In the current subset:
   - primitive scalars,
   - `string` views,
   - and small POD structs over those primitives.
-- Avoid storing refcounted `&Struct` heap references or owned Drop-managed
-  structs (for example `std::strings::String`) as keys/values until the
-  compiler has complete Drop integration for values stored inside container
-  memory.
+- `get` and `iter` produce values by value (copy element bytes). For value types
+  that require `Drop`, copying out creates duplicate ownership. Prefer move-out
+  operations (`remove` and the returned previous value from `put`) for
+  `Drop`-managed values.
 
-These limits are expected to be relaxed as the compiler grows a complete memory
-model for container element drops.
+These limits are expected to be relaxed as the language gains borrow-aware
+accessors and iterators for container storage.
 
 ## HashMap (`HashMap(K, V)`)
 

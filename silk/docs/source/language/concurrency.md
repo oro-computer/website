@@ -68,12 +68,45 @@ implemented by the compiler/runtime today.
 - Initial task-safety rules are enforced at the `task fn` boundary:
   - `task fn` / `async task fn` parameter and result types must not contain
     non-opaque reference types (`&T`), including within structs and optionals.
-  - `&OpaqueHandle` is permitted (opaque structs are handle types and cannot be
-    dereferenced or field-accessed in Silk).
+  - references to opaque structs (types declared as `struct Name;`) are permitted
+    (opaque structs are handle types and cannot be dereferenced or field-accessed
+    in Silk).
   - `Task(T)` and `Promise(T)` handles are permitted at task boundaries, but
     their inner `T` must itself satisfy the task-safety rule above. This
     supports patterns like `Task(Promise(T))` (for tasks that produce promises)
     and `await * yield * t` for `t: Task(Promise(T))`.
+
+### Thread Safety and Sharing (Current Subset)
+
+`task` concurrency runs on OS threads. Crossing a task boundary is therefore a
+thread-crossing operation.
+
+In the current compiler subset:
+
+- Passing values into a `task fn` is **by value**. For ownership-tracked values
+  (for example `Drop` types and `Task(T)` / `Promise(T)` handles), this is a
+  move: ownership transfers into the task and there is no implicit sharing.
+- The checker enforces a conservative task-safety rule at `task fn` / `async task fn`
+  boundaries (`E2037`):
+  - non-opaque references (`&T`) are rejected (including nested inside structs and optionals),
+  - references to opaque structs (types declared as `struct Name;`) are permitted
+    (opaque structs cannot be dereferenced or field-accessed in Silk),
+  - task boundary types are otherwise restricted to primitives, optionals, and
+    structs/enums composed of task-safe members.
+- Shared mutable state must be synchronized explicitly (for example via
+  `std::sync` primitives or by communicating through channels).
+- To share a runtime handle across tasks without transferring ownership, prefer
+  stdlib APIs that follow the `T` / `TBorrow` pattern (for example
+  `Channel(T)` + `ChannelBorrow(T)` and `AbortSignal` + `AbortSignalBorrow`).
+
+Note: this includes `&Struct` values produced by `new`. The compiler-inserted
+reference counting (RC) used for `new` is non-atomic in the current subset and
+is not safe to share across OS threads.
+
+These rules prevent common “accidentally share a borrowed view across threads”
+bugs in the current subset. They do not prevent data races in programs that
+explicitly share memory through FFI or other low-level mechanisms; such sharing
+must be synchronized by the program.
 
 ### Important Limitations
 
@@ -85,16 +118,29 @@ implemented by the compiler/runtime today.
     (`src/silk_rt_async.c`) rather than a compiler state-machine coroutine
     transform. The long-term design remains a compiler transform + stable
     `std::runtime::event_loop` surface (see `docs/compiler/async-runtime.md`).
+  - Current limitation: coroutine spawning for `async fn` calls is not reliable
+    in a multi-threaded process yet. In this snapshot, starting an OS-thread
+    task (`task fn`) and then spawning stackful async coroutines can crash
+    (SIGILL). Workarounds:
+    - keep `std::io::async`-based I/O and `await *` composition in a
+      single-threaded async program for now,
+    - if you need threads, restrict cross-thread async usage to the low-level
+      promise constructors in `std::runtime::event_loop` (`sleep_ms`,
+      `fd_wait_readable`, `fd_wait_writable`), which do not spawn new coroutines.
   - Awaiting a `Task(T)` is still rejected; use `yield` / `yield *` for task values.
 - The runtime subset implements `task` execution using OS threads (via
   `pthread_create` on `linux/x86_64`); it is not yet a work-stealing pool.
-- `Send`/`Sync`-like task-safety rules are not yet enforced; all task boundary
-  safety guarantees described below remain design work beyond the initial
-  signature-level restrictions described above.
+- Full Send/Sync-style checking (beyond the conservative boundary restriction
+  described above) is not implemented yet. In particular, the compiler does not
+  attempt to prove absence of data races for shared state; programs must use
+  explicit synchronization for any shared mutation.
 - A small initial set of standard-library primitives exists now under
   `std::task` and `std::sync` for the hosted `linux/x86_64` subset. These are
   mostly blocking primitives today; integrating OS-facing std modules with the
   async executor/event loop is follow-up work.
+- For cooperative cancellation across tasks and `async` functions, `std::`
+  provides WHATWG-style abort signals via `std::abort_controller` (see
+  `docs/std/abort-controller.md`).
 
 ## Core Keywords: `async` and `task`
 

@@ -77,6 +77,8 @@ distribution:
 - `std::url` — WHATWG URL parsing/serialization and `URLSearchParams` (`application/x-www-form-urlencoded`; see `docs/std/url.md`).
 - `std::task` — task/runtime helpers (hosted baseline; see `docs/std/task.md`).
 - `std::sync` — synchronization primitives (hosted baseline; see `docs/std/sync.md`).
+- `std::abort_controller` — WHATWG-style abort signals for cancellation (see
+  `docs/std/abort-controller.md`).
 - `std::stream` — Web Streams-inspired byte streams and piping (see `docs/std/stream.md`).
 - `std::args` — native `main(argc, argv)` argument helpers (current subset; see `docs/std/args.md`).
 - `std::readline` — interactive line editor for CLI programs (TTY mode) built on
@@ -88,10 +90,13 @@ distribution:
 - `std::process` — process primitives (hosted baseline; see `docs/std/process.md`).
 - `std::os` — target OS/arch metadata and small OS helpers (see `docs/std/os.md`).
 - `std::path` — path manipulation utilities (current subset; see `docs/std/path.md`).
-- `std::io` — basic I/O (readers/writers, formatting, stdout/stderr).
+- `std::io` — basic I/O (unbuffered fd reads/writes, formatting, stdout/stderr;
+  see `docs/std/io.md`). Stream adapters live under `std::io::stream`.
 - `std::fmt` — shared formatting layer used by `std::io` and string builders.
-- `std::fs` — filesystem access (POSIX baseline).
-- `std::net` — networking primitives (POSIX baseline).
+- `std::fs` — filesystem access (POSIX baseline; stream adapters under
+  `std::fs::stream`).
+- `std::net` — networking primitives (POSIX baseline; stream adapters under
+  `std::net::stream`).
 - `std::http` — HTTP/1.1 parsing + blocking client/server on top of `std::net`
   (see `docs/std/http.md`).
 - `std::https` — HTTPS (HTTP over TLS) on top of `std::tls` + `std::net`
@@ -105,6 +110,7 @@ distribution:
 - `std::sqlite` — SQLite database primitives (POSIX baseline via SQLite; see
   `docs/std/sqlite.md`).
 - `std::runtime` — runtime interface layer used by OS-facing std modules (see `docs/std/runtime.md`).
+- `std::ffi::c` — C FFI helpers (C strings and interop utilities; see `docs/std/ffi-c.md`).
 - `std::interfaces` — shared std interface contracts (“protocols”) such as
   `Drop`, `Len`, `Capacity`, etc. (see `docs/std/interfaces.md`).
 - `std::formal` — reusable Formal Silk theories (“standard lemmas”) used by

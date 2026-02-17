@@ -18,6 +18,21 @@ See also:
 - `docs/language/concurrency.md` (language-level `task`/`yield`/`await`)
 - `docs/std/task.md` (task/runtime utilities)
 
+## Thread Safety
+
+`std::sync` is used from OS-thread-backed `task` code. The core pattern is:
+
+- Owning handle types (`Mutex`, `Condvar`, `Channel(T)`, `CancellationToken`)
+  implement `Drop` and are **move-only** in safe code (ownership transfers by
+  value; they are not copyable).
+- To share a handle across tasks without transferring ownership, prefer the
+  `*Borrow` view types (for example `ChannelBorrow(T)`, `MutexBorrow`).
+  `*Borrow` values are non-owning, copyable views; the owner must keep the
+  backing handle alive for the duration of all borrows.
+- For multi-producer patterns, pass `ChannelSender(T)` to worker tasks and
+  clone it explicitly with `sender.clone()`; the channel auto-closes when the
+  last sender is dropped.
+
 ## Implemented API
 
 ```silk
@@ -155,9 +170,9 @@ Notes:
   `Result(...)`. `Channel(T).init` / `init_default` return `Result(...)`.
 - `Channel(T).invalid()` returns an inert handle (`handle == 0`); operations treat it as closed/empty and return `InvalidInput` for sends.
 - `CancellationToken.invalid()` returns an inert handle; it is treated as already cancelled so waits do not block.
-- Handle types are trivially copyable in the current language subset; copying a
-  handle duplicates the pointer. Destroying (or dropping) any copy invalidates
-  the others.
+- Owning handle types implement `Drop` and are moved by value (non-copyable).
+  `*Borrow` view types are copyable and may be passed across tasks/threads, but
+  do not manage lifetime.
 - When sending a channel handle across a `task` boundary, prefer passing a
   non-owning view (`ChannelBorrow(T)`) obtained via `c.borrow()` so ownership
   stays with the original `Channel(T)`.

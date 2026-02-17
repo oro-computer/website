@@ -6,6 +6,10 @@ The language’s error model is explicit and typed (`docs/language/errors.md`).
 `std::result` standardizes the common “success or error” return shape so that
 APIs across `std::` compose cleanly.
 
+When the standard library is enabled (the default), `Result` is available
+without explicit imports via the std prelude module `std::runtime::globals`.
+Import `std::result` only when you need other exports from the module.
+
 ## `Result(T, E)`
 
 `Result(T, E)` models a recoverable “success or error” outcome.
@@ -69,9 +73,7 @@ Notes:
   type context is not available:
 
 ```silk
-import std::result;
-
-type R = std::result::Result(int, string);
+type R = Result(int, string);
 
 fn main () -> int {
   let x: R = R.ok(123);
@@ -85,13 +87,11 @@ In type-directed contexts, `Ok(...)` / `Err(...)` can be used without a
 qualifier. For example:
 
 ```silk
-import std::result;
-
 error Oops {
   code: int
 }
 
-fn foo (oops: bool) -> std::result::Result(int, Oops) {
+fn foo (oops: bool) -> Result(int, Oops) {
   if (oops) {
     return Err(Oops{ code: 123 });
   }

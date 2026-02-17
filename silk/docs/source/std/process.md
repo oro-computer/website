@@ -49,6 +49,21 @@ let out_r = cmd.output();
 See the `std::process::child` source (`std/process/child.slk`) for the exact,
 current API surface.
 
+### Child stdio pipes and `std::stream`
+
+When a child is spawned with piped stdio (`Stdio::Pipe`), `std::process::child`
+exposes the pipes as POSIX file descriptors (`Child.take_stdin()` /
+`take_stdout()` / `take_stderr()`).
+
+To treat those file descriptors as `std::stream` byte streams, use the
+task-based adapters in `std::io::stream`:
+
+- `std::io::stream::pipe_fd_to_stream` / `pipe_fd_to_stream_abortable` (fd → `WritableStream`)
+- `std::io::stream::pipe_stream_to_fd` / `pipe_stream_to_fd_abortable` (`ReadableStream` → fd)
+
+This keeps the child-process API small and portable while still enabling
+stream-oriented composition.
+
 ## `getcwd`
 
 `std::process::getcwd()` returns the current working directory as an owned

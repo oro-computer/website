@@ -13,9 +13,8 @@ A build module is an optional file:
 
 - `build.slk` (in the package root directory)
 
-When enabled, `silk` compiles and runs a small wrapper program that imports the
-build module and parses the manifest it emits as a TOML v1.0 package manifest in
-the same format as `silk.toml`
+When enabled, `silk` executes the build module and consumes the manifest it
+produces as a TOML v1.0 package manifest in the same format as `silk.toml`
 (see `docs/compiler/package-manifests.md`).
 
 This allows packages to compute targets, outputs, and dependency paths
@@ -100,11 +99,9 @@ qualified path:
 - `module <name> as std::interfaces::Builder;` (fully qualified), or
 - `module <name> as Builder;` with `import { Builder } from "std/interfaces";`
 
-The `silk` driver compiles and runs a wrapper program that:
+The `silk` driver invokes the build module as:
 
-- parses the build-module invocation arguments,
-- imports the build module by file path, and
-- calls `await build_module::run(package_root, action)`.
+- `await build_module::run(package_root, action)`.
 
 Build module requirements:
 

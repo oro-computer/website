@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-02-13T15:21:41+00:00",
+  "generatedAt": "2026-02-17T14:41:33+00:00",
   "kind": "docs",
-  "count": 171,
+  "count": 175,
   "sections": [
     {
       "name": "overview",
@@ -357,6 +357,11 @@
           "file": "std/package-structure.md"
         },
         {
+          "id": "std/abort-controller",
+          "title": "`std::abort_controller`",
+          "file": "std/abort-controller.md"
+        },
+        {
           "id": "std/algorithms",
           "title": "`std::algorithms`",
           "file": "std/algorithms.md"
@@ -395,6 +400,11 @@
           "id": "std/env",
           "title": "`std::env`",
           "file": "std/env.md"
+        },
+        {
+          "id": "std/ffi-c",
+          "title": "`std::ffi::c` (C FFI helpers)",
+          "file": "std/ffi-c.md"
         },
         {
           "id": "std/flag",
@@ -515,6 +525,11 @@
           "id": "std/result",
           "title": "`std::result`",
           "file": "std/result.md"
+        },
+        {
+          "id": "std/z3",
+          "title": "`std::runtime::z3` \u2014 Z3 SMT Solver (C API Bindings)",
+          "file": "std/z3.md"
         },
         {
           "id": "std/runtime",
@@ -700,6 +715,11 @@
           "id": "usage/tutorials/05-concurrency",
           "title": "Tutorial 5: concurrency basics (`async`, `task`, `yield`, `await`)",
           "file": "usage/tutorials/05-concurrency.md"
+        },
+        {
+          "id": "usage/tutorials/06-async-io-streams-abort",
+          "title": "Tutorial 6: Async I/O + Streams + Abort Signals",
+          "file": "usage/tutorials/06-async-io-streams-abort.md"
         },
         {
           "id": "usage/editor-ctags",

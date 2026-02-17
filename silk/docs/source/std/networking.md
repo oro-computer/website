@@ -186,6 +186,11 @@ Notes:
 - If you want to discard error details, prefer `match (r)` when the `Result`
   payload may implement `Drop` (for example `TcpStream` / `TcpListener`), since
   `ResultType.ok_value(r)` copies the `Result` payload in the current subset.
+- `std::net::stream` provides task-based adapters that connect `TcpStream` with
+  `std::stream` using producer/consumer loops:
+  - `std::net::stream::pipe_tcpstream_to_stream` / `pipe_tcpstream_to_stream_abortable`
+  - `std::net::stream::pipe_stream_to_tcpstream` / `pipe_stream_to_tcpstream_abortable`
+  These adapters take ownership of the `TcpStream` and close it before returning.
 
 ## Hosted UDP API (Implemented)
 

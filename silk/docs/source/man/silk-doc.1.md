@@ -20,7 +20,7 @@ It supports two modes:
 - Markdown mode (default): emits Markdown documentation for one or more input files.
 - Manpage mode (`--man`): renders a single roff `man(7)` page derived from doc comments and displays or writes it.
 
-In Markdown mode, by default `silk doc` includes exported values and types, plus all `struct` and `interface` declarations. Use `--all` to include non-exported declarations.
+In Markdown mode, by default `silk doc` includes exported values, types, and Formal Silk theories, plus all `struct`/`enum`/`error`/`interface` declarations. Use `--all` to include non-exported declarations.
 
 In manpage mode, the rendered manpage section is derived from doc tags:
 

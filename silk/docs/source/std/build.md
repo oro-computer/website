@@ -4,7 +4,7 @@ Status: **Implemented subset** (manifest builder + step graph).
 
 `std::build` provides helper APIs for writing Silk build modules (`build.slk`).
 Build modules are executed by the `silk` CLI (see `docs/compiler/build-scripts.md`)
-and must print a TOML v1.0 package manifest (`silk.toml` format) to stdout.
+and must produce a TOML v1.0 package manifest in the `silk.toml` format.
 
 This module is intentionally a *tooling* surface:
 
@@ -29,10 +29,8 @@ The driver provides these values to the build module via the
 - `package_root` (string)
 - `action` (string)
 
-The build-module wrapper program also receives these as process arguments:
-
-- `argv[1]` is `package_root`
-- `argv[2]` is `action` (when omitted, treat as `"build"`)
+For standalone hosted tools (not build modules), `Context.from_args(argc, argv)`
+is available to parse `argv` into a `Context`.
 
 ### `Build`
 
@@ -80,8 +78,8 @@ export async fn run (package_root: string, action: string) -> int {
 
 Notes:
 
-- Build modules may still write TOML directly to stdout; `std::build` is a
-  convenience layer.
+- Build modules may still generate the TOML manifest directly; `std::build` is
+  a convenience layer.
 - Build modules are allowed to be `async` so they can `await` during manifest
   generation.
 - `build::context(argc, argv)` remains available for wrapper/legacy usage when

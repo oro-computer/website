@@ -32,6 +32,7 @@ enum IOErrorKind {
   PermissionDenied,
   WouldBlock,
   Interrupted,
+  Aborted,
   BrokenPipe,
   InvalidInput,
   Unknown,
@@ -99,6 +100,17 @@ Notes:
 - `string` parameters in `ext` calls are lowered as C-string pointers in the
   current backend subset (the backing bytes include a trailing NUL terminator;
   Silk `string` length excludes it).
+- `std::io::async` provides small async wrappers (`read`/`write`) on top of
+  `std::runtime::event_loop`. Abortable variants (`read_abortable` /
+  `write_abortable`) accept an optional `std::abort_controller::AbortSignalBorrow`
+  and return `IOErrorKind::Aborted` when cancelled.
+  Note: in the current subset, aborts are observed only before/after an awaited
+  fd-wait; they do not yet interrupt an in-flight wait.
+- `std::io::stream` provides task-based adapters that connect POSIX/WASI file
+  descriptors (`fd`) with `std::stream` (`ReadableStream` / `WritableStream`):
+  - `std::io::stream::pipe_fd_to_stream` / `pipe_fd_to_stream_abortable`
+  - `std::io::stream::pipe_stream_to_fd` / `pipe_stream_to_fd_abortable`
+  These adapters take ownership of the `fd` and close it before returning.
 
 Example (formatted printing):
 

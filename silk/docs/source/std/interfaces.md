@@ -13,6 +13,10 @@ interfaces are used for:
 - one compiler-backed convention: `std::interfaces::Drop` is used for automatic
   cleanup of values at well-defined points (see “Drop semantics” below).
 
+When the standard library is enabled (the default), all interfaces in
+`std::interfaces` are available without explicit imports via the std prelude
+module `std::runtime::globals`, so you can write `impl T as Drop { ... }`.
+
 See also:
 
 - `docs/language/interfaces.md` (syntax, conformance, dispatch status)
@@ -116,7 +120,7 @@ Notes:
   interface (used via `module ... as ...`) and defines a single `run` entrypoint
   that may be implemented as `async` and `await`ed by the driver wrapper.
   - Recommended build-module header style:
-    - `module my_pkg::build as Builder;` + `import { Builder } from "std/interfaces";`
+    - `module my_pkg::build as Builder;` (preferred; `Builder` is in the std prelude)
     - or `module my_pkg::build as std::interfaces::Builder;` (fully qualified)
 
 ## Drop semantics (Implemented subset)
@@ -127,7 +131,7 @@ handles, etc.). A type is considered “droppable” when it provides a method w
 this surface signature:
 
 ```silk
-impl T as std::interfaces::Drop {
+impl T as Drop {
   public fn drop (mut self: &T) -> void { ... }
 }
 ```
@@ -159,13 +163,11 @@ Notes and limitations (current subset):
 ## Example (Conformance)
 
 ```silk
-import std::interfaces;
-
 struct Counter {
   value: i64,
 }
 
-impl Counter as std::interfaces::Len {
+impl Counter as Len {
   public fn len (self: &Counter) -> i64 {
     return self.value;
   }

@@ -96,8 +96,13 @@ This layering is specified in `docs/std/runtime.md`.
 
 Notes:
 
-- This does **not** imply an implicit `import std::...;` prelude; importing is
-  explicit. Linking-by-default means “`std::` is available to import”.
+- This does **not** imply an implicit `import std::...;` of all std modules;
+  importing remains explicit. Linking-by-default means “`std::` is available to
+  import”.
+- When the standard library is enabled (the default), the compiler provides a
+  small implicit std prelude of selected symbols (for example `Result` and the
+  `std::interfaces` interface names) as specified by `std::runtime::globals`.
+  Use `--nostd` to disable this behavior.
 - The compiler should only compile/link the std modules that are reachable from
   the user’s imports (and any internal dependencies), rather than eagerly
   compiling all of `std::`.
