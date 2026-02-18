@@ -1,210 +1,195 @@
 {
-  "generatedAt": "2026-01-27T13:07:52+00:00",
+  "generatedAt": "2026-02-18T18:36:05+00:00",
   "kind": "docs",
-  "count": 29,
+  "count": 33,
   "sections": [
     {
       "name": "overview",
       "items": [
         {
           "id": "start",
-          "title": "Oro Runtime Documentation",
+          "title": "Oro Runtime Docs",
           "file": "start.md"
         }
       ]
     },
     {
-      "name": "architecture",
+      "name": "guides",
       "items": [
         {
-          "id": "RUNTIME_ARCHITECTURE",
-          "title": "Oro Runtime Architecture",
-          "file": "RUNTIME_ARCHITECTURE.md"
+          "id": "guides/hello-world",
+          "title": "Hello world",
+          "file": "guides/hello-world.md"
         },
         {
-          "id": "NAVIGATOR_MOUNTS",
-          "title": "Navigator Mounts",
-          "file": "NAVIGATOR_MOUNTS.md"
+          "id": "guides/project-layout",
+          "title": "Project layout",
+          "file": "guides/project-layout.md"
         },
         {
-          "id": "CONDUIT",
-          "title": "Conduit Transport",
-          "file": "CONDUIT.md"
+          "id": "guides/build-and-package",
+          "title": "Build and package",
+          "file": "guides/build-and-package.md"
+        },
+        {
+          "id": "guides/windows-and-messaging",
+          "title": "Windows and messaging",
+          "file": "guides/windows-and-messaging.md"
         }
       ]
     },
     {
-      "name": "apis",
+      "name": "cli",
       "items": [
         {
-          "id": "TAR_API",
-          "title": "Tar Archive API (`oro:tar`)",
-          "file": "TAR_API.md"
+          "id": "cli/oroc",
+          "title": "`oroc`",
+          "file": "cli/oroc.md"
+        },
+        {
+          "id": "cli/run",
+          "title": "`oroc run`",
+          "file": "cli/run.md"
+        },
+        {
+          "id": "cli/build",
+          "title": "`oroc build`",
+          "file": "cli/build.md"
+        },
+        {
+          "id": "cli/setup",
+          "title": "`oroc setup`",
+          "file": "cli/setup.md"
+        },
+        {
+          "id": "cli/init",
+          "title": "`oroc init`",
+          "file": "cli/init.md"
+        },
+        {
+          "id": "cli/config",
+          "title": "`oroc config`",
+          "file": "cli/config.md"
+        },
+        {
+          "id": "cli/env",
+          "title": "`oroc env`",
+          "file": "cli/env.md"
+        },
+        {
+          "id": "cli/install-app",
+          "title": "`oroc install-app`",
+          "file": "cli/install-app.md"
+        },
+        {
+          "id": "cli/list-devices",
+          "title": "`oroc list-devices`",
+          "file": "cli/list-devices.md"
+        },
+        {
+          "id": "cli/mcp",
+          "title": "`oroc mcp`",
+          "file": "cli/mcp.md"
+        },
+        {
+          "id": "cli/print-build-dir",
+          "title": "`oroc print-build-dir`",
+          "file": "cli/print-build-dir.md"
+        },
+        {
+          "id": "cli/update",
+          "title": "`oroc update`",
+          "file": "cli/update.md"
+        },
+        {
+          "id": "cli/version",
+          "title": "`oroc version`",
+          "file": "cli/version.md"
+        },
+        {
+          "id": "cli/versions",
+          "title": "`oroc versions`",
+          "file": "cli/versions.md"
         }
       ]
     },
     {
-      "name": "platform",
+      "name": "config",
       "items": [
         {
-          "id": "WINDOW_MANAGEMENT",
-          "title": "Window Management",
-          "file": "WINDOW_MANAGEMENT.md"
+          "id": "config/overview",
+          "title": "Configuration overview",
+          "file": "config/overview.md"
         },
         {
-          "id": "ANDROID_STORAGE",
-          "title": "Android Storage Defaults",
-          "file": "ANDROID_STORAGE.md"
+          "id": "config/reference",
+          "title": "Configuration reference",
+          "file": "config/reference.md"
         },
         {
-          "id": "background-services",
-          "title": "Background Services Architecture",
-          "file": "background-services.md"
+          "id": "config/copy-map",
+          "title": "`copy_map`",
+          "file": "config/copy-map.md"
         }
       ]
     },
     {
-      "name": "security",
+      "name": "javascript",
       "items": [
         {
-          "id": "SECURE_STORAGE",
-          "title": "Secure Storage",
-          "file": "SECURE_STORAGE.md"
+          "id": "javascript/overview",
+          "title": "JavaScript APIs overview",
+          "file": "javascript/overview.md"
         },
         {
-          "id": "SANDBOX_HELPER",
-          "title": "Sandbox Helper Implementation Plan",
-          "file": "SANDBOX_HELPER.md"
-        }
-      ]
-    },
-    {
-      "name": "networking",
-      "items": [
-        {
-          "id": "TLS_QUICKSTART",
-          "title": "TLS Quickstart (Experimental)",
-          "file": "TLS_QUICKSTART.md"
+          "id": "javascript/module-index",
+          "title": "Module index",
+          "file": "javascript/module-index.md"
         },
         {
-          "id": "TLS_TESTING",
-          "title": "TLS Testing Guide",
-          "file": "TLS_TESTING.md"
+          "id": "javascript/all-modules",
+          "title": "All module specifiers",
+          "file": "javascript/all-modules.md"
         },
         {
-          "id": "WEBVIEW_TLS_PINS",
-          "title": "WebView TLS Pins",
-          "file": "WEBVIEW_TLS_PINS.md"
-        }
-      ]
-    },
-    {
-      "name": "web-platform",
-      "items": [
-        {
-          "id": "WEB_BLUETOOTH_STATUS",
-          "title": "Web Bluetooth Runtime Status",
-          "file": "WEB_BLUETOOTH_STATUS.md"
+          "id": "javascript/application",
+          "title": "`oro:application`",
+          "file": "javascript/application.md"
         },
         {
-          "id": "WEB_OTP",
-          "title": "Web OTP Support",
-          "file": "WEB_OTP.md"
+          "id": "javascript/window",
+          "title": "`oro:window`",
+          "file": "javascript/window.md"
         },
         {
-          "id": "WEB_HID_STATUS",
-          "title": "WebHID Runtime Status",
-          "file": "WEB_HID_STATUS.md"
+          "id": "javascript/hooks",
+          "title": "`oro:hooks`",
+          "file": "javascript/hooks.md"
         },
         {
-          "id": "webusb",
-          "title": "WebUSB in Oro Runtime",
-          "file": "webusb.md"
-        }
-      ]
-    },
-    {
-      "name": "mcp",
-      "items": [
-        {
-          "id": "MCP",
-          "title": "MCP Server Configuration",
-          "file": "MCP.md"
+          "id": "javascript/filesystem",
+          "title": "`oro:fs`",
+          "file": "javascript/filesystem.md"
         },
         {
-          "id": "mcp/2025-06-18/INDEX",
-          "title": "MCP Specification (2025-06-18)",
-          "file": "mcp/2025-06-18/INDEX.md"
-        }
-      ]
-    },
-    {
-      "name": "ai",
-      "items": [
-        {
-          "id": "AI_SERVER",
-          "title": "Embedded LLaMA Server (AI, OpenAI-compatible)",
-          "file": "AI_SERVER.md"
+          "id": "javascript/secure-storage",
+          "title": "`oro:secure-storage`",
+          "file": "javascript/secure-storage.md"
         },
         {
-          "id": "AI_TOOL_CALLING",
-          "title": "Tool-Calling (Stub) Behavior",
-          "file": "AI_TOOL_CALLING.md"
+          "id": "javascript/notification",
+          "title": "`oro:notification`",
+          "file": "javascript/notification.md"
         },
         {
-          "id": "AI_WHISPER",
-          "title": "Whisper Speech Integration",
-          "file": "AI_WHISPER.md"
-        }
-      ]
-    },
-    {
-      "name": "release",
-      "items": [
-        {
-          "id": "APPLICATION_UPDATE_PROTOCOL",
-          "title": "Oro Application Update Protocol (OUP)",
-          "file": "APPLICATION_UPDATE_PROTOCOL.md"
+          "id": "javascript/mcp",
+          "title": "`oro:mcp`",
+          "file": "javascript/mcp.md"
         },
         {
-          "id": "release/ORO_RELEASE_AUTOMATION",
-          "title": "Oro Runtime Release Automation (npm packages)",
-          "file": "release/ORO_RELEASE_AUTOMATION.md"
-        },
-        {
-          "id": "CI_MATRIX",
-          "title": "Oro Runtime CI/CD Matrix",
-          "file": "CI_MATRIX.md"
-        },
-        {
-          "id": "ORO_ARTIFACT_NAMING",
-          "title": "Oro Runtime Artifact Naming",
-          "file": "ORO_ARTIFACT_NAMING.md"
-        }
-      ]
-    },
-    {
-      "name": "governance",
-      "items": [
-        {
-          "id": "GOVERNANCE",
-          "title": "Oro Runtime Governance Overview",
-          "file": "GOVERNANCE.md"
-        },
-        {
-          "id": "ENGINEERING_SCOPING",
-          "title": "Engineering Note: Scoped State, Metrics, and Limits",
-          "file": "ENGINEERING_SCOPING.md"
-        }
-      ]
-    },
-    {
-      "name": "debugging",
-      "items": [
-        {
-          "id": "CDP",
-          "title": "CDP (Chrome DevTools Protocol)",
-          "file": "CDP.md"
+          "id": "javascript/ai",
+          "title": "`oro:ai`",
+          "file": "javascript/ai.md"
         }
       ]
     }

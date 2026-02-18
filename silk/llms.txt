@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-02-17T23:09:53+00:00
+Generated: 2026-02-18T15:09:51+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -3353,9 +3353,15 @@ and do not exist as runtime calls.
 the compiler recognizes the following keys in queries and
 conditional compilation contexts:
 
-- `arch`: `"x86_64"` or `"wasm32"`
-- `os`: `"linux"`, `"wasi"`, or `"unknown"`
-- `target`: `"linux-x86_64"`, `"wasm32-unknown-unknown"`, or `"wasm32-wasi"`
+- `arch`: `"x86_64"`, `"aarch64"`, or `"wasm32"`
+- `os`: `"linux"`, `"macos"`, `"ios"`, `"android"`, `"windows"`, `"wasi"`, or `"unknown"`
+- `target`:
+  - `"linux-x86_64"` or `"linux-aarch64"`
+  - `"macos-x86_64"` or `"macos-aarch64"`
+  - `"ios-aarch64"`
+  - `"android-aarch64"`
+  - `"windows-x86_64"` or `"windows-aarch64"`
+  - `"wasm32-unknown-unknown"` or `"wasm32-wasi"`
 - `feature`: an enabled feature name (see “Features” below)
 
 ## ABI selection (`abi=c`) and `c_fn`
@@ -3771,7 +3777,8 @@ Today, the language subset implemented by the compiler supports only:
 - call-scoped borrow alias checks for:
   - borrowed reference parameters (`&T`, `mut p: &T`), and
   - slice parameters (`T[]`, `mut s: T[]`) and slice range borrows
-    (`&base[start..end]`, `mut &base[start..end]`).
+    (`&base[start..end]`, `mut &base[start..end]`, and `&base[r]` / `mut &base[r]`
+    where `r: range`).
 - first-class borrowed `&Struct` values created from borrowable lvalues:
   - `&expr` (borrow operator) for borrowable lvalues, and
   - implicit borrow coercions in contexts that expect `&T`
@@ -3788,6 +3795,7 @@ Slices (`T[]`) are non-owning views. Slice range borrows create slices that
 point into existing storage:
 
 - `&base[start..end]` creates a slice view whose lifetime is tied to `base`.
+- `&base[r]` creates a slice view whose bounds are defined by the `range` value
 - When borrowing a range from an existing slice binding `s: T[]`, the borrow’s
   underlying origin is `s`’s origin (sub-slicing does not extend lifetime).
 
@@ -7641,6 +7649,7 @@ Slice views (`T[]`) are also call-scoped and safe-by-default:
   - `&a[start..end]`
   - `&a[..end]`
   - `&a[start..]`
+  - `&a[r]` where `r: range` (including `..=` inclusive ranges)
 - A mutable slice view is created via `mut &a[...]` and is restricted:
   - the base must be a borrowable lvalue (a name or a field-access chain rooted
     at a name), and
@@ -7906,6 +7915,8 @@ The language includes the following operators and delimiters:
       - `Duration + Duration`, `Duration - Duration`, and unary `-Duration`,
       - `Instant + Duration`, `Duration + Instant`, `Instant - Duration`,
       - and `Instant - Instant` (producing a `Duration`).
+    - `range` supports shifting by an `int` offset:
+      - `range + int`, `range - int`, `int + range`.
 - Bitwise: `&`, `|`, `^`, `~`, `<<`, `>>`.
   - Currently, bitwise operators are defined for
     integer operands (`int` and the fixed-width integer types):
@@ -7968,7 +7979,7 @@ The language includes the following operators and delimiters:
 - Typed error propagation: `?` (postfix).
   - Syntax: `<call_expr>?`.
   - This propagates typed errors from an error-producing call to the enclosing
-- Ranges: `...`, `..=`, `..`.
+- Ranges / varargs delimiters: `..`, `..=`, `...`.
 - Other punctuation: `?`, `??`, `->`, `=>`, `,`, `;`, `(`, `)`, `{`, `}`, `[`, `]`, `_`, `:`.
   - Currently, `??` is supported for optionals in the
     current backend subset (including scalar, `string`, and the current
@@ -8078,6 +8089,10 @@ Notes:
 - `sizeof string` (type operand) is the **representation** size (currently 16
   bytes in the scalar-slot model), while `sizeof <string value>` is the
   **content** size (byte length).
+- `sizeof` is a byte-size operator. For logical element counts (for example a
+  slice length or vector length), use a `.len()` method via
+  `std::interfaces::Len` on the relevant type. The standard library does not
+  define a generic `length(...)` helper.
 
 Parsing note:
 
@@ -11734,8 +11749,16 @@ A canonical target platform/OS name string.
 
 Current compiler target set and values:
 
-- `linux/x86_64`:
+- `linux-x86_64` and `linux-aarch64`:
   - `OS_PLATFORM == "linux"`
+- `macos-x86_64` and `macos-aarch64`:
+  - `OS_PLATFORM == "macos"`
+- `ios-aarch64`:
+  - `OS_PLATFORM == "ios"`
+- `android-aarch64`:
+  - `OS_PLATFORM == "android"`
+- `windows-x86_64` and `windows-aarch64`:
+  - `OS_PLATFORM == "windows"`
 - `wasm32-unknown-unknown`:
   - `OS_PLATFORM == "unknown"`
 - `wasm32-wasi`:
@@ -11747,8 +11770,10 @@ A canonical target CPU architecture name string.
 
 Current compiler target set and values:
 
-- `linux/x86_64`:
+- `linux-x86_64`, `macos-x86_64`, and `windows-x86_64`:
   - `OS_ARCH == "x86_64"`
+- `linux-aarch64`, `macos-aarch64`, `ios-aarch64`, `android-aarch64`, and `windows-aarch64`:
+  - `OS_ARCH == "aarch64"`
 - `wasm32-unknown-unknown` and `wasm32-wasi`:
   - `OS_ARCH == "wasm32"`
 
@@ -11758,7 +11783,14 @@ Whether the compilation target is a UNIX family target.
 
 Current compiler target set:
 
-- `linux/x86_64`: `true`
+- `linux-x86_64`: `true`
+- `linux-aarch64`: `true`
+- `macos-x86_64`: `true`
+- `macos-aarch64`: `true`
+- `ios-aarch64`: `true`
+- `android-aarch64`: `true`
+- `windows-x86_64`: `false`
+- `windows-aarch64`: `false`
 - `wasm32-unknown-unknown`: `false`
 - `wasm32-wasi`: `false`
 
@@ -11768,7 +11800,14 @@ Whether the compilation target is a POSIX target.
 
 Current compiler target set:
 
-- `linux/x86_64`: `true`
+- `linux-x86_64`: `true`
+- `linux-aarch64`: `true`
+- `macos-x86_64`: `true`
+- `macos-aarch64`: `true`
+- `ios-aarch64`: `true`
+- `android-aarch64`: `true`
+- `windows-x86_64`: `false`
+- `windows-aarch64`: `false`
 - `wasm32-unknown-unknown`: `false`
 - `wasm32-wasi`: `false`
 
@@ -11776,6 +11815,7 @@ Current compiler target set:
 
 The standard library provides `std::os` helpers that expose the same metadata
 in a namespaced form and additionally map these strings into enums for use with
+to `Unknown`).
 
 ## Examples
 
@@ -12458,6 +12498,21 @@ The core categories are:
     current scalar-slot memory model. in Silk, fixed array
     lengths are limited to `N <= 4096`. Indexing `xs[i]` traps when `i` is out
     of bounds in Silk.
+- Range: `range`
+  - Examples: `let r: range = 0..4;`, `let r2: range = (1..) + 2;`.
+  - Notes: an `int`-indexed range value used for slicing and other index-based
+    operations. Range literal bounds are `int` values; in range literals, bound
+    expressions must have type `int` (integer literals may be coerced to
+    `int`). Range literal expressions support:
+    - `start..end` (end-exclusive) and `start..=end` (end-inclusive),
+    - `start..` (open-ended),
+    - `..end` (implicit start `0`),
+    - `..` (full range).
+    The inclusive (`..=`) form requires an explicit end bound.
+    In index/slice contexts, open-ended ranges use the container’s length as
+    the effective end bound.
+    A `range` value can be used for slicing via `&xs[r]` / `mut &xs[r]`, enabling
+    composed ranges (including inclusive ranges) to drive slicing.
 - Function Types: `fn(params) -> R`
   - Examples: `fn(i32) -> i32`.
   - Notes: function types are part of the type grammar and function-typed
@@ -26489,6 +26544,7 @@ URL: /silk/docs/?p=man/libsilk.7
 
 /* Core types */
 typedef struct SilkString   SilkString;
+typedef struct SilkRange    SilkRange;
 typedef struct SilkBytes    SilkBytes;
 typedef struct SilkCompiler SilkCompiler;
 typedef struct SilkModule   SilkModule;
@@ -26610,6 +26666,21 @@ typedef struct SilkBytes {
 - `ptr` may be `NULL` when `len == 0`.
 - Buffers returned by `silk_compiler_build_to_bytes` must be freed with
   `silk_bytes_free`.
+
+### `SilkRange`
+
+```c
+typedef struct SilkRange {
+  int64_t  start;
+  int64_t  end;
+  uint64_t flags;
+} SilkRange;
+```
+
+- Represents the Silk `range` primitive as three scalar slots.
+- `flags` is a bitfield:
+  - bit 0: `has_end` (when unset, `end` is ignored),
+  - bit 1: `inclusive` (only valid when `has_end` is set).
 
 ### Opaque handles
 
@@ -27249,8 +27320,18 @@ Output selection:
 
 Target selection:
 
-- `--arch <arch>` — shorthand target selector (mutually exclusive with `--target`).
+- `--arch <arch>` — shorthand target selector (mutually exclusive with `--target`). Accepted values:
+  - `x86_64` / `amd64` → `linux-x86_64` (default)
+  - `aarch64` / `arm64` → `linux-aarch64`
+  - `wasm32` → `wasm32-unknown-unknown`
+  - `wasm32-wasi` → `wasm32-wasi`
 - `--target <triple>` — target triple (mutually exclusive with `--arch`).
+  - executable code generation backends exist for:
+    - `linux-x86_64` (IR-backed subset + const-main fallback)
+    - `linux-aarch64` (const-main subset only)
+    - `wasm32-unknown-unknown` (IR-backed subset + const-main fallback)
+    - `wasm32-wasi` (IR-backed subset + const-main fallback)
+  - target metadata and `attr(...)` gating are also available for: `macos-x86_64`, `macos-aarch64`, `ios-aarch64`, `android-aarch64`, `windows-x86_64`, `windows-aarch64`
 
 Native compilation:
 
@@ -27416,6 +27497,8 @@ When explicit input files are used (no `--package`), the `silk` CLI may load add
 - `--std <path>` — alias of `--std-root` when `<path>` does not end in `.a`.
 - `--std-lib <path>` — accepted for consistency; ignored by `check`.
 - `--std <path>.a` — accepted for consistency; ignored by `check`.
+- `--arch <arch>` — shorthand target selector (mutually exclusive with `--target`). This affects `OS_PLATFORM` / `OS_ARCH` and `attr(...)` conditional compilation during checking.
+- `--target <triple>` — target triple (mutually exclusive with `--arch`). This affects `OS_PLATFORM` / `OS_ARCH` and `attr(...)` conditional compilation during checking.
 - `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`).
 - `--debug`, `-g` — emit Z3 debug output and write `.smt2` dumps for failing Formal Silk obligations.
 - `--package <dir|manifest>`, `--pkg <dir|manifest>` — load the module set from a `silk.toml` manifest instead of explicit input files.
@@ -28576,6 +28659,7 @@ This document summarizes the key syntax and concepts from the Silk language in a
 - Optional: `T?` (sugar for `Option(T)`).
 - References: `&T`.
 - Arrays / slices: `T[]`, `T[N]`.
+- Range: `range` (range literal expressions: `start..end`, `start..=end`, `start..`, `..end`, `..`).
 - Maps / dictionaries: `std::map::{HashMap, TreeMap}` (standard library).
 - Function types: `fn(params) -> R` (discipline modifiers apply to function
   declarations; function types are unmodified in Silk).
@@ -29261,20 +29345,22 @@ See `Interfaces`.
 Error type declaration:
 
 ```silk
+import std::arrays;
+
 error OutOfBounds {
-  index: int,
-  len: int
+  index: i64,
+  len: i64
 }
 ```
 
 Error-producing signatures use `|`:
 
 ```silk
-fn get_at (xs: &u8[], index: int) -> u8 | OutOfBounds {
-  if index < 0 || index >= std::length(xs) {
-    panic OutOfBounds { index: index, len: std::length(xs) };
+fn get_at (xs: std::arrays::Slice(u8), index: i64) -> u8 | OutOfBounds {
+  if index < 0 || index >= xs.len() {
+    panic OutOfBounds { index: index, len: xs.len() };
   }
-  return xs[index];
+  return xs.get(index);
 }
 ```
 
@@ -29282,7 +29368,10 @@ Handling typed errors uses the `match` **statement** form:
 
 ```silk
 fn main () -> int {
-  match (get_at([1, 2, 3], 10)) {
+  let xs_arr: u8[3] = [1, 2, 3];
+  let xs: std::arrays::Slice(u8) = { ptr: xs_arr as u64, len: 3 };
+
+  match (get_at(xs, 10)) {
     value => {
       return value as int;
     },
@@ -29298,7 +29387,10 @@ Propagating errors from calls uses postfix `?`:
 ```silk
 // Example when `main` declares a compatible error set.
 fn main () -> int | OutOfBounds {
-  let x: u8 = get_at([1, 2, 3], 0)?;
+  let xs_arr: u8[3] = [1, 2, 3];
+  let xs: std::arrays::Slice(u8) = { ptr: xs_arr as u64, len: 3 };
+
+  let x: u8 = get_at(xs, 0)?;
   return x as int;
 }
 ```
@@ -30598,6 +30690,21 @@ The core categories are:
     current scalar-slot memory model. in Silk, fixed array
     lengths are limited to `N <= 4096`. Indexing `xs[i]` traps when `i` is out
     of bounds in Silk.
+- Range: `range`
+  - Examples: `let r: range = 0..4;`, `let r2: range = (1..) + 2;`.
+  - Notes: an `int`-indexed range value used for slicing and other index-based
+    operations. Range literal bounds are `int` values; in range literals, bound
+    expressions must have type `int` (integer literals may be coerced to
+    `int`). Range literal expressions support:
+    - `start..end` (end-exclusive) and `start..=end` (end-inclusive),
+    - `start..` (open-ended),
+    - `..end` (implicit start `0`),
+    - `..` (full range).
+    The inclusive (`..=`) form requires an explicit end bound.
+    In index/slice contexts, open-ended ranges use the container’s length as
+    the effective end bound.
+    A `range` value can be used for slicing via `&xs[r]` / `mut &xs[r]`, enabling
+    composed ranges (including inclusive ranges) to drive slicing.
 - Function Types: `fn(params) -> R`
   - Examples: `fn(i32) -> i32`.
   - Notes: function types are part of the type grammar and function-typed
@@ -34789,7 +34896,7 @@ its success type using `|`.
 Examples:
 
 ```silk
-fn get_at(xs: &u8[], index: int) -> u8 | OutOfBounds { ... }
+fn get_at(xs: u8[], index: int) -> u8 | OutOfBounds { ... }
 fn parse() -> Frame? | FrameTooLarge { ... }
 fn init() -> void | InitFailure { ... }
 ```
@@ -34824,9 +34931,12 @@ Syntax:
 ```silk
 panic OutOfBounds {
   index: index,
-  len: std::length(xs)
+  len: len
 };
 ```
+
+In a real implementation, the `len` value typically comes from the relevant
+container/view (for example a `.len()` method via `std::interfaces::Len`).
 
 Rules:
 
@@ -35142,6 +35252,7 @@ Slice views (`T[]`) are also call-scoped and safe-by-default:
   - `&a[start..end]`
   - `&a[..end]`
   - `&a[start..]`
+  - `&a[r]` where `r: range` (including `..=` inclusive ranges)
 - A mutable slice view is created via `mut &a[...]` and is restricted:
   - the base must be a borrowable lvalue (a name or a field-access chain rooted
     at a name), and
@@ -35454,7 +35565,8 @@ Today, the language subset implemented by the compiler supports only:
 - call-scoped borrow alias checks for:
   - borrowed reference parameters (`&T`, `mut p: &T`), and
   - slice parameters (`T[]`, `mut s: T[]`) and slice range borrows
-    (`&base[start..end]`, `mut &base[start..end]`).
+    (`&base[start..end]`, `mut &base[start..end]`, and `&base[r]` / `mut &base[r]`
+    where `r: range`).
 - first-class borrowed `&Struct` values created from borrowable lvalues:
   - `&expr` (borrow operator) for borrowable lvalues, and
   - implicit borrow coercions in contexts that expect `&T`
@@ -35471,6 +35583,8 @@ Slices (`T[]`) are non-owning views. Slice range borrows create slices that
 point into existing storage:
 
 - `&base[start..end]` creates a slice view whose lifetime is tied to `base`.
+- `&base[r]` creates a slice view whose bounds are defined by the `range` value
+  `r` (see `Types`).
 - When borrowing a range from an existing slice binding `s: T[]`, the borrow’s
   underlying origin is `s`’s origin (sub-slicing does not extend lifetime).
 
@@ -38654,8 +38768,16 @@ A canonical target platform/OS name string.
 
 Current compiler target set and values:
 
-- `linux/x86_64`:
+- `linux-x86_64` and `linux-aarch64`:
   - `OS_PLATFORM == "linux"`
+- `macos-x86_64` and `macos-aarch64`:
+  - `OS_PLATFORM == "macos"`
+- `ios-aarch64`:
+  - `OS_PLATFORM == "ios"`
+- `android-aarch64`:
+  - `OS_PLATFORM == "android"`
+- `windows-x86_64` and `windows-aarch64`:
+  - `OS_PLATFORM == "windows"`
 - `wasm32-unknown-unknown`:
   - `OS_PLATFORM == "unknown"`
 - `wasm32-wasi`:
@@ -38667,8 +38789,10 @@ A canonical target CPU architecture name string.
 
 Current compiler target set and values:
 
-- `linux/x86_64`:
+- `linux-x86_64`, `macos-x86_64`, and `windows-x86_64`:
   - `OS_ARCH == "x86_64"`
+- `linux-aarch64`, `macos-aarch64`, `ios-aarch64`, `android-aarch64`, and `windows-aarch64`:
+  - `OS_ARCH == "aarch64"`
 - `wasm32-unknown-unknown` and `wasm32-wasi`:
   - `OS_ARCH == "wasm32"`
 
@@ -38678,7 +38802,14 @@ Whether the compilation target is a UNIX family target.
 
 Current compiler target set:
 
-- `linux/x86_64`: `true`
+- `linux-x86_64`: `true`
+- `linux-aarch64`: `true`
+- `macos-x86_64`: `true`
+- `macos-aarch64`: `true`
+- `ios-aarch64`: `true`
+- `android-aarch64`: `true`
+- `windows-x86_64`: `false`
+- `windows-aarch64`: `false`
 - `wasm32-unknown-unknown`: `false`
 - `wasm32-wasi`: `false`
 
@@ -38688,7 +38819,14 @@ Whether the compilation target is a POSIX target.
 
 Current compiler target set:
 
-- `linux/x86_64`: `true`
+- `linux-x86_64`: `true`
+- `linux-aarch64`: `true`
+- `macos-x86_64`: `true`
+- `macos-aarch64`: `true`
+- `ios-aarch64`: `true`
+- `android-aarch64`: `true`
+- `windows-x86_64`: `false`
+- `windows-aarch64`: `false`
 - `wasm32-unknown-unknown`: `false`
 - `wasm32-wasi`: `false`
 
@@ -38696,7 +38834,7 @@ Current compiler target set:
 
 The standard library provides `std::os` helpers that expose the same metadata
 in a namespaced form and additionally map these strings into enums for use with
-`match` (see `the standard library`).
+`match` (targets not covered by the current enum set map to `Unknown`; see `the standard library`).
 
 ### Examples
 

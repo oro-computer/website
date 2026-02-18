@@ -366,6 +366,30 @@ def build_llms_txt(site_root: Path) -> str:
     return "\n".join(body).rstrip() + "\n"
 
 
+def normalize_generated_line(text: str) -> str:
+    """
+    Normalize only the *header* Generated timestamp so we can avoid rewriting
+    `llms.txt` when content is unchanged.
+
+    Note: we intentionally do not rewrite any later `Generated:` occurrences
+    inside documentation content.
+    """
+
+    lines = text.splitlines()
+    out: list[str] = []
+    in_header = True
+    replaced = False
+    for line in lines:
+        if in_header and not replaced and line.startswith("Generated: "):
+            out.append("Generated: <preserved>")
+            replaced = True
+            continue
+        out.append(line)
+        if line.strip() == "How to link:":
+            in_header = False
+    return "\n".join(out).rstrip() + "\n"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build website/silk/llms.txt from the docs + wiki sources.")
     parser.add_argument(
@@ -380,7 +404,14 @@ def main() -> None:
     site_root = repo_root / "website" / "silk"
     out_path: Path = args.output if args.output is not None else (site_root / "llms.txt")
 
-    out_path.write_text(build_llms_txt(site_root), encoding="utf-8")
+    next_text = build_llms_txt(site_root)
+    prev_text = out_path.read_text(encoding="utf-8") if out_path.exists() else None
+
+    if prev_text is not None and normalize_generated_line(prev_text) == normalize_generated_line(next_text):
+        print(f"Unchanged: {out_path}")
+        return
+
+    out_path.write_text(next_text, encoding="utf-8")
     print(f"Wrote: {out_path}")
 
 

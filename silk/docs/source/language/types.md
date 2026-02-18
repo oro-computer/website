@@ -113,6 +113,21 @@ The core categories are:
     current scalar-slot memory model. In the current subset, fixed array
     lengths are limited to `N <= 4096`. Indexing `xs[i]` traps when `i` is out
     of bounds in the current subset.
+- Range: `range`
+  - Examples: `let r: range = 0..4;`, `let r2: range = (1..) + 2;`.
+  - Notes: an `int`-indexed range value used for slicing and other index-based
+    operations. Range literal bounds are `int` values; in range literals, bound
+    expressions must have type `int` (integer literals may be coerced to
+    `int`). Range literal expressions support:
+    - `start..end` (end-exclusive) and `start..=end` (end-inclusive),
+    - `start..` (open-ended),
+    - `..end` (implicit start `0`),
+    - `..` (full range).
+    The inclusive (`..=`) form requires an explicit end bound.
+    In index/slice contexts, open-ended ranges use the container’s length as
+    the effective end bound.
+    A `range` value can be used for slicing via `&xs[r]` / `mut &xs[r]`, enabling
+    composed ranges (including inclusive ranges) to drive slicing.
 - Function Types: `fn(params) -> R`
   - Examples: `fn(i32) -> i32`.
   - Notes: function types are part of the type grammar and function-typed

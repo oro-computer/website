@@ -172,6 +172,15 @@ def strip_markdown(markdown: str) -> str:
     return md
 
 
+def read_json(path: Path) -> object | None:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return None
+    except json.JSONDecodeError:
+        return None
+
+
 def strip_internal_refs(markdown: str) -> str:
     drop_line = re.compile(
         r"(STATUS\.md|PLAN\.md|README\.md|llms\.txt|\bdocs/|\btests/)",
@@ -480,7 +489,32 @@ def write_json(path: Path, payload: object):
     path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
-def build(kind_root: Path, kind: str, section_order: list[str]):
+def write_json_if_changed(path: Path, payload: object, *, preserve_generated_at: bool = False) -> bool:
+    """
+    Avoid churning generated artifacts when inputs haven't changed.
+
+    If `preserve_generated_at` is set and the only difference is `generatedAt`,
+    keep the existing file verbatim.
+    """
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    existing = read_json(path)
+    if preserve_generated_at and isinstance(existing, dict) and isinstance(payload, dict):
+        if "generatedAt" in existing and "generatedAt" in payload:
+            preserved = dict(payload)
+            preserved["generatedAt"] = existing["generatedAt"]
+            if existing == preserved:
+                return False
+
+    if existing == payload:
+        return False
+
+    write_json(path, payload)
+    return True
+
+
+def build(kind_root: Path, kind: str, section_order: list[str]) -> list[Path]:
     source_root = kind_root / "source"
     items = collect_items(source_root, section_order)
 
@@ -509,8 +543,14 @@ def build(kind_root: Path, kind: str, section_order: list[str]):
         ],
     }
 
-    write_json(kind_root / "index.json", index_payload)
-    write_json(kind_root / "search.json", search_payload)
+    written: list[Path] = []
+    index_path = kind_root / "index.json"
+    search_path = kind_root / "search.json"
+    if write_json_if_changed(index_path, index_payload, preserve_generated_at=True):
+        written.append(index_path)
+    if write_json_if_changed(search_path, search_payload, preserve_generated_at=True):
+        written.append(search_path)
+    return written
 
 
 def main():
@@ -518,14 +558,17 @@ def main():
     docs_root = repo_root / "website" / "silk" / "docs"
     wiki_root = repo_root / "website" / "silk" / "wiki"
 
-    build(docs_root, "docs", SECTION_ORDER_DOCS)
-    build(wiki_root, "wiki", SECTION_ORDER_WIKI)
+    written: list[Path] = []
+    written.extend(build(docs_root, "docs", SECTION_ORDER_DOCS))
+    written.extend(build(wiki_root, "wiki", SECTION_ORDER_WIKI))
+
+    if not written:
+        print("No changes.")
+        return
 
     print("Wrote:")
-    print(f"- {docs_root / 'index.json'}")
-    print(f"- {docs_root / 'search.json'}")
-    print(f"- {wiki_root / 'index.json'}")
-    print(f"- {wiki_root / 'search.json'}")
+    for path in written:
+        print(f"- {path}")
 
 
 if __name__ == "__main__":

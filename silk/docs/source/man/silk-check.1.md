@@ -28,6 +28,8 @@ When explicit input files are used (no `--package`), the `silk` CLI may load add
 - `--std <path>` — alias of `--std-root` when `<path>` does not end in `.a`.
 - `--std-lib <path>` — accepted for consistency; ignored by `check`.
 - `--std <path>.a` — accepted for consistency; ignored by `check`.
+- `--arch <arch>` — shorthand target selector (mutually exclusive with `--target`). This affects `OS_PLATFORM` / `OS_ARCH` and `attr(...)` conditional compilation during checking.
+- `--target <triple>` — target triple (mutually exclusive with `--arch`). This affects `OS_PLATFORM` / `OS_ARCH` and `attr(...)` conditional compilation during checking.
 - `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`).
 - `--debug`, `-g` — emit Z3 debug output and write `.smt2` dumps for failing Formal Silk obligations.
 - `--package <dir|manifest>`, `--pkg <dir|manifest>` — load the module set from a `silk.toml` manifest instead of explicit input files.

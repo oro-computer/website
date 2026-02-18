@@ -36,8 +36,16 @@ A canonical target platform/OS name string.
 
 Current compiler target set and values:
 
-- `linux/x86_64`:
+- `linux-x86_64` and `linux-aarch64`:
   - `OS_PLATFORM == "linux"`
+- `macos-x86_64` and `macos-aarch64`:
+  - `OS_PLATFORM == "macos"`
+- `ios-aarch64`:
+  - `OS_PLATFORM == "ios"`
+- `android-aarch64`:
+  - `OS_PLATFORM == "android"`
+- `windows-x86_64` and `windows-aarch64`:
+  - `OS_PLATFORM == "windows"`
 - `wasm32-unknown-unknown`:
   - `OS_PLATFORM == "unknown"`
 - `wasm32-wasi`:
@@ -49,8 +57,10 @@ A canonical target CPU architecture name string.
 
 Current compiler target set and values:
 
-- `linux/x86_64`:
+- `linux-x86_64`, `macos-x86_64`, and `windows-x86_64`:
   - `OS_ARCH == "x86_64"`
+- `linux-aarch64`, `macos-aarch64`, `ios-aarch64`, `android-aarch64`, and `windows-aarch64`:
+  - `OS_ARCH == "aarch64"`
 - `wasm32-unknown-unknown` and `wasm32-wasi`:
   - `OS_ARCH == "wasm32"`
 
@@ -60,7 +70,14 @@ Whether the compilation target is a UNIX family target.
 
 Current compiler target set:
 
-- `linux/x86_64`: `true`
+- `linux-x86_64`: `true`
+- `linux-aarch64`: `true`
+- `macos-x86_64`: `true`
+- `macos-aarch64`: `true`
+- `ios-aarch64`: `true`
+- `android-aarch64`: `true`
+- `windows-x86_64`: `false`
+- `windows-aarch64`: `false`
 - `wasm32-unknown-unknown`: `false`
 - `wasm32-wasi`: `false`
 
@@ -70,7 +87,14 @@ Whether the compilation target is a POSIX target.
 
 Current compiler target set:
 
-- `linux/x86_64`: `true`
+- `linux-x86_64`: `true`
+- `linux-aarch64`: `true`
+- `macos-x86_64`: `true`
+- `macos-aarch64`: `true`
+- `ios-aarch64`: `true`
+- `android-aarch64`: `true`
+- `windows-x86_64`: `false`
+- `windows-aarch64`: `false`
 - `wasm32-unknown-unknown`: `false`
 - `wasm32-wasi`: `false`
 
@@ -78,7 +102,8 @@ Current compiler target set:
 
 The standard library provides `std::os` helpers that expose the same metadata
 in a namespaced form and additionally map these strings into enums for use with
-`match` (see `docs/std/os.md`).
+`match` (see `docs/std/os.md`; targets not covered by the current enum set map
+to `Unknown`).
 
 ## Examples
 

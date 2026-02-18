@@ -105,9 +105,15 @@ and do not exist as runtime calls.
 The current compiler subset recognizes the following keys in queries and
 conditional compilation contexts:
 
-- `arch`: `"x86_64"` or `"wasm32"`
-- `os`: `"linux"`, `"wasi"`, or `"unknown"`
-- `target`: `"linux-x86_64"`, `"wasm32-unknown-unknown"`, or `"wasm32-wasi"`
+- `arch`: `"x86_64"`, `"aarch64"`, or `"wasm32"`
+- `os`: `"linux"`, `"macos"`, `"ios"`, `"android"`, `"windows"`, `"wasi"`, or `"unknown"`
+- `target`:
+  - `"linux-x86_64"` or `"linux-aarch64"`
+  - `"macos-x86_64"` or `"macos-aarch64"`
+  - `"ios-aarch64"`
+  - `"android-aarch64"`
+  - `"windows-x86_64"` or `"windows-aarch64"`
+  - `"wasm32-unknown-unknown"` or `"wasm32-wasi"`
 - `feature`: an enabled feature name (see “Features” below)
 
 ## ABI selection (`abi=c`) and `c_fn`

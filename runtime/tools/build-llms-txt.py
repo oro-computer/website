@@ -29,6 +29,12 @@ def read_json(path: Path) -> object:
 def section_label(name: str) -> str:
     if name == "overview":
         return "Start"
+    if name == "cli":
+        return "CLI"
+    if name == "config":
+        return "Configuration"
+    if name == "javascript":
+        return "JavaScript APIs"
     if name == "ai":
         return "AI"
     if name == "mcp":
@@ -120,6 +126,29 @@ def load_items(docs_root: Path) -> list[DocItem]:
     return items
 
 
+def normalize_generated_line(text: str) -> str:
+    """
+    Normalize only the *header* Generated timestamp so we can avoid rewriting
+    llms.txt when content is unchanged.
+    """
+
+    lines = text.splitlines()
+    out: list[str] = []
+    in_header = True
+    replaced = False
+
+    for line in lines:
+        if in_header and not replaced and line.startswith("Generated: "):
+            out.append("Generated: <preserved>")
+            replaced = True
+            continue
+        out.append(line)
+        if line.strip() == "How to link:":
+            in_header = False
+
+    return "\n".join(out).rstrip() + "\n"
+
+
 def main():
     repo_root = Path(__file__).resolve().parents[3]
     docs_root = repo_root / "website" / "runtime" / "docs"
@@ -168,7 +197,14 @@ def main():
             continue
         lines.append(sanitize_markdown(read_text(content_path)))
 
-    out_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    next_text = "\n".join(lines).rstrip() + "\n"
+    prev_text = out_path.read_text(encoding="utf-8") if out_path.exists() else None
+
+    if prev_text is not None and normalize_generated_line(prev_text) == normalize_generated_line(next_text):
+        print(f"Unchanged: {out_path}")
+        return
+
+    out_path.write_text(next_text, encoding="utf-8")
     print(f"Wrote: {out_path}")
 
 

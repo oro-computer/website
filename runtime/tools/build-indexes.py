@@ -20,84 +20,47 @@ EXCLUDE_BASENAMES = {
 
 SECTION_ORDER_DOCS = [
     "overview",
-    "architecture",
-    "apis",
-    "platform",
-    "security",
-    "networking",
-    "web-platform",
-    "mcp",
-    "ai",
-    "release",
-    "governance",
-    "debugging",
+    "guides",
+    "cli",
+    "config",
+    "javascript",
 ]
 
 
-SECTION_BY_BASENAME = {
-    # AI
-    "AI_SERVER.md": "ai",
-    "AI_TOOL_CALLING.md": "ai",
-    "AI_WHISPER.md": "ai",
-    # MCP
-    "MCP.md": "mcp",
-    # Architecture
-    "RUNTIME_ARCHITECTURE.md": "architecture",
-    "NAVIGATOR_MOUNTS.md": "architecture",
-    "CONDUIT.md": "architecture",
-    # APIs
-    "TAR_API.md": "apis",
-    # Platform
-    "WINDOW_MANAGEMENT.md": "platform",
-    "ANDROID_STORAGE.md": "platform",
-    "background-services.md": "platform",
-    # Security
-    "SECURE_STORAGE.md": "security",
-    "SANDBOX_HELPER.md": "security",
-    # Networking
-    "TLS_QUICKSTART.md": "networking",
-    "TLS_TESTING.md": "networking",
-    "WEBVIEW_TLS_PINS.md": "networking",
-    # Web platform surfaces
-    "WEB_BLUETOOTH_STATUS.md": "web-platform",
-    "WEB_HID_STATUS.md": "web-platform",
-    "WEB_OTP.md": "web-platform",
-    "webusb.md": "web-platform",
-    # Release + CI
-    "APPLICATION_UPDATE_PROTOCOL.md": "release",
-    "CI_MATRIX.md": "release",
-    "ORO_ARTIFACT_NAMING.md": "release",
-    # Governance
-    "ENGINEERING_SCOPING.md": "governance",
-    "GOVERNANCE.md": "governance",
-    # Debugging
-    "CDP.md": "debugging",
-}
+SECTION_BY_BASENAME: dict[str, str] = {}
 
 
 PINNED_ORDER = [
     "start",
-    "RUNTIME_ARCHITECTURE",
-    "NAVIGATOR_MOUNTS",
-    "CONDUIT",
-    "WINDOW_MANAGEMENT",
-    "SECURE_STORAGE",
-    "SANDBOX_HELPER",
-    "TLS_QUICKSTART",
-    "TLS_TESTING",
-    "WEBVIEW_TLS_PINS",
-    "MCP",
-    "mcp/2025-06-18/INDEX",
-    "AI_SERVER",
-    "AI_TOOL_CALLING",
-    "AI_WHISPER",
-    "APPLICATION_UPDATE_PROTOCOL",
-    "release/ORO_RELEASE_AUTOMATION",
-    "CI_MATRIX",
-    "ORO_ARTIFACT_NAMING",
-    "GOVERNANCE",
-    "ENGINEERING_SCOPING",
-    "CDP",
+    # Guides
+    "guides/hello-world",
+    "guides/project-layout",
+    "guides/build-and-package",
+    "guides/windows-and-messaging",
+    # CLI
+    "cli/oroc",
+    "cli/run",
+    "cli/build",
+    "cli/setup",
+    "cli/init",
+    "cli/config",
+    "cli/env",
+    # Config
+    "config/overview",
+    "config/reference",
+    "config/copy-map",
+    # JavaScript APIs
+    "javascript/overview",
+    "javascript/module-index",
+    "javascript/all-modules",
+    "javascript/application",
+    "javascript/window",
+    "javascript/hooks",
+    "javascript/filesystem",
+    "javascript/secure-storage",
+    "javascript/notification",
+    "javascript/mcp",
+    "javascript/ai",
 ]
 
 
@@ -113,6 +76,14 @@ class Item:
 
 def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
+
+def read_json(path: Path) -> object | None:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return None
+    except json.JSONDecodeError:
+        return None
 
 
 def first_heading(markdown: str) -> str | None:
@@ -306,6 +277,30 @@ def write_json(path: Path, payload: object):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
+def write_json_if_changed(path: Path, payload: object, *, preserve_generated_at: bool = False) -> bool:
+    """
+    Avoid churning generated artifacts when inputs haven't changed.
+
+    If `preserve_generated_at` is set and the only difference is `generatedAt`,
+    keep the existing file verbatim.
+    """
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    existing = read_json(path)
+    if preserve_generated_at and isinstance(existing, dict) and isinstance(payload, dict):
+        if "generatedAt" in existing and "generatedAt" in payload:
+            preserved = dict(payload)
+            preserved["generatedAt"] = existing["generatedAt"]
+            if existing == preserved:
+                return False
+
+    if existing == payload:
+        return False
+
+    write_json(path, payload)
+    return True
+
 
 def build(docs_root: Path):
     source_root = docs_root / "source"
@@ -336,8 +331,20 @@ def build(docs_root: Path):
         ],
     }
 
-    write_json(docs_root / "index.json", index_payload)
-    write_json(docs_root / "search.json", search_payload)
+    written = []
+    index_path = docs_root / "index.json"
+    search_path = docs_root / "search.json"
+    if write_json_if_changed(index_path, index_payload, preserve_generated_at=True):
+        written.append(index_path)
+    if write_json_if_changed(search_path, search_payload, preserve_generated_at=True):
+        written.append(search_path)
+
+    if written:
+        print("Wrote:")
+        for path in written:
+            print(f"- {path}")
+    else:
+        print("Unchanged: index.json and search.json")
 
 
 def main():
@@ -346,11 +353,6 @@ def main():
 
     build(docs_root)
 
-    print("Wrote:")
-    print(f"- {docs_root / 'index.json'}")
-    print(f"- {docs_root / 'search.json'}")
-
 
 if __name__ == "__main__":
     main()
-

@@ -136,6 +136,7 @@ Slice views (`T[]`) are also call-scoped and safe-by-default:
   - `&a[start..end]`
   - `&a[..end]`
   - `&a[start..]`
+  - `&a[r]` where `r: range` (including `..=` inclusive ranges)
 - A mutable slice view is created via `mut &a[...]` and is restricted:
   - the base must be a borrowable lvalue (a name or a field-access chain rooted
     at a name), and

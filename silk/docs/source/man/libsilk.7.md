@@ -13,6 +13,7 @@
 
 /* Core types */
 typedef struct SilkString   SilkString;
+typedef struct SilkRange    SilkRange;
 typedef struct SilkBytes    SilkBytes;
 typedef struct SilkCompiler SilkCompiler;
 typedef struct SilkModule   SilkModule;
@@ -135,6 +136,21 @@ typedef struct SilkBytes {
 - `ptr` may be `NULL` when `len == 0`.
 - Buffers returned by `silk_compiler_build_to_bytes` must be freed with
   `silk_bytes_free`.
+
+### `SilkRange`
+
+```c
+typedef struct SilkRange {
+  int64_t  start;
+  int64_t  end;
+  uint64_t flags;
+} SilkRange;
+```
+
+- Represents the Silk `range` primitive as three scalar slots.
+- `flags` is a bitfield:
+  - bit 0: `has_end` (when unset, `end` is ignored),
+  - bit 1: `inclusive` (only valid when `has_end` is set).
 
 ### Opaque handles
 

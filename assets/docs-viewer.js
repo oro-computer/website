@@ -155,6 +155,9 @@
   function humanizeSectionName(name) {
     if (!name) return "Docs";
     if (name === "overview") return "Start";
+    if (name === "cli") return "CLI";
+    if (name === "config") return "Configuration";
+    if (name === "javascript") return "JavaScript APIs";
     if (name === "ai") return "AI";
     if (name === "mcp") return "MCP";
     if (name === "api" || name === "apis") return "APIs";

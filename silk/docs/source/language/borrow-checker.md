@@ -26,7 +26,8 @@ Today, the language subset implemented by the compiler supports only:
 - call-scoped borrow alias checks for:
   - borrowed reference parameters (`&T`, `mut p: &T`), and
   - slice parameters (`T[]`, `mut s: T[]`) and slice range borrows
-    (`&base[start..end]`, `mut &base[start..end]`).
+    (`&base[start..end]`, `mut &base[start..end]`, and `&base[r]` / `mut &base[r]`
+    where `r: range`).
 - first-class borrowed `&Struct` values created from borrowable lvalues:
   - `&expr` (borrow operator) for borrowable lvalues, and
   - implicit borrow coercions in contexts that expect `&T`
@@ -43,6 +44,8 @@ Slices (`T[]`) are non-owning views. Slice range borrows create slices that
 point into existing storage:
 
 - `&base[start..end]` creates a slice view whose lifetime is tied to `base`.
+- `&base[r]` creates a slice view whose bounds are defined by the `range` value
+  `r` (see `docs/language/types.md`).
 - When borrowing a range from an existing slice binding `s: T[]`, the borrow’s
   underlying origin is `s`’s origin (sub-slicing does not extend lifetime).
 

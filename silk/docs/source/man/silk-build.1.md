@@ -83,8 +83,18 @@ Output selection:
 
 Target selection:
 
-- `--arch <arch>` — shorthand target selector (mutually exclusive with `--target`).
+- `--arch <arch>` — shorthand target selector (mutually exclusive with `--target`). Accepted values:
+  - `x86_64` / `amd64` → `linux-x86_64` (default)
+  - `aarch64` / `arm64` → `linux-aarch64`
+  - `wasm32` → `wasm32-unknown-unknown`
+  - `wasm32-wasi` → `wasm32-wasi`
 - `--target <triple>` — target triple (mutually exclusive with `--arch`).
+  - executable code generation backends exist for:
+    - `linux-x86_64` (IR-backed subset + const-main fallback)
+    - `linux-aarch64` (const-main subset only)
+    - `wasm32-unknown-unknown` (IR-backed subset + const-main fallback)
+    - `wasm32-wasi` (IR-backed subset + const-main fallback)
+  - target metadata and `attr(...)` gating are also available for: `macos-x86_64`, `macos-aarch64`, `ios-aarch64`, `android-aarch64`, `windows-x86_64`, `windows-aarch64`
 
 Native compilation:
 

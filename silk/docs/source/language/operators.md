@@ -18,6 +18,8 @@ The language includes the following operators and delimiters:
       - `Duration + Duration`, `Duration - Duration`, and unary `-Duration`,
       - `Instant + Duration`, `Duration + Instant`, `Instant - Duration`,
       - and `Instant - Instant` (producing a `Duration`).
+    - `range` supports shifting by an `int` offset:
+      - `range + int`, `range - int`, `int + range`.
 - Bitwise: `&`, `|`, `^`, `~`, `<<`, `>>`.
   - Currently, bitwise operators are defined for
     integer operands (`int` and the fixed-width integer types):
@@ -83,7 +85,9 @@ The language includes the following operators and delimiters:
   - Syntax: `<call_expr>?`.
   - This propagates typed errors from an error-producing call to the enclosing
     function; see `docs/language/typed-errors.md`.
-- Ranges: `...`, `..=`, `..`.
+- Ranges / varargs delimiters: `..`, `..=`, `...`.
+  - `..` and `..=` form range literals of type `range` (see `docs/language/types.md`).
+  - `...` is the varargs/rest marker (see `docs/language/varargs.md`).
 - Other punctuation: `?`, `??`, `->`, `=>`, `,`, `;`, `(`, `)`, `{`, `}`, `[`, `]`, `_`, `:`.
   - Currently, `??` is supported for optionals in the
     current backend subset (including scalar, `string`, and the current
@@ -196,6 +200,10 @@ Notes:
 - `sizeof string` (type operand) is the **representation** size (currently 16
   bytes in the scalar-slot model), while `sizeof <string value>` is the
   **content** size (byte length).
+- `sizeof` is a byte-size operator. For logical element counts (for example a
+  slice length or vector length), use a `.len()` method via
+  `std::interfaces::Len` on the relevant type. The standard library does not
+  define a generic `length(...)` helper.
 
 Parsing note:
 
