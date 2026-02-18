@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-02-17T18:49:38+00:00",
+  "generatedAt": "2026-02-17T23:09:53+00:00",
   "kind": "docs",
-  "count": 174,
+  "count": 175,
   "sections": [
     {
       "name": "overview",
@@ -120,6 +120,11 @@
           "id": "language/literals-aggregate",
           "title": "Aggregate Literals",
           "file": "language/literals-aggregate.md"
+        },
+        {
+          "id": "language/attributes",
+          "title": "Attributes (`attr(...)`)",
+          "file": "language/attributes.md"
         },
         {
           "id": "language/flow-blocks-statements",

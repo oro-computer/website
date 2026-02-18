@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-02-17T18:49:38+00:00
+Generated: 2026-02-17T23:09:53+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -38,6 +38,7 @@ Silk Docs
   - language/using — `using` (Aliases and Method Reuse) — /silk/docs/?p=language/using
   - language/flow-while — `while` Loop — /silk/docs/?p=language/flow-while
   - language/literals-aggregate — Aggregate Literals — /silk/docs/?p=language/literals-aggregate
+  - language/attributes — Attributes (`attr(...)`) — /silk/docs/?p=language/attributes
   - language/flow-blocks-statements — Blocks and Statement Composition — /silk/docs/?p=language/flow-blocks-statements
   - language/literals-boolean — Boolean Literals — /silk/docs/?p=language/literals-boolean
   - language/borrow-checker — Borrow Checking (Static Alias and Lifetime Safety) — /silk/docs/?p=language/borrow-checker
@@ -3267,6 +3268,121 @@ limited struct subset described in `structs-impls-layout.md`:
     subset,
 - no duplicate field initializers are permitted,
 - field order is not semantically significant.
+
+==============================================================================
+DOCS: Attributes (`attr(...)`) (language/attributes)
+URL: /silk/docs/?p=language/attributes
+==============================================================================
+
+# Attributes (`attr(...)`)
+
+Silk supports first-class **attributes** that can annotate declarations and can
+also be queried at compile time for conditional compilation.
+
+Attributes come in two forms:
+
+- **Tags**: `attr(one, two, three)`
+- **Key/value pairs**: `attr(arch="x86_64", feature="tui")`
+
+Values may be:
+
+- booleans (`true` / `false`)
+- integers (numeric literals)
+- strings (`"..."` or raw string literals)
+- identifiers (treated as a string value, e.g. `abi=c`)
+
+## Syntax
+
+### Attribute list
+
+```silk
+attr(one, two, debug=false, arch="x86_64", abi=c)
+```
+
+Items are comma-separated. A trailing comma is permitted.
+
+### Annotation form (prefix)
+
+Attributes may prefix most declarations:
+
+```silk
+attr(one) fn hello () -> int { return 0; }
+attr(feature="tui") struct TTY { /* ... */ }
+attr(arch="x86_64", os="linux") interface Builder { /* ... */ }
+```
+
+Attributes may also prefix statements inside blocks:
+
+```silk
+fn main () -> int {
+  attr(one, two) let x: int = 1;
+  return x;
+}
+```
+
+Notes:
+
+- Statement-level attributes are metadata only; use `if attr(...) { ... }` for
+  compile-time selection inside blocks.
+
+### Query form (expression)
+
+`attr(...)` may be used as a boolean expression:
+
+```silk
+if attr(arch="x86_64") {
+  // compiled only when the target arch is x86_64
+} else {
+  // compiled otherwise
+}
+```
+
+Compound expressions are supported:
+
+```silk
+if attr(os="linux") && (attr(arch="x86_64") || attr(arch="wasm32")) {
+  // ...
+}
+```
+
+`attr(...)` queries are compile-time only; they are evaluated by the compiler
+and do not exist as runtime calls.
+
+## Built-in attribute keys ()
+
+the compiler recognizes the following keys in queries and
+conditional compilation contexts:
+
+- `arch`: `"x86_64"` or `"wasm32"`
+- `os`: `"linux"`, `"wasi"`, or `"unknown"`
+- `target`: `"linux-x86_64"`, `"wasm32-unknown-unknown"`, or `"wasm32-wasi"`
+- `feature`: an enabled feature name (see “Features” below)
+
+## ABI selection (`abi=c`) and `c_fn`
+
+In type positions, `attr(abi=c) fn (...) -> R` is equivalent to `c_fn (...) -> R`.
+This is intended for C callback pointer types:
+
+```silk
+type InfoCb = attr(abi=c) fn (u64, u64) -> void;
+type InfoCb2 = c_fn (u64, u64) -> void; // equivalent
+```
+
+## Features
+
+Features are named build-time toggles intended for conditional compilation.
+
+In Silk, feature configuration is not yet exposed, so
+the enabled feature set is empty and `attr(feature="...")` always evaluates to
+`false`.
+
+Use `attr(feature="name")` in queries and conditional compilation:
+
+```silk
+if attr(feature="tui") {
+  // code compiled when the build enables the "tui" feature
+}
+```
 
 ==============================================================================
 DOCS: Blocks and Statement Composition (language/flow-blocks-statements)
