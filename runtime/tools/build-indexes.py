@@ -56,7 +56,7 @@ PINNED_ORDER = [
     "javascript/application",
     "javascript/window",
     "javascript/hooks",
-    "javascript/filesystem",
+    "javascript/fs",
     "javascript/secure-storage",
     "javascript/notification",
     "javascript/mcp",

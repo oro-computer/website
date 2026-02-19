@@ -40,4 +40,4 @@ If you’re looking for the TOML keys and defaults, see: [Configuration](?p=conf
 
 - Core modules: [`oro:application`](?p=javascript/application) · [`oro:window`](?p=javascript/window) · [`oro:hooks`](?p=javascript/hooks)
 - Integrations: [`oro:mcp`](?p=javascript/mcp) · [`oro:ai`](?p=javascript/ai)
-- Security: [`oro:secure-storage`](?p=javascript/secure-storage) · [`oro:fs`](?p=javascript/filesystem)
+- Security: [`oro:secure-storage`](?p=javascript/secure-storage) · [`oro:fs`](?p=javascript/fs)

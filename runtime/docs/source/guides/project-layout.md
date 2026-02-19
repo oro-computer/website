@@ -13,7 +13,7 @@ A common layout:
 my-app/
   oro.toml
   copy-map.toml
-  web/
+  src/
     index.html
     main.js
   backend/
@@ -51,4 +51,3 @@ See: [Config overview](?p=config/overview).
 
 - Guides: [Hello world](?p=guides/hello-world) · [Windows and messaging](?p=guides/windows-and-messaging)
 - CLI: [oroc](?p=cli/oroc)
-

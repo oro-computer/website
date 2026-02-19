@@ -1,6 +1,6 @@
 # Hello world
 
-This guide builds a minimal Oro Runtime app: a web folder + an `oro.toml`, then runs it with `oroc`.
+This guide builds a minimal Oro Runtime app: a `src/` folder + an `oro.toml`, then runs it with `oroc`.
 
 ## 1) Create the files
 
@@ -10,7 +10,7 @@ Create this layout:
 hello/
   oro.toml
   copy-map.toml
-  web/
+  src/
     index.html
     main.js
 ```
@@ -34,15 +34,15 @@ copy_map = "copy-map.toml"
 Copy-maps define what files become part of your app bundle:
 
 ```toml
-"./web/index.html" = "index.html"
-"./web/main.js" = "main.js"
+"./src/index.html" = "index.html"
+"./src/main.js" = "main.js"
 ```
 
 See: [copy_map](?p=config/copy-map).
 
 ## 4) Add a page and a module
 
-`web/index.html`:
+`src/index.html`:
 
 ```html
 <!doctype html>
@@ -60,7 +60,7 @@ See: [copy_map](?p=config/copy-map).
 </html>
 ```
 
-`web/main.js`:
+`src/main.js`:
 
 ```js
 import application from 'oro:application'
@@ -92,7 +92,7 @@ oroc build .
 For quick experiments, `oroc` can infer a minimal configuration when no `oro.toml` is present:
 
 ```bash
-oroc run web/index.html
+oroc run src/index.html
 ```
 
 ## Next
@@ -100,4 +100,3 @@ oroc run web/index.html
 - CLI: [oroc run](?p=cli/run) · [oroc build](?p=cli/build)
 - Config: [Overview](?p=config/overview)
 - JavaScript APIs: [Overview](?p=javascript/overview) · [`oro:application`](?p=javascript/application)
-

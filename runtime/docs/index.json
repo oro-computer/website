@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-02-18T18:36:05+00:00",
+  "generatedAt": "2026-02-18T21:04:53+00:00",
   "kind": "docs",
-  "count": 33,
+  "count": 108,
   "sections": [
     {
       "name": "overview",
@@ -167,9 +167,9 @@
           "file": "javascript/hooks.md"
         },
         {
-          "id": "javascript/filesystem",
+          "id": "javascript/fs",
           "title": "`oro:fs`",
-          "file": "javascript/filesystem.md"
+          "file": "javascript/fs.md"
         },
         {
           "id": "javascript/secure-storage",
@@ -190,6 +190,381 @@
           "id": "javascript/ai",
           "title": "`oro:ai`",
           "file": "javascript/ai.md"
+        },
+        {
+          "id": "javascript/asn1",
+          "title": "`oro:asn1`",
+          "file": "javascript/asn1.md"
+        },
+        {
+          "id": "javascript/assert",
+          "title": "`oro:assert`",
+          "file": "javascript/assert.md"
+        },
+        {
+          "id": "javascript/async_hooks",
+          "title": "`oro:async_hooks`",
+          "file": "javascript/async_hooks.md"
+        },
+        {
+          "id": "javascript/async",
+          "title": "`oro:async`",
+          "file": "javascript/async.md"
+        },
+        {
+          "id": "javascript/background",
+          "title": "`oro:background`",
+          "file": "javascript/background.md"
+        },
+        {
+          "id": "javascript/bootstrap",
+          "title": "`oro:bootstrap`",
+          "file": "javascript/bootstrap.md"
+        },
+        {
+          "id": "javascript/buffer",
+          "title": "`oro:buffer`",
+          "file": "javascript/buffer.md"
+        },
+        {
+          "id": "javascript/cdp",
+          "title": "`oro:cdp`",
+          "file": "javascript/cdp.md"
+        },
+        {
+          "id": "javascript/child_process",
+          "title": "`oro:child_process`",
+          "file": "javascript/child_process.md"
+        },
+        {
+          "id": "javascript/clipboard",
+          "title": "`oro:clipboard`",
+          "file": "javascript/clipboard.md"
+        },
+        {
+          "id": "javascript/commonjs",
+          "title": "`oro:commonjs`",
+          "file": "javascript/commonjs.md"
+        },
+        {
+          "id": "javascript/conduit",
+          "title": "`oro:conduit`",
+          "file": "javascript/conduit.md"
+        },
+        {
+          "id": "javascript/console",
+          "title": "`oro:console`",
+          "file": "javascript/console.md"
+        },
+        {
+          "id": "javascript/constants",
+          "title": "`oro:constants`",
+          "file": "javascript/constants.md"
+        },
+        {
+          "id": "javascript/cookies",
+          "title": "`oro:cookies`",
+          "file": "javascript/cookies.md"
+        },
+        {
+          "id": "javascript/crypto",
+          "title": "`oro:crypto`",
+          "file": "javascript/crypto.md"
+        },
+        {
+          "id": "javascript/dbus",
+          "title": "`oro:dbus`",
+          "file": "javascript/dbus.md"
+        },
+        {
+          "id": "javascript/dgram",
+          "title": "`oro:dgram`",
+          "file": "javascript/dgram.md"
+        },
+        {
+          "id": "javascript/diagnostics",
+          "title": "`oro:diagnostics`",
+          "file": "javascript/diagnostics.md"
+        },
+        {
+          "id": "javascript/did",
+          "title": "`oro:did`",
+          "file": "javascript/did.md"
+        },
+        {
+          "id": "javascript/dns",
+          "title": "`oro:dns`",
+          "file": "javascript/dns.md"
+        },
+        {
+          "id": "javascript/enumeration",
+          "title": "`oro:enumeration`",
+          "file": "javascript/enumeration.md"
+        },
+        {
+          "id": "javascript/errno",
+          "title": "`oro:errno`",
+          "file": "javascript/errno.md"
+        },
+        {
+          "id": "javascript/errors",
+          "title": "`oro:errors`",
+          "file": "javascript/errors.md"
+        },
+        {
+          "id": "javascript/events",
+          "title": "`oro:events`",
+          "file": "javascript/events.md"
+        },
+        {
+          "id": "javascript/extension",
+          "title": "`oro:extension`",
+          "file": "javascript/extension.md"
+        },
+        {
+          "id": "javascript/external",
+          "title": "`oro:external/*`",
+          "file": "javascript/external.md"
+        },
+        {
+          "id": "javascript/fetch",
+          "title": "`oro:fetch`",
+          "file": "javascript/fetch.md"
+        },
+        {
+          "id": "javascript/gc",
+          "title": "`oro:gc`",
+          "file": "javascript/gc.md"
+        },
+        {
+          "id": "javascript/hci",
+          "title": "`oro:hci`",
+          "file": "javascript/hci.md"
+        },
+        {
+          "id": "javascript/http",
+          "title": "`oro:http`",
+          "file": "javascript/http.md"
+        },
+        {
+          "id": "javascript/https",
+          "title": "`oro:https`",
+          "file": "javascript/https.md"
+        },
+        {
+          "id": "javascript/i18n",
+          "title": "`oro:i18n`",
+          "file": "javascript/i18n.md"
+        },
+        {
+          "id": "javascript/internal",
+          "title": "`oro:internal/*`",
+          "file": "javascript/internal.md"
+        },
+        {
+          "id": "javascript/ip",
+          "title": "`oro:ip`",
+          "file": "javascript/ip.md"
+        },
+        {
+          "id": "javascript/ipc",
+          "title": "`oro:ipc`",
+          "file": "javascript/ipc.md"
+        },
+        {
+          "id": "javascript/ipfs",
+          "title": "`oro:ipfs`",
+          "file": "javascript/ipfs.md"
+        },
+        {
+          "id": "javascript/iroh",
+          "title": "`oro:iroh`",
+          "file": "javascript/iroh.md"
+        },
+        {
+          "id": "javascript/language",
+          "title": "`oro:language`",
+          "file": "javascript/language.md"
+        },
+        {
+          "id": "javascript/latica",
+          "title": "`oro:latica`",
+          "file": "javascript/latica.md"
+        },
+        {
+          "id": "javascript/location",
+          "title": "`oro:location`",
+          "file": "javascript/location.md"
+        },
+        {
+          "id": "javascript/mime",
+          "title": "`oro:mime`",
+          "file": "javascript/mime.md"
+        },
+        {
+          "id": "javascript/module",
+          "title": "`oro:module`",
+          "file": "javascript/module.md"
+        },
+        {
+          "id": "javascript/navigation",
+          "title": "`oro:navigation`",
+          "file": "javascript/navigation.md"
+        },
+        {
+          "id": "javascript/net",
+          "title": "`oro:net`",
+          "file": "javascript/net.md"
+        },
+        {
+          "id": "javascript/network",
+          "title": "`oro:network`",
+          "file": "javascript/network.md"
+        },
+        {
+          "id": "javascript/node-esm-loader",
+          "title": "`oro:node-esm-loader`",
+          "file": "javascript/node-esm-loader.md"
+        },
+        {
+          "id": "javascript/node",
+          "title": "`oro:node/*`",
+          "file": "javascript/node.md"
+        },
+        {
+          "id": "javascript/npm",
+          "title": "`oro:npm/*`",
+          "file": "javascript/npm.md"
+        },
+        {
+          "id": "javascript/os",
+          "title": "`oro:os`",
+          "file": "javascript/os.md"
+        },
+        {
+          "id": "javascript/path",
+          "title": "`oro:path`",
+          "file": "javascript/path.md"
+        },
+        {
+          "id": "javascript/process",
+          "title": "`oro:process`",
+          "file": "javascript/process.md"
+        },
+        {
+          "id": "javascript/protocol-handlers",
+          "title": "`oro:protocol-handlers`",
+          "file": "javascript/protocol-handlers.md"
+        },
+        {
+          "id": "javascript/querystring",
+          "title": "`oro:querystring`",
+          "file": "javascript/querystring.md"
+        },
+        {
+          "id": "javascript/semver",
+          "title": "`oro:semver`",
+          "file": "javascript/semver.md"
+        },
+        {
+          "id": "javascript/service-worker",
+          "title": "`oro:service-worker`",
+          "file": "javascript/service-worker.md"
+        },
+        {
+          "id": "javascript/shared-worker",
+          "title": "`oro:shared-worker`",
+          "file": "javascript/shared-worker.md"
+        },
+        {
+          "id": "javascript/signal",
+          "title": "`oro:signal`",
+          "file": "javascript/signal.md"
+        },
+        {
+          "id": "javascript/sqlite",
+          "title": "`oro:sqlite`",
+          "file": "javascript/sqlite.md"
+        },
+        {
+          "id": "javascript/stream",
+          "title": "`oro:stream`",
+          "file": "javascript/stream.md"
+        },
+        {
+          "id": "javascript/string_decoder",
+          "title": "`oro:string_decoder`",
+          "file": "javascript/string_decoder.md"
+        },
+        {
+          "id": "javascript/tar",
+          "title": "`oro:tar`",
+          "file": "javascript/tar.md"
+        },
+        {
+          "id": "javascript/tcp",
+          "title": "`oro:tcp`",
+          "file": "javascript/tcp.md"
+        },
+        {
+          "id": "javascript/test",
+          "title": "`oro:test`",
+          "file": "javascript/test.md"
+        },
+        {
+          "id": "javascript/timers",
+          "title": "`oro:timers`",
+          "file": "javascript/timers.md"
+        },
+        {
+          "id": "javascript/tls",
+          "title": "`oro:tls`",
+          "file": "javascript/tls.md"
+        },
+        {
+          "id": "javascript/toml",
+          "title": "`oro:toml`",
+          "file": "javascript/toml.md"
+        },
+        {
+          "id": "javascript/tty",
+          "title": "`oro:tty`",
+          "file": "javascript/tty.md"
+        },
+        {
+          "id": "javascript/url",
+          "title": "`oro:url`",
+          "file": "javascript/url.md"
+        },
+        {
+          "id": "javascript/util",
+          "title": "`oro:util`",
+          "file": "javascript/util.md"
+        },
+        {
+          "id": "javascript/vm",
+          "title": "`oro:vm`",
+          "file": "javascript/vm.md"
+        },
+        {
+          "id": "javascript/worker_threads",
+          "title": "`oro:worker_threads`",
+          "file": "javascript/worker_threads.md"
+        },
+        {
+          "id": "javascript/worker",
+          "title": "`oro:worker`",
+          "file": "javascript/worker.md"
+        },
+        {
+          "id": "javascript/xpc",
+          "title": "`oro:xpc`",
+          "file": "javascript/xpc.md"
+        },
+        {
+          "id": "javascript/zlib",
+          "title": "`oro:zlib`",
+          "file": "javascript/zlib.md"
         }
       ]
     }

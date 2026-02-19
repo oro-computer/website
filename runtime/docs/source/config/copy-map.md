@@ -15,9 +15,9 @@ A copy-map file can be TOML or INI. It must contain only top-level key/value pai
 ## Minimal example
 
 ```toml
-"./web/index.html" = "index.html"
-"./web/main.js" = "main.js"
-"./web/styles.css" = "styles.css"
+"./src/index.html" = "index.html"
+"./src/main.js" = "main.js"
+"./src/styles.css" = "styles.css"
 ```
 
 If the destination value is empty, the source is copied into the resource root (advanced; typically avoid this and spell
@@ -34,10 +34,10 @@ Copy-map keys may be prefixed to include entries only on certain platforms or mo
 Example:
 
 ```toml
-"./web/index.html" = "index.html"
+"./src/index.html" = "index.html"
 
-"debug_./web/dev-tools.js" = "dev-tools.js"
-"prod_./web/dev-tools.js" = ""
+"debug_./src/dev-tools.js" = "dev-tools.js"
+"prod_./src/dev-tools.js" = ""
 
 "mac_./icons/app.icns" = "icon.icns"
 "win_./icons/app.ico" = "icon.ico"
@@ -48,4 +48,3 @@ Example:
 - The build warns when a copy-map entry source path doesn’t exist.
 - Copy-map TOML must be a single table (no nested tables).
 - Prefer paths relative to your project; avoid `..` in build inputs.
-

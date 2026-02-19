@@ -41,8 +41,8 @@ See: [`oroc run`](?p=cli/run) and [Configuration reference](?p=config/reference)
 Copy-maps define exactly what files are included in your app bundle.
 
 ```toml
-"./web/index.html" = "index.html"
-"./web/main.js" = "main.js"
+"./src/index.html" = "index.html"
+"./src/main.js" = "main.js"
 ```
 
 See: [`copy_map`](?p=config/copy-map).
@@ -100,4 +100,3 @@ Update tooling can:
 - run an update server (HTTP/TCP/UDP)
 
 See: [`oroc update`](?p=cli/update).
-

@@ -21,7 +21,7 @@ Project layout:
 hello/
   oro.toml
   copy-map.toml
-  web/
+  src/
     index.html
     main.js
 ```
@@ -41,11 +41,11 @@ copy_map = "copy-map.toml"
 `copy-map.toml`:
 
 ```toml
-"./web/index.html" = "index.html"
-"./web/main.js" = "main.js"
+"./src/index.html" = "index.html"
+"./src/main.js" = "main.js"
 ```
 
-`web/index.html`:
+`src/index.html`:
 
 ```html
 <!doctype html>
@@ -63,7 +63,7 @@ copy_map = "copy-map.toml"
 </html>
 ```
 
-`web/main.js`:
+`src/main.js`:
 
 ```js
 import application from 'oro:application'

@@ -9,17 +9,19 @@ Oro Runtime exposes native capabilities as explicit ES modules under the `oro:*`
 - [`oro:hooks`](?p=javascript/hooks) — lifecycle and runtime event subscriptions
 - [`oro:secure-storage`](?p=javascript/secure-storage) — origin-scoped secret storage
 - [`oro:notification`](?p=javascript/notification) — notifications and permissions
-- [`oro:fs`](?p=javascript/filesystem) — filesystem APIs (Node/POSIX-style)
+- [`oro:fs`](?p=javascript/fs) — filesystem APIs (Node/POSIX-style)
 - [`oro:mcp`](?p=javascript/mcp) — register tools/resources and start the embedded MCP bridge
 - [`oro:ai`](?p=javascript/ai) — local AI helpers (LLM + chat)
 
 See also: [All module specifiers](?p=javascript/all-modules).
 
-## Top-level module specifiers
+## Importable top-level module specifiers
+
+Each module family has its own API reference page in this docs set. Use the sidebar search for `oro:<name>`.
 
 Many modules also have subpath imports (for example `oro:fs/promises`, `oro:url/index`, `oro:test/*`).
 
-Top-level `oro:*` modules:
+Top-level `oro:*` specifiers you can import directly:
 
 ```text
 oro:ai
@@ -50,7 +52,6 @@ oro:errno
 oro:errors
 oro:events
 oro:extension
-oro:external
 oro:fetch
 oro:fs
 oro:gc
@@ -59,7 +60,6 @@ oro:hooks
 oro:http
 oro:https
 oro:i18n
-oro:internal
 oro:ip
 oro:ipc
 oro:ipfs
@@ -73,10 +73,8 @@ oro:module
 oro:navigation
 oro:net
 oro:network
-oro:node
 oro:node-esm-loader
 oro:notification
-oro:npm
 oro:os
 oro:path
 oro:process
@@ -106,3 +104,14 @@ oro:worker_threads
 oro:xpc
 oro:zlib
 ```
+
+## Subpath-only module families
+
+Some families only exist as subpath imports (there is no `oro:<family>` top-level specifier):
+
+- `oro:internal/*` — internal runtime building blocks
+- `oro:node/*` — Node interop helpers used by the runtime loader
+- `oro:npm/*` — NPM/module integration helpers
+- `oro:external/*` — bundled third-party libraries
+
+See: [All module specifiers](?p=javascript/all-modules).
