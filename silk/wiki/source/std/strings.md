@@ -29,7 +29,7 @@ export fn or_empty (s: string?) -> string;
 
 ## Examples
 
-### Works today: equality + optionals
+### Example: equality + optionals
 
 ```silk
 import std::strings;

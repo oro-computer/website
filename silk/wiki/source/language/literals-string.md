@@ -5,7 +5,7 @@
 
 Canonical doc: `docs/language/literals-string.md`.
 
-## Example (Works today): escapes
+## Example: escapes
 
 ```silk
 import std::io;
@@ -20,4 +20,4 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/language/literals-string.md`
-- `std::strings`: `docs/wiki/std/strings.md`
+- `std::strings`: `wiki/std/strings.md`

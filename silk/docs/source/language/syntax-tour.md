@@ -19,7 +19,7 @@ Silk’s `docs/` are the canonical specification, and many documents describe bo
 
 This tour follows the same approach:
 
-- examples labeled “Works today” are intended to compile in the current subset,
+- examples labeled “Supported” are intended to compile in the current subset,
 - examples labeled “Design” illustrate planned syntax and are not necessarily implemented.
 
 When in doubt, prefer:
@@ -219,7 +219,7 @@ This section shows the core top-level declaration forms:
 
 ### 4.1 Bindings: `const`, `let`, `let mut`, `var`
 
-Works today (current subset requires initializers; see `E2015`):
+Supported (current subset requires initializers; see `E2015`):
 
 ```silk
 fn main () -> int {
@@ -351,7 +351,7 @@ fn get_first(T, N: int; xs: &T[N]) -> T {
 
 ### 4.3 Function expressions (lambdas)
 
-Works today (non-capturing expression body):
+Supported (non-capturing expression body):
 
 ```silk
 fn main () -> int {
@@ -360,7 +360,7 @@ fn main () -> int {
 }
 ```
 
-Works today (block body with explicit return type):
+Supported (block body with explicit return type):
 
 ```silk
 fn main () -> int {
@@ -540,7 +540,7 @@ fn main () -> int {
 Propagating errors from calls uses postfix `?`:
 
 ```silk
-// Works today when `main` declares a compatible error set.
+// Supported when `main` declares a compatible error set.
 fn main () -> int | OutOfBounds {
   let x: u8 = get_at([1, 2, 3], 0)?;
   return x as int;

@@ -13,7 +13,7 @@ Canonical spec: `docs/language/flow-for.md`.
 
 - Implemented subset + current limitations: `docs/language/flow-for.md`
 
-## Syntax (Selected)
+## Syntax
 
 ```silk
 for x in xs {
@@ -27,7 +27,7 @@ for (let i = 0; i < 10; ++i) {
 
 ## Examples
 
-### Works today: range iteration
+### Example: range iteration
 
 ```silk
 fn main () -> int {
@@ -39,7 +39,7 @@ fn main () -> int {
 }
 ```
 
-### Works today: array iteration
+### Example: array iteration
 
 ```silk
 fn main () -> int {

@@ -20,7 +20,7 @@ import std::map;
 
 ## Examples
 
-### Works today: `HashMap(u64, int)` basic usage
+### Example: `HashMap(u64, int)` basic usage
 
 ```silk
 import std::map;

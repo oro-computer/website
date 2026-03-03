@@ -17,7 +17,7 @@ import std::tls;
 
 ## Examples
 
-### Works today: in-memory client/server handshake (MemPipe)
+### Example: in-memory client/server handshake (MemPipe)
 
 This example uses `MemPipe` so it does not require sockets. It is kept runnable
 as `tests/silk/pass_std_tls_mem_handshake.slk`.

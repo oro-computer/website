@@ -14,7 +14,7 @@ Canonical spec + implemented subset notes: `docs/language/concurrency.md`.
 - Implemented subset is documented in detail: `docs/language/concurrency.md`
 - End-to-end fixtures: `tests/silk/pass_concurrency_*.slk`
 
-## Examples (Works today)
+## Examples
 
 ### `task` inside `async fn` + `yield *`
 

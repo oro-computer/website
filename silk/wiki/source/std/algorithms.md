@@ -11,7 +11,7 @@ Canonical doc: `docs/std/algorithms.md`.
 import std::algorithms;
 ```
 
-## Example (Works today): `clamp_int`
+## Example: `clamp_int`
 
 ```silk
 import std::algorithms;

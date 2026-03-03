@@ -5,7 +5,7 @@ operations.
 
 Canonical doc: `docs/std/task.md`.
 
-## Example (Works today)
+## Example
 
 ```silk
 import std::task;
@@ -22,4 +22,4 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/task.md`
-- Concurrency model: `docs/wiki/language/concurrency.md`
+- Concurrency model: `wiki/language/concurrency.md`

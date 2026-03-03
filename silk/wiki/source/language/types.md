@@ -37,7 +37,7 @@ type IntAdder = fn (int, int) -> int;
 
 ## Examples
 
-### Works today: function values with an explicit function type
+### Example: function values with an explicit function type
 
 ```silk
 type IntAdder = fn (int, int) -> int;
@@ -48,7 +48,7 @@ fn main () -> int {
 }
 ```
 
-### Works today: arrays + `for` iteration
+### Example: arrays + `for` iteration
 
 ```silk
 fn main () -> int {

@@ -20,7 +20,7 @@ import std::set;
 
 ## Examples
 
-### Works today: `SetMap(u64)` basic usage
+### Example: `SetMap(u64)` basic usage
 
 ```silk
 import std::set;

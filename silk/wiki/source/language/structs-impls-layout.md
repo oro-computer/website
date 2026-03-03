@@ -10,7 +10,7 @@ Canonical spec: `docs/language/structs-impls-layout.md`.
 
 - Implemented subset + layout model: `docs/language/structs-impls-layout.md`
 
-## Syntax (Selected)
+## Syntax
 
 ```silk
 struct Point {
@@ -27,7 +27,7 @@ impl Point {
 
 ## Examples
 
-### Works today: struct literal + method call
+### Example: struct literal + method call
 
 ```silk
 struct Point {

@@ -18,7 +18,7 @@ import std::io;
 
 ## Examples
 
-### Works today: formatted printing
+### Example: formatted printing
 
 ```silk
 import std::io;

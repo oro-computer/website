@@ -18,7 +18,7 @@ import std::vector;
 
 ## Examples
 
-### Works today: push/pop
+### Example: push/pop
 
 ```silk
 import std::vector;

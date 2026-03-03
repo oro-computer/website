@@ -9,7 +9,7 @@ Canonical spec: `docs/language/flow-expression-statements.md`.
 
 - Implemented subset + restrictions: `docs/language/flow-expression-statements.md`
 
-## Example (Works today): assignment + increment
+## Example: assignment + increment
 
 ```silk
 fn main () -> int {
@@ -23,4 +23,4 @@ fn main () -> int {
 ## See also
 
 - Canonical spec: `docs/language/flow-expression-statements.md`
-- Operators: `docs/wiki/language/operators.md`
+- Operators: `wiki/language/operators.md`

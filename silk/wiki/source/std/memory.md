@@ -10,7 +10,7 @@ Canonical doc: `docs/std/memory.md`.
 import std::memory;
 ```
 
-## Example (Works today): alignment helpers
+## Example: alignment helpers
 
 ```silk
 import std::memory;
@@ -25,4 +25,4 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/memory.md`
-- Regions: `docs/wiki/language/regions.md`
+- Regions: `wiki/language/regions.md`

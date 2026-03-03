@@ -14,7 +14,7 @@ Canonical spec: `docs/language/enums.md`.
 
 - Implemented subset + representation: `docs/language/enums.md`
 
-## Syntax (Selected)
+## Syntax
 
 ```silk
 enum Msg {
@@ -25,7 +25,7 @@ enum Msg {
 
 ## Examples
 
-### Works today: construct + match
+### Example: construct + match
 
 ```silk
 enum Msg {

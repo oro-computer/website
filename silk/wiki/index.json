@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-17T23:09:53+00:00",
+  "generatedAt": "2026-02-25T19:21:36+00:00",
   "kind": "wiki",
   "count": 84,
   "sections": [
@@ -17,6 +17,46 @@
       "name": "language",
       "items": [
         {
+          "id": "language/syntax-tour",
+          "title": "Syntax tour",
+          "file": "language/syntax-tour.md"
+        },
+        {
+          "id": "language/cheat-sheet",
+          "title": "Cheat sheet",
+          "file": "language/cheat-sheet.md"
+        },
+        {
+          "id": "language/flow-overview",
+          "title": "Flow control overview",
+          "file": "language/flow-overview.md"
+        },
+        {
+          "id": "language/flow-if-else",
+          "title": "`if` / `else`",
+          "file": "language/flow-if-else.md"
+        },
+        {
+          "id": "language/flow-match",
+          "title": "`match`",
+          "file": "language/flow-match.md"
+        },
+        {
+          "id": "language/flow-loop",
+          "title": "`loop`",
+          "file": "language/flow-loop.md"
+        },
+        {
+          "id": "language/flow-while",
+          "title": "`while`",
+          "file": "language/flow-while.md"
+        },
+        {
+          "id": "language/flow-for",
+          "title": "`for` loops",
+          "file": "language/flow-for.md"
+        },
+        {
           "id": "language/flow-break",
           "title": "`break`",
           "file": "language/flow-break.md"
@@ -27,44 +67,14 @@
           "file": "language/flow-continue.md"
         },
         {
-          "id": "language/duration-instant",
-          "title": "`Duration` and `Instant`",
-          "file": "language/duration-instant.md"
-        },
-        {
-          "id": "language/flow-for",
-          "title": "`for` loops",
-          "file": "language/flow-for.md"
-        },
-        {
-          "id": "language/flow-if-else",
-          "title": "`if` / `else`",
-          "file": "language/flow-if-else.md"
-        },
-        {
-          "id": "language/flow-loop",
-          "title": "`loop`",
-          "file": "language/flow-loop.md"
-        },
-        {
-          "id": "language/flow-match",
-          "title": "`match`",
-          "file": "language/flow-match.md"
-        },
-        {
           "id": "language/flow-return",
           "title": "`return`",
           "file": "language/flow-return.md"
         },
         {
-          "id": "language/flow-while",
-          "title": "`while`",
-          "file": "language/flow-while.md"
-        },
-        {
-          "id": "language/literals-aggregate",
-          "title": "Aggregate literals (arrays and structs)",
-          "file": "language/literals-aggregate.md"
+          "id": "language/flow-expression-statements",
+          "title": "Expression statements",
+          "file": "language/flow-expression-statements.md"
         },
         {
           "id": "language/flow-blocks-statements",
@@ -72,49 +82,9 @@
           "file": "language/flow-blocks-statements.md"
         },
         {
-          "id": "language/literals-boolean",
-          "title": "Boolean literals",
-          "file": "language/literals-boolean.md"
-        },
-        {
-          "id": "language/borrow-checker",
-          "title": "Borrow checker (design)",
-          "file": "language/borrow-checker.md"
-        },
-        {
-          "id": "language/buffers",
-          "title": "Buffers (`Buffer(T)`) (design)",
-          "file": "language/buffers.md"
-        },
-        {
-          "id": "language/literals-character",
-          "title": "Character literals",
-          "file": "language/literals-character.md"
-        },
-        {
-          "id": "language/cheat-sheet",
-          "title": "Cheat sheet",
-          "file": "language/cheat-sheet.md"
-        },
-        {
-          "id": "language/concurrency",
-          "title": "Concurrency (`async`, `task`, `await`, `yield`)",
-          "file": "language/concurrency.md"
-        },
-        {
-          "id": "language/const-functions",
-          "title": "Const Functions (`const fn`)",
-          "file": "language/const-functions.md"
-        },
-        {
-          "id": "language/conventions",
-          "title": "Conventions",
-          "file": "language/conventions.md"
-        },
-        {
-          "id": "language/dependent-types",
-          "title": "Dependent types (const parameters) (design)",
-          "file": "language/dependent-types.md"
+          "id": "language/grammar",
+          "title": "Grammar",
+          "file": "language/grammar.md"
         },
         {
           "id": "language/doc-comments",
@@ -122,9 +92,84 @@
           "file": "language/doc-comments.md"
         },
         {
+          "id": "language/packages-imports-exports",
+          "title": "Packages, imports, and exports",
+          "file": "language/packages-imports-exports.md"
+        },
+        {
+          "id": "language/types",
+          "title": "Types",
+          "file": "language/types.md"
+        },
+        {
+          "id": "language/optional",
+          "title": "Optionals (`T?`)",
+          "file": "language/optional.md"
+        },
+        {
+          "id": "language/mutability",
+          "title": "Mutability (`mut`)",
+          "file": "language/mutability.md"
+        },
+        {
+          "id": "language/operators",
+          "title": "Operators",
+          "file": "language/operators.md"
+        },
+        {
+          "id": "language/literals-overview",
+          "title": "Literals",
+          "file": "language/literals-overview.md"
+        },
+        {
+          "id": "language/literals-numeric",
+          "title": "Numeric literals",
+          "file": "language/literals-numeric.md"
+        },
+        {
+          "id": "language/literals-string",
+          "title": "String literals",
+          "file": "language/literals-string.md"
+        },
+        {
+          "id": "language/literals-character",
+          "title": "Character literals",
+          "file": "language/literals-character.md"
+        },
+        {
+          "id": "language/literals-boolean",
+          "title": "Boolean literals",
+          "file": "language/literals-boolean.md"
+        },
+        {
           "id": "language/literals-duration",
           "title": "Duration literals",
           "file": "language/literals-duration.md"
+        },
+        {
+          "id": "language/duration-instant",
+          "title": "`Duration` and `Instant`",
+          "file": "language/duration-instant.md"
+        },
+        {
+          "id": "language/literals-aggregate",
+          "title": "Aggregate literals (arrays and structs)",
+          "file": "language/literals-aggregate.md"
+        },
+        {
+          "id": "language/structs-impls-layout",
+          "title": "Structs and `impl`",
+          "file": "language/structs-impls-layout.md"
+        },
+        {
+          "id": "language/struct-requirements",
+          "title": "Struct requirements (`#require`)",
+          "file": "language/struct-requirements.md"
+        },
+        {
+          "id": "language/interfaces",
+          "title": "Interfaces",
+          "file": "language/interfaces.md"
         },
         {
           "id": "language/enums",
@@ -137,49 +182,14 @@
           "file": "language/errors.md"
         },
         {
-          "id": "language/flow-expression-statements",
-          "title": "Expression statements",
-          "file": "language/flow-expression-statements.md"
+          "id": "language/typed-errors",
+          "title": "Typed errors (`error`, `panic`, and `T | ErrorType...`)",
+          "file": "language/typed-errors.md"
         },
         {
-          "id": "language/ext",
-          "title": "External declarations (`ext`)",
-          "file": "language/ext.md"
-        },
-        {
-          "id": "language/flow-overview",
-          "title": "Flow control overview",
-          "file": "language/flow-overview.md"
-        },
-        {
-          "id": "language/formal-verification",
-          "title": "Formal verification (Formal Silk)",
-          "file": "language/formal-verification.md"
-        },
-        {
-          "id": "language/function-disciplines",
-          "title": "Function disciplines (`pure`, `async`, `task`)",
-          "file": "language/function-disciplines.md"
-        },
-        {
-          "id": "language/generics",
-          "title": "Generics (monomorphized)",
-          "file": "language/generics.md"
-        },
-        {
-          "id": "language/grammar",
-          "title": "Grammar",
-          "file": "language/grammar.md"
-        },
-        {
-          "id": "language/interfaces",
-          "title": "Interfaces",
-          "file": "language/interfaces.md"
-        },
-        {
-          "id": "language/literals-overview",
-          "title": "Literals",
-          "file": "language/literals-overview.md"
+          "id": "language/borrow-checker",
+          "title": "Borrow checker (design)",
+          "file": "language/borrow-checker.md"
         },
         {
           "id": "language/memory-model",
@@ -187,59 +197,44 @@
           "file": "language/memory-model.md"
         },
         {
-          "id": "language/mutability",
-          "title": "Mutability (`mut`)",
-          "file": "language/mutability.md"
-        },
-        {
-          "id": "language/literals-numeric",
-          "title": "Numeric literals",
-          "file": "language/literals-numeric.md"
-        },
-        {
-          "id": "language/operators",
-          "title": "Operators",
-          "file": "language/operators.md"
-        },
-        {
-          "id": "language/optional",
-          "title": "Optionals (`T?`)",
-          "file": "language/optional.md"
-        },
-        {
-          "id": "language/packages-imports-exports",
-          "title": "Packages, imports, and exports",
-          "file": "language/packages-imports-exports.md"
-        },
-        {
-          "id": "language/refinement-types",
-          "title": "Refinement types (removed)",
-          "file": "language/refinement-types.md"
-        },
-        {
           "id": "language/regions",
           "title": "Regions (`with`)",
           "file": "language/regions.md"
         },
         {
-          "id": "language/literals-string",
-          "title": "String literals",
-          "file": "language/literals-string.md"
+          "id": "language/buffers",
+          "title": "Buffers (`Buffer(T)`) (design)",
+          "file": "language/buffers.md"
         },
         {
-          "id": "language/struct-requirements",
-          "title": "Struct requirements (`#require`)",
-          "file": "language/struct-requirements.md"
+          "id": "language/concurrency",
+          "title": "Concurrency (`async`, `task`, `await`, `yield`)",
+          "file": "language/concurrency.md"
         },
         {
-          "id": "language/structs-impls-layout",
-          "title": "Structs and `impl`",
-          "file": "language/structs-impls-layout.md"
+          "id": "language/function-disciplines",
+          "title": "Function disciplines (`pure`, `async`, `task`)",
+          "file": "language/function-disciplines.md"
         },
         {
-          "id": "language/syntax-tour",
-          "title": "Syntax tour",
-          "file": "language/syntax-tour.md"
+          "id": "language/const-functions",
+          "title": "Const Functions (`const fn`)",
+          "file": "language/const-functions.md"
+        },
+        {
+          "id": "language/generics",
+          "title": "Generics (monomorphized)",
+          "file": "language/generics.md"
+        },
+        {
+          "id": "language/varargs",
+          "title": "Varargs (`...args`)",
+          "file": "language/varargs.md"
+        },
+        {
+          "id": "language/ext",
+          "title": "External declarations (`ext`)",
+          "file": "language/ext.md"
         },
         {
           "id": "language/testing",
@@ -247,25 +242,35 @@
           "file": "language/testing.md"
         },
         {
-          "id": "language/typed-errors",
-          "title": "Typed errors (`error`, `panic`, and `T | ErrorType...`)",
-          "file": "language/typed-errors.md"
+          "id": "language/formal-verification",
+          "title": "Formal verification (Formal Silk)",
+          "file": "language/formal-verification.md"
         },
         {
-          "id": "language/types",
-          "title": "Types",
-          "file": "language/types.md"
+          "id": "language/refinement-types",
+          "title": "Refinement types (removed)",
+          "file": "language/refinement-types.md"
         },
         {
-          "id": "language/varargs",
-          "title": "Varargs (`...args`)",
-          "file": "language/varargs.md"
+          "id": "language/dependent-types",
+          "title": "Dependent types (const parameters) (design)",
+          "file": "language/dependent-types.md"
+        },
+        {
+          "id": "language/conventions",
+          "title": "Conventions",
+          "file": "language/conventions.md"
         }
       ]
     },
     {
       "name": "std",
       "items": [
+        {
+          "id": "std/overview",
+          "title": "Standard library overview (`std::`)",
+          "file": "std/overview.md"
+        },
         {
           "id": "std/conventions",
           "title": "`std::` conventions",
@@ -277,94 +282,9 @@
           "file": "std/package-structure.md"
         },
         {
-          "id": "std/algorithms",
-          "title": "`std::algorithms`",
-          "file": "std/algorithms.md"
-        },
-        {
-          "id": "std/args",
-          "title": "`std::args`",
-          "file": "std/args.md"
-        },
-        {
-          "id": "std/arrays",
-          "title": "`std::arrays`",
-          "file": "std/arrays.md"
-        },
-        {
-          "id": "std/bits",
-          "title": "`std::bits`",
-          "file": "std/bits.md"
-        },
-        {
-          "id": "std/buffer",
-          "title": "`std::buffer`",
-          "file": "std/buffer.md"
-        },
-        {
-          "id": "std/crypto",
-          "title": "`std::crypto`",
-          "file": "std/crypto.md"
-        },
-        {
-          "id": "std/env",
-          "title": "`std::env`",
-          "file": "std/env.md"
-        },
-        {
-          "id": "std/fmt",
-          "title": "`std::fmt`",
-          "file": "std/fmt.md"
-        },
-        {
-          "id": "std/formal",
-          "title": "`std::formal`",
-          "file": "std/formal.md"
-        },
-        {
-          "id": "std/filesystem",
-          "title": "`std::fs`",
-          "file": "std/filesystem.md"
-        },
-        {
           "id": "std/interfaces",
           "title": "`std::interfaces`",
           "file": "std/interfaces.md"
-        },
-        {
-          "id": "std/io",
-          "title": "`std::io`",
-          "file": "std/io.md"
-        },
-        {
-          "id": "std/json",
-          "title": "`std::json`",
-          "file": "std/json.md"
-        },
-        {
-          "id": "std/map",
-          "title": "`std::map`",
-          "file": "std/map.md"
-        },
-        {
-          "id": "std/memory",
-          "title": "`std::memory`",
-          "file": "std/memory.md"
-        },
-        {
-          "id": "std/networking",
-          "title": "`std::net`",
-          "file": "std/networking.md"
-        },
-        {
-          "id": "std/path",
-          "title": "`std::path`",
-          "file": "std/path.md"
-        },
-        {
-          "id": "std/process",
-          "title": "`std::process`",
-          "file": "std/process.md"
         },
         {
           "id": "std/result",
@@ -372,19 +292,14 @@
           "file": "std/result.md"
         },
         {
-          "id": "std/runtime",
-          "title": "`std::runtime`",
-          "file": "std/runtime.md"
+          "id": "std/io",
+          "title": "`std::io`",
+          "file": "std/io.md"
         },
         {
-          "id": "std/semver",
-          "title": "`std::semver`",
-          "file": "std/semver.md"
-        },
-        {
-          "id": "std/set",
-          "title": "`std::set`",
-          "file": "std/set.md"
+          "id": "std/fmt",
+          "title": "`std::fmt`",
+          "file": "std/fmt.md"
         },
         {
           "id": "std/strings",
@@ -392,24 +307,74 @@
           "file": "std/strings.md"
         },
         {
-          "id": "std/sync",
-          "title": "`std::sync`",
-          "file": "std/sync.md"
+          "id": "std/arrays",
+          "title": "`std::arrays`",
+          "file": "std/arrays.md"
         },
         {
-          "id": "std/task",
-          "title": "`std::task`",
-          "file": "std/task.md"
+          "id": "std/vector",
+          "title": "`std::vector`",
+          "file": "std/vector.md"
         },
         {
-          "id": "std/temporal",
-          "title": "`std::temporal`",
-          "file": "std/temporal.md"
+          "id": "std/map",
+          "title": "`std::map`",
+          "file": "std/map.md"
         },
         {
-          "id": "std/tls",
-          "title": "`std::tls`",
-          "file": "std/tls.md"
+          "id": "std/set",
+          "title": "`std::set`",
+          "file": "std/set.md"
+        },
+        {
+          "id": "std/buffer",
+          "title": "`std::buffer`",
+          "file": "std/buffer.md"
+        },
+        {
+          "id": "std/bits",
+          "title": "`std::bits`",
+          "file": "std/bits.md"
+        },
+        {
+          "id": "std/algorithms",
+          "title": "`std::algorithms`",
+          "file": "std/algorithms.md"
+        },
+        {
+          "id": "std/memory",
+          "title": "`std::memory`",
+          "file": "std/memory.md"
+        },
+        {
+          "id": "std/args",
+          "title": "`std::args`",
+          "file": "std/args.md"
+        },
+        {
+          "id": "std/env",
+          "title": "`std::env`",
+          "file": "std/env.md"
+        },
+        {
+          "id": "std/process",
+          "title": "`std::process`",
+          "file": "std/process.md"
+        },
+        {
+          "id": "std/path",
+          "title": "`std::path`",
+          "file": "std/path.md"
+        },
+        {
+          "id": "std/filesystem",
+          "title": "`std::fs`",
+          "file": "std/filesystem.md"
+        },
+        {
+          "id": "std/json",
+          "title": "`std::json`",
+          "file": "std/json.md"
         },
         {
           "id": "std/toml",
@@ -422,19 +387,54 @@
           "file": "std/url.md"
         },
         {
+          "id": "std/semver",
+          "title": "`std::semver`",
+          "file": "std/semver.md"
+        },
+        {
           "id": "std/uuid",
           "title": "`std::uuid`",
           "file": "std/uuid.md"
         },
         {
-          "id": "std/vector",
-          "title": "`std::vector`",
-          "file": "std/vector.md"
+          "id": "std/networking",
+          "title": "`std::net`",
+          "file": "std/networking.md"
         },
         {
-          "id": "std/overview",
-          "title": "Standard library overview (`std::`)",
-          "file": "std/overview.md"
+          "id": "std/crypto",
+          "title": "`std::crypto`",
+          "file": "std/crypto.md"
+        },
+        {
+          "id": "std/tls",
+          "title": "`std::tls`",
+          "file": "std/tls.md"
+        },
+        {
+          "id": "std/runtime",
+          "title": "`std::runtime`",
+          "file": "std/runtime.md"
+        },
+        {
+          "id": "std/task",
+          "title": "`std::task`",
+          "file": "std/task.md"
+        },
+        {
+          "id": "std/sync",
+          "title": "`std::sync`",
+          "file": "std/sync.md"
+        },
+        {
+          "id": "std/temporal",
+          "title": "`std::temporal`",
+          "file": "std/temporal.md"
+        },
+        {
+          "id": "std/formal",
+          "title": "`std::formal`",
+          "file": "std/formal.md"
         }
       ]
     }

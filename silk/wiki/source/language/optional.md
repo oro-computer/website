@@ -14,7 +14,7 @@ Canonical spec: `docs/language/optional.md`.
 
 - Implemented subset + backend payload limits: `docs/language/optional.md`
 
-## Syntax (Selected)
+## Syntax
 
 ```silk
 let a: int? = None;
@@ -29,7 +29,7 @@ let y: int = match b {
 
 ## Examples
 
-### Works today: `??` and `match`
+### Example: `??` and `match`
 
 ```silk
 fn main () -> int {
@@ -43,7 +43,7 @@ fn main () -> int {
 }
 ```
 
-### Works today: optional struct field access with `?.`
+### Example: optional struct field access with `?.`
 
 ```silk
 struct Profile {

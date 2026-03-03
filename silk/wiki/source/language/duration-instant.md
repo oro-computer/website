@@ -6,7 +6,7 @@ as distinct Silk types that lower to `i64` nanoseconds.
 
 Canonical doc: `docs/language/duration-instant.md`.
 
-## Example (Works today): `Duration` arithmetic
+## Example: `Duration` arithmetic
 
 ```silk
 fn main () -> int {
@@ -23,5 +23,5 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/language/duration-instant.md`
-- Duration literals: `docs/wiki/language/literals-duration.md`
+- Duration literals: `wiki/language/literals-duration.md`
 - Temporal stdlib: `docs/std/temporal.md`

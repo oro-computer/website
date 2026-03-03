@@ -13,7 +13,7 @@ Canonical doc: `docs/std/fmt.md`.
 
 ## Examples
 
-### Works today: `println` formatting
+### Example: `println` formatting
 
 ```silk
 import std::io;

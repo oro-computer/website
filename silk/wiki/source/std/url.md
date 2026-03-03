@@ -31,7 +31,7 @@ import std::strings;
 
 ## Examples
 
-### Works today: parse + resolve + query params
+### Example: parse + resolve + query params
 
 ```silk
 import std::url;

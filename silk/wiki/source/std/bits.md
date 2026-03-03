@@ -4,7 +4,7 @@
 
 Canonical doc: `docs/std/bits.md`.
 
-## What works today (current subset)
+## Supported behavior
 
 Implemented in `std/bits.slk`:
 

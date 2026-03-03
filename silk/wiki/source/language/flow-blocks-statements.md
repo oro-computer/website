@@ -8,7 +8,7 @@ Canonical spec: `docs/language/flow-blocks-statements.md`.
 
 - Implemented subset + syntax notes: `docs/language/flow-blocks-statements.md`
 
-## Example (Works today): scope boundaries
+## Example: scope boundaries
 
 ```silk
 fn main () -> int {
@@ -27,4 +27,4 @@ fn main () -> int {
 ## See also
 
 - Canonical spec: `docs/language/flow-blocks-statements.md`
-- Expression statements: `docs/wiki/language/flow-expression-statements.md`
+- Expression statements: `wiki/language/flow-expression-statements.md`

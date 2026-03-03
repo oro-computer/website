@@ -14,7 +14,7 @@ Canonical spec: `docs/language/flow-break.md`.
 break;
 ```
 
-## Example (Works today)
+## Example
 
 ```silk
 fn main () -> int {
@@ -32,4 +32,4 @@ fn main () -> int {
 ## See also
 
 - Canonical spec: `docs/language/flow-break.md`
-- `continue`: `docs/wiki/language/flow-continue.md`
+- `continue`: `wiki/language/flow-continue.md`

@@ -20,7 +20,7 @@ import std::runtime::mem;
 
 ## Examples
 
-### Works today: build metadata + raw memory
+### Example: build metadata + raw memory
 
 ```silk
 import std::runtime::build;

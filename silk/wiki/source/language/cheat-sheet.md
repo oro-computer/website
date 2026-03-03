@@ -8,7 +8,7 @@ canonical cheat sheet:
 This wiki page exists to keep wiki navigation self-contained; the cheat sheet
 itself is already concise and example-heavy.
 
-## Example (Works today)
+## Example
 
 ```silk
 fn main () -> int {

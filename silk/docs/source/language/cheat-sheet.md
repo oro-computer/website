@@ -9,7 +9,7 @@ This cheat sheet includes **both**:
 - the full language design (where some features are still evolving), and
 - the **currently implemented compiler subset**.
 
-For the authoritative “what works today”, prefer:
+For the authoritative view of what the compiler supports today, prefer:
 
 - any “Implementation Status” sections inside the relevant concept documents.
 
@@ -162,8 +162,8 @@ See `structs-impls-layout.md` and `interfaces.md` for details.
 ## Regions & Buffers
 
 - Regions (fixed-size allocation context):
-  - declare: `const region arena: u8[1024];`
-  - use: `with arena { let p: &Frame = new Frame{ ... }; }`
+  - declare: `const region scratch: u8[1024];`
+  - use: `with scratch { let p: &Frame = new Frame{ ... }; }`
   - anonymous: `with 1024 { let p: &Frame = new Frame{ ... }; }`
 - Buffers:
   - intrinsic `Buffer(T)` with `(ptr, capacity)`,

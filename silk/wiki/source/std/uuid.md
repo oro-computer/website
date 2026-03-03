@@ -18,7 +18,7 @@ import std::strings;
 
 ## Examples
 
-### Works today: parse + name-based UUID (v5)
+### Example: parse + name-based UUID (v5)
 
 ```silk
 import std::uuid;

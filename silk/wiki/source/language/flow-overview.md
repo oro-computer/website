@@ -13,7 +13,7 @@ Canonical spec: `docs/language/flow-overview.md`.
 
 - Implemented-subset details: `docs/language/flow-*.md`
 
-## Example (Works today)
+## Example
 
 ```silk
 fn main () -> int {
@@ -35,6 +35,6 @@ fn main () -> int {
 
 ## See also
 
-- `if` / `else`: `docs/wiki/language/flow-if-else.md`
-- `for`: `docs/wiki/language/flow-for.md`
-- `match`: `docs/wiki/language/flow-match.md`
+- `if` / `else`: `wiki/language/flow-if-else.md`
+- `for`: `wiki/language/flow-for.md`
+- `match`: `wiki/language/flow-match.md`

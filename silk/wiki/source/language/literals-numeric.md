@@ -5,7 +5,7 @@ suffixes as defined in the canonical spec.
 
 Canonical doc: `docs/language/literals-numeric.md`.
 
-## Example (Works today)
+## Example
 
 ```silk
 fn main () -> int {
@@ -22,4 +22,4 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/language/literals-numeric.md`
-- Operators: `docs/wiki/language/operators.md`
+- Operators: `wiki/language/operators.md`

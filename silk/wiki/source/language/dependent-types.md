@@ -15,4 +15,4 @@ struct VectorN(T, N: int) { /* ... */ }
 ## See also
 
 - Canonical design doc: `docs/language/dependent-types.md`
-- Generics: `docs/wiki/language/generics.md`
+- Generics: `wiki/language/generics.md`

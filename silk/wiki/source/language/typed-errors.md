@@ -17,7 +17,7 @@ Implemented in the reference compiler (front-end + native backend subset).
 - Canonical spec + rules: `docs/language/typed-errors.md`
 - Error model overview: `docs/language/errors.md`
 
-## Syntax (Selected)
+## Syntax
 
 ```silk
 error OutOfBounds { index: int, len: int }
@@ -35,7 +35,7 @@ fn caller (xs: &u8[]) -> u8 | OutOfBounds {
 
 ## Examples
 
-### Works today: `?` propagation
+### Example: `?` propagation
 
 ```silk
 error Boom { code: int }
@@ -50,7 +50,7 @@ fn main () -> int | Boom {
 }
 ```
 
-### Works today: handling with `match` statement
+### Example: handling with `match` statement
 
 ```silk
 error Boom { code: int }

@@ -10,7 +10,7 @@ Canonical spec: `docs/language/ext.md`.
 - Current supported `ext` subset + ABI notes: `docs/language/ext.md`
 - Embedding ABI contract: `docs/compiler/abi-libsilk.md`
 
-## Syntax (Selected)
+## Syntax
 
 ```silk
 // C function named `puts`.
@@ -26,7 +26,7 @@ ext errno = i32;
 
 ## Examples
 
-### Works today: call a C symbol
+### Example: call a C symbol
 
 ```silk
 import std::io;
@@ -40,7 +40,7 @@ fn main () -> int {
 }
 ```
 
-### Works today: opaque handle pattern (FFI-safe pointers)
+### Example: opaque handle pattern (FFI-safe pointers)
 
 ```silk
 struct Thing;

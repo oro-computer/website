@@ -14,7 +14,7 @@ At a high level:
 
 - Canonical spec + implementation notes: `docs/language/memory-model.md`
 
-## Example (Works today): `new` + reference field access
+## Example: `new` + reference field access
 
 ```silk
 struct Point {
@@ -30,5 +30,5 @@ fn main () -> int {
 
 ## See also
 
-- Regions (`with`): `docs/wiki/language/regions.md`
+- Regions (`with`): `wiki/language/regions.md`
 - `Drop` and cleanup hooks: `docs/std/interfaces.md`

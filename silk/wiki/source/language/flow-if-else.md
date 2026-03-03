@@ -24,7 +24,7 @@ if condition {
 
 ## Examples
 
-### Works today: minimal `if` / `else`
+### Example: minimal `if` / `else`
 
 ```silk
 fn main () -> int {
@@ -36,7 +36,7 @@ fn main () -> int {
 }
 ```
 
-### Works today: `else if` chains
+### Example: `else if` chains
 
 Currently, `else if` parses as sugar for a nested `if` in
 the `else` branch.

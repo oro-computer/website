@@ -8,7 +8,7 @@ with many examples and cross-links:
 This wiki page keeps navigation self-contained and highlights where to look
 next when you want precise rules.
 
-## Example (Works today): minimal executable
+## Example: minimal executable
 
 ```silk
 fn main () -> int {
@@ -18,5 +18,5 @@ fn main () -> int {
 
 ## See also
 
-- Grammar: `docs/wiki/language/grammar.md`
-- Packages/imports/exports: `docs/wiki/language/packages-imports-exports.md`
+- Grammar: `wiki/language/grammar.md`
+- Packages/imports/exports: `wiki/language/packages-imports-exports.md`

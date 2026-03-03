@@ -16,7 +16,7 @@ while condition {
 }
 ```
 
-## Example (Works today)
+## Example
 
 ```silk
 fn main () -> int {
@@ -35,4 +35,4 @@ fn main () -> int {
 ## See also
 
 - Canonical spec: `docs/language/flow-while.md`
-- `break` / `continue`: `docs/wiki/language/flow-break.md`, `docs/wiki/language/flow-continue.md`
+- `break` / `continue`: `wiki/language/flow-break.md`, `wiki/language/flow-continue.md`

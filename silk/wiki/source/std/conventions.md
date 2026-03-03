@@ -21,7 +21,7 @@ Canonical doc: `docs/std/conventions.md`.
 
 ## Examples
 
-### Works today: optionals + typed errors + dropping owned values
+### Example: optionals + typed errors + dropping owned values
 
 ```silk
 import std::process;
@@ -49,4 +49,4 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/conventions.md`
-- Typed errors: `docs/wiki/language/typed-errors.md`
+- Typed errors: `wiki/language/typed-errors.md`

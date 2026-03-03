@@ -5,7 +5,7 @@ value directly in source code.
 
 Canonical doc: `docs/language/literals-character.md`.
 
-## Example (Works today)
+## Example
 
 ```silk
 fn main () -> int {

@@ -25,7 +25,7 @@ import std::toml;
 
 ## Examples
 
-### Works today: parse + query
+### Example: parse + query
 
 ```silk
 import std::toml;

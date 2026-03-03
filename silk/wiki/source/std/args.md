@@ -5,7 +5,7 @@
 
 Canonical doc: `docs/std/args.md`.
 
-## Example (Works today)
+## Example
 
 ```silk
 import args from "std/args";

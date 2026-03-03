@@ -9,7 +9,7 @@ Canonical spec: `docs/language/mutability.md`.
 
 - Implemented subset + borrow rules: `docs/language/mutability.md`
 
-## Syntax (Selected)
+## Syntax
 
 ```silk
 let mut x: int = 0;
@@ -22,7 +22,7 @@ x += 1;
 // bump(mut pair);
 ```
 
-## Example (Works today): mutable local + mutable borrow
+## Example: mutable local + mutable borrow
 
 ```silk
 struct Pair {
@@ -44,4 +44,4 @@ fn main () -> int {
 ## See also
 
 - Canonical spec: `docs/language/mutability.md`
-- Borrow-checker design notes: `docs/wiki/language/borrow-checker.md`
+- Borrow-checker design notes: `wiki/language/borrow-checker.md`

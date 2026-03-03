@@ -8,11 +8,11 @@ Use it when you want:
 - examples that show how a feature feels in real code
 - a gentler progression than the full reference material
 
-If you want the canonical, detailed specification and toolchain reference, use: [Silk Docs](../docs/).
+If you want the canonical, detailed specification and toolchain reference, use: [Silk Docs](docs/start.md).
 
 ## Start here
 
-- New project: [Getting started](../docs/?p=usage/getting-started)
+- New project: [Getting started](docs/usage/getting-started.md)
 - Language: [Overview](?p=language/cheat-sheet)
 - Standard library: [Overview](?p=std/overview)
-- Tooling: [CLI](../docs/?p=guides/cli)
+- Tooling: [CLI](docs/guides/cli.md)

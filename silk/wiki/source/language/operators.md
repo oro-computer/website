@@ -10,7 +10,7 @@ This wiki page is a learning-oriented companion to the canonical reference:
 
 - Full operator set + precedence: `docs/language/operators.md`
 
-## Syntax (Selected)
+## Syntax
 
 ```silk
 let a: int = 10;
@@ -31,7 +31,7 @@ let x: u64 = 123 as u64;
 
 ## Examples
 
-### Works today: arithmetic + comparisons
+### Example: arithmetic + comparisons
 
 ```silk
 fn main () -> int {
@@ -44,7 +44,7 @@ fn main () -> int {
 }
 ```
 
-### Works today: `??` coalescing
+### Example: `??` coalescing
 
 ```silk
 fn main () -> int {

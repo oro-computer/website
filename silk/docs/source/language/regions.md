@@ -3,6 +3,10 @@
 Regions provide a fixed-size, **statically allocated** block of memory that can
 be used as an allocation context for `new`.
 
+If you’re familiar with arena allocators: regions are Silk’s arena-allocation
+surface. The user-facing language feature is `region` + `with`, not a separate
+“arena” construct.
+
 Regions are represented at runtime as a first-class `Region` handle value. A
 `Region` value may be passed to functions, stored in structs, and exported.
 
@@ -61,7 +65,7 @@ store and cursor.
 A region declaration has the surface form:
 
 ```silk
-const region arena: u8[1024];
+const region scratch: u8[1024];
 ```
 
 Rules:
@@ -84,9 +88,9 @@ Rules:
 struct Frame { x: int }
 
 fn main () -> int {
-  const region arena: u8[1024];
+  const region scratch: u8[1024];
 
-  with arena {
+  with scratch {
     let p: &Frame = new Frame{ x: 1 };
     // ...
   }
@@ -139,9 +143,9 @@ first `<bytes>` bytes of `<region>`:
 struct Frame { x: int }
 
 fn main () -> int {
-  const region arena: u8[2048];
+  const region scratch: u8[2048];
 
-  with 1024 from arena {
+  with 1024 from scratch {
     let p: &Frame = new Frame{ x: 1 };
     // ...
   }
@@ -153,12 +157,12 @@ fn main () -> int {
 You may also specify a byte slice of the source region:
 
 ```silk
-with 1024 from arena[64..] {
-  // uses bytes 64..(64 + 1024) of `arena`
+with 1024 from scratch[64..] {
+  // uses bytes 64..(64 + 1024) of `scratch`
 }
 
-with 1024 from arena[64..1088] {
-  // uses bytes 64..1088 of `arena`
+with 1024 from scratch[64..1088] {
+  // uses bytes 64..1088 of `scratch`
 }
 ```
 
@@ -253,7 +257,7 @@ Important limitation:
 Region declarations may be exported and imported like other top-level bindings:
 
 ```silk
-export const region global_arena: u8[4096];
+export const region global_region: u8[4096];
 ```
 
 Exporting a region exports a `Region` handle that refers to the same backing

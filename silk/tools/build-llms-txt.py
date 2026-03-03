@@ -87,7 +87,7 @@ def sanitize_markdown(markdown: str) -> str:
     """
 
     drop_line = re.compile(
-        r"(STATUS\.md|PLAN\.md|README\.md|\bllms\.txt\b|_template-[^`\s]+|style-guide\.md|\bdocs/|\btests/)",
+        r"(STATUS\.md|PLAN\.md|README\.md|\bllms\.txt\b|docs/llms\.txt|docs/wiki/style-guide\.md|_template-[^`\s]+|style-guide\.md)",
         flags=re.I,
     )
     status_heading = re.compile(r"^(#{1,6})\s+(Status|Implementation status)\b", flags=re.I)

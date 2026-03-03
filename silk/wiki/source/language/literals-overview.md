@@ -11,7 +11,7 @@ This wiki page is a learning-oriented companion to the canonical spec:
 
 - Detailed rules and edge cases: `docs/language/literals-*.md`
 
-## Syntax (Selected)
+## Syntax
 
 ```silk
 let n: int = 42;
@@ -30,7 +30,7 @@ let xs: int[3] = [1, 2, 3];
 
 ## Examples
 
-### Works today: array literal + indexing
+### Example: array literal + indexing
 
 ```silk
 fn main () -> int {
@@ -39,7 +39,7 @@ fn main () -> int {
 }
 ```
 
-### Works today: strings and escapes
+### Example: strings and escapes
 
 ```silk
 import std::io;

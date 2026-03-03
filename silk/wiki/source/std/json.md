@@ -30,7 +30,7 @@ import std::strings;
 
 ## Examples
 
-### Works today: parse + query + stringify
+### Example: parse + query + stringify
 
 ```silk
 import std::json;

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-17T23:09:53+00:00",
+  "generatedAt": "2026-02-25T19:21:36+00:00",
   "kind": "docs",
   "count": 175,
   "sections": [
@@ -62,6 +62,46 @@
       "name": "language",
       "items": [
         {
+          "id": "language/syntax-tour",
+          "title": "Silk Syntax Tour (Soup to Nuts)",
+          "file": "language/syntax-tour.md"
+        },
+        {
+          "id": "language/cheat-sheet",
+          "title": "Language Cheat Sheet",
+          "file": "language/cheat-sheet.md"
+        },
+        {
+          "id": "language/flow-overview",
+          "title": "Flow Control Overview",
+          "file": "language/flow-overview.md"
+        },
+        {
+          "id": "language/flow-if-else",
+          "title": "`if` / `else`",
+          "file": "language/flow-if-else.md"
+        },
+        {
+          "id": "language/flow-match",
+          "title": "`match` Expression",
+          "file": "language/flow-match.md"
+        },
+        {
+          "id": "language/flow-loop",
+          "title": "`loop` Loop",
+          "file": "language/flow-loop.md"
+        },
+        {
+          "id": "language/flow-while",
+          "title": "`while` Loop",
+          "file": "language/flow-while.md"
+        },
+        {
+          "id": "language/flow-for",
+          "title": "`for` Loop",
+          "file": "language/flow-for.md"
+        },
+        {
           "id": "language/flow-break",
           "title": "`break`",
           "file": "language/flow-break.md"
@@ -72,114 +112,9 @@
           "file": "language/flow-continue.md"
         },
         {
-          "id": "language/duration-instant",
-          "title": "`Duration` & `Instant`",
-          "file": "language/duration-instant.md"
-        },
-        {
-          "id": "language/enums",
-          "title": "`enum` Types",
-          "file": "language/enums.md"
-        },
-        {
-          "id": "language/flow-for",
-          "title": "`for` Loop",
-          "file": "language/flow-for.md"
-        },
-        {
-          "id": "language/flow-if-else",
-          "title": "`if` / `else`",
-          "file": "language/flow-if-else.md"
-        },
-        {
-          "id": "language/flow-loop",
-          "title": "`loop` Loop",
-          "file": "language/flow-loop.md"
-        },
-        {
-          "id": "language/flow-match",
-          "title": "`match` Expression",
-          "file": "language/flow-match.md"
-        },
-        {
           "id": "language/flow-return",
           "title": "`return`",
           "file": "language/flow-return.md"
-        },
-        {
-          "id": "language/using",
-          "title": "`using` (Aliases and Method Reuse)",
-          "file": "language/using.md"
-        },
-        {
-          "id": "language/flow-while",
-          "title": "`while` Loop",
-          "file": "language/flow-while.md"
-        },
-        {
-          "id": "language/literals-aggregate",
-          "title": "Aggregate Literals",
-          "file": "language/literals-aggregate.md"
-        },
-        {
-          "id": "language/attributes",
-          "title": "Attributes (`attr(...)`)",
-          "file": "language/attributes.md"
-        },
-        {
-          "id": "language/flow-blocks-statements",
-          "title": "Blocks and Statement Composition",
-          "file": "language/flow-blocks-statements.md"
-        },
-        {
-          "id": "language/literals-boolean",
-          "title": "Boolean Literals",
-          "file": "language/literals-boolean.md"
-        },
-        {
-          "id": "language/borrow-checker",
-          "title": "Borrow Checking (Static Alias and Lifetime Safety)",
-          "file": "language/borrow-checker.md"
-        },
-        {
-          "id": "language/buffers",
-          "title": "Buffers",
-          "file": "language/buffers.md"
-        },
-        {
-          "id": "language/build-metadata",
-          "title": "Build Metadata (`BUILD_KIND`, `BUILD_MODE`, `BUILD_VERSION`)",
-          "file": "language/build-metadata.md"
-        },
-        {
-          "id": "language/literals-character",
-          "title": "Character Literals",
-          "file": "language/literals-character.md"
-        },
-        {
-          "id": "language/concurrency",
-          "title": "Concurrency",
-          "file": "language/concurrency.md"
-        },
-        {
-          "id": "language/const-functions",
-          "title": "Const Functions (`const fn`)",
-          "file": "language/const-functions.md"
-        },
-        {
-          "id": "language/dependent-types",
-          "title": "Dependent Types (Const Parameters and Type-Level Computation)",
-          "file": "language/dependent-types.md"
-        },
-        {
-          "id": "language/literals-duration",
-          "title": "Duration Literals",
-          "file": "language/literals-duration.md"
-        },
-        {
-          "id": "language/errors",
-          "title": "Errors",
-          "file": "language/errors.md"
         },
         {
           "id": "language/flow-expression-statements",
@@ -187,14 +122,9 @@
           "file": "language/flow-expression-statements.md"
         },
         {
-          "id": "language/ext",
-          "title": "External Declarations (`ext`)",
-          "file": "language/ext.md"
-        },
-        {
-          "id": "language/flow-overview",
-          "title": "Flow Control Overview",
-          "file": "language/flow-overview.md"
+          "id": "language/flow-blocks-statements",
+          "title": "Blocks and Statement Composition",
+          "file": "language/flow-blocks-statements.md"
         },
         {
           "id": "language/grammar",
@@ -202,94 +132,9 @@
           "file": "language/grammar.md"
         },
         {
-          "id": "language/formal-verification",
-          "title": "Formal Silk",
-          "file": "language/formal-verification.md"
-        },
-        {
-          "id": "language/function-disciplines",
-          "title": "Function Disciplines (`pure`, `task`, `async`)",
-          "file": "language/function-disciplines.md"
-        },
-        {
-          "id": "language/generics",
-          "title": "Generics (Monomorphized)",
-          "file": "language/generics.md"
-        },
-        {
-          "id": "language/asm",
-          "title": "Inline Assembly (`asm`)",
-          "file": "language/asm.md"
-        },
-        {
-          "id": "language/interfaces",
-          "title": "Interfaces",
-          "file": "language/interfaces.md"
-        },
-        {
-          "id": "language/cheat-sheet",
-          "title": "Language Cheat Sheet",
-          "file": "language/cheat-sheet.md"
-        },
-        {
-          "id": "language/conventions",
-          "title": "Language Spec Conventions",
-          "file": "language/conventions.md"
-        },
-        {
-          "id": "language/literals-overview",
-          "title": "Literals Overview",
-          "file": "language/literals-overview.md"
-        },
-        {
-          "id": "language/memory-model",
-          "title": "Memory Model (Stack, Heap, and Moves)",
-          "file": "language/memory-model.md"
-        },
-        {
-          "id": "language/mutability",
-          "title": "Mutability",
-          "file": "language/mutability.md"
-        },
-        {
-          "id": "language/literals-numeric",
-          "title": "Numeric Literals",
-          "file": "language/literals-numeric.md"
-        },
-        {
-          "id": "language/operators",
-          "title": "Operators",
-          "file": "language/operators.md"
-        },
-        {
-          "id": "language/optional",
-          "title": "Optional",
-          "file": "language/optional.md"
-        },
-        {
-          "id": "language/packages-imports-exports",
-          "title": "Packages, Imports, and Exports",
-          "file": "language/packages-imports-exports.md"
-        },
-        {
-          "id": "language/refinement-types",
-          "title": "Refinement Types (Removed)",
-          "file": "language/refinement-types.md"
-        },
-        {
-          "id": "language/regions",
-          "title": "Regions",
-          "file": "language/regions.md"
-        },
-        {
-          "id": "language/literals-regexp",
-          "title": "Regular Expression Literals",
-          "file": "language/literals-regexp.md"
-        },
-        {
-          "id": "language/syntax-tour",
-          "title": "Silk Syntax Tour (Soup to Nuts)",
-          "file": "language/syntax-tour.md"
+          "id": "language/attributes",
+          "title": "Attributes (`attr(...)`)",
+          "file": "language/attributes.md"
         },
         {
           "id": "language/doc-comments",
@@ -297,9 +142,89 @@
           "file": "language/doc-comments.md"
         },
         {
+          "id": "language/packages-imports-exports",
+          "title": "Packages, Imports, and Exports",
+          "file": "language/packages-imports-exports.md"
+        },
+        {
+          "id": "language/using",
+          "title": "`using` (Aliases and Method Reuse)",
+          "file": "language/using.md"
+        },
+        {
+          "id": "language/types",
+          "title": "Types",
+          "file": "language/types.md"
+        },
+        {
+          "id": "language/type-unions",
+          "title": "Type Unions (`T1 | T2 | ...`)",
+          "file": "language/type-unions.md"
+        },
+        {
+          "id": "language/optional",
+          "title": "Optional",
+          "file": "language/optional.md"
+        },
+        {
+          "id": "language/mutability",
+          "title": "Mutability",
+          "file": "language/mutability.md"
+        },
+        {
+          "id": "language/operators",
+          "title": "Operators",
+          "file": "language/operators.md"
+        },
+        {
+          "id": "language/literals-overview",
+          "title": "Literals Overview",
+          "file": "language/literals-overview.md"
+        },
+        {
+          "id": "language/literals-numeric",
+          "title": "Numeric Literals",
+          "file": "language/literals-numeric.md"
+        },
+        {
           "id": "language/literals-string",
           "title": "String Literals",
           "file": "language/literals-string.md"
+        },
+        {
+          "id": "language/literals-character",
+          "title": "Character Literals",
+          "file": "language/literals-character.md"
+        },
+        {
+          "id": "language/literals-boolean",
+          "title": "Boolean Literals",
+          "file": "language/literals-boolean.md"
+        },
+        {
+          "id": "language/literals-duration",
+          "title": "Duration Literals",
+          "file": "language/literals-duration.md"
+        },
+        {
+          "id": "language/duration-instant",
+          "title": "`Duration` & `Instant`",
+          "file": "language/duration-instant.md"
+        },
+        {
+          "id": "language/literals-regexp",
+          "title": "Regular Expression Literals",
+          "file": "language/literals-regexp.md"
+        },
+        {
+          "id": "language/literals-aggregate",
+          "title": "Aggregate Literals",
+          "file": "language/literals-aggregate.md"
+        },
+        {
+          "id": "language/structs-impls-layout",
+          "title": "Structs, Impl Blocks, and Memory Layout",
+          "file": "language/structs-impls-layout.md"
         },
         {
           "id": "language/struct-requirements",
@@ -307,9 +232,84 @@
           "file": "language/struct-requirements.md"
         },
         {
-          "id": "language/structs-impls-layout",
-          "title": "Structs, Impl Blocks, and Memory Layout",
-          "file": "language/structs-impls-layout.md"
+          "id": "language/interfaces",
+          "title": "Interfaces",
+          "file": "language/interfaces.md"
+        },
+        {
+          "id": "language/enums",
+          "title": "`enum` Types",
+          "file": "language/enums.md"
+        },
+        {
+          "id": "language/errors",
+          "title": "Errors",
+          "file": "language/errors.md"
+        },
+        {
+          "id": "language/typed-errors",
+          "title": "Typed Errors (`error`, `panic`, and `T | ErrorType...`)",
+          "file": "language/typed-errors.md"
+        },
+        {
+          "id": "language/borrow-checker",
+          "title": "Borrow Checking (Static Alias and Lifetime Safety)",
+          "file": "language/borrow-checker.md"
+        },
+        {
+          "id": "language/memory-model",
+          "title": "Memory Model (Stack, Heap, and Moves)",
+          "file": "language/memory-model.md"
+        },
+        {
+          "id": "language/regions",
+          "title": "Regions",
+          "file": "language/regions.md"
+        },
+        {
+          "id": "language/buffers",
+          "title": "Buffers",
+          "file": "language/buffers.md"
+        },
+        {
+          "id": "language/concurrency",
+          "title": "Concurrency",
+          "file": "language/concurrency.md"
+        },
+        {
+          "id": "language/function-disciplines",
+          "title": "Function Disciplines (`pure`, `task`, `async`)",
+          "file": "language/function-disciplines.md"
+        },
+        {
+          "id": "language/const-functions",
+          "title": "Const Functions (`const fn`)",
+          "file": "language/const-functions.md"
+        },
+        {
+          "id": "language/generics",
+          "title": "Generics (Monomorphized)",
+          "file": "language/generics.md"
+        },
+        {
+          "id": "language/varargs",
+          "title": "Varargs (Variable Arguments)",
+          "file": "language/varargs.md"
+        },
+        {
+          "id": "language/ext",
+          "title": "External Declarations (`ext`)",
+          "file": "language/ext.md"
+        },
+        {
+          "id": "language/asm",
+          "title": "Inline Assembly (`asm`)",
+          "file": "language/asm.md"
+        },
+        {
+          "id": "language/build-metadata",
+          "title": "Build Metadata (`BUILD_KIND`, `BUILD_MODE`, `BUILD_VERSION`)",
+          "file": "language/build-metadata.md"
         },
         {
           "id": "language/target-metadata",
@@ -322,30 +322,35 @@
           "file": "language/testing.md"
         },
         {
-          "id": "language/type-unions",
-          "title": "Type Unions (`T1 | T2 | ...`)",
-          "file": "language/type-unions.md"
+          "id": "language/formal-verification",
+          "title": "Formal Silk",
+          "file": "language/formal-verification.md"
         },
         {
-          "id": "language/typed-errors",
-          "title": "Typed Errors (`error`, `panic`, and `T | ErrorType...`)",
-          "file": "language/typed-errors.md"
+          "id": "language/refinement-types",
+          "title": "Refinement Types (Removed)",
+          "file": "language/refinement-types.md"
         },
         {
-          "id": "language/types",
-          "title": "Types",
-          "file": "language/types.md"
+          "id": "language/dependent-types",
+          "title": "Dependent Types (Const Parameters and Type-Level Computation)",
+          "file": "language/dependent-types.md"
         },
         {
-          "id": "language/varargs",
-          "title": "Varargs (Variable Arguments)",
-          "file": "language/varargs.md"
+          "id": "language/conventions",
+          "title": "Language Spec Conventions",
+          "file": "language/conventions.md"
         }
       ]
     },
     {
       "name": "std",
       "items": [
+        {
+          "id": "std/overview",
+          "title": "Standard Library Overview (`std::`)",
+          "file": "std/overview.md"
+        },
         {
           "id": "std/conventions",
           "title": "`std::` Conventions",
@@ -357,99 +362,9 @@
           "file": "std/package-structure.md"
         },
         {
-          "id": "std/abort-controller",
-          "title": "`std::abort_controller`",
-          "file": "std/abort-controller.md"
-        },
-        {
-          "id": "std/algorithms",
-          "title": "`std::algorithms`",
-          "file": "std/algorithms.md"
-        },
-        {
-          "id": "std/args",
-          "title": "`std::args`",
-          "file": "std/args.md"
-        },
-        {
-          "id": "std/arrays",
-          "title": "`std::arrays`",
-          "file": "std/arrays.md"
-        },
-        {
-          "id": "std/bits",
-          "title": "`std::bits`",
-          "file": "std/bits.md"
-        },
-        {
-          "id": "std/buffer",
-          "title": "`std::buffer`",
-          "file": "std/buffer.md"
-        },
-        {
           "id": "std/build",
           "title": "`std::build`",
           "file": "std/build.md"
-        },
-        {
-          "id": "std/crypto",
-          "title": "`std::crypto`",
-          "file": "std/crypto.md"
-        },
-        {
-          "id": "std/env",
-          "title": "`std::env`",
-          "file": "std/env.md"
-        },
-        {
-          "id": "std/ffi-c",
-          "title": "`std::ffi::c` (C FFI helpers)",
-          "file": "std/ffi-c.md"
-        },
-        {
-          "id": "std/flag",
-          "title": "`std::flag`",
-          "file": "std/flag.md"
-        },
-        {
-          "id": "std/fmt",
-          "title": "`std::fmt`",
-          "file": "std/fmt.md"
-        },
-        {
-          "id": "std/formal",
-          "title": "`std::formal`",
-          "file": "std/formal.md"
-        },
-        {
-          "id": "std/filesystem",
-          "title": "`std::fs`",
-          "file": "std/filesystem.md"
-        },
-        {
-          "id": "std/ggml",
-          "title": "`std::ggml`",
-          "file": "std/ggml.md"
-        },
-        {
-          "id": "std/graphics",
-          "title": "`std::graphics` \u2014 Graphics API Bindings",
-          "file": "std/graphics.md"
-        },
-        {
-          "id": "std/http",
-          "title": "`std::http`",
-          "file": "std/http.md"
-        },
-        {
-          "id": "std/https",
-          "title": "`std::https`",
-          "file": "std/https.md"
-        },
-        {
-          "id": "std/image",
-          "title": "`std::image` \u2014 Image Codecs + Color",
-          "file": "std/image.md"
         },
         {
           "id": "std/interfaces",
@@ -457,19 +372,34 @@
           "file": "std/interfaces.md"
         },
         {
+          "id": "std/result",
+          "title": "`std::result`",
+          "file": "std/result.md"
+        },
+        {
           "id": "std/io",
           "title": "`std::io`",
           "file": "std/io.md"
         },
         {
-          "id": "std/json",
-          "title": "`std::json`",
-          "file": "std/json.md"
+          "id": "std/fmt",
+          "title": "`std::fmt`",
+          "file": "std/fmt.md"
         },
         {
-          "id": "std/limits",
-          "title": "`std::limits`",
-          "file": "std/limits.md"
+          "id": "std/strings",
+          "title": "`std::strings`",
+          "file": "std/strings.md"
+        },
+        {
+          "id": "std/arrays",
+          "title": "`std::arrays`",
+          "file": "std/arrays.md"
+        },
+        {
+          "id": "std/vector",
+          "title": "`std::vector`",
+          "file": "std/vector.md"
         },
         {
           "id": "std/map",
@@ -477,9 +407,24 @@
           "file": "std/map.md"
         },
         {
-          "id": "std/math",
-          "title": "`std::math`",
-          "file": "std/math.md"
+          "id": "std/set",
+          "title": "`std::set` \u2014 Sets",
+          "file": "std/set.md"
+        },
+        {
+          "id": "std/buffer",
+          "title": "`std::buffer`",
+          "file": "std/buffer.md"
+        },
+        {
+          "id": "std/bits",
+          "title": "`std::bits`",
+          "file": "std/bits.md"
+        },
+        {
+          "id": "std/algorithms",
+          "title": "`std::algorithms`",
+          "file": "std/algorithms.md"
         },
         {
           "id": "std/memory",
@@ -487,14 +432,29 @@
           "file": "std/memory.md"
         },
         {
-          "id": "std/networking",
-          "title": "`std::net`",
-          "file": "std/networking.md"
+          "id": "std/math",
+          "title": "`std::math`",
+          "file": "std/math.md"
         },
         {
           "id": "std/number",
           "title": "`std::number`",
           "file": "std/number.md"
+        },
+        {
+          "id": "std/args",
+          "title": "`std::args`",
+          "file": "std/args.md"
+        },
+        {
+          "id": "std/env",
+          "title": "`std::env`",
+          "file": "std/env.md"
+        },
+        {
+          "id": "std/process",
+          "title": "`std::process`",
+          "file": "std/process.md"
         },
         {
           "id": "std/os",
@@ -507,94 +467,14 @@
           "file": "std/path.md"
         },
         {
-          "id": "std/process",
-          "title": "`std::process`",
-          "file": "std/process.md"
+          "id": "std/filesystem",
+          "title": "`std::fs`",
+          "file": "std/filesystem.md"
         },
         {
-          "id": "std/readline",
-          "title": "`std::readline`",
-          "file": "std/readline.md"
-        },
-        {
-          "id": "std/regex",
-          "title": "`std::regex`",
-          "file": "std/regex.md"
-        },
-        {
-          "id": "std/result",
-          "title": "`std::result`",
-          "file": "std/result.md"
-        },
-        {
-          "id": "std/z3",
-          "title": "`std::runtime::z3` \u2014 Z3 SMT Solver (C API Bindings)",
-          "file": "std/z3.md"
-        },
-        {
-          "id": "std/runtime",
-          "title": "`std::runtime`",
-          "file": "std/runtime.md"
-        },
-        {
-          "id": "std/semver",
-          "title": "`std::semver`",
-          "file": "std/semver.md"
-        },
-        {
-          "id": "std/set",
-          "title": "`std::set` \u2014 Sets",
-          "file": "std/set.md"
-        },
-        {
-          "id": "std/sqlite",
-          "title": "`std::sqlite`",
-          "file": "std/sqlite.md"
-        },
-        {
-          "id": "std/ssh2",
-          "title": "`std::ssh2`",
-          "file": "std/ssh2.md"
-        },
-        {
-          "id": "std/stream",
-          "title": "`std::stream`",
-          "file": "std/stream.md"
-        },
-        {
-          "id": "std/strings",
-          "title": "`std::strings`",
-          "file": "std/strings.md"
-        },
-        {
-          "id": "std/sync",
-          "title": "`std::sync`",
-          "file": "std/sync.md"
-        },
-        {
-          "id": "std/tar",
-          "title": "`std::tar`",
-          "file": "std/tar.md"
-        },
-        {
-          "id": "std/task",
-          "title": "`std::task`",
-          "file": "std/task.md"
-        },
-        {
-          "id": "std/temporal",
-          "title": "`std::temporal`",
-          "file": "std/temporal.md"
-        },
-        {
-          "id": "std/test",
-          "title": "`std::test`",
-          "file": "std/test.md"
-        },
-        {
-          "id": "std/tls",
-          "title": "`std::tls`",
-          "file": "std/tls.md"
+          "id": "std/json",
+          "title": "`std::json`",
+          "file": "std/json.md"
         },
         {
           "id": "std/toml",
@@ -602,9 +482,9 @@
           "file": "std/toml.md"
         },
         {
-          "id": "std/unicode",
-          "title": "`std::unicode`",
-          "file": "std/unicode.md"
+          "id": "std/xml",
+          "title": "`std::xml` \u2014 XML Parsing (libxml2)",
+          "file": "std/xml.md"
         },
         {
           "id": "std/url",
@@ -612,14 +492,39 @@
           "file": "std/url.md"
         },
         {
+          "id": "std/semver",
+          "title": "`std::semver`",
+          "file": "std/semver.md"
+        },
+        {
           "id": "std/uuid",
           "title": "`std::uuid`",
           "file": "std/uuid.md"
         },
         {
-          "id": "std/vector",
-          "title": "`std::vector`",
-          "file": "std/vector.md"
+          "id": "std/unicode",
+          "title": "`std::unicode`",
+          "file": "std/unicode.md"
+        },
+        {
+          "id": "std/regex",
+          "title": "`std::regex`",
+          "file": "std/regex.md"
+        },
+        {
+          "id": "std/networking",
+          "title": "`std::net`",
+          "file": "std/networking.md"
+        },
+        {
+          "id": "std/http",
+          "title": "`std::http`",
+          "file": "std/http.md"
+        },
+        {
+          "id": "std/https",
+          "title": "`std::https`",
+          "file": "std/https.md"
         },
         {
           "id": "std/websocket",
@@ -627,9 +532,79 @@
           "file": "std/websocket.md"
         },
         {
-          "id": "std/xml",
-          "title": "`std::xml` \u2014 XML Parsing (libxml2)",
-          "file": "std/xml.md"
+          "id": "std/stream",
+          "title": "`std::stream`",
+          "file": "std/stream.md"
+        },
+        {
+          "id": "std/crypto",
+          "title": "`std::crypto`",
+          "file": "std/crypto.md"
+        },
+        {
+          "id": "std/tls",
+          "title": "`std::tls`",
+          "file": "std/tls.md"
+        },
+        {
+          "id": "std/ssh2",
+          "title": "`std::ssh2`",
+          "file": "std/ssh2.md"
+        },
+        {
+          "id": "std/runtime",
+          "title": "`std::runtime`",
+          "file": "std/runtime.md"
+        },
+        {
+          "id": "std/task",
+          "title": "`std::task`",
+          "file": "std/task.md"
+        },
+        {
+          "id": "std/sync",
+          "title": "`std::sync`",
+          "file": "std/sync.md"
+        },
+        {
+          "id": "std/temporal",
+          "title": "`std::temporal`",
+          "file": "std/temporal.md"
+        },
+        {
+          "id": "std/abort-controller",
+          "title": "`std::abort_controller`",
+          "file": "std/abort-controller.md"
+        },
+        {
+          "id": "std/sqlite",
+          "title": "`std::sqlite`",
+          "file": "std/sqlite.md"
+        },
+        {
+          "id": "std/tar",
+          "title": "`std::tar`",
+          "file": "std/tar.md"
+        },
+        {
+          "id": "std/test",
+          "title": "`std::test`",
+          "file": "std/test.md"
+        },
+        {
+          "id": "std/flag",
+          "title": "`std::flag`",
+          "file": "std/flag.md"
+        },
+        {
+          "id": "std/readline",
+          "title": "`std::readline`",
+          "file": "std/readline.md"
+        },
+        {
+          "id": "std/ffi-c",
+          "title": "`std::ffi::c` (C FFI helpers)",
+          "file": "std/ffi-c.md"
         },
         {
           "id": "std/js-ecma",
@@ -637,9 +612,19 @@
           "file": "std/js-ecma.md"
         },
         {
-          "id": "std/overview",
-          "title": "Standard Library Overview (`std::`)",
-          "file": "std/overview.md"
+          "id": "std/wasm",
+          "title": "WebAssembly Runtime (`std::wasm`)",
+          "file": "std/wasm.md"
+        },
+        {
+          "id": "std/graphics",
+          "title": "`std::graphics` \u2014 Graphics API Bindings",
+          "file": "std/graphics.md"
+        },
+        {
+          "id": "std/image",
+          "title": "`std::image` \u2014 Image Codecs + Color",
+          "file": "std/image.md"
         },
         {
           "id": "std/idl-web",
@@ -647,9 +632,24 @@
           "file": "std/idl-web.md"
         },
         {
-          "id": "std/wasm",
-          "title": "WebAssembly Runtime (`std::wasm`)",
-          "file": "std/wasm.md"
+          "id": "std/formal",
+          "title": "`std::formal`",
+          "file": "std/formal.md"
+        },
+        {
+          "id": "std/z3",
+          "title": "`std::runtime::z3` \u2014 Z3 SMT Solver (C API Bindings)",
+          "file": "std/z3.md"
+        },
+        {
+          "id": "std/ggml",
+          "title": "`std::ggml`",
+          "file": "std/ggml.md"
+        },
+        {
+          "id": "std/limits",
+          "title": "`std::limits`",
+          "file": "std/limits.md"
         }
       ]
     },
@@ -657,39 +657,9 @@
       "name": "usage",
       "items": [
         {
-          "id": "usage/cli-examples",
-          "title": "CLI usage examples",
-          "file": "usage/cli-examples.md"
-        },
-        {
-          "id": "usage/editor-coc-nvim",
-          "title": "coc.nvim Integration for Silk",
-          "file": "usage/editor-coc-nvim.md"
-        },
-        {
           "id": "usage/getting-started",
           "title": "Getting started",
           "file": "usage/getting-started.md"
-        },
-        {
-          "id": "usage/github-linguist",
-          "title": "GitHub Linguist Support",
-          "file": "usage/github-linguist.md"
-        },
-        {
-          "id": "usage/howto-run-wasi-node",
-          "title": "How-To: Run `wasm32-wasi` Output in Node.js",
-          "file": "usage/howto-run-wasi-node.md"
-        },
-        {
-          "id": "usage/howto-custom-stdlib-root",
-          "title": "How-To: Use a Custom Stdlib Root (and Runtime)",
-          "file": "usage/howto-custom-stdlib-root.md"
-        },
-        {
-          "id": "usage/editor-textmate",
-          "title": "TextMate Grammar (tmLanguage)",
-          "file": "usage/editor-textmate.md"
         },
         {
           "id": "usage/tutorials/01-first-program",
@@ -722,14 +692,44 @@
           "file": "usage/tutorials/06-async-io-streams-abort.md"
         },
         {
-          "id": "usage/editor-ctags",
-          "title": "Universal Ctags Support",
-          "file": "usage/editor-ctags.md"
+          "id": "usage/cli-examples",
+          "title": "CLI usage examples",
+          "file": "usage/cli-examples.md"
+        },
+        {
+          "id": "usage/howto-custom-stdlib-root",
+          "title": "How-To: Use a Custom Stdlib Root (and Runtime)",
+          "file": "usage/howto-custom-stdlib-root.md"
+        },
+        {
+          "id": "usage/howto-run-wasi-node",
+          "title": "How-To: Run `wasm32-wasi` Output in Node.js",
+          "file": "usage/howto-run-wasi-node.md"
+        },
+        {
+          "id": "usage/github-linguist",
+          "title": "GitHub Linguist Support",
+          "file": "usage/github-linguist.md"
         },
         {
           "id": "usage/editor-vim",
           "title": "Vim Integration for Silk",
           "file": "usage/editor-vim.md"
+        },
+        {
+          "id": "usage/editor-coc-nvim",
+          "title": "coc.nvim Integration for Silk",
+          "file": "usage/editor-coc-nvim.md"
+        },
+        {
+          "id": "usage/editor-ctags",
+          "title": "Universal Ctags Support",
+          "file": "usage/editor-ctags.md"
+        },
+        {
+          "id": "usage/editor-textmate",
+          "title": "TextMate Grammar (tmLanguage)",
+          "file": "usage/editor-textmate.md"
         }
       ]
     },
@@ -737,14 +737,19 @@
       "name": "compiler",
       "items": [
         {
+          "id": "compiler/architecture",
+          "title": "Compiler Architecture",
+          "file": "compiler/architecture.md"
+        },
+        {
           "id": "compiler/cli-silk",
           "title": "`silk` CLI",
           "file": "compiler/cli-silk.md"
         },
         {
-          "id": "compiler/async-runtime",
-          "title": "Async Runtime (Hosted)",
-          "file": "compiler/async-runtime.md"
+          "id": "compiler/package-manifests",
+          "title": "Package Manifests (`silk.toml`)",
+          "file": "compiler/package-manifests.md"
         },
         {
           "id": "compiler/build-scripts",
@@ -752,14 +757,24 @@
           "file": "compiler/build-scripts.md"
         },
         {
-          "id": "compiler/abi-libsilk",
-          "title": "C99 ABI and `libsilk.a`",
-          "file": "compiler/abi-libsilk.md"
+          "id": "compiler/stdlib-integration",
+          "title": "Standard Library Integration",
+          "file": "compiler/stdlib-integration.md"
         },
         {
-          "id": "compiler/architecture",
-          "title": "Compiler Architecture",
-          "file": "compiler/architecture.md"
+          "id": "compiler/backend-wasm",
+          "title": "WebAssembly Back-End (`wasm32` / `wasm64`)",
+          "file": "compiler/backend-wasm.md"
+        },
+        {
+          "id": "compiler/async-runtime",
+          "title": "Async Runtime (Hosted)",
+          "file": "compiler/async-runtime.md"
+        },
+        {
+          "id": "compiler/ir-overview",
+          "title": "Intermediate Representation (IR) \u2013 Overview",
+          "file": "compiler/ir-overview.md"
         },
         {
           "id": "compiler/diagnostics",
@@ -772,14 +787,9 @@
           "file": "compiler/limits.md"
         },
         {
-          "id": "compiler/ir-overview",
-          "title": "Intermediate Representation (IR) \u2013 Overview",
-          "file": "compiler/ir-overview.md"
-        },
-        {
-          "id": "compiler/package-manifests",
-          "title": "Package Manifests (`silk.toml`)",
-          "file": "compiler/package-manifests.md"
+          "id": "compiler/testing-strategy",
+          "title": "Testing Strategy (Zig + C99 + Silk)",
+          "file": "compiler/testing-strategy.md"
         },
         {
           "id": "compiler/lsp-silk",
@@ -787,29 +797,19 @@
           "file": "compiler/lsp-silk.md"
         },
         {
-          "id": "compiler/stdlib-integration",
-          "title": "Standard Library Integration",
-          "file": "compiler/stdlib-integration.md"
-        },
-        {
-          "id": "compiler/testing-strategy",
-          "title": "Testing Strategy (Zig + C99 + Silk)",
-          "file": "compiler/testing-strategy.md"
-        },
-        {
-          "id": "compiler/vendored-deps",
-          "title": "Vendored Dependencies",
-          "file": "compiler/vendored-deps.md"
-        },
-        {
-          "id": "compiler/backend-wasm",
-          "title": "WebAssembly Back-End (`wasm32` / `wasm64`)",
-          "file": "compiler/backend-wasm.md"
+          "id": "compiler/abi-libsilk",
+          "title": "C99 ABI and `libsilk.a`",
+          "file": "compiler/abi-libsilk.md"
         },
         {
           "id": "compiler/zig-api",
           "title": "Zig Embedding API (Programmatic Compilation)",
           "file": "compiler/zig-api.md"
+        },
+        {
+          "id": "compiler/vendored-deps",
+          "title": "Vendored Dependencies",
+          "file": "compiler/vendored-deps.md"
         }
       ]
     },
@@ -817,9 +817,19 @@
       "name": "man",
       "items": [
         {
-          "id": "man/libsilk.7",
-          "title": "`libsilk` (7) \u2014 C99 ABI for the Silk Compiler",
-          "file": "man/libsilk.7.md"
+          "id": "man/silk.1",
+          "title": "`silk` (1) \u2014 Silk Language Compiler",
+          "file": "man/silk.1.md"
+        },
+        {
+          "id": "man/slc.1",
+          "title": "`slc` (1) \u2014 Alias of `silk build`",
+          "file": "man/slc.1.md"
+        },
+        {
+          "id": "man/slcc.1",
+          "title": "`slcc` (1) \u2014 Alias of `silk cc`",
+          "file": "man/slcc.1.md"
         },
         {
           "id": "man/silk-build.1",
@@ -827,24 +837,19 @@
           "file": "man/silk-build.1.md"
         },
         {
-          "id": "man/silk-cc.1",
-          "title": "`silk-cc` (1) \u2014 C Compiler Wrapper for `libsilk`",
-          "file": "man/silk-cc.1.md"
-        },
-        {
           "id": "man/silk-check.1",
           "title": "`silk-check` (1) \u2014 Parse and Type-Check",
           "file": "man/silk-check.1.md"
         },
         {
+          "id": "man/silk-test.1",
+          "title": "`silk-test` (1) \u2014 Run Language-Level Tests",
+          "file": "man/silk-test.1.md"
+        },
+        {
           "id": "man/silk-doc.1",
           "title": "`silk-doc` (1) \u2014 Generate Documentation (Markdown or Manpages)",
           "file": "man/silk-doc.1.md"
-        },
-        {
-          "id": "man/silk-env.1",
-          "title": "`silk-env` (1) \u2014 Print `silk` CLI Environment",
-          "file": "man/silk-env.1.md"
         },
         {
           "id": "man/silk-format.1",
@@ -857,19 +862,34 @@
           "file": "man/silk-lsp.1.md"
         },
         {
+          "id": "man/silk-env.1",
+          "title": "`silk-env` (1) \u2014 Print `silk` CLI Environment",
+          "file": "man/silk-env.1.md"
+        },
+        {
           "id": "man/silk-man.1",
           "title": "`silk-man` (1) \u2014 View Manpages Derived from Source Docs",
           "file": "man/silk-man.1.md"
         },
         {
-          "id": "man/silk-test.1",
-          "title": "`silk-test` (1) \u2014 Run Language-Level Tests",
-          "file": "man/silk-test.1.md"
+          "id": "man/silk-cc.1",
+          "title": "`silk-cc` (1) \u2014 C Compiler Wrapper for `libsilk`",
+          "file": "man/silk-cc.1.md"
         },
         {
-          "id": "man/silk_abi_get_version.3",
-          "title": "`silk_abi_get_version` (3) \u2014 Query the `libsilk` ABI Version",
-          "file": "man/silk_abi_get_version.3.md"
+          "id": "man/silk.7",
+          "title": "`silk` (7) \u2014 Silk Toolchain Overview",
+          "file": "man/silk.7.md"
+        },
+        {
+          "id": "man/libsilk.7",
+          "title": "`libsilk` (7) \u2014 C99 ABI for the Silk Compiler",
+          "file": "man/libsilk.7.md"
+        },
+        {
+          "id": "man/silk_error.3",
+          "title": "`silk_error` (3) \u2014 Retrieve and Format Compiler Errors",
+          "file": "man/silk_error.3.md"
         },
         {
           "id": "man/silk_bytes.3",
@@ -882,29 +902,9 @@
           "file": "man/silk_compiler.3.md"
         },
         {
-          "id": "man/silk_error.3",
-          "title": "`silk_error` (3) \u2014 Retrieve and Format Compiler Errors",
-          "file": "man/silk_error.3.md"
-        },
-        {
-          "id": "man/silk.1",
-          "title": "`silk` (1) \u2014 Silk Language Compiler",
-          "file": "man/silk.1.md"
-        },
-        {
-          "id": "man/silk.7",
-          "title": "`silk` (7) \u2014 Silk Toolchain Overview",
-          "file": "man/silk.7.md"
-        },
-        {
-          "id": "man/slc.1",
-          "title": "`slc` (1) \u2014 Alias of `silk build`",
-          "file": "man/slc.1.md"
-        },
-        {
-          "id": "man/slcc.1",
-          "title": "`slcc` (1) \u2014 Alias of `silk cc`",
-          "file": "man/slcc.1.md"
+          "id": "man/silk_abi_get_version.3",
+          "title": "`silk_abi_get_version` (3) \u2014 Query the `libsilk` ABI Version",
+          "file": "man/silk_abi_get_version.3.md"
         }
       ]
     },

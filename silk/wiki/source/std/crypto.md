@@ -22,7 +22,7 @@ import std::runtime::mem;
 
 ## Examples
 
-### Works today: init + memzero + blake2b
+### Example: init + memzero + blake2b
 
 ```silk
 import std::crypto;

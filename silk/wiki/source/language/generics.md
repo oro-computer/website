@@ -10,7 +10,7 @@ Canonical spec: `docs/language/generics.md`.
 
 - Current supported forms and restrictions: `docs/language/generics.md`
 
-## Syntax (Selected)
+## Syntax
 
 ```silk
 struct Pair(T) {
@@ -25,7 +25,7 @@ impl Pair(T) {
 
 ## Examples
 
-### Works today: generic struct + applied type
+### Example: generic struct + applied type
 
 ```silk
 struct Pair(T) {

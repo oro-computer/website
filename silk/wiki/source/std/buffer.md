@@ -12,7 +12,7 @@ Canonical doc: `docs/std/buffer.md`.
 import std::buffer;
 ```
 
-## Example (Works today): `BufferU8`
+## Example: `BufferU8`
 
 ```silk
 import std::buffer;

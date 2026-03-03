@@ -25,7 +25,7 @@ match value {
 
 ## Examples
 
-### Works today: matching an optional
+### Example: matching an optional
 
 ```silk
 fn main () -> int {
@@ -38,7 +38,7 @@ fn main () -> int {
 }
 ```
 
-### Works today: matching an enum
+### Example: matching an enum
 
 ```silk
 enum Msg {

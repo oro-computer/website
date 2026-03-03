@@ -18,7 +18,7 @@ import std::arrays;
 
 ## Examples
 
-### Works today: `Slice(T)` + `SliceIter(T)`
+### Example: `Slice(T)` + `SliceIter(T)`
 
 ```silk
 import std::arrays;

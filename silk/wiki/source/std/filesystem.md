@@ -5,7 +5,7 @@ subset).
 
 Canonical doc: `docs/std/filesystem.md`.
 
-## Example (Works today): existence checks
+## Example: existence checks
 
 ```silk
 import std::fs;

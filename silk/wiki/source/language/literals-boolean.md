@@ -4,7 +4,7 @@ Silk has the boolean type `bool` with literals `true` and `false`.
 
 Canonical doc: `docs/language/literals-boolean.md`.
 
-## Example (Works today)
+## Example
 
 ```silk
 fn main () -> int {

@@ -11,7 +11,7 @@ Canonical spec: `docs/language/interfaces.md`.
 - Syntax + conformance checking: `docs/language/interfaces.md`
 - Dynamic dispatch (trait objects/vtables): not implemented yet
 
-## Syntax (Selected)
+## Syntax
 
 ```silk
 interface Len {
@@ -29,7 +29,7 @@ impl Counter as Len {
 
 ## Examples
 
-### Works today: conformance + direct method call
+### Example: conformance + direct method call
 
 ```silk
 interface Len {

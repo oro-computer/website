@@ -11,7 +11,7 @@ In the current toolchain, buffer-like functionality is provided via `std::`:
 - `std::buffer::BufferU8` as an owning packed byte buffer, plus width-oriented
   scalar buffer aliases (`BufferI32`, etc.)
 
-## Example (Works today): buffer aliases
+## Example: buffer aliases
 
 ```silk
 import std::buffer;
@@ -32,5 +32,5 @@ fn main () -> int {
 ## See also
 
 - Canonical design doc: `docs/language/buffers.md`
-- `std::buffer`: `docs/wiki/std/buffer.md`
-- `std::vector`: `docs/wiki/std/vector.md`
+- `std::buffer`: `wiki/std/buffer.md`
+- `std::vector`: `wiki/std/vector.md`

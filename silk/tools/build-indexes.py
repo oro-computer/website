@@ -52,6 +52,209 @@ GUIDE_ORDER = [
     "guides/formal-silk",
 ]
 
+LANGUAGE_ORDER = [
+    "language/syntax-tour",
+    "language/cheat-sheet",
+    # Flow control
+    "language/flow-overview",
+    "language/flow-if-else",
+    "language/flow-match",
+    "language/flow-loop",
+    "language/flow-while",
+    "language/flow-for",
+    "language/flow-break",
+    "language/flow-continue",
+    "language/flow-return",
+    "language/flow-expression-statements",
+    "language/flow-blocks-statements",
+    # Core language reference
+    "language/grammar",
+    "language/attributes",
+    "language/doc-comments",
+    "language/packages-imports-exports",
+    "language/using",
+    "language/types",
+    "language/type-unions",
+    "language/optional",
+    "language/mutability",
+    "language/operators",
+    # Literals
+    "language/literals-overview",
+    "language/literals-numeric",
+    "language/literals-string",
+    "language/literals-character",
+    "language/literals-boolean",
+    "language/literals-duration",
+    "language/duration-instant",
+    "language/literals-regexp",
+    "language/literals-aggregate",
+    # Data + interfaces
+    "language/structs-impls-layout",
+    "language/struct-requirements",
+    "language/interfaces",
+    "language/enums",
+    # Errors + safety
+    "language/errors",
+    "language/typed-errors",
+    "language/borrow-checker",
+    "language/memory-model",
+    "language/regions",
+    "language/buffers",
+    # Concurrency + advanced
+    "language/concurrency",
+    "language/function-disciplines",
+    "language/const-functions",
+    "language/generics",
+    "language/varargs",
+    "language/ext",
+    "language/asm",
+    "language/build-metadata",
+    "language/target-metadata",
+    "language/testing",
+    "language/formal-verification",
+    "language/refinement-types",
+    "language/dependent-types",
+    # Contributor-oriented conventions (kept, but de-emphasized)
+    "language/conventions",
+]
+
+
+STD_ORDER = [
+    "std/overview",
+    "std/conventions",
+    "std/package-structure",
+    "std/build",
+    "std/interfaces",
+    "std/result",
+    # Core utilities
+    "std/io",
+    "std/fmt",
+    "std/strings",
+    "std/arrays",
+    "std/vector",
+    "std/map",
+    "std/set",
+    "std/buffer",
+    "std/bits",
+    "std/algorithms",
+    "std/memory",
+    "std/math",
+    "std/number",
+    # Environment + platform
+    "std/args",
+    "std/env",
+    "std/process",
+    "std/os",
+    "std/path",
+    "std/filesystem",
+    # Data formats
+    "std/json",
+    "std/toml",
+    "std/xml",
+    "std/url",
+    "std/semver",
+    "std/uuid",
+    "std/unicode",
+    "std/regex",
+    # Networking + security
+    "std/networking",
+    "std/http",
+    "std/https",
+    "std/websocket",
+    "std/stream",
+    "std/crypto",
+    "std/tls",
+    "std/ssh2",
+    # Runtime + concurrency
+    "std/runtime",
+    "std/task",
+    "std/sync",
+    "std/temporal",
+    "std/abort-controller",
+    # Storage and tooling
+    "std/sqlite",
+    "std/tar",
+    "std/test",
+    "std/flag",
+    "std/readline",
+    # Interop / optional surfaces
+    "std/ffi-c",
+    "std/js-ecma",
+    "std/wasm",
+    "std/graphics",
+    "std/image",
+    "std/idl-web",
+    # Formal + ML helpers
+    "std/formal",
+    "std/z3",
+    "std/ggml",
+    # Limits and odds-and-ends
+    "std/limits",
+]
+
+
+USAGE_ORDER = [
+    "usage/getting-started",
+    # Tutorials
+    "usage/tutorials/01-first-program",
+    "usage/tutorials/02-structs-and-impls",
+    "usage/tutorials/03-arrays-and-slices",
+    "usage/tutorials/04-filesystem",
+    "usage/tutorials/05-concurrency",
+    "usage/tutorials/06-async-io-streams-abort",
+    # Practical references
+    "usage/cli-examples",
+    "usage/howto-custom-stdlib-root",
+    "usage/howto-run-wasi-node",
+    "usage/github-linguist",
+    # Editors
+    "usage/editor-vim",
+    "usage/editor-coc-nvim",
+    "usage/editor-ctags",
+    "usage/editor-textmate",
+]
+
+
+COMPILER_ORDER = [
+    "compiler/architecture",
+    "compiler/cli-silk",
+    "compiler/package-manifests",
+    "compiler/build-scripts",
+    "compiler/stdlib-integration",
+    "compiler/backend-wasm",
+    "compiler/async-runtime",
+    "compiler/ir-overview",
+    "compiler/diagnostics",
+    "compiler/limits",
+    "compiler/testing-strategy",
+    "compiler/lsp-silk",
+    "compiler/abi-libsilk",
+    "compiler/zig-api",
+    "compiler/vendored-deps",
+]
+
+
+MAN_ORDER = [
+    "man/silk.1",
+    "man/slc.1",
+    "man/slcc.1",
+    "man/silk-build.1",
+    "man/silk-check.1",
+    "man/silk-test.1",
+    "man/silk-doc.1",
+    "man/silk-format.1",
+    "man/silk-lsp.1",
+    "man/silk-env.1",
+    "man/silk-man.1",
+    "man/silk-cc.1",
+    "man/silk.7",
+    "man/libsilk.7",
+    "man/silk_error.3",
+    "man/silk_bytes.3",
+    "man/silk_compiler.3",
+    "man/silk_abi_get_version.3",
+]
+
 
 @dataclass(frozen=True)
 class Item:
@@ -183,7 +386,7 @@ def read_json(path: Path) -> object | None:
 
 def strip_internal_refs(markdown: str) -> str:
     drop_line = re.compile(
-        r"(STATUS\.md|PLAN\.md|README\.md|llms\.txt|\bdocs/|\btests/)",
+        r"(STATUS\.md|PLAN\.md|README\.md|\bllms\.txt\b|docs/llms\.txt|docs/wiki/style-guide\.md|_template-[^`\s]+|style-guide\.md)",
         flags=re.I,
     )
     status_line = re.compile(r"^(Status:|Implementation status:)\s*", flags=re.I)
@@ -451,6 +654,11 @@ def collect_items(source_root: Path, section_order: list[str]) -> list[Item]:
     # Sort by section order, then title.
     order_index = {name: i for i, name in enumerate(section_order)}
     guide_index = {doc_id: i for i, doc_id in enumerate(GUIDE_ORDER)}
+    language_index = {doc_id: i for i, doc_id in enumerate(LANGUAGE_ORDER)}
+    std_index = {doc_id: i for i, doc_id in enumerate(STD_ORDER)}
+    usage_index = {doc_id: i for i, doc_id in enumerate(USAGE_ORDER)}
+    compiler_index = {doc_id: i for i, doc_id in enumerate(COMPILER_ORDER)}
+    man_index = {doc_id: i for i, doc_id in enumerate(MAN_ORDER)}
 
     def sort_key(item: Item):
         section_rank = order_index.get(item.section, 999)
@@ -459,6 +667,46 @@ def collect_items(source_root: Path, section_order: list[str]) -> list[Item]:
                 section_rank,
                 0,
                 guide_index.get(item.id, 999),
+                item.title.lower(),
+                item.id,
+            )
+        if item.section == "language":
+            return (
+                section_rank,
+                0,
+                language_index.get(item.id, 999),
+                item.title.lower(),
+                item.id,
+            )
+        if item.section == "std":
+            return (
+                section_rank,
+                0,
+                std_index.get(item.id, 999),
+                item.title.lower(),
+                item.id,
+            )
+        if item.section == "usage":
+            return (
+                section_rank,
+                0,
+                usage_index.get(item.id, 999),
+                item.title.lower(),
+                item.id,
+            )
+        if item.section == "compiler":
+            return (
+                section_rank,
+                0,
+                compiler_index.get(item.id, 999),
+                item.title.lower(),
+                item.id,
+            )
+        if item.section == "man":
+            return (
+                section_rank,
+                0,
+                man_index.get(item.id, 999),
                 item.title.lower(),
                 item.id,
             )

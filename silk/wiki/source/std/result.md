@@ -18,7 +18,7 @@ import std::result;
 
 ## Examples
 
-### Works today: create and inspect a `Result`
+### Example: create and inspect a `Result`
 
 ```silk
 import std::result;

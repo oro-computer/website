@@ -22,7 +22,7 @@ import std::vector;
 
 ## Examples
 
-### Works today: a tiny “hello std” program
+### Example: a tiny “hello std” program
 
 ```silk
 import std::io;
@@ -44,5 +44,5 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/overview.md`
-- Module structure and swappability: `docs/wiki/std/package-structure.md`
-- API conventions: `docs/wiki/std/conventions.md`
+- Module structure and swappability: `wiki/std/package-structure.md`
+- API conventions: `wiki/std/conventions.md`

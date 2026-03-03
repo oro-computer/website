@@ -11,7 +11,7 @@ This wiki page is a reading guide, not a replacement for the grammar itself.
 - Use the concept docs (`docs/language/*.md`) for semantics and type rules.
 - Use `tests/silk/pass_*.slk` for runnable examples.
 
-## Example (Works today)
+## Example
 
 ```silk
 import std::io;
@@ -25,4 +25,4 @@ fn main () -> int {
 ## See also
 
 - Canonical grammar: `docs/language/grammar.md`
-- Syntax tour: `docs/wiki/language/syntax-tour.md`
+- Syntax tour: `wiki/language/syntax-tour.md`
