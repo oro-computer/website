@@ -1,7 +1,7 @@
 # Silk Documentation
 
-Silk is a spec-first programming language and compiler toolchain. The goal is a language you can *read* as well as you can
-compile: predictable semantics, explicit module boundaries, and a standard library designed for systems work.
+Silk is a high performance general purpose programming language with formal verification built in. Silk targets computer
+systems, mobile / tablet devices, WASM / WASI runtimes, and the web.
 
 This documentation site is written for downstream users. It is organized into:
 
@@ -33,7 +33,7 @@ From here, you can:
 
 If you’re new to Silk, this is a good order:
 
-1. **What Silk is for**: design goals, spec-first workflow, and the mental model.
+1. **What Silk is for**: design goals, constraints, and the mental model.
 2. **Hello world**: the smallest working program and the `check → test → build` loop.
 3. **Language tour**: the shape of real programs (types, functions, control flow, errors).
 4. **Modules & packages**: how code is organized and how imports/exports create clean dependency boundaries.

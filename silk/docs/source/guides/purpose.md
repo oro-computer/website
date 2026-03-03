@@ -1,9 +1,12 @@
 # What Silk is for
 
-Silk is a **spec-first** programming language and toolchain: the design is written down as a readable, linkable reference,
-and the compiler is built to match that contract.
+Silk is a high performance general purpose programming language with formal verification built in. Silk targets computer
+systems, mobile / tablet devices, WASM / WASI runtimes, and the web.
 
-This matters because it changes how the language evolves:
+Silk is developed as a coherent system: the language, standard library, compiler, and CLI are documented as the canonical
+reference, and the implementation is built to match that contract.
+
+This matters because it keeps the language predictable as it grows:
 
 - The “meaning” of a construct lives in the docs, not in folklore.
 - Tooling can rely on stable concepts (packages, imports, diagnostics, CLI shapes).
@@ -113,4 +116,3 @@ The recommended flow:
 7. [Formal Silk](?p=guides/formal-silk)
 
 If you already know what you’re looking for, use search and the sidebar reference sections.
-
