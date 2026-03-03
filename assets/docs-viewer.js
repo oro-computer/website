@@ -16,6 +16,8 @@
   const searchUrl = app.getAttribute("data-search") || "search.json";
   const baseUrl = app.getAttribute("data-base") || "source/";
   const defaultId = app.getAttribute("data-default") || "start";
+  const githubRepo = app.getAttribute("data-github-repo") || "";
+  const githubRef = app.getAttribute("data-github-ref") || "";
 
   const titleSuffix =
     app.getAttribute("data-title-suffix") ||
@@ -48,6 +50,55 @@
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
+  }
+
+  function stripBackticks(text) {
+    return String(text || "")
+      .replace(/`([^`]+)`/g, "$1")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function splitInlineCode(text) {
+    const raw = String(text || "");
+    const out = [];
+    let i = 0;
+    while (i < raw.length) {
+      const start = raw.indexOf("`", i);
+      if (start === -1) {
+        const tail = raw.slice(i);
+        if (tail) out.push({ type: "text", value: tail });
+        break;
+      }
+
+      const end = raw.indexOf("`", start + 1);
+      if (end === -1) {
+        const tail = raw.slice(i);
+        if (tail) out.push({ type: "text", value: tail });
+        break;
+      }
+
+      const before = raw.slice(i, start);
+      if (before) out.push({ type: "text", value: before });
+      const code = raw.slice(start + 1, end);
+      out.push({ type: "code", value: code });
+      i = end + 1;
+    }
+
+    return out;
+  }
+
+  function appendInlineCodeNodes(parent, text) {
+    const doc = parent.ownerDocument || document;
+    for (const part of splitInlineCode(text)) {
+      if (part.type === "text") {
+        parent.appendChild(doc.createTextNode(part.value));
+        continue;
+      }
+      const code = doc.createElement("code");
+      code.textContent = part.value;
+      parent.appendChild(code);
+    }
   }
 
   function normalizeRelPath(input) {
@@ -564,13 +615,11 @@
       return;
     }
 
-    tocRoot.hidden = false;
     const frag = document.createDocumentFragment();
 
     const label = document.createElement("div");
     label.className = "docs-toc-title";
     label.textContent = "On this page";
-    frag.appendChild(label);
 
     const list = document.createElement("ul");
     list.className = "docs-toc-list";
@@ -585,13 +634,25 @@
       li.appendChild(a);
       list.appendChild(li);
     }
+    if (!list.children.length) {
+      tocRoot.replaceChildren();
+      tocRoot.hidden = true;
+      return;
+    }
+
+    tocRoot.hidden = false;
+    frag.appendChild(label);
     frag.appendChild(list);
     tocRoot.replaceChildren(frag);
   }
 
   function updateBreadcrumb(section, title) {
     if (!breadcrumb) return;
-    breadcrumb.textContent = `${humanizeSectionName(section)} / ${title}`;
+    breadcrumb.replaceChildren();
+    breadcrumb.appendChild(
+      document.createTextNode(`${humanizeSectionName(section)} / `)
+    );
+    appendInlineCodeNodes(breadcrumb, title);
   }
 
   function renderPrevNext(flat, currentId) {
@@ -601,27 +662,31 @@
     const prev = idx > 0 ? flat[idx - 1] : null;
     const next = idx >= 0 && idx < flat.length - 1 ? flat[idx + 1] : null;
 
-    if (prevRoot) {
-      prevRoot.innerHTML = prev
-        ? `<a class="docs-prevnext-link" href="${viewerHref(
-            kind,
-            prev.id
-          )}"><span class="docs-prevnext-label">Previous</span><span class="docs-prevnext-title">${escapeHtml(
-            prev.title
-          )}</span></a>`
-        : "";
+    function renderSlot(root, item, label) {
+      if (!root) return;
+      if (!item) {
+        root.replaceChildren();
+        return;
+      }
+      const a = document.createElement("a");
+      a.className = "docs-prevnext-link";
+      a.href = viewerHref(kind, item.id);
+
+      const l = document.createElement("span");
+      l.className = "docs-prevnext-label";
+      l.textContent = label;
+
+      const t = document.createElement("span");
+      t.className = "docs-prevnext-title";
+      appendInlineCodeNodes(t, item.title);
+
+      a.appendChild(l);
+      a.appendChild(t);
+      root.replaceChildren(a);
     }
 
-    if (nextRoot) {
-      nextRoot.innerHTML = next
-        ? `<a class="docs-prevnext-link" href="${viewerHref(
-            kind,
-            next.id
-          )}"><span class="docs-prevnext-label">Next</span><span class="docs-prevnext-title">${escapeHtml(
-            next.title
-          )}</span></a>`
-        : "";
-    }
+    renderSlot(prevRoot, prev, "Previous");
+    renderSlot(nextRoot, next, "Next");
   }
 
   function renderNav(index, currentId) {
@@ -643,7 +708,7 @@
         const li = document.createElement("li");
         const a = document.createElement("a");
         a.href = viewerHref(kind, item.id);
-        a.textContent = item.title;
+        appendInlineCodeNodes(a, item.title);
         a.dataset.docId = item.id;
         if (item.id === currentId) a.dataset.active = "true";
         li.appendChild(a);
@@ -706,10 +771,18 @@
     }
   }
 
-  function rewriteInlineDocRefs(container, currentFile, docsIdByFile, wikiIdByFile, titleById) {
+  function rewriteInlineDocRefs(
+    container,
+    currentFile,
+    docsIdByFile,
+    wikiIdByFile,
+    titleById,
+    docsSpecifierToId
+  ) {
     const codes = Array.from(container.querySelectorAll("code"));
     for (const code of codes) {
       if (code.closest("pre")) continue;
+      if (code.closest("a")) continue;
       const raw = (code.textContent || "").trim();
       if (!raw) continue;
 
@@ -721,6 +794,47 @@
         raw === "README.md"
       ) {
         code.replaceWith("");
+        continue;
+      }
+
+      // Convert Silk stdlib module specifiers like `std::task` or `std::io::async`
+      // into docs links when we can resolve them.
+      if (raw.startsWith("std::") && docsSpecifierToId) {
+        const parts = raw.split("::").filter(Boolean);
+        for (let n = parts.length; n >= 2; n -= 1) {
+          const candidate = parts.slice(0, n).join("::");
+          const id = docsSpecifierToId.get(candidate);
+          if (!id) continue;
+          const a = document.createElement("a");
+          a.className = "docs-inline-code";
+          a.href = viewerHref("docs", id);
+          a.textContent = raw;
+          code.replaceWith(a);
+          break;
+        }
+        if (!code.isConnected) continue;
+      }
+
+      // Convert repository-relative example paths like `examples/foo.slk` into
+      // clickable GitHub links when the current docs viewer declares a repo.
+      if (
+        githubRepo &&
+        githubRef &&
+        (raw.startsWith("examples/") || raw.startsWith("tests/"))
+      ) {
+        const isFile = /\.[a-z0-9]+$/i.test(raw);
+        const base = `https://github.com/${githubRepo}`;
+        const href = isFile
+          ? `${base}/blob/${githubRef}/${raw}`
+          : `${base}/tree/${githubRef}/${raw}`;
+
+        const a = document.createElement("a");
+        a.className = "docs-inline-code";
+        a.href = href;
+        a.target = "_blank";
+        a.rel = "noreferrer";
+        a.textContent = raw;
+        code.replaceWith(a);
         continue;
       }
 
@@ -750,9 +864,15 @@
       if (!title) continue;
 
       const a = document.createElement("a");
-      a.className = "docs-inline-ref";
       a.href = viewerHref(targetKind, id);
-      a.textContent = title;
+      const plainTitle = stripBackticks(title);
+      if (plainTitle.startsWith("std::") || plainTitle.startsWith("oro:")) {
+        a.className = "docs-inline-code";
+        a.textContent = plainTitle;
+      } else {
+        a.className = "docs-inline-ref";
+        appendInlineCodeNodes(a, title);
+      }
       code.replaceWith(a);
     }
   }
@@ -827,7 +947,7 @@
 
       const title = document.createElement("div");
       title.className = "docs-search-result-title";
-      title.textContent = r.title;
+      appendInlineCodeNodes(title, r.title);
 
       const meta = document.createElement("div");
       meta.className = "docs-search-result-meta";
@@ -896,7 +1016,8 @@
       item.file,
       state.docsIdByFile,
       state.wikiIdByFile,
-      state.titleById
+      state.titleById,
+      state.docsSpecifierToId
     );
     renderTabs(contentRoot);
     globalThis.oroInitTabs?.(contentRoot);
@@ -904,7 +1025,7 @@
     renderToc(contentRoot);
     highlightContent(contentRoot);
 
-    document.title = `${item.title} · ${titleSuffix} · Oro Computer`;
+    document.title = `${stripBackticks(item.title)} · ${titleSuffix} · Oro Computer`;
 
     if (globalThis.location.hash) {
       const targetId = globalThis.location.hash.slice(1);
@@ -933,6 +1054,8 @@
     const titleById = new Map();
     const docsIdByFile = new Map();
     const wikiIdByFile = new Map();
+    const docsSpecifierToId = new Map();
+    const wikiSpecifierToId = new Map();
 
     for (const section of index.sections || []) {
       for (const item of section.items || []) {
@@ -947,6 +1070,11 @@
         titleById.set(merged.id, merged.title);
         if (kind === "docs") docsIdByFile.set(merged.file, merged.id);
         if (kind === "wiki") wikiIdByFile.set(merged.file, merged.id);
+        const plain = stripBackticks(merged.title);
+        if (plain.startsWith("std::")) {
+          if (kind === "docs") docsSpecifierToId.set(plain, merged.id);
+          if (kind === "wiki") wikiSpecifierToId.set(plain, merged.id);
+        }
       }
     }
 
@@ -961,6 +1089,8 @@
           for (const it of s.items || []) {
             wikiIdByFile.set(it.file, it.id);
             if (!titleById.has(it.id)) titleById.set(it.id, it.title);
+            const plain = stripBackticks(it.title);
+            if (plain.startsWith("std::")) wikiSpecifierToId.set(plain, it.id);
           }
         }
       } else {
@@ -971,6 +1101,8 @@
           for (const it of s.items || []) {
             docsIdByFile.set(it.file, it.id);
             if (!titleById.has(it.id)) titleById.set(it.id, it.title);
+            const plain = stripBackticks(it.title);
+            if (plain.startsWith("std::")) docsSpecifierToId.set(plain, it.id);
           }
         }
       }
@@ -986,6 +1118,8 @@
       idByFile: kind === "docs" ? docsIdByFile : wikiIdByFile,
       docsIdByFile,
       wikiIdByFile,
+      docsSpecifierToId,
+      wikiSpecifierToId,
       searchIndex,
     };
 
