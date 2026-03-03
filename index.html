@@ -14,7 +14,7 @@
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
-    <header class="hero" id="top">
+    <header class="site-top" id="top">
       <div class="container">
         <div class="site-header">
           <a class="brand" href="./">
@@ -26,29 +26,198 @@
             <a href="silk/">Silk</a>
             <a href="https://github.com/oro-computer" target="_blank" rel="noreferrer">GitHub</a>
             <a href="#contact">Contact</a>
+            <a class="button button-primary" href="runtime/docs/">Get started</a>
           </nav>
         </div>
       </div>
     </header>
 
     <main id="main">
-      <section class="section">
+      <section class="hero" aria-label="Overview">
+        <div class="container">
+          <div class="hero-grid">
+            <div class="hero-copy">
+              <div class="hero-kicker">Systems software</div>
+              <h1>Build native apps with the web platform.</h1>
+              <p class="lede">
+                Oro Runtime embeds the platform WebView and exposes native capabilities to JavaScript as explicit ES modules
+                (<code>oro:*</code>). Silk is a spec-first systems language and compiler toolchain.
+              </p>
+              <div class="hero-actions">
+                <a class="button button-primary" href="runtime/">Explore Runtime</a>
+                <a class="button" href="silk/">Explore Silk</a>
+                <a class="button button-quiet" href="runtime/docs/">Docs</a>
+              </div>
+              <form class="hero-search" role="search" method="get" aria-label="Search Oro docs">
+                <input
+                  class="hero-search-input"
+                  type="search"
+                  name="q"
+                  inputmode="search"
+                  autocomplete="off"
+                  placeholder='Search docs (e.g. "copy_map" or "oro:fs")'
+                />
+                <div class="hero-search-actions">
+                  <button class="button button-quiet" type="submit" formaction="runtime/docs/">Runtime</button>
+                  <button class="button button-quiet" type="submit" formaction="silk/docs/">Silk</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="panel" aria-label="Quickstart">
+              <div class="panel-header">
+                <div class="panel-title">Quickstart</div>
+                <a class="button button-quiet" href="runtime/docs/?p=start">Open Runtime docs</a>
+              </div>
+              <div class="panel-body">
+                <p>Oro Runtime</p>
+                <pre><code class="language-bash">oroc init hello
+cd hello
+oroc run .</code></pre>
+                <p>Silk</p>
+                <pre><code class="language-bash">silk check hello.slk
+silk test hello.slk
+silk build hello.slk -o build/hello</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="projects">
         <div class="container">
           <div class="prose">
-            <h1>Oro Computer</h1>
-            <p>Systems software.</p>
+            <h2>Projects</h2>
+            <p>Two pillars: a runtime for app developers and a language/toolchain for systems work.</p>
+          </div>
 
-            <h2 id="projects">Projects</h2>
-            <p>
-              <a href="runtime/">Oro Runtime</a> — Cross-platform runtime embedding a WebView and exposing native capabilities to
-              JavaScript. (<a href="https://github.com/oro-computer/oro-runtime" target="_blank" rel="noreferrer">GitHub</a>)
-            </p>
-            <p>
-              <a href="silk/">Silk</a> — Spec-first programming language and compiler toolchain implemented in Zig, with a C99
-              embedding ABI (<code>libsilk</code>).
-            </p>
+          <div class="card-grid mt-lg">
+            <div class="card col-span-6">
+              <div class="card-body">
+                <h3 class="card-title">Oro Runtime</h3>
+                <div class="card-meta">
+                  Cross-platform runtime embedding the platform WebView. Native features are imported as ES modules under
+                  <code>oro:*</code>, with a CLI (<code>oroc</code>) and TOML configuration (<code>oro.toml</code>).
+                </div>
+                <div class="card-links">
+                  <a class="button button-primary" href="runtime/docs/">Runtime docs</a>
+                  <a class="button" href="runtime/">Overview</a>
+                  <a class="button button-quiet" href="https://github.com/oro-computer/oro-runtime" target="_blank" rel="noreferrer">GitHub</a>
+                </div>
+              </div>
+            </div>
 
-            <h2 id="contact">Contact</h2>
+            <div class="card col-span-6">
+              <div class="card-body">
+                <h3 class="card-title">Silk</h3>
+                <div class="card-meta">
+                  Spec-first systems programming language and compiler toolchain implemented in Zig, with a C99 embedding ABI
+                  (<code>libsilk</code>).
+                </div>
+                <div class="card-links">
+                  <a class="button button-primary" href="silk/docs/">Silk docs</a>
+                  <a class="button" href="silk/">Overview</a>
+                  <a class="button button-quiet" href="silk/spec/2026/">Spec (2026)</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-label="Developer resources">
+        <div class="container">
+          <div class="prose">
+            <h2>Developer resources</h2>
+            <p>Guides, reference, and APIs designed to be read like a system.</p>
+          </div>
+
+          <div class="card-grid mt-lg">
+            <div class="col-span-6">
+              <div class="panel">
+                <div class="panel-header">
+                  <div class="panel-title">Runtime</div>
+                  <a class="button button-quiet" href="runtime/docs/">Open</a>
+                </div>
+                <div class="list">
+                  <a class="list-row" href="runtime/docs/?p=start">
+                    <div>
+                      <div class="list-title">Start</div>
+                      <div class="list-desc">Hello world, recommended reading path, and the programming model.</div>
+                    </div>
+                    <div class="list-meta">Docs</div>
+                  </a>
+                  <a class="list-row" href="runtime/docs/?p=guides/hello-world">
+                    <div>
+                      <div class="list-title">Guides</div>
+                      <div class="list-desc">Build and package, project layout, windows and messaging.</div>
+                    </div>
+                    <div class="list-meta">Guides</div>
+                  </a>
+                  <a class="list-row" href="runtime/docs/?p=cli/oroc">
+                    <div>
+                      <div class="list-title">CLI</div>
+                      <div class="list-desc"><code>oroc</code> commands, flags, and environment variables.</div>
+                    </div>
+                    <div class="list-meta">CLI</div>
+                  </a>
+                  <a class="list-row" href="runtime/docs/?p=javascript/overview">
+                    <div>
+                      <div class="list-title">JavaScript APIs</div>
+                      <div class="list-desc"><code>oro:*</code> modules with references and module index.</div>
+                    </div>
+                    <div class="list-meta">API</div>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-span-6">
+              <div class="panel">
+                <div class="panel-header">
+                  <div class="panel-title">Silk</div>
+                  <a class="button button-quiet" href="silk/docs/">Open</a>
+                </div>
+                <div class="list">
+                  <a class="list-row" href="silk/docs/?p=usage/getting-started">
+                    <div>
+                      <div class="list-title">Getting started</div>
+                      <div class="list-desc">Install, build, and run your first program.</div>
+                    </div>
+                    <div class="list-meta">Docs</div>
+                  </a>
+                  <a class="list-row" href="silk/docs/?p=language/overview">
+                    <div>
+                      <div class="list-title">Language</div>
+                      <div class="list-desc">Types, functions, modules, memory model, regions, and more.</div>
+                    </div>
+                    <div class="list-meta">Language</div>
+                  </a>
+                  <a class="list-row" href="silk/docs/?p=guides/cli">
+                    <div>
+                      <div class="list-title">CLI</div>
+                      <div class="list-desc"><code>silk</code> commands for check, test, and build.</div>
+                    </div>
+                    <div class="list-meta">CLI</div>
+                  </a>
+                  <a class="list-row" href="silk/wiki/?p=start">
+                    <div>
+                      <div class="list-title">Wiki</div>
+                      <div class="list-desc">Learning-first explanations and design notes.</div>
+                    </div>
+                    <div class="list-meta">Wiki</div>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="contact">
+        <div class="container">
+          <div class="prose">
+            <h2>Contact</h2>
             <p><a href="mailto:info@oro.computer">info@oro.computer</a> — General inquiries.</p>
             <p><a href="mailto:contributors@oro.computer">contributors@oro.computer</a> — Community coordination.</p>
             <p><a href="mailto:runtime@oro.computer">runtime@oro.computer</a> — Oro Runtime questions.</p>

@@ -20,7 +20,7 @@
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
-    <header class="hero">
+    <header class="site-top" id="top">
       <div class="container">
         <div class="site-header">
           <a class="brand" href="../">
@@ -33,178 +33,158 @@
             />
             <span class="brand-name">Oro Computer</span>
           </a>
-          <nav class="nav" aria-label="Page navigation">
+          <nav class="nav" aria-label="Primary navigation">
             <a href="../">Home</a>
+            <a href="./">Runtime</a>
             <a href="./docs/">Docs</a>
             <a href="../silk/">Silk</a>
             <a href="https://github.com/oro-computer/oro-runtime" target="_blank" rel="noreferrer">GitHub</a>
             <a href="../#contact">Contact</a>
+            <a class="button button-primary" href="./docs/?p=guides/hello-world">Hello world</a>
           </nav>
         </div>
       </div>
     </header>
 
     <main id="main">
-      <section class="section">
+      <section class="hero" aria-label="Oro Runtime overview">
         <div class="container">
-          <article class="prose">
-            <h1>Oro Runtime</h1>
-            <p>
-              Oro Runtime is a cross-platform runtime for building native applications as web applications: HTML/CSS for UI,
-              JavaScript for behavior, and a small native core for integration with the OS.
-            </p>
-            <p>
-              <a href="./docs/">Docs</a> is the reference for the public JavaScript APIs (<code>oro:*</code>), the CLI
-              (<code>oroc</code>), and configuration (<code>oro.toml</code>).
-            </p>
+          <div class="hero-grid">
+            <div class="hero-copy">
+              <div class="hero-kicker">Oro Runtime</div>
+              <h1>A native runtime for web applications.</h1>
+              <p class="lede">
+                Build UI with HTML/CSS, behavior with JavaScript, and import native capabilities as explicit ES modules under
+                <code>oro:*</code> — without platform-specific application code.
+              </p>
+              <div class="hero-actions">
+                <a class="button button-primary" href="./docs/">Read the docs</a>
+                <a class="button" href="./docs/?p=javascript/overview">JavaScript APIs</a>
+                <a class="button" href="./docs/?p=cli/oroc">CLI</a>
+                <a class="button button-quiet" href="https://github.com/oro-computer/oro-runtime" target="_blank" rel="noreferrer">GitHub</a>
+              </div>
+            </div>
 
-            <h2>Web standards are the foundation</h2>
-            <p>
-              Your app runs inside the platform WebView, so the “UI toolkit” is the web platform itself: DOM, ES modules,
-              <code>fetch</code>, URLs, WebCrypto, WebAssembly, and other modern browser APIs.
-            </p>
-            <p>
-              The runtime focuses on making those standards feel native: packaged resources resolve like a normal origin,
-              navigation behaves like a website, and you can adopt familiar web architecture (SPA routing, service workers,
-              streaming responses) where it makes sense.
-            </p>
-
-            <h2>High-level JavaScript APIs (<code>oro:*</code>)</h2>
-            <p>
-              When you need native capabilities, you import them explicitly as ES modules under the <code>oro:*</code>
-              namespace. These modules are the public API surface of the runtime: they give you window management, storage,
-              networking, system integration, and more without you writing platform-specific code.
-            </p>
-            <pre><code class="language-javascript">import application from 'oro:application'
-import { onApplicationURL } from 'oro:hooks'
-import fs from 'oro:fs/promises'
-import { open } from 'oro:sqlite'
-import * as secureStorage from 'oro:secure-storage'</code></pre>
-            <dl>
-              <dt><code>oro:application</code></dt>
-              <dd>
-                Window management and app-level integration: create additional windows, query and control existing windows,
-                integrate with system menus, and respond to lifecycle events.
-              </dd>
-              <dt><code>oro:hooks</code></dt>
-              <dd>
-                Event subscriptions for runtime-delivered events (<code>onInit</code>, <code>onReady</code>, application URL
-                routing, pause/resume, notification events, and more) using familiar event patterns.
-              </dd>
-              <dt><code>oro:fs</code> and <code>oro:fs/promises</code></dt>
-              <dd>
-                A filesystem API modeled on Node.js (sync and promises flavors) with runtime sandboxing and origin-aware path
-                normalization.
-              </dd>
-              <dt><code>oro:sqlite</code></dt>
-              <dd>
-                Embedded SQLite access through a lightweight JavaScript layer. On supported platforms, the runtime can
-                auto-load the <code>cr-sqlite</code> extension so conflict-free replication features are available when
-                present.
-              </dd>
-              <dt><code>oro:secure-storage</code></dt>
-              <dd>
-                Secret storage scoped by origin: store and retrieve credentials or tokens without leaking them into general
-                on-disk storage.
-              </dd>
-              <dt><code>oro:notification</code></dt>
-              <dd>
-                System notifications and permission handling that bridges platform notification back into web code as events.
-              </dd>
-            </dl>
-
-            <h2>Hello world</h2>
-            <p>
-              A minimal Oro Runtime app is just a small web folder plus an <code>oro.toml</code>. The build step copies your
-              web assets into a bundle; at runtime, the WebView loads <code>/index.html</code> from that bundle.
-            </p>
-
-            <p><strong>Project layout</strong></p>
-            <pre><code class="language-plaintext">hello/
+            <div class="panel" aria-label="Hello world">
+              <div class="panel-header">
+                <div class="panel-title">Hello world</div>
+                <a class="button button-quiet" href="./docs/?p=guides/hello-world">Guide</a>
+              </div>
+              <div class="panel-body">
+                <pre><code class="language-plaintext">hello/
   oro.toml
   copy-map.toml
-  web/
+  src/
     index.html
     main.js</code></pre>
+                <pre><code class="language-bash">oroc run .
+oroc build .</code></pre>
+                <p><code>globalThis.isOroRuntime === true</code> when running inside Oro Runtime.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-            <p><strong><code>oro.toml</code></strong></p>
-            <pre><code class="language-toml">[meta]
-bundle_identifier = "com.example.hello"
-version = "0.1.0"
-
-[build]
-name = "hello"
-copy_map = "copy-map.toml"</code></pre>
-
-            <p><strong><code>copy-map.toml</code></strong></p>
+      <section class="section" aria-label="Programming model">
+        <div class="container">
+          <div class="prose">
+            <h2>Programming model</h2>
             <p>
-              Copy-maps let you explicitly map build inputs into the bundle root. This is the same pattern used by the
-              runtime’s examples.
+              The web platform is the UI toolkit. Oro Runtime adds an explicit capability layer (<code>oro:*</code>) plus a
+              bundling story that feels like shipping a website.
             </p>
-            <pre><code class="language-toml">"./web/index.html" = "index.html"
-"./web/main.js" = "main.js"</code></pre>
+          </div>
 
-            <p><strong><code>web/index.html</code></strong></p>
-            <pre><code class="language-html">&lt;!doctype html&gt;
-&lt;html lang=&quot;en&quot;&gt;
-  &lt;meta charset=&quot;utf-8&quot; /&gt;
-  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot; /&gt;
-  &lt;title&gt;Hello · Oro Runtime&lt;/title&gt;
+          <div class="card-grid mt-lg">
+            <div class="card col-span-4">
+              <div class="card-body">
+                <h3 class="card-title">Web standards</h3>
+                <div class="card-meta">
+                  DOM, ES modules, <code>fetch</code>, URLs, WebCrypto, WebAssembly, and modern browser APIs — because your app
+                  runs inside the platform WebView.
+                </div>
+                <div class="card-links">
+                  <a class="button button-quiet" href="./docs/?p=guides/project-layout">Project layout</a>
+                </div>
+              </div>
+            </div>
 
-  &lt;main&gt;
-    &lt;h1&gt;Hello&lt;/h1&gt;
-    &lt;p id=&quot;status&quot;&gt;Starting…&lt;/p&gt;
-  &lt;/main&gt;
+            <div class="card col-span-4">
+              <div class="card-body">
+                <h3 class="card-title">Explicit capabilities</h3>
+                <div class="card-meta">
+                  Import native functionality as ES modules under <code>oro:*</code>. Start with
+                  <code>oro:application</code>, <code>oro:window</code>, and <code>oro:hooks</code>.
+                </div>
+                <div class="card-links">
+                  <a class="button button-quiet" href="./docs/?p=javascript/module-index">Module index</a>
+                </div>
+              </div>
+            </div>
 
-  &lt;script type=&quot;module&quot; src=&quot;./main.js&quot;&gt;&lt;/script&gt;
-&lt;/html&gt;</code></pre>
+            <div class="card col-span-4">
+              <div class="card-body">
+                <h3 class="card-title">Bundle and ship</h3>
+                <div class="card-meta">
+                  Define what enters your bundle via <code>copy_map</code>. Build outputs land under <code>./build</code> by
+                  default.
+                </div>
+                <div class="card-links">
+                  <a class="button button-quiet" href="./docs/?p=guides/build-and-package">Build and package</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-            <p><strong><code>web/main.js</code></strong></p>
-            <p>
-              This example intentionally mixes web APIs (DOM + ES modules) with a small, high-level runtime API call
-              (<code>oro:application</code>) so you can see the programming model.
-            </p>
-            <pre><code class="language-javascript">import application from 'oro:application'
+      <section class="section" aria-label="Documentation map">
+        <div class="container">
+          <div class="prose">
+            <h2>Docs map</h2>
+            <p>A short path through the CLI, configuration, and the full JavaScript API surface.</p>
+          </div>
 
-const status = document.getElementById('status')
-status.textContent = `isOroRuntime: ${globalThis.isOroRuntime === true}`
-
-application.getScreenSize().then(({ width, height }) => {
-  status.textContent += ` · screen: ${width}×${height}`
-})</code></pre>
-
-            <h2>Build and run</h2>
-            <p>
-              The Oro CLI (<code>oroc</code>) can run a full project directory (with <code>oro.toml</code>) or, for quick
-              experiments, it can infer a minimal configuration from an HTML file.
-            </p>
-            <p><strong>Run (development)</strong></p>
-            <pre><code class="language-bash">oroc run .</code></pre>
-            <p><strong>Build (bundle/package)</strong></p>
-            <pre><code class="language-bash">oroc build .</code></pre>
-            <p>
-              By default, build outputs go under <code>./build</code>. For larger apps, it’s common to run a web build step
-              before copying assets into the bundle (for example, emitting <code>web/</code> from a bundler and then mapping
-              those outputs via a copy-map).
-            </p>
-
-            <h2>Examples</h2>
-            <p>
-              The runtime ships a growing set of working examples that demonstrate the intended use of the <code>oro:*</code>
-              APIs. They are also the best source of “real” <code>oro.toml</code> patterns (copy-maps, build scripts, and
-              multi-entry bundles).
-            </p>
-            <pre><code class="language-bash">oroc build examples
-oroc run examples --entry window/messaging.html</code></pre>
-
-            <h2>Runtime detection</h2>
-            <p><code>globalThis.isOroRuntime === true</code> when running inside Oro Runtime.</p>
-
-            <h2>Links</h2>
-            <p><a href="./docs/">Runtime Docs</a></p>
-            <p><a href="https://github.com/oro-computer/oro-runtime" target="_blank" rel="noreferrer">github.com/oro-computer/oro-runtime</a></p>
-            <p><a href="mailto:runtime@oro.computer">runtime@oro.computer</a></p>
-          </article>
+          <div class="list mt-lg">
+            <a class="list-row" href="./docs/?p=start">
+              <div>
+                <div class="list-title">Start</div>
+                <div class="list-desc">Hello world, reading path, and the runtime’s programming model.</div>
+              </div>
+              <div class="list-meta">Docs</div>
+            </a>
+            <a class="list-row" href="./docs/?p=guides/hello-world">
+              <div>
+                <div class="list-title">Guides</div>
+                <div class="list-desc">Project layout, build and package, and windows and messaging.</div>
+              </div>
+              <div class="list-meta">Guides</div>
+            </a>
+            <a class="list-row" href="./docs/?p=cli/oroc">
+              <div>
+                <div class="list-title">CLI</div>
+                <div class="list-desc"><code>oroc</code> commands, flags, environment variables, and workflow helpers.</div>
+              </div>
+              <div class="list-meta">CLI</div>
+            </a>
+            <a class="list-row" href="./docs/?p=config/overview">
+              <div>
+                <div class="list-title">Configuration</div>
+                <div class="list-desc"><code>oro.toml</code>, <code>.ororc</code>, and <code>copy_map</code>.</div>
+              </div>
+              <div class="list-meta">Config</div>
+            </a>
+            <a class="list-row" href="./docs/?p=javascript/overview">
+              <div>
+                <div class="list-title">JavaScript APIs</div>
+                <div class="list-desc">
+                  Overview, module index, and the exhaustive list of importable <code>oro:*</code> specifiers.
+                </div>
+              </div>
+              <div class="list-meta">API</div>
+            </a>
+          </div>
         </div>
       </section>
     </main>

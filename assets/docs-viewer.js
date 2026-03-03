@@ -865,6 +865,58 @@
     const initial = getCurrentId();
     await renderDoc(state, initial, { replaceState: true });
 
+    function getQueryParam(key) {
+      const params = new URLSearchParams(globalThis.location.search);
+      const value = params.get(key);
+      return (value || "").trim();
+    }
+
+    function setQueryParam(key, value) {
+      const params = new URLSearchParams(globalThis.location.search);
+      const nextValue = (value || "").trim();
+      if (nextValue) params.set(key, nextValue);
+      else params.delete(key);
+
+      const qs = params.toString();
+      const hash = globalThis.location.hash || "";
+      const next = qs
+        ? `${globalThis.location.pathname}?${qs}${hash}`
+        : `${globalThis.location.pathname}${hash}`;
+      globalThis.history.replaceState(globalThis.history.state || {}, "", next);
+    }
+
+    function closeSearch() {
+      if (searchInput) searchInput.value = "";
+      setQueryParam("q", "");
+      if (resultsRoot) resultsRoot.hidden = true;
+      navRoot.hidden = false;
+    }
+
+    function openSearch(query, { focus = false } = {}) {
+      if (!searchInput) return;
+      const q = (query || "").trim();
+      searchInput.value = q;
+      setQueryParam("q", q);
+      if (!q) {
+        if (resultsRoot) resultsRoot.hidden = true;
+        navRoot.hidden = false;
+        return;
+      }
+
+      const currentId = getCurrentId();
+      const results = searchDocs(state.searchIndex, q, 20);
+      navRoot.hidden = true;
+      if (resultsRoot) {
+        resultsRoot.hidden = false;
+        renderSearchResults(results, currentId);
+      }
+
+      if (focus) {
+        searchInput.focus();
+        searchInput.select();
+      }
+    }
+
     function navigateToId(id) {
       renderDoc(state, id).catch(() => {});
     }
@@ -875,9 +927,7 @@
       const id = a.dataset.docId;
       if (!id) return;
       event.preventDefault();
-      if (searchInput) searchInput.value = "";
-      if (resultsRoot) resultsRoot.hidden = true;
-      if (navRoot) navRoot.hidden = false;
+      closeSearch();
       navigateToId(id);
     });
 
@@ -888,9 +938,7 @@
         const id = a.dataset.docId;
         if (!id) return;
         event.preventDefault();
-        if (searchInput) searchInput.value = "";
-        resultsRoot.hidden = true;
-        navRoot.hidden = false;
+        closeSearch();
         navigateToId(id);
       });
     }
@@ -926,31 +974,19 @@
 
     if (searchInput) {
       searchInput.addEventListener("input", () => {
-        const q = (searchInput.value || "").trim();
-        if (!q) {
-          if (resultsRoot) resultsRoot.hidden = true;
-          navRoot.hidden = false;
-          return;
-        }
-
-        const currentId = getCurrentId();
-        const results = searchDocs(state.searchIndex, q, 20);
-        navRoot.hidden = true;
-        if (resultsRoot) {
-          resultsRoot.hidden = false;
-          renderSearchResults(results, currentId);
-        }
+        openSearch(searchInput.value);
       });
 
       searchInput.addEventListener("keydown", (event) => {
         if (event.key === "Escape") {
-          searchInput.value = "";
-          if (resultsRoot) resultsRoot.hidden = true;
-          navRoot.hidden = false;
+          closeSearch();
           searchInput.blur();
         }
       });
     }
+
+    const initialQuery = getQueryParam("q");
+    if (initialQuery) openSearch(initialQuery, { focus: true });
 
     globalThis.addEventListener("keydown", (event) => {
       if (!searchInput) return;

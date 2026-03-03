@@ -18,7 +18,7 @@
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
-    <header class="hero">
+    <header class="site-top" id="top">
       <div class="container">
         <div class="site-header">
           <a class="brand" href="../">
@@ -31,56 +31,119 @@
             />
             <span class="brand-name">Oro Computer</span>
           </a>
-          <nav class="nav" aria-label="Page navigation">
+          <nav class="nav" aria-label="Primary navigation">
             <a href="../">Home</a>
             <a href="../runtime/">Runtime</a>
+            <a href="./">Silk</a>
             <a href="./docs/">Docs</a>
+            <a href="./spec/2026/">Spec</a>
             <a href="./wiki/">Wiki</a>
             <a href="https://github.com/oro-computer" target="_blank" rel="noreferrer">GitHub</a>
             <a href="../#contact">Contact</a>
+            <a class="button button-primary" href="./docs/?p=usage/getting-started">Get started</a>
           </nav>
         </div>
       </div>
     </header>
 
     <main id="main">
-      <section class="section">
+      <section class="hero" aria-label="Silk overview">
         <div class="container">
-          <article class="prose">
-            <h1>Silk</h1>
-            <p>Spec-first systems programming language and toolchain.</p>
-            <p><a href="./docs/">Docs</a> is the canonical reference. <a href="./wiki/">Wiki</a> is learning-first.</p>
+          <div class="hero-grid">
+            <div class="hero-copy">
+              <div class="hero-kicker">Silk</div>
+              <h1>Spec-first systems language and toolchain.</h1>
+              <p class="lede">
+                Silk treats the spec as the product: the language, standard library, compiler, and CLI are documented as a
+                coherent system. Use Docs as the canonical reference; use the Wiki for learning-first explanations.
+              </p>
+              <div class="hero-actions">
+                <a class="button button-primary" href="./docs/">Read the docs</a>
+                <a class="button" href="./wiki/">Wiki</a>
+                <a class="button" href="./spec/2026/">Spec (2026)</a>
+                <a class="button button-quiet" href="https://github.com/oro-computer" target="_blank" rel="noreferrer">GitHub</a>
+              </div>
+            </div>
 
-            <h2>Start</h2>
-            <p>
-              <a href="./docs/?p=usage/getting-started">Getting started</a> ·
-              <a href="./docs/?p=guides/purpose">What Silk is for</a> ·
-              <a href="./docs/?p=guides/hello-world">Hello world</a> ·
-              <a href="./docs/?p=guides/standard-library">Standard library</a> ·
-              <a href="./docs/?p=guides/cli">CLI</a> ·
-              <a href="./docs/?p=guides/testing">Testing</a> ·
-              <a href="./docs/?p=guides/formal-silk">Formal Silk</a> ·
-              <a href="./spec/2026/">Spec (2026)</a>
-            </p>
-
-            <h2>Hello</h2>
-            <pre><code class="language-silk">import std::io::println;
+            <div class="panel" aria-label="Hello world">
+              <div class="panel-header">
+                <div class="panel-title">Hello world</div>
+                <a class="button button-quiet" href="./docs/?p=guides/hello-world">Guide</a>
+              </div>
+              <div class="panel-body">
+                <pre><code class="language-silk">import std::io::println;
 
 fn main () -&gt; int {
   println(&quot;hello from silk&quot;);
   return 0;
 }</code></pre>
-
-            <h2>Toolchain</h2>
-            <pre><code class="language-bash">silk check hello.slk
+                <pre><code class="language-bash">silk check hello.slk
 silk test hello.slk
 silk build hello.slk -o build/hello</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-            <h2>Links</h2>
-            <p><a href="../runtime/">Oro Runtime</a></p>
-            <p><a href="https://github.com/oro-computer" target="_blank" rel="noreferrer">github.com/oro-computer</a></p>
-            <p><a href="mailto:contributors@oro.computer">contributors@oro.computer</a></p>
-          </article>
+      <section class="section" aria-label="Start">
+        <div class="container">
+          <div class="prose">
+            <h2>Start</h2>
+            <p>A short path into the language, toolchain, and canonical references.</p>
+          </div>
+
+          <div class="list mt-lg">
+            <a class="list-row" href="./docs/?p=usage/getting-started">
+              <div>
+                <div class="list-title">Getting started</div>
+                <div class="list-desc">Install, build, and run your first program.</div>
+              </div>
+              <div class="list-meta">Docs</div>
+            </a>
+            <a class="list-row" href="./docs/?p=guides/purpose">
+              <div>
+                <div class="list-title">What Silk is for</div>
+                <div class="list-desc">Design goals, constraints, and where Silk fits.</div>
+              </div>
+              <div class="list-meta">Guide</div>
+            </a>
+            <a class="list-row" href="./docs/?p=guides/hello-world">
+              <div>
+                <div class="list-title">Hello world</div>
+                <div class="list-desc">A minimal program and the toolchain workflow.</div>
+              </div>
+              <div class="list-meta">Guide</div>
+            </a>
+            <a class="list-row" href="./docs/?p=guides/standard-library">
+              <div>
+                <div class="list-title">Standard library</div>
+                <div class="list-desc">What’s included and how the library is organized.</div>
+              </div>
+              <div class="list-meta">Guide</div>
+            </a>
+            <a class="list-row" href="./docs/?p=guides/cli">
+              <div>
+                <div class="list-title">CLI</div>
+                <div class="list-desc"><code>silk</code> commands for check, test, build, and tooling.</div>
+              </div>
+              <div class="list-meta">CLI</div>
+            </a>
+            <a class="list-row" href="./spec/2026/">
+              <div>
+                <div class="list-title">Specification (2026)</div>
+                <div class="list-desc">Reader-focused spec view with a searchable ToC.</div>
+              </div>
+              <div class="list-meta">Spec</div>
+            </a>
+            <a class="list-row" href="./wiki/?p=start">
+              <div>
+                <div class="list-title">Wiki</div>
+                <div class="list-desc">Learning-first explanations, design notes, and cross-links.</div>
+              </div>
+              <div class="list-meta">Wiki</div>
+            </a>
+          </div>
         </div>
       </section>
     </main>
