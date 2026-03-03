@@ -6,7 +6,7 @@
     <title>Oro Computer</title>
     <meta
       name="description"
-      content="Oro Computer builds systems software. Projects include Oro Runtime and Silk."
+      content="Oro Computer is a software research and development firm focused on high-fidelity software used in far-edge environments."
     />
     <meta name="theme-color" content="#101012" />
     <link rel="icon" type="image/png" href="docs/branding/assets/logo-icon-small.png" sizes="32x32" />
@@ -26,7 +26,7 @@
             <a href="silk/">Silk</a>
             <a href="https://github.com/oro-computer" target="_blank" rel="noreferrer">GitHub</a>
             <a href="#contact">Contact</a>
-            <a class="button button-primary" href="runtime/docs/">Get started</a>
+            <a class="button button-primary" href="#projects">Explore</a>
           </nav>
         </div>
       </div>
@@ -37,47 +37,39 @@
         <div class="container">
           <div class="hero-grid">
             <div class="hero-copy">
-              <div class="hero-kicker">Systems software</div>
-              <h1>Build native apps with the web platform.</h1>
+              <div class="hero-kicker">Software R&amp;D</div>
+              <h1>High-fidelity software for far-edge environments.</h1>
               <p class="lede">
-                Oro Runtime embeds the platform WebView and exposes native capabilities to JavaScript as explicit ES modules
-                (<code>oro:*</code>). Silk is a spec-first systems language and compiler toolchain.
+                Oro Computer is a software research and development firm focused on high-fidelity software used in far-edge
+                environments.
               </p>
               <div class="hero-actions">
-                <a class="button button-primary" href="runtime/">Explore Runtime</a>
-                <a class="button" href="silk/">Explore Silk</a>
-                <a class="button button-quiet" href="runtime/docs/">Docs</a>
+                <a class="button button-primary" href="#projects">Explore projects</a>
+                <a class="button" href="#resources">Developer resources</a>
+                <a class="button button-quiet" href="#contact">Contact</a>
               </div>
-              <form class="hero-search" role="search" method="get" aria-label="Search Oro docs">
-                <input
-                  class="hero-search-input"
-                  type="search"
-                  name="q"
-                  inputmode="search"
-                  autocomplete="off"
-                  placeholder='Search docs (e.g. "copy_map" or "oro:fs")'
-                />
-                <div class="hero-search-actions">
-                  <button class="button button-quiet" type="submit" formaction="runtime/docs/">Runtime</button>
-                  <button class="button button-quiet" type="submit" formaction="silk/docs/">Silk</button>
-                </div>
-              </form>
             </div>
 
-            <div class="panel" aria-label="Quickstart">
+            <div class="panel" aria-label="Projects">
               <div class="panel-header">
-                <div class="panel-title">Quickstart</div>
-                <a class="button button-quiet" href="runtime/docs/?p=start">Open Runtime docs</a>
+                <div class="panel-title">Projects</div>
+                <a class="button button-quiet" href="#projects">All</a>
               </div>
-              <div class="panel-body">
-                <p>Oro Runtime</p>
-                <pre><code class="language-bash">oroc init hello
-cd hello
-oroc run .</code></pre>
-                <p>Silk</p>
-                <pre><code class="language-bash">silk check hello.slk
-silk test hello.slk
-silk build hello.slk -o build/hello</code></pre>
+              <div class="list">
+                <a class="list-row" href="runtime/">
+                  <div>
+                    <div class="list-title">Oro Runtime</div>
+                    <div class="list-desc">A native runtime for web applications.</div>
+                  </div>
+                  <div class="list-meta">Runtime</div>
+                </a>
+                <a class="list-row" href="silk/">
+                  <div>
+                    <div class="list-title">Silk</div>
+                    <div class="list-desc">Spec-first systems language and toolchain.</div>
+                  </div>
+                  <div class="list-meta">Language</div>
+                </a>
               </div>
             </div>
           </div>
@@ -88,7 +80,7 @@ silk build hello.slk -o build/hello</code></pre>
         <div class="container">
           <div class="prose">
             <h2>Projects</h2>
-            <p>Two pillars: a runtime for app developers and a language/toolchain for systems work.</p>
+            <p>Two open-source pillars that support high-fidelity applications under real constraints.</p>
           </div>
 
           <div class="card-grid mt-lg">
@@ -125,12 +117,27 @@ silk build hello.slk -o build/hello</code></pre>
         </div>
       </section>
 
-      <section class="section" aria-label="Developer resources">
+      <section class="section" id="resources" aria-label="Developer resources">
         <div class="container">
           <div class="prose">
             <h2>Developer resources</h2>
             <p>Guides, reference, and APIs designed to be read like a system.</p>
           </div>
+
+          <form class="hero-search mt-lg" role="search" method="get" aria-label="Search developer docs">
+            <input
+              class="hero-search-input"
+              type="search"
+              name="q"
+              inputmode="search"
+              autocomplete="off"
+              placeholder='Search docs (e.g. "copy_map", "regions", or "oro:fs")'
+            />
+            <div class="hero-search-actions">
+              <button class="button button-quiet" type="submit" formaction="runtime/docs/">Runtime</button>
+              <button class="button button-quiet" type="submit" formaction="silk/docs/">Silk</button>
+            </div>
+          </form>
 
           <div class="card-grid mt-lg">
             <div class="col-span-6">

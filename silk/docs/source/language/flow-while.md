@@ -136,6 +136,7 @@ fn main () -> int {
   #invariant i >= 0;
   #invariant i <= original_limit;
   #variant original_limit - i;
+  #monovariant i;
   while i < limit {
     i = i + 1;
   }

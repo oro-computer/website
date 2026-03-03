@@ -125,6 +125,14 @@ Executable entrypoint (initial rule):
 - This `main` function takes no parameters and returns `int`. The front-end
   enforces this shape for executable builds before code generation.
 
+## Attributes & Conditional Compilation
+
+- Annotate declarations: `attr(os="linux") fn platform () -> string { ... }`
+- Compile-time branching: `if attr(target="wasm32-wasi") { ... } else { ... }`
+- Built-in keys (current subset): `arch`, `os`, `target`, `feature` (+ `abi=c` in type positions)
+
+See `docs/language/attributes.md` for the full reference and examples.
+
 ## Optionals & Mutability
 
 - Declare optionals: `let x: T? = None;` or `let x: Option(T) = None;`.

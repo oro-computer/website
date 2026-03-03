@@ -16,6 +16,16 @@ The key design choice is **opt-in by syntax**:
 Formal Silk is meant to be used the way you actually write systems code: small, local assertions around the parts that are
 easy to get subtly wrong (boundary checks, invariants, protocol rules, and “this must never happen” assumptions).
 
+## Where directives live
+
+Formal Silk directives attach to **specific syntactic sites**:
+
+- Before `fn`: `#require`, `#assure`, `#theory`
+- Before `struct`: `#require` (struct requirements)
+- Before `while`: `#invariant`, `#variant`, `#monovariant`
+- Inside blocks: `#const`, `#assert`, `#theory` (inline declaration + use)
+- At top level: `theory` declarations (optionally `export`)
+
 ## The basic pieces
 
 Formal Silk uses a small vocabulary of directives:
@@ -25,51 +35,90 @@ Formal Silk uses a small vocabulary of directives:
 - `#assert` — a proof obligation at a specific point in a block
 - `#invariant` — a property that must hold before/after loop iterations
 - `#variant` — a measure used for termination reasoning (it must decrease)
+- `#monovariant` — a measure that must be monotonic (non-decreasing or non-increasing)
 - `#const` — a compile-time-only binding used inside specifications
 - `theory` / `#theory` — reusable proof obligations
 
 You’ll see these used in three places: function boundaries, inside blocks, and around loops.
 
-## Function contracts: `#require` and `#assure`
+## Syntax (one screen)
 
-You can attach preconditions and postconditions to a function:
+This shows the *full* Formal Silk syntax surface in one place:
+
+```silk
+// Function contracts:
+#require <bool-expr>;
+#assure <bool-expr>;     // may reference `result`
+#theory SomeTheory(args);
+fn f (params) -> T { return <expr>; }
+
+// Struct requirements:
+#require <bool-expr>;    // may reference fields by name
+struct S { field: int }
+
+// Loop specifications:
+#invariant <bool-expr>;
+#variant <int-expr>;
+#monovariant <int-expr>;
+while <bool-expr> { ... }
+
+// Block-local proofs + declarations:
+#const name = <expr>;
+#assert <bool-expr>;
+#theory local_name(params) { ... }  // inline theory declaration
+#theory local_name(args);           // theory use (asserts obligations here)
+
+// Reusable proof bundles:
+export theory SomeTheory (params) { ... }
+```
+
+Details and semantics: [`Formal Silk`](?p=language/formal-verification)
+
+## Examples (copy/paste)
+
+<!-- tabs:start Formal Silk examples -->
+
+### Function contracts
+
+Function contracts define what must be true **at the boundary** of a function:
+
+- `#require` is proved at call sites.
+- `#assure` is proved for the function body.
 
 ```silk
 #require x >= 0;
-#assure result > x;
+#assure result == x + 1;
 fn inc (x: int) -> int {
   return x + 1;
 }
-```
 
-This gives you a mechanically checked contract with zero runtime cost.
+#require x >= 0;
+#assure result == x + 2;
+fn inc2 (x: int) -> int {
+  // Contracted calls are part of the “verified code” subset.
+  return inc(inc(x));
+}
 
-### A more realistic example: `clamp`
-
-`clamp` is simple, but it’s exactly the kind of function where off-by-one and boundary mistakes show up:
-
-```silk
-#require lo <= hi;
-#assure result >= lo;
-#assure result <= hi;
-fn clamp (x: int, lo: int, hi: int) -> int {
-  if x < lo { return lo; }
-  if x > hi { return hi; }
-  return x;
+fn main () -> int {
+  // `inc2(40) == 42`, so exit code is 0.
+  return inc2(40) - 42;
 }
 ```
 
-The postconditions say what callers actually care about: the result is within range.
+Notes:
 
-## Loop invariants and termination
+- `result` is a built-in name available only in `#assure` expressions.
+- Formal arithmetic uses fixed-width bitvectors (modular 2^N semantics). See the reference for details.
 
-Formal Silk can express loop invariants (`#invariant`) and termination measures (`#variant`) to prove properties that span
-iterations.
+### Loop specifications
 
-Invariants are “always true” properties around the loop. Variants are how you justify termination: the variant must move in
-the right direction each iteration (usually decreasing toward a bound).
+Loop specifications express facts that span iterations:
 
-Example: counting up to a limit while remembering what the original limit was:
+- `#invariant` — must hold at entry and after each iteration.
+- `#variant` — must be non-negative at the loop head and decrease each iteration (termination reasoning).
+- `#monovariant` — must be monotonic (either non-decreasing or non-increasing) each iteration.
+
+Counting up (increasing monovariant, decreasing variant):
 
 ```silk
 fn main () -> int {
@@ -80,38 +129,167 @@ fn main () -> int {
   #invariant i >= 0;
   #invariant i <= original_limit;
   #variant original_limit - i;
+  #monovariant i;
   while i < limit {
-    i = i + 1;
+    i += 1;
+  }
+
+  return 0;
+}
+```
+
+Counting down (decreasing monovariant and variant):
+
+```silk
+fn main () -> int {
+  let mut remaining: int = 3;
+  #invariant remaining >= 0;
+  #variant remaining;
+  #monovariant remaining;
+  while remaining > 0 {
+    remaining = remaining - 1;
   }
   return 0;
 }
 ```
 
-This is a small example, but it illustrates a common pattern: use `#const` to name the “before” value you want to talk
-about in specifications.
+### Block-local proofs (`#assert`) and declarations (`#const`)
 
-## Block-local proof obligations
-
-Use `#assert` to create a proof obligation at a specific point in a block:
+Use `#assert` to state a fact that must be provable **right here**, and `#const` to name intermediate values for specs:
 
 ```silk
-fn demo (x: int) -> int {
-  #assert x == x;
-  return x;
+fn main () -> int {
+  let x: int = 3;
+  #const x0 = x;
+
+  let y: int = x + 1;
+  #assert y > x0;
+
+  return 0;
 }
 ```
 
-In practice, `#assert` is most useful for:
+After a `#assert` succeeds, the verifier assumes it for the remainder of the block.
 
-- documenting an assumption you want the compiler to enforce (not just a comment)
-- breaking a large proof into smaller checkpoints
-- expressing a local fact that helps downstream invariants
+### Struct requirements
 
-## Reusable proofs: theories
+Struct requirements let you enforce shape invariants at *construction sites*:
 
-When you have a property that should hold in many places, you can write it as a `theory` and attach it where needed.
+```silk
+#require len >= 0;
+struct SliceU8 {
+  ptr: u64,
+  len: int,
+}
 
-The idea is to keep verification **modular**: small reusable statements instead of one giant proof block.
+#require cap >= len;
+struct BufferU8 {
+  ptr: u64,
+  len: int,
+  cap: int,
+}
+
+fn main () -> int {
+  let s: SliceU8 = SliceU8{ ptr: 0, len: 0 };
+  let b: BufferU8 = BufferU8{ ptr: 0, len: 1, cap: 1 };
+  return (s.len + b.len) - 1;
+}
+```
+
+Reference: [`Struct requirements`](?p=language/struct-requirements)
+
+### Theories (`theory` / `#theory`)
+
+Theories are reusable proof bundles. You can:
+
+- define them at top level (`export theory ...`),
+- apply them as part of a function contract (prefix `#theory ...;`), and
+- apply them inside blocks (as a proof obligation at that point).
+
+Top-level theory + contract attachment:
+
+```silk
+export theory add_commutes (x: int, y: int) {
+  #assure (x + y) == (y + x);
+}
+
+#theory add_commutes(a, b);
+#assure result == a + b;
+fn add (a: int, b: int) -> int {
+  return a + b;
+}
+```
+
+Inline (block-local) theory declaration + use:
+
+```silk
+fn main () -> int {
+  let x: int = 2;
+  let y: int = 1;
+
+  #theory local_sum_not_zero (x: int, y: int) {
+    #const z = x + y;
+    #assure z != 0;
+  }
+
+  #theory local_sum_not_zero(x, y);
+  return 0;
+}
+```
+
+Theory composition (a theory that applies other theories):
+
+```silk
+export theory add_commutes (x: int, y: int) {
+  #assure (x + y) == (y + x);
+}
+
+export theory add_associates (x: int, y: int, z: int) {
+  #assure (x + (y + z)) == ((x + y) + z);
+}
+
+export theory add_laws (x: int, y: int, z: int) {
+  #theory add_commutes(x, y);
+  #theory add_associates(x, y, z);
+}
+```
+
+Reference: [`Formal Silk`](?p=language/formal-verification)
+
+### Values and operators (what you can write in specs)
+
+Formal Silk expressions are normal Silk expressions, but the verifier accepts a restricted subset. The current subset
+includes:
+
+- `bool` expressions (`!`, `&&`, `||`, comparisons, equality),
+- `string` equality/inequality (`==`, `!=`),
+- integer arithmetic, comparisons, and bitwise ops,
+- layout queries: `sizeof`, `alignof`, `offsetof`.
+
+```silk
+struct Pair { a: int, b: int }
+
+#require mode == "safe" || mode == "fast";
+fn run (mode: string) -> int { return 0; }
+
+fn main () -> int {
+  #assert (1 + 2 * 3) == 7;
+  #assert ((7 << 1) | 1) == 15;
+  #assert (~0) == -1;
+  #assert (10 % 3) == 1;
+
+  // Layout queries (current subset).
+  #assert offsetof(Pair, a) < offsetof(Pair, b);
+  #assert sizeof(Pair) >= 16;
+  #assert alignof(Pair) >= 8;
+
+  return run("safe");
+}
+```
+
+See the reference for the exact accepted subset and the Z3 mapping: [`Formal Silk`](?p=language/formal-verification)
+
+<!-- tabs:end -->
 
 ## Why it’s valuable
 

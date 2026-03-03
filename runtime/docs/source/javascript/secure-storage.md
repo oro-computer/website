@@ -41,6 +41,10 @@ const restored = await secureStorage.getItem('blob', { encoding: 'buffer' })
 
 ## API reference
 
+## API reference
+
+## API reference
+
 <!-- GENERATED: ORO_API_REFERENCE_START -->
 
 ### Module specifiers

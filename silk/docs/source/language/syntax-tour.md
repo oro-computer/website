@@ -102,6 +102,28 @@ fn inc (x: int) -> int {
 }
 ```
 
+### Attributes (`attr(...)`) and conditional compilation
+
+Silk supports first-class **attributes** that can annotate declarations and can
+also be queried at compile time for conditional compilation:
+
+```silk
+attr(os="linux") fn platform () -> string { return "linux"; }
+
+fn main () -> int {
+  if attr(target="wasm32-wasi") {
+    // compiled only for the WASI target
+    return 0;
+  } else {
+    // compiled otherwise
+    return 0;
+  }
+}
+```
+
+See `docs/language/attributes.md` for the full reference, built-in keys, and
+patterns for feature/target detection.
+
 ## 2. Source File Structure: `package`/`module`, `import`, then declarations
 
 Top-level ordering is enforced (see `docs/language/packages-imports-exports.md`):

@@ -4,7 +4,7 @@ Oro Runtime · LLMS Pack
 This file concatenates the full Oro Runtime documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-02-18T21:04:56+00:00
+Generated: 2026-03-03T16:40:23+00:00
 
 How to link:
 - Docs: /runtime/docs/?p=<id>
@@ -2179,6 +2179,10 @@ await application.backend.close()
 
 ## API reference
 
+## API reference
+
+## API reference
+
 <!-- GENERATED: ORO_API_REFERENCE_START -->
 
 ### Module specifiers
@@ -3137,6 +3141,10 @@ console.log(paths)
 
 ## API reference
 
+## API reference
+
+## API reference
+
 <!-- GENERATED: ORO_API_REFERENCE_START -->
 
 ### Module specifiers
@@ -3950,6 +3958,10 @@ await wait('__runtime_ready__')
 
 ## API reference
 
+## API reference
+
+## API reference
+
 <!-- GENERATED: ORO_API_REFERENCE_START -->
 
 ### Module specifiers
@@ -4344,6 +4356,10 @@ The runtime can restrict filesystem access via configuration. Common keys:
 - `filesystem.no_follow_symlinks`
 
 See: [Config reference](?p=config/reference).
+
+## API reference
+
+## API reference
 
 ## API reference
 
@@ -6940,6 +6956,10 @@ const restored = await secureStorage.getItem('blob', { encoding: 'buffer' })
 
 ## API reference
 
+## API reference
+
+## API reference
+
 <!-- GENERATED: ORO_API_REFERENCE_START -->
 
 ### Module specifiers
@@ -7082,6 +7102,10 @@ onNotificationResponse((event) => {
   console.log('response:', event)
 })
 ```
+
+## API reference
+
+## API reference
 
 ## API reference
 
@@ -7582,6 +7606,10 @@ console.log(status)
 
 ## API reference
 
+## API reference
+
+## API reference
+
 <!-- GENERATED: ORO_API_REFERENCE_START -->
 
 ### Module specifiers
@@ -7931,6 +7959,10 @@ chat.addEventListener('message', (event) => {
 await chat.message({ prompt: 'Hello!' })
 await chat.generate({ prompt: 'Tell me a joke.' })
 ```
+
+## API reference
+
+## API reference
 
 ## API reference
 

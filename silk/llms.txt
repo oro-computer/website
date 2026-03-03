@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-03-02T23:40:33+00:00
+Generated: 2026-03-03T16:35:08+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -563,10 +563,397 @@ This example is intentionally small, but it demonstrates the “systems” postu
 (process arguments are ultimately raw pointers), the language and stdlib make that boundary explicit rather than hiding it
 behind magic.
 
+## Hello, standard library
+
+The smallest program imports a single symbol. Real programs quickly pull in modules: filesystems, networking, crypto, and
+more. Each tab below is a self-contained “hello, but practical” sketch you can paste into its own `.slk` file.
+
+<!-- tabs:start Standard library examples -->
+
+### Filesystem
+
+Create a directory, write a file, read it back, clean up:
+
+```silk
+import std::fs;
+import std::io::println;
+
+fn main () -> int {
+  // 493 == 0o755 on POSIX.
+  if std::fs::mkdir_all("tmp", 493) != None {
+    println("mkdir failed");
+    return 1;
+  }
+
+  let path: string = "tmp/hello_silk.txt";
+  std::fs::unlink(path); // ignore errors; we just want the file gone
+
+  // 420 == 0o644 on POSIX.
+  match (std::fs::write_file_string(path, "hello from silk\\n", 420)) {
+    Ok(_) => {},
+    Err(_) => {
+      println("write failed");
+      std::fs::unlink(path);
+      return 2;
+    },
+  }
+
+  match (std::fs::read_file_string(path)) {
+    Ok(s) => {
+      println("read: {s}", s.as_string());
+      std::fs::unlink(path);
+      return 0;
+    },
+    Err(_) => {
+      println("read failed");
+      std::fs::unlink(path);
+      return 3;
+    },
+  }
+}
+```
+
+Reference: [`std::fs`](?p=std/filesystem)
+
+### Networking
+
+A tiny single-request HTTP server on loopback (blocking I/O):
+
+```silk
+import std::http;
+import std::net;
+import std::io::println;
+
+fn trap (T;) -> T { std::abort(); }
+
+fn main () -> int {
+  let addr = net::SocketAddrV4.loopback(8080);
+
+  let listener_r = net::TcpListener.listen(addr, 16);
+  if listener_r.is_err() {
+    println("listen failed");
+    return 1;
+  }
+  let mut listener: net::TcpListener = match (listener_r) {
+    Ok(v) => v,
+    Err(_) => trap(net::TcpListener;),
+  };
+
+  println("listening on 127.0.0.1:8080 (try: curl http://127.0.0.1:8080/)");
+
+  let stream_r = listener.accept();
+  if stream_r.is_err() {
+    listener.close();
+    println("accept failed");
+    return 2;
+  }
+  let stream: net::TcpStream = match (stream_r) {
+    Ok(v) => v,
+    Err(_) => trap(net::TcpStream;),
+  };
+
+  let mut conn = http::Connection.from_stream(stream);
+  let req_r = conn.read_request();
+  if req_r.is_err() {
+    conn.close();
+    listener.close();
+    return 3;
+  }
+  let req: http::Request = match (req_r) {
+    Ok(v) => v,
+    Err(_) => trap(http::Request;),
+  };
+
+  println("got {s} {s}", req.method(), req.target());
+
+  let w_err: http::Error? = conn.write_response(200, "OK", "hello from silk http\\n");
+  conn.close();
+  listener.close();
+  if w_err != None { return 4; }
+  return 0;
+}
+```
+
+Reference: [`std::net`](?p=std/networking), [`std::http`](?p=std/http)
+
+### Cryptography
+
+Hash bytes, compare safely, and wipe buffers when you’re done:
+
+```silk
+import std::arrays;
+import std::buffer;
+import std::crypto;
+import std::crypto::hash;
+import std::io::print;
+import std::io::println;
+import std::runtime::mem;
+
+fn main () -> int {
+  if std::crypto::init() != None {
+    println("crypto init failed");
+    return 1;
+  }
+
+  let msg: string = "hello from silk";
+  let msg_ptr: u64 = std::runtime::mem::string_ptr(msg);
+  let msg_len: i64 = std::runtime::mem::string_len(msg);
+
+  let out_r = std::buffer::BufferU8.init(32);
+  if out_r.is_err() { return 2; }
+  let mut out: std::buffer::BufferU8 = match (out_r) {
+    Ok(v) => v,
+    Err(_) => std::buffer::BufferU8.empty(),
+  };
+
+  let hash_err: std::crypto::CryptoError? = std::crypto::hash::blake2b(
+    mut out,
+    32,
+    std::arrays::ByteSlice{ ptr: msg_ptr, len: msg_len }
+  );
+  if hash_err != None {
+    out.drop();
+    return 3;
+  }
+
+  print("blake2b-256(\"{s}\") = ", msg);
+  var i: i64 = 0;
+  while i < 32 {
+    print("{x:02}", out.get(i));
+    i = i + 1;
+  }
+  println("");
+
+  let wipe_err: std::crypto::CryptoFailed? = std::crypto::memzero(out.as_bytes());
+  out.drop();
+  if wipe_err != None { return 4; }
+  return 0;
+}
+```
+
+Reference: [`std::crypto`](?p=std/crypto)
+
+### GGML
+
+`std::ggml` brings the ggml tensor library into the standard library surface. On the hosted baseline, the toolchain
+auto-links ggml when the module is included in your module set.
+
+```silk
+import std::ggml;
+import std::io::println;
+
+fn main () -> int {
+  println("hello from std::ggml");
+  return 0;
+}
+```
+
+Reference: [`std::ggml`](?p=std/ggml)
+
+### Graphics
+
+`std::graphics` provides raw, pinned bindings to common APIs (OpenGL, OpenGL ES, Vulkan). These are FFI bindings — context
+creation and safety live above this layer — and hosted builds must link the appropriate loader library.
+
+```silk
+import std::graphics::opengl;
+import std::io::println;
+
+fn main () -> int {
+  println("hello from std::graphics::opengl");
+  return 0;
+}
+```
+
+Build (hosted `linux/x86_64` baseline):
+
+```bash
+silk build hello_gl.slk -o build/hello_gl --needed libGL.so.1
+```
+
+Reference: [`std::graphics`](?p=std/graphics)
+
+<!-- tabs:end -->
+
+## Concurrency: `async` and `task`
+
+Silk’s concurrency keywords are explicit: `task` spawns work (returns a `Task(T)`), and `async` produces a `Promise(T)`.
+
+<!-- tabs:start Concurrency examples -->
+
+### Task + `yield`
+
+```silk
+import std::io::println;
+
+task fn add (a: int, b: int) -> int { return a + b; }
+
+async fn main () -> int {
+  let h = add(1, 2); // h: Task(int)
+
+  task {
+    let v: int = yield h;
+    println("1 + 2 = {d}", v);
+    return 0;
+  }
+}
+```
+
+### Promise + `await`
+
+```silk
+import std::io::println;
+
+async fn answer () -> int { return 42; }
+
+async fn main () -> int {
+  let p = answer();     // p: Promise(int)
+  let v: int = await p; // unwrap the promise
+  println("answer = {d}", v);
+  return 0;
+}
+```
+
+<!-- tabs:end -->
+
+Reference: [Concurrency](?p=language/concurrency), [Tutorial 5](?p=usage/tutorials/05-concurrency)
+
+## Formal Silk: `#invariant`, `#variant`, `#monovariant`
+
+Formal Silk is Silk’s compile-time verification surface (Z3-backed). When you use directives like `#invariant` or
+`#monovariant`, `silk check` / `silk build` prove the obligations at compile time and fail the build if they can’t be
+proven.
+
+<!-- tabs:start Formal Silk examples -->
+
+### Loop specs
+
+Use `#variant` to prove termination, and `#monovariant` to prove a measure moves in one direction (non-decreasing or
+non-increasing):
+
+```silk
+fn main () -> int {
+  let limit: int = 3;
+  #const original_limit = limit;
+
+  let mut i: int = 0;
+  #invariant i >= 0;
+  #invariant i <= original_limit;
+  #variant original_limit - i;
+  #monovariant i;
+  while i < limit {
+    i += 1;
+  }
+
+  return 0;
+}
+```
+
+### Function contracts
+
+Contracts attach to a function and introduce proof obligations:
+
+```silk
+#require x >= 0;
+#assure result == x + 1;
+fn inc (x: int) -> int {
+  return x + 1;
+}
+
+fn main () -> int {
+  return inc(2) - 3;
+}
+```
+
+<!-- tabs:end -->
+
+Reference: [Formal Silk guide](?p=guides/formal-silk), [Formal Silk reference](?p=language/formal-verification), [`while` loop](?p=language/flow-while), [Syntax tour](?p=language/syntax-tour)
+
+## WebAssembly and WASI
+
+Silk can target `wasm32-wasi` and run under standard WASI runtimes (including Node’s built-in WASI support).
+
+<!-- tabs:start WASI hello -->
+
+### `main.slk`
+
+```silk
+import std::io;
+
+fn main () -> int {
+  std::io::println("hello from silk wasm wasi");
+  return 7;
+}
+```
+
+Build:
+
+```bash
+silk build main.slk --target wasm32-wasi -o out.wasm
+```
+
+### `run.js`
+
+```js
+const fs = require("node:fs");
+const { WASI } = require("node:wasi");
+
+async function main() {
+  const wasmPath = process.argv[2];
+  const wasi = new WASI({
+    version: "preview1",
+    args: [wasmPath],
+    env: {},
+    preopens: {},
+  });
+
+  const bytes = fs.readFileSync(wasmPath);
+  const { instance } = await WebAssembly.instantiate(bytes, wasi.getImportObject());
+
+  try {
+    wasi.start(instance);
+  } catch {
+    // Some Node versions throw on proc_exit; the exit code is still available.
+  }
+
+  const exitSym = Object.getOwnPropertySymbols(wasi).find(
+    (s) => s.toString() === "Symbol(kExitCode)"
+  );
+  const code =
+    exitSym && typeof wasi[exitSym] === "number" ? wasi[exitSym] : process.exitCode ?? 0;
+  process.exit(code);
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
+```
+
+Run:
+
+```bash
+node --no-warnings run.js out.wasm
+echo $?
+```
+
+Expected:
+
+- stdout contains `hello from silk wasm wasi`
+- exit code is `7`
+
+<!-- tabs:end -->
+
+Reference: [How-To: Run `wasm32-wasi` Output in Node.js](?p=usage/howto-run-wasi-node)
+
 ## Where to go next
 
 - [Language tour](?p=guides/language-tour)
 - [Modules & packages](?p=guides/modules-and-packages)
+- [Standard library](?p=guides/standard-library)
+- Tutorials: [Filesystem](?p=usage/tutorials/04-filesystem), [Concurrency](?p=usage/tutorials/05-concurrency)
+- [WASI + Node](?p=usage/howto-run-wasi-node)
+- [Formal Silk](?p=language/formal-verification)
 - Reference: packages/imports/exports (`Packages, imports, exports` in the sidebar under “Language”)
 
 ==============================================================================
@@ -1416,6 +1803,16 @@ The key design choice is **opt-in by syntax**:
 Formal Silk is meant to be used the way you actually write systems code: small, local assertions around the parts that are
 easy to get subtly wrong (boundary checks, invariants, protocol rules, and “this must never happen” assumptions).
 
+## Where directives live
+
+Formal Silk directives attach to **specific syntactic sites**:
+
+- Before `fn`: `#require`, `#assure`, `#theory`
+- Before `struct`: `#require` (struct requirements)
+- Before `while`: `#invariant`, `#variant`, `#monovariant`
+- Inside blocks: `#const`, `#assert`, `#theory` (inline declaration + use)
+- At top level: `theory` declarations (optionally `export`)
+
 ## The basic pieces
 
 Formal Silk uses a small vocabulary of directives:
@@ -1425,51 +1822,90 @@ Formal Silk uses a small vocabulary of directives:
 - `#assert` — a proof obligation at a specific point in a block
 - `#invariant` — a property that must hold before/after loop iterations
 - `#variant` — a measure used for termination reasoning (it must decrease)
+- `#monovariant` — a measure that must be monotonic (non-decreasing or non-increasing)
 - `#const` — a compile-time-only binding used inside specifications
 - `theory` / `#theory` — reusable proof obligations
 
 You’ll see these used in three places: function boundaries, inside blocks, and around loops.
 
-## Function contracts: `#require` and `#assure`
+## Syntax (one screen)
 
-You can attach preconditions and postconditions to a function:
+This shows the *full* Formal Silk syntax surface in one place:
+
+```silk
+// Function contracts:
+#require <bool-expr>;
+#assure <bool-expr>;     // may reference `result`
+#theory SomeTheory(args);
+fn f (params) -> T { return <expr>; }
+
+// Struct requirements:
+#require <bool-expr>;    // may reference fields by name
+struct S { field: int }
+
+// Loop specifications:
+#invariant <bool-expr>;
+#variant <int-expr>;
+#monovariant <int-expr>;
+while <bool-expr> { ... }
+
+// Block-local proofs + declarations:
+#const name = <expr>;
+#assert <bool-expr>;
+#theory local_name(params) { ... }  // inline theory declaration
+#theory local_name(args);           // theory use (asserts obligations here)
+
+// Reusable proof bundles:
+export theory SomeTheory (params) { ... }
+```
+
+Details and semantics: [`Formal Silk`](?p=language/formal-verification)
+
+## Examples (copy/paste)
+
+<!-- tabs:start Formal Silk examples -->
+
+### Function contracts
+
+Function contracts define what must be true **at the boundary** of a function:
+
+- `#require` is proved at call sites.
+- `#assure` is proved for the function body.
 
 ```silk
 #require x >= 0;
-#assure result > x;
+#assure result == x + 1;
 fn inc (x: int) -> int {
   return x + 1;
 }
-```
 
-This gives you a mechanically checked contract with zero runtime cost.
+#require x >= 0;
+#assure result == x + 2;
+fn inc2 (x: int) -> int {
+  // Contracted calls are part of the “verified code” subset.
+  return inc(inc(x));
+}
 
-### A more realistic example: `clamp`
-
-`clamp` is simple, but it’s exactly the kind of function where off-by-one and boundary mistakes show up:
-
-```silk
-#require lo <= hi;
-#assure result >= lo;
-#assure result <= hi;
-fn clamp (x: int, lo: int, hi: int) -> int {
-  if x < lo { return lo; }
-  if x > hi { return hi; }
-  return x;
+fn main () -> int {
+  // `inc2(40) == 42`, so exit code is 0.
+  return inc2(40) - 42;
 }
 ```
 
-The postconditions say what callers actually care about: the result is within range.
+Notes:
 
-## Loop invariants and termination
+- `result` is a built-in name available only in `#assure` expressions.
+- Formal arithmetic uses fixed-width bitvectors (modular 2^N semantics). See the reference for details.
 
-Formal Silk can express loop invariants (`#invariant`) and termination measures (`#variant`) to prove properties that span
-iterations.
+### Loop specifications
 
-Invariants are “always true” properties around the loop. Variants are how you justify termination: the variant must move in
-the right direction each iteration (usually decreasing toward a bound).
+Loop specifications express facts that span iterations:
 
-Example: counting up to a limit while remembering what the original limit was:
+- `#invariant` — must hold at entry and after each iteration.
+- `#variant` — must be non-negative at the loop head and decrease each iteration (termination reasoning).
+- `#monovariant` — must be monotonic (either non-decreasing or non-increasing) each iteration.
+
+Counting up (increasing monovariant, decreasing variant):
 
 ```silk
 fn main () -> int {
@@ -1480,38 +1916,167 @@ fn main () -> int {
   #invariant i >= 0;
   #invariant i <= original_limit;
   #variant original_limit - i;
+  #monovariant i;
   while i < limit {
-    i = i + 1;
+    i += 1;
+  }
+
+  return 0;
+}
+```
+
+Counting down (decreasing monovariant and variant):
+
+```silk
+fn main () -> int {
+  let mut remaining: int = 3;
+  #invariant remaining >= 0;
+  #variant remaining;
+  #monovariant remaining;
+  while remaining > 0 {
+    remaining = remaining - 1;
   }
   return 0;
 }
 ```
 
-This is a small example, but it illustrates a common pattern: use `#const` to name the “before” value you want to talk
-about in specifications.
+### Block-local proofs (`#assert`) and declarations (`#const`)
 
-## Block-local proof obligations
-
-Use `#assert` to create a proof obligation at a specific point in a block:
+Use `#assert` to state a fact that must be provable **right here**, and `#const` to name intermediate values for specs:
 
 ```silk
-fn demo (x: int) -> int {
-  #assert x == x;
-  return x;
+fn main () -> int {
+  let x: int = 3;
+  #const x0 = x;
+
+  let y: int = x + 1;
+  #assert y > x0;
+
+  return 0;
 }
 ```
 
-In practice, `#assert` is most useful for:
+After a `#assert` succeeds, the verifier assumes it for the remainder of the block.
 
-- documenting an assumption you want the compiler to enforce (not just a comment)
-- breaking a large proof into smaller checkpoints
-- expressing a local fact that helps downstream invariants
+### Struct requirements
 
-## Reusable proofs: theories
+Struct requirements let you enforce shape invariants at *construction sites*:
 
-When you have a property that should hold in many places, you can write it as a `theory` and attach it where needed.
+```silk
+#require len >= 0;
+struct SliceU8 {
+  ptr: u64,
+  len: int,
+}
 
-The idea is to keep verification **modular**: small reusable statements instead of one giant proof block.
+#require cap >= len;
+struct BufferU8 {
+  ptr: u64,
+  len: int,
+  cap: int,
+}
+
+fn main () -> int {
+  let s: SliceU8 = SliceU8{ ptr: 0, len: 0 };
+  let b: BufferU8 = BufferU8{ ptr: 0, len: 1, cap: 1 };
+  return (s.len + b.len) - 1;
+}
+```
+
+Reference: [`Struct requirements`](?p=language/struct-requirements)
+
+### Theories (`theory` / `#theory`)
+
+Theories are reusable proof bundles. You can:
+
+- define them at top level (`export theory ...`),
+- apply them as part of a function contract (prefix `#theory ...;`), and
+- apply them inside blocks (as a proof obligation at that point).
+
+Top-level theory + contract attachment:
+
+```silk
+export theory add_commutes (x: int, y: int) {
+  #assure (x + y) == (y + x);
+}
+
+#theory add_commutes(a, b);
+#assure result == a + b;
+fn add (a: int, b: int) -> int {
+  return a + b;
+}
+```
+
+Inline (block-local) theory declaration + use:
+
+```silk
+fn main () -> int {
+  let x: int = 2;
+  let y: int = 1;
+
+  #theory local_sum_not_zero (x: int, y: int) {
+    #const z = x + y;
+    #assure z != 0;
+  }
+
+  #theory local_sum_not_zero(x, y);
+  return 0;
+}
+```
+
+Theory composition (a theory that applies other theories):
+
+```silk
+export theory add_commutes (x: int, y: int) {
+  #assure (x + y) == (y + x);
+}
+
+export theory add_associates (x: int, y: int, z: int) {
+  #assure (x + (y + z)) == ((x + y) + z);
+}
+
+export theory add_laws (x: int, y: int, z: int) {
+  #theory add_commutes(x, y);
+  #theory add_associates(x, y, z);
+}
+```
+
+Reference: [`Formal Silk`](?p=language/formal-verification)
+
+### Values and operators (what you can write in specs)
+
+Formal Silk expressions are normal Silk expressions, but the verifier accepts a restricted subset. The 
+includes:
+
+- `bool` expressions (`!`, `&&`, `||`, comparisons, equality),
+- `string` equality/inequality (`==`, `!=`),
+- integer arithmetic, comparisons, and bitwise ops,
+- layout queries: `sizeof`, `alignof`, `offsetof`.
+
+```silk
+struct Pair { a: int, b: int }
+
+#require mode == "safe" || mode == "fast";
+fn run (mode: string) -> int { return 0; }
+
+fn main () -> int {
+  #assert (1 + 2 * 3) == 7;
+  #assert ((7 << 1) | 1) == 15;
+  #assert (~0) == -1;
+  #assert (10 % 3) == 1;
+
+  // Layout queries ().
+  #assert offsetof(Pair, a) < offsetof(Pair, b);
+  #assert sizeof(Pair) >= 16;
+  #assert alignof(Pair) >= 8;
+
+  return run("safe");
+}
+```
+
+See the reference for the exact accepted subset and the Z3 mapping: [`Formal Silk`](?p=language/formal-verification)
+
+<!-- tabs:end -->
 
 ## Why it’s valuable
 
@@ -1624,6 +2189,28 @@ fn inc (x: int) -> int {
   return x + 1;
 }
 ```
+
+### Attributes (`attr(...)`) and conditional compilation
+
+Silk supports first-class **attributes** that can annotate declarations and can
+also be queried at compile time for conditional compilation:
+
+```silk
+attr(os="linux") fn platform () -> string { return "linux"; }
+
+fn main () -> int {
+  if attr(target="wasm32-wasi") {
+    // compiled only for the WASI target
+    return 0;
+  } else {
+    // compiled otherwise
+    return 0;
+  }
+}
+```
+
+See `docs/language/attributes.md` for the full reference, built-in keys, and
+patterns for feature/target detection.
 
 ## 2. Source File Structure: `package`/`module`, `import`, then declarations
 
@@ -2703,6 +3290,14 @@ Executable entrypoint (initial rule):
 - This `main` function takes no parameters and returns `int`. The front-end
   enforces this shape for executable builds before code generation.
 
+## Attributes & Conditional Compilation
+
+- Annotate declarations: `attr(os="linux") fn platform () -> string { ... }`
+- Compile-time branching: `if attr(target="wasm32-wasi") { ... } else { ... }`
+- Built-in keys (): `arch`, `os`, `target`, `feature` (+ `abi=c` in type positions)
+
+See `docs/language/attributes.md` for the full reference and examples.
+
 ## Optionals & Mutability
 
 - Declare optionals: `let x: T? = None;` or `let x: Option(T) = None;`.
@@ -3572,6 +4167,7 @@ fn main () -> int {
   #invariant i >= 0;
   #invariant i <= original_limit;
   #variant original_limit - i;
+  #monovariant i;
   while i < limit {
     i = i + 1;
   }
@@ -5025,13 +5621,30 @@ URL: /silk/docs/?p=language/attributes
 
 # Attributes (`attr(...)`)
 
-Silk supports first-class **attributes** that can annotate declarations and can
-also be queried at compile time for conditional compilation.
+Attributes are first-class compile-time metadata.
 
-Attributes come in two forms:
+You can use them to:
 
-- **Tags**: `attr(one, two, three)`
-- **Key/value pairs**: `attr(arch="x86_64", feature="tui")`
+- annotate declarations with `attr(...)`,
+- **select code at compile time** with `if attr(...) { ... } else { ... }`,
+- and (in type positions) select ABIs for callback types (`attr(abi=c)`).
+
+Attributes are intentionally small and explicit: they are a way to express
+“this code only exists for target X” or “this code is only present when feature
+Y is enabled”, without requiring runtime environment probes.
+
+## Syntax (one screen)
+
+### Attribute list
+
+```silk
+attr(one, two, debug=false, arch="x86_64", abi=c)
+```
+
+An attribute list is a comma-separated list of **items**:
+
+- **tags**: `one`, `two` (identifiers)
+- **key/value pairs**: `arch="x86_64"`, `debug=false`, `abi=c`
 
 Values may be:
 
@@ -5040,15 +5653,7 @@ Values may be:
 - strings (`"..."` or raw string literals)
 - identifiers (treated as a string value, e.g. `abi=c`)
 
-## Syntax
-
-### Attribute list
-
-```silk
-attr(one, two, debug=false, arch="x86_64", abi=c)
-```
-
-Items are comma-separated. A trailing comma is permitted.
+A trailing comma is permitted.
 
 ### Annotation form (prefix)
 
@@ -5071,8 +5676,8 @@ fn main () -> int {
 
 Notes:
 
-- Statement-level attributes are metadata only; use `if attr(...) { ... }` for
-  compile-time selection inside blocks.
+- Statement-level attributes are **metadata only** in Silk; use
+  `if attr(...) { ... }` for compile-time selection inside blocks.
 
 ### Query form (expression)
 
@@ -5097,47 +5702,193 @@ if attr(os="linux") && (attr(arch="x86_64") || attr(arch="wasm32")) {
 `attr(...)` queries are compile-time only; they are evaluated by the compiler
 and do not exist as runtime calls.
 
-## Built-in attribute keys ()
+## Feature detection and conditional compilation
 
-the compiler recognizes the following keys in queries and
-conditional compilation contexts:
+The most common “feature detection” pattern in Silk is:
 
-- `arch`: `"x86_64"`, `"aarch64"`, or `"wasm32"`
-- `os`: `"linux"`, `"macos"`, `"ios"`, `"android"`, `"windows"`, `"wasi"`, or `"unknown"`
-- `target`:
-  - `"linux-x86_64"` or `"linux-aarch64"`
-  - `"macos-x86_64"` or `"macos-aarch64"`
-  - `"ios-aarch64"`
-  - `"android-aarch64"`
-  - `"windows-x86_64"` or `"windows-aarch64"`
-  - `"wasm32-unknown-unknown"` or `"wasm32-wasi"`
-- `feature`: an enabled feature name (see “Features” below)
+- decide at compile time using `if attr(...)`,
+- keep a single public API surface,
+- and provide a fallback implementation for targets/features that don’t apply.
 
-## ABI selection (`abi=c`) and `c_fn`
+Two important consequences of compile-time pruning:
 
-In type positions, `attr(abi=c) fn (...) -> R` is equivalent to `c_fn (...) -> R`.
-This is intended for C callback pointer types:
+- The pruned branch is **not type-checked** (so it may refer to declarations
+  that don’t exist on the active target).
+- The pruned branch is **not emitted** (no IR, no codegen, no symbols).
+
+<!-- tabs:start Attribute examples -->
+### Declaration gating
+
+Use declaration annotations to include/exclude whole declarations from a build:
+
+```silk
+import { println } from "std/io";
+
+attr(os="linux") fn platform_name () -> string { return "linux"; }
+attr(os="macos") fn platform_name () -> string { return "macos"; }
+attr(os="windows") fn platform_name () -> string { return "windows"; }
+attr(os="wasi") fn platform_name () -> string { return "wasi"; }
+attr(os="unknown") fn platform_name () -> string { return "unknown"; }
+
+fn main () -> int {
+  println(platform_name());
+  return 0;
+}
+```
+
+Notes:
+
+- This pattern relies on **declaration gating**: only the declarations whose
+  `attr(...)` constraints match the current target are included.
+- Keep a single ungated fallback when you want a defined behavior for
+  otherwise-unrecognized targets.
+
+### Compile-time pruning with `if attr(...)`
+
+Use `if attr(...)` inside blocks when you want localized target selection:
+
+```silk
+import { println } from "std/io";
+
+fn main () -> int {
+  if attr(target="wasm32-wasi") {
+    println("hello from wasi");
+  } else {
+    println("hello from a hosted target");
+  }
+  return 0;
+}
+```
+
+The pruned branch is not type-checked, so you can safely fence off code that
+only makes sense on some targets:
+
+```silk
+fn main () -> int {
+  if attr(os="windows") {
+    // This can mention Windows-only bindings/types.
+    let x: WindowsOnlyType = windows_call();
+    return 0;
+  } else {
+    return 0;
+  }
+}
+```
+
+### Feature flags (`attr(feature="...")`)
+
+Features are named build-time toggles intended for conditional compilation:
+
+```silk
+import { println } from "std/io";
+
+fn main () -> int {
+  if attr(feature="tui") {
+    println("tui enabled");
+  } else {
+    println("tui disabled");
+  }
+  return 0;
+}
+```
+
+In Silk, feature configuration is not yet exposed, so
+the enabled feature set is empty and `attr(feature="...")` always evaluates to
+`false`. The structure above is still the intended shape for optional code.
+
+### Tooling metadata (tags and custom keys)
+
+Tags and non-built-in keys are available for tooling and future extensions:
+
+```silk
+// In the , these do not affect compilation unless you use
+// built-in keys like arch/os/target/feature.
+attr(internal, since="0.3.0", owner="runtime") fn helper () -> void {
+  return;
+}
+```
+
+Prefer to keep metadata keys short and stable; treat them as part of your
+project’s conventions.
+
+### ABI selection (`abi=c`) and `c_fn`
+
+In type positions, `attr(abi=c) fn (...) -> R` is equivalent to
+`c_fn (...) -> R`. This is intended for C callback pointer types:
 
 ```silk
 type InfoCb = attr(abi=c) fn (u64, u64) -> void;
 type InfoCb2 = c_fn (u64, u64) -> void; // equivalent
 ```
+<!-- tabs:end -->
 
-## Features
+## Built-in attribute keys (exhaustive in )
 
-Features are named build-time toggles intended for conditional compilation.
+the compiler recognizes the following keys in queries and
+conditional compilation contexts:
 
-In Silk, feature configuration is not yet exposed, so
-the enabled feature set is empty and `attr(feature="...")` always evaluates to
-`false`.
+- `arch`
+- `os`
+- `target`
+- `feature`
+and additionally recognizes:
 
-Use `attr(feature="name")` in queries and conditional compilation:
+- `abi` (type positions only; see above)
 
-```silk
-if attr(feature="tui") {
-  // code compiled when the build enables the "tui" feature
-}
-```
+The compiler normalizes the selected target to a canonical set of strings. All
+values below are those canonical strings (they match `OS_PLATFORM` / `OS_ARCH`
+as documented in `docs/language/target-metadata.md`).
+
+### `arch`
+
+Canonical CPU architecture name string:
+
+- `"x86_64"`
+- `"aarch64"`
+- `"wasm32"`
+
+### `os`
+
+Canonical platform/OS name string:
+
+- `"linux"`
+- `"macos"`
+- `"ios"`
+- `"android"`
+- `"windows"`
+- `"wasi"`
+- `"unknown"` (used for `wasm32-unknown-unknown`)
+
+### `target`
+
+Canonical target triple string:
+
+- `"linux-x86_64"`
+- `"linux-aarch64"`
+- `"macos-x86_64"`
+- `"macos-aarch64"`
+- `"ios-aarch64"`
+- `"android-aarch64"`
+- `"windows-x86_64"`
+- `"windows-aarch64"`
+- `"wasm32-unknown-unknown"`
+- `"wasm32-wasi"`
+
+### `feature`
+
+An enabled feature name string.
+
+Feature configuration is not exposed in Silk, so the enabled set
+is empty and `attr(feature="...")` always evaluates to `false`.
+
+## Relationship to target/build metadata
+
+Attributes are one piece of the compile-time configuration story.
+
+- For runtime-visible target metadata, see `docs/language/target-metadata.md`
+  (`OS_PLATFORM`, `OS_ARCH`, `OS_IS_UNIX`, `OS_IS_POSIX`).
+- For runtime-visible build metadata, see `docs/language/build-metadata.md`
+  (`BUILD_KIND`, `BUILD_MODE`, `BUILD_VERSION`, ...).
 
 ==============================================================================
 DOCS: Silkdoc (Documentation Comments) (language/doc-comments)
