@@ -87,7 +87,7 @@ Source: oro-computer/silk/highlight/silk.js (copied for website usage)
 
     const VERIFIER = {
       className: "meta",
-      begin: /#[ \t]*(?:const|require|assure|assert|invariant|variant|theory)\b/,
+      begin: /#[ \t]*(?:const|require|assure|assert|invariant|variant|monovariant|theory)\b/,
       relevance: 0,
     };
 

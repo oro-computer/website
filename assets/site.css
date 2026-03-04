@@ -646,6 +646,14 @@ code {
   background: rgba(250, 248, 244, 0.06);
 }
 
+.prose a code {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-gold);
+  font-weight: 650;
+}
+
 .prose h1 code,
 .prose h2 code,
 .prose h3 code,
@@ -693,9 +701,13 @@ pre code {
 
 .docs-layout {
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr) 220px;
+  grid-template-columns: 280px minmax(0, 1fr);
   gap: 2rem;
   align-items: start;
+}
+
+.docs-layout[data-has-toc="true"] {
+  grid-template-columns: 280px minmax(0, 1fr) 220px;
 }
 
 .spec-layout {

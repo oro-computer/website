@@ -612,6 +612,7 @@
     if (!headings.length) {
       tocRoot.replaceChildren();
       tocRoot.hidden = true;
+      app.dataset.hasToc = "false";
       return;
     }
 
@@ -637,10 +638,12 @@
     if (!list.children.length) {
       tocRoot.replaceChildren();
       tocRoot.hidden = true;
+      app.dataset.hasToc = "false";
       return;
     }
 
     tocRoot.hidden = false;
+    app.dataset.hasToc = "true";
     frag.appendChild(label);
     frag.appendChild(list);
     tocRoot.replaceChildren(frag);
@@ -991,6 +994,7 @@
     } catch {
       contentRoot.innerHTML = `<h1>Not found</h1><p>Unable to load this page.</p>`;
       if (tocRoot) tocRoot.hidden = true;
+      app.dataset.hasToc = "false";
       return;
     }
 
@@ -1046,6 +1050,7 @@
       contentRoot.innerHTML =
         "<h1>Docs unavailable</h1><p>Unable to load the docs index.</p>";
       if (tocRoot) tocRoot.hidden = true;
+      app.dataset.hasToc = "false";
       return;
     }
 
