@@ -2,15 +2,22 @@
 Language: Silk
 Description: Syntax highlighting for the Silk programming language.
 Author: Silk contributors
-Source: silk/highlight/silk.js (copied for website usage)
+Source: oro-computer/silk/highlight/silk.js (copied for website usage)
 */
 
 (function () {
   function defineSilk(hljs) {
+    const KEYWORDS = {
+      keyword:
+        "package module import from attr export public private default const let var mut move fn c_fn test theory struct extends enum type error interface impl using as is raw pure async task region with new sizeof alignof offsetof typename asm ext where if else match while for in loop return panic break continue assert await yield",
+      type: "bool u8 i8 u16 i16 u32 i32 u64 i64 i128 u128 int usize size isize f32 f64 f128 char string regexp range void Instant Duration Region Option Result Buffer Self Task Promise",
+      literal: "true false None none null Some",
+    };
+
     const DOC_TAG = {
       className: "doctag",
       begin:
-        /@(param|returns|throws|example|since|deprecated|remarks|see|misc|cli|synopsis|option|command)\b/,
+        /@(param|returns|throws|external|requires|assures|asserts|theory|example|since|deprecated|remarks|see|misc|cli|synopsis|option|command)\b/,
       relevance: 0,
     };
 
@@ -73,7 +80,7 @@ Source: silk/highlight/silk.js (copied for website usage)
       variants: [
         { begin: /\b[0-9]+(?:\.[0-9]+)?(?:ns|us|ms|s|min|h|d)\b/ },
         { begin: /\b[0-9]+\.[0-9]+\b/ },
-        { begin: /\b[0-9]+\b/ },
+        { begin: /\b(?:0[bB][01]+|0[oO][0-7]+|0[xX][0-9A-Fa-f]+|0[0-7]+|0|[1-9][0-9]*)\b/ },
       ],
       relevance: 0,
     };
@@ -81,6 +88,59 @@ Source: silk/highlight/silk.js (copied for website usage)
     const VERIFIER = {
       className: "meta",
       begin: /#[ \t]*(?:const|require|assure|assert|invariant|variant|theory)\b/,
+      relevance: 0,
+    };
+
+    const QUALIFIED_NAME = /(?:::)?[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*/;
+
+    const DECL_FN = {
+      match: [/\bfn\b/, /\s+/, /[A-Za-z_]\w*/, /\s*(?=\()/],
+      scope: {
+        1: "keyword",
+        3: "title.function",
+      },
+      relevance: 0,
+    };
+
+    const DECL_TYPE = {
+      match: [/\b(struct|enum|error|interface)\b/, /\s+/, /[A-Za-z_]\w*/],
+      scope: {
+        1: "keyword",
+        3: "title.class",
+      },
+      relevance: 0,
+    };
+
+    const DECL_IMPL = {
+      variants: [
+        {
+          match: [/\bimpl\b/, /\s+/, QUALIFIED_NAME, /\s+/, /\bas\b/, /\s+/, QUALIFIED_NAME],
+          scope: {
+            1: "keyword",
+            3: "title.class",
+            5: "keyword",
+            7: "title.class",
+          },
+          relevance: 0,
+        },
+        {
+          match: [/\bimpl\b/, /\s+/, QUALIFIED_NAME],
+          scope: {
+            1: "keyword",
+            3: "title.class",
+          },
+          relevance: 0,
+        },
+      ],
+      relevance: 0,
+    };
+
+    const DECL_PACKAGE = {
+      match: [/\b(package|module)\b/, /\s+/, QUALIFIED_NAME],
+      scope: {
+        1: "keyword",
+        3: "title.class",
+      },
       relevance: 0,
     };
 
@@ -114,20 +174,54 @@ Source: silk/highlight/silk.js (copied for website usage)
       relevance: 0,
     };
 
-    return {
-      name: "Silk",
-      aliases: ["silk", "slk"],
-      keywords: {
-        keyword:
-          "package module import from export public private default const let var mut move fn test theory struct extends enum error interface impl using as raw type pure async task region with new sizeof alignof offsetof typename ext where if else match while for in loop return panic break continue assert await yield",
-        type: "bool u8 i8 u16 i16 u32 i32 u64 i64 int usize isize f32 f64 char string regexp void Instant Duration Region Option Buffer Self Task Promise",
-        literal: "true false None none null Some",
-      },
+    const REGEXP_ESCAPE = {
+      begin: /\\[\s\S]/,
+      relevance: 0,
+    };
+
+    const REGEXP_LITERAL = {
+      className: "regexp",
+      begin: /\/(?![/*])(?=[^/\n]*\/)/,
+      end: /\/[gimsyd]*/,
+      contains: [
+        REGEXP_ESCAPE,
+        {
+          begin: /\[/,
+          end: /\]/,
+          relevance: 0,
+          contains: [REGEXP_ESCAPE],
+        },
+      ],
+    };
+
+    const REGEXP_CONTEXT = {
+      begin: "(" + hljs.RE_STARTERS_RE + "|\\b(return|panic|assert)\\b)\\s*",
+      keywords: "return panic assert",
+      relevance: 0,
       contains: [
         DOC_LINE_COMMENT,
         DOC_BLOCK_COMMENT,
         LINE_COMMENT,
         BLOCK_COMMENT,
+        REGEXP_LITERAL,
+      ],
+    };
+
+    return {
+      name: "Silk",
+      aliases: ["silk", "slk"],
+      disableAutodetect: true,
+      keywords: KEYWORDS,
+      contains: [
+        DOC_LINE_COMMENT,
+        DOC_BLOCK_COMMENT,
+        LINE_COMMENT,
+        BLOCK_COMMENT,
+        DECL_PACKAGE,
+        DECL_TYPE,
+        DECL_IMPL,
+        DECL_FN,
+        REGEXP_CONTEXT,
         STRING,
         RAW_STRING,
         CHAR,
@@ -148,4 +242,3 @@ Source: silk/highlight/silk.js (copied for website usage)
     globalThis.hljsDefineSilk = defineSilk;
   }
 })();
-

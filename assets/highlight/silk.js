@@ -7,8 +7,8 @@ Author: Silk contributors
 module.exports = function (hljs) {
   const KEYWORDS = {
     keyword:
-      "package module import from export public private default const let var mut move fn test theory struct extends enum error interface impl using as raw type pure async task region with new sizeof alignof offsetof typename ext where if else match while for in loop return panic break continue assert await yield",
-    type: "bool u8 i8 u16 i16 u32 i32 u64 i64 int usize isize f32 f64 char string regexp void Instant Duration Region Option Buffer Self Task Promise",
+      "package module import from attr export public private default const let var mut move fn c_fn test theory struct extends enum type error interface impl using as is raw pure async task region with new sizeof alignof offsetof typename asm ext where if else match while for in loop return panic break continue assert await yield",
+    type: "bool u8 i8 u16 i16 u32 i32 u64 i64 i128 u128 int usize size isize f32 f64 f128 char string regexp range void Instant Duration Region Option Result Buffer Self Task Promise",
     literal: "true false None none null Some",
   };
 
@@ -131,7 +131,7 @@ module.exports = function (hljs) {
     variants: [
       { begin: /\b[0-9]+(?:\.[0-9]+)?(?:ns|us|ms|s|min|h|d)\b/ },
       { begin: /\b[0-9]+\.[0-9]+\b/ },
-      { begin: /\b[0-9]+\b/ },
+      { begin: /\b(?:0[bB][01]+|0[oO][0-7]+|0[xX][0-9A-Fa-f]+|0[0-7]+|0|[1-9][0-9]*)\b/ },
     ],
     relevance: 0,
   };

@@ -30,12 +30,24 @@ pre code.hljs {
   color: var(--hljs-string);
 }
 
+.hljs-regexp {
+  color: var(--hljs-string);
+}
+
 .hljs-number {
+  color: var(--hljs-number);
+}
+
+.hljs-escape {
   color: var(--hljs-number);
 }
 
 .hljs-built_in,
 .hljs-attribute {
+  color: var(--hljs-built-in);
+}
+
+.hljs-namespace {
   color: var(--hljs-built-in);
 }
 
