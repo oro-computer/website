@@ -18,6 +18,7 @@
   const defaultId = app.getAttribute("data-default") || "start";
   const githubRepo = app.getAttribute("data-github-repo") || "";
   const githubRef = app.getAttribute("data-github-ref") || "";
+  const inlineLang = app.getAttribute("data-inline-lang") || "";
 
   const titleSuffix =
     app.getAttribute("data-title-suffix") ||
@@ -220,7 +221,6 @@
     const banned =
       /(STATUS\.md|PLAN\.md|llms\.txt|docs\/llms\.txt|docs\/wiki\/style-guide\.md|_template-[^`\\s]+|style-guide\.md|README\.md)/;
     const statusLine = /^(Status:|Implementation status:)\s*/i;
-    const statusHeading = /^(#{1,6})\s+(Status|Implementation status)\b/i;
 
     function rewriteStatusLine(line) {
       const m = String(line).match(/^(\s*)(Status:|Implementation status:)\s*/i);
@@ -319,6 +319,7 @@
       );
       out = out.replace(/^(\s*#{1,6}\s+)Implemented\s*$/i, "$1Details");
       out = out.replace(/^(\s*#{1,6}\s+)Implemented\s+API\b/i, "$1API");
+      out = out.replace(/^(\s*#{1,6}\s+)(?:Status|Implementation status)\s*$/i, "$1Details");
 
       // Drop "Implemented:" label prefixes in prose/lists.
       out = out.replace(/^(\s*[-*+]\s+)Implemented\s*:\s*/i, "$1");
@@ -349,7 +350,6 @@
     const lines = String(markdown).split("\n");
     const out = [];
     let inCode = false;
-    let skipLevel = null;
     let codeLang = null;
 
     for (let line of lines) {
@@ -363,27 +363,9 @@
         } else {
           codeLang = null;
         }
-        if (skipLevel === null) out.push(line);
+        out.push(line);
         continue;
       }
-
-      if (!inCode) {
-        const headingMatch = line.match(/^(#{1,6})\s+(.+?)\s*$/);
-        if (skipLevel !== null && headingMatch) {
-          const level = headingMatch[1].length;
-          if (level <= skipLevel) skipLevel = null;
-        }
-
-        if (skipLevel === null) {
-          const statusMatch = line.match(statusHeading);
-          if (statusMatch) {
-            skipLevel = statusMatch[1].length;
-            continue;
-          }
-        }
-      }
-
-      if (skipLevel !== null) continue;
 
       if (!inCode && statusLine.test(line)) {
         const rewritten = rewriteStatusLine(line);
@@ -462,6 +444,29 @@
     for (const block of blocks) {
       try {
         hljs.highlightElement(block);
+      } catch {}
+    }
+  }
+
+  function highlightInlineCode(container) {
+    if (!inlineLang) return;
+    const hljs = globalThis.hljs;
+    if (!hljs || typeof hljs.highlight !== "function") return;
+    const nodes = Array.from(container.querySelectorAll("code"));
+    for (const node of nodes) {
+      if (node.closest("pre")) continue;
+      if (node.dataset.inlineHljs === "true") continue;
+
+      const raw = String(node.textContent || "");
+      const text = raw.trim();
+      if (!text) continue;
+      if (text.length > 160) continue;
+
+      try {
+        const res = hljs.highlight(raw, { language: inlineLang, ignoreIllegals: true });
+        node.classList.add("hljs", "hljs-inline");
+        node.innerHTML = res.value;
+        node.dataset.inlineHljs = "true";
       } catch {}
     }
   }
@@ -967,6 +972,7 @@
     }
 
     resultsRoot.replaceChildren(list);
+    highlightInlineCode(resultsRoot);
   }
 
   async function renderDoc(state, id, { replaceState = false } = {}) {
@@ -1028,6 +1034,7 @@
     addHeadingAnchors(contentRoot);
     renderToc(contentRoot);
     highlightContent(contentRoot);
+    highlightInlineCode(app);
 
     document.title = `${stripBackticks(item.title)} · ${titleSuffix} · Oro Computer`;
 

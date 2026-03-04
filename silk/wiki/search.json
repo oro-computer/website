@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-02T23:38:01+00:00",
+  "generatedAt": "2026-03-04T01:37:26+00:00",
   "kind": "wiki",
   "count": 84,
   "items": [
@@ -267,7 +267,7 @@
       "title": "Regions (`with`)",
       "section": "language",
       "summary": "Regions provide a fixed-size, statically allocated backing store that can be used as an allocation context for `new`.",
-      "text": "Regions (with) Regions provide a fixed-size, statically allocated backing store that can be used as an allocation context for new. Conceptually: a region behaves like an arena (bump) allocator. Silk uses the term \u201cregion\u201d for the user-facing language feature. Canonical spec: docs/language/regions.md. Syntax const region scratch: u8[1024]; with scratch { // new allocations use scratch as backing storage. } Example struct Point { x: int, y: int, } fn main () -> int { const region scratch: u8[1024]; with scratch { let p: &Point = new Point{ x: 1, y: 2 }; return p.x + p.y; } } See also Canonical spec: docs/language/regions.md Memory model and new: wiki/language/memory-model.md noheap and std::runtime::mem: docs/std/runtime.md"
+      "text": "Regions (with) Regions provide a fixed-size, statically allocated backing store that can be used as an allocation context for new. Conceptually: a region behaves like a bump allocator. Silk uses the term \u201cregion\u201d for the user-facing language feature. Canonical spec: docs/language/regions.md. Syntax const region scratch: u8[1024]; with scratch { // new allocations use scratch as backing storage. } Example struct Point { x: int, y: int, } fn main () -> int { const region scratch: u8[1024]; with scratch { let p: &Point = new Point{ x: 1, y: 2 }; return p.x + p.y; } } See also Canonical spec: docs/language/regions.md Memory model and new: wiki/language/memory-model.md noheap and std::runtime::mem: docs/std/runtime.md"
     },
     {
       "id": "language/buffers",

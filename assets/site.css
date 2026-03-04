@@ -640,9 +640,9 @@ p {
 }
 
 code {
-  padding: 0.15em 0.35em;
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
+  padding: 0.12em 0.32em;
+  border-radius: 6px;
+  border: 0;
   background: rgba(250, 248, 244, 0.06);
 }
 
@@ -663,6 +663,13 @@ code {
   background: transparent;
   color: var(--color-gold);
   font-weight: 650;
+}
+
+.prose h1 code.hljs-inline,
+.prose h2 code.hljs-inline,
+.prose h3 code.hljs-inline,
+.prose h4 code.hljs-inline {
+  color: inherit;
 }
 
 pre {
@@ -1020,9 +1027,9 @@ pre code {
 
 .docs-inline-code {
   font-family: var(--font-mono);
-  padding: 0.15em 0.35em;
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
+  padding: 0.12em 0.32em;
+  border-radius: 6px;
+  border: 0;
   background: rgba(250, 248, 244, 0.06);
   color: var(--color-fg);
   text-decoration: none;
@@ -1032,7 +1039,6 @@ pre code {
 
 .docs-inline-code:hover,
 .docs-inline-code:focus-visible {
-  border-color: rgba(246, 201, 69, 0.6);
   background: rgba(246, 201, 69, 0.09);
   color: var(--color-fg);
 }
@@ -1105,6 +1111,13 @@ pre code {
   background: transparent;
   color: var(--color-gold);
   font-weight: 650;
+}
+
+.docs-nav code.hljs-inline,
+.docs-breadcrumb code.hljs-inline,
+.docs-search-result-title code.hljs-inline,
+.docs-prevnext-title code.hljs-inline {
+  color: inherit;
 }
 
 .prose table {

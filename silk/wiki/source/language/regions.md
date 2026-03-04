@@ -3,8 +3,8 @@
 Regions provide a fixed-size, statically allocated backing store that can be
 used as an allocation context for `new`.
 
-Conceptually: a region behaves like an arena (bump) allocator. Silk uses the
-term “region” for the user-facing language feature.
+Conceptually: a region behaves like a bump allocator. Silk uses the term
+“region” for the user-facing language feature.
 
 Canonical spec: `docs/language/regions.md`.
 

@@ -3,9 +3,9 @@
 Regions provide a fixed-size, **statically allocated** block of memory that can
 be used as an allocation context for `new`.
 
-If you’re familiar with arena allocators: regions are Silk’s arena-allocation
-surface. The user-facing language feature is `region` + `with`, not a separate
-“arena” construct.
+If you’re familiar with bump allocators: regions provide a fixed-budget,
+bump-allocation surface. The user-facing language feature is `region` + `with`
+(there is no separate construct).
 
 Regions are represented at runtime as a first-class `Region` handle value. A
 `Region` value may be passed to functions, stored in structs, and exported.
