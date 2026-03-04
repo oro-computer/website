@@ -45,7 +45,7 @@ accept these end-to-end):
 When in doubt, consult:
 
 - `docs/compiler/diagnostics.md` (error codes)
-- `tests/silk/pass_*.slk` (working examples)
+- the runnable examples embedded throughout `docs/language/`
 
 ## Principles
 

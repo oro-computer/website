@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-03-04T01:37:33+00:00
+Generated: 2026-03-04T03:17:23+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -3945,31 +3945,6 @@ fn main () -> int {
 }
 ```
 
-## Tests
-
-- Optional `match` expressions:
-  - `tests/silk/pass_optional_match_unwrap_int.slk`
-- Enum `match` expressions:
-  - `tests/silk/pass_enum_unit_match_int.slk`
-  - `tests/silk/pass_enum_tuple_match_int.slk`
-  - `tests/silk/pass_enum_tuple_match_struct_payload.slk`
-  - `tests/silk/pass_enum_tuple_match_pair_underscore.slk`
-  - `tests/silk/fail_enum_match_non_exhaustive.slk`
-- Union `match` expressions:
-  - `tests/silk/pass_type_union_match_struct_payload.slk`
-  - `tests/silk/pass_type_union_match_struct_payload_different_shapes.slk`
-  - `tests/silk/pass_type_union_match_error_payload_different_shapes.slk`
-  - `tests/silk/pass_type_union_superset_tag_remap_primitive.slk`
-  - `tests/silk/pass_type_union_superset_tag_remap_struct.slk`
-  - `tests/silk/pass_type_union_superset_payload_widen_mixed.slk`
-- Result-like `match` expressions:
-  - `tests/silk/pass_result_match_expr_string.slk`
-  - `tests/silk/pass_result_match_expr_f64.slk`
-  - `tests/silk/pass_result_match_expr_shorthand_int.slk`
-- Typed error-handling `match` statements:
-  - `tests/silk/pass_typed_errors_success.slk`
-  - `tests/silk/pass_typed_errors_abort.slk`
-
 ==============================================================================
 DOCS: `loop` Loop (language/flow-loop)
 URL: /silk/docs/?p=language/flow-loop
@@ -5424,8 +5399,7 @@ At a high level, the language can be structured as:
 
 - Expressions:
 
-  Expressions follow a conventional precedence hierarchy, as implemented in
-  `src/parser.zig`:
+  Expressions follow a conventional precedence hierarchy:
 
   - `Expr ::= Assign`
   - `Assign ::= Coalesce (AssignOp Assign)?`
@@ -6914,25 +6888,6 @@ Rules (current compiler subset):
 - **Name collisions with named imports**: when importing from multiple modules, use
   `as` to rename one binding (`E2004`).
 
-## Tests
-
-- Package import + unqualified/qualified access:
-  - `tests/silk/pass_import_std_strings.slk`
-  - `tests/silk/pass_import_pkg_util.slk` (module-set package import; built with `tests/silk/support_pkg_import_util.slk`)
-- Namespace imports (file and package):
-  - `tests/silk/pass_import_namespace_file_no_default.slk`
-  - `tests/silk/pass_import_namespace_package.slk`
-- Named imports + aliasing:
-  - `tests/silk/pass_file_import_named_values.slk`
-  - `tests/silk/pass_import_named_from_package_spec.slk`
-- Re-exports (`export { ... };`):
-  - `tests/silk/pass_reexport_named_import.slk` (built with `tests/silk/support_reexport_barrel.slk` and `tests/silk/support_reexport_target.slk`)
-  - `tests/silk/pass_reexport_local_decl.slk` (built with `tests/silk/support_reexport_local_decl.slk`)
-- Default exports:
-  - `tests/silk/pass_file_import_default_export.slk`
-- Importing types and using exported methods:
-  - `tests/silk/pass_file_import_methods_counter.slk`
-
 ==============================================================================
 DOCS: `using` (Aliases and Method Reuse) (language/using)
 URL: /silk/docs/?p=language/using
@@ -7728,8 +7683,7 @@ You can declare variables or fields as optional using either:
 The language design treats these as equivalent.
 
 
-- The type system (`src/types.zig`) models optional types, and the parser
-  now accepts both:
+- The type system models optional types, and the parser accepts both:
   - the suffix form `T?` in type annotations, and
   - the nominal form `Option(T)` for simple cases (a single type argument),
     which is desugared into the same internal optional representation as
@@ -8903,27 +8857,6 @@ fn main () -> int {
 - `docs/language/operators.md` (unary `-`, arithmetic, and `as` casts)
 - `docs/language/types.md` (primitive numeric type names)
 
-## Tests
-
-- Integer literal contextual typing (`u8` parameters):
-  - `tests/silk/pass_typed_params_u8_many_stack.slk`
-- Integer wrap behavior in arithmetic:
-  - `tests/silk/pass_typed_params_u8_wrap.slk`
-  - `tests/silk/pass_unary_ops.slk`
-- Float literal contextual typing (`f32` parameters):
-  - `tests/silk/pass_float_f32_literal_context.slk`
-- Float literal default type (`f64`):
-  - `tests/silk/pass_float_literal_default_f64.slk`
-- Float arithmetic and comparisons:
-  - `tests/silk/pass_float_f64_arith_cmp.slk`
-  - `tests/silk/pass_float_mixed_int_float_params.slk`
-- Duration literals (numeric + unit suffix):
-  - `tests/silk/pass_duration_literals.slk`
-- Integer literal base prefixes and legacy octal:
-  - `tests/silk/pass_numeric_literal_prefixes.slk`
-- Integer/float/duration digit separators (`_`):
-  - `tests/silk/pass_numeric_literal_separators.slk`
-
 ==============================================================================
 DOCS: String Literals (language/literals-string)
 URL: /silk/docs/?p=language/literals-string
@@ -9094,21 +9027,13 @@ b`;
 - `docs/language/literals-character.md` (shared escape spellings)
 - `docs/compiler/abi-libsilk.md` (C ABI string representation)
 
-## Tests
+## Details
 
-- Core string equality and ordering:
-  - `tests/silk/pass_string_eq.slk`
-  - `tests/silk/pass_string_cmp.slk`
-- Escape coverage:
-  - `tests/silk/pass_string_literal_escapes.slk`
-- Raw/backtick coverage:
-  - `tests/silk/pass_string_raw_backtick.slk`
+String literals:
 
-The compiler must:
-
-- Implement lexing and parsing for both `"..."` and `` `...` ``.
-- Normalize line endings and escapes according to the spec.
-- Ensure compatibility with the FFI `SilkString` representation.
+- support both `"..."` and raw `` `...` `` forms,
+- normalize line endings and escapes according to the language rules, and
+- are compatible with the FFI `SilkString` representation (`docs/compiler/abi-libsilk.md`).
 
 ==============================================================================
 DOCS: Character Literals (language/literals-character)
@@ -9232,15 +9157,6 @@ fn main () -> int {
 - `docs/language/literals-string.md` (string literals and escape sequences)
 - `docs/language/operators.md` (`as` casts for int-like types, including `char`)
 
-## Tests
-
-- Unicode char equality and `\u{...}` escape:
-  - `tests/silk/pass_char_eq.slk`
-- Returning and comparing `char` values:
-  - `tests/silk/pass_helper_char_return_cfg.slk`
-- Escape coverage:
-  - `tests/silk/pass_char_literal_escapes.slk`
-
 ==============================================================================
 DOCS: Boolean Literals (language/literals-boolean)
 URL: /silk/docs/?p=language/literals-boolean
@@ -9307,17 +9223,6 @@ fn main () -> int {
 - `docs/language/operators.md` (`!`, `&&`, `||`)
 - `docs/language/flow-if-else.md` (`if` statement semantics)
 - `docs/language/flow-while.md` (`while` statement semantics)
-
-## Tests
-
-- Boolean control flow:
-  - `tests/silk/pass_if_bool.slk`
-  - `tests/silk/pass_while_bool.slk`
-- Short-circuit semantics:
-  - `tests/silk/pass_bool_short_circuit_values.slk`
-  - `tests/silk/pass_bool_short_circuit_call_arg.slk`
-- Unary `!`:
-  - `tests/silk/pass_unary_ops.slk`
 
 ==============================================================================
 DOCS: Duration Literals (language/literals-duration)
@@ -10736,17 +10641,6 @@ ABI mature.
 - `docs/language/packages-imports-exports.md` (namespaces and imports)
 - `docs/language/typed-errors.md` (typed errors, not enums)
 
-## Tests
-
-- Enum matches (end-to-end):
-  - `tests/silk/pass_enum_unit_match_int.slk`
-  - `tests/silk/pass_enum_tuple_match_int.slk`
-  - `tests/silk/pass_enum_tuple_match_struct_payload.slk`
-  - `tests/silk/pass_enum_tuple_match_pair_underscore.slk`
-  - `tests/silk/fail_enum_match_non_exhaustive.slk`
-- Namespaced enum references (module-set build):
-  - `tests/silk/pass_import_pkg_util.slk` (built with `tests/silk/support_pkg_import_util.slk`)
-
 ==============================================================================
 DOCS: Errors (language/errors)
 URL: /silk/docs/?p=language/errors
@@ -12021,7 +11915,7 @@ Today:
 - Lowering/codegen implements `task` execution using OS threads on `linux/x86_64`
   and implements `yield`/`yield *` for task values plus `await` for promises.
   - On hosted `linux/x86_64`, the compiler ships a bring-up async runtime
-    (`src/silk_rt_async.c`) so `await` is a true suspension point:
+    so `await` is a true suspension point:
     - awaiting a pending `Promise(T)` parks the current fiber and allows other
       runnable fibers to execute (it does not block the OS thread),
     - outside an active executor, awaiting may fall back to blocking behavior.
@@ -13941,7 +13835,7 @@ Recommended sections:
    - realistic examples (how the feature is used in real code)
 7. **Common pitfalls**
 8. **Related documents**
-9. **Tests** (links to `tests/silk/pass_*.slk` and `tests/silk/fail_*.slk`)
+9. **References** (cross-links to the most relevant docs and, when available, runnable examples)
 
 Not every concept needs every section, but the goal is that a reader should
 never have to infer critical rules from examples.
@@ -23338,8 +23232,8 @@ silk build examples/feature_stream_transform_uppercase_fd.slk -o build/stream_up
 
 ## Next steps
 
-- If you want a quick, runnable reference, prefer `tests/silk/pass_std_io_async_*.slk`
-  and `tests/silk/pass_std_*_stream_*.slk` alongside the examples.
+- If you want a quick, runnable reference, prefer the `examples/` programs in
+  the Silk compiler repository alongside the docs.
 - For network I/O, start with `examples/std_net_tcp_loopback.slk` and
   `docs/std/networking.md` (`std::net::stream` provides `TcpStream` ↔ stream adapters).
 
@@ -26626,44 +26520,37 @@ This document defines how we validate the compiler, ABI, and standard library.
 
 ## Silk Tests
 
-In addition to Zig and C99 tests, we maintain **Silk-written test programs**:
+In addition to Zig and C99 tests, we maintain **Silk-written test programs** in
+the Silk compiler repository.
 
 - Location:
-  - Silk test sources live under `tests/silk/` in the Silk compiler repository.
-  - They are regular Silk modules and are intended to be readable examples of language features.
-- Categories:
-  - **Passing tests** (e.g. `tests/silk/pass_if_bool.slk`, `tests/silk/pass_while_bool.slk`, `tests/silk/pass_requires_ensures.slk`):
-    - must parse and type-check successfully,
-    - are exercised from Zig tests via the compiler front-end and CLI helpers.
-  - **Failing tests** (e.g. `tests/silk/fail_type_mismatch.slk`, `tests/silk/fail_return_type.slk`, `tests/silk/fail_break_outside.slk`):
-    - are expected to fail type checking (many fixtures only assert “fails”, with targeted tests asserting specific error kinds such as `TypeMismatch` / `InvalidBreak` when stability matters),
-    - are used to validate that the front-end rejects invalid programs as described in `docs/language/`.
-  - **Verification-failing tests** (e.g. `tests/silk/verify_fail_postcondition.slk`, `tests/silk/verify_fail_variant_negative.slk`):
-    - must parse and type-check successfully,
-    - are expected to fail Formal Silk verification with stable diagnostic codes (`E3001`..`E3008`),
-    - are used to validate verifier behavior independently of the type checker.
-  - **Support modules** (e.g. `tests/silk/support_file_import_values.slk`, `tests/silk/support_pkg_import_util.slk`):
-    - are fixtures imported by other tests,
-    - are not executed directly by the harness as standalone “tests”.
-  - **Package fixtures** (`tests/silk/pkg_*.slk`):
-    - are multi-module package/import fixtures that require running `silk check` on an explicit module set,
-    - include both expected-success and expected-error scenarios (for example, duplicate exports across modules in the same package).
+  - The fixture suite lives alongside the compiler sources and is kept runnable
+    from CI.
+  - Fixtures are regular Silk modules and are intended to be readable examples
+    of language features.
+- Categories (by filename prefix):
+  - **Passing fixtures** (`pass_*`): must parse and type-check successfully.
+  - **Failing fixtures** (`fail_*`): must be rejected by the checker.
+  - **Verification-failing fixtures** (`verify_fail_*`): must type-check, but
+    fail Formal Silk verification with stable diagnostic codes (`E3001`..`E3008`).
+  - **Support fixtures** (`support_*`): shared helpers imported by other fixtures.
+  - **Package fixtures** (`pkg_*`): multi-module import/export scenarios
+    exercised via explicit module-set invocations.
 - Execution:
-  - Zig tests in `src/tests.zig`:
-    - iterate all `.slk` files under `tests/silk/` and, based on filename prefix:
-      - for `pass_*.slk`, call `driver.runCheck` and require success,
-      - for `fail_*.slk`, parse and type-check and require that type checking fails (most fixtures only assert “fails”, with targeted tests asserting specific `CheckError` values),
-    - run `verify_fail_*.slk` fixtures through the Formal Silk verifier and assert stable diagnostic codes,
-    - run `pkg_*.slk` fixtures via explicit `silk check` module-set invocations (some are expected to fail),
-    - include a small guard test that rejects unknown `tests/silk/*.slk` filename prefixes so new fixtures cannot silently land without harness coverage.
-    - for a growing subset of `pass_*.slk` programs whose `main` fits the current constant-expression backend (e.g. `pass_let_locals.slk`, `pass_top_level_let.slk`), invoke the `silk` CLI to `build` them to native executables and run those executables, asserting on their exit codes; this keeps Silk-written tests participating in both front-end and back-end validation as code generation matures.
-  - The `silk test` CLI subcommand runs **language-level** `test` declarations embedded in Silk source files (see `docs/language/testing.md`), emitting TAP output. This is complementary to the Silk compiler repository’s `tests/silk/pass_*` / `tests/silk/fail_*` suite, which is driven from Zig tests today.
-  - As the backend matures, additional Silk tests will be added that:
-    - build and run executables beyond the constant-expression subset,
-    - exercise libraries and FFI,
-    - validate behavior across targets (ELF/Mach-O/PE) and architectures.
+  - Zig integration tests iterate the fixture suite, dispatch by prefix, and
+    assert the expected outcome (success, check failure, or verifier diagnostic
+    code).
+  - For a growing subset of passing fixtures, CI also builds a native
+    executable and runs it, so the same programs validate both the front-end
+    and the backend.
+  - The `silk test` CLI subcommand runs **language-level** `test` declarations
+    embedded in Silk source files (see `docs/language/testing.md`), emitting TAP
+    output. This is complementary to the fixture suite above (which is driven
+    from the Zig test runner today).
 
-Silk tests are part of the overall strategy to keep the implementation grounded in real programs, not just synthetic unit tests. Every new language feature should, where practical, land with at least one Silk test program under `tests/silk/` in addition to Zig and C tests.
+Silk fixtures keep the implementation grounded in real programs, not just unit
+tests. Every new language feature should, where practical, land with at least
+one Silk fixture in addition to Zig and C tests.
 
 ==============================================================================
 DOCS: Silk Language Server (LSP) (compiler/lsp-silk)
@@ -29023,7 +28910,7 @@ The supported subset is documented in:
 
 - `silk` (1) (see the `build` command and its notes),
 - `docs/compiler/cli-silk.md`,
-- and runnable fixtures under `tests/silk/`.
+- and the Silk compiler repository’s runnable fixtures (exercised end-to-end by CI).
 
 ## Source Layout
 
@@ -42784,7 +42671,7 @@ This wiki page is a reading guide, not a replacement for the grammar itself.
 
 - Use the grammar when you need the exact token-level surface form.
 - Use the concept docs (`docs/language/*.md`) for semantics and type rules.
-- Use `tests/silk/pass_*.slk` for runnable examples.
+- Use the runnable examples embedded throughout the docs for working reference programs.
 
 ## Example
 
@@ -43055,7 +42942,6 @@ fn main () -> int {
 
 - Canonical spec: `docs/language/optional.md`
 - `match` expressions: `docs/language/flow-match.md`
-- Optional-related fixtures: `tests/silk/pass_optional_*.slk`
 
 ==============================================================================
 WIKI: Mutability (`mut`) (language/mutability)
@@ -43614,7 +43500,6 @@ fn main () -> int {
 
 - Canonical spec: `docs/language/enums.md`
 - `match` expressions: `docs/language/flow-match.md`
-- Enum fixtures: `tests/silk/pass_enum_*`
 
 ==============================================================================
 WIKI: Errors and assertions (language/errors)
@@ -43724,7 +43609,6 @@ fn main () -> int {
 ## See also
 
 - Canonical spec: `docs/language/typed-errors.md`
-- Fixtures: `tests/silk/pass_typed_errors_*.slk`
 
 ==============================================================================
 WIKI: Borrow checker (design) (language/borrow-checker)
@@ -45156,7 +45040,6 @@ fn main () -> int {
 
 - Canonical doc: `docs/std/process.md`
 - Environment helpers: `wiki/std/env.md`
-- End-to-end fixture: `tests/silk/pass_std_process_getcwd_chdir.slk`
 
 ==============================================================================
 WIKI: `std::path` (std/path)
@@ -45217,7 +45100,6 @@ fn main () -> int {
 
 - Canonical doc: `docs/std/path.md`
 - Filesystem: `wiki/std/filesystem.md`
-- End-to-end fixture: `tests/silk/pass_std_path_basic.slk`
 
 ==============================================================================
 WIKI: `std::fs` (std/filesystem)
@@ -45367,7 +45249,6 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/json.md`
-- End-to-end fixture: `tests/silk/pass_std_json_basic.slk`
 
 ==============================================================================
 WIKI: `std::toml` (std/toml)
@@ -45461,7 +45342,6 @@ answer = 42
 ## See also
 
 - Canonical doc: `docs/std/toml.md`
-- End-to-end fixture: `tests/silk/pass_std_toml_basic.slk`
 
 ==============================================================================
 WIKI: `std::url` (std/url)
@@ -45663,7 +45543,6 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/url.md`
-- End-to-end fixture: `tests/silk/pass_std_url_basic.slk`
 
 ==============================================================================
 WIKI: `std::semver` (std/semver)
@@ -45777,7 +45656,6 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/uuid.md`
-- End-to-end fixture: `tests/silk/pass_std_uuid_basic.slk`
 
 ==============================================================================
 WIKI: `std::net` (std/networking)
@@ -45956,9 +45834,6 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/crypto.md`
-- End-to-end fixtures:
-  - `tests/silk/pass_std_crypto_libsodium_basic.slk`
-  - `tests/silk/pass_std_crypto_aead_basic.slk`
 
 ==============================================================================
 WIKI: `std::tls` (std/tls)
@@ -45982,7 +45857,7 @@ import std::tls;
 ### Example: in-memory client/server handshake (MemPipe)
 
 This example uses `MemPipe` so it does not require sockets. It is kept runnable
-as `tests/silk/pass_std_tls_mem_handshake.slk`.
+as a self-contained end-to-end example in the Silk repository.
 
 ```silk
 import mem from "std/runtime/mem.slk";
@@ -46197,7 +46072,6 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/tls.md`
-- End-to-end fixture: `tests/silk/pass_std_tls_mem_handshake.slk`
 
 ==============================================================================
 WIKI: `std::runtime` (std/runtime)
@@ -46254,7 +46128,6 @@ fn main () -> int {
 
 - Canonical doc: `docs/std/runtime.md`
 - Std package structure and swappability: `docs/std/package-structure.md`
-- End-to-end fixture (build metadata): `tests/silk/pass_std_runtime_build_is_debug.slk`
 
 ==============================================================================
 WIKI: `std::task` (std/task)
@@ -46352,10 +46225,6 @@ async fn main () -> int {
 
 - Canonical doc: `docs/std/sync.md`
 - Concurrency: `wiki/language/concurrency.md`
-- End-to-end fixtures:
-  - `tests/silk/pass_std_sync_channel_u64.slk`
-  - `tests/silk/pass_std_sync_mutex_condvar.slk`
-  - `tests/silk/pass_std_sync_cancellation_token.slk`
 
 ==============================================================================
 WIKI: `std::temporal` (std/temporal)

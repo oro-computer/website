@@ -57,4 +57,3 @@ fn main () -> int {
 
 - Canonical doc: `docs/std/path.md`
 - Filesystem: `wiki/std/filesystem.md`
-- End-to-end fixture: `tests/silk/pass_std_path_basic.slk`

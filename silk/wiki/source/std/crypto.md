@@ -148,6 +148,3 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/crypto.md`
-- End-to-end fixtures:
-  - `tests/silk/pass_std_crypto_libsodium_basic.slk`
-  - `tests/silk/pass_std_crypto_aead_basic.slk`

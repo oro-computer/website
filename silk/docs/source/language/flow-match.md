@@ -184,28 +184,3 @@ fn main () -> int {
   return s.len as int;
 }
 ```
-
-## Tests
-
-- Optional `match` expressions:
-  - `tests/silk/pass_optional_match_unwrap_int.slk`
-- Enum `match` expressions:
-  - `tests/silk/pass_enum_unit_match_int.slk`
-  - `tests/silk/pass_enum_tuple_match_int.slk`
-  - `tests/silk/pass_enum_tuple_match_struct_payload.slk`
-  - `tests/silk/pass_enum_tuple_match_pair_underscore.slk`
-  - `tests/silk/fail_enum_match_non_exhaustive.slk`
-- Union `match` expressions:
-  - `tests/silk/pass_type_union_match_struct_payload.slk`
-  - `tests/silk/pass_type_union_match_struct_payload_different_shapes.slk`
-  - `tests/silk/pass_type_union_match_error_payload_different_shapes.slk`
-  - `tests/silk/pass_type_union_superset_tag_remap_primitive.slk`
-  - `tests/silk/pass_type_union_superset_tag_remap_struct.slk`
-  - `tests/silk/pass_type_union_superset_payload_widen_mixed.slk`
-- Result-like `match` expressions:
-  - `tests/silk/pass_result_match_expr_string.slk`
-  - `tests/silk/pass_result_match_expr_f64.slk`
-  - `tests/silk/pass_result_match_expr_shorthand_int.slk`
-- Typed error-handling `match` statements:
-  - `tests/silk/pass_typed_errors_success.slk`
-  - `tests/silk/pass_typed_errors_abort.slk`

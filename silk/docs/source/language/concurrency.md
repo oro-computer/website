@@ -115,9 +115,9 @@ must be synchronized by the program.
     (fibers), so awaiting a pending `Promise(T)` can park and resume without
     blocking the OS thread.
   - The current implementation uses stackful coroutines in `libsilk_rt`
-    (`src/silk_rt_async.c`) rather than a compiler state-machine coroutine
-    transform. The long-term design remains a compiler transform + stable
-    `std::runtime::event_loop` surface (see `docs/compiler/async-runtime.md`).
+    rather than a compiler state-machine coroutine transform. The long-term
+    design remains a compiler transform + stable `std::runtime::event_loop`
+    surface (see `docs/compiler/async-runtime.md`).
   - Current limitation: coroutine spawning for `async fn` calls is not reliable
     in a multi-threaded process yet. In this snapshot, starting an OS-thread
     task (`task fn`) and then spawning stackful async coroutines can crash

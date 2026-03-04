@@ -26,7 +26,7 @@ When in doubt, prefer:
 
 - `docs/language/grammar.md` for syntax,
 - `docs/compiler/diagnostics.md` for unsupported forms and error codes,
-- `tests/silk/pass_*.slk` for working example programs.
+- the runnable examples embedded throughout `docs/language/`.
 
 ## 0. Minimal Executable Module
 

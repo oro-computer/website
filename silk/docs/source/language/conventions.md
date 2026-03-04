@@ -29,7 +29,7 @@ Recommended sections:
    - realistic examples (how the feature is used in real code)
 7. **Common pitfalls**
 8. **Related documents**
-9. **Tests** (links to `tests/silk/pass_*.slk` and `tests/silk/fail_*.slk`)
+9. **References** (cross-links to the most relevant docs and, when available, runnable examples)
 
 Not every concept needs every section, but the goal is that a reader should
 never have to infer critical rules from examples.

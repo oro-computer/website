@@ -428,8 +428,7 @@ At a high level, the language can be structured as:
 
 - Expressions (implemented subset):
 
-  Expressions follow a conventional precedence hierarchy, as implemented in
-  `src/parser.zig`:
+  Expressions follow a conventional precedence hierarchy:
 
   - `Expr ::= Assign`
   - `Assign ::= Coalesce (AssignOp Assign)?`

@@ -12,7 +12,7 @@ Canonical spec + implemented subset notes: `docs/language/concurrency.md`.
 ## Status
 
 - Implemented subset is documented in detail: `docs/language/concurrency.md`
-- End-to-end fixtures: `tests/silk/pass_concurrency_*.slk`
+- The examples on this page are intended to compile in the current subset.
 
 ## Examples
 

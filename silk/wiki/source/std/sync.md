@@ -63,7 +63,3 @@ async fn main () -> int {
 
 - Canonical doc: `docs/std/sync.md`
 - Concurrency: `wiki/language/concurrency.md`
-- End-to-end fixtures:
-  - `tests/silk/pass_std_sync_channel_u64.slk`
-  - `tests/silk/pass_std_sync_mutex_condvar.slk`
-  - `tests/silk/pass_std_sync_cancellation_token.slk`

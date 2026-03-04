@@ -71,11 +71,7 @@ fn main () -> int {
 - Code generation:
   - emits the assembled bytes in the `linux/x86_64` IR→ELF backend.
 - Tests:
-  - end-to-end coverage via:
-    - `tests/silk/pass_asm_basic.slk`
-    - `tests/silk/pass_asm_arbitrary.slk`
-    - `tests/silk/fail_asm_unknown_mnemonic.slk`
-    - `tests/silk/fail_asm_relocations_not_supported.slk`
+  - covered by end-to-end fixtures in the Silk compiler repository.
 
 Not yet implemented:
 

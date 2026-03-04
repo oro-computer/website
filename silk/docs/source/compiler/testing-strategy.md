@@ -44,41 +44,34 @@ This document defines how we validate the compiler, ABI, and standard library.
 
 ## Silk Tests
 
-In addition to Zig and C99 tests, we maintain **Silk-written test programs**:
+In addition to Zig and C99 tests, we maintain **Silk-written test programs** in
+the Silk compiler repository.
 
 - Location:
-  - Silk test sources live under `tests/silk/` in the Silk compiler repository.
-  - They are regular Silk modules and are intended to be readable examples of language features.
-- Categories:
-  - **Passing tests** (e.g. `tests/silk/pass_if_bool.slk`, `tests/silk/pass_while_bool.slk`, `tests/silk/pass_requires_ensures.slk`):
-    - must parse and type-check successfully,
-    - are exercised from Zig tests via the compiler front-end and CLI helpers.
-  - **Failing tests** (e.g. `tests/silk/fail_type_mismatch.slk`, `tests/silk/fail_return_type.slk`, `tests/silk/fail_break_outside.slk`):
-    - are expected to fail type checking (many fixtures only assert “fails”, with targeted tests asserting specific error kinds such as `TypeMismatch` / `InvalidBreak` when stability matters),
-    - are used to validate that the front-end rejects invalid programs as described in `docs/language/`.
-  - **Verification-failing tests** (e.g. `tests/silk/verify_fail_postcondition.slk`, `tests/silk/verify_fail_variant_negative.slk`):
-    - must parse and type-check successfully,
-    - are expected to fail Formal Silk verification with stable diagnostic codes (`E3001`..`E3008`),
-    - are used to validate verifier behavior independently of the type checker.
-  - **Support modules** (e.g. `tests/silk/support_file_import_values.slk`, `tests/silk/support_pkg_import_util.slk`):
-    - are fixtures imported by other tests,
-    - are not executed directly by the harness as standalone “tests”.
-  - **Package fixtures** (`tests/silk/pkg_*.slk`):
-    - are multi-module package/import fixtures that require running `silk check` on an explicit module set,
-    - include both expected-success and expected-error scenarios (for example, duplicate exports across modules in the same package).
+  - The fixture suite lives alongside the compiler sources and is kept runnable
+    from CI.
+  - Fixtures are regular Silk modules and are intended to be readable examples
+    of language features.
+- Categories (by filename prefix):
+  - **Passing fixtures** (`pass_*`): must parse and type-check successfully.
+  - **Failing fixtures** (`fail_*`): must be rejected by the checker.
+  - **Verification-failing fixtures** (`verify_fail_*`): must type-check, but
+    fail Formal Silk verification with stable diagnostic codes (`E3001`..`E3008`).
+  - **Support fixtures** (`support_*`): shared helpers imported by other fixtures.
+  - **Package fixtures** (`pkg_*`): multi-module import/export scenarios
+    exercised via explicit module-set invocations.
 - Execution:
-  - Zig tests in `src/tests.zig`:
-    - iterate all `.slk` files under `tests/silk/` and, based on filename prefix:
-      - for `pass_*.slk`, call `driver.runCheck` and require success,
-      - for `fail_*.slk`, parse and type-check and require that type checking fails (most fixtures only assert “fails”, with targeted tests asserting specific `CheckError` values),
-    - run `verify_fail_*.slk` fixtures through the Formal Silk verifier and assert stable diagnostic codes,
-    - run `pkg_*.slk` fixtures via explicit `silk check` module-set invocations (some are expected to fail),
-    - include a small guard test that rejects unknown `tests/silk/*.slk` filename prefixes so new fixtures cannot silently land without harness coverage.
-    - for a growing subset of `pass_*.slk` programs whose `main` fits the current constant-expression backend (e.g. `pass_let_locals.slk`, `pass_top_level_let.slk`), invoke the `silk` CLI to `build` them to native executables and run those executables, asserting on their exit codes; this keeps Silk-written tests participating in both front-end and back-end validation as code generation matures.
-  - The `silk test` CLI subcommand runs **language-level** `test` declarations embedded in Silk source files (see `docs/language/testing.md`), emitting TAP output. This is complementary to the Silk compiler repository’s `tests/silk/pass_*` / `tests/silk/fail_*` suite, which is driven from Zig tests today.
-  - As the backend matures, additional Silk tests will be added that:
-    - build and run executables beyond the constant-expression subset,
-    - exercise libraries and FFI,
-    - validate behavior across targets (ELF/Mach-O/PE) and architectures.
+  - Zig integration tests iterate the fixture suite, dispatch by prefix, and
+    assert the expected outcome (success, check failure, or verifier diagnostic
+    code).
+  - For a growing subset of passing fixtures, CI also builds a native
+    executable and runs it, so the same programs validate both the front-end
+    and the current backend subset.
+  - The `silk test` CLI subcommand runs **language-level** `test` declarations
+    embedded in Silk source files (see `docs/language/testing.md`), emitting TAP
+    output. This is complementary to the fixture suite above (which is driven
+    from the Zig test runner today).
 
-Silk tests are part of the overall strategy to keep the implementation grounded in real programs, not just synthetic unit tests. Every new language feature should, where practical, land with at least one Silk test program under `tests/silk/` in addition to Zig and C tests.
+Silk fixtures keep the implementation grounded in real programs, not just unit
+tests. Every new language feature should, where practical, land with at least
+one Silk fixture in addition to Zig and C tests.

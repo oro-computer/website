@@ -646,6 +646,12 @@ code {
   background: rgba(250, 248, 244, 0.06);
 }
 
+code.hljs-inline {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
 .prose a code {
   padding: 0;
   border: 0;
@@ -658,6 +664,7 @@ code {
 .prose h2 code,
 .prose h3 code,
 .prose h4 code {
+  font-family: inherit;
   padding: 0;
   border: 0;
   background: transparent;
@@ -1106,6 +1113,7 @@ pre code {
 .docs-breadcrumb code,
 .docs-search-result-title code,
 .docs-prevnext-title code {
+  font-family: inherit;
   padding: 0;
   border: 0;
   background: transparent;

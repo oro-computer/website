@@ -236,6 +236,7 @@ def sanitize_docs_markdown(markdown: str) -> str:
         return out
 
     markdown = drop_named_section(markdown, "Arenas")
+    markdown = drop_named_section(markdown, "Tests")
 
     out_lines: list[str] = []
     in_code = False

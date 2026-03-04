@@ -116,4 +116,3 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/json.md`
-- End-to-end fixture: `tests/silk/pass_std_json_basic.slk`

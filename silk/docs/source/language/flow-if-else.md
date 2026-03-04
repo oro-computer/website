@@ -251,10 +251,4 @@ Not implemented yet:
 - General block expressions (`{ stmt* <expr> }`) outside the specific `if`
   expression form.
 
-Examples that exercise the implemented subset:
-
-- `tests/silk/pass_if_bool.slk`
-- `tests/silk/pass_if_logical.slk`
-- `tests/silk/pass_bool_local_if.slk`
-- `tests/silk/pass_nested_if_while.slk`
-- `tests/silk/pass_if_expr_basic.slk`
+The examples above are accepted by the current compiler subset.

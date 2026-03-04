@@ -9,7 +9,7 @@ This wiki page is a reading guide, not a replacement for the grammar itself.
 
 - Use the grammar when you need the exact token-level surface form.
 - Use the concept docs (`docs/language/*.md`) for semantics and type rules.
-- Use `tests/silk/pass_*.slk` for runnable examples.
+- Use the runnable examples embedded throughout the docs for working reference programs.
 
 ## Example
 

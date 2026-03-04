@@ -90,4 +90,3 @@ answer = 42
 ## See also
 
 - Canonical doc: `docs/std/toml.md`
-- End-to-end fixture: `tests/silk/pass_std_toml_basic.slk`

@@ -44,17 +44,10 @@ Not implemented yet:
 - A stable, fully specified “package build” system outside the current CLI/module-set
   model (see `docs/compiler/package-manifests.md` for current manifest support).
 
-Working examples (recommended to read alongside this doc):
+Related tooling and diagnostics:
 
-- Package imports: `tests/silk/pass_import_std_strings.slk`, `tests/silk/pass_import_std_arrays_methods.slk`, `tests/silk/pass_import_pkg_util.slk`
-- File imports (named + default): `tests/silk/pass_file_import_named_values.slk`,
-  `tests/silk/pass_file_import_default_export.slk`,
-  `tests/silk/pass_import_namespace_file_no_default.slk`
-- Package specifier imports (`from "..."`): `tests/silk/pass_import_namespace_package.slk`,
-  `tests/silk/pass_import_named_from_package_spec.slk`
-
-When an import fails, the relevant error codes live in `docs/compiler/diagnostics.md`
-(notably `E1001`–`E1006`, plus `E2003`/`E2004` for invalid imported names).
+- `docs/compiler/diagnostics.md` (import-related error codes like `E1001`–`E1006`)
+- `docs/compiler/package-manifests.md` (manifest builds via `silk.toml`)
 
 ## Terminology
 
@@ -738,65 +731,41 @@ Rules (current compiler subset):
 
 ## Status and Future Work
 
-The current compiler front-end:
+Silk’s package/import/export surface is designed to make dependencies explicit
+and keep boundaries obvious.
 
-- parses `package` declarations into the AST,
-- parses `import` declarations into the AST,
-- records whether top-level declarations are marked `export`:
-  - values (`fn`, `let`, `ext`),
-  - Formal Silk theories (`theory`),
-  - type aliases (`type`),
-  - type declarations where supported (`error`, `interface`),
-  - and similarly tracks `export` for static `impl` members and `export default`
-    for top-level functions.
+Today, the reference compiler:
 
-The type checker partially respects `package`, `import`, and `export` today:
+- parses and type-checks `package` / `module` headers and contiguous `import`
+  blocks,
+- tracks which top-level declarations are exported (values, type names where
+  supported, and Formal Silk `theory` declarations),
+- supports package imports and module-specifier imports (including named and
+  default imports), and
+- enforces basic cross-package visibility rules (non-exported names are not
+  callable across package boundaries).
 
-- a multi-module helper (`checker.checkModuleSetWithImports`) seeds each
-  module’s top-level environment with exported `let` bindings (with
-  explicit type annotations) from any packages it imports, making those
-  constants visible as unqualified names in the importing module,
-- within a module set, function calls are type-checked against:
-  - all top-level functions in the current package (across all modules of
-    that package), and
-  - `export fn` declarations from any imported packages,
-  while still rejecting calls to non-exported functions across package
-  boundaries.
+Name resolution across package boundaries is intentionally conservative:
 
-A package-level resolver now exists in `src/resolver.zig` and is used by the
-ABI build path (`silk_compiler_build`) to:
+- Calls within a module set may target:
+  - functions defined in the same package (across all modules of that package),
+  - and `export fn` declarations from imported packages.
+- Calls to non-exported functions across package boundaries are rejected.
 
-- group modules into packages (including an implementation-defined default
-  package for modules that omit `package`),
-- ensure that every `import` refers to a package that exists in the current
-  module set,
-- reject cyclic package graphs (e.g. `package a` importing `b` while `b`
-  imports `a`).
+In addition, the reference compiler includes a package resolver used by both
+the CLI and the embedding APIs:
 
-Resolver errors are surfaced through `libsilk.a` as human-readable
-errors (for example, `"unknown imported package"` or
-`"cyclic package imports"`), and are covered by both Zig tests and C99
-tests under `c-tests/`.
+- groups modules into packages (including a default package for modules that
+  omit `package`),
+- ensures every `import` refers to a package present in the module set, and
+- rejects cyclic package graphs (`a` importing `b` while `b` imports `a`).
 
-In addition to the package graph, the resolver also builds per-package
-export tables:
+Future work will tighten and extend this model:
 
-- for each package, all `export fn` and `export let` declarations are
-  collected into a symbol list,
-- duplicate exported names within the same package are rejected, except for the
-  prototype/definition pairing described above (`export fn name(...) -> T;` +
-  `export fn name(...) -> T { ... }`), which is accepted only when the
-  signatures match,
-- these export tables are currently used only for consistency checks; the
-  type checker does not yet use them for cross-package name resolution.
-
-Future work will:
-
-- extend the resolver and checker to:
-  - map imports to concrete modules and exported symbols,
-  - ensure only exported symbols are visible across package boundaries,
-- propagate package and export information into the IR and back-end so that
-  symbol visibility and linkage match these rules.
+- map imports to concrete modules and exported symbols (not just packages),
+- ensure only exported symbols are visible across package boundaries, and
+- propagate package/export metadata into IR and back-ends so symbol visibility
+  and linkage match the surface rules.
 
 ## Common Pitfalls
 
@@ -811,22 +780,3 @@ Future work will:
   add `export default` (`E2018`).
 - **Name collisions with named imports**: when importing from multiple modules, use
   `as` to rename one binding (`E2004`).
-
-## Tests
-
-- Package import + unqualified/qualified access:
-  - `tests/silk/pass_import_std_strings.slk`
-  - `tests/silk/pass_import_pkg_util.slk` (module-set package import; built with `tests/silk/support_pkg_import_util.slk`)
-- Namespace imports (file and package):
-  - `tests/silk/pass_import_namespace_file_no_default.slk`
-  - `tests/silk/pass_import_namespace_package.slk`
-- Named imports + aliasing:
-  - `tests/silk/pass_file_import_named_values.slk`
-  - `tests/silk/pass_import_named_from_package_spec.slk`
-- Re-exports (`export { ... };`):
-  - `tests/silk/pass_reexport_named_import.slk` (built with `tests/silk/support_reexport_barrel.slk` and `tests/silk/support_reexport_target.slk`)
-  - `tests/silk/pass_reexport_local_decl.slk` (built with `tests/silk/support_reexport_local_decl.slk`)
-- Default exports:
-  - `tests/silk/pass_file_import_default_export.slk`
-- Importing types and using exported methods:
-  - `tests/silk/pass_file_import_methods_counter.slk`

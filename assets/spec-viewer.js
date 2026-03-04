@@ -51,6 +51,7 @@
       /(STATUS\.md|PLAN\.md|llms\.txt|docs\/llms\.txt|docs\/wiki\/style-guide\.md|_template-[^`\\s]+|style-guide\.md|README\.md)/;
     const statusLine = /^(Status:|Implementation status:)\s*/i;
     const statusHeading = /^(#{1,6})\s+(Status|Implementation status)\b/i;
+    const testsHeading = /^(#{1,6})\s+Tests\b/i;
 
     function rewriteStatusLine(line) {
       const m = String(line).match(/^(\s*)(Status:|Implementation status:)\s*/i);
@@ -176,6 +177,12 @@
           const statusMatch = line.match(statusHeading);
           if (statusMatch) {
             skipLevel = statusMatch[1].length;
+            continue;
+          }
+
+          const testsMatch = line.match(testsHeading);
+          if (testsMatch) {
+            skipLevel = testsMatch[1].length;
             continue;
           }
         }

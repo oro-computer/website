@@ -68,4 +68,3 @@ fn main () -> int {
 
 - Canonical spec: `docs/language/optional.md`
 - `match` expressions: `docs/language/flow-match.md`
-- Optional-related fixtures: `tests/silk/pass_optional_*.slk`

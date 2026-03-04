@@ -53,4 +53,3 @@ fn main () -> int {
 
 - Canonical doc: `docs/std/runtime.md`
 - Std package structure and swappability: `docs/std/package-structure.md`
-- End-to-end fixture (build metadata): `tests/silk/pass_std_runtime_build_is_debug.slk`

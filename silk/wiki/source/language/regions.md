@@ -11,7 +11,7 @@ Canonical spec: `docs/language/regions.md`.
 ## Status
 
 - Implemented subset + current limitations: `docs/language/regions.md`
-- End-to-end fixtures: `tests/silk/pass_region_*.slk`
+- The example on this page is intended to compile in the current subset.
 
 ## Syntax
 

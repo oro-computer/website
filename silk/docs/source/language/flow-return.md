@@ -83,8 +83,4 @@ Implemented end-to-end:
 - `return;` from `void` functions.
 - Missing return in a non-`void` function is rejected (`E2010`).
 
-Examples that exercise the implemented subset:
-
-- `tests/silk/fail_return_type.slk` (wrong type, rejected)
-- `tests/silk/fail_missing_return.slk` (missing return, rejected)
-- `tests/silk/pass_impl_methods.slk` (uses `return;` in a `-> void` method)
+The rules above are enforced by the current compiler subset.

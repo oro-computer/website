@@ -55,4 +55,3 @@ fn main () -> int {
 
 - Canonical doc: `docs/std/process.md`
 - Environment helpers: `wiki/std/env.md`
-- End-to-end fixture: `tests/silk/pass_std_process_getcwd_chdir.slk`

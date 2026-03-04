@@ -22,8 +22,7 @@ The language design treats these as equivalent.
 
 Implementation status:
 
-- The type system (`src/types.zig`) models optional types, and the parser
-  now accepts both:
+- The type system models optional types, and the parser accepts both:
   - the suffix form `T?` in type annotations, and
   - the nominal form `Option(T)` for simple cases (a single type argument),
     which is desugared into the same internal optional representation as

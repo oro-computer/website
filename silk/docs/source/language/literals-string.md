@@ -189,18 +189,10 @@ b`;
 - `docs/language/literals-character.md` (shared escape spellings)
 - `docs/compiler/abi-libsilk.md` (C ABI string representation)
 
-## Tests
+## Details
 
-- Core string equality and ordering:
-  - `tests/silk/pass_string_eq.slk`
-  - `tests/silk/pass_string_cmp.slk`
-- Escape coverage:
-  - `tests/silk/pass_string_literal_escapes.slk`
-- Raw/backtick coverage:
-  - `tests/silk/pass_string_raw_backtick.slk`
+String literals:
 
-The compiler must:
-
-- Implement lexing and parsing for both `"..."` and `` `...` ``.
-- Normalize line endings and escapes according to the spec.
-- Ensure compatibility with the FFI `SilkString` representation.
+- support both `"..."` and raw `` `...` `` forms,
+- normalize line endings and escapes according to the language rules, and
+- are compatible with the FFI `SilkString` representation (`docs/compiler/abi-libsilk.md`).

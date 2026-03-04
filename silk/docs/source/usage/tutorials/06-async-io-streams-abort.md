@@ -108,7 +108,7 @@ silk build examples/feature_stream_transform_uppercase_fd.slk -o build/stream_up
 
 ## Next steps
 
-- If you want a quick, runnable reference, prefer `tests/silk/pass_std_io_async_*.slk`
-  and `tests/silk/pass_std_*_stream_*.slk` alongside the examples.
+- If you want a quick, runnable reference, prefer the `examples/` programs in
+  the Silk compiler repository alongside the docs.
 - For network I/O, start with `examples/std_net_tcp_loopback.slk` and
   `docs/std/networking.md` (`std::net::stream` provides `TcpStream` ↔ stream adapters).
