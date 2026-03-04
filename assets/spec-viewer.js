@@ -48,7 +48,7 @@
     // Keep the spec faithful, but remove repo-workflow prose and status framing
     // that does not belong in a standalone reader-facing specification.
     const banned =
-      /(STATUS\.md|PLAN\.md|llms\.txt|docs\/llms\.txt|docs\/wiki\/style-guide\.md|_template-[^`\\s]+|style-guide\.md|README\.md)/;
+      /(STATUS\.md|PLAN\.md|docs\/wiki\/style-guide\.md|_template-[^`\\s]+|style-guide\.md|README\.md)/;
     const statusLine = /^(Status:|Implementation status:)\s*/i;
     const statusHeading = /^(#{1,6})\s+(Status|Implementation status)\b/i;
     const testsHeading = /^(#{1,6})\s+Tests\b/i;
@@ -382,8 +382,20 @@
     } catch {
       contentRoot.innerHTML =
         "<h1>Spec unavailable</h1><p>Unable to load this specification.</p>";
+      globalThis.oroPageMarkdown = { url: "", text: "" };
+      try {
+        globalThis.dispatchEvent(new CustomEvent("oro:page-markdown", { detail: { url: "" } }));
+      } catch {}
       return;
     }
+
+    const markdownUrl = new URL(specFile, globalThis.location.href).toString();
+    globalThis.oroPageMarkdown = { url: markdownUrl, text: raw };
+    try {
+      globalThis.dispatchEvent(
+        new CustomEvent("oro:page-markdown", { detail: { url: markdownUrl } })
+      );
+    } catch {}
 
     const text = sanitizeMarkdown(raw);
 

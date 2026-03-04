@@ -1,0 +1,10 @@
+# Oro Computer — LLM Packs
+
+This repository hosts the public documentation for Oro Computer projects.
+
+Use these packs to give an AI assistant a complete, self-contained view of a docs set:
+
+- Oro Runtime docs pack: `runtime/llms.txt`
+- Silk docs pack: `silk/llms.txt`
+
+Tip: for a single page, prefer the site’s “Ask AI → View Markdown / Copy Markdown”.

@@ -147,7 +147,7 @@ def sanitize_for_index(markdown: str) -> str:
     - Drop references to STATUS/PLAN/README/llms meta files.
     """
 
-    drop_line = re.compile(r"(STATUS\.md|PLAN\.md|README\.md|\bllms\.txt\b)", flags=re.I)
+    drop_line = re.compile(r"(STATUS\.md|PLAN\.md|README\.md)", flags=re.I)
     status_heading = re.compile(r"^(#{1,6})\s+(Status|Implementation status)\b", flags=re.I)
     status_line = re.compile(r"^(Status:|Implementation status:)\s*", flags=re.I)
 

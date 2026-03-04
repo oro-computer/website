@@ -91,6 +91,19 @@ Examples of help/suggestion content the compiler may emit:
 - guidance to include additional modules in the build/module set when an import
   refers to a package or file that is not present.
 
+## Quick lookup
+
+- Error codes are written as `E####` (for example `E2001`).
+- The first digit groups errors by subsystem:
+  - `E000x` — parsing
+  - `E100x` — import/package resolution
+  - `E200x` — type checking and semantic validation
+  - `E300x` — Formal Silk verification
+  - `E400x` — backend lowering and code generation
+- Deep links: append `#E2001` to this page URL to jump to a specific code entry
+  (for example `?p=compiler/diagnostics#E2001`).
+- Search: the docs search box accepts error codes directly (type `E2001`).
+
 ## Error Codes (Initial Set)
 
 The compiler assigns a stable code to each currently supported error kind.

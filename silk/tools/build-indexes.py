@@ -386,7 +386,7 @@ def read_json(path: Path) -> object | None:
 
 def strip_internal_refs(markdown: str) -> str:
     drop_line = re.compile(
-        r"(STATUS\.md|PLAN\.md|README\.md|\bllms\.txt\b|docs/llms\.txt|docs/wiki/style-guide\.md|_template-[^`\s]+|style-guide\.md)",
+        r"(STATUS\.md|PLAN\.md|README\.md|docs/wiki/style-guide\.md|_template-[^`\s]+|style-guide\.md)",
         flags=re.I,
     )
     status_line = re.compile(r"^(Status:|Implementation status:)\s*", flags=re.I)

@@ -13,6 +13,13 @@ This documentation is organized into:
 - **Configuration** — `oro.toml`, `.ororc`, and `copy_map`.
 - **JavaScript APIs** — `oro:*` modules like `oro:application`, `oro:window`, and `oro:hooks`.
 
+## Ask AI / `llms.txt`
+
+For AI assistants and LLM tooling:
+
+- Whole-site pack: [`llms.txt`](../../llms.txt)
+- Runtime docs pack: [`runtime/llms.txt`](../llms.txt)
+
 ## A minimal “hello world”
 
 Project layout:

@@ -194,6 +194,88 @@ pre {
   background: rgba(250, 248, 244, 0.06);
 }
 
+.menu {
+  position: relative;
+}
+
+.menu summary {
+  list-style: none;
+}
+
+.menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.menu summary::after {
+  content: "▾";
+  display: inline-block;
+  opacity: 0.72;
+  font-size: 0.85em;
+  transition: transform 140ms ease;
+}
+
+.menu[open] summary::after {
+  transform: rotate(180deg);
+}
+
+.menu-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  min-width: 220px;
+  padding: 0.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: calc(var(--radius) + 2px);
+  background: rgba(16, 16, 18, 0.96);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22), 0 18px 44px rgba(0, 0, 0, 0.46);
+  z-index: 220;
+}
+
+.menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  text-decoration: none;
+  color: rgba(250, 248, 244, 0.82);
+  font: inherit;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  text-align: left;
+}
+
+.menu-item:hover,
+.menu-item:focus-visible {
+  border-color: rgba(250, 248, 244, 0.12);
+  background: rgba(250, 248, 244, 0.06);
+  color: var(--color-fg);
+}
+
+.menu-item small {
+  color: rgba(250, 248, 244, 0.55);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+}
+
+.menu-sep {
+  height: 1px;
+  background: rgba(250, 248, 244, 0.12);
+  margin: 0.35rem 0.25rem;
+}
+
+.menu-hint {
+  padding: 0.35rem 0.65rem;
+  color: rgba(250, 248, 244, 0.55);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
 .button {
   display: inline-flex;
   align-items: center;
@@ -1048,6 +1130,13 @@ pre code {
 .docs-inline-code:focus-visible {
   background: rgba(246, 201, 69, 0.09);
   color: var(--color-fg);
+}
+
+.docs-hash-target {
+  outline: 2px solid rgba(246, 201, 69, 0.55);
+  outline-offset: 3px;
+  border-radius: 8px;
+  background: rgba(246, 201, 69, 0.08);
 }
 
 .prose h1 .docs-inline-code,

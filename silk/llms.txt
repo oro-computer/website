@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-03-04T03:17:23+00:00
+Generated: 2026-03-04T15:50:43+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -306,6 +306,10 @@ This documentation site is written for downstream users. It is organized into:
 - **Reference** — the detailed language, standard library, CLI, and ABI surfaces.
 
 If you’re setting up a workspace, start with: [Getting started](?p=usage/getting-started).
+
+
+For AI assistants and LLM tooling:
+
 
 ## A minimal “hello world”
 
@@ -26210,6 +26214,19 @@ Examples of help/suggestion content the compiler may emit:
   `--std-root`, `SILK_STD_ROOT`) when importing `std::...`,
 - guidance to include additional modules in the build/module set when an import
   refers to a package or file that is not present.
+
+## Quick lookup
+
+- Error codes are written as `E####` (for example `E2001`).
+- The first digit groups errors by subsystem:
+  - `E000x` — parsing
+  - `E100x` — import/package resolution
+  - `E200x` — type checking and semantic validation
+  - `E300x` — Formal Silk verification
+  - `E400x` — backend lowering and code generation
+- Deep links: append `#E2001` to this page URL to jump to a specific code entry
+  (for example `?p=compiler/diagnostics#E2001`).
+- Search: the docs search box accepts error codes directly (type `E2001`).
 
 ## Error Codes (Initial Set)
 

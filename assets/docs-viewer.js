@@ -219,7 +219,7 @@
 
   function sanitizeMarkdown(markdown) {
     const banned =
-      /(STATUS\.md|PLAN\.md|llms\.txt|docs\/llms\.txt|docs\/wiki\/style-guide\.md|_template-[^`\\s]+|style-guide\.md|README\.md)/;
+      /(STATUS\.md|PLAN\.md|docs\/wiki\/style-guide\.md|_template-[^`\\s]+|style-guide\.md|README\.md)/;
     const statusLine = /^(Status:|Implementation status:)\s*/i;
 
     function rewriteStatusLine(line) {
@@ -801,10 +801,20 @@
       if (
         raw === "STATUS.md" ||
         raw === "PLAN.md" ||
-        raw === "llms.txt" ||
         raw === "README.md"
       ) {
         code.replaceWith("");
+        continue;
+      }
+
+      // Link error codes like `E2001` to the compiler diagnostics reference
+      // when this docs set contains it.
+      if (/^E\\d{4}$/i.test(raw) && titleById?.has?.("compiler/diagnostics")) {
+        const a = document.createElement("a");
+        a.className = "docs-inline-code";
+        a.href = viewerHref("docs", "compiler/diagnostics", `#${raw.toUpperCase()}`);
+        a.textContent = raw.toUpperCase();
+        code.replaceWith(a);
         continue;
       }
 
@@ -885,6 +895,39 @@
         appendInlineCodeNodes(a, title);
       }
       code.replaceWith(a);
+    }
+  }
+
+  function scrollToHashTarget(container) {
+    const hash = String(globalThis.location.hash || "");
+    if (!hash || hash === "#") return;
+    let id = hash.slice(1);
+    try {
+      id = decodeURIComponent(id);
+    } catch {}
+
+    let target = null;
+    try {
+      target = document.getElementById(id);
+    } catch {}
+
+    if (!target && /^E\\d{4}$/i.test(id)) {
+      const wanted = id.toUpperCase();
+      const codes = Array.from(container.querySelectorAll("code"));
+      const code = codes.find((n) => String(n.textContent || "").trim().toUpperCase() === wanted);
+      if (code) {
+        code.classList.add("docs-hash-target");
+        globalThis.setTimeout(() => code.classList.remove("docs-hash-target"), 1400);
+        target = code;
+      }
+    }
+
+    if (target && typeof target.scrollIntoView === "function") {
+      try {
+        target.scrollIntoView({ block: "center" });
+      } catch {
+        target.scrollIntoView();
+      }
     }
   }
 
@@ -1004,8 +1047,20 @@
       contentRoot.innerHTML = `<h1>Not found</h1><p>Unable to load this page.</p>`;
       if (tocRoot) tocRoot.hidden = true;
       app.dataset.hasToc = "false";
+      globalThis.oroPageMarkdown = { url: "", text: "" };
+      try {
+        globalThis.dispatchEvent(new CustomEvent("oro:page-markdown", { detail: { url: "" } }));
+      } catch {}
       return;
     }
+
+    const markdownUrl = new URL(url, globalThis.location.href).toString();
+    globalThis.oroPageMarkdown = { url: markdownUrl, text: raw };
+    try {
+      globalThis.dispatchEvent(
+        new CustomEvent("oro:page-markdown", { detail: { url: markdownUrl } })
+      );
+    } catch {}
 
     const text = sanitizeMarkdown(raw);
 
@@ -1041,11 +1096,7 @@
 
     document.title = `${stripBackticks(item.title)} · ${titleSuffix} · Oro Computer`;
 
-    if (globalThis.location.hash) {
-      const targetId = globalThis.location.hash.slice(1);
-      const target = document.getElementById(targetId);
-      if (target) target.scrollIntoView();
-    }
+    scrollToHashTarget(contentRoot);
   }
 
   async function init() {

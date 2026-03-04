@@ -4,7 +4,7 @@ Oro Runtime · LLMS Pack
 This file concatenates the full Oro Runtime documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-03-03T16:40:23+00:00
+Generated: 2026-03-04T15:51:01+00:00
 
 How to link:
 - Docs: /runtime/docs/?p=<id>
@@ -146,6 +146,10 @@ This documentation is organized into:
 - **CLI** — `oroc` commands, flags, and environment variables.
 - **Configuration** — `oro.toml`, `.ororc`, and `copy_map`.
 - **JavaScript APIs** — `oro:*` modules like `oro:application`, `oro:window`, and `oro:hooks`.
+
+
+For AI assistants and LLM tooling:
+
 
 ## A minimal “hello world”
 
