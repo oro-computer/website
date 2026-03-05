@@ -217,6 +217,7 @@ USAGE_ORDER = [
 
 COMPILER_ORDER = [
     "compiler/architecture",
+    "compiler/implementation-status",
     "compiler/cli-silk",
     "compiler/package-manifests",
     "compiler/build-scripts",
@@ -390,7 +391,7 @@ def strip_internal_refs(markdown: str) -> str:
         flags=re.I,
     )
     status_line = re.compile(r"^(Status:|Implementation status:)\s*", flags=re.I)
-    status_heading = re.compile(r"^(#{1,6})\s+(Status|Implementation status)\b", flags=re.I)
+    status_heading = re.compile(r"^(#{1,6})\s+(Status|Implementation status)\s*:?\s*$", flags=re.I)
     status_prefix = re.compile(r"^(\s*)(Status:|Implementation status:)\s*", flags=re.I)
 
     def strip_status_line(line: str) -> str:

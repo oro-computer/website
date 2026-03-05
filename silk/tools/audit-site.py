@@ -194,6 +194,30 @@ def check_no_works_today_labels(source_root: Path) -> list[Issue]:
     return issues
 
 
+def check_spec_has_no_repo_internal_paths(spec_path: Path) -> list[Issue]:
+    """
+    The public spec should not cite internal implementation file paths or
+    test harness directories (these frequently drift and are not meaningful to
+    downstream users).
+    """
+
+    issues: list[Issue] = []
+    if not spec_path.exists():
+        return issues
+
+    text = spec_path.read_text(encoding="utf-8")
+    banned = re.compile(
+        r"\bchecker\.[A-Za-z0-9_]+\b"
+        r"|\bsrc/[A-Za-z0-9_./-]+"
+        r"|\bc-tests/"
+        r"|\btests/silk/",
+        flags=re.I,
+    )
+    if banned.search(text):
+        issues.append(Issue(spec_path, "Spec contains repo-internal paths/names (remove or generalize)."))
+    return issues
+
+
 def main() -> int:
     if not DOCS_INDEX.exists() or not WIKI_INDEX.exists():
         print("Missing Silk index.json files; run build scripts first.", file=sys.stderr)
@@ -213,6 +237,7 @@ def main() -> int:
     issues += check_no_arena_identifiers(WIKI_SOURCE)
     issues += check_no_works_today_labels(DOCS_SOURCE)
     issues += check_no_works_today_labels(WIKI_SOURCE)
+    issues += check_spec_has_no_repo_internal_paths(DOCS_SOURCE / "spec" / "2026.md")
 
     if issues:
         for iss in issues[:200]:

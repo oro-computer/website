@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-02-25T19:21:36+00:00",
+  "generatedAt": "2026-03-05T15:52:40+00:00",
   "kind": "docs",
-  "count": 175,
+  "count": 176,
   "sections": [
     {
       "name": "overview",
@@ -740,6 +740,11 @@
           "id": "compiler/architecture",
           "title": "Compiler Architecture",
           "file": "compiler/architecture.md"
+        },
+        {
+          "id": "compiler/implementation-status",
+          "title": "Implementation Status",
+          "file": "compiler/implementation-status.md"
         },
         {
           "id": "compiler/cli-silk",

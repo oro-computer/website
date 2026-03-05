@@ -104,6 +104,131 @@ Examples of help/suggestion content the compiler may emit:
   (for example `?p=compiler/diagnostics#E2001`).
 - Search: the docs search box accepts error codes directly (type `E2001`).
 
+## Examples (common diagnostics)
+
+These examples are representative “shapes” that tend to trigger the listed error codes.
+The exact wording may evolve, but the codes are intended to stay stable for known error kinds.
+
+<!-- tabs:start Diagnostics examples -->
+
+### Parsing (`E0001`)
+
+Imports must appear before other top-level declarations, and top-level forms use `;` terminators:
+
+```silk
+fn main () -> int {
+  return 0;
+}
+
+import std::io::println; // invalid: imports must come first
+```
+
+Fix:
+
+- Move the `import ...;` block to the top of the file (after the optional `package` / `module` header).
+
+### Imports and packages (`E100x`)
+
+Unknown imported package (`E1001`):
+
+```silk
+import util;
+
+fn main () -> int { return 0; }
+```
+
+Fix:
+
+- Ensure the package exists in the **module set** (pass the missing `.slk` files to the build, or use `--package` with a manifest).
+
+Unknown imported file (`E1003`):
+
+```silk
+import { answer } from "./missing.slk";
+
+fn main () -> int { return answer; }
+```
+
+Fix:
+
+- Check the relative path and ensure the file is included in the module set.
+
+### Type checking (`E200x`)
+
+`let` requires an initializer (`E2015`):
+
+```silk
+fn main () -> int {
+  let x: int;
+  return x;
+}
+```
+
+Fix:
+
+- Provide an initializer: `let x: int = 0;`.
+
+Namespace imports are not callable (`E2018`):
+
+```silk
+import foo from "./foo.slk";
+
+fn main () -> int {
+  foo(); // invalid: namespace imports are accessed as foo::Name
+  return 0;
+}
+```
+
+Fix:
+
+- Use `foo::ExportedName(...)`, or add an `export default` to the imported module and call the default binding.
+
+### Typed errors (`E202x`)
+
+Error-producing calls must be handled (`E2023`):
+
+```silk
+error IoError;
+
+fn read_byte () -> u8 | IoError { return panic IoError; }
+
+fn main () -> int {
+  let b = read_byte(); // must be handled with `match`
+  return 0;
+}
+```
+
+Fix:
+
+- Use `match` to handle success vs. error cases. See: [Typed errors](?p=language/typed-errors).
+
+### Formal Silk (`E300x`)
+
+Postcondition may not hold (`E3004`):
+
+```silk
+#assure result == 2;
+fn one () -> int { return 1; }
+```
+
+Fix:
+
+- Correct the contract, or change the implementation so the proof is valid. Start with: [Formal Silk](?p=language/formal-verification).
+
+### Back-end and code generation (`E400x`)
+
+Back-end errors typically mean either:
+
+- your program uses constructs that haven’t been lowered for the active target yet (`E4001`), or
+- the back-end failed to emit an artifact (`E4002`).
+
+Fix:
+
+- Check the target-specific back-end doc (for example: [WebAssembly back-end](?p=compiler/backend-wasm)),
+  and reduce to a minimal repro that fits the documented subset for that target.
+
+<!-- tabs:end -->
+
 ## Error Codes (Initial Set)
 
 The compiler assigns a stable code to each currently supported error kind.

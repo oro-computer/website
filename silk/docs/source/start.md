@@ -52,6 +52,7 @@ If you’re new to Silk, this is a good order:
 Start here:
 
 - Usage: [Getting started](?p=usage/getting-started)
+- Reference: [Implementation status](?p=compiler/implementation-status) · [Diagnostics](?p=compiler/diagnostics)
 - Guides: [What Silk is for](?p=guides/purpose)
 - Guides: [Hello world](?p=guides/hello-world) · [Language tour](?p=guides/language-tour) · [Modules & packages](?p=guides/modules-and-packages)
 - Guides: [Standard library](?p=guides/standard-library) · [CLI and toolchain](?p=guides/cli)

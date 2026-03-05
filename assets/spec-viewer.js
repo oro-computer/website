@@ -9,6 +9,9 @@
   const specFile = app.getAttribute("data-spec-file");
   if (!tocRoot || !contentRoot || !specFile) return;
 
+  const githubRepo = app.getAttribute("data-github-repo") || "oro-computer/silk";
+  const githubRef = app.getAttribute("data-github-ref") || "master";
+
   const marked = globalThis.marked;
   if (marked?.setOptions) {
     marked.setOptions({
@@ -25,6 +28,49 @@
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
+  }
+
+  function stripBackticks(text) {
+    return String(text || "").replace(/`([^`]+)`/g, "$1");
+  }
+
+  function normalizeRelPath(inputPath) {
+    if (!inputPath) return null;
+    let p = String(inputPath).trim();
+    p = p.replace(/\\/g, "/");
+    p = p.replace(/^\.\//, "");
+    p = p.replace(/^\/+/, "");
+    const parts = [];
+    for (const raw of p.split("/")) {
+      const part = raw.trim();
+      if (!part || part === ".") continue;
+      if (part === "..") {
+        if (!parts.length) return null;
+        parts.pop();
+        continue;
+      }
+      parts.push(part);
+    }
+    const out = parts.join("/");
+    if (!out || out.includes("\0")) return null;
+    return out;
+  }
+
+  function getSilkBasePath() {
+    const path = String(globalThis.location?.pathname || "");
+    const idx = path.indexOf("/spec/");
+    if (idx !== -1) return path.slice(0, idx + 1);
+    // Fallback: assume /silk/spec/... depth.
+    const parts = path.split("/").filter(Boolean);
+    if (parts.length >= 2) return `/${parts.slice(0, -2).join("/")}/`;
+    return "/";
+  }
+
+  function viewerHref(kind, id, hash = "") {
+    const encoded = encodeURIComponent(String(id || ""));
+    const base = getSilkBasePath();
+    if (kind === "wiki") return `${base}wiki/?p=${encoded}${hash}`;
+    return `${base}docs/?p=${encoded}${hash}`;
   }
 
   function dropProposalProcess(markdown) {
@@ -50,7 +96,7 @@
     const banned =
       /(STATUS\.md|PLAN\.md|docs\/wiki\/style-guide\.md|_template-[^`\\s]+|style-guide\.md|README\.md)/;
     const statusLine = /^(Status:|Implementation status:)\s*/i;
-    const statusHeading = /^(#{1,6})\s+(Status|Implementation status)\b/i;
+    const statusHeading = /^(#{1,6})\s+(Status|Implementation status)\s*:?\s*$/i;
     const testsHeading = /^(#{1,6})\s+Tests\b/i;
 
     function rewriteStatusLine(line) {
@@ -75,6 +121,11 @@
 
     function rewriteOutsideCode(text) {
       let out = text;
+
+      // Generated-spec phrasing: make the single-file edition self-contained.
+      out = out.replace(/Silk['’]s\s+this\s+specification\s+are\b/gi, "This specification is");
+      out = out.replace(/\bother\s+this\s+specification\s+files\b/gi, "chapters below");
+      out = out.replace(/\bconcept\s+documents\s+under\s+this\s+specification\b/gi, "concept chapters in this specification");
 
       out = out.replace(/^(\s*#{1,6}\s+)What works today\b/i, "$1Supported behavior");
       out = out.replace(/\bwhat works today\b/gi, "supported behavior");
@@ -150,6 +201,7 @@
     let inCode = false;
     let skipLevel = null;
     let codeLang = null;
+    let skipFixtureList = false;
 
     for (let line of lines) {
       const trimmed = line.trimStart();
@@ -189,6 +241,43 @@
       }
 
       if (skipLevel !== null) continue;
+
+      if (!inCode) {
+        // Drop generated-spec “fixtures” lists that were redacted to placeholders.
+        // These are useful in the compiler repo, but not in a public, reader-focused spec.
+        if (skipFixtureList) {
+          const blank = !String(line || "").trim();
+          const heading = /^(#{1,6})\s+/.test(line);
+          if (blank || heading) {
+            skipFixtureList = false;
+          } else if (/^\s*[-*+]\s+/.test(line) && /\bthe runnable fixtures\b/i.test(line)) {
+            continue;
+          } else {
+            // Any other content ends the list.
+            skipFixtureList = false;
+          }
+        }
+
+        if (/^\s*Examples that exercise the implemented subset\s*:\s*$/i.test(line)) {
+          skipFixtureList = true;
+          continue;
+        }
+
+        // Drop “Relevant tests” checklist lines that only point at redacted fixtures.
+        if (/Relevant tests/i.test(line) && /\bthe runnable fixtures\b/i.test(line)) {
+          continue;
+        }
+
+        // Avoid rendering backticked prose placeholders as code.
+        line = line.replace(/`this specification`/gi, "this specification");
+        line = line.replace(
+          /`the relevant chapters of this specification`/gi,
+          "the relevant chapters of this specification"
+        );
+
+        // Prefer a public repo anchor over redacted “fixtures” placeholders.
+        line = line.replace(/`the runnable fixtures`/gi, "`examples/`");
+      }
 
       if (!inCode && statusLine.test(line)) {
         const rewritten = rewriteStatusLine(line);
@@ -283,6 +372,199 @@
       try {
         hljs.highlightElement(block);
       } catch {}
+    }
+  }
+
+  function highlightInlineCodeInHeadings(container) {
+    const hljs = globalThis.hljs;
+    if (!hljs || typeof hljs.highlight !== "function") return;
+    const nodes = Array.from(container.querySelectorAll("h1 code, h2 code, h3 code, h4 code"));
+    if (!nodes.length) return;
+
+    const silkInlineCandidate =
+      /(::|^\s*#|^\s*(package|module|import|from|export|public|private|default|const|let|var|mut|move|fn|c_fn|test|theory|struct|extends|enum|type|error|interface|impl|using|as|is|raw|pure|async|task|await|yield|with|region|new|sizeof|alignof|offsetof|typename|asm|ext|where|if|else|match|while|for|in|loop|return|panic|break|continue|assert|attr)\b)/;
+
+    for (const node of nodes) {
+      if (node.closest("pre")) continue;
+      if (node.dataset.inlineHljs === "true") continue;
+
+      const raw = String(node.textContent || "");
+      const text = raw.trim();
+      if (!text) continue;
+      if (text.length > 160) continue;
+      if (!silkInlineCandidate.test(text)) continue;
+
+      try {
+        const res = hljs.highlight(raw, { language: "silk", ignoreIllegals: true });
+        node.classList.add("hljs", "hljs-inline");
+        node.innerHTML = res.value;
+        node.dataset.inlineHljs = "true";
+      } catch {}
+    }
+  }
+
+  async function loadDocMaps() {
+    const origin = String(globalThis.location?.origin || "");
+    const base = getSilkBasePath();
+    const docsIndexUrl = new URL(`${base}docs/index.json`, origin).toString();
+    const wikiIndexUrl = new URL(`${base}wiki/index.json`, origin).toString();
+
+    async function fetchIndex(url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      return res.json();
+    }
+
+    try {
+      const [docsIndex, wikiIndex] = await Promise.all([
+        fetchIndex(docsIndexUrl),
+        fetchIndex(wikiIndexUrl),
+      ]);
+
+      const docsIdByFile = new Map();
+      const wikiIdByFile = new Map();
+      const titleById = new Map();
+      const docsSpecifierToId = new Map();
+
+      function ingest(index, idByFile) {
+        for (const sec of index?.sections || []) {
+          for (const it of sec?.items || []) {
+            const id = String(it.id || "");
+            const title = String(it.title || "");
+            const file = normalizeRelPath(String(it.file || ""));
+            if (id && title) titleById.set(id, title);
+            if (file && id) idByFile.set(file, id);
+          }
+        }
+      }
+
+      ingest(docsIndex, docsIdByFile);
+      ingest(wikiIndex, wikiIdByFile);
+
+      for (const [id, title] of titleById.entries()) {
+        const plain = stripBackticks(title);
+        if (plain.startsWith("std::") || plain.startsWith("oro:")) {
+          docsSpecifierToId.set(plain, id);
+        }
+      }
+
+      return { docsIdByFile, wikiIdByFile, titleById, docsSpecifierToId };
+    } catch {
+      return null;
+    }
+  }
+
+  function rewriteInlineDocRefs(container, maps) {
+    if (!maps) return;
+    const { docsIdByFile, wikiIdByFile, titleById, docsSpecifierToId } = maps;
+
+    const codes = Array.from(container.querySelectorAll("code"));
+    for (const code of codes) {
+      if (code.closest("pre")) continue;
+      if (code.closest("a")) continue;
+      const raw = String(code.textContent || "").trim();
+      if (!raw) continue;
+
+      if (/^the runnable fixtures$/i.test(raw)) {
+        const a = document.createElement("a");
+        a.className = "docs-inline-code";
+        a.href = `https://github.com/${githubRepo}/tree/${githubRef}/examples`;
+        a.target = "_blank";
+        a.rel = "noreferrer";
+        a.textContent = "examples/";
+        code.replaceWith(a);
+        continue;
+      }
+
+      if (/^the implementation status$/i.test(raw)) {
+        const a = document.createElement("a");
+        a.className = "docs-inline-ref";
+        a.href = viewerHref("docs", "compiler/implementation-status");
+        a.textContent = "implementation status";
+        code.replaceWith(a);
+        continue;
+      }
+
+      // Link error codes like `E2001` to the compiler diagnostics reference when available.
+      if (/^E\d{4}$/i.test(raw) && titleById.has("compiler/diagnostics")) {
+        const a = document.createElement("a");
+        a.className = "docs-inline-code";
+        a.href = viewerHref("docs", "compiler/diagnostics", `#${raw.toUpperCase()}`);
+        a.textContent = raw.toUpperCase();
+        code.replaceWith(a);
+        continue;
+      }
+
+      // Convert repository-relative example paths like `examples/foo.slk` into
+      // clickable GitHub links.
+      if (
+        githubRepo &&
+        githubRef &&
+        (raw.startsWith("examples/") || raw.startsWith("tests/") || raw === "examples/")
+      ) {
+        const path = raw === "examples/" ? "examples" : raw;
+        const isFile = /\.[a-z0-9]+$/i.test(path);
+        const base = `https://github.com/${githubRepo}`;
+        const href = isFile ? `${base}/blob/${githubRef}/${path}` : `${base}/tree/${githubRef}/${path}`;
+
+        const a = document.createElement("a");
+        a.className = "docs-inline-code";
+        a.href = href;
+        a.target = "_blank";
+        a.rel = "noreferrer";
+        a.textContent = raw;
+        code.replaceWith(a);
+        continue;
+      }
+
+      // Link stdlib module specifiers like `std::task`.
+      if (raw.startsWith("std::") && docsSpecifierToId.size) {
+        const parts = raw.split("::").filter(Boolean);
+        for (let n = parts.length; n >= 2; n -= 1) {
+          const candidate = parts.slice(0, n).join("::");
+          const id = docsSpecifierToId.get(candidate);
+          if (!id) continue;
+          const a = document.createElement("a");
+          a.className = "docs-inline-code";
+          a.href = viewerHref("docs", id);
+          a.textContent = raw;
+          code.replaceWith(a);
+          break;
+        }
+        if (!code.isConnected) continue;
+      }
+
+      // Link doclike file references such as `docs/std/io.md` or `wiki/language/types.md`.
+      let targetKind = null;
+      let file = null;
+      if (raw.startsWith("docs/")) {
+        targetKind = "docs";
+        file = raw.slice("docs/".length);
+      } else if (raw.startsWith("wiki/")) {
+        targetKind = "wiki";
+        file = raw.slice("wiki/".length);
+      } else if (raw.startsWith("spec/")) {
+        targetKind = "docs";
+        file = raw;
+      } else if (raw.endsWith(".md") || raw.endsWith(".txt")) {
+        // Only resolve explicit file references; avoid guessing bare names.
+        targetKind = "docs";
+        file = raw;
+      }
+
+      if (!targetKind || !file) continue;
+      const normalized = normalizeRelPath(file);
+      if (!normalized) continue;
+
+      const id =
+        targetKind === "wiki" ? wikiIdByFile.get(normalized) : docsIdByFile.get(normalized);
+      if (!id) continue;
+
+      const a = document.createElement("a");
+      a.className = "docs-inline-code";
+      a.href = viewerHref(targetKind, id);
+      a.textContent = raw;
+      code.replaceWith(a);
     }
   }
 
@@ -410,6 +692,7 @@
     addHeadingAnchors(contentRoot);
     registerLanguages();
     highlightContent(contentRoot);
+    highlightInlineCodeInHeadings(contentRoot);
 
     const links = buildToc(contentRoot);
     observeActiveHeadings(contentRoot, links);
@@ -444,6 +727,8 @@
     if (h1) {
       document.title = `${h1.textContent.trim()} · Oro Computer`;
     }
+
+    loadDocMaps().then((maps) => rewriteInlineDocRefs(contentRoot, maps));
   }
 
   init();

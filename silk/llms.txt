@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-03-04T15:50:43+00:00
+Generated: 2026-03-05T15:54:57+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -162,6 +162,7 @@ Silk Docs
   - usage/editor-textmate — TextMate Grammar (tmLanguage) — /silk/docs/?p=usage/editor-textmate
 - Compiler
   - compiler/architecture — Compiler Architecture — /silk/docs/?p=compiler/architecture
+  - compiler/implementation-status — Implementation Status — /silk/docs/?p=compiler/implementation-status
   - compiler/cli-silk — `silk` CLI — /silk/docs/?p=compiler/cli-silk
   - compiler/package-manifests — Package Manifests (`silk.toml`) — /silk/docs/?p=compiler/package-manifests
   - compiler/build-scripts — Build Modules (`build.slk`) — /silk/docs/?p=compiler/build-scripts
@@ -346,6 +347,7 @@ If you’re new to Silk, this is a good order:
 Start here:
 
 - Usage: [Getting started](?p=usage/getting-started)
+- Reference: [Implementation status](?p=compiler/implementation-status) · [Diagnostics](?p=compiler/diagnostics)
 - Guides: [What Silk is for](?p=guides/purpose)
 - Guides: [Hello world](?p=guides/hello-world) · [Language tour](?p=guides/language-tour) · [Modules & packages](?p=guides/modules-and-packages)
 - Guides: [Standard library](?p=guides/standard-library) · [CLI and toolchain](?p=guides/cli)
@@ -24112,6 +24114,13 @@ The build system (Zig build file and any supporting scripts) must be wired so th
 - both suites can be invoked easily during development and CI.
 
 ==============================================================================
+DOCS: Implementation Status (compiler/implementation-status)
+URL: /silk/docs/?p=compiler/implementation-status
+==============================================================================
+
+
+
+==============================================================================
 DOCS: `silk` CLI (compiler/cli-silk)
 URL: /silk/docs/?p=compiler/cli-silk
 ==============================================================================
@@ -26227,6 +26236,131 @@ Examples of help/suggestion content the compiler may emit:
 - Deep links: append `#E2001` to this page URL to jump to a specific code entry
   (for example `?p=compiler/diagnostics#E2001`).
 - Search: the docs search box accepts error codes directly (type `E2001`).
+
+## Examples (common diagnostics)
+
+These examples are representative “shapes” that tend to trigger the listed error codes.
+The exact wording may evolve, but the codes are intended to stay stable for known error kinds.
+
+<!-- tabs:start Diagnostics examples -->
+
+### Parsing (`E0001`)
+
+Imports must appear before other top-level declarations, and top-level forms use `;` terminators:
+
+```silk
+fn main () -> int {
+  return 0;
+}
+
+import std::io::println; // invalid: imports must come first
+```
+
+Fix:
+
+- Move the `import ...;` block to the top of the file (after the optional `package` / `module` header).
+
+### Imports and packages (`E100x`)
+
+Unknown imported package (`E1001`):
+
+```silk
+import util;
+
+fn main () -> int { return 0; }
+```
+
+Fix:
+
+- Ensure the package exists in the **module set** (pass the missing `.slk` files to the build, or use `--package` with a manifest).
+
+Unknown imported file (`E1003`):
+
+```silk
+import { answer } from "./missing.slk";
+
+fn main () -> int { return answer; }
+```
+
+Fix:
+
+- Check the relative path and ensure the file is included in the module set.
+
+### Type checking (`E200x`)
+
+`let` requires an initializer (`E2015`):
+
+```silk
+fn main () -> int {
+  let x: int;
+  return x;
+}
+```
+
+Fix:
+
+- Provide an initializer: `let x: int = 0;`.
+
+Namespace imports are not callable (`E2018`):
+
+```silk
+import foo from "./foo.slk";
+
+fn main () -> int {
+  foo(); // invalid: namespace imports are accessed as foo::Name
+  return 0;
+}
+```
+
+Fix:
+
+- Use `foo::ExportedName(...)`, or add an `export default` to the imported module and call the default binding.
+
+### Typed errors (`E202x`)
+
+Error-producing calls must be handled (`E2023`):
+
+```silk
+error IoError;
+
+fn read_byte () -> u8 | IoError { return panic IoError; }
+
+fn main () -> int {
+  let b = read_byte(); // must be handled with `match`
+  return 0;
+}
+```
+
+Fix:
+
+- Use `match` to handle success vs. error cases. See: [Typed errors](?p=language/typed-errors).
+
+### Formal Silk (`E300x`)
+
+Postcondition may not hold (`E3004`):
+
+```silk
+#assure result == 2;
+fn one () -> int { return 1; }
+```
+
+Fix:
+
+- Correct the contract, or change the implementation so the proof is valid. Start with: [Formal Silk](?p=language/formal-verification).
+
+### Back-end and code generation (`E400x`)
+
+Back-end errors typically mean either:
+
+- your program uses constructs that haven’t been lowered for the active target yet (`E4001`), or
+- the back-end failed to emit an artifact (`E4002`).
+
+Fix:
+
+- Check the target-specific back-end doc (for example: [WebAssembly back-end](?p=compiler/backend-wasm)),
+  and reduce to a minimal repro that fits the documented subset for that target.
+
+<!-- tabs:end -->
 
 ## Error Codes (Initial Set)
 

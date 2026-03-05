@@ -217,10 +217,12 @@
     return name.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   }
 
-  function sanitizeMarkdown(markdown) {
+  function sanitizeMarkdown(markdown, { currentFile = "" } = {}) {
     const banned =
       /(STATUS\.md|PLAN\.md|docs\/wiki\/style-guide\.md|_template-[^`\\s]+|style-guide\.md|README\.md)/;
     const statusLine = /^(Status:|Implementation status:)\s*/i;
+    const isSpec = String(currentFile || "").startsWith("spec/");
+    const testsHeading = /^(#{1,6})\s+Tests\b/i;
 
     function rewriteStatusLine(line) {
       const m = String(line).match(/^(\s*)(Status:|Implementation status:)\s*/i);
@@ -349,6 +351,7 @@
     const out = [];
     let inCode = false;
     let codeLang = null;
+    let skipLevel = null;
 
     for (let line of lines) {
       const trimmed = line.trimStart();
@@ -361,9 +364,27 @@
         } else {
           codeLang = null;
         }
-        out.push(line);
+        if (skipLevel === null) out.push(line);
         continue;
       }
+
+      if (isSpec && !inCode) {
+        const headingMatch = line.match(/^(#{1,6})\s+(.+?)\s*$/);
+        if (skipLevel !== null && headingMatch) {
+          const level = headingMatch[1].length;
+          if (level <= skipLevel) skipLevel = null;
+        }
+
+        if (skipLevel === null) {
+          const testsMatch = line.match(testsHeading);
+          if (testsMatch) {
+            skipLevel = testsMatch[1].length;
+            continue;
+          }
+        }
+      }
+
+      if (skipLevel !== null) continue;
 
       if (!inCode && statusLine.test(line)) {
         const rewritten = rewriteStatusLine(line);
@@ -1062,7 +1083,7 @@
       );
     } catch {}
 
-    const text = sanitizeMarkdown(raw);
+    const text = sanitizeMarkdown(raw, { currentFile: item.file });
 
     let html = "";
     if (item.file.endsWith(".md") && marked?.parse) {
