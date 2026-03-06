@@ -425,8 +425,24 @@
       const wikiIdByFile = new Map();
       const titleById = new Map();
       const docsSpecifierToId = new Map();
+      const plainTitleToRef = new Map();
+      const plainTitleAmbiguous = new Set();
 
-      function ingest(index, idByFile) {
+      function addPlainTitle(targetKind, id, title) {
+        const plain = stripBackticks(title);
+        const key = String(plain || "").trim();
+        if (!key) return;
+        if (plainTitleAmbiguous.has(key)) return;
+        const existing = plainTitleToRef.get(key);
+        if (existing) {
+          plainTitleToRef.delete(key);
+          plainTitleAmbiguous.add(key);
+          return;
+        }
+        plainTitleToRef.set(key, { kind: targetKind, id });
+      }
+
+      function ingest(index, idByFile, kind) {
         for (const sec of index?.sections || []) {
           for (const it of sec?.items || []) {
             const id = String(it.id || "");
@@ -434,12 +450,13 @@
             const file = normalizeRelPath(String(it.file || ""));
             if (id && title) titleById.set(id, title);
             if (file && id) idByFile.set(file, id);
+            if (id && title) addPlainTitle(kind, id, title);
           }
         }
       }
 
-      ingest(docsIndex, docsIdByFile);
-      ingest(wikiIndex, wikiIdByFile);
+      ingest(docsIndex, docsIdByFile, "docs");
+      ingest(wikiIndex, wikiIdByFile, "wiki");
 
       for (const [id, title] of titleById.entries()) {
         const plain = stripBackticks(title);
@@ -448,7 +465,7 @@
         }
       }
 
-      return { docsIdByFile, wikiIdByFile, titleById, docsSpecifierToId };
+      return { docsIdByFile, wikiIdByFile, titleById, docsSpecifierToId, plainTitleToRef };
     } catch {
       return null;
     }
@@ -456,7 +473,7 @@
 
   function rewriteInlineDocRefs(container, maps) {
     if (!maps) return;
-    const { docsIdByFile, wikiIdByFile, titleById, docsSpecifierToId } = maps;
+    const { docsIdByFile, wikiIdByFile, titleById, docsSpecifierToId, plainTitleToRef } = maps;
 
     const codes = Array.from(container.querySelectorAll("code"));
     for (const code of codes) {
@@ -532,6 +549,20 @@
           break;
         }
         if (!code.isConnected) continue;
+      }
+
+      // Link plain-title references like `Regions` or `Operators` when they
+      // unambiguously match a docs/wiki page title.
+      if (plainTitleToRef) {
+        const ref = plainTitleToRef.get(raw);
+        if (ref && ref.id) {
+          const a = document.createElement("a");
+          a.className = "docs-inline-ref";
+          a.href = viewerHref(ref.kind, ref.id);
+          a.textContent = raw;
+          code.replaceWith(a);
+          continue;
+        }
       }
 
       // Link doclike file references such as `docs/std/io.md` or `wiki/language/types.md`.

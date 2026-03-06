@@ -809,7 +809,8 @@
     docsIdByFile,
     wikiIdByFile,
     titleById,
-    docsSpecifierToId
+    docsSpecifierToId,
+    plainTitleToRef
   ) {
     const codes = Array.from(container.querySelectorAll("code"));
     for (const code of codes) {
@@ -878,6 +879,28 @@
         a.textContent = raw;
         code.replaceWith(a);
         continue;
+      }
+
+      // Link plain-title references like `Regions` or `Operators` when they
+      // unambiguously match a docs/wiki page title.
+      if (plainTitleToRef) {
+        const ref = plainTitleToRef.get(raw);
+        if (ref && ref.id) {
+          const resolvedTitle = titleById.get(ref.id) || raw;
+          const plainTitle = stripBackticks(resolvedTitle);
+
+          const a = document.createElement("a");
+          a.href = viewerHref(ref.kind, ref.id);
+          if (plainTitle.startsWith("std::") || plainTitle.startsWith("oro:")) {
+            a.className = "docs-inline-code";
+            a.textContent = plainTitle;
+          } else {
+            a.className = "docs-inline-ref";
+            appendInlineCodeNodes(a, resolvedTitle);
+          }
+          code.replaceWith(a);
+          continue;
+        }
       }
 
       // Paths like docs/std/foo.md, wiki/language/bar.md, or local "interfaces.md".
@@ -1106,7 +1129,8 @@
       state.docsIdByFile,
       state.wikiIdByFile,
       state.titleById,
-      state.docsSpecifierToId
+      state.docsSpecifierToId,
+      state.plainTitleToRef
     );
     renderTabs(contentRoot);
     globalThis.oroInitTabs?.(contentRoot);
@@ -1143,6 +1167,22 @@
     const wikiIdByFile = new Map();
     const docsSpecifierToId = new Map();
     const wikiSpecifierToId = new Map();
+    const plainTitleToRef = new Map();
+    const plainTitleAmbiguous = new Set();
+
+    function addPlainTitle(targetKind, id, title) {
+      const plain = stripBackticks(title);
+      const key = String(plain || "").trim();
+      if (!key) return;
+      if (plainTitleAmbiguous.has(key)) return;
+      const existing = plainTitleToRef.get(key);
+      if (existing) {
+        plainTitleToRef.delete(key);
+        plainTitleAmbiguous.add(key);
+        return;
+      }
+      plainTitleToRef.set(key, { kind: targetKind, id });
+    }
 
     for (const section of index.sections || []) {
       for (const item of section.items || []) {
@@ -1155,6 +1195,7 @@
         flat.push(merged);
         itemById.set(merged.id, merged);
         titleById.set(merged.id, merged.title);
+        addPlainTitle(kind, merged.id, merged.title);
         if (kind === "docs") docsIdByFile.set(merged.file, merged.id);
         if (kind === "wiki") wikiIdByFile.set(merged.file, merged.id);
         const plain = stripBackticks(merged.title);
@@ -1176,6 +1217,7 @@
           for (const it of s.items || []) {
             wikiIdByFile.set(it.file, it.id);
             if (!titleById.has(it.id)) titleById.set(it.id, it.title);
+            addPlainTitle("wiki", it.id, it.title);
             const plain = stripBackticks(it.title);
             if (plain.startsWith("std::")) wikiSpecifierToId.set(plain, it.id);
           }
@@ -1188,6 +1230,7 @@
           for (const it of s.items || []) {
             docsIdByFile.set(it.file, it.id);
             if (!titleById.has(it.id)) titleById.set(it.id, it.title);
+            addPlainTitle("docs", it.id, it.title);
             const plain = stripBackticks(it.title);
             if (plain.startsWith("std::")) docsSpecifierToId.set(plain, it.id);
           }
@@ -1207,6 +1250,7 @@
       wikiIdByFile,
       docsSpecifierToId,
       wikiSpecifierToId,
+      plainTitleToRef,
       searchIndex,
     };
 

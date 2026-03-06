@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-03-05T15:54:57+00:00
+Generated: 2026-03-05T21:15:19+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -30074,18 +30074,20 @@ DOCS: Silk Specification (2026) (spec/2026)
 URL: /silk/spec/2026/
 ==============================================================================
 
-<!--
-This file is generated. Do not edit it by hand.
--->
-
 # Silk Specification (2026)
 
 This is the single-file edition of the Silk language specification for 2026.
 
----
+This spec is written for downstream users: it aims to be readable end-to-end,
+while still being precise enough to implement.
+
+For a high-level snapshot of what the reference compiler supports today, see:
+[Implementation status](../../docs/?p=compiler/implementation-status).
+
 ## Language Cheat Sheet
 
-This document summarizes the key syntax and concepts from the Silk language in a condensed form. It is meant as a quick reference; detailed semantics live in the other `this specification` files.
+This document summarizes the key syntax and concepts from Silk in a condensed form. It is meant as a quick reference;
+detailed semantics live in the chapters below.
 
 ### Types (Surface Forms)
 
@@ -30161,7 +30163,7 @@ Operator precedence and associativity follow the rules in `Operators`.
 - Blocks: `{ stmt* }`.
 - Expression statements: `expr;` (where allowed).
 
-See `the relevant chapters of this specification` for details.
+See the relevant chapters below for details.
 
 Executable entrypoint (initial rule):
 
@@ -30292,7 +30294,8 @@ See `Concurrency` for deeper semantics.
   - C side uses `SilkString { char *ptr; int64_t len; }` for embedding,
   - `ext` calls to typical C APIs may pass `const char *` derived from `string` where appropriate.
 
-See `External Declarations (`ext`)` and `C99 ABI and `libsilk.a`` for full details.
+See [External Declarations (`ext`)](../../docs/?p=language/ext) and
+[C99 ABI and `libsilk.a`](../../docs/?p=compiler/abi-libsilk) for full details.
 
 ## Silk Syntax Tour (Soup to Nuts)
 
@@ -30302,10 +30305,10 @@ expressions, and the Formal Silk verification directives.
 
 This guide complements (not replaces):
 
-- `Formal Grammar Spec` (the exact grammar the parser accepts),
-- the concept documents under `this specification` (semantics and checker rules),
-- `the implementation status` (what works end-to-end today),
-- and `Compiler Diagnostics` (error codes for unsupported forms).
+- [Formal Grammar Spec](../../docs/?p=language/grammar) (the exact grammar the parser accepts),
+- the reference chapters in this specification (semantics and checker rules),
+- [Implementation status](../../docs/?p=compiler/implementation-status) (what works end-to-end today),
+- and [Compiler diagnostics](../../docs/?p=compiler/diagnostics) (error codes for unsupported forms).
 
 ### 0. Minimal Executable Module
 
@@ -30322,7 +30325,7 @@ Notes:
 - Most statements end with `;`.
 - Blocks are `{ stmt* }`.
 - The entrypoint for an executable build is `main` returning `int` (see
-  ``silk` CLI` for the CLI rules and supported targets).
+  the [`silk` CLI](../../docs/?p=compiler/cli-silk) for rules and supported targets).
 
 ### 1. Lexical Basics
 
@@ -30754,7 +30757,7 @@ fn to_int (c: Color) -> int {
 }
 ```
 
-See ``enum` Types` and ``match` Expression`.
+See `enum` Types and `match` Expression.
 
 #### 4.7 Interfaces and `impl ... as ...`
 
@@ -30834,11 +30837,11 @@ fn main () -> int | OutOfBounds {
 }
 ```
 
-See `Typed Errors (`error`, `panic`, and `T | ErrorType...`)`.
+See [Typed errors](../../docs/?p=language/typed-errors).
 
 #### 4.9 External declarations: `ext`
 
-External function binding (symbol name optional; see `External Declarations (`ext`)`):
+External function binding (symbol name optional; see [External Declarations (`ext`)](../../docs/?p=language/ext)):
 
 ```silk
 export ext puts = fn(string) -> int;
@@ -30847,9 +30850,9 @@ export ext errno "errno" = int;
 ```
 
 Note: C variadics (`printf`-style `...`) via `ext` are not implemented yet; see
-`Varargs (Variable Arguments)` and `External Declarations (`ext`)`.
+`Varargs (Variable Arguments)` and [External Declarations (`ext`)](../../docs/?p=language/ext).
 
-See also: `C99 ABI and `libsilk.a`` (C ABI) and `include/silk.h`.
+See also: [C99 ABI and `libsilk.a`](../../docs/?p=compiler/abi-libsilk) (C ABI) and `include/silk.h`.
 
 #### 4.10 Tests: `test`
 
@@ -31002,7 +31005,7 @@ const parameters/arguments and generic functions).
 ### 6. Statements (Inside Blocks)
 
 The statement grammar is summarized in `Formal Grammar Spec` and detailed
-in `the relevant chapters of this specification`.
+in the relevant chapters of this specification.
 
 #### `if` / `else`
 
@@ -31029,7 +31032,7 @@ fn main () -> int {
 }
 ```
 
-`for` over a range form (special-cased surface; see ``for` Loop`):
+`for` over a range form (special-cased surface; see `for` Loop):
 
 ```silk
 fn main () -> int {
@@ -31079,7 +31082,7 @@ fn main () -> int {
 }
 ```
 
-`panic` is used for typed errors (see `Typed Errors (`error`, `panic`, and `T | ErrorType...`)`):
+`panic` is used for typed errors (see [Typed errors](../../docs/?p=language/typed-errors)):
 
 ```silk
 panic OutOfBounds { index: 1, len: 0 };
@@ -31087,7 +31090,7 @@ panic OutOfBounds { index: 1, len: 0 };
 
 #### `match` statement (typed errors)
 
-See `Typed Errors (`error`, `panic`, and `T | ErrorType...`)` for the Terminal Arm Rule and the supported
+See [Typed errors](../../docs/?p=language/typed-errors) for the Terminal Arm Rule and the supported
 pattern forms.
 
 #### `async { ... }` and `task { ... }`
@@ -31165,7 +31168,7 @@ productions, see `Formal Grammar Spec`.
 
 #### Literals and other primary expressions
 
-See the `the relevant chapters of this specification` concept documents for precise rules.
+See the relevant chapters of this specification for precise rules.
 
 ```silk
 fn main () -> int {
@@ -31365,10 +31368,10 @@ If you want more detail on a specific construct, jump to:
 - Syntax: `Formal Grammar Spec`
 - Types: `Types`, `Generics (Monomorphized)`
 - Operators: `Operators`
-- Flow control: `Flow Control Overview` and `the relevant chapters of this specification`
+- Flow control: `Flow Control Overview` and the relevant chapters of this specification
 - Modules/imports/exports: `Packages, Imports, and Exports`
 - Optionals: `Optional`
-- Typed errors: `Typed Errors (`error`, `panic`, and `T | ErrorType...`)`
+- Typed errors: [Typed errors](../../docs/?p=language/typed-errors)
 - Concurrency: `Concurrency`
 - Formal verification: `Formal Silk`
 
@@ -31663,7 +31666,7 @@ At a high level, the language can be structured as:
     language subset (`#assure` / `#theory` are rejected on `struct`).
 
   Enum declarations are part of the core language design. They are specified in
-  ``enum` Types`.
+  `enum` Types.
 
   - `EnumDecl ::= ExportModifier 'enum' Identifier GenericParamListOpt '{' EnumVariantListOpt '}'`
   - `EnumVariantListOpt ::= EnumVariantList | ε`
@@ -31808,7 +31811,7 @@ At a high level, the language can be structured as:
 
   - `match` as an expression (arms are expressions; see `MatchExpr` below),
   - `match` as a statement (arms are blocks), used for typed errors as
-    specified in `Typed Errors (`error`, `panic`, and `T | ErrorType...`)`.
+    specified in [Typed errors](../../docs/?p=language/typed-errors).
 
   In the implemented subset, the `match` statement form is restricted to a
   call-expression scrutinee and the patterns listed above.
@@ -31989,7 +31992,7 @@ At a high level, the language can be structured as:
     parsed as call expressions using the `Postfix`/`CallSuffix` productions;
     the compiler supports calls to named functions, but the type checker
     and back-end currently restrict which value types can appear at call boundaries;
-    see ``silk` CLI` for the exact supported subset.
+    see `silk` CLI for the exact supported subset.
 
 Further expression forms (ranges, etc.) are described in other
 language concept documents and in `Operators`. The current
@@ -32055,7 +32058,7 @@ Implementation status (current compiler subset):
     and some `as` casts lower to bundled runtime helper calls and rely on
     `libgcc_s.so.1` for `__float128` builtins.
 - Typed errors (`error`, `panic`, and `T | ErrorType...`) are specified in
-  `Typed Errors (`error`, `panic`, and `T | ErrorType...`)`. The current compiler models typed error
+  [Typed errors](../../docs/?p=language/typed-errors). The current compiler models typed error
   contracts as an effect on function return types and expressions.
   - Separately, type unions (`T1 | T2 | ...`) are supported in type annotations
     as described in `Type Unions (`T1 | T2 | ...`)`. In function declaration
@@ -32685,30 +32688,9 @@ fn main () -> int {
 ### Related Documents
 
 - `Duration Literals` (duration literals like `5ms`, `1.5s`)
-- ``Duration` & `Instant`` (time types and operators)
+- `Duration` & `Instant` (time types and operators)
 - `Operators` (unary `-`, arithmetic, and `as` casts)
 - `Types` (primitive numeric type names)
-
-### Tests
-
-- Integer literal contextual typing (`u8` parameters):
-  - `the runnable fixtures`
-- Integer wrap behavior in arithmetic:
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-- Float literal contextual typing (`f32` parameters):
-  - `the runnable fixtures`
-- Float literal default type (`f64`):
-  - `the runnable fixtures`
-- Float arithmetic and comparisons:
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-- Duration literals (numeric + unit suffix):
-  - `the runnable fixtures`
-- Integer literal base prefixes and legacy octal:
-  - `the runnable fixtures`
-- Integer/float/duration digit separators (`_`):
-  - `the runnable fixtures`
 
 ## String Literals
 
@@ -32873,17 +32855,9 @@ b`;
 
 - `Types` (primitive `string` and `char`)
 - `Character Literals` (shared escape spellings)
-- `C99 ABI and `libsilk.a`` (C ABI string representation)
+- [C99 ABI and `libsilk.a`](../../docs/?p=compiler/abi-libsilk) (C ABI string representation)
 
-### Tests
-
-- Core string equality and ordering:
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-- Escape coverage:
-  - `the runnable fixtures`
-- Raw/backtick coverage:
-  - `the runnable fixtures`
+### Implementation notes
 
 The compiler must:
 
@@ -33081,15 +33055,6 @@ fn main () -> int {
 - `Types` (primitive `char` and `string`)
 - `String Literals` (string literals and escape sequences)
 - `Operators` (`as` casts for int-like types, including `char`)
-
-### Tests
-
-- Unicode char equality and `\u{...}` escape:
-  - `the runnable fixtures`
-- Returning and comparing `char` values:
-  - `the runnable fixtures`
-- Escape coverage:
-  - `the runnable fixtures`
 
 ## Aggregate Literals
 
@@ -33350,19 +33315,8 @@ fn main () -> int {
 
 - `Types` (the `bool` type)
 - `Operators` (`!`, `&&`, `||`)
-- ``if` / `else`` (`if` statement semantics)
-- ``while` Loop` (`while` statement semantics)
-
-### Tests
-
-- Boolean control flow:
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-- Short-circuit semantics:
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-- Unary `!`:
-  - `the runnable fixtures`
+- `if` / `else` (`if` statement semantics)
+- `while` loop (`while` statement semantics)
 
 ## Duration Literals
 
@@ -33489,14 +33443,14 @@ fn main () -> int {
 
 See the dedicated documents:
 
-- ``if` / `else``
-- ``loop` Loop`
-- ``while` Loop`
-- ``for` Loop`
-- ``match` Expression`
-- ``return``
-- ``break``
-- ``continue``
+- `if` / `else`
+- `loop` Loop
+- `while` Loop
+- `for` Loop
+- `match` Expression
+- `return`
+- `break`
+- `continue`
 - `Blocks and Statement Composition`
 - `Expression Statements`
 
@@ -33569,7 +33523,7 @@ fn main () -> int {
 ```
 
 Supported patterns in Silk (same as `match` expressions; see
-``match` Expression`):
+`match` Expression):
 
 - optionals: `None`, `Some(name)`, `Some(_)`
 - recoverable results: `Ok(name)`, `Err(name)` (and `_` binders)
@@ -33779,7 +33733,7 @@ Notes:
 - The pattern binders (for example `Some(v)` binds `v`) are in scope only in
   the loop body.
 - The loop exits when the scrutinee does not match the pattern.
-- Supported patterns are the same as `if let` (see ``if` / `else``).
+- Supported patterns are the same as `if let` (see `if` / `else`).
 
 Example (optional countdown):
 
@@ -33830,10 +33784,10 @@ Evaluation rules:
 
 Control-flow statements inside the body follow their own definitions:
 
-- `break` exits the nearest enclosing loop (``break``).
-- `continue` skips to the next iteration (``continue``).
-- `return` exits the function (``return``).
-- `panic` exits the function via the typed error system (`Typed Errors (`error`, `panic`, and `T | ErrorType...`)`).
+- `break` exits the nearest enclosing loop (`break`).
+- `continue` skips to the next iteration (`continue`).
+- `return` exits the function (`return`).
+- `panic` exits the function via the typed error system ([Typed errors](../../docs/?p=language/typed-errors)).
 
 Blocks create scopes. A `let` declared inside the body is not visible outside
 the loop’s body block.
@@ -34087,7 +34041,7 @@ The `match` expression provides structured pattern matching.
 Key ideas:
 
 - A `match` selects one of several branches based on a scrutinee expression.
-- Patterns and guards are defined as per the language specification in `this specification`.
+- Patterns and guards are defined as per the language specification in this specification.
 - `match` is an expression; all arms must be compatible in type.
 
 The compiler must:
@@ -34146,7 +34100,7 @@ fn main () -> int {
 #### Enum Matching (`enum`)
 
 The language design supports matching over user-defined `enum` types
-(``enum` Types`).
+(`enum` Types).
 
 Defined initial subset:
 
@@ -34192,7 +34146,7 @@ Defined initial subset:
 ### `match` Statement (Typed Errors)
 
 The language design also includes a statement form of `match` used for
-*typed errors* (`Typed Errors (`error`, `panic`, and `T | ErrorType...`)`).
+*typed errors* ([Typed errors](../../docs/?p=language/typed-errors)).
 
 Surface form:
 
@@ -34213,7 +34167,7 @@ Key semantic rule (Terminal Arm Rule):
   - the optional subset (`T?`), and
   - exhaustive `enum` matches (no guards) for the current CFG IR backend subset.
 - The statement form required for typed errors is implemented as part of the
-  typed errors feature work and is described in `Typed Errors (`error`, `panic`, and `T | ErrorType...`)`.
+  typed errors feature work and is described in [Typed errors](../../docs/?p=language/typed-errors).
 
 Note: the compiler also allows the `match` statement form to destructure
 recoverable `Result`-style values. This form does not trigger the Terminal Arm
@@ -34265,31 +34219,6 @@ fn main () -> int {
   return s.len as int;
 }
 ```
-
-### Tests
-
-- Optional `match` expressions:
-  - `the runnable fixtures`
-- Enum `match` expressions:
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-- Union `match` expressions:
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-- Result-like `match` expressions:
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-- Typed error-handling `match` statements:
-  - `the runnable fixtures`
-  - `the runnable fixtures`
 
 ## Structs, Impl Blocks, and Memory Layout
 
@@ -34742,7 +34671,7 @@ Use enums to model:
 - and any API where “exactly one of these cases” is the core invariant.
 
 If your goal is “a function can fail with one of several error shapes”, prefer
-typed errors (`Typed Errors (`error`, `panic`, and `T | ErrorType...`)`) over enums.
+typed errors ([Typed errors](../../docs/?p=language/typed-errors)) over enums.
 
 ### Surface Syntax
 
@@ -34856,7 +34785,7 @@ package imports seed qualified type names.
 ### Matching
 
 Enum values are typically consumed via `match` expressions. The `match`
-expression rules are defined in ``match` Expression`; this section
+expression rules are defined in `match` Expression; this section
 focuses on the enum-specific subset.
 
 #### Patterns
@@ -35005,22 +34934,11 @@ ABI mature.
 
 ### Related Documents
 
-- ``match` Expression` (match expression rules)
+- `match` expression (match expression rules)
 - `Structs, Impl Blocks, and Memory Layout` (struct payloads)
 - `Types` (nominal types and type annotations)
 - `Packages, Imports, and Exports` (namespaces and imports)
-- `Typed Errors (`error`, `panic`, and `T | ErrorType...`)` (typed errors, not enums)
-
-### Tests
-
-- Enum matches (end-to-end):
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-- Namespaced enum references (module-set build):
-  - `the runnable fixtures` (built with `the runnable fixtures`)
+- [Typed errors](../../docs/?p=language/typed-errors) (`error`, `panic`, and `T | ErrorType...`) (typed errors, not enums)
 
 ## Interfaces
 
@@ -35288,7 +35206,7 @@ multi-module builds are implemented.
 
 In the current `silk` CLI implementation, when building a package via a package
 manifest (`silk.toml`), source files that omit `package` default to the
-manifest’s `package.name`. See `Package Manifests (`silk.toml`)`.
+manifest’s `package.name`. See [Package manifests (`silk.toml`)](../../docs/?p=compiler/package-manifests).
 
 ### Modules (`module`)
 
@@ -35561,7 +35479,7 @@ If you omit the file import (or otherwise fail to include a module that declares
 From the CLI, the usual fix is to ensure the missing package’s module(s) are
 part of the command’s module set (for example by passing their `.slk` files to
 `silk check` / `silk build`, or by adding a file import). See
-``silk` CLI` and `CLI Usage Examples`.
+`silk` CLI and `CLI Usage Examples`.
 
 ### Import Specifier Imports (JS-style)
 
@@ -35580,8 +35498,8 @@ An import specifier string is interpreted in one of three ways:
   path. These imports resolve to a module by file path.
 - **Std-root file specifier**: the string begins with `std/`. These imports
   resolve to a module by file path under the configured stdlib root (see the
-  stdlib root selection rules in ``silk` CLI` and
-  `C99 ABI and `libsilk.a``).
+  stdlib root selection rules in `silk` CLI and
+  [C99 ABI and `libsilk.a`](../../docs/?p=compiler/abi-libsilk)).
 - **Package specifier**: any other string. These imports resolve to a package
   by name (for example `"ui"` or `"std::strings"`).
 
@@ -35936,25 +35854,6 @@ Rules (current compiler subset):
 - **Name collisions with named imports**: when importing from multiple modules, use
   `as` to rename one binding (`E2004`).
 
-### Tests
-
-- Package import + unqualified/qualified access:
-  - `the runnable fixtures`
-  - `the runnable fixtures` (module-set package import; built with `the runnable fixtures`)
-- Namespace imports (file and package):
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-- Named imports + aliasing:
-  - `the runnable fixtures`
-  - `the runnable fixtures`
-- Re-exports (`export { ... };`):
-  - `the runnable fixtures` (built with `the runnable fixtures` and `the runnable fixtures`)
-  - `the runnable fixtures` (built with `the runnable fixtures`)
-- Default exports:
-  - `the runnable fixtures`
-- Importing types and using exported methods:
-  - `the runnable fixtures`
-
 ## Optional
 
 The `Optional` type provides a safe way to represent values that may or may not
@@ -36008,7 +35907,7 @@ The language design treats these as equivalent.
   - unwrap optionals via `??` (coalescing) with short-circuit evaluation of
     the fallback expression,
   - explicitly branch on optionals via the `match` expression (see
-    ``match` Expression`),
+    `match` Expression),
   - and pass/return such optionals between helpers in the supported IR
     subset.
 
@@ -36048,8 +35947,8 @@ payload equality for all optional payload kinds (notably optional-of-enum) is
 still evolving.
 
 For the current C ABI mapping of optionals in exported function signatures
-within the supported backend subset, see `C99 ABI and `libsilk.a`` and
-`External Declarations (`ext`)`.
+within the supported backend subset, see [C99 ABI and `libsilk.a`](../../docs/?p=compiler/abi-libsilk) and
+[External Declarations (`ext`)](../../docs/?p=language/ext).
 
 ### Creating Optional Values
 
@@ -36132,11 +36031,11 @@ The compiler must:
 
 ## Errors
 
-This document summarizes the Silk error-handling model at a level suitable for compiler implementation. It is based on the language design captured in `this specification` (optionals, verification, `ext`, ABI).
+This document summarizes the Silk error-handling model at a level suitable for compiler implementation. It is based on the language design captured in this specification (optionals, verification, `ext`, ABI).
 
 For unrecoverable logic bugs and contract violations, Silk uses **typed
 errors** (`error`, `panic`, and `T | ErrorType...`), specified in
-`Typed Errors (`error`, `panic`, and `T | ErrorType...`)`.
+[Typed errors](../../docs/?p=language/typed-errors).
 
 ### Design Goals
 
@@ -36154,7 +36053,7 @@ Silk distinguishes between:
   optional (`T?`).
 - **Typed errors** (`T | ErrorType...` + `panic`): reserved for unrecoverable
   contract violations and logic bugs that should not be silently ignored (see
-  `Typed Errors (`error`, `panic`, and `T | ErrorType...`)`).
+  [Typed errors](../../docs/?p=language/typed-errors)).
 
 #### Example: Recovering from URL parse errors
 
@@ -36213,7 +36112,7 @@ The verifier should be able to:
 
 On the C99 side:
 
-- Error values exposed through `libsilk.a` should use well-defined C types (e.g. enums or structs) documented in `C99 ABI and `libsilk.a``.
+- Error values exposed through `libsilk.a` should use well-defined C types (e.g. enums or structs) documented in [C99 ABI and `libsilk.a`](../../docs/?p=compiler/abi-libsilk).
 - For external functions declared via `ext`, any error behavior must be captured in the Silk-side function type and corresponding C signature (e.g. error-return codes, nullable pointers, or explicit error structs).
 
 The compiler must:
@@ -36520,7 +36419,7 @@ Implementation notes:
 - The current compiler supports a match subset for optionals as an
   *expression* (`match x { None => expr, Some(v) => expr }`).
 - The `match` expression also supports `Ok(...)` / `Err(...)` patterns for
-  `Result` values (see ``match` Expression`).
+  `Result` values (see `match` Expression).
 - Typed error handling uses the *statement* form of `match` with block arms.
 
 ### Restrictions
@@ -36791,7 +36690,9 @@ move/cleanup model for droppable values:
   compiler during lowering.
 
 Regions and a richer move/borrow model remain design-in-progress. See
-`Regions`, `Borrow Checking (Static Alias and Lifetime Safety)`, and `the implementation status`
+[Regions](../../docs/?p=language/regions),
+[Borrow checking](../../docs/?p=language/borrow-checker), and
+[Implementation status](../../docs/?p=compiler/implementation-status)
 for current scope.
 
 ### Goals
@@ -36831,7 +36732,7 @@ Important: this is currently an internal Silk-managed heap for Silk code, not an
 FFI pointer model. The compiler does not permit `&Struct` for
 non-opaque structs in `ext` signatures; only `&Opaque` handles may cross the
 FFI boundary (see `Structs, Impl Blocks, and Memory Layout` and
-`External Declarations (`ext`)`).
+[External Declarations (`ext`)](../../docs/?p=language/ext)).
 
 ##### Details
 
@@ -37588,7 +37489,7 @@ Therefore:
   declarations do not have Formal Silk contracts yet, so verified code cannot
   call `ext` functions.
 
-See `External Declarations (`ext`)` for the external-declaration rules.
+See [External Declarations (`ext`)](../../docs/?p=language/ext) for the external-declaration rules.
 
 The main constructs are:
 
@@ -38653,7 +38554,7 @@ In Silk.
 
 ## Language Spec Conventions
 
-This document defines conventions used across `this specification`. It exists to
+This document defines conventions used across this specification. It exists to
 keep the language specification consistent and easy to navigate for both:
 
 - first-time readers learning Silk, and
@@ -38682,7 +38583,6 @@ Recommended sections:
    - realistic examples (how the feature is used in real code)
 7. **Common pitfalls**
 8. **Related documents**
-9. **Relevant tests** (links to `the runnable fixtures` and `the runnable fixtures`)
 
 Not every concept needs every section, but the goal is that a reader should
 never have to infer critical rules from examples.
@@ -38747,7 +38647,7 @@ restating it everywhere. Common cross-links include:
 - `Types` for type-system rules and special cases,
 - `Mutability` for `mut` and borrowing rules,
 - `Compiler Diagnostics` for error codes,
-- `the implementation status` for a high-level implementation snapshot.
+- [Implementation status](../../docs/?p=compiler/implementation-status) for a high-level implementation snapshot.
 
 ## Operators
 
@@ -38833,7 +38733,7 @@ The language includes the following operators and delimiters:
 - Typed error propagation: `?` (postfix).
   - Syntax: `<call_expr>?`.
   - This propagates typed errors from an error-producing call to the enclosing
-    function; see `Typed Errors (`error`, `panic`, and `T | ErrorType...`)`.
+    function; see [Typed errors](../../docs/?p=language/typed-errors).
 - Ranges: `...`, `..=`, `..`.
 - Other punctuation: `?`, `??`, `->`, `=>`, `,`, `;`, `(`, `)`, `{`, `}`, `[`, `]`, `_`, `:`.
   - Currently, `??` is supported for optionals in the
@@ -38841,7 +38741,7 @@ The language includes the following operators and delimiters:
     `struct` subset, plus nested optionals in the supported payload subset;
     see `Optional`). The `?` token is used both in type
     annotations (`T?`) and as the postfix typed error propagation operator for
-    error-producing calls (`call()?`; see `Typed Errors (`error`, `panic`, and `T | ErrorType...`)`).
+    error-producing calls (`call()?`; see [Typed errors](../../docs/?p=language/typed-errors)).
 
 The lexer and parser must recognize these tokens exactly as specified, and precedence/associativity must match the formal grammar.
 
@@ -39590,7 +39490,7 @@ When calling conventional C APIs, the compiler may pass a `const char *` derived
 - Internal/runtime ABI: operates on `{ ptr, len }` structs (`SilkString`).
 - Compatibility calls to typical C libraries: may expose `const char *` for parameters declared as `string` in Silk `ext` declarations, with the compiler extracting the `ptr`.
 
-Our embedding ABI for `libsilk.a` will treat `SilkString` as the canonical C representation; details are further specified in `C99 ABI and `libsilk.a``.
+Our embedding ABI for `libsilk.a` will treat `SilkString` as the canonical C representation; details are further specified in [C99 ABI and `libsilk.a`](../../docs/?p=compiler/abi-libsilk).
 
 ### Primitive Type Mapping
 
@@ -39600,12 +39500,12 @@ The spec includes a table mapping Silk primitive types to C types, for example:
 - `i16`, `u16` → `int16_t`, `uint16_t`
 - `i32`, `u32` → `int32_t`, `uint32_t`
 - `i64`, `u64` → `int64_t`, `uint64_t`
-- `i128` → `SilkI128` (see `C99 ABI and `libsilk.a``; `{ lo, hi }` lanes)
-- `u128` → `SilkU128` (see `C99 ABI and `libsilk.a``; `{ lo, hi }` lanes)
+- `i128` → `SilkI128` (see [C99 ABI and `libsilk.a`](../../docs/?p=compiler/abi-libsilk); `{ lo, hi }` lanes)
+- `u128` → `SilkU128` (see [C99 ABI and `libsilk.a`](../../docs/?p=compiler/abi-libsilk); `{ lo, hi }` lanes)
 - `int` → `int64_t` (current `linux/x86_64` baseline; do not assume C `int`)
 - `f32` → `float`
 - `f64` → `double`
-- `f128` → `SilkF128` (see `C99 ABI and `libsilk.a``; IEEE binary128 bits in `{ lo, hi }`)
+- `f128` → `SilkF128` (see [C99 ABI and `libsilk.a`](../../docs/?p=compiler/abi-libsilk); IEEE binary128 bits in `{ lo, hi }`)
 - `bool` → `bool` (or `_Bool`)
 - `char` → `uint32_t` (UTF‑32)
 - `string` → `SilkString` (`{ char *ptr; int64_t len; }`)
@@ -39739,7 +39639,7 @@ Compiler requirements:
 - Implement `ext` declarations as specified.
 - Map Silk types to C types per the ABI document.
 - Enforce the documented passing conventions and ownership rules for external-call strings and other bridged types.
-- Keep this document and `C99 ABI and `libsilk.a`` in sync with the actual codegen strategy.
+- Keep this document and [C99 ABI and `libsilk.a`](../../docs/?p=compiler/abi-libsilk) in sync with the actual codegen strategy.
 
 ## Inline Assembly (`asm`)
 
@@ -39842,7 +39742,7 @@ the compiler supports these statement forms (see
   - `return`,
   - `assert`,
   - `panic` (typed errors),
-  - `match` statement (typed errors; see `Typed Errors (`error`, `panic`, and `T | ErrorType...`)`).
+  - `match` statement (typed errors; see [Typed errors](../../docs/?p=language/typed-errors)).
 
 ### Semantics
 
@@ -40781,7 +40681,7 @@ fn main () -> int {
 ```
 
 If you want a value for control flow, prefer an expression form that produces a
-value (for example `match` expressions; see ``match` Expression`).
+value (for example `match` expressions; see `match` Expression).
 
 ### Compiler requirements
 
@@ -41053,10 +40953,10 @@ Notes:
 
 - The body block executes repeatedly.
 - `break;` exits the nearest enclosing loop and continues execution at the
-  statement immediately following the loop (``break``).
+  statement immediately following the loop (`break`).
 - `continue;` skips the remainder of the current iteration’s body and begins the
-  next iteration (``continue``).
-- `return;` exits the current function (``return``).
+  next iteration (`continue`).
+- `return;` exits the current function (`return`).
 
 ### Type Checking Rules
 
@@ -41075,10 +40975,10 @@ without requiring a dedicated nominal `enum` declaration for every case.
 
 See also:
 
-- `Typed Errors (`error`, `panic`, and `T | ErrorType...`)` (unparenthesized `|` in function *signatures*
+- [Typed errors](../../docs/?p=language/typed-errors) (unparenthesized `|` in function *signatures*
   is reserved for typed-error contracts),
-- ``enum` Types` (general tagged unions with named variants),
-- ``match` Expression` (`match` over union values).
+- `enum` Types (general tagged unions with named variants),
+- `match` Expression (`match` over union values).
 
 ### Surface Syntax
 
@@ -41593,7 +41493,7 @@ This document defines the C99 ABI and the interface of the `libsilk.a` static li
 ### Goals
 
 - Provide a stable C ABI for embedders.
-- Mirror the external-declaration semantics described in `External Declarations (`ext`)`.
+- Mirror the external-declaration semantics described in [External Declarations (`ext`)](../../docs/?p=language/ext).
 - Keep the ABI small, explicit, and well-documented.
 
 ### Library & Headers
@@ -41889,7 +41789,7 @@ The initial C header provided in the Silk compiler repository defines:
     - it lexes and parses each module into an internal representation,
     - it then type‑checks the *set* of modules as a unit, taking into account
       package/import relationships and exported constants, according to the
-      language grammar and semantics documented under `this specification`,
+      language grammar and semantics documented under this specification,
     - if Formal Silk syntax is present (for example `#require`, `#assure`,
       `#assert`, `#invariant`, `#variant`, `#monovariant`, `#const`), it also runs the Z3-backed verifier
       and fails the build if verification fails (`E3001`..`E3008`),
@@ -42247,7 +42147,7 @@ In addition, the embedding ABI must clearly distinguish:
 - functions that consume Silk‑owned values (e.g. `SilkString` whose storage is owned by the runtime) versus
 - functions that take ownership of data supplied by the embedder (and are responsible for freeing it via documented APIs).
 
-Any deviation from the mappings documented in `External Declarations (`ext`)` must be justified here and reflected in tests.
+Any deviation from the mappings documented in [External Declarations (`ext`)](../../docs/?p=language/ext) must be justified here and reflected in tests.
 
 ### See Also
 
