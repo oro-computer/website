@@ -20,4 +20,4 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/language/conventions.md`
-- Grammar: `wiki/language/grammar.md`
+- Grammar: `docs/wiki/language/grammar.md`

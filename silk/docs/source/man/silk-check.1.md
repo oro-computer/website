@@ -23,6 +23,8 @@ When explicit input files are used (no `--package`), the `silk` CLI may load add
 ## Options
 
 - `--help`, `-h` — show command help and exit.
+- `--verify` — enable Formal Silk verification for modules that contain Formal Silk directives.
+- `--no-verify` — disable Formal Silk verification (default).
 - `--nostd`, `-nostd` — disable stdlib auto-loading for `import std::...;`.
 - `--std-root <path>` — override the stdlib root directory used to resolve `import std::...;`.
 - `--std <path>` — alias of `--std-root` when `<path>` does not end in `.a`.
@@ -30,8 +32,12 @@ When explicit input files are used (no `--package`), the `silk` CLI may load add
 - `--std <path>.a` — accepted for consistency; ignored by `check`.
 - `--arch <arch>` — shorthand target selector (mutually exclusive with `--target`). This affects `OS_PLATFORM` / `OS_ARCH` and `attr(...)` conditional compilation during checking.
 - `--target <triple>` — target triple (mutually exclusive with `--arch`). This affects `OS_PLATFORM` / `OS_ARCH` and `attr(...)` conditional compilation during checking.
-- `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`).
-- `--debug`, `-g` — emit Z3 debug output and write `.smt2` dumps for failing Formal Silk obligations.
+- `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`; valid only with `--verify`).
+- `--debug`, `-g` — emit Z3 debug output and write `.smt2` dumps for failing Formal Silk obligations (valid only with `--verify`).
+- `--feature <spec>`, `-F<spec>` — enable a build feature for `attr(feature="...")` queries and declaration gating. Repeatable.
+  - Spec forms: `NAME` or `NAME=VALUE` (see `?p=language/attributes`).
+  - For package builds, you may target a specific package with `PKG/NAME` or
+    `PKG/NAME=VALUE` (for example `ui/tui` or `ui/tui=false`).
 - `--package <dir|manifest>`, `--pkg <dir|manifest>` — load the module set from a `silk.toml` manifest instead of explicit input files.
 - `--` — end of options; treat following args as file paths (even if they begin with `-`).
 
@@ -55,6 +61,8 @@ silk check --package .
 
 - `PREFIX` — installation prefix used for the system package search root at `PREFIX/lib/silk` (searched last when it exists). Default: `/usr/local`.
 - `SILK_PACKAGE_PATH` — primary package search path for bare-specifier imports (entries separated by `:` on POSIX, `;` on Windows). The compiler appends `PREFIX/lib/silk` as the last search path entry when it exists.
+- `SILK_Z3_LIB` — path to a dynamic Z3 library used by the Formal Silk verifier when `--verify` is enabled.
+- `SILK_VERIFY_JOBS` — override the number of worker threads used for Formal Silk verification (default: auto; capped at 8).
 
 ## Exit status
 
@@ -64,5 +72,5 @@ silk check --package .
 ## See Also
 
 - `silk` (1), `silk-build` (1)
-- `docs/compiler/cli-silk.md`
-- `docs/compiler/diagnostics.md`
+- `?p=compiler/cli-silk`
+- `?p=compiler/diagnostics`

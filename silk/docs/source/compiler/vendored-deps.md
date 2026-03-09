@@ -3,6 +3,9 @@
 Silk aims to be buildable with minimal reliance on system-installed
 dependencies. For the hosted POSIX baseline, Silk vendors:
 
+- a pinned Zig toolchain tarball for `linux/x86_64` (used by CI and optional for
+  contributors):
+  - `vendor/zig-x86_64-linux-0.16.0-dev.1912+0cbaaa5eb.tar.xz`
 - libsodium (`jedisct1/libsodium`) at tag `1.0.20-RELEASE`
 - mbedTLS (`Mbed-TLS/mbedtls`) at tag `mbedtls-4.0.0`
 - libssh2 (`libssh2/libssh2`) at tag `libssh2-1.11.1`
@@ -11,17 +14,20 @@ dependencies. For the hosted POSIX baseline, Silk vendors:
 - libpng (`pnggroup/libpng`) at tag `v1.6.54`
 - libjpeg-turbo (`libjpeg-turbo/libjpeg-turbo`) at tag `3.1.3`
 - libxml2 (`GNOME/libxml2`) at tag `v2.15.1`
+- Z3 SMT solver at version `4.15.4.0` (shipped as a pinned static archive for `linux/x86_64`)
 
-These dependencies are fetched as shallow clones (`--depth 1`) and built as
-static libraries for `linux/x86_64`.
+When fetching is enabled, these dependencies are fetched as shallow clones
+(`--depth 1`) or downloaded archives and built as static libraries for
+`linux/x86_64`.
 
-Note: the current deps workflow builds libssh2 with the OpenSSL
-backend, so building libssh2 requires system OpenSSL headers and libraries
-(`libssl`/`libcrypto`).
+Note: the deps workflow builds libssh2 with the mbedTLS backend. This keeps the
+hosted baseline self-contained (no system OpenSSL headers/libraries required),
+and allows `silk build` to link `std::ssh2` without adding `DT_NEEDED` entries
+for `libssh2.so.*`.
 
-## Fetch + Build
+## Build (Offline by Default)
 
-From the Silk compiler repository root:
+From the repo root:
 
 ```sh
 make deps
@@ -31,6 +37,16 @@ Or directly:
 
 ```sh
 zig build deps
+```
+
+By default, `zig build deps` does **not** use the network (no `git fetch`,
+no `git clone`, no downloads). It assumes the dependency sources already exist
+under `vendor/deps/`.
+
+To allow `zig build deps` to fetch missing sources from the network, run:
+
+```sh
+zig build deps -Dfetch-deps=true
 ```
 
 This populates:
@@ -55,20 +71,36 @@ This populates:
   - `libsilk_jpeg_shims.a` (ABI-safe Silk wrappers for libjpeg-turbo)
   - `libxml2.a`
   - `libsilk_xml_shims.a` (ABI-safe Silk wrappers for libxml2 struct access)
+  - `libz3.a` (Z3 `4.15.4.0`; shipped in the repo for Formal Silk verification)
 
-These directories and generated `.a` files are ignored by git.
+These directories and generated `.a` files are ignored by git, except for:
+
+- the shipped pinned Z3 archive: `vendor/lib/x64-linux/libz3.a`
+- the shipped pinned Z3 headers: `vendor/include/z3*.h` and `vendor/include/z3++.h`
+- the shipped pinned Zig toolchain tarball (Linux x86_64): `vendor/zig-x86_64-linux-0.16.0-dev.1912+0cbaaa5eb.tar.xz`
+
+To build the full hosted toolchain from a clean checkout (including `std::xml`,
+`std::image`, and other modules that depend on vendored C libraries), run:
+
+```sh
+zig build deps -Dfetch-deps=true
+```
 
 ## Staging and Installed Layout
 
 For distribution and `make install`, the hosted toolchain expects vendored
-archives under the compiler prefix:
+archives and headers under the compiler prefix:
 
 - staged (repo build prefix): `build/lib/silk/vendor/lib/x64-linux/`
+- staged headers: `build/lib/silk/vendor/include/`
 - installed: `<prefix>/lib/silk/vendor/lib/x64-linux/` (typically
   `/usr/local/lib/silk/vendor/lib/x64-linux/`)
+- installed headers: `<prefix>/lib/silk/vendor/include/` (typically
+  `/usr/local/lib/silk/vendor/include/`)
 
 `make build` copies `.a` files from `vendor/lib/x64-linux/` into the staged
-prefix under `build/lib/silk/vendor/lib/x64-linux/`, and `make install` copies
+prefix under `build/lib/silk/vendor/lib/x64-linux/` and headers from
+`vendor/include/` into `build/lib/silk/vendor/include/`. `make install` copies
 the staged prefix into `<prefix>/`.
 
 ## Bundling Into `libsilk.a`
@@ -86,14 +118,13 @@ zig build -Drequire-vendored-crypto=true
 ## Notes
 
 - Vendoring is currently wired up only for `linux/x86_64`.
-- Some std modules are currently wired to system shared libraries
-  during the hosted `linux/x86_64` phase (for example `std::tls` and
-  `std::ssh2`); the vendored static archives produced by `zig build deps` are
-  used for embedding and future bundling into `libsilk.a`.
+- `std::crypto` and `std::tls` are wired to the vendored static archives
+  produced by `zig build deps` for `silk build` outputs on `linux/x86_64`.
 - `mbedTLS` uses git submodules (`framework`, `tf-psa-crypto`); `zig build deps` initializes them automatically.
 - `zig build deps` configures `mbedTLS` with `ENABLE_TESTING=OFF` and `ENABLE_PROGRAMS=OFF` (we only need the static libraries).
 - The `deps` step requires `git`, `cmake`, `perl`, and a working C build toolchain (`make` + a C compiler).
-- Building libssh2 currently requires system OpenSSL development files (headers + libraries) due to the OpenSSL backend configuration.
+- `zig build deps` builds libssh2 against the vendored mbedTLS archives (no
+  OpenSSL requirement in the hosted baseline).
 - libpng requires zlib at link/runtime (typically `libz.so.1`).
 - libxml2 is configured without iconv/zlib/modules/threads in the default deps workflow; it still requires libm at link/runtime (typically `libm.so.6`).
 - `mbedTLS`/TF-PSA-Crypto generation requires `python3` with `jinja2` available; `jsonschema` is optional (validation is skipped when it is missing).

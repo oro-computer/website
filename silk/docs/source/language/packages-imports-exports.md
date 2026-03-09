@@ -41,13 +41,23 @@ Not implemented yet:
 
 - Package-import aliasing (for example `import std::strings as str;`).
 - Bulk re-exports (“export from ...”) and forwarding of export surfaces.
-- A stable, fully specified “package build” system outside the current CLI/module-set
-  model (see `docs/compiler/package-manifests.md` for current manifest support).
+
+The current package-root workflow is documented separately from this language
+syntax page:
+
+- [Package manifests](?p=compiler/package-manifests)
+- [Package distribution](?p=compiler/package-distribution)
+- [`silk-package` (1)](?p=man/silk-package.1)
 
 Related tooling and diagnostics:
 
-- `docs/compiler/diagnostics.md` (import-related error codes like `E1001`–`E1006`)
-- `docs/compiler/package-manifests.md` (manifest builds via `silk.toml`)
+- [Diagnostics](?p=compiler/diagnostics) (import-related error codes like
+  `E1001`–`E1006`)
+- [Package manifests](?p=compiler/package-manifests) (manifest builds via
+  `silk.toml`)
+- [Package distribution](?p=compiler/package-distribution) (distribution,
+  install, and portable package-root layout)
+- [`silk-package` (1)](?p=man/silk-package.1) (`inspect` / `lint`)
 
 ## Terminology
 
@@ -99,7 +109,7 @@ multi-module builds are implemented.
 
 In the current `silk` CLI implementation, when building a package via a package
 manifest (`silk.toml`), source files that omit `package` default to the
-manifest’s `package.name`. See `docs/compiler/package-manifests.md`.
+manifest’s `package.name`. See [Package manifests](?p=compiler/package-manifests).
 
 ## Modules (`module`)
 
@@ -368,7 +378,7 @@ If you omit the file import (or otherwise fail to include a module that declares
 From the CLI, the usual fix is to ensure the missing package’s module(s) are
 part of the command’s module set (for example by passing their `.slk` files to
 `silk check` / `silk build`, or by adding a file import). See
-`docs/compiler/cli-silk.md` and `docs/usage/cli-examples.md`.
+[`silk` CLI](?p=compiler/cli-silk) and [CLI examples](?p=usage/cli-examples).
 
 ## Import Specifier Imports (JS-style)
 
@@ -387,8 +397,8 @@ An import specifier string is interpreted in one of three ways:
   path. These imports resolve to a module by file path.
 - **Std-root file specifier**: the string begins with `std/`. These imports
   resolve to a module by file path under the configured stdlib root (see the
-  stdlib root selection rules in `docs/compiler/cli-silk.md` and
-  `docs/compiler/abi-libsilk.md`).
+  stdlib root selection rules in [`silk` CLI](?p=compiler/cli-silk) and
+  [C ABI (`libsilk`)](?p=compiler/abi-libsilk)).
 - **Package specifier**: any other string. These imports resolve to a package
   by name (for example `"ui"` or `"std::strings"`).
 

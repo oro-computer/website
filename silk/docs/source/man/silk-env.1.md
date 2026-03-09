@@ -29,10 +29,15 @@ The output includes, at minimum:
 - `SILK_STD_ROOT` — override stdlib root used to resolve `import std::...;`.
 - `SILK_STD_LIB` — override stdlib archive used for linking (`libsilk_std.a`).
 - `SILK_Z3_LIB` — override Z3 dynamic library path used for Formal Silk verification.
+- `SILK_VERIFY_JOBS` — override the number of worker threads used for Formal Silk verification (default: auto; capped at 8).
 - `SILK_PACKAGE_PATH` — package search path for bare-specifier imports.
+- `SILK_ELF_INTERP` — override the ELF `PT_INTERP` dynamic loader path used for `linux-x86_64` outputs when emitting dynamically-linked executables/shared libraries.
 - `PREFIX` — installation prefix used for the system package search root (`PREFIX/lib/silk`) and as the default prefix for `silk build install` / `silk build uninstall` when `-p/--prefix` is not provided.
 - `SILK_WORK_DIR` — override compiler work directory root (defaults to `.silk`).
 - `SILK_REPL_HISTORY` — override REPL history path.
+- `SILK_TEST_TIMEOUT_MS` — per-top-level-test process timeout in milliseconds (default: `30000`).
+- `SILK_TEST_JOBS` — override the number of test processes run in parallel (default: `1`; `0` means auto; capped at 8). Overridden by `silk test --jobs`.
+- `SILK_TEST_MAX_OUTPUT_BYTES` — maximum bytes of stdout/stderr captured per test process for diagnostics (default: `1048576`). Output beyond this limit is truncated.
 - `SILK_RT_LIBDIR` — override search directory for bundled runtime archives (`libsilk_rt*.a`).
 - `SILK_CC` / `CC` — select host C compiler for `silk cc` and `.c` inputs during `silk build`.
 - `MANPAGER` / `PAGER` / `TERM` / `NO_COLOR` — paging and rendering configuration for `silk man` and diagnostic output.

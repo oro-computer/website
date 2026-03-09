@@ -1,7 +1,9 @@
 # `std::ssh2`
 
-Status: **Initial implementation + design**. `std::ssh2` provides SSH2 client primitives
-for the hosted POSIX baseline using the system `libssh2` shared library.
+Status: **Initial implementation + design**. `std::ssh2` provides SSH2 client
+primitives for the hosted POSIX baseline. On `linux/x86_64`, `silk build`
+auto-links the vendored `libssh2.a` so outputs do not depend on a system
+`libssh2` shared object at runtime.
 
 The initial goals are:
 
@@ -14,18 +16,20 @@ The initial goals are:
 
 ## Linkage and Toolchain Integration
 
-On `linux/x86_64` with the glibc dynamic loader (`ld-linux`), `silk build`
-automatically adds `libssh2.so.1` as a `DT_NEEDED` dependency when a program
-imports `libssh2_*` extern symbols (for example via `import std::ssh2;`).
+On `linux/x86_64`, when a program imports `std::ssh2`, `silk build`
+automatically links the vendored `libssh2.a` archive from:
 
-This mirrors existing behavior for `libc.so.6`, `libsodium.so.23`, and
-`libmbedtls.so.14` so downstream users do not have to pass
-`--needed libssh2.so.1` for normal hosted builds.
+- repo builds: `vendor/lib/x64-linux/libssh2.a`
+- staged toolchains: `build/lib/silk/vendor/lib/x64-linux/libssh2.a`
+- installed toolchains: `<prefix>/lib/silk/vendor/lib/x64-linux/libssh2.a`
 
-To build the vendored static library artifact used for embedding and future
-bundling, run `zig build deps`. This stages `vendor/lib/x64-linux/libssh2.a`
-from `vendor/deps/libssh2` (tag `libssh2-1.11.1`). The current deps workflow
-builds libssh2 using the OpenSSL backend.
+The hosted deps workflow builds libssh2 against the vendored mbedTLS archives,
+so `std::ssh2` does not require system OpenSSL headers/libraries or a system
+`libssh2.so.*` at runtime.
+
+To link dynamically (system libssh2), pass `--needed libssh2.so.1` (or set
+`[[target]].needed = ["libssh2.so.1"]` in `silk.toml`) and ensure the SONAME is
+resolvable by the dynamic loader on the target system.
 
 In staged/installed toolchains, the vendored archive is expected under the
 compiler prefix:
@@ -35,11 +39,11 @@ compiler prefix:
 
 ## Error Model
 
-The `std::ssh2` API uses `std::result::Result(T, E)` and a stable `Ssh2Failed`
+The `std::ssh2` API uses `std::result::Result(T, E)` and a stable `SSH2Failed`
 error value. The underlying libssh2 error code is retained as structured detail
-(`Ssh2Failed.detail`) for debugging and telemetry.
+(`SSH2Failed.detail`) for debugging and telemetry.
 
-Non-blocking I/O is surfaced via `Ssh2ErrorKind::WouldBlock` (mapped from
+Non-blocking I/O is surfaced via `SSH2ErrorKind::WouldBlock` (mapped from
 `LIBSSH2_ERROR_EAGAIN`).
 
 Public error/value types in the current subset:
@@ -49,7 +53,7 @@ module std::ssh2;
 
 import std::result;
 
-enum Ssh2ErrorKind {
+enum SSH2ErrorKind {
   OutOfMemory,
   InvalidInput,
   WouldBlock,
@@ -64,18 +68,18 @@ enum Ssh2ErrorKind {
   Unknown,
 }
 
-export error Ssh2Failed {
+export error SSH2Failed {
   code: int,
   detail: int,
 }
 
-export type Ssh2IntResult = std::result::Result(int, Ssh2Failed);
-export type Ssh2I64Result = std::result::Result(i64, Ssh2Failed);
+export type SSH2IntResult = std::result::Result(int, SSH2Failed);
+export type SSH2I64Result = std::result::Result(i64, SSH2Failed);
 
-export type SessionResult = std::result::Result(Session, Ssh2Failed);
-export type ChannelResult = std::result::Result(Channel, Ssh2Failed);
-export type SftpResult = std::result::Result(Sftp, Ssh2Failed);
-export type SftpHandleResult = std::result::Result(SftpHandle, Ssh2Failed);
+export type SessionResult = std::result::Result(Session, SSH2Failed);
+export type ChannelResult = std::result::Result(Channel, SSH2Failed);
+export type SftpResult = std::result::Result(Sftp, SSH2Failed);
+export type SftpHandleResult = std::result::Result(SftpHandle, SSH2Failed);
 
 enum KnownHostCheck {
   Match,
@@ -83,10 +87,10 @@ enum KnownHostCheck {
   NotFound,
 }
 
-export type KnownHostCheckResult = std::result::Result(KnownHostCheck, Ssh2Failed);
+export type KnownHostCheckResult = std::result::Result(KnownHostCheck, SSH2Failed);
 
 // Agent iteration uses `Ok(Some(identity))` and `Ok(None)` for end-of-list.
-export type AgentNextIdentityResult = std::result::Result(AgentIdentity?, Ssh2Failed);
+export type AgentNextIdentityResult = std::result::Result(AgentIdentity?, SSH2Failed);
 ```
 
 ## Byte Buffers and Formal Silk

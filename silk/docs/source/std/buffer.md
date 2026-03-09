@@ -1,13 +1,15 @@
 # `std::buffer`
 
-Status: **Initial implementation + design**. In the long-term design, Silk exposes an
-intrinsic `Buffer(T)` type for low-level, unsafe contiguous memory access (see
-`docs/language/buffers.md`).
+Status: **Implemented (scalar-slot + packed bytes)**. `std::buffer` provides:
 
-In the current stdlib, `std::buffer` provides a packed byte
-buffer (`BufferU8`) plus width-oriented buffer aliases built on
-`std::vector::Vector(T)` for common scalar element types. This keeps buffer
-usage ergonomic without relying on per-type `Vec*` stand-ins.
+- `Buffer(T)`: an owning, fixed-capacity **scalar-slot** buffer (cap measured in
+  elements), with view/slice helpers returning `std::arrays::Slice(T)`.
+- `BufferU8`: an owning, growable **packed byte buffer** (byte-addressed `ptr`,
+  with `len`/`cap` measured in bytes).
+
+In the long-term design, the compiler may treat `Buffer(T)` as a special
+primitive, but the shipped stdlib surface is already usable end-to-end (see
+`docs/language/buffers.md`).
 
 See also:
 
@@ -19,10 +21,44 @@ See also:
 
 `std::buffer` provides:
 
+- `Buffer(T)`: an owning, fixed-capacity scalar-slot buffer for `T` values.
 - `BufferU8`: an owning, growable **packed byte buffer** (byte-addressed `ptr`,
   with `len` and `cap` measured in bytes).
 - width-oriented scalar buffer aliases built on `std::vector::Vector(T)` for
   convenience in the current subset.
+
+### `Buffer(T)`
+
+```silk
+module std::buffer;
+
+import std::arrays;
+import std::memory;
+
+struct Buffer(T) {
+  ptr: u64,
+  cap: i64,
+}
+
+impl Buffer(T) {
+  public fn init (cap: i64) -> std::result::Result(Buffer(T), std::memory::AllocFailed);
+  public fn empty () -> Buffer(T);
+  public fn read (self: &Buffer(T), index: i64) -> T;
+  public fn write (mut self: &Buffer(T), index: i64, value: T) -> void;
+  public fn view (self: &Buffer(T), len: i64) -> std::arrays::Slice(T);
+  public fn slice (self: &Buffer(T), start: i64, end: i64) -> std::arrays::Slice(T);
+  public fn drop (mut self: &Buffer(T)) -> void;
+}
+
+// Module-level wrappers (synonyms for the methods above).
+export fn alloc (T; cap: i64) -> std::result::Result(Buffer(T), std::memory::AllocFailed);
+export fn capacity (T; buf: &Buffer(T)) -> i64;
+export fn drop (T; mut buf: &Buffer(T)) -> void;
+export fn read (T; buf: &Buffer(T), index: i64) -> T;
+export fn write (T; mut buf: &Buffer(T), index: i64, value: T) -> void;
+export fn view (T; buf: &Buffer(T), len: i64) -> std::arrays::Slice(T);
+export fn slice (T; buf: &Buffer(T), start: i64, end: i64) -> std::arrays::Slice(T);
+```
 
 ### `BufferU8`
 
@@ -81,6 +117,9 @@ export type BufferF64 = std::vector::Vector(f64);
 
 Notes:
 
+- `Buffer(T)` is a scalar-slot buffer: `cap` is in elements, and the allocation
+  size is `cap * sizeof(T)` bytes (in the current backend subset, `sizeof(u8) == 8`).
+  For packed bytes suitable for OS/FFI byte APIs, use `BufferU8`.
 - `BufferU8` is a packed byte buffer. Its `ptr` can be passed directly to
   byte-oriented OS/FFI APIs alongside `len`.
 - `BufferU8.init(cap)` returns `Err(AllocFailed)` rather than silently

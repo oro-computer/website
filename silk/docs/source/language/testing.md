@@ -64,6 +64,18 @@ The initial runner uses TAP version 13 formatting:
 - `ok <n> - <name>`
 - `not ok <n> - <name>`
 
+### Nested test progress output
+
+When a `test` block contains nested `test` blocks, the runner emits subtest
+progress lines to stderr as each nested test completes:
+
+- `ok - a/b`
+- `not ok - a/b`
+
+The `a/b` path reflects the active nested test name stack (including the
+outermost test name) joined with `/`. This keeps TAP output on stdout stable
+while making long nested suites easier to follow in an interactive terminal.
+
 ### Assertions inside tests
 
 In `silk test` builds, failed assertions do not abort the process. Instead:
@@ -73,9 +85,12 @@ In `silk test` builds, failed assertions do not abort the process. Instead:
   condition text as the message (e.g. `assert value != 123;` uses `value != 123`).
 - Failed assertions also emit a one-line detail message to stderr so failures are
   visible in `silk test` output without requiring `--debug`, formatted like:
-  - `assertion failed: <message>` when not inside a nested `test` block, or
-  - `assertion failed [test: a/b]: <message>` when inside nested `test` blocks
-    (the nested `a/b` path reflects the active nested test name stack).
+  - `assertion failed: <message>` when not inside any `test` block, or
+  - `assertion failed [test: a]: <message>` when inside a `test` block, or
+  - `assertion failed [test: a/b]: <message>` when inside nested `test` blocks.
+
+    The `a/b` path reflects the active nested test name stack (including the
+    outermost `test` declaration name).
 - The test executable exits non-zero if any failures were recorded so TAP output
   reflects failures.
 

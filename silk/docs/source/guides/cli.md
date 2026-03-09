@@ -1,93 +1,57 @@
 # CLI and toolchain
 
-Silk’s CLI is designed to make the “normal loop” cheap:
+Silk’s CLI is designed around a small number of commands that compose well:
 
-1. **check** — parse + type-check
-2. **test** — run language-level tests
-3. **build** — produce artifacts (executables and libraries)
+1. **check** — parse, resolve imports, type-check, and optionally verify
+2. **test** — compile and run language-level tests
+3. **build** — produce executables, libraries, or object files
+4. **package/doc/man/env/format** — package authoring, documentation, environment inspection, and formatting
 
-Everything else (docs/man, embedding helpers) is there to make the language usable as a toolchain, not only as a compiler
-binary.
+This guide stays CLI-first: what each command is for, what inputs it accepts, and how the commands fit together in real
+workflows.
 
-This guide focuses on the **user-facing model**: what the commands mean and how they fit together.
+## The key idea: the module set
 
-## The key idea: a module set
-
-Every invocation operates on a **module set**: the set of `.slk` files compiled together.
+Every command runs on a **module set**: the set of `.slk` files compiled together for that invocation.
 
 You can define that set in two ways:
 
-- **Explicit files:** `silk check a.slk b.slk`
-- **A package manifest:** `silk check --package .` (loads `silk.toml`)
-
-The module set determines:
-
-- what packages exist
-- how `import` resolves
-- what gets type-checked together
-
-This is why the CLI feels deterministic: you always know what the compiler is looking at.
-
-## `silk check`: fast feedback
-
-Use `silk check` when you want a quick, cheap answer:
-
-```bash
-silk check src/main.slk
-```
-
-Common patterns:
-
-- Check a whole package:
+- **Explicit files**
+  ```bash
+  silk check app.slk util.slk
+  ```
+- **A package manifest**
   ```bash
   silk check --package .
   ```
-- Check with a custom stdlib root:
-  ```bash
-  silk check --std-root ./path/to/std src/main.slk
-  ```
 
-Why it’s valuable:
+That one idea explains most CLI behavior:
 
-- it makes “does this program make sense?” a first-class operation
-- editors and CI can run it constantly without building outputs
+- imports only resolve within the active module/package graph
+- package boundaries are explicit
+- CI and editors get deterministic answers
 
-## `silk build`: artifacts and build targets
+## `silk check`: fast feedback
 
-`silk build` compiles and produces an output artifact. The output **kind** is explicit:
+Use `silk check` when you want the cheapest possible answer to “does this compile as a module set?”
 
 ```bash
-# Executable (default kind is executable)
-silk build src/main.slk -o build/app
-
-# Object file (useful for embedding into other build systems)
-silk build src/lib.slk --kind object -o build/lib.o
-
-# Static / shared libraries
-silk build src/lib.slk --kind static -o build/libfoo.a
-silk build src/lib.slk --kind shared -o build/libfoo.so
+silk check src/main.slk
+silk check --package .
+silk check --std-root ./toolchains/std src/main.slk
 ```
 
-Build targets matter because they change how you structure code:
-
-- **executables** center around `main`
-- **libraries** emphasize exported functions and stable boundaries (often with a C header via `--c-header`)
-
-### Target selection
-
-When you need to select a target explicitly:
+Feature detection is available at the command line as well:
 
 ```bash
-silk build src/main.slk --target x86_64-linux-gnu -o build/app
-silk build src/main.slk --arch wasm32 --kind executable -o build/app.wasm
+silk check --package . --feature tui --feature renderer=mock
 ```
 
-The CLI also exposes knobs for linking metadata (`--needed`, `--runpath`, `--soname`) when producing executables or shared
-libraries.
+That maps directly to `attr(feature="...")` queries in the language reference. See [Attributes](?p=language/attributes).
 
-## `silk test`: language-level tests (TAP)
+## `silk test`: language-level tests with TAP
 
-Silk tests are authored in the language and live next to the code they exercise:
+Silk tests live in the language, next to the code they exercise:
 
 ```silk
 import std::test::expect_equal;
@@ -99,59 +63,153 @@ test "add returns the sum" {
 }
 ```
 
-Run them with:
+Typical invocations:
 
 ```bash
 silk test src/main.slk
-silk test --package .          # run package tests
-silk test --filter add         # run only matching tests
+silk test --package .
+silk test --package . --filter add
+silk test --package . --jobs 4
 ```
 
-The runner emits TAP v13 output so it drops into existing tooling without special adapters.
+The test runner emits TAP v13 output, so it drops into existing CI and terminal tooling cleanly.
 
-## `silk fmt`: formatting
+## `silk build`: artifacts, targets, and non-Silk inputs
 
-Silk includes a formatter for `.slk` and `.silk` files:
+`silk build` is the artifact-producing command. Common output kinds:
 
 ```bash
+silk build src/main.slk -o build/app
+silk build src/lib.slk --kind object -o build/lib.o
+silk build src/lib.slk --kind static -o build/libfoo.a
+silk build src/lib.slk --kind shared -o build/libfoo.so
+silk build src/lib.slk --kind static --c-header build/libfoo.h -o build/libfoo.a
+```
+
+### Build inputs
+
+`silk build` is not limited to `.slk` sources. The current toolchain also accepts:
+
+- `.slk` — Silk source files
+- `.c` — host-compiled C translation units
+- `.o` — relocatable objects
+- `.a` — static archives
+- `.so` — shared-library dependencies
+
+Examples:
+
+```bash
+silk build src/main.slk src/extra.c -o build/app
+silk build src/main.slk build/runtime.o vendor/libhelper.a -o build/app
+silk build --package . vendor/libsqlite3.so
+```
+
+### Target selection
+
+Use `--target` for an exact target triple, or `--arch` as shorthand:
+
+```bash
+silk build src/main.slk --target x86_64-linux-gnu -o build/app
+silk build src/main.slk --arch wasm32 --kind executable -o build/app.wasm
+silk build --list-targets
+silk build --list-archs
+```
+
+For shared and executable outputs, the CLI also exposes link metadata such as `--needed`, `--runpath`, and `--soname`.
+
+## Package workflow: `silk.toml`, `silk package`, install/uninstall
+
+Once a project grows beyond a couple of files, switch to a manifest-driven workflow:
+
+```bash
+silk check --package .
+silk build --package .
+silk package inspect --package .
+silk package lint --package .
+```
+
+Package-target builds and install flows are part of the public CLI:
+
+```bash
+silk build --package . --package-target cli
+silk build install --package . --prefix /usr/local
+silk build uninstall --package . --prefix /usr/local
+```
+
+If the package uses `build.slk`, enable it explicitly:
+
+```bash
+silk build --package . --build-module
+```
+
+See [Package manifests](?p=compiler/package-manifests), [Package distribution](?p=compiler/package-distribution), and
+[`silk-package` (1)](?p=man/silk-package.1).
+
+## Features and conditional compilation
+
+Feature detection is shared across the manifest format and the CLI:
+
+- root-package features can come from `[build].features` in `silk.toml`
+- dependency features come from dependency entries
+- ad hoc feature toggles can be passed with `--feature`
+
+Example:
+
+```bash
+silk build --package . --feature ui --feature backend=wayland
+```
+
+Language-side usage:
+
+```silk
+if attr(feature="ui") {
+  // compiled only when the "ui" feature is enabled
+}
+```
+
+## Documentation, man pages, environment, and formatting
+
+The toolchain includes first-party documentation commands:
+
+```bash
+silk doc src/main.slk -o build/api.md
+silk doc --man --package . my_pkg::client::connect -o build/connect.3
+silk man std::io::println
+silk man --search println
+silk env
 silk fmt src
 silk fmt --check .
 ```
 
-Reference: [`silk-format` (1)](?p=man/silk-format.1)
+References:
 
-## `silk doc` and `silk man`: documentation as part of the toolchain
+- [`silk-doc` (1)](?p=man/silk-doc.1)
+- [`silk-man` (1)](?p=man/silk-man.1)
+- [`silk-env` (1)](?p=man/silk-env.1)
+- [`silk-format` (1)](?p=man/silk-format.1)
 
-Silk treats documentation as something the compiler can *extract* and *render*:
+## Embedding and `silk cc`
 
-- `silk doc` generates Markdown from doc comments
-- `silk man` renders a manpage view for a symbol/module/concept
+For host-side integration:
 
-This is a practical way to keep “what this code means” close to the codebase without inventing a separate doc pipeline.
+- use `silk build --kind object|static|shared` to generate consumable artifacts
+- use `--c-header` for exported-library headers
+- use `silk cc` when building host C code that embeds `libsilk`
 
-## `silk cc` and embedding (C99 ABI)
+Deep references:
 
-Silk includes a stable embedding interface (`libsilk`) for host applications.
-
-If you’re integrating Silk into an existing C build:
-
-- use `silk build --kind object|static|shared` for artifacts
-- emit headers with `--c-header`
-- link against `libsilk` when embedding the compiler itself
-
-For deep embedding details, see:
-
-- C ABI: `libsilk` (sidebar → compiler/ABI)
-- Zig embedding: `Zig Embedding API` (sidebar → compiler)
+- [C99 ABI and `libsilk.a`](?p=compiler/abi-libsilk)
+- [Zig embedding API](?p=compiler/zig-api)
 
 ## Diagnostics
 
-When a command fails, the compiler prints a diagnostic with a stable error code. These codes are designed to be:
+When a command fails, Silk emits a stable error code and a terminal-friendly diagnostic. That makes the CLI usable for:
 
-- human readable (good in terminals)
-- machine consumable (good in CI and tooling)
+- interactive development in terminals and editors
+- CI log parsing
+- embedding/tooling that needs stable error categories
 
-Reference: `Diagnostics` (sidebar → compiler).
+Reference: [Compiler diagnostics](?p=compiler/diagnostics)
 
 ## Next
 

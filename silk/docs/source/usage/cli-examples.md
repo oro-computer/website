@@ -62,6 +62,8 @@ For larger projects, you typically describe the module set in `silk.toml` and as
 silk check --package .
 silk test --package .
 silk build --package .
+silk package inspect --package .
+silk package lint --package .
 ```
 
 Why this model is valuable:
@@ -69,6 +71,12 @@ Why this model is valuable:
 - “what gets compiled” is explicit and reproducible
 - tooling can reason about packages without executing code
 - named targets let you build multiple artifacts from one codebase
+
+References:
+
+- [Package manifests](?p=compiler/package-manifests)
+- [Package distribution](?p=compiler/package-distribution)
+- [`silk-package` (1)](?p=man/silk-package.1)
 
 ## Build kinds: executable, object, static, shared
 

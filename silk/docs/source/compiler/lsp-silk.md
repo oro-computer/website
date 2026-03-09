@@ -268,6 +268,9 @@ The current front-end exposes errors as simple error codes (e.g. `UnexpectedToke
 - Type-checking errors:
   - reported at an approximate source location associated with the expression or statement that triggered the error (for example, the initializer expression for a mismatched `let` binding or the `break` / `continue` / `return` keyword),
   - message text distinguishes between known error kinds (e.g. `TypeMismatch`, `InvalidReturn`) and carries the span reported by the type checker when available; if no span is available, diagnostics fall back to a coarse location.
+- Conditional compilation (`if attr(...)`):
+  - the server evaluates `attr(...)` query conditions using the host target (`arch`, `os`, `target`) and the enabled feature set (empty in the current compiler subset),
+  - when an `if` / `else if` condition is an attribute-query boolean expression that resolves to a constant `true`/`false`, the inactive branch body is published as a `Hint` diagnostic tagged `Unnecessary` so editors may render it faded (similar to inactive `#if` blocks in C/C++).
 
 As the compiler evolves to carry richer diagnostic information (spans, notes, labels), this document and the LSP implementation must be updated so that:
 

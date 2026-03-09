@@ -2,7 +2,7 @@
 
 Status: **Implemented (hosted, blocking; HTTP/1.1 subset)**. `std::http` provides
 HTTP/1.1 request/response parsing and a small blocking client/server connection
-API on top of `std::net::TcpStream`.
+API on top of `std::net::TCPStream`.
 
 See also:
 
@@ -16,12 +16,11 @@ Implemented:
 
 - HTTP/1.1 request line and response status line parsing.
 - Case-insensitive header scanning (`header(name)`).
-- Body handling via `Content-Length` (read/write).
-- Blocking I/O over `std::net::TcpStream`.
+- Body handling via `Content-Length` and `Transfer-Encoding: chunked` (parse/read).
+- Blocking I/O over `std::net::TCPStream`.
 
 Not implemented (yet):
 
-- Chunked transfer encoding (`Transfer-Encoding: chunked`).
 - HTTP/2 or HTTP/3.
 - Streaming bodies (incremental read/write APIs).
 - Automatic decompression, redirects, cookies, proxies, etc.
@@ -76,7 +75,7 @@ impl Response {
 // A blocking connection wrapper that can read/write one message at a time.
 struct Connection { /* opaque */ }
 impl Connection {
-  public fn from_stream (stream: std::net::TcpStream) -> Connection;
+  public fn from_stream (stream: std::net::TCPStream) -> Connection;
   public fn is_valid (self: &Connection) -> bool;
   public fn close (mut self: &Connection) -> Error?;
 
@@ -109,13 +108,13 @@ fn trap (T;) -> T {
 export fn main () -> int {
   // Plain HTTP to a loopback server (no DNS in the current stdlib).
   let addr = net::SocketAddrV4.loopback(8080);
-  let stream_r = net::TcpStream.connect(addr);
+  let stream_r = net::TCPStream.connect(addr);
   if stream_r.is_err() {
     return 1;
   }
-  let stream: net::TcpStream = match (stream_r) {
-    net::TcpStreamResult::Ok(v) => v,
-    net::TcpStreamResult::Err(_) => trap(net::TcpStream;),
+  let stream: net::TCPStream = match (stream_r) {
+    net::TCPStreamResult::Ok(v) => v,
+    net::TCPStreamResult::Err(_) => trap(net::TCPStream;),
   };
 
   let mut conn = http::Connection.from_stream(stream);
@@ -143,7 +142,7 @@ export fn main () -> int {
 ## Validation Rules
 
 - `Content-Length` must parse as a non-negative decimal value.
-- When `Transfer-Encoding` is present and not equal to `"identity"`, parsing
-  fails with `ERR_UNSUPPORTED_TRANSFER_ENCODING`.
+- When `Transfer-Encoding` is present, only `"identity"` and `"chunked"` are
+  accepted; other encodings fail with `ERR_UNSUPPORTED_TRANSFER_ENCODING`.
 - Request/response header blocks are limited by `DEFAULT_MAX_HEADER_BYTES`
   (and per-connection configuration where applicable).

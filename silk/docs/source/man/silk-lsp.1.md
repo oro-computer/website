@@ -14,7 +14,7 @@
 
 `silk-lsp` speaks the Language Server Protocol over stdin/stdout for editor integrations.
 
-The LSP behavior and supported requests are documented in `docs/compiler/lsp-silk.md`.
+The LSP behavior and supported requests are documented at `?p=compiler/lsp-silk`.
 
 ## Options
 
@@ -28,4 +28,4 @@ The LSP behavior and supported requests are documented in `docs/compiler/lsp-sil
 ## See Also
 
 - `silk` (1)
-- `docs/compiler/lsp-silk.md`
+- `?p=compiler/lsp-silk`

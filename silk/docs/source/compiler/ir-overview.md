@@ -323,9 +323,12 @@ Short term:
   - `src/backend_ir_const.zig` attempts IR lowering + interpretation for
     constant-style `fn main() -> int` programs using `src/ir_eval.zig`,
   - if that fails, callers fall back to the legacy AST-based constant
-    evaluator in `src/backend_const.zig`,
-  - `src/backend_const.zig` emits the tiny ELF64 stub executable for this
-    constant-only path.
+    evaluator in `src/backend_const.zig` (this also supports the standard
+    `fn main(argc: int, argv: u64) -> int` form when the return value is
+    constant and does not depend on arguments),
+  - `src/backend_const.zig` emits a minimal target-specific const-main stub
+    executable for this constant-only path (ELF64 for Linux/Android, Mach-O
+    64-bit for macOS/iOS, and PE32+ for Windows).
 
 Medium term:
 
@@ -337,8 +340,8 @@ Medium term:
 - The existing IR interpreter will remain the reference semantics for IR
   programs and will be extended to cover any new instruction kinds.
 - Back-ends for ELF/Mach-O/PE will lower from IR to target-specific machine
-  code or object files. The current constant-expression ELF64 emitter is a
-  minimal slice of this design, not a separate “non-IR” path.
+  code or object files. The current constant-expression stub executable
+  emitter is a minimal slice of this design, not a separate “non-IR” path.
 
 The IR is designed so that importing and exporting package symbols can be
 modeled cleanly at the function and module level. Symbol visibility and
@@ -610,7 +613,7 @@ incrementally in tests and then in the compiler’s lowering pipeline.
   - if that fails, they fall back to the legacy constant-expression evaluator
     in `src/backend_const.zig`,
   - in both cases, `src/backend_const.zig` is still responsible for emitting
-    the minimal ELF64 executable used by the constant-only backend.
+    the minimal target-specific executable used by the constant-only backend.
 - `src/backend_ir_elf.zig` provides an IR→ELF64 backend for `linux/x86_64`
   that emits native executables directly from typed scalar IR graphs:
   - it exposes a convenience helper `emitIrFunctionExecutable` for
@@ -628,7 +631,7 @@ incrementally in tests and then in the compiler’s lowering pipeline.
     - `Return` of a scalar value, which is returned in `rax` from the
       function (or in `xmm0` for floats); a small entry stub calls the
       program’s entry function and
-      then performs `sys_exit(result)` so that the overall process exit
+      then performs `sys_exit_group(result)` so that the overall process exit
       status matches the returned integer value (entrypoints that return
       floats are rejected),
     as long as every block is terminated by a `Return`, `Br`, or `BrCond`

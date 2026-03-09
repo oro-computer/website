@@ -70,6 +70,7 @@ impl AbortSignal {
   public fn borrow (self: &AbortSignal) -> AbortSignalBorrow;
   public fn is_aborted (self: &AbortSignal) -> bool;
   public fn reason (self: &AbortSignal) -> AbortReason?;
+  public fn wait_fd (self: &AbortSignal) -> int?;
   public fn wait (self: &AbortSignal) -> void;
   public fn destroy (mut self: &AbortSignal) -> void;
 }
@@ -77,6 +78,7 @@ impl AbortSignal {
 impl AbortSignalBorrow {
   public fn is_aborted (self: &AbortSignalBorrow) -> bool;
   public fn reason (self: &AbortSignalBorrow) -> AbortReason?;
+  public fn wait_fd (self: &AbortSignalBorrow) -> int?;
   public fn wait (self: &AbortSignalBorrow) -> void;
 }
 ```
@@ -98,9 +100,14 @@ impl AbortSignalBorrow {
 - `AbortSignal.reason()` returns an `AbortReason` whose `message: string` view
   is backed by memory owned by the signal. Do not use the returned `message`
   after the signal/controller has been destroyed or dropped.
+- `AbortSignalBorrow.wait_fd()` returns a file descriptor that becomes readable
+  when the signal is aborted. This is intended for `poll(2)`/`select(2)` style
+  waiting (for example to wait on both a TTY fd and an abort signal at the same
+  time). Do not read from or close the returned fd; it is owned by the signal
+  and used as an internal wake mechanism.
 - `AbortSignal.wait()` blocks the current OS thread until the signal is aborted.
-  In the current subset, this is a blocking synchronization primitive (it does
-  not integrate with a `select`-style event loop yet).
+  In the current subset, this is a blocking synchronization primitive. For
+  select-style waiting, use `wait_fd()` instead.
 
 ## Using `AbortSignalBorrow` Across Tasks
 

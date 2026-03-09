@@ -5,7 +5,13 @@ compiler consumes it.
 
 Manifests are a *build/package* concept (they are not part of the core language
 syntax). The language-level `package` / `import` / `export` semantics remain
-defined in `docs/language/packages-imports-exports.md`.
+defined in [Packages, Imports, and Exports](?p=language/packages-imports-exports).
+
+For the broader package authoring/publication/consumption model, including
+third-party distribution channels, binary-only packages, and the rationale for
+the current manifest shape, see [Package distribution](?p=compiler/package-distribution). This
+document describes the current implemented manifest format and current CLI
+behavior.
 
 ## Manifest Discovery
 
@@ -39,7 +45,7 @@ the compiler compiles and runs the
 module and parses the manifest it emits in this format (used in place of
 reading `silk.toml` for the root package).
 
-See `docs/compiler/build-scripts.md`.
+See [Build modules](?p=compiler/build-scripts).
 
 ## Package Metadata (`[package]`)
 
@@ -70,15 +76,30 @@ Examples:
 
 ### `package.version` (optional)
 
-Free-form version string (commonly `MAJOR.MINOR.PATCH`).
+Package version string (recommended: Semantic Versioning such as
+`MAJOR.MINOR.PATCH`).
 
 When building from a package manifest, the compiler surfaces this value to
 runtime code via `std::runtime::build::version()`
 (otherwise it defaults to `"0.0.0"`).
 
-Additional optional metadata fields MAY be present under `[package]` (for
-example `description`, `license`, `authors`, `repository`), but the current
-compiler only uses `name` and `version`.
+When another package uses a dependency `version = "..."` constraint, the
+compiler interprets this field as a SemVer string. Reusable packages SHOULD
+therefore use SemVer-compatible versions.
+
+Additional channel-agnostic metadata fields are supported under `[package]`:
+
+- `description`
+- `license`
+- `homepage`
+- `repository`
+- `documentation`
+- `readme`
+- `authors`
+- `keywords`
+
+These fields are surfaced by `silk package inspect` and preserved in installed
+package manifests.
 
 ### `package.definitions` (optional)
 
@@ -99,13 +120,45 @@ Rules:
   - exported type declarations, and
   - declaration-only exported function prototypes (`export fn name(...) -> T;`)
     that describe the public API surface.
-  See `docs/language/packages-imports-exports.md` (“Prototype exports”).
+  See [Packages, Imports, and Exports](?p=language/packages-imports-exports)
+  for prototype exports.
 - The compiler does not treat definition files specially during ordinary
   builds; this field exists so tooling can locate an explicit “API surface”
   without scanning arbitrary source files.
 - `silk build install` uses this list when installing libraries into
-  `PREFIX/lib/silk` so that the installed package remains importable (for
+  `PREFIX/lib/silk/<package>/...` so that the installed package remains
+  importable (for
   example `import my_lib from "my_lib";`) via the system package search root.
+
+## Distribution Payload (`[dist]`)
+
+Packages may declare the distributable package payload separately from the
+module-set source files:
+
+```toml
+[dist]
+include = ["defs/**/*.slk", "lib/**/*.a", "README.md"]
+exclude = ["**/.DS_Store"]
+```
+
+Rules:
+
+- Patterns are evaluated against forward-slash (`/`) relative paths rooted at
+  the manifest directory.
+- Supported glob syntax matches `[sources]`:
+  - `*` matches any characters within a single path segment.
+  - `**` matches zero or more path segments.
+- When `[dist]` is omitted, package integrity hashing falls back to the
+  source-oriented `[sources]` file set.
+- When `[dist]` is present, package integrity hashing covers:
+  - the manifest bytes, and
+  - every file selected by `[dist]`.
+
+This section is used by:
+
+- `computePackageSha256String(...)` / dependency `sha256` verification,
+- `silk package lint`,
+- and installed package manifests emitted by `silk build install`.
 
 ## Source Layout (`[sources]`: `include` / `exclude`)
 
@@ -136,7 +189,7 @@ Dependencies are a table mapping dependency import names to dependency specs:
 
 ```toml
 [dependencies]
-ui = { path = "../libs/silk-ui", sha256 = "sha256:0123456789abcdef..." }
+ui = { path = "../libs/silk-ui", version = "^1.4.0", sha256 = "sha256:0123456789abcdef...", features = ["tui"] }
 ```
 
 Fields:
@@ -148,24 +201,59 @@ Fields:
   resolved relative to the importing manifest directory when not absolute.
   When `path` is omitted, the dependency is resolved from the package search
   path (see “Dependency discovery via `SILK_PACKAGE_PATH`” below).
-- `sha256` (required): integrity hash string.
+- `version` (optional): SemVer requirement string checked against the
+  dependency’s `package.version`.
+  Supported forms:
+  - exact version: `1.2.3`
+  - caret range: `^1.4.0`
+  - tilde range: `~1.4.0`
+  - comma-separated comparator conjunctions such as `>=1.2.0, <2.0.0`
+- `sha256` (optional): integrity hash string.
+- `features` (optional): enabled build features for this dependency package.
+  - It may be:
+    - an array of strings of the form `NAME` or `NAME=VALUE`, or
+    - an inline table mapping `NAME = <bool|int|string>`.
+      - `NAME = true` is equivalent to `NAME`.
+      - otherwise it is equivalent to `NAME=VALUE`.
+  - These features populate the enabled feature set queried by
+    `attr(feature="...")` within the dependency package’s modules (see
+    [Attributes](?p=language/attributes)).
+  - When building a package graph (via `--package`), dependency feature specs
+    are merged from every manifest in the graph.
+    - If multiple manifests assign different values to the same feature name
+      for a single package, the build fails unless overridden by a CLI
+      `--feature <package>/<spec>` entry.
 
-Dependency `sha256` verification:
+Dependency resolution + verification:
+
+- When `version` is present, the dependency manifest’s `package.version` must
+  exist, parse as SemVer, and satisfy the requirement.
+- When `sha256` is present, the compiler verifies the dependency payload hash.
 
 - The `sha256` value must be of the form `sha256:<64 hex digits>` (case-insensitive).
 - The compiler verifies it by hashing the dependency package’s contents using a
   deterministic scheme:
-  - The hash input starts with the ASCII prefix `silk-package-sha256-v1\0`.
-  - Then the exact bytes of the dependency’s `silk.toml`, followed by `\0`.
-  - Then, in sorted (lexicographic) order by relative path:
-    - the file’s relative path bytes, then `\0`,
-    - the file’s bytes, then `\0`.
-  - Only files included by that dependency manifest’s `[sources]` include/exclude
-    rules are hashed.
+  - When `[dist]` is omitted:
+    - the hash input starts with the ASCII prefix `silk-package-sha256-v1\0`,
+    - then the exact bytes of the dependency’s `silk.toml`, followed by `\0`,
+    - then, in sorted order by relative path:
+      - the file’s relative path bytes, then `\0`,
+      - the file’s bytes, then `\0`,
+    - and only files included by that dependency manifest’s `[sources]`
+      include/exclude rules are hashed.
+  - When `[dist]` is present:
+    - the hash input starts with the ASCII prefix `silk-package-sha256-v2\0`,
+    - then the exact bytes of the dependency’s `silk.toml`, followed by `\0`,
+    - then the sorted `[dist]` payload files using the same
+      `relative-path\0bytes\0` scheme.
 
 Current limitations:
 
 - Only local-path dependencies are supported (no remote fetch).
+- Dependency features are currently selected only via the importer’s manifest
+  (`[dependencies].<dep>.features`) and the CLI. A dependency’s own
+  `[build].features` are applied only when that dependency is built as the root
+  package.
 
 ## Dependency discovery via `SILK_PACKAGE_PATH`
 
@@ -190,6 +278,42 @@ Rules:
 - The discovered manifest MUST declare `package.name` exactly matching the
   dependency key, and the dependency is still subject to the `sha256`
   verification rules above.
+
+## Distributed Artifacts (`[[artifact]]`)
+
+Packages may declare shipped native artifacts explicitly:
+
+```toml
+[[artifact]]
+name = "my_lib_static"
+kind = "static"
+path = "lib/linux-x86_64/libmy_lib.a"
+target = "linux-x86_64"
+definitions = ["defs/api.slk"]
+c_header = "include/my_lib.h"
+```
+
+Fields:
+
+- `name` (required): artifact identifier unique within the manifest.
+- `kind` (required): one of `executable`, `object`, `static`, or `shared`.
+- `path` (required): relative path inside the package root.
+- `target` (optional): target triple for the artifact payload.
+- `libc` / `libc_min` (optional): structured compatibility metadata for native
+  libraries.
+- `definitions` (optional): definition files associated with this artifact.
+- `c_header` (optional): C header shipped with this artifact.
+
+Current uses:
+
+- `silk package inspect` prints declared artifacts,
+- `silk package lint` validates that artifact files exist and are covered by
+  `[dist]`,
+- `silk build` and `silk test --package` auto-consume one compatible artifact
+  for imported binary-only/interface-only dependencies (currently on
+  `linux/x86_64`, preferring object, then static, then shared payloads),
+- and `silk build install` emits installed `[[artifact]]` records for built
+  package targets.
 
 Example:
 
@@ -229,6 +353,11 @@ Fields:
   directory.
 - `inputs` (optional): additional non-`.slk` build inputs for this target:
   - entries are paths (relative to the manifest directory when not absolute),
+  - entries may also use a toolchain-relative vendored archive reference:
+    - `@vendored/<name>.a` — resolves to the vendored static archive under the
+      active Silk prefix (for example `@vendored/libmbedtls.a`),
+    - this form is supported only for `.a` inputs and only on `linux/x86_64`
+      in the current toolchain,
   - each entry MUST end with one of:
     - `.c` — compiled via the host C compiler and linked as an object,
     - `.h` — compiled via the host C compiler as a C translation unit (passed
@@ -246,23 +375,30 @@ Fields:
   - entries are single `cc` arguments (no shell splitting),
   - include paths passed via `-I<rel>` or `-I`, `<rel>` are resolved relative
     to the manifest directory.
+  - On `linux/x86_64`, when compiling `.c`/`.h` inputs, `silk` also adds the
+    active toolchain’s vendored include directory to the C compiler’s include
+    search path, so C sources can include headers like
+    `#include <mbedtls/net_sockets.h>` without hardcoding a repo-relative
+    `-I.../vendor/include` path.
 - `ldflags` (optional): additional link-related arguments for this target.
   Note: `silk` does not invoke a system linker for native codegen; `ldflags`
   are translated into existing manifest/CLI linkage knobs.
   Supported forms:
   - `-Wl,-rpath,<path>` / `-Wl,-rpath=<path>` → adds a `runpath` entry,
   - `-Wl,-soname,<name>` / `-Wl,-soname=<name>` → sets `soname`,
+  - `-Wl,--dynamic-linker,<path>` / `-Wl,-dynamic-linker,<path>` / `-Wl,--dynamic-linker=<path>` / `-Wl,-dynamic-linker=<path>` → sets `elf_interp`,
   - `-lfoo` / `-l`, `foo` → adds a `needed` entry:
-    - for common glibc-provided system libraries, `silk` maps to the versioned runtime soname
-      (for example `-lm` → `needed = ["libm.so.6"]`, `-lpthread` → `needed = ["libpthread.so.0"]`),
-    - otherwise, `silk` maps to `needed = ["libfoo.so"]` (note: some distros ship `libfoo.so` only in `*-dev`
+    - by default, `silk` maps to `needed = ["libfoo.so"]`,
+    - when the selected dynamic loader looks like glibc (`ld-linux`), `silk` maps common system libraries
+      to their versioned runtime sonames (for example `-lm` → `needed = ["libm.so.6"]`, `-lpthread` → `needed = ["libpthread.so.0"]`),
+    - note: some distros ship `libfoo.so` only in `*-dev`
       packages, so prefer `-l:libfoo.so.<ver>` or an explicit `needed = ["libfoo.so.<ver>"]` when targeting
       versioned shared libraries),
   - `-l:libfoo.so.1` → adds `needed = ["libfoo.so.1"]`.
 - `output` (optional): output path relative to the manifest directory.
   If omitted, the compiler chooses a default under `build/` based on `name` and
   `kind`:
-  - `executable`: `build/<name>` (or `build/<name>.wasm` for wasm targets),
+  - `executable`: `build/<name>` (or `build/<name>.wasm` for wasm targets, or `build/<name>.exe` for Windows targets),
   - `object`: `build/<name>.o`,
   - `static`: `build/lib<name>.a`,
   - `shared`: `build/lib<name>.so` (current hosted baseline is `linux/x86_64`).
@@ -277,6 +413,8 @@ Fields:
   - `needed = ["libc.so.6", "..."]` (repeatable `DT_NEEDED` entries),
   - `runpath = ["$ORIGIN", "..."]` (joined with `:` for `DT_RUNPATH`),
   - `soname = "libfoo.so"` (for shared libraries).
+  - `elf_interp = "/lib64/ld-linux-x86-64.so.2"` (for `linux/x86_64` executable outputs; emitted as `PT_INTERP`; also influences glibc/musl defaults for `ldflags` `-l...` mapping).
+    - This field is rejected for non-`linux/x86_64` targets.
   - Note: `needed` entries starting with `libsilk_rt` are rejected; bundled runtime helpers are linked statically by `silk build` when referenced.
 
 Example:
@@ -301,6 +439,9 @@ needs to know which one to build.
 default_target = "my_app"
 build_module = true            # optional opt-in (default: false)
 build_module_path = "build.slk" # optional; default "build.slk"
+features = ["tui", "MY_FEATURE=123", "enable_this_feature=true"] # optional
+# or:
+# features = { tui = true, MY_FEATURE = 123, enable_this_feature = true }
 ```
 
 Rules:
@@ -309,7 +450,7 @@ Rules:
 - If `build.default_target` is not set:
   - if exactly one `[[target]]` exists, it is the default,
   - otherwise, `silk build --package` requires an explicit target selection
-    flag (see `docs/compiler/cli-silk.md`).
+    flag (see [`silk` CLI](?p=compiler/cli-silk)).
 - `build.build_module` (optional; default `false`) enables build module
   execution for package builds:
   - when `true`, the build module runs for `silk build --package` (and
@@ -324,13 +465,23 @@ Rules:
     itself; use `build_module = true` or the CLI.
 - When a build module is executed:
   - the manifest it emits replaces the root manifest for the remainder of the
-    build (see `docs/compiler/build-scripts.md`),
+    build (see [Build modules](?p=compiler/build-scripts)),
   - the emitted manifest’s `[build].build_module` / `[build].build_module_path`
     values are ignored for the current invocation to prevent recursive build
     module execution,
   - CLI overrides:
     - `--build-module-path <path>` wins (and implies build module execution),
     - otherwise `--build-module` wins.
+- `build.features` (optional) enables build features for this package when it
+  is selected as the root package for `silk build` / `silk check` / `silk test`.
+  - It may be:
+    - an array of strings of the form `NAME` or `NAME=VALUE`, or
+    - an inline table mapping `NAME = <bool|int|string>`.
+      - `NAME = true` is equivalent to `NAME`.
+      - otherwise it is equivalent to `NAME=VALUE`.
+  - These features populate the enabled feature set queried by `attr(feature="...")`
+    (see [Attributes](?p=language/attributes)).
+  - CLI `--feature` / `-F` entries override manifest features of the same name.
 
 ## Interaction With `package` Declarations
 

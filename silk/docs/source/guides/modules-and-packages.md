@@ -126,6 +126,46 @@ Why this matters for packages/modules:
 
 If you want the user-facing toolchain model, read: [CLI and toolchain](?p=guides/cli).
 
+## From package graph to distributable package
+
+For libraries and reusable apps, `silk.toml` is the bridge from source layout to public package surface.
+
+Small example:
+
+```toml
+[package]
+name = "acme::http"
+version = "0.1.0"
+definitions = ["defs/api.slk"]
+
+[[target]]
+name = "acme-http"
+kind = "static"
+entry = "src/lib.slk"
+output = "build/libacme_http.a"
+```
+
+That manifest gives you:
+
+- a stable package identity
+- an explicit importable/public surface (`defs/api.slk`)
+- named build targets
+- a basis for `silk package inspect` and `silk package lint`
+
+Useful commands:
+
+```bash
+silk build --package .
+silk package inspect --package .
+silk package lint --package .
+```
+
+References:
+
+- [Package manifests](?p=compiler/package-manifests)
+- [Package distribution](?p=compiler/package-distribution)
+- [`silk-package` (1)](?p=man/silk-package.1)
+
 ## Why this structure matters
 
 The language design is intentionally strict about where these declarations live (package/module headers first, then a

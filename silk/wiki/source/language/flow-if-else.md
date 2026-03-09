@@ -25,7 +25,6 @@ if condition {
 ## Examples
 
 ### Example: minimal `if` / `else`
-
 ```silk
 fn main () -> int {
   if true {
@@ -37,7 +36,6 @@ fn main () -> int {
 ```
 
 ### Example: `else if` chains
-
 Currently, `else if` parses as sugar for a nested `if` in
 the `else` branch.
 

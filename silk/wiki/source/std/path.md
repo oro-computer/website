@@ -19,7 +19,6 @@ import std::strings;
 ## Examples
 
 ### Example: normalize + `PathBuf`
-
 ```silk
 import std::path;
 import std::strings;
@@ -56,4 +55,5 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/path.md`
-- Filesystem: `wiki/std/filesystem.md`
+- Filesystem: `docs/wiki/std/filesystem.md`
+- End-to-end fixture: `tests/silk/pass_std_path_basic.slk`

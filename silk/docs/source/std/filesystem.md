@@ -238,6 +238,11 @@ Notes:
     (`std::fs::stream::pipe_file_to_stream` and
     `std::fs::stream::pipe_stream_to_file`). These are blocking OS-thread
     operations in the current runtime subset.
+  - The runtime filesystem layer (`std::runtime::fs`) also exposes
+    `mkstemp(template_ptr)` as a low-level primitive for creating unique
+    temporary files from writable NUL-terminated templates (hosted POSIX
+    baseline). `std::fs` does not yet wrap this in a higher-level temp-file
+    API.
 
 ## Scope
 

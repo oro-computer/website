@@ -21,6 +21,8 @@ Implementation status (current compiler subset):
   generally prefer the language sugar:
   - `s as raw u64` (extract the underlying byte pointer), and
   - `p as raw u64` (extract the underlying address for `p: &T`), and
+  - `ptr as string(len)` (construct a `string` view from a raw pointer plus an
+    explicit byte length), and
   - `sizeof s` (string byte length as `usize`)
   over calling these helpers directly. The intrinsic names remain reserved and
   are not a stable user API.
@@ -35,9 +37,14 @@ Implementation status (current compiler subset):
   - In the current scalar-slot model (`docs/language/structs-impls-layout.md`),
     these primitives lower to **two 8-byte slots** (`lo: u64`, `hi: u64`).
   - `f128` uses the IEEE‑754 binary128 bit pattern stored across those slots.
-  - On `linux/x86_64` in the current backend implementation, `f128` arithmetic
-    and some `as` casts lower to bundled runtime helper calls and rely on
-    `libgcc_s.so.1` for `__float128` builtins.
+  - In the current backend implementation, `f128` arithmetic and some `as`
+    casts lower to bundled runtime helper calls:
+    - on `linux/x86_64`, the helpers use `__float128` and rely on libgcc
+      symbols (for example `__addtf3`),
+    - on targets where `long double` is an IEEE‑754 binary128 value (for
+      example `linux/aarch64`), the helpers use `long double`,
+    - on other targets, the helper calls are currently stubbed and will trap
+      if executed.
 - Typed errors (`error`, `panic`, and `T | ErrorType...`) are specified in
   `docs/language/typed-errors.md`. The current compiler models typed error
   contracts as an effect on function return types and expressions.
@@ -392,7 +399,7 @@ The initial surface syntax for applying type arguments is:
 
 - `TypeApply ::= TypeName '(' TypeArgListOpt ')'`
 - `TypeName ::= Identifier ('::' Identifier)*`
-- `TypeArgListOpt ::= TypeArgList | ε`
+- `TypeArgListOpt ::= TypeArgList`
 - `TypeArgList ::= TypeArg (',' TypeArg)* ','?`
 - `TypeArg ::= Type | IntLiteral`
 
@@ -426,6 +433,9 @@ Current implementation notes:
 
 - `&Struct` is supported in function parameter types and as local values when
   produced by heap allocation (`new`) or by calls that return `&Struct`.
+- `&T` where `T` is a **single-slot scalar primitive** (for example `&bool`,
+  `&int`, `&u64`, `&f64`) is supported in function parameter types and as local
+  values when produced by the borrow operator `&expr`.
 - Borrowed `&Struct` references may also be created from stack values:
   - via the borrow operator `&expr` on borrowable lvalues, and
   - via implicit borrow coercions in contexts that expect `&T`
@@ -444,7 +454,8 @@ The current compiler subset:
   - expression body form: `fn (x: int, y: int) -> x + y`
   - block body form: `fn (x: int, y: int) -> int { return x + y; }`
   - block body `void` shorthand: `fn (x: int, y: int) { ... }` (implicit `void`)
-- Function expressions may not declare `&T` parameters in the current subset.
+- Function expressions may declare `&T` parameters only when `T` is a
+  single-slot scalar primitive (for example `&int` / `&bool`).
 - Function expression bodies are checked under the `pure` rules in the current
   subset. Non-capturing function expressions are inferred as `pure` function
   types and are permitted in `pure` code:

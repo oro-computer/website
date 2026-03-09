@@ -15,7 +15,6 @@ Canonical spec: `docs/language/enums.md`.
 - Implemented subset + representation: `docs/language/enums.md`
 
 ## Syntax
-
 ```silk
 enum Msg {
   Quit,
@@ -26,7 +25,6 @@ enum Msg {
 ## Examples
 
 ### Example: construct + match
-
 ```silk
 enum Msg {
   Quit,
@@ -46,3 +44,4 @@ fn main () -> int {
 
 - Canonical spec: `docs/language/enums.md`
 - `match` expressions: `docs/language/flow-match.md`
+- Enum fixtures: `tests/silk/pass_enum_*`

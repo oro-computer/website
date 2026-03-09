@@ -53,7 +53,7 @@ Typical workflow:
 5. On error, retrieve diagnostics via `silk_compiler_last_error` and `silk_error_format` (see `silk_error` (3)).
 6. Destroy the compiler with `silk_compiler_destroy`.
 
-The canonical ABI specification lives in `docs/compiler/abi-libsilk.md`.
+The canonical ABI specification lives at `?p=compiler/abi-libsilk`.
 
 ## Configuration
 
@@ -95,4 +95,4 @@ The `SilkCompiler` object is not currently specified as thread-safe. Confine it 
 
 - `silk_error` (3), `silk_bytes` (3), `silk_abi_get_version` (3)
 - `libsilk` (7)
-- `docs/compiler/abi-libsilk.md`
+- `?p=compiler/abi-libsilk`

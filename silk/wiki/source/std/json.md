@@ -31,7 +31,6 @@ import std::strings;
 ## Examples
 
 ### Example: parse + query + stringify
-
 ```silk
 import std::json;
 import std::strings;
@@ -116,3 +115,4 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/json.md`
+- End-to-end fixture: `tests/silk/pass_std_json_basic.slk`

@@ -15,7 +15,6 @@ Canonical spec: `docs/language/optional.md`.
 - Implemented subset + backend payload limits: `docs/language/optional.md`
 
 ## Syntax
-
 ```silk
 let a: int? = None;
 let b: int? = Some(123);
@@ -30,7 +29,6 @@ let y: int = match b {
 ## Examples
 
 ### Example: `??` and `match`
-
 ```silk
 fn main () -> int {
   let x: int? = Some(7);
@@ -44,7 +42,6 @@ fn main () -> int {
 ```
 
 ### Example: optional struct field access with `?.`
-
 ```silk
 struct Profile {
   email: string,
@@ -68,3 +65,4 @@ fn main () -> int {
 
 - Canonical spec: `docs/language/optional.md`
 - `match` expressions: `docs/language/flow-match.md`
+- Optional-related fixtures: `tests/silk/pass_optional_*.slk`

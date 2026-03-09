@@ -5,7 +5,6 @@
 Canonical doc: `docs/std/networking.md`.
 
 ## Example: IPv4 helpers
-
 ```silk
 import std::net;
 

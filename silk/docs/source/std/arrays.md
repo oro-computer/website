@@ -105,8 +105,10 @@ impl ByteSliceIter as std::interfaces::Iterator(u8) {
 
 Notes:
 
-- This type is a placeholder until the intrinsic `Buffer(T)` surface and safe
-  view/borrowing rules land end-to-end.
+- `ByteSlice` is the packed-byte view type used for OS/FFI byte APIs. For owning
+  packed-byte storage, use `std::buffer::BufferU8`. For owning scalar-slot
+  storage, use `std::buffer::Buffer(T)` or `std::vector::Vector(T)` and view it
+  as `std::arrays::Slice(T)`.
 - In the current API, `ptr` is represented as a raw `u64`
   address for early FFI-friendly bridging. The constructors enforce basic
   invariants via `#require`:

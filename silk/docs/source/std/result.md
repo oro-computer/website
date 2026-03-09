@@ -42,11 +42,17 @@ impl Result(T, E) {
   public fn is_ok (self: &Result(T, E)) -> bool;
   public fn is_err (self: &Result(T, E)) -> bool;
 
-  public fn unwrap_or (value: Result(T, E), fallback: T) -> T;
+  public fn unwrap_or (self: Result(T, E), fallback: T) -> T;
+  public fn unwrap_or_else (self: Result(T, E), f: fn(E) -> T) -> T;
 
-  public fn ok_value (value: Result(T, E)) -> T?;
-  public fn unwrap (value: Result(T, E)) -> T?;
-  public fn err_value (value: Result(T, E)) -> E?;
+  public fn ok_value (self: Result(T, E)) -> T?;
+  public fn unwrap (self: Result(T, E)) -> T?;
+  public fn err_value (self: Result(T, E)) -> E?;
+
+  public fn map (U; self: Result(T, E), f: fn(T) -> U) -> Result(U, E);
+  public fn map_err (F; self: Result(T, E), f: fn(E) -> F) -> Result(T, F);
+  public fn and_then (U; self: Result(T, E), f: fn(T) -> Result(U, E)) -> Result(U, E);
+  public fn or_else (F; self: Result(T, E), f: fn(E) -> Result(T, F)) -> Result(T, F);
 }
 ```
 
@@ -56,14 +62,11 @@ Notes:
   `ok_value()` / `err_value()` (or a `match`) to recover the payload.
 - `unwrap()` is a non-aborting alias of `ok_value()` and returns `T?`.
 - `is_ok()` / `is_err()` borrow the `Result` and are safe for all payload types.
-- `unwrap_or()` / `ok_value()` / `unwrap()` / `err_value()` currently take the
-  `Result` by value as a current workaround (the language does not yet
-  support by-value receivers for instance methods). This copies the active
-  payload and is only safe when the active payload does not implement `Drop`.
-  For `Result` values that may hold `Drop` payloads (for example `String`,
-  `BufferU8`, `TcpStream`), prefer `match (r)` to extract values safely.
-- Callback-based combinators (for example `map` / `and_then`) are deferred until
-  the IR backend supports non-scalar function-typed parameters and results.
+- Methods that extract or transform payloads consume the `Result` by value. This
+  follows the move/cleanup model and avoids copying `Drop` payloads.
+- Callback-based combinators (`map`, `map_err`, `and_then`, `or_else`) accept
+  function-typed values. Capturing closures exist in the current subset, but
+  captures are restricted (see `docs/language/memory-model.md`).
 - `match` supports a shorthand for `Result` destructuring:
   - when the scrutinee type is `Result(T, E)`, patterns `Ok(v)` / `Err(e)` are
     accepted as shorthand for `R::Ok(v)` / `R::Err(e)` where `R` is the scrutinee
@@ -78,7 +81,7 @@ type R = Result(int, string);
 fn main () -> int {
   let x: R = R.ok(123);
   if x.is_err() { return 1; }
-  if R.unwrap_or(x, 0) != 123 { return 2; }
+  if x.unwrap_or(0) != 123 { return 2; }
   return 0;
 }
 ```

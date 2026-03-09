@@ -8,18 +8,19 @@
 
 ## Description
 
+Silk is a high performance general purpose programming language with formal verification built in. Silk targets computer systems, mobile / tablet devices, WASM / WASI runtimes, and the web.
+
 Silk is a native compiler toolchain with:
 
 - a CLI entrypoint (`silk` (1)),
 - an embedding API (`libsilk` (7) and the `silk_*` functions documented in section 3),
-- and a standard library under the `std::` namespace (`docs/std/`).
+- and a standard library under the `std::` namespace.
 
-The canonical specifications live in `docs/`:
+Online documentation:
 
-- Language semantics: `docs/language/`
-- Compiler behavior and architecture: `docs/compiler/`
-- Standard library design and APIs: `docs/std/`
-- Manpage sources: `docs/man/`
+- `https://oro.computer/silk` (entry point)
+- `https://oro.computer/silk/docs/` (documentation)
+- `https://oro.computer/silk/spec/2026/` (spec snapshot)
 
 ## Current Backend Subset
 
@@ -31,13 +32,13 @@ type-checks but uses a construct outside this subset, builds fail with
 The supported subset is documented in:
 
 - `silk` (1) (see the `build` command and its notes),
-- `docs/compiler/cli-silk.md`,
-- and the Silk compiler repository’s runnable fixtures (exercised end-to-end by CI).
+- `?p=compiler/cli-silk`,
+- and the feature-specific implementation-status sections throughout the reference docs.
 
 ## Source Layout
 
 - Silk source files use the `.slk` extension.
-- Package builds are driven by a manifest file named `silk.toml` (see `docs/compiler/package-manifests.md`).
+- Package builds are driven by a manifest file named `silk.toml` (see `?p=compiler/package-manifests`).
 - The default stdlib implementation is a directory tree rooted at `std/` and is imported via `import std::...;`.
 
 ## Standard Library
@@ -46,9 +47,9 @@ The `std::` package namespace is the primary stdlib surface. The compiler can au
 
 See:
 
-- `docs/std/overview.md` for module inventory and conventions,
-- `docs/std/conventions.md` for ownership and error-handling patterns,
-- `docs/compiler/cli-silk.md` for stdlib root selection and archive linking behavior.
+- `?p=std/overview` for module inventory and conventions,
+- `?p=std/conventions` for ownership and error-handling patterns,
+- `?p=compiler/cli-silk` for stdlib root selection and archive linking behavior.
 
 ## Formal Silk
 
@@ -56,12 +57,13 @@ Formal Silk verification is an optional part of the toolchain. The verifier uses
 
 See:
 
-- `docs/language/formal-verification.md`
-- `docs/compiler/diagnostics.md` (verifier diagnostics)
+- `?p=language/formal-verification`
+- `?p=compiler/diagnostics` (verifier diagnostics)
 
 ## See Also
 
 - `silk` (1)
-- `silk-build` (1), `silk-check` (1), `silk-test` (1), `silk-doc` (1), `silk-man` (1), `silk-cc` (1)
+- `silk-build` (1), `silk-package` (1), `silk-check` (1), `silk-test` (1), `silk-doc` (1), `silk-man` (1), `silk-cc` (1)
 - `silk_compiler` (3), `silk_error` (3), `silk_bytes` (3), `silk_abi_get_version` (3)
 - `libsilk` (7)
+- `https://oro.computer/silk`

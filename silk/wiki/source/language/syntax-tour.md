@@ -9,7 +9,6 @@ This wiki page keeps navigation self-contained and highlights where to look
 next when you want precise rules.
 
 ## Example: minimal executable
-
 ```silk
 fn main () -> int {
   return 0;
@@ -18,5 +17,5 @@ fn main () -> int {
 
 ## See also
 
-- Grammar: `wiki/language/grammar.md`
-- Packages/imports/exports: `wiki/language/packages-imports-exports.md`
+- Grammar: `docs/wiki/language/grammar.md`
+- Packages/imports/exports: `docs/wiki/language/packages-imports-exports.md`

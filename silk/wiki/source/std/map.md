@@ -21,7 +21,6 @@ import std::map;
 ## Examples
 
 ### Example: `HashMap(u64, int)` basic usage
-
 ```silk
 import std::map;
 import std::result;

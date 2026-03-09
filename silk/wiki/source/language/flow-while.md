@@ -17,7 +17,6 @@ while condition {
 ```
 
 ## Example
-
 ```silk
 fn main () -> int {
   let mut i: int = 0;
@@ -35,4 +34,4 @@ fn main () -> int {
 ## See also
 
 - Canonical spec: `docs/language/flow-while.md`
-- `break` / `continue`: `wiki/language/flow-break.md`, `wiki/language/flow-continue.md`
+- `break` / `continue`: `docs/wiki/language/flow-break.md`, `docs/wiki/language/flow-continue.md`

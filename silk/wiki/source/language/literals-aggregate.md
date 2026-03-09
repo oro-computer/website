@@ -8,7 +8,6 @@ Aggregate literals build compound values directly in source code:
 Canonical doc: `docs/language/literals-aggregate.md`.
 
 ## Example
-
 ```silk
 struct Pair {
   a: int,
@@ -25,4 +24,4 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/language/literals-aggregate.md`
-- Types: `wiki/language/types.md`
+- Types: `docs/wiki/language/types.md`

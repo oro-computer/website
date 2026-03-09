@@ -28,6 +28,7 @@ export type GetCwdResult = std::result::Result(std::strings::String, GetCwdError
 
 export fn chdir (path: string) -> ChdirFailed?;
 export fn getcwd () -> GetCwdResult;
+export fn getpid () -> int;
 ```
 
 ## Child processes (`std::process::child`)
@@ -103,8 +104,9 @@ Notes:
 ## Platform notes
 
 - **POSIX (default shipped stdlib)**: implemented via `getcwd(3)` and
-  `chdir(2)`.
+  `chdir(2)`. `getpid(2)` is available.
 - **Child processes (POSIX)**: implemented via `fork(2)` + `exec*` + `waitpid(2)`
   with pipe-based stdio and poll-based output capture.
 - **WASI (Preview 1)**: `getcwd` and `chdir` are implemented via a virtual
-  working directory. `std::process::child` operations remain unsupported.
+  working directory. `getpid()` currently returns 0. `std::process::child`
+  operations remain unsupported.

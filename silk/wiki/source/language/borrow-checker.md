@@ -7,7 +7,6 @@ explicit `mut` borrow contract (see mutability).
 Canonical design doc: `docs/language/borrow-checker.md`.
 
 ## Example: explicit mutable borrow
-
 ```silk
 struct Counter {
   value: int,
@@ -26,5 +25,5 @@ fn main () -> int {
 
 ## See also
 
-- Mutability rules: `wiki/language/mutability.md`
+- Mutability rules: `docs/wiki/language/mutability.md`
 - Canonical design doc: `docs/language/borrow-checker.md`

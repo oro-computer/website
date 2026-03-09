@@ -15,7 +15,6 @@ break;
 ```
 
 ## Example
-
 ```silk
 fn main () -> int {
   let mut i: int = 0;
@@ -32,4 +31,4 @@ fn main () -> int {
 ## See also
 
 - Canonical spec: `docs/language/flow-break.md`
-- `continue`: `wiki/language/flow-continue.md`
+- `continue`: `docs/wiki/language/flow-continue.md`

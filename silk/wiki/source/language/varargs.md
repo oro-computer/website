@@ -14,7 +14,6 @@ fn log (fmt: string, ...args: std::fmt::Arg) -> void {
 ```
 
 ## Example
-
 ```silk
 import std::io;
 
@@ -27,4 +26,4 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/language/varargs.md`
-- `std::fmt`: `wiki/std/fmt.md`
+- `std::fmt`: `docs/wiki/std/fmt.md`

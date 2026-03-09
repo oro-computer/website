@@ -95,17 +95,22 @@ The current compiler subset implements:
 - Local `let mut` bindings, including assignment and numeric compound assignment.
 - `mut` value parameters (`fn inc(mut x: int) { x = x + 1; }`) as a callee-local
   mutable binding (no call-site `mut` marker is required).
-- Borrowed reference parameters of the form `&Struct` for the current supported `struct` subset.
+- Borrowed reference parameters for:
+  - `&Struct` for the current supported `struct` subset, and
+  - `&T` where `T` is a single-slot scalar primitive (for example `&int`,
+    `&bool`, `&u64`, `&f64`).
 - The two-part `mut` borrow contract for mutable reference parameters:
   - parameter declared `mut` (e.g. `fn bump(mut p: &Pair)`), and
   - call site uses `mut <expr>` (e.g. `bump(mut pair)`).
 - Field updates through both:
   - local `let mut` struct bindings (`pair.a = 1`, `pair.b += 2`), and
   - `mut` borrowed reference parameters (`p.a = 1`, `p.b += 2`).
-- Local borrowed references (`&Struct`) as first-class values:
-  - via the borrow operator `&expr` on borrowable lvalues (e.g. `&pair`, `&obj.field`), and
+  Nested field updates (`cfg.theme.status_bg = ...`) are supported for scalar
+  leaf fields in the current backend subset.
+- Local borrowed references (`&T`) as first-class values:
+  - via the borrow operator `&expr` on borrowable lvalues (e.g. `&pair`, `&obj.field`, `&x`), and
   - via implicit borrow coercions in contexts that expect `&T`
-    (for example `let r: &Pair = pair;`).
+    (currently implemented for `&Struct`; for example `let r: &Pair = pair;`).
   These borrows are checked with conservative **lexical lifetime** rules (they
   may not escape the scope of the borrowed stack storage).
 - Local bindings of `&Struct` values that originate from heap allocation (`new`)

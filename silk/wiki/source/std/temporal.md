@@ -6,7 +6,6 @@ utilities.
 Canonical doc: `docs/std/temporal.md`.
 
 ## Example
-
 ```silk
 import std::temporal;
 
@@ -22,4 +21,4 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/temporal.md`
-- Time types: `wiki/language/duration-instant.md`
+- Time types: `docs/wiki/language/duration-instant.md`

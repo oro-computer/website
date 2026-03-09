@@ -1,7 +1,7 @@
 # `std::websocket`
 
 Status: **Implemented (hosted, blocking)**. `std::websocket` provides an RFC 6455
-WebSocket implementation on top of `std::net::TcpStream` (client + server
+WebSocket implementation on top of `std::net::TCPStream` (client + server
 handshake, framing, ping/pong, close, fragmentation).
 
 See also:
@@ -86,7 +86,7 @@ struct WebSocket {
 
 impl WebSocket {
   // Server-side: perform the HTTP upgrade handshake on an accepted TCP stream.
-  public fn accept (stream: std::net::TcpStream) -> WebSocketResult;
+  public fn accept (stream: std::net::TCPStream) -> WebSocketResult;
 
   // Client-side: connect and perform the HTTP upgrade handshake.
   public fn connect (addr: SocketAddrV4, host: string, path: string) -> WebSocketResult;

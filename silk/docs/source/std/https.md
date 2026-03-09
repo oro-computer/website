@@ -2,7 +2,7 @@
 
 Status: **Implemented (hosted, blocking; HTTPS subset)**. `std::https` provides a
 small HTTPS client/server connection API on top of `std::tls` (mbedTLS) and
-`std::net::TcpStream`.
+`std::net::TCPStream`.
 
 See also:
 
@@ -15,12 +15,13 @@ See also:
 Implemented:
 
 - Blocking TLS handshake using `std::tls::Session`.
+- Authenticated HTTPS client sessions via `Connection.connect_host(...)` using a
+  system CA bundle + hostname verification.
 - HTTPS request/response I/O using the same message model as `std::http`.
 
 Not implemented (yet):
 
-- Certificate verification (CA store), hostname verification, and SNI/ALPN
-  configuration beyond current defaults.
+- ALPN configuration and HTTP/2 negotiation.
 - Non-blocking integration with an async runtime.
 
 ## Public API (Current Compiler Subset)
@@ -47,6 +48,11 @@ export type ConnectionResult = std::result::Result(Connection, Error);
 impl Connection {
   // Establish TCP, then perform a TLS client handshake.
   public fn connect (addr: std::net::SocketAddrV4) -> ConnectionResult;
+  public fn connect_v6 (addr: std::net::SocketAddrV6) -> ConnectionResult;
+
+  // Like `connect`, but configures SNI + hostname verification (recommended).
+  public fn connect_host (addr: std::net::SocketAddrV4, hostname: string) -> ConnectionResult;
+  public fn connect_host_v6 (addr: std::net::SocketAddrV6, hostname: string) -> ConnectionResult;
   public fn is_valid (self: &Connection) -> bool;
   public fn close (mut self: &Connection) -> Error?;
 
@@ -62,6 +68,7 @@ impl Server {
   // Listen on TCP, accept, then perform a TLS server handshake with the provided
   // certificate and private key (PEM).
   public fn listen (addr: std::net::SocketAddrV4, backlog: int, cert_pem: string, key_pem: string) -> ServerResult;
+  public fn listen_v6 (addr: std::net::SocketAddrV6, backlog: int, cert_pem: string, key_pem: string) -> ServerResult;
   public fn is_valid (self: &Server) -> bool;
   public fn local_port (self: &Server) -> std::net::NetIntResult;
   public fn accept (mut self: &Server) -> ConnectionResult;
@@ -72,5 +79,6 @@ impl Server {
 Notes:
 
 - This API is blocking and intended for the hosted POSIX baseline.
-- For now, TLS configuration uses current defaults and does not verify
-  certificates; this will be tightened as `std::tls` grows.
+- `connect_host(...)` / `connect_host_v6(...)` perform certificate chain
+  verification using a system CA bundle and enable hostname verification by
+  calling `std::tls::Session.set_hostname(...)` before the handshake.

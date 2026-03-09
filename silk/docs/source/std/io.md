@@ -101,11 +101,14 @@ Notes:
   current backend subset (the backing bytes include a trailing NUL terminator;
   Silk `string` length excludes it).
 - `std::io::async` provides small async wrappers (`read`/`write`) on top of
-  `std::runtime::event_loop`. Abortable variants (`read_abortable` /
-  `write_abortable`) accept an optional `std::abort_controller::AbortSignalBorrow`
-  and return `IOErrorKind::Aborted` when cancelled.
-  Note: in the current subset, aborts are observed only before/after an awaited
-  fd-wait; they do not yet interrupt an in-flight wait.
+  `std::runtime::io::{read_async,write_async}`. On `linux/*` these are backed
+  by the hosted async runtime (`io_uring` when available, `poll(2)` fallback).
+  On other targets they complete immediately by issuing a blocking `read`/`write`.
+  Abortable variants (`read_abortable` / `write_abortable`) accept an optional
+  `std::abort_controller::AbortSignalBorrow` and return `IOErrorKind::Aborted`
+  when cancelled.
+  Note: in the current subset, aborts are observed before starting an I/O
+  attempt; they do not interrupt an in-flight operation.
 - `std::io::stream` provides task-based adapters that connect POSIX/WASI file
   descriptors (`fd`) with `std::stream` (`ReadableStream` / `WritableStream`):
   - `std::io::stream::pipe_fd_to_stream` / `pipe_fd_to_stream_abortable`
@@ -215,6 +218,6 @@ key point is that `std::fs` and `std::net` can reuse the same I/O traits.
     exposes timers + fd readiness via `std::runtime::event_loop`,
   - `std::task` includes awaitable sleep helpers (`sleep_ms_async`, `sleep_async`),
   - `std::io::async` provides minimal `async fn` wrappers over fd-based
-    `read`/`write` using the event loop readiness waits.
+    `read`/`write` using the hosted async runtime I/O ops.
   Broader async I/O surface (buffered async I/O, sockets, filesystem streams,
   cancellation, and `select`-style waiting) remains future work.

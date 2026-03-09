@@ -28,10 +28,13 @@ Today, the language subset implemented by the compiler supports only:
   - slice parameters (`T[]`, `mut s: T[]`) and slice range borrows
     (`&base[start..end]`, `mut &base[start..end]`, and `&base[r]` / `mut &base[r]`
     where `r: range`).
-- first-class borrowed `&Struct` values created from borrowable lvalues:
-  - `&expr` (borrow operator) for borrowable lvalues, and
-  - implicit borrow coercions in contexts that expect `&T`
-    (for example `let r: &Pair = pair;`).
+- first-class borrowed `&T` values created from borrowable lvalues:
+  - `&expr` (borrow operator) for borrowable lvalues, for:
+    - the supported `&Struct` subset, and
+    - `&T` where `T` is a single-slot scalar primitive (for example `&int`,
+      `&bool`, `&u64`, `&f64`).
+  - implicit borrow coercions in contexts that expect `&T` are currently
+    implemented for `&Struct` (for example `let r: &Pair = pair;`).
 
 Additionally, the subset implements **lexical lifetime checks** for both slice
 borrows and borrowed `&T` values so obvious use-after-scope cases are rejected
@@ -68,7 +71,8 @@ to a richer lifetime model as more borrow forms become first-class.
 Borrowed `&T` values that ultimately reference **stack storage** may not escape
 that storage’s lexical scope. This includes:
 
-- returning a borrowed `&T` that points to a local struct binding,
+- returning a borrowed `&T` that points to a local stack binding (struct or
+  single-slot scalar),
 - and assigning such a borrowed reference into outer-scope storage.
 
 Returning a reference is permitted when the returned `&T` ultimately refers to

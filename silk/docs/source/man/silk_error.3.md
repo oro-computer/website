@@ -46,4 +46,4 @@ Embedders must not free or dereference the `SilkError` object directly.
 
 - `silk_compiler` (3)
 - `libsilk` (7)
-- `docs/compiler/abi-libsilk.md`
+- `?p=compiler/abi-libsilk`

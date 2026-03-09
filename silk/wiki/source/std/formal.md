@@ -21,7 +21,6 @@ import { nonnegative_i64, bounds_i64 } from "std/formal";
 ## Examples
 
 ### Example: applying standard theories
-
 ```silk
 import { nonnegative_i64, bounds_i64 } from "std/formal";
 
@@ -35,4 +34,4 @@ fn get_at (index: i64, len: i64) -> i64 {
 ## See also
 
 - Canonical doc: `docs/std/formal.md`
-- Formal verification: `wiki/language/formal-verification.md`
+- Formal verification: `docs/wiki/language/formal-verification.md`

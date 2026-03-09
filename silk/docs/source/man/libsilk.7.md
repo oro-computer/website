@@ -104,7 +104,7 @@ Embedders are expected to:
 - drive compilation by creating a `SilkCompiler` handle, adding source buffers, and invoking `silk_compiler_build`,
 - inspect error details via `silk_compiler_last_error` and `silk_error_format`.
 
-This manpage summarizes the ABI; the normative specification lives in `docs/compiler/abi-libsilk.md`.
+This manpage summarizes the ABI; the normative specification lives at `?p=compiler/abi-libsilk`.
 
 ## Types
 
@@ -279,7 +279,7 @@ bool silk_compiler_set_debug(SilkCompiler *compiler,
   - debug-mode lowering for supported native outputs (e.g. stack traces on
     failed `assert` for `linux/x86_64`),
   - additional Z3 debug output and `.smt2` dump emission on failing Formal Silk
-    verification (see `docs/language/formal-verification.md`).
+    verification (see `?p=language/formal-verification`).
 - `--debug` is currently incompatible with `--noheap`.
 
 ### No-heap build mode (`noheap`)
@@ -304,7 +304,14 @@ bool silk_compiler_set_target(SilkCompiler *compiler,
 - The triple is copied; errors are recorded in the compiler’s last‑error state.
 - Supported targets (initial implementation):
   - `linux-x86_64` (default), plus common `x86_64-*-linux-*` triples such as `x86_64-linux-gnu` and `x86_64-unknown-linux-gnu`,
-- `wasm32-unknown-unknown` (IR-backed wasm32 mode; emits a final `.wasm` module exporting `memory` and exported functions, including `main` when present; `ext` declarations become imports under `env.<name>`; also supports export-only modules with no `main` for JS/Node-style embedding),
+  - `linux-aarch64`,
+  - `android-aarch64`,
+  - `macos-x86_64`,
+  - `macos-aarch64`,
+  - `ios-aarch64`,
+  - `windows-x86_64`,
+  - `windows-aarch64`,
+  - `wasm32-unknown-unknown` (IR-backed wasm32 mode; emits a final `.wasm` module exporting `memory` and exported functions, including `main` when present; `ext` declarations become imports under `env.<name>`; also supports export-only modules with no `main` for JS/Node-style embedding),
   - `wasm32-wasi` (IR-backed wasm32 WASI mode; emits `memory` and `_start () -> void`, imports `wasi_snapshot_preview1.proc_exit`, and calls Silk `fn main () -> int`; also supports export-only modules for embedding, which do not include `_start`).
 - Note: for `wasm32` targets, only `SILK_OUTPUT_EXECUTABLE` is supported. `wasm32-wasi` currently supports only `fn main () -> int` (no argv).
 
@@ -514,9 +521,11 @@ Return value:
         - evaluates the constant integer expression determined by `main`,
         - emits a tiny native executable image *directly* using an Silk‑owned
           backend (no C stub, no external C compiler):
-          - currently this backend writes a minimal ELF64 executable for
-            `linux/x86_64` whose entrypoint immediately calls
-            `sys_exit(value)`,
+          - currently this backend writes a minimal target-specific executable
+            that terminates the process with the evaluated `main` value:
+            - ELF64 for `linux-x86_64`, `linux-aarch64`, and `android-aarch64`,
+            - Mach-O 64-bit for `macos-x86_64`, `macos-aarch64`, and `ios-aarch64`,
+            - PE32+ for `windows-x86_64` and `windows-aarch64`,
         - returns `true` on success and leaves the last error unset,
     - if the program is front‑end valid but outside this subset (for example,
       `main` contains non‑constant expressions, references to non‑constant
@@ -613,7 +622,7 @@ size_t silk_error_format(const SilkError *error,
   - always NUL‑terminates if `buffer_len > 0`,
   - returns the number of bytes that would be required to format the full message, **excluding** the terminating NUL.
 - If the return value is greater than or equal to `buffer_len`, the message was truncated.
-- The formatted message is intended for end-user display and follows the standard compiler diagnostic format (error code + optional file/line/column + caret snippet) as specified in `docs/compiler/diagnostics.md`.
+- The formatted message is intended for end-user display and follows the standard compiler diagnostic format (error code + optional file/line/column + caret snippet) as specified at `?p=compiler/diagnostics`.
 
 Callers can use a two‑step pattern:
 
@@ -673,11 +682,11 @@ compiler:
 
 - On `linux/x86_64`, the compiler can emit native ELF64 executables, objects,
   static libraries, and shared libraries for the current IR subset documented
-  in `docs/compiler/abi-libsilk.md` (structured control flow, helper calls,
+  in `?p=compiler/abi-libsilk` (structured control flow, helper calls,
   limited `string`/`struct`/optional support, and a limited FFI subset).
 - On `wasm32-unknown-unknown` and `wasm32-wasi`, executable builds emit `.wasm`
   modules for the current IR-backed wasm32 subset documented in
-  `docs/compiler/abi-libsilk.md` (including multi-module builds, export-only
+  `?p=compiler/abi-libsilk` (including multi-module builds, export-only
   modules, and `ext` imports under `env.<name>`).
 - On other targets, no code generation backend is available yet.
 - For well‑typed programs outside these subsets, `silk_compiler_build` fails
@@ -701,11 +710,12 @@ covers the full std surface.
   archive.
 - `SILK_Z3_LIB` — path to a dynamic Z3 library used by the Formal Silk verifier.
   When set, it overrides the default vendored Z3 linkage for verification.
+- `SILK_VERIFY_JOBS` — override the number of worker threads used for Formal Silk verification (default: auto; capped at 8).
 
 ## See Also
 
 - `silk` (1) — Silk language compiler CLI.
 - `silk_abi_get_version` (3), `silk_compiler` (3), `silk_error` (3), `silk_bytes` (3)
 - `silk` (7)
-- `docs/compiler/abi-libsilk.md` — normative ABI spec.
+- `?p=compiler/abi-libsilk` — normative ABI spec.
 - `silk.h` — C99 ABI header in the source tree.

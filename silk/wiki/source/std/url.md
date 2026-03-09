@@ -32,7 +32,6 @@ import std::strings;
 ## Examples
 
 ### Example: parse + resolve + query params
-
 ```silk
 import std::url;
 import std::strings;
@@ -198,3 +197,4 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/url.md`
+- End-to-end fixture: `tests/silk/pass_std_url_basic.slk`

@@ -49,6 +49,40 @@ Notes:
   as `else if ...`.
 - `else let ...` is supported as shorthand for `else if let ...`.
 
+### `if let` chains (`&& let`)
+
+The `if let` statement form supports a short-circuiting `&&` chain that mixes
+refutable `let` clauses and ordinary boolean clauses:
+
+```silk
+if let Some(x) = get_x() &&
+   x > 0 &&
+   let Ok(v) = get_value(x) {
+  // `x` and `v` are in scope here.
+  return v;
+} else {
+  // `x` and `v` are NOT in scope here.
+  return 0;
+}
+```
+
+Semantics:
+
+- Clauses are evaluated left-to-right and short-circuit like `&&`.
+- A `let <pattern> = <expr>` clause evaluates `<expr>` exactly once:
+  - if the pattern matches, its binders are introduced and evaluation continues,
+  - otherwise the entire condition is `false`.
+- A non-`let` clause must have type `bool`; `false` short-circuits.
+- Binders introduced by `let` clauses are in scope for:
+  - subsequent clauses in the chain, and
+  - the `then` block.
+  They are not in scope in the `else` block, and they do not escape the `if`.
+
+Parsing note (current subset):
+
+- `&&` at the top level is parsed as a clause separator. Use parentheses if a
+  clause needs its own `&&` / `||` / `??` expression at the top level.
+
 Example (`else let` shorthand):
 
 ```silk
@@ -242,7 +276,9 @@ fn main () -> int {
 Implemented end-to-end:
 
 - `if <expr> { ... }` and `if <expr> { ... } else { ... }` statement forms.
-- `if let <pattern> = <expr> { ... }` statement form (and `else if let` / `else let` chains).
+- `if let <pattern> = <expr> { ... }` statement form:
+  - `else if let` / `else let` chains, and
+  - `&&` let-chains in the `if let` condition.
 - Boolean type-checking for conditions.
 - `if` expressions of the form `if <cond> { <expr> } else { <expr> }`.
 
@@ -251,4 +287,11 @@ Not implemented yet:
 - General block expressions (`{ stmt* <expr> }`) outside the specific `if`
   expression form.
 
-The examples above are accepted by the current compiler subset.
+Examples that exercise the implemented subset:
+
+- `tests/silk/pass_if_bool.slk`
+- `tests/silk/pass_if_logical.slk`
+- `tests/silk/pass_bool_local_if.slk`
+- `tests/silk/pass_nested_if_while.slk`
+- `tests/silk/pass_if_expr_basic.slk`
+- `tests/silk/pass_if_let_chain_optional_result_basic.slk`

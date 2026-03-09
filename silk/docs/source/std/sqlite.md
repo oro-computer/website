@@ -1,8 +1,9 @@
 # `std::sqlite`
 
 Status: **Implemented subset + design**. `std::sqlite` provides SQLite database
-primitives for the hosted POSIX baseline using the system `libsqlite3` shared
-library.
+primitives for the hosted POSIX baseline. On `linux/x86_64`, `silk build`
+auto-links the vendored `libsqlite3.a` so outputs do not depend on a system
+SQLite shared library at runtime.
 
 The initial goals are:
 
@@ -14,9 +15,19 @@ The initial goals are:
 
 ## Linkage and Toolchain Integration
 
-On `linux/x86_64` with the glibc dynamic loader (`ld-linux`), `silk build`
-automatically adds `libsqlite3.so.0` as a `DT_NEEDED` dependency when a program
-imports `sqlite3_*` extern symbols (for example via `import std::sqlite;`).
+On `linux/x86_64`, when a program imports `std::sqlite`, `silk build`
+automatically links the vendored `libsqlite3.a` archive from:
+
+- repo builds: `vendor/lib/x64-linux/libsqlite3.a`
+- staged toolchains: `build/lib/silk/vendor/lib/x64-linux/libsqlite3.a`
+- installed toolchains: `<prefix>/lib/silk/vendor/lib/x64-linux/libsqlite3.a`
+
+This keeps `std::sqlite` runnable without requiring `libsqlite3.so.*` at
+runtime.
+
+To link dynamically (system SQLite), pass `--needed libsqlite3.so.0` (or set
+`[[target]].needed = ["libsqlite3.so.0"]` in `silk.toml`) and ensure the SONAME
+is resolvable by the dynamic loader on the target system.
 
 To build the vendored static library artifact used for embedding and future
 bundling, run `zig build deps`. This downloads and extracts the pinned SQLite

@@ -6,7 +6,6 @@ value directly in source code.
 Canonical doc: `docs/language/literals-character.md`.
 
 ## Example
-
 ```silk
 fn main () -> int {
   let a: char = 'A';

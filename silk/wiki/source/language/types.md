@@ -38,7 +38,6 @@ type IntAdder = fn (int, int) -> int;
 ## Examples
 
 ### Example: function values with an explicit function type
-
 ```silk
 type IntAdder = fn (int, int) -> int;
 
@@ -49,7 +48,6 @@ fn main () -> int {
 ```
 
 ### Example: arrays + `for` iteration
-
 ```silk
 fn main () -> int {
   let xs: int[3] = [1, 2, 3];

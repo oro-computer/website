@@ -40,6 +40,37 @@ Notes:
 - The loop exits when the scrutinee does not match the pattern.
 - Supported patterns are the same as `if let` (see `docs/language/flow-if-else.md`).
 
+### `while let` chains (`&& let`)
+
+The `while let` loop form supports the same short-circuiting `&&` chain syntax
+as `if let`, mixing refutable `let` clauses and ordinary boolean clauses:
+
+```silk
+fn main () -> int {
+  var x: int? = Some(3);
+  var sum: int = 0;
+
+  while let Some(v) = x && v > 0 {
+    sum = sum + v;
+    x = if v <= 1 { None } else { Some(v - 1) };
+  }
+
+  return sum;
+}
+```
+
+Semantics:
+
+- Clauses are evaluated left-to-right and short-circuit like `&&`.
+- `let` clause binders are in scope for subsequent clauses and for the loop
+  body, but they do not escape the loop.
+- The loop exits when any clause fails (pattern mismatch or boolean `false`).
+
+Parsing note (current subset):
+
+- `&&` at the top level is parsed as a clause separator. Use parentheses if a
+  clause needs its own `&&` / `||` / `??` expression at the top level.
+
 Example (optional countdown):
 
 ```silk
@@ -136,7 +167,6 @@ fn main () -> int {
   #invariant i >= 0;
   #invariant i <= original_limit;
   #variant original_limit - i;
-  #monovariant i;
   while i < limit {
     i = i + 1;
   }
@@ -151,8 +181,16 @@ Implemented end-to-end:
 
 - `while` loops with boolean conditions.
 - `while let <pattern> = <expr> { ... }` pattern-destructuring loops.
+- `&&` let-chains in `while let` loop conditions.
 - `break` / `continue` inside `while` bodies.
 - `#invariant` (type-checked as `bool`), `#variant` (type-checked as an
   integer), and `#monovariant` (type-checked as an integer) attached to `while`.
 
-The examples above are accepted by the current compiler subset.
+Examples that exercise the implemented subset:
+
+- `tests/silk/pass_while_bool.slk`
+- `tests/silk/pass_invariant_while.slk`
+- `tests/silk/pass_spec_const_while.slk`
+- `tests/silk/pass_nested_if_while.slk`
+- `tests/silk/pass_while_let_optional_countdown.slk`
+- `tests/silk/pass_while_let_chain_optional_basic.slk`

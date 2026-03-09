@@ -18,7 +18,6 @@ Canonical spec: `docs/language/packages-imports-exports.md`.
 - Full rules and many examples: `docs/language/packages-imports-exports.md`
 
 ## Syntax
-
 ```silk
 package my_app;
 
@@ -32,7 +31,6 @@ export fn main () -> int { return 0; }
 ## Examples
 
 ### Example: named file import
-
 ```silk
 // math.slk
 package app;
@@ -54,7 +52,6 @@ fn main () -> int {
 ```
 
 ### Example: default export and default import
-
 ```silk
 // module.slk
 package module;

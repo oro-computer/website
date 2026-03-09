@@ -21,7 +21,6 @@ import std::runtime::mem;
 ## Examples
 
 ### Example: build metadata + raw memory
-
 ```silk
 import std::runtime::build;
 import std::runtime::mem;
@@ -53,3 +52,4 @@ fn main () -> int {
 
 - Canonical doc: `docs/std/runtime.md`
 - Std package structure and swappability: `docs/std/package-structure.md`
+- End-to-end fixture (build metadata): `tests/silk/pass_std_runtime_build_is_debug.slk`

@@ -67,7 +67,11 @@ Implemented:
   end-to-end.
 - `continue;` outside a loop is rejected (`E2008`).
 
-The examples above are accepted by the current compiler subset.
+Example that uses `continue` in the implemented subset:
+
+- `tests/silk/pass_nested_if_while.slk`
+- `tests/silk/pass_for_continue_break.slk`
+- `tests/silk/pass_loop_basic.slk`
 
 ## Common Pitfalls
 

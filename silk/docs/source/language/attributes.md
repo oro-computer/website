@@ -1,57 +1,12 @@
 # Attributes (`attr(...)`)
 
-Attributes are first-class compile-time metadata.
+Silk supports first-class **attributes** that can annotate declarations and can
+also be queried at compile time for conditional compilation.
 
-You can use them to:
+Attributes come in two forms:
 
-- annotate declarations with `attr(...)`,
-- **select code at compile time** with `if attr(...) { ... } else { ... }`,
-- and (in type positions) select ABIs for callback types (`attr(abi=c)`).
-
-Attributes are intentionally small and explicit: they are a way to express
-“this code only exists for target X” or “this code is only present when feature
-Y is enabled”, without requiring runtime environment probes.
-
-## Implementation status (current compiler subset)
-
-Status: **in progress**.
-
-Implemented:
-
-- `attr(...)` as a prefix annotation on declarations and statements.
-- `attr(...)` as a compile-time query expression of type `bool`.
-- Declaration gating:
-  - when an `attr(...)` annotation contains `arch` / `os` / `target` / `feature`,
-    the annotated declaration is included only when the key/value constraints
-    match the current build target.
-- Conditional compilation:
-  - `if <cond> { ... } else { ... }` prunes branches at compile time when
-    `<cond>` is an attribute-query boolean expression built from:
-    `attr(...)`, `!`, `&&`, `||`, and parentheses.
-  - The pruned branch is not type-checked and is not lowered/code-generated.
-- ABI selection:
-  - `attr(abi=c) fn (...) -> ...` in type positions is accepted as a synonym for
-    `c_fn (...) -> ...` (C ABI callback pointer types).
-
-Not yet fully implemented:
-
-- Per-dependency feature resolution and namespacing (Cargo-style feature graphs).
-- A public feature-configuration mechanism (the current subset evaluates
-  `attr(feature="...")` against an empty enabled set).
-- ABI selectors beyond the initial `abi=c` support.
-
-## Syntax (one screen)
-
-### Attribute list
-
-```silk
-attr(one, two, debug=false, arch="x86_64", abi=c)
-```
-
-An attribute list is a comma-separated list of **items**:
-
-- **tags**: `one`, `two` (identifiers)
-- **key/value pairs**: `arch="x86_64"`, `debug=false`, `abi=c`
+- **Tags**: `attr(one, two, three)`
+- **Key/value pairs**: `attr(arch="x86_64", feature="tui")`
 
 Values may be:
 
@@ -60,7 +15,62 @@ Values may be:
 - strings (`"..."` or raw string literals)
 - identifiers (treated as a string value, e.g. `abi=c`)
 
-A trailing comma is permitted.
+## Implementation status
+
+Status: **in progress**.
+
+Implemented in the current compiler subset:
+
+- `attr(...)` as a prefix annotation on declarations and statements.
+- `attr(...)` as a compile-time query expression of type `bool`.
+- Comparison operators in `attr(...)` items for numeric toolchain keys:
+  - examples: `attr(silk_major>=0)`, `attr(silk_minor>=2)`, `attr(silk_patch=0)`
+  - and: `attr(silk_abi_major>=0)`, `attr(silk_abi_minor>=2)`, `attr(silk_abi_patch=0)`
+  where `<op>` is one of `=`, `<`, `<=`, `>`, `>=` and `<n>` is an integer literal.
+- Declaration gating:
+  - when an `attr(...)` annotation contains `arch` / `os` / `target` / `feature`,
+    the annotated declaration is included only when the key/value constraints
+    match the current build target.
+- Conditional compilation:
+  - `if <cond> { ... } else { ... }` prunes branches at compile time when
+    `<cond>` is an attribute-query boolean expression (built from `attr(...)`,
+    `!`, `&&`, `||`, and parentheses).
+  - The pruned branch is not type-checked and is not lowered/code-generated.
+- `attr(abi=c) fn (...) -> ...` in type positions is accepted as a synonym for
+  `c_fn (...) -> ...` (C ABI callback pointer types).
+- Task scheduling hints on `task` functions:
+  - `attr(task=pool)` / `attr(task="pool")` schedules the task on the global
+    task pool (see “Task scheduling” below),
+  - `attr(task_pool)` is accepted as a tag-form synonym for `attr(task=pool)`.
+
+Not yet fully implemented:
+
+- Objective-C / FFM / WASI-component / other ABI selectors beyond the initial
+  `abi=c` support.
+
+## Syntax
+
+### Attribute list
+
+```silk
+attr(one, two, debug=false, arch="x86_64", abi=c)
+attr(silk_minor>=2, arch="x86_64")
+```
+
+Items are comma-separated. A trailing comma is permitted.
+
+### Attribute operators
+
+An attribute item may be either:
+
+- a tag: `attr(one)`, or
+- a key/value item: `attr(arch="x86_64")`.
+
+In the current subset, key/value items use one of:
+
+- `=` for string/identifier/bool keys (for example `arch="x86_64"`, `abi=c`),
+- `=`, `<`, `<=`, `>`, `>=` for numeric toolchain keys (for example
+  `silk_minor>=2`).
 
 ### Annotation form (prefix)
 
@@ -83,8 +93,8 @@ fn main () -> int {
 
 Notes:
 
-- Statement-level attributes are **metadata only** in the current subset; use
-  `if attr(...) { ... }` for compile-time selection inside blocks.
+- Statement-level attributes are metadata only; use `if attr(...) { ... }` for
+  compile-time selection inside blocks.
 
 ### Query form (expression)
 
@@ -109,190 +119,153 @@ if attr(os="linux") && (attr(arch="x86_64") || attr(arch="wasm32")) {
 `attr(...)` queries are compile-time only; they are evaluated by the compiler
 and do not exist as runtime calls.
 
-## Feature detection and conditional compilation
+## Built-in attribute keys (current subset)
 
-The most common “feature detection” pattern in Silk is:
+The current compiler subset recognizes the following keys in queries and
+conditional compilation contexts:
 
-- decide at compile time using `if attr(...)`,
-- keep a single public API surface,
-- and provide a fallback implementation for targets/features that don’t apply.
+- `arch`: `"x86_64"`, `"aarch64"`, or `"wasm32"`
+- `os`: `"linux"`, `"macos"`, `"ios"`, `"android"`, `"windows"`, `"wasi"`, or `"unknown"`
+- `target`:
+  - `"linux-x86_64"` or `"linux-aarch64"`
+  - `"macos-x86_64"` or `"macos-aarch64"`
+  - `"ios-aarch64"`
+  - `"android-aarch64"`
+  - `"windows-x86_64"` or `"windows-aarch64"`
+  - `"wasm32-unknown-unknown"` or `"wasm32-wasi"`
+- `feature`: an enabled feature name (see “Features” below)
+- Toolchain version keys (numeric; compare against an integer literal using `=`, `<`, `<=`, `>`, `>=`):
+  - `silk_major`, `silk_minor`, `silk_patch`
+  - `silk_abi_major`, `silk_abi_minor`, `silk_abi_patch`
 
-Two important consequences of compile-time pruning:
+## ABI selection (`abi=c`) and `c_fn`
 
-- The pruned branch is **not type-checked** (so it may refer to declarations
-  that don’t exist on the active target).
-- The pruned branch is **not emitted** (no IR, no codegen, no symbols).
-
-<!-- tabs:start Attribute examples -->
-### Declaration gating
-
-Use declaration annotations to include/exclude whole declarations from a build:
-
-```silk
-import { println } from "std/io";
-
-attr(os="linux") fn platform_name () -> string { return "linux"; }
-attr(os="macos") fn platform_name () -> string { return "macos"; }
-attr(os="windows") fn platform_name () -> string { return "windows"; }
-attr(os="wasi") fn platform_name () -> string { return "wasi"; }
-attr(os="unknown") fn platform_name () -> string { return "unknown"; }
-
-fn main () -> int {
-  println(platform_name());
-  return 0;
-}
-```
-
-Notes:
-
-- This pattern relies on **declaration gating**: only the declarations whose
-  `attr(...)` constraints match the current target are included.
-- Keep a single ungated fallback when you want a defined behavior for
-  otherwise-unrecognized targets.
-
-### Compile-time pruning with `if attr(...)`
-
-Use `if attr(...)` inside blocks when you want localized target selection:
-
-```silk
-import { println } from "std/io";
-
-fn main () -> int {
-  if attr(target="wasm32-wasi") {
-    println("hello from wasi");
-  } else {
-    println("hello from a hosted target");
-  }
-  return 0;
-}
-```
-
-The pruned branch is not type-checked, so you can safely fence off code that
-only makes sense on some targets:
-
-```silk
-fn main () -> int {
-  if attr(os="windows") {
-    // This can mention Windows-only bindings/types.
-    let x: WindowsOnlyType = windows_call();
-    return 0;
-  } else {
-    return 0;
-  }
-}
-```
-
-### Feature flags (`attr(feature="...")`)
-
-Features are named build-time toggles intended for conditional compilation:
-
-```silk
-import { println } from "std/io";
-
-fn main () -> int {
-  if attr(feature="tui") {
-    println("tui enabled");
-  } else {
-    println("tui disabled");
-  }
-  return 0;
-}
-```
-
-In the current compiler subset, feature configuration is not yet exposed, so
-the enabled feature set is empty and `attr(feature="...")` always evaluates to
-`false`. The structure above is still the intended shape for optional code.
-
-### Tooling metadata (tags and custom keys)
-
-Tags and non-built-in keys are available for tooling and future extensions:
-
-```silk
-// In the current subset, these do not affect compilation unless you use
-// built-in keys like arch/os/target/feature.
-attr(internal, since="0.3.0", owner="runtime") fn helper () -> void {
-  return;
-}
-```
-
-Prefer to keep metadata keys short and stable; treat them as part of your
-project’s conventions.
-
-### ABI selection (`abi=c`) and `c_fn`
-
-In type positions, `attr(abi=c) fn (...) -> R` is equivalent to
-`c_fn (...) -> R`. This is intended for C callback pointer types:
+In type positions, `attr(abi=c) fn (...) -> R` is equivalent to `c_fn (...) -> R`.
+This is intended for C callback pointer types:
 
 ```silk
 type InfoCb = attr(abi=c) fn (u64, u64) -> void;
 type InfoCb2 = c_fn (u64, u64) -> void; // equivalent
 ```
-<!-- tabs:end -->
 
-## Built-in attribute keys (exhaustive in current subset)
+## Task scheduling (`task=pool`)
 
-The current compiler subset recognizes the following keys in queries and
-conditional compilation contexts:
+In the current hosted subset, `task fn` execution is implemented on OS threads.
+By default, calling a `task fn` spawns a dedicated OS thread for that call.
 
-- `arch`
-- `os`
-- `target`
-- `feature`
-and additionally recognizes:
+When a `task fn` (or `async task fn`) is annotated with:
 
-- `abi` (type positions only; see above)
+- `attr(task=pool)` (or `attr(task="pool")`), or
+- `attr(task_pool)` (tag-form synonym),
 
-The compiler normalizes the selected target to a canonical set of strings. All
-values below are those canonical strings (they match `OS_PLATFORM` / `OS_ARCH`
-as documented in `docs/language/target-metadata.md`).
+the compiler schedules calls to that task on the global **task pool** instead
+of spawning a dedicated OS thread per call.
 
-### `arch`
+The task pool is:
 
-Canonical CPU architecture name string:
+- created lazily on the first pooled task submission,
+- backed by OS worker threads,
+- implemented as a queue-based pool with simple work stealing between workers
+  (see `src/silk_rt_task_pool.c`).
 
-- `"x86_64"`
-- `"aarch64"`
-- `"wasm32"`
+### Configuration
 
-### `os`
+On hosted targets, the worker count defaults to the detected CPU count (clamped
+to a small fixed maximum).
 
-Canonical platform/OS name string:
+You may override it by setting:
 
-- `"linux"`
-- `"macos"`
-- `"ios"`
-- `"android"`
-- `"windows"`
-- `"wasi"`
-- `"unknown"` (used for `wasm32-unknown-unknown`)
+- `SILK_TASK_POOL_THREADS=<n>`
 
-### `target`
+to request `n` worker threads (values `<= 0` are treated as `1`; non-numeric
+values are ignored and the default is used).
 
-Canonical target triple string:
+## Features
 
-- `"linux-x86_64"`
-- `"linux-aarch64"`
-- `"macos-x86_64"`
-- `"macos-aarch64"`
-- `"ios-aarch64"`
-- `"android-aarch64"`
-- `"windows-x86_64"`
-- `"windows-aarch64"`
-- `"wasm32-unknown-unknown"`
-- `"wasm32-wasi"`
+Features are named build-time toggles intended for conditional compilation.
 
-### `feature`
+In the current compiler subset, features may be enabled from:
 
-An enabled feature name string.
+- the CLI (`--feature` / `-F`), and
+- package manifests (`silk.toml`):
+  - the root package via `[build].features`, and
+  - dependency packages via `[dependencies].<dep>.features`.
 
-Feature configuration is not exposed in the current subset, so the enabled set
-is empty and `attr(feature="...")` always evaluates to `false`.
+In `silk.toml`, `[build].features` may be either:
 
-## Relationship to target/build metadata
+- an array of strings (`["NAME", "NAME=VALUE", ...]`), or
+- an inline table (`{ NAME = <bool|int|string>, ... }`).
+  - `NAME = true` is equivalent to `NAME` (boolean enabled),
+  - any other value is equivalent to `NAME=VALUE`.
 
-Attributes are one piece of the compile-time configuration story.
+Use `attr(feature="name")` in queries and conditional compilation:
 
-- For runtime-visible target metadata, see `docs/language/target-metadata.md`
-  (`OS_PLATFORM`, `OS_ARCH`, `OS_IS_UNIX`, `OS_IS_POSIX`).
-- For runtime-visible build metadata, see `docs/language/build-metadata.md`
-  (`BUILD_KIND`, `BUILD_MODE`, `BUILD_VERSION`, ...).
+```silk
+if attr(feature="tui") {
+  // code compiled when the build enables the "tui" feature
+}
+```
+
+### Feature scoping (package builds)
+
+When building a package graph (via `silk build/check/test --package ...`),
+features are **scoped per package**:
+
+- `attr(feature="...")` queries observe only the enabled features for the
+  current module’s package.
+- Root package features do not implicitly affect dependency packages.
+
+Dependency-scoped features are enabled via the root package manifest’s
+dependency entries:
+
+```toml
+[dependencies]
+ui = { path = "../ui", sha256 = "sha256:...", features = ["tui"] }
+```
+
+### Feature values
+
+Features may optionally carry values. Use `attr(feature="name=value")` to
+require a specific value:
+
+```silk
+if attr(feature="MY_FEATURE=123") {
+  // compiled only when MY_FEATURE is set to 123
+}
+
+if attr(feature=enable_this_feature) {
+  // compiled only when enable_this_feature is enabled
+}
+```
+
+Rules (current subset):
+
+- Feature specs are of the form `NAME` or `NAME=VALUE`.
+  - When `VALUE` is omitted, the feature is treated as boolean `true`.
+  - When `VALUE` is present:
+    - `true` / `false` are parsed as booleans,
+    - integer literals (including `0x...` / `0b...` / digit separators) are
+      parsed as integers,
+    - all other values are treated as strings.
+- `attr(feature="NAME")` is `true` when the feature is enabled:
+  - boolean features are enabled only when they are `true`,
+  - non-boolean-valued features are enabled when present.
+- `attr(feature="NAME=VALUE")` is `true` only when the named feature exists and
+  its value equals `VALUE` after parsing.
+
+Precedence:
+
+- CLI `--feature` / `-F` entries override manifest-provided feature values of
+  the same name.
+  - For package builds, unscoped `--feature NAME[=VALUE]` entries target the
+    **root package**.
+  - You may target a specific package with a namespaced spec:
+    `--feature <package>/<spec>` (for example `--feature ui/tui` or
+    `--feature ui/tui=false`).
+  - Namespaced feature specs are accepted only for package builds (those that
+    use `--package`).
+
+- For package builds, multiple manifests in the package graph may request
+  features for the same dependency package. If the same feature name is
+  assigned multiple different values for a single package, the build fails
+  unless a CLI `--feature <package>/<spec>` entry overrides it.

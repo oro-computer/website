@@ -1,4 +1,4 @@
-# `match` Expression
+# `match` Expression (and Statement)
 
 The `match` expression provides structured pattern matching.
 
@@ -61,6 +61,36 @@ fn main () -> int {
 }
 ```
 
+### Integer Matching (Primitive Integers) (Implemented Subset)
+
+The compiler also supports a small `match` subset for integer-like primitive
+scrutinees.
+
+Implemented initial subset:
+
+- The scrutinee expression must have a primitive integer type in the current
+  backend subset (`int`, `i64`, `u64`, and the fixed-width integer primitives).
+- Patterns are restricted to:
+  - integer literals (`0`, `1`, `123`, `0xFF`, ...), and
+  - a wildcard `_` arm.
+- The match must be exhaustive:
+  - there must be exactly one wildcard `_` arm, and
+  - literal arms must not repeat the same value.
+- No guards (`if ...`) are implemented yet.
+
+Example:
+
+```silk
+fn main () -> int {
+  let x: int = 0;
+  let y: int = match (x) {
+    0 => 1,
+    _ => 2,
+  };
+  return y;
+}
+```
+
 ### Enum Matching (`enum`) (Implemented Subset)
 
 The language design supports matching over user-defined `enum` types
@@ -79,8 +109,10 @@ Implemented initial subset:
   variant name directly.
 - No guards (`if ...`) are implemented yet.
 - Matches must be exhaustive for the enum scrutinee in the initial subset:
-  there must be exactly one arm for each enum variant (order is not
-  significant).
+  - either there is exactly one arm for each enum variant (order is not
+    significant), or
+  - there is exactly one wildcard `_` arm that acts as a catch-all for any
+    remaining variants.
 
 ### Type Union Matching (`T1 | T2 | ...`) (Implemented Subset)
 
@@ -107,7 +139,64 @@ Implemented initial subset:
 - The result type of a `match` expression is the common type of its arms; all
   arms must type-check to the same result type in the initial subset.
 
-## `match` Statement (Typed Errors)
+## `match` Statement (Block Arms)
+
+Silk also supports a *statement* form of `match` whose arms are blocks. This is
+the ergonomic counterpart to the expression form when an arm must perform
+multiple statements (printing, early returns, mutation, etc).
+
+Surface form:
+
+```silk
+match (<scrutinee>) {
+  <pattern> => { ... },
+  <pattern> => { ... },
+}
+```
+
+The statement form may also use a single-expression arm body without braces:
+
+```silk
+match (x) {
+  _ => do_work(),
+}
+```
+
+An optional trailing semicolon is permitted after the closing brace:
+
+```silk
+match (x) { _ => { } };
+```
+
+In the current compiler subset, the statement form is supported for:
+
+- ordinary value matching (no typed-error contract), and
+- typed error handling (`docs/language/typed-errors.md`).
+
+### Ordinary value matching (implemented subset)
+
+When the scrutinee expression is an ordinary value (it does *not* have a typed
+error contract), the statement form supports the same scrutinee + pattern
+subsets as the `match` expression form in this document:
+
+- optionals (`T?`): `None` / `Some(name)` / `Some(_)`
+- primitive integers: integer literals and `_`
+- enums (`enum`): enum variants (see note below)
+- type unions (`T1 | ... | Tn`): typed binders `name: Ti` / `_: Ti`
+- recoverable results: `Ok(name)` / `Ok(_)` and `Err(name)` / `Err(_)`
+
+Exhaustiveness rules are the same as the expression form: the match must cover
+the full scrutinee domain in the supported subset.
+
+Enum variant pattern note (statement form):
+
+- In the statement form, a bare identifier pattern `name` is reserved for a
+  catch-all binder arm (used by typed error matches), so enum variant patterns
+  must be written in qualified form: `E::Variant(...)` (including `::pkg::E::Variant(...)`).
+- The wildcard pattern `_` is permitted as a catch-all arm for enums, and
+  satisfies exhaustiveness without requiring one arm per variant.
+
+### Typed error matching (Terminal Arm Rule)
 
 The language design also includes a statement form of `match` used for
 *typed errors* (`docs/language/typed-errors.md`).
@@ -131,8 +220,9 @@ Implementation status:
 - The compiler currently implements `match` as an expression for:
   - the optional subset (`T?`), and
   - exhaustive `enum` matches (no guards) for the current CFG IR backend subset.
-- The statement form required for typed errors is implemented as part of the
-  typed errors feature work and is described in `docs/language/typed-errors.md`.
+- The statement form is implemented for:
+  - ordinary values in the supported subset (block arms), and
+  - typed errors as part of the typed errors feature work (`docs/language/typed-errors.md`).
 
 Note: the compiler also allows the `match` statement form to destructure
 recoverable `Result`-style values. This form does not trigger the Terminal Arm

@@ -28,7 +28,7 @@ In manpage mode, the rendered manpage section is derived from doc tags:
 - `@misc` → section 7
 - otherwise API docs → section 3
 
-Doc tag semantics are specified in `docs/language/doc-comments.md`.
+Doc tag semantics are specified in `?p=language/doc-comments`.
 
 ## Options
 
@@ -68,4 +68,4 @@ silk doc --man std::flag -o std_flag.3
 
 - `silk` (1)
 - `silk-man` (1)
-- `docs/compiler/cli-silk.md`
+- `?p=compiler/cli-silk`

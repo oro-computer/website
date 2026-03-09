@@ -19,7 +19,6 @@ import std::strings;
 ## Examples
 
 ### Example: `getcwd` + `chdir` with recoverable errors
-
 ```silk
 import std::process;
 import std::strings;
@@ -54,4 +53,5 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/process.md`
-- Environment helpers: `wiki/std/env.md`
+- Environment helpers: `docs/wiki/std/env.md`
+- End-to-end fixture: `tests/silk/pass_std_process_getcwd_chdir.slk`

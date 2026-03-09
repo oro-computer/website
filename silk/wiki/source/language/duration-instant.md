@@ -7,7 +7,6 @@ as distinct Silk types that lower to `i64` nanoseconds.
 Canonical doc: `docs/language/duration-instant.md`.
 
 ## Example: `Duration` arithmetic
-
 ```silk
 fn main () -> int {
   let a: Duration = 10ms;
@@ -23,5 +22,5 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/language/duration-instant.md`
-- Duration literals: `wiki/language/literals-duration.md`
+- Duration literals: `docs/wiki/language/literals-duration.md`
 - Temporal stdlib: `docs/std/temporal.md`

@@ -19,7 +19,6 @@ Canonical doc: `docs/std/package-structure.md`.
 ## Examples
 
 ### Example: import a std module
-
 ```silk
 import std::io;
 import std::strings;
@@ -44,4 +43,4 @@ silk build --std-root ./my-stdlib --std-lib ./my-stdlib/libsilk_std.a main.slk
 ## See also
 
 - Canonical doc: `docs/std/package-structure.md`
-- Runtime interface layer: `wiki/std/runtime.md`
+- Runtime interface layer: `docs/wiki/std/runtime.md`

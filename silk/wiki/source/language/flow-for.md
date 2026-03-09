@@ -14,7 +14,6 @@ Canonical spec: `docs/language/flow-for.md`.
 - Implemented subset + current limitations: `docs/language/flow-for.md`
 
 ## Syntax
-
 ```silk
 for x in xs {
   // ...
@@ -28,7 +27,6 @@ for (let i = 0; i < 10; ++i) {
 ## Examples
 
 ### Example: range iteration
-
 ```silk
 fn main () -> int {
   let mut sum: int = 0;
@@ -40,7 +38,6 @@ fn main () -> int {
 ```
 
 ### Example: array iteration
-
 ```silk
 fn main () -> int {
   let xs: int[3] = [1, 2, 3];

@@ -39,4 +39,4 @@ None.
 ## See Also
 
 - `libsilk` (7)
-- `docs/compiler/abi-libsilk.md`
+- `?p=compiler/abi-libsilk`

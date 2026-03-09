@@ -1,0 +1,87 @@
+{
+  "generatedAt": "2026-03-09T15:59:15+00:00",
+  "kind": "docs",
+  "count": 12,
+  "sections": [
+    {
+      "name": "overview",
+      "items": [
+        {
+          "id": "start",
+          "title": "slg Docs",
+          "file": "start.md"
+        }
+      ]
+    },
+    {
+      "name": "guides",
+      "items": [
+        {
+          "id": "guides/getting-started",
+          "title": "Getting started",
+          "file": "guides/getting-started.md"
+        },
+        {
+          "id": "guides/search-recipes",
+          "title": "Search recipes",
+          "file": "guides/search-recipes.md"
+        }
+      ]
+    },
+    {
+      "name": "cli",
+      "items": [
+        {
+          "id": "cli/slg",
+          "title": "`slg`",
+          "file": "cli/slg.md"
+        },
+        {
+          "id": "cli/input-types-and-parsing",
+          "title": "Input types and parsing",
+          "file": "cli/input-types-and-parsing.md"
+        },
+        {
+          "id": "cli/patterns-and-matching",
+          "title": "Patterns and matching",
+          "file": "cli/patterns-and-matching.md"
+        },
+        {
+          "id": "cli/traversal-and-ignores",
+          "title": "Traversal and ignores",
+          "file": "cli/traversal-and-ignores.md"
+        },
+        {
+          "id": "cli/parallelism",
+          "title": "Parallelism",
+          "file": "cli/parallelism.md"
+        },
+        {
+          "id": "cli/output-and-exit-codes",
+          "title": "Output and exit codes",
+          "file": "cli/output-and-exit-codes.md"
+        },
+        {
+          "id": "cli/options-reference",
+          "title": "Options reference",
+          "file": "cli/options-reference.md"
+        },
+        {
+          "id": "cli/diagnostics",
+          "title": "Diagnostics",
+          "file": "cli/diagnostics.md"
+        }
+      ]
+    },
+    {
+      "name": "man",
+      "items": [
+        {
+          "id": "man/slg-1",
+          "title": "`slg` (1) \u2014 Silk Line Grep",
+          "file": "man/slg-1.md"
+        }
+      ]
+    }
+  ]
+}

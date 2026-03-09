@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-03-05T15:52:40+00:00",
+  "generatedAt": "2026-03-09T16:22:11+00:00",
   "kind": "docs",
-  "count": 176,
+  "count": 180,
   "sections": [
     {
       "name": "overview",
@@ -83,7 +83,7 @@
         },
         {
           "id": "language/flow-match",
-          "title": "`match` Expression",
+          "title": "`match` Expression (and Statement)",
           "file": "language/flow-match.md"
         },
         {
@@ -315,6 +315,11 @@
           "id": "language/target-metadata",
           "title": "Target Metadata (`OS_PLATFORM`, `OS_ARCH`, `OS_IS_UNIX`, `OS_IS_POSIX`)",
           "file": "language/target-metadata.md"
+        },
+        {
+          "id": "language/toolchain-metadata",
+          "title": "Toolchain Metadata (`SILK_VERSION`, `SILK_ABI_VERSION`, `SILK_GIT_COMMIT`)",
+          "file": "language/toolchain-metadata.md"
         },
         {
           "id": "language/testing",
@@ -557,6 +562,11 @@
           "file": "std/runtime.md"
         },
         {
+          "id": "std/signal",
+          "title": "`std::signal`",
+          "file": "std/signal.md"
+        },
+        {
           "id": "std/task",
           "title": "`std::task`",
           "file": "std/task.md"
@@ -757,6 +767,11 @@
           "file": "compiler/package-manifests.md"
         },
         {
+          "id": "compiler/package-distribution",
+          "title": "Silk Package Distribution",
+          "file": "compiler/package-distribution.md"
+        },
+        {
           "id": "compiler/build-scripts",
           "title": "Build Modules (`build.slk`)",
           "file": "compiler/build-scripts.md"
@@ -840,6 +855,11 @@
           "id": "man/silk-build.1",
           "title": "`silk-build` (1) \u2014 Build Silk Artifacts",
           "file": "man/silk-build.1.md"
+        },
+        {
+          "id": "man/silk-package.1",
+          "title": "`silk-package` (1) \u2014 Inspect And Lint Silk Packages",
+          "file": "man/silk-package.1.md"
         },
         {
           "id": "man/silk-check.1",

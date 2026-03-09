@@ -70,8 +70,10 @@ The language includes the following operators and delimiters:
 - Member and scope: `.`, `::`, `?.`.
 - Currently:
   - `.` and `::` are supported,
-  - and `?.` is supported for optional field access on the supported `struct`
-    subset (`opt?.field` yields `FieldType?`; see `docs/language/optional.md`).
+  - and `?.` is supported for optional chaining on the supported `struct` subset:
+    - `opt?.field` yields `FieldType?`,
+    - `opt?.method(args...)` yields `ResultType?`.
+    See `docs/language/optional.md`.
 - Casts: `as` and `as raw` (postfix).
   - Syntax:
     - numeric/shape cast: `<expr> as <Type>`,
@@ -112,9 +114,13 @@ Rules:
 
 - The left-hand side must be an assignable lvalue. In the current subset, it may be:
   - an identifier that refers to a local `let mut` binding, or
-  - a struct field lvalue `name.field` where `name` is either:
+  - a struct field lvalue `name.field` (or nested field lvalue `name.field1.field2...`)
+    where `name` is either:
     - a local `let mut` binding of a supported POD `struct`, or
     - a `mut` borrowed reference parameter (`mut name: &Struct`).
+    In the current backend subset, nested field assignment is supported only
+    when the **leaf field** lowers to a single scalar slot (for example `bool`,
+    integer scalars, and `f32`/`f64`).
 - Identifier lvalues must refer to `let mut` local bindings.
 - The type of `expr` must match the binding’s type.
 - The assignment expression has type `void`.
@@ -443,6 +449,10 @@ conversions:
         unless an explicit length is provided.
     - `ptr as T[](len)` constructs a `T[]` slice view where the pointer
       component is `ptr` and the length component is `len` (element count).
+    - `ptr as string(len)` constructs a `string` view where the pointer
+      component is `ptr` and the length component is `len` (byte count). This
+      is sugar for `std::runtime::mem::string_from_ptr_len(ptr, len)` (and the
+      reserved intrinsic `__silk_string_from_ptr_len`).
     - `slice as u64` / `slice as usize` extracts the pointer component of a
       `T[]` slice.
     - `arr as u64` / `arr as usize` extracts the address of element `0` of a

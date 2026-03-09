@@ -6,7 +6,7 @@ For first-time readers, a good path is:
 
 1. `docs/language/types.md` (primitive types like `int`, `f64`, `bool`, `string`),
 2. this overview (what literal categories exist),
-3. the specific literal docs below (syntax, semantics, and current compiler support).
+3. the specific literal docs below (syntax, semantics, and current implementation notes).
 
 Returning readers typically want the “Implementation Status” section near the top
 of each literal concept doc, plus the “Tests” links for runnable

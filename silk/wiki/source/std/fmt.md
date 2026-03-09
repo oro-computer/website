@@ -14,7 +14,6 @@ Canonical doc: `docs/std/fmt.md`.
 ## Examples
 
 ### Example: `println` formatting
-
 ```silk
 import std::io;
 

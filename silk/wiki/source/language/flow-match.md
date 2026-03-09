@@ -26,7 +26,6 @@ match value {
 ## Examples
 
 ### Example: matching an optional
-
 ```silk
 fn main () -> int {
   let x: int? = Some(7);
@@ -39,7 +38,6 @@ fn main () -> int {
 ```
 
 ### Example: matching an enum
-
 ```silk
 enum Msg {
   Quit,

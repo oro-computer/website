@@ -10,8 +10,8 @@ make `await` a true suspension point. In the current subset:
 - `yield` / `yield *` are still blocking OS-thread operations (task runtime is thread-based).
 - Sleep helpers are split into:
   - blocking thread sleeps (`sleep_ms`, `sleep`, `sleep_until`), and
-  - awaitable sleep promises (`sleep_ms_async`, `sleep_async`) that can park a coroutine
-    when running under the hosted executor.
+  - awaitable sleep promises (`sleep_ms_async`, `sleep_async`, `sleep_until_async`) that can
+    park a coroutine when running under the hosted executor.
 
 See also:
 
@@ -47,6 +47,9 @@ export fn sleep_async (d: Duration) -> Promise(void);
 
 // Block the current OS thread until `deadline` (monotonic time).
 export fn sleep_until (deadline: Instant) -> SleepUntilFailed?;
+
+// Awaitably sleep until `deadline` (monotonic time; millisecond resolution).
+export async fn sleep_until_async (deadline: Instant) -> SleepUntilFailed?;
 ```
 
 Notes:
@@ -67,6 +70,10 @@ Notes:
   (rounds up to the next millisecond).
 - `sleep_until(deadline)` is a blocking thread operation and is implemented by
   reading `std::temporal::now_monotonic()` and calling `sleep(deadline - now)`.
+  - It returns `Some(SleepUntilFailed{ ... })` when a monotonic clock read fails
+    (`std::temporal::now_monotonic()` returns `Err(...)`).
+- `sleep_until_async(deadline)` is an awaitable operation and is implemented by
+  reading `std::temporal::now_monotonic()` and awaiting `sleep_async(deadline - now)`.
   - It returns `Some(SleepUntilFailed{ ... })` when a monotonic clock read fails
     (`std::temporal::now_monotonic()` returns `Err(...)`).
 

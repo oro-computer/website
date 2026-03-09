@@ -12,7 +12,6 @@ Canonical spec: `docs/language/interfaces.md`.
 - Dynamic dispatch (trait objects/vtables): not implemented yet
 
 ## Syntax
-
 ```silk
 interface Len {
   fn len() -> i64;
@@ -30,7 +29,6 @@ impl Counter as Len {
 ## Examples
 
 ### Example: conformance + direct method call
-
 ```silk
 interface Len {
   fn len() -> i64;

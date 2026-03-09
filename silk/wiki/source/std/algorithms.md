@@ -12,7 +12,6 @@ import std::algorithms;
 ```
 
 ## Example: `clamp_int`
-
 ```silk
 import std::algorithms;
 

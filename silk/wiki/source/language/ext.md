@@ -11,7 +11,6 @@ Canonical spec: `docs/language/ext.md`.
 - Embedding ABI contract: `docs/compiler/abi-libsilk.md`
 
 ## Syntax
-
 ```silk
 // C function named `puts`.
 ext puts = fn (string) -> i32;
@@ -27,7 +26,6 @@ ext errno = i32;
 ## Examples
 
 ### Example: call a C symbol
-
 ```silk
 import std::io;
 
@@ -41,7 +39,6 @@ fn main () -> int {
 ```
 
 ### Example: opaque handle pattern (FFI-safe pointers)
-
 ```silk
 struct Thing;
 

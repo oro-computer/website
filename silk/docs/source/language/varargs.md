@@ -54,6 +54,32 @@ fn log (fmt: string, ...args: std::fmt::Arg) -> void {
 This is primarily intended for building wrappers that preserve the caller’s
 argument list without repacking.
 
+## Indexing and Iteration
+
+Varargs packs expose a `len: int` field and support array-style indexing.
+
+```silk
+fn first_or_none (...args: string) -> string? {
+  if args.len <= 0 {
+    return None;
+  }
+  return Some(args[0]);
+}
+```
+
+Indexing `args[i]` traps when `i` is out of bounds (`i < 0` or `i >= args.len`),
+matching slice/array indexing rules in the current backend subset.
+
+To iterate, use `len` + indexing:
+
+```silk
+var i: int = 0;
+while i < args.len {
+  let v = args[i];
+  i = i + 1;
+}
+```
+
 ## Representation (Current Compiler Subset)
 
 In the current compiler/backend subset, a varargs parameter is lowered as a
@@ -68,7 +94,10 @@ POD structs.
 
 Notes:
 
-- Accessing `aK` where `K >= len` is a logic error (the value is unspecified).
+- `args[i]` performs bounds checks against `len` and traps on out-of-bounds.
+- Directly reading `aK` is not bounds-checked; when `K >= len`, the value is
+  unspecified. Prefer `args[i]` unless you are working with the raw
+  representation intentionally.
 - Calls supplying more than `N` varargs arguments are rejected.
 
 ## FFI (C Variadics)

@@ -19,7 +19,6 @@ import std::strings;
 ## Examples
 
 ### Example: parse + name-based UUID (v5)
-
 ```silk
 import std::uuid;
 import std::strings;
@@ -70,3 +69,4 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/uuid.md`
+- End-to-end fixture: `tests/silk/pass_std_uuid_basic.slk`

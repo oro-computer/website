@@ -21,7 +21,7 @@
 - explicit inputs (`<input> ...`), or
 - a package module set from a manifest (`silk.toml`) using `--package` / `--pkg`.
 
-For package builds, outputs are selected by the manifest `[[target]]` entries. See `docs/compiler/package-manifests.md`.
+For package builds, outputs are selected by the manifest `[[target]]` entries. See `?p=compiler/package-manifests`.
 
 When explicit input files are used (no `--package`), the `silk` CLI may load additional packages into the module set by resolving bare-specifier package imports (for example `import util from "util";`) from the package search path (`SILK_PACKAGE_PATH`).
 
@@ -38,25 +38,30 @@ Package builds: when `--package` is provided, `.slk` inputs must be omitted, but
 Package installation:
 
 - `silk build install` builds the selected package target(s) and installs:
-  - executables to `<prefix>/bin`,
-  - objects/static/shared libraries to `<prefix>/lib/silk`,
-  - emitted C headers (when present) to `<prefix>/include/silk/<package>/`,
+  - package-owned artifacts under the canonical package root
+    `<prefix>/lib/silk/<package>/...`,
+  - emitted C headers inside that package root and mirrored to
+    `<prefix>/include/silk/<package>/`,
+  - executables inside that package root and mirrored to `<prefix>/bin`,
   - and, when `[package].definitions` is set, installs those definition files
     plus an installed `silk.toml` under `<prefix>/lib/silk/<package>/` so the
     package is importable via the system package search root (`PREFIX/lib/silk`).
-  It writes an uninstall receipt at `<prefix>/lib/silk/<package>/.silk_install_receipt`.
+  It writes an uninstall receipt at
+  `<prefix>/lib/silk/<package>/.silk_install_receipt`.
+- `--destdir <path>` stages install/uninstall paths under `<destdir><prefix>/...`
+  for system packaging workflows.
 - `silk build uninstall` removes files listed in the uninstall receipt (same
   prefix selection rules as install).
 
 Notes:
 
-- `.o`/`.a`/`.c` link inputs are currently supported only for `linux/x86_64` outputs.
+- `.o`/`.a`/`.c` link inputs are currently supported only for `linux-x86_64` outputs.
 - `.so` inputs only affect executable/shared outputs (static archives cannot record dynamic dependencies).
 - script-style entrypoints: when building an executable, if the **first** `.slk` input contains top-level statements (after the normal `package`/`module` header and `import` block) and does not define an explicit `main`, `silk build` synthesizes an implicit `fn main() -> int` that executes those statements and then returns `0`.
 - for `--kind executable`, `--std-lib` / `--std <path>.a` is currently rejected when linking additional `.c`/`.o`/`.a` inputs (std sources are compiled into the build instead).
-- on `linux/x86_64`, when `std::ggml` is present in the module set (or when linked `.o`/`.a` inputs reference `silk_ggml_init`), `silk build` automatically links the vendored ggml archives produced by `zig build deps` (see `docs/std/ggml.md`).
-- on `linux/x86_64`, when `std::image::png` / `std::image::jpeg` are present in the module set (or when linked `.o`/`.a` inputs reference the shim symbols), `silk build` automatically links the vendored image archives produced by `zig build deps` (see `docs/std/image.md`).
-- on `linux/x86_64`, when `std::xml` is present in the module set (or when linked `.o`/`.a` inputs reference `silk_xml_node_name_ptr`), `silk build` automatically links the vendored libxml2 archives produced by `zig build deps` (see `docs/std/xml.md`).
+- on `linux-x86_64`, when `std::ggml` is present in the module set (or when linked `.o`/`.a` inputs reference `silk_ggml_init`), `silk build` automatically links the vendored ggml archives produced by `zig build deps` (see `?p=std/ggml`).
+- on `linux-x86_64`, when `std::image::png` / `std::image::jpeg` are present in the module set (or when linked `.o`/`.a` inputs reference the shim symbols), `silk build` automatically links the vendored image archives produced by `zig build deps` (see `?p=std/image`).
+- on `linux-x86_64`, when `std::xml` is present in the module set (or when linked `.o`/`.a` inputs reference `silk_xml_node_name_ptr`), `silk build` automatically links the vendored libxml2 archives produced by `zig build deps` (see `?p=std/xml`).
 
 ## Options
 
@@ -68,9 +73,14 @@ Notes:
 - `--std <path>.a` — alias of `--std-lib`.
 - `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`).
 - `--debug`, `-g` — enable debug build mode (also enables extra Formal Silk debug output when verification fails).
+- `--feature <spec>`, `-F<spec>` — enable a build feature for `attr(feature="...")` queries and declaration gating. Repeatable.
+  - Spec forms: `NAME` or `NAME=VALUE` (see `?p=language/attributes`).
+  - For package builds, you may target a specific package with `PKG/NAME` or
+    `PKG/NAME=VALUE` (for example `ui/tui` or `ui/tui=false`).
 - `-O <0-3>` — set optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`). `-O1`+ prunes unused extern symbols before code generation and prunes unreachable functions in executable builds (typically reducing output size).
-- `--noheap` — reject heap allocation in the supported subset (see `docs/language/memory-model.md` and `docs/compiler/cli-silk.md`).
+- `--noheap` — reject heap allocation in the supported subset (see `?p=language/memory-model` and `?p=compiler/cli-silk`).
 - `-p <path>`, `--prefix <path>` — install/uninstall prefix (default: `$PREFIX` when set, otherwise `/usr/local`).
+- `--destdir <path>` — stage install/uninstall paths under `<destdir><prefix>/...`.
 
 Output selection:
 
@@ -78,23 +88,32 @@ Output selection:
 - `--kind executable|object|static|shared` — output kind.
 - `--emit bin|asm` — emission mode:
   - `bin` (default) emits the selected binary artifact at `-o` / `--out`,
-  - `asm` writes an `objdump`-style disassembly (Intel syntax) of the selected output on `linux/x86_64` and writes it to `-o` / `--out`.
+  - `asm` writes an `objdump`-style disassembly (Intel syntax) of the selected output on `linux-x86_64` and writes it to `-o` / `--out`.
 - `-S` — alias of `--emit asm` (defaults to `--kind object` when `--kind` is not set).
 
 Target selection:
 
+- `--list-targets` — list the recognized `--target` triples (including supported output kinds and const-main-only notes) and exit.
+- `--list-archs` — list the recognized `--arch` values and exit.
 - `--arch <arch>` — shorthand target selector (mutually exclusive with `--target`). Accepted values:
   - `x86_64` / `amd64` → `linux-x86_64` (default)
   - `aarch64` / `arm64` → `linux-aarch64`
   - `wasm32` → `wasm32-unknown-unknown`
   - `wasm32-wasi` → `wasm32-wasi`
-- `--target <triple>` — target triple (mutually exclusive with `--arch`).
+  - `--target <triple>` — target triple (mutually exclusive with `--arch`).
   - executable code generation backends exist for:
     - `linux-x86_64` (IR-backed subset + const-main fallback)
     - `linux-aarch64` (const-main subset only)
+    - `android-aarch64` (const-main subset only)
+    - `macos-x86_64` (const-main subset only)
+    - `macos-aarch64` (const-main subset only)
+    - `ios-aarch64` (const-main subset only)
+    - `windows-x86_64` (const-main subset only)
+    - `windows-aarch64` (const-main subset only)
     - `wasm32-unknown-unknown` (IR-backed subset + const-main fallback)
     - `wasm32-wasi` (IR-backed subset + const-main fallback)
-  - target metadata and `attr(...)` gating are also available for: `macos-x86_64`, `macos-aarch64`, `ios-aarch64`, `android-aarch64`, `windows-x86_64`, `windows-aarch64`
+  - const-main stub outputs require `main` to reduce to a constant integer value (supports `fn main () -> int` and the standard `fn main(argc: int, argv: u64) -> int` form when arguments are unused).
+  - target metadata and `attr(...)` gating are available for all recognized targets (including the const-main-only targets listed above).
 
 Native compilation:
 
@@ -102,11 +121,12 @@ Native compilation:
 
 Linker metadata (executable/shared only):
 
-- `--ldflag <arg>` — add a link-related argument (repeatable). In the current toolchain these are translated into `--needed`/`--runpath`/`--soname` effects (see `docs/compiler/package-manifests.md`).
+- `--ldflag <arg>` — add a link-related argument (repeatable). In the current toolchain these are translated into `--needed`/`--runpath`/`--soname`/`--elf-interp` effects (see `?p=compiler/package-manifests`).
 - `--needed <soname>` — add a `DT_NEEDED` entry (repeatable).
 - `--runpath <path>` — add a `DT_RUNPATH` entry (repeatable).
 - `--rpath <path>` — alias of `--runpath`.
 - `--soname <soname>` — set `DT_SONAME` (shared only).
+- `--elf-interp <path>` — override the ELF `PT_INTERP` dynamic loader path used for `linux-x86_64` executable outputs (overrides `SILK_ELF_INTERP`; when cross-compiling from non-`linux/x86_64` hosts the default falls back to `/lib64/ld-linux-x86-64.so.2`). Rejected for non-`linux/x86_64` targets.
 
 C header emission:
 
@@ -124,7 +144,8 @@ Package builds:
 - Legacy aliases (accepted for compatibility): `--build-script` and `--build-script-path`.
 - `--package-target <name>` — select one or more manifest `[[target]]` entries by name (repeatable; `--pkg-target` is accepted as an alias).
   - when omitted, `silk build --package ...` builds every manifest `[[target]]` entry by default.
-  - when building multiple targets, per-output flags are rejected (`-o/--out`, `--kind`, `--emit`, `--arch`, `--target`, `--c-header`, `--cflag`, `--ldflag`, `--needed`, `--runpath`, `--soname`).
+  - when building multiple targets, per-output flags are rejected (`-o/--out`, `--kind`, `--emit`, `--arch`, `--target`, `--c-header`, `--cflag`, `--ldflag`, `--needed`, `--runpath`, `--soname`, `--elf-interp`).
+  - build features may be enabled via `[build].features` in `silk.toml` (and may be overridden by `--feature` / `-F`).
 
 Argument parsing:
 
@@ -166,6 +187,9 @@ silk build uninstall -p /tmp/silk-prefix
 
 - `PREFIX` — installation prefix used by `silk build install` / `silk build uninstall` when `-p/--prefix` is not provided (default: `/usr/local`).
 - `SILK_PACKAGE_PATH` — PATH-like list of package root directories used to resolve bare-specifier package imports (entries separated by `:` on POSIX). The compiler appends a system library root at `PREFIX/lib/silk` as the last search path entry when it exists.
+- `SILK_ELF_INTERP` — override the ELF `PT_INTERP` dynamic loader path used for `linux-x86_64` outputs when emitting dynamically-linked executables/shared libraries.
+- `SILK_Z3_LIB` — path to a dynamic Z3 library used by the Formal Silk verifier.
+- `SILK_VERIFY_JOBS` — override the number of worker threads used for Formal Silk verification (default: auto; capped at 8).
 - `SILK_CC` — host C compiler used by `silk cc` (also used when compiling `.c` inputs passed to `silk build`).
 
 ## Exit status
@@ -176,5 +200,5 @@ silk build uninstall -p /tmp/silk-prefix
 ## See Also
 
 - `silk` (1), `silk-check` (1), `silk-test` (1)
-- `docs/compiler/cli-silk.md`
-- `docs/compiler/package-manifests.md`
+- `?p=compiler/cli-silk`
+- `?p=compiler/package-manifests`

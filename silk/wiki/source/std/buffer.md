@@ -13,7 +13,6 @@ import std::buffer;
 ```
 
 ## Example: `BufferU8`
-
 ```silk
 import std::buffer;
 

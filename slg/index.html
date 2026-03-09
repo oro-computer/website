@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>slg · Oro Computer</title>
+    <meta
+      name="description"
+      content="slg is a fast recursive line grep utility for files and directories, with rg/ag-style workflows, explicit ignore controls, and tunable parallel traversal."
+    />
+    <meta name="theme-color" content="#101012" />
+    <link rel="icon" type="image/png" href="../docs/branding/assets/logo-icon-small.png" sizes="32x32" />
+    <link rel="stylesheet" href="../assets/site.css" />
+    <link rel="stylesheet" href="../assets/highlight/highlight.css" />
+    <script src="../assets/highlight/highlight.min.js" defer></script>
+    <script src="../assets/highlight/languages/bash.min.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-top" id="top">
+      <div class="container">
+        <div class="site-header">
+          <a class="brand" href="../">
+            <img
+              class="brand-mark"
+              src="../docs/branding/assets/logo-icon.png"
+              alt="Oro Computer logo"
+              width="32"
+              height="32"
+            />
+            <span class="brand-name">Oro Computer</span>
+          </a>
+          <nav class="nav" aria-label="Primary navigation">
+            <a href="../">Home</a>
+            <a href="../runtime/">Runtime</a>
+            <a href="../silk/">Silk</a>
+            <a href="../sage/">Sage</a>
+            <a href="./">slg</a>
+            <a href="./docs/">Docs</a>
+            <a href="https://github.com/oro-computer/slg" target="_blank" rel="noreferrer">GitHub</a>
+            <a href="../#contact">Contact</a>
+            <a class="button button-primary" href="./docs/?p=guides/getting-started">Get started</a>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-label="slg overview">
+        <div class="container">
+          <div class="hero-grid">
+            <div class="hero-copy">
+              <div class="hero-kicker">slg</div>
+              <h1>A fast recursive line grep utility.</h1>
+              <p class="lede">
+                Search files and directories with regex or literal patterns, list candidate files without searching content,
+                control ignore behavior directly, and tune parallel traversal when the tree is large enough to justify it.
+              </p>
+              <div class="hero-actions">
+                <a class="button button-primary" href="./docs/">Read the docs</a>
+                <a class="button" href="./docs/?p=cli/slg">CLI</a>
+                <a class="button" href="./docs/?p=man/slg-1">slg(1)</a>
+                <a class="button button-quiet" href="https://github.com/oro-computer/slg" target="_blank" rel="noreferrer">GitHub</a>
+              </div>
+            </div>
+
+            <div class="panel" aria-label="CLI examples">
+              <div class="panel-header">
+                <div class="panel-title">CLI examples</div>
+                <a class="button button-quiet" href="./docs/?p=cli/options-reference">Reference</a>
+              </div>
+              <div class="panel-body">
+                <pre><code class="language-bash">slg TODO src
+slg -F "TODO:" .
+slg --files --max-depth 0 src
+slg --hidden --no-ignore-vcs "needle" .
+slg --jobs auto --stats error .</code></pre>
+                <p><code>slg</code> is filesystem-only: roots are files or directories, not stdin or URLs.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-label="Why slg">
+        <div class="container">
+          <div class="prose">
+            <h2>Why slg</h2>
+            <p>A grep-first CLI with explicit behavior instead of hidden mode switches.</p>
+          </div>
+
+          <div class="card-grid mt-lg">
+            <div class="card col-span-4">
+              <div class="card-body">
+                <h3 class="card-title">Predictable inputs</h3>
+                <div class="card-meta">
+                  Search mode takes one pattern plus zero or more filesystem roots. File-list mode swaps the pattern for
+                  <code>--files</code>. There is no stdin shorthand or URL mode to guess about.
+                </div>
+                <div class="card-links">
+                  <a class="button button-quiet" href="./docs/?p=cli/input-types-and-parsing">Input types and parsing</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="card col-span-4">
+              <div class="card-body">
+                <h3 class="card-title">Honest traversal</h3>
+                <div class="card-meta">
+                  Hidden files, VCS directories, common heavy directories, per-directory ignore files, symlink following, and
+                  depth limits are all surfaced as explicit flags.
+                </div>
+                <div class="card-links">
+                  <a class="button button-quiet" href="./docs/?p=cli/traversal-and-ignores">Traversal and ignores</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="card col-span-4">
+              <div class="card-body">
+                <h3 class="card-title">Tunable parallelism</h3>
+                <div class="card-meta">
+                  Start with <code>--jobs auto</code>, then reach for worker caps, split depth, file-batch jobs, and
+                  <code>--parallel-files</code> when you need more control.
+                </div>
+                <div class="card-links">
+                  <a class="button button-quiet" href="./docs/?p=cli/parallelism">Parallelism</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-label="Documentation map">
+        <div class="container">
+          <div class="prose">
+            <h2>Docs map</h2>
+            <p>A CLI-first path through installation, matching semantics, traversal rules, diagnostics, and the full manual page.</p>
+          </div>
+
+          <div class="list mt-lg">
+            <a class="list-row" href="./docs/?p=start">
+              <div>
+                <div class="list-title">Start</div>
+                <div class="list-desc">Quick start, reading path, and the exact downstream scope of <code>slg</code>.</div>
+              </div>
+              <div class="list-meta">Docs</div>
+            </a>
+            <a class="list-row" href="./docs/?p=guides/getting-started">
+              <div>
+                <div class="list-title">Guides</div>
+                <div class="list-desc">Build, install, and adopt <code>slg</code> in real grep workflows.</div>
+              </div>
+              <div class="list-meta">Guides</div>
+            </a>
+            <a class="list-row" href="./docs/?p=cli/slg">
+              <div>
+                <div class="list-title">CLI</div>
+                <div class="list-desc"><code>slg</code> modes, inputs, matching, traversal, parallelism, output, and diagnostics.</div>
+              </div>
+              <div class="list-meta">CLI</div>
+            </a>
+            <a class="list-row" href="./docs/?p=cli/options-reference">
+              <div>
+                <div class="list-title">Options reference</div>
+                <div class="list-desc">Every public flag, its mode applicability, and parsing rules.</div>
+              </div>
+              <div class="list-meta">Ref</div>
+            </a>
+            <a class="list-row" href="./docs/?p=man/slg-1">
+              <div>
+                <div class="list-title">Man pages</div>
+                <div class="list-desc">Reader-friendly <code>slg(1)</code> with the same public surface as the shipped manual.</div>
+              </div>
+              <div class="list-meta">Man</div>
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-inner">
+          <strong>slg</strong>
+          <span>© <span data-year>2026</span> Oro Computer.</span>
+        </div>
+      </div>
+    </footer>
+    <script src="../assets/site.js" defer></script>
+  </body>
+</html>

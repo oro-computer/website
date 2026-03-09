@@ -6,7 +6,6 @@ directory helpers.
 Canonical doc: `docs/std/env.md`.
 
 ## Example: `get`
-
 ```silk
 import std::env;
 import { println } from "std/io";
@@ -24,4 +23,4 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/env.md`
-- Typed errors: `wiki/language/typed-errors.md`
+- Typed errors: `docs/wiki/language/typed-errors.md`

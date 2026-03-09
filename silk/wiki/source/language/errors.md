@@ -10,7 +10,6 @@ the full rules.
 Canonical doc: `docs/language/errors.md`.
 
 ## Example: `assert`
-
 ```silk
 fn main () -> int {
   assert (1 + 2) == 3;
@@ -21,5 +20,5 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/language/errors.md`
-- Typed errors: `wiki/language/typed-errors.md`
-- `Result(T, E)`: `wiki/std/result.md`
+- Typed errors: `docs/wiki/language/typed-errors.md`
+- `Result(T, E)`: `docs/wiki/std/result.md`

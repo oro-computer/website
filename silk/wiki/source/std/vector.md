@@ -19,7 +19,6 @@ import std::vector;
 ## Examples
 
 ### Example: push/pop
-
 ```silk
 import std::vector;
 

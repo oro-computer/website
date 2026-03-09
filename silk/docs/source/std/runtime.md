@@ -118,15 +118,24 @@ Implemented runtime areas in the shipped stdlib:
   virtual cwd (`std::runtime::wasi::cwd`)).
   - includes read-only mapping helpers (`mmap_readonly` / `munmap`); on
     `wasm32-wasi` mapping is currently unsupported and reports `InvalidInput`.
+  - includes `mkstemp(template_ptr)` for creating unique temporary files from a
+    writable NUL-terminated template ending in `XXXXXX` (hosted POSIX
+    baseline). On `wasm32-wasi` this operation is currently unsupported and
+    reports `InvalidInput`.
 - `std::runtime::io` — low-level stdio primitives used by `std::io` (on
   `wasm32-wasi`, rewritten to `std::runtime::wasi::io`, which maintains a
-  POSIX-shaped `errno` cell for wrappers that still query `errno()`).
+  POSIX-shaped `errno` cell for wrappers that still query `errno()`). This
+  surface also includes `async fn` wrappers (`read_async` / `write_async`)
+  backed by the hosted async runtime on `linux/*`; on other targets they
+  complete immediately by issuing the blocking `read`/`write` operation.
 - `std::runtime::task` — hosted task/runtime primitives used by `std::task`
   (sleep/yield_now/available parallelism; currently blocking OS-thread operations;
   delegates to `std::runtime::posix::task` in the shipped stdlib).
 - `std::runtime::sync` — hosted synchronization primitives used by `std::sync`
   (mutexes/condvars and allocation helpers; delegates to
-  `std::runtime::posix::sync` in the shipped stdlib).
+  `std::runtime::posix::sync` in the shipped stdlib. On `wasm32-wasi` the
+  compiler rewrites this to `std::runtime::wasi::sync`, which is a single-thread
+  stub backend.)
 - `std::runtime::time` — hosted time primitives used by `std::temporal` and
   other std modules:
   - monotonic clock reads (`monotonic_now_ns`),
@@ -146,7 +155,8 @@ Implemented runtime areas in the shipped stdlib:
   (`std::runtime::wasi::cwd`); hosted child-process operations remain
   unsupported).
 - `std::runtime::net` — hosted networking primitives used by `std::net`
-  (IPv4/IPv6 TCP + UDP sockets; delegates to `std::runtime::posix::net` in the shipped stdlib).
+  (IPv4/IPv6 TCP + UDP sockets plus hostname resolution used by
+  `std::net::resolve_host`; delegates to `std::runtime::posix::net` in the shipped stdlib).
 - `std::runtime::z3` — low-level `ext` bindings for the Z3 C API (vendored on hosted `linux/x86_64`).
 - `std::runtime::regex` / `std::runtime::unicode` / `std::runtime::number` / `std::runtime::readline` —
   non-OS-specific runtime helpers used by `std::{regex,unicode,number,readline}`. These
@@ -173,15 +183,23 @@ Follow-ups are expected to introduce additional runtime areas:
     (`src/silk_rt_async.c`) and lowers `async`/`await` to it on the hosted
     `linux/x86_64` target,
   - the `std::runtime::event_loop` module now exposes low-level awaitable
-    building blocks (timers + fd readiness), but the explicit `Handle`/`poll`
-    surface and higher-level async adapters are still follow-up work
+    building blocks (timers + fd readiness, including `fd_wait_readable2` and `fd_wait_readable_any`) and an explicit `Handle`/`poll`
+    surface for manually driving the hosted executor/event loop. Higher-level
+    async adapters are still follow-up work
     (see `docs/compiler/async-runtime.md`).
+  - the hosted executor is thread-affine: `Handle.poll()` / `Handle.deinit()`
+    must be called from the same OS thread that created the handle; cross-thread
+    wake is supported via `Handle.wake()`.
   - abort-aware wrappers exist for cooperative cancellation (`std::abort_controller`):
     - `sleep_ms_abortable(ms, sig) -> bool`
     - `fd_wait_readable_abortable(fd, sig) -> bool`
     - `fd_wait_writable_abortable(fd, sig) -> bool`
-    In the current subset, aborts are observed only before/after the awaited
-    operation; they do not yet interrupt an in-flight wait.
+    In the current subset, aborts are generally observed only before/after the
+    awaited operation. For `fd_wait_readable_abortable`, when the runtime can
+    provide a pollable abort fd (`AbortSignalBorrow.wait_fd()`), aborts can
+    interrupt an in-flight wait by awaiting `fd_wait_readable2(fd, abort_fd)`.
+    When no pollable abort fd is available, it falls back to the before/after
+    checks.
 - WASI networking (via WASI sockets or similar proposals) when supported by the toolchain targets.
 
 ## Providing a Custom Runtime
@@ -206,8 +224,8 @@ and similarly for `std::fs` (`std/runtime/fs.slk`) if you reuse `std::fs`.
 
 To reuse `std::io`, provide `std/runtime/io.slk` implementing the
 `std::runtime::io` interface (`STDIN_FD`, `STDOUT_FD`, `STDERR_FD`, `read`,
-`write`, `puts`, and hosted fd helpers used by `std::process::child` such as
-`dup2`, `pipe`, `poll`, and `set_cloexec`).
+`write`, `read_async`, `write_async`, `puts`, and hosted fd helpers used by
+`std::process::child` such as `dup2`, `pipe`, `poll`, and `set_cloexec`).
 
 Fallible operations should return errors directly:
 

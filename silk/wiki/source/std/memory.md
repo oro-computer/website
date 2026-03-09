@@ -11,7 +11,6 @@ import std::memory;
 ```
 
 ## Example: alignment helpers
-
 ```silk
 import std::memory;
 
@@ -25,4 +24,4 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/memory.md`
-- Regions: `wiki/language/regions.md`
+- Regions: `docs/wiki/language/regions.md`

@@ -10,6 +10,8 @@
 
 - `silk man [options]`
 - `silk man [options] <query>`
+- `silk man [options] <module> <symbol>`
+- `silk man [options] <section> <module> <symbol>`
 - `silk man [options] <section> <name>`
 - `silk man --list`
 - `silk man --search <pattern>`
@@ -24,15 +26,26 @@
 - CLI pages defined by doc blocks tagged with `@cli` (intended for man section 1),
 - API pages derived from declaration docs (intended for man section 3).
 
-The doc-comment tag semantics are specified in `docs/language/doc-comments.md`.
+The doc-comment tag semantics are specified in `?p=language/doc-comments`.
 
 Notes:
 
 - You may also spell section selection as `name.<section>` (for example `silk.7`).
 - `name(<section>)` is accepted but must be quoted in most shells.
+- API symbol pages are derived from **exported/public** declarations; non-exported declarations are intentionally omitted so docs match the public surface.
 - Shorthands:
   - `silk man build` opens `silk-build(1)` (same for `check`, `test`, `doc`, `man`, `cc`, `env`, `format` / `fmt`).
   - when no package is selected/resolvable, `silk man fs` is treated as `silk man std::fs` (and similarly for other top-level std modules).
+  - when no package is selected/resolvable, `silk man io println` is treated as `silk man std::io::println`.
+
+## System manpages
+
+When Silk is installed (for example via `zig build install`), the toolchain also installs roff manpages under the system man root so they can be opened with `man` directly:
+
+- stdlib module pages install as `silk-<module>(3)` subpages, so `man 3 silk io` resolves to `silk-io(3)`,
+- exported stdlib symbols install as `silk-<module>-<symbol>(3)` pages, for example `silk-io-println(3)`.
+
+Note: `man` subpage resolution only joins **one** level (like `man git log` → `git-log(1)`), so multi-segment queries should use the hyphenated page name (for example `man 3 silk-io-println`).
 
 ## Options
 
@@ -75,6 +88,14 @@ silk man fs
 # View docs for a stdlib symbol.
 silk man std::sqlite::Database
 
+# Module + symbol split (when no package is selected).
+silk man io println
+silk man 3 io println
+
+# Use system-installed manpages (when installed).
+man 3 silk io
+man 3 silk-io-println
+
 # Shorthand for CLI command pages.
 silk man build
 
@@ -90,4 +111,4 @@ silk man std::result::design
 ## See Also
 
 - `silk` (1), `silk-doc` (1)
-- `docs/language/doc-comments.md`
+- `?p=language/doc-comments`

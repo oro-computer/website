@@ -6,7 +6,6 @@ suffixes as defined in the canonical spec.
 Canonical doc: `docs/language/literals-numeric.md`.
 
 ## Example
-
 ```silk
 fn main () -> int {
   let a: int = 42;
@@ -22,4 +21,4 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/language/literals-numeric.md`
-- Operators: `wiki/language/operators.md`
+- Operators: `docs/wiki/language/operators.md`

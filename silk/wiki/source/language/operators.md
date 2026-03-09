@@ -11,7 +11,6 @@ This wiki page is a learning-oriented companion to the canonical reference:
 - Full operator set + precedence: `docs/language/operators.md`
 
 ## Syntax
-
 ```silk
 let a: int = 10;
 let b: int = 3;
@@ -32,7 +31,6 @@ let x: u64 = 123 as u64;
 ## Examples
 
 ### Example: arithmetic + comparisons
-
 ```silk
 fn main () -> int {
   let a: int = 10;
@@ -45,7 +43,6 @@ fn main () -> int {
 ```
 
 ### Example: `??` coalescing
-
 ```silk
 fn main () -> int {
   let x: int? = None;

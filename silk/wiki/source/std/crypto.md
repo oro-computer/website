@@ -23,7 +23,6 @@ import std::runtime::mem;
 ## Examples
 
 ### Example: init + memzero + blake2b
-
 ```silk
 import std::crypto;
 import std::crypto::hash;
@@ -148,3 +147,6 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/crypto.md`
+- End-to-end fixtures:
+  - `tests/silk/pass_std_crypto_libsodium_basic.slk`
+  - `tests/silk/pass_std_crypto_aead_basic.slk`

@@ -156,7 +156,7 @@ String literals are still backed by read-only static storage, but they are
 introduced by the literal syntax itself (see `literals-string.md`), not by the
 `const fn` evaluator.
 
-## Evaluation Limits (Current Implementation)
+## Evaluation Limits
 
 Compile-time evaluation must terminate. The compiler enforces an
 instruction budget and a call-depth budget when executing `const fn` bodies at

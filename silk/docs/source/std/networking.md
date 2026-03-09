@@ -2,10 +2,30 @@
 
 Status: **Implemented subset**. A small endian/byte-order
 helper subset plus hosted **IPv4/IPv6 TCP** and **IPv4/IPv6 UDP** socket APIs
-are implemented in `std/net.slk`. Async/event-loop integration remains future
-work.
+are implemented in `std/net.slk`.
+
+Async integration (current snapshot):
+
+- `std::net` exposes async TCP `connect` and `accept` via:
+  - `std::net::TCPStream.{connect_async,connect_v6_async}`
+  - `std::net::TCPListener.accept_async`
+- On `linux/*`, these are backed by the hosted async runtime (`docs/compiler/async-runtime.md`)
+  with a `poll(2)` fallback backend and optional `io_uring` acceleration.
+- On other targets, these `async fn` wrappers complete immediately by performing the
+  blocking socket operation.
+- Cancellation of in-flight socket operations is still follow-up work.
 
 `std::net` provides networking primitives on POSIX systems.
+
+Hostname resolution (DNS) integration (current snapshot):
+
+- `std::net` provides `resolve_host(...)` and `TCPStream.connect_host(...)` helpers
+  built on a small hosted POSIX `getaddrinfo(3)` shim.
+- This is intended for common client-side use cases (HTTP/HTTPS/SSH) where
+  code wants to connect to `host:port` without binding libc directly.
+- The current implementation supports:
+  - IPv4 (`A`) and IPv6 (`AAAA`) results, and
+  - caller-controlled selection/order via `ResolveIpMode`.
 
 See also:
 
@@ -86,6 +106,7 @@ enum NetErrorKind {
   BrokenPipe,
   InvalidInput,
   OutOfMemory,
+  NameResolutionFailed,
   Unknown,
 }
 
@@ -136,61 +157,84 @@ impl SocketAddrV6 {
   public fn scope_id (self: &SocketAddrV6) -> int;
 }
 
-struct TcpStream {
+struct TCPStream {
   fd: int,
 }
 
-export type TcpStreamResult = std::result::Result(TcpStream, NetFailed);
+export type TCPStreamResult = std::result::Result(TCPStream, NetFailed);
 
-impl TcpStream {
-  public fn invalid () -> TcpStream;
-  public fn is_valid (self: &TcpStream) -> bool;
-  public fn connect (addr: SocketAddrV4) -> TcpStreamResult;
-  public fn connect_v6 (addr: SocketAddrV6) -> TcpStreamResult;
-  public fn close (mut self: &TcpStream) -> NetFailed?;
-  public fn read (self: &TcpStream, buf: std::arrays::ByteSlice) -> NetIntResult;
-  public fn write (self: &TcpStream, buf: std::arrays::ByteSlice) -> NetIntResult;
-  public fn write_all (self: &TcpStream, buf: std::arrays::ByteSlice) -> NetFailed?;
-  public fn write_string (self: &TcpStream, s: string) -> NetFailed?;
-  public fn shutdown_read (self: &TcpStream) -> NetFailed?;
-  public fn shutdown_write (self: &TcpStream) -> NetFailed?;
-  public fn shutdown (self: &TcpStream) -> NetFailed?;
+impl TCPStream {
+  public fn invalid () -> TCPStream;
+  public fn is_valid (self: &TCPStream) -> bool;
+  public fn connect (addr: SocketAddrV4) -> TCPStreamResult;
+  public fn connect_v6 (addr: SocketAddrV6) -> TCPStreamResult;
+  public async fn connect_async (addr: SocketAddrV4) -> TCPStreamResult;
+  public async fn connect_v6_async (addr: SocketAddrV6) -> TCPStreamResult;
+
+  // Hostname resolution + connect-by-host helpers.
+  public fn connect_host (host: string, port: int) -> TCPStreamResult;
+  public fn connect_host_mode (host: string, port: int, mode: ResolveIpMode) -> TCPStreamResult;
+  public async fn connect_host_async (host: string, port: int) -> TCPStreamResult;
+  public async fn connect_host_mode_async (host: string, port: int, mode: ResolveIpMode) -> TCPStreamResult;
+
+  public fn close (mut self: &TCPStream) -> NetFailed?;
+  public fn read (self: &TCPStream, buf: std::arrays::ByteSlice) -> NetIntResult;
+  public fn write (self: &TCPStream, buf: std::arrays::ByteSlice) -> NetIntResult;
+  public fn write_all (self: &TCPStream, buf: std::arrays::ByteSlice) -> NetFailed?;
+  public fn write_string (self: &TCPStream, s: string) -> NetFailed?;
+  public fn shutdown_read (self: &TCPStream) -> NetFailed?;
+  public fn shutdown_write (self: &TCPStream) -> NetFailed?;
+  public fn shutdown (self: &TCPStream) -> NetFailed?;
 }
 
-struct TcpListener {
+enum ResolveIpMode {
+  Any,
+  PreferV4,
+  PreferV6,
+  V4Only,
+  V6Only,
+}
+
+export type ResolveAddrsResult = std::result::Result(std::vector::Vector(SocketAddr), NetFailed);
+
+export fn resolve_host (host: string, port: int, mode: ResolveIpMode) -> ResolveAddrsResult;
+
+struct TCPListener {
   fd: int,
 }
 
-export type TcpListenerResult = std::result::Result(TcpListener, NetFailed);
+export type TCPListenerResult = std::result::Result(TCPListener, NetFailed);
 
-impl TcpListener {
-  public fn invalid () -> TcpListener;
-  public fn is_valid (self: &TcpListener) -> bool;
-  public fn listen (addr: SocketAddrV4, backlog: int) -> TcpListenerResult;
-  public fn listen_v6 (addr: SocketAddrV6, backlog: int) -> TcpListenerResult;
-  public fn accept (self: &TcpListener) -> TcpStreamResult;
-  public fn local_port (self: &TcpListener) -> NetIntResult;
-  public fn local_port_v6 (self: &TcpListener) -> NetIntResult;
-  public fn close (mut self: &TcpListener) -> NetFailed?;
+impl TCPListener {
+  public fn invalid () -> TCPListener;
+  public fn is_valid (self: &TCPListener) -> bool;
+  public fn listen (addr: SocketAddrV4, backlog: int) -> TCPListenerResult;
+  public fn listen_v6 (addr: SocketAddrV6, backlog: int) -> TCPListenerResult;
+  public fn accept (self: &TCPListener) -> TCPStreamResult;
+  public async fn accept_async (self: &TCPListener) -> TCPStreamResult;
+  public fn local_port (self: &TCPListener) -> NetIntResult;
+  public fn local_port_v6 (self: &TCPListener) -> NetIntResult;
+  public fn close (mut self: &TCPListener) -> NetFailed?;
 }
 ```
 
 Notes:
 
-- This API is currently **blocking** (no non-blocking sockets/event loop yet).
+- This API is currently **mostly blocking** (only `connect_async` and
+  `accept_async` are integrated with the hosted event loop today).
 - This module targets hosted `linux/x86_64` via `std::runtime::net`
   (POSIX sockets); `wasm32-wasi` has no Preview 1 sockets, so the runtime
   stubs return error values.
-- `TcpStream`/`TcpListener` wrap raw file descriptors; avoid copying these
+- `TCPStream`/`TCPListener` wrap raw file descriptors; avoid copying these
   values until the language has move-only handle types.
 - If you want to discard error details, prefer `match (r)` when the `Result`
-  payload may implement `Drop` (for example `TcpStream` / `TcpListener`), since
+  payload may implement `Drop` (for example `TCPStream` / `TCPListener`), since
   `ResultType.ok_value(r)` copies the `Result` payload in the current subset.
-- `std::net::stream` provides task-based adapters that connect `TcpStream` with
+- `std::net::stream` provides task-based adapters that connect `TCPStream` with
   `std::stream` using producer/consumer loops:
   - `std::net::stream::pipe_tcpstream_to_stream` / `pipe_tcpstream_to_stream_abortable`
   - `std::net::stream::pipe_stream_to_tcpstream` / `pipe_stream_to_tcpstream_abortable`
-  These adapters take ownership of the `TcpStream` and close it before returning.
+  These adapters take ownership of the `TCPStream` and close it before returning.
 
 ## Hosted UDP API (Implemented)
 
@@ -200,20 +244,20 @@ datagram-oriented but remains blocking.
 ```silk
 module std::net;
 
-struct UdpSocket {
+struct UDPSocket {
   fd: int,
   domain: int,
 }
 
 export type NetError = NetFailed;
-export type UdpSocketResult = std::result::Result(UdpSocket, NetFailed);
+export type UDPSocketResult = std::result::Result(UDPSocket, NetFailed);
 
-struct UdpRecvFrom {
+struct UDPRecvFrom {
   n: int,
   addr: SocketAddr,
 }
 
-export type UdpRecvFromResult = std::result::Result(UdpRecvFrom, NetError);
+export type UDPRecvFromResult = std::result::Result(UDPRecvFrom, NetError);
 
 struct SocketAddr {
   domain: int,
@@ -234,26 +278,26 @@ impl SocketAddr {
   public fn port (self: &SocketAddr) -> int;
 }
 
-impl UdpSocket {
-  public fn invalid () -> UdpSocket;
-  public fn is_valid (self: &UdpSocket) -> bool;
+impl UDPSocket {
+  public fn invalid () -> UDPSocket;
+  public fn is_valid (self: &UDPSocket) -> bool;
 
-  public fn bind_v4 (addr: SocketAddrV4) -> UdpSocketResult;
-  public fn bind_v6 (addr: SocketAddrV6) -> UdpSocketResult;
+  public fn bind_v4 (addr: SocketAddrV4) -> UDPSocketResult;
+  public fn bind_v6 (addr: SocketAddrV6) -> UDPSocketResult;
 
-  public fn connect_v4 (addr: SocketAddrV4) -> UdpSocketResult;
-  public fn connect_v6 (addr: SocketAddrV6) -> UdpSocketResult;
+  public fn connect_v4 (addr: SocketAddrV4) -> UDPSocketResult;
+  public fn connect_v6 (addr: SocketAddrV6) -> UDPSocketResult;
 
-  public fn local_port (self: &UdpSocket) -> NetIntResult;
-  public fn close (mut self: &UdpSocket) -> NetFailed?;
+  public fn local_port (self: &UDPSocket) -> NetIntResult;
+  public fn close (mut self: &UDPSocket) -> NetFailed?;
 
   // Connected I/O (uses `read(2)` / `write(2)`).
-  public fn read (self: &UdpSocket, buf: std::arrays::ByteSlice) -> NetIntResult;
-  public fn write (self: &UdpSocket, buf: std::arrays::ByteSlice) -> NetIntResult;
+  public fn read (self: &UDPSocket, buf: std::arrays::ByteSlice) -> NetIntResult;
+  public fn write (self: &UDPSocket, buf: std::arrays::ByteSlice) -> NetIntResult;
 
   // Unconnected datagrams.
-  public fn send_to (self: &UdpSocket, addr: SocketAddr, buf: std::arrays::ByteSlice) -> NetIntResult;
-  public fn recv_from (self: &UdpSocket, buf: std::arrays::ByteSlice) -> UdpRecvFromResult;
+  public fn send_to (self: &UDPSocket, addr: SocketAddr, buf: std::arrays::ByteSlice) -> NetIntResult;
+  public fn recv_from (self: &UDPSocket, buf: std::arrays::ByteSlice) -> UDPRecvFromResult;
 }
 ```
 
@@ -272,7 +316,7 @@ Notes:
 ## Core Types (Initial Design)
 
 - `IpAddr` (`V4` / `V6`) and `SocketAddr`.
-- `TcpStream`, `TcpListener`, `UdpSocket`.
+- `TCPStream`, `TCPListener`, `UDPSocket`.
 
 Illustrative sketch:
 
@@ -288,8 +332,8 @@ export enum NetError {
   Unknown,
 }
 
-export fn tcp_connect (addr: SocketAddr) -> Result(TcpStream, NetError);
-export fn tcp_listen (addr: SocketAddr) -> Result(TcpListener, NetError);
+export fn tcp_connect (addr: SocketAddr) -> Result(TCPStream, NetError);
+export fn tcp_listen (addr: SocketAddr) -> Result(TCPListener, NetError);
 ```
 
 ## Blocking vs Async

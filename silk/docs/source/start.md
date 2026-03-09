@@ -45,7 +45,7 @@ If you’re new to Silk, this is a good order:
 3. **Language tour**: the shape of real programs (types, functions, control flow, errors).
 4. **Modules & packages**: how code is organized and how imports/exports create clean dependency boundaries.
 5. **Standard library**: what lives in `std::` and the common patterns it uses.
-6. **CLI and toolchain**: module sets, build targets, package manifests, docs/man, and diagnostics.
+6. **CLI and toolchain**: module sets, build targets, package manifests, package distribution, docs/man, and diagnostics.
 7. **Testing**: language-level tests and TAP output for CI and tooling.
 8. **Formal Silk**: opt-in proofs with Z3; how to write verified code with zero runtime cost.
 
@@ -53,6 +53,8 @@ Start here:
 
 - Usage: [Getting started](?p=usage/getting-started)
 - Reference: [Implementation status](?p=compiler/implementation-status) · [Diagnostics](?p=compiler/diagnostics)
+- Reference: [Package manifests](?p=compiler/package-manifests) · [Package distribution](?p=compiler/package-distribution)
+- Reference: [`silk` CLI](?p=compiler/cli-silk) · [`silk-package` (1)](?p=man/silk-package.1)
 - Guides: [What Silk is for](?p=guides/purpose)
 - Guides: [Hello world](?p=guides/hello-world) · [Language tour](?p=guides/language-tour) · [Modules & packages](?p=guides/modules-and-packages)
 - Guides: [Standard library](?p=guides/standard-library) · [CLI and toolchain](?p=guides/cli)

@@ -6,7 +6,6 @@
 Canonical doc: `docs/std/interfaces.md`.
 
 ## Example: `Iterator(T)` and `next() -> T?`
-
 ```silk
 import std::interfaces;
 
@@ -36,4 +35,4 @@ impl CounterIter as std::interfaces::Iterator(int) {
 ## See also
 
 - Canonical doc: `docs/std/interfaces.md`
-- `for` iterator iteration: `wiki/language/flow-for.md`
+- `for` iterator iteration: `docs/wiki/language/flow-for.md`

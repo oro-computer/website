@@ -22,7 +22,8 @@ The language design treats these as equivalent.
 
 Implementation status:
 
-- The type system models optional types, and the parser accepts both:
+- The type system (`src/types.zig`) models optional types, and the parser
+  now accepts both:
   - the suffix form `T?` in type annotations, and
   - the nominal form `Option(T)` for simple cases (a single type argument),
     which is desugared into the same internal optional representation as
@@ -44,6 +45,8 @@ Implementation status:
   - construct optionals via `None` and `Some(value)`,
   - access fields of optional structs via optional chaining
     (`opt?.field`, producing a `FieldType?` value),
+  - call methods on optional structs via optional chaining
+    (`opt?.method(args)`, producing a `ResultType?` value),
   - use nested optionals (`T??`) for a subset of payloads in the current backend
     (see below),
   - compare supported optionals via `==` / `!=` (tag + payload equality; nested
@@ -78,9 +81,9 @@ Implementation status:
   `(Bool tag0, Bool tag1, i64 payload)`.
 
 - Not yet implemented:
-  - optional chaining beyond the current optional-struct field access subset
-    (for example chaining through optional fields, optional method calls, and
-    optional indexing),
+  - optional chaining beyond the current optional-struct field access and
+    optional method call subsets (for example chaining through optional fields
+    and optional indexing),
   - `match` over non-optional scrutinee types (and richer pattern forms beyond
     `None`/`Some(...)`),
   - and richer optional forms beyond the current backend subset.
@@ -158,10 +161,57 @@ The spec provides several mechanisms for working with optionals:
 - Optional chaining `?.`:
   - `user.profile?.email` yields `string?`.
   - If any link in the chain is `None`, the result is `None`.
+  - Optional method calls are also supported:
+    - `user.profile?.email_len()` yields `int?`.
+    - When the receiver is `Some(v)`, the call evaluates as `Some(v.email_len())`.
+    - When the receiver is `None`, the call evaluates as `None`.
 - Coalescing `??`:
   - Converts an optional into a non‑optional by supplying a default.
 - Explicit checking via `match`:
   - Pattern‑matching on `Some(...)` / `None` to handle both cases explicitly.
+
+## Optional combinators (methods)
+
+In addition to `match`, `?.`, and `??`, the compiler provides a small set of
+combinator methods on optional values (`T?`). These are designed to feel
+familiar to Rust developers while preserving Silk’s explicit move/cleanup rules
+(`docs/language/memory-model.md`).
+
+Supported methods (current subset):
+
+- `opt.is_some() -> bool`
+- `opt.is_none() -> bool`
+- `opt.map(f) -> U?` where `f: fn(T) -> U`
+- `opt.and_then(f) -> U?` where `f: fn(T) -> U?`
+- `opt.or_else(f) -> T?` where `f: fn() -> T?`
+- `opt.unwrap_or(fallback) -> T` (eager; `fallback` is evaluated before the call)
+- `opt.unwrap_or_else(f) -> T` where `f: fn() -> T` (lazy; called only for `None`)
+
+Notes:
+
+- `??` remains the idiomatic lazy fallback operator because the fallback is an
+  ordinary expression and is evaluated only for `None`.
+- `unwrap_or` is eager by design; use `unwrap_or_else` (or `??`) when the
+  fallback is expensive.
+- `map`/`and_then` call the callback only for `Some(...)`.
+
+Example (`map` + `and_then`):
+
+```silk
+import std::result;
+
+fn parse_port (s: string) -> std::result::Result(int, int) {
+  return Ok(123);
+}
+
+fn main () -> int {
+  let maybe: string? = Some("8080");
+  let port_opt: int? = maybe.and_then(fn (s: string) {
+    return parse_port(s).ok_value();
+  });
+  return port_opt.unwrap_or(0);
+}
+```
 
 ## Compiler Requirements
 

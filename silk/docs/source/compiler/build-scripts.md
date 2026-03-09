@@ -177,3 +177,21 @@ export async fn run (package_root: string, action: string) -> int {
   return b.emit();
 }
 ```
+
+## Vendored C deps (headers + archives)
+
+When a build module emits a manifest target with native `.c`/`.h` inputs, the
+`silk` driver compiles those inputs with the toolchain’s vendored C headers on
+`linux/x86_64`. This keeps build modules portable across:
+
+- a repo checkout (vendored headers under `vendor/include/`), and
+- an installed prefix (vendored headers under `<prefix>/lib/silk/vendor/include/`).
+
+For linking against vendored static archives from a build module (for example
+when your project has its own `ext` bindings to mbedTLS), prefer manifest input
+entries of the form:
+
+- `@vendored/libmbedtls.a`
+
+See `docs/compiler/package-manifests.md` for the full `inputs` rules and the
+`@vendored/...` syntax.

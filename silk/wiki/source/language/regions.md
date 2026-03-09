@@ -3,28 +3,22 @@
 Regions provide a fixed-size, statically allocated backing store that can be
 used as an allocation context for `new`.
 
-Conceptually: a region behaves like a bump allocator. Silk uses the term
-“region” for the user-facing language feature.
-
 Canonical spec: `docs/language/regions.md`.
 
 ## Status
 
 - Implemented subset + current limitations: `docs/language/regions.md`
-- The example on this page is intended to compile in the current subset.
 
 ## Syntax
-
 ```silk
-const region scratch: u8[1024];
+const region scratch_region: u8[1024];
 
-with scratch {
-  // `new` allocations use `scratch` as backing storage.
+with scratch_region {
+  // `new` allocations use `scratch_region` as backing storage.
 }
 ```
 
 ## Example
-
 ```silk
 struct Point {
   x: int,
@@ -32,8 +26,8 @@ struct Point {
 }
 
 fn main () -> int {
-  const region scratch: u8[1024];
-  with scratch {
+  const region scratch_region: u8[1024];
+  with scratch_region {
     let p: &Point = new Point{ x: 1, y: 2 };
     return p.x + p.y;
   }
@@ -43,5 +37,5 @@ fn main () -> int {
 ## See also
 
 - Canonical spec: `docs/language/regions.md`
-- Memory model and `new`: `wiki/language/memory-model.md`
+- Memory model and `new`: `docs/language/memory-model.md`
 - `--noheap` and `std::runtime::mem`: `docs/std/runtime.md`

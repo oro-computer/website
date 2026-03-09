@@ -3,10 +3,6 @@
 Regions provide a fixed-size, **statically allocated** block of memory that can
 be used as an allocation context for `new`.
 
-If you’re familiar with bump allocators: regions provide a fixed-budget,
-bump-allocation surface. The user-facing language feature is `region` + `with`
-(there is no separate construct).
-
 Regions are represented at runtime as a first-class `Region` handle value. A
 `Region` value may be passed to functions, stored in structs, and exported.
 
@@ -65,7 +61,7 @@ store and cursor.
 A region declaration has the surface form:
 
 ```silk
-const region scratch: u8[1024];
+const region scratch_region: u8[1024];
 ```
 
 Rules:
@@ -88,9 +84,9 @@ Rules:
 struct Frame { x: int }
 
 fn main () -> int {
-  const region scratch: u8[1024];
+  const region scratch_region: u8[1024];
 
-  with scratch {
+  with scratch_region {
     let p: &Frame = new Frame{ x: 1 };
     // ...
   }
@@ -143,9 +139,9 @@ first `<bytes>` bytes of `<region>`:
 struct Frame { x: int }
 
 fn main () -> int {
-  const region scratch: u8[2048];
+  const region scratch_region: u8[2048];
 
-  with 1024 from scratch {
+  with 1024 from scratch_region {
     let p: &Frame = new Frame{ x: 1 };
     // ...
   }
@@ -157,12 +153,12 @@ fn main () -> int {
 You may also specify a byte slice of the source region:
 
 ```silk
-with 1024 from scratch[64..] {
-  // uses bytes 64..(64 + 1024) of `scratch`
+with 1024 from scratch_region[64..] {
+  // uses bytes 64..(64 + 1024) of `scratch_region`
 }
 
-with 1024 from scratch[64..1088] {
-  // uses bytes 64..1088 of `scratch`
+with 1024 from scratch_region[64..1088] {
+  // uses bytes 64..1088 of `scratch_region`
 }
 ```
 
@@ -257,7 +253,7 @@ Important limitation:
 Region declarations may be exported and imported like other top-level bindings:
 
 ```silk
-export const region global_region: u8[4096];
+export const region shared_region: u8[4096];
 ```
 
 Exporting a region exports a `Region` handle that refers to the same backing

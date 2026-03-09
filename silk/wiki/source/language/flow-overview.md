@@ -14,7 +14,6 @@ Canonical spec: `docs/language/flow-overview.md`.
 - Implemented-subset details: `docs/language/flow-*.md`
 
 ## Example
-
 ```silk
 fn main () -> int {
   let mut sum: int = 0;
@@ -35,6 +34,6 @@ fn main () -> int {
 
 ## See also
 
-- `if` / `else`: `wiki/language/flow-if-else.md`
-- `for`: `wiki/language/flow-for.md`
-- `match`: `wiki/language/flow-match.md`
+- `if` / `else`: `docs/wiki/language/flow-if-else.md`
+- `for`: `docs/wiki/language/flow-for.md`
+- `match`: `docs/wiki/language/flow-match.md`

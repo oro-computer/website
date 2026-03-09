@@ -79,6 +79,8 @@ distribution:
 - `std::sync` — synchronization primitives (hosted baseline; see `docs/std/sync.md`).
 - `std::abort_controller` — WHATWG-style abort signals for cancellation (see
   `docs/std/abort-controller.md`).
+- `std::signal` — pollable signal waiting for TUI programs (Linux `signalfd(2)`
+  backend; see `docs/std/signal.md`).
 - `std::stream` — Web Streams-inspired byte streams and piping (see `docs/std/stream.md`).
 - `std::args` — native `main(argc, argv)` argument helpers (current subset; see `docs/std/args.md`).
 - `std::readline` — interactive line editor for CLI programs (TTY mode) built on

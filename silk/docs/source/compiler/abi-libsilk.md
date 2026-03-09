@@ -66,6 +66,23 @@ The initial C header provided in the Silk compiler repository defines:
   } SilkBytes;
   ```
 
+- `SilkRange` mirroring the Silk `range` primitive:
+
+  ```c
+  typedef struct SilkRange {
+      int64_t  start;
+      int64_t  end;
+      uint64_t flags;
+  } SilkRange;
+  ```
+
+  Notes:
+  - The current `linux/x86_64` backend subset passes and returns `range` values
+    as three 8-byte scalar slots (`start`, `end`, `flags`).
+  - `flags` is a bitfield:
+    - bit 0: `has_end` (when unset, `end` is ignored),
+    - bit 1: `inclusive` (only valid when `has_end` is set).
+
 - 128-bit scalar primitives (`i128` / `u128` / `f128`) used by generated C
   headers for exported Silk interfaces:
 
@@ -174,10 +191,18 @@ The initial C header provided in the Silk compiler repository defines:
   auto-loaded `import std::...;` modules.
 
   `silk_compiler_set_target` selects the code generation target. The
-  `target_triple` string is copied. The initial implementation recognizes:
+  `target_triple` string is copied. The initial implementation recognizes the
+  same targets as the CLI (`silk build --list-targets`), including:
 
   - `linux-x86_64` (default), and common `x86_64-*-linux-*` triples such as
     `x86_64-linux-gnu` and `x86_64-unknown-linux-gnu`,
+  - `linux-aarch64`,
+  - `android-aarch64`,
+  - `macos-x86_64`,
+  - `macos-aarch64`,
+  - `ios-aarch64`,
+  - `windows-x86_64`,
+  - `windows-aarch64`,
   - `wasm32-unknown-unknown`,
   - `wasm32-wasi` (and other `wasm32` triples containing `wasi`).
 
@@ -620,9 +645,11 @@ The initial C header provided in the Silk compiler repository defines:
         - evaluates the constant integer expression in the body of `main`,
         - emits a tiny native executable image directly using a Silk‑owned
           backend (no C stub, no external C compiler),
-          - currently this backend writes a minimal ELF64 executable for
-            `linux/x86_64` whose entrypoint immediately performs a
-            `sys_exit(value)` system call,
+          - currently this backend writes a minimal target-specific executable
+            that terminates the process with the evaluated `main` value:
+            - ELF64 for `linux-x86_64`, `linux-aarch64`, and `android-aarch64`,
+            - Mach-O 64-bit for `macos-x86_64`, `macos-aarch64`, and `ios-aarch64`,
+            - PE32+ for `windows-x86_64` and `windows-aarch64`,
         - returns `true` on success with no last error recorded.
       - when the program is front‑end valid but outside this subset
         (e.g. `main` contains non‑constant expressions, references to

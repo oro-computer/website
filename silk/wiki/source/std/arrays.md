@@ -19,7 +19,6 @@ import std::arrays;
 ## Examples
 
 ### Example: `Slice(T)` + `SliceIter(T)`
-
 ```silk
 import std::arrays;
 import std::buffer;

@@ -140,8 +140,7 @@ export struct Writer {
 `std::tar::async` provides `async fn` adapters for fd-backed reading and writing
 of tar archives. These are intended for event-loop-based programs:
 
-- waits for fd readiness (`std::runtime::event_loop`),
-- performs non-blocking reads/writes when possible,
+- issues async reads/writes via the hosted async runtime (`std::runtime::io`),
 - keeps tar parsing/encoding streaming (no whole-archive buffering).
 
 API surface:

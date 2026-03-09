@@ -1,0 +1,1672 @@
+slg · LLMS Pack
+================
+
+This file concatenates the full slg documentation hosted on this website,
+so an LLM can answer questions using the same source of truth as readers.
+
+Generated: 2026-03-09T15:59:15+00:00
+
+How to link:
+- Docs: /slg/docs/?p=<id>
+
+Table of contents
+-----------------
+
+slg Docs
+- Start
+  - start — slg Docs — /slg/docs/?p=start
+- Guides
+  - guides/getting-started — Getting started — /slg/docs/?p=guides/getting-started
+  - guides/search-recipes — Search recipes — /slg/docs/?p=guides/search-recipes
+- CLI
+  - cli/slg — `slg` — /slg/docs/?p=cli/slg
+  - cli/input-types-and-parsing — Input types and parsing — /slg/docs/?p=cli/input-types-and-parsing
+  - cli/patterns-and-matching — Patterns and matching — /slg/docs/?p=cli/patterns-and-matching
+  - cli/traversal-and-ignores — Traversal and ignores — /slg/docs/?p=cli/traversal-and-ignores
+  - cli/parallelism — Parallelism — /slg/docs/?p=cli/parallelism
+  - cli/output-and-exit-codes — Output and exit codes — /slg/docs/?p=cli/output-and-exit-codes
+  - cli/options-reference — Options reference — /slg/docs/?p=cli/options-reference
+  - cli/diagnostics — Diagnostics — /slg/docs/?p=cli/diagnostics
+- Man Pages
+  - man/slg-1 — `slg` (1) — Silk Line Grep — /slg/docs/?p=man/slg-1
+
+==============================================================================
+DOCS: slg Docs (start)
+URL: /slg/docs/?p=start
+==============================================================================
+
+# slg Docs
+
+`slg` is a fast recursive line grep utility for files and directories.
+
+It is a filesystem-first CLI in the `ag` / `rg` class: search with regex or literals, list candidate files without searching content, honor ignore files and default skip lists, and tune parallel traversal explicitly when the tree is large enough to justify it.
+
+This docs set is written from the downstream CLI perspective:
+
+- **Guides** — build, install, and adopt `slg` in real grep workflows.
+- **CLI** — exact parsing rules, input types, matching semantics, traversal, parallelism, output, and diagnostics.
+- **Man pages** — reader-friendly `slg(1)` with the same public surface as the shipped manual.
+
+## Quick start
+
+```bash
+cd slg
+silk build --package .
+install -m 0755 build/bin/slg ~/.local/bin/slg
+slg --help
+```
+
+## First commands
+
+```bash
+slg TODO src
+slg -F "TODO:" .
+slg --files --max-depth 0 src
+slg --hidden --no-ignore-vcs "needle" .
+slg --stats error .
+```
+
+## What `slg` accepts
+
+- Search mode: `slg [options] <pattern> [path ...]`
+- File-list mode: `slg --files [options] [path ...]`
+- Roots are local filesystem paths only: regular files or directories
+- If no paths are provided, `slg` uses the current directory (`.`)
+- `--` ends option parsing
+- `-` is just a literal positional value, not stdin shorthand
+- There is no rc/config file layer; runtime behavior is controlled by flags plus `NO_COLOR`
+
+## Recommended reading path
+
+1. [Getting started](?p=guides/getting-started)
+2. [`slg`](?p=cli/slg)
+3. [Input types and parsing](?p=cli/input-types-and-parsing)
+4. [Patterns and matching](?p=cli/patterns-and-matching)
+5. [Traversal and ignores](?p=cli/traversal-and-ignores)
+6. [Parallelism](?p=cli/parallelism)
+7. [Output and exit codes](?p=cli/output-and-exit-codes)
+8. [Options reference](?p=cli/options-reference)
+9. [Diagnostics](?p=cli/diagnostics)
+10. [`slg(1)`](?p=man/slg-1)
+
+==============================================================================
+DOCS: Getting started (guides/getting-started)
+URL: /slg/docs/?p=guides/getting-started
+==============================================================================
+
+# Getting started
+
+This guide covers the downstream story: build `slg`, install it, run a few real searches, then move into the exact CLI reference.
+
+## Build from source
+
+From a checkout of the `slg` repository:
+
+```bash
+cd slg
+silk build --package .
+```
+
+The binary is written to:
+
+```text
+./build/bin/slg
+```
+
+A simple local install flow is:
+
+```bash
+install -m 0755 build/bin/slg ~/.local/bin/slg
+```
+
+## First searches
+
+Regex search:
+
+```bash
+slg "TODO|FIXME" src
+```
+
+Literal search:
+
+```bash
+slg -F "TODO:" .
+```
+
+List the files that would be searched:
+
+```bash
+slg --files src
+```
+
+Search hidden files too:
+
+```bash
+slg --hidden "needle" .
+```
+
+Show a stats summary on stderr:
+
+```bash
+slg --stats error .
+```
+
+## How to think about `slg`
+
+- It is **filesystem-only**. Inputs are files and directories, not stdin or URLs.
+- It has **two modes**: search mode and `--files` mode.
+- It walks directories **recursively** unless you limit depth.
+- It skips hidden entries, VCS directories, common heavy directories, and ignore-file matches by default.
+- It defaults to regex syntax, but patterns without regex metacharacters are automatically handled by the fixed matcher.
+
+## Read the shipped manual
+
+The project ships one manual page:
+
+```bash
+man ./man/slg.1
+```
+
+The website version is here: [`slg(1)`](?p=man/slg-1)
+
+## Next
+
+- Exact CLI shape: [`slg`](?p=cli/slg)
+- Root/path behavior: [Input types and parsing](?p=cli/input-types-and-parsing)
+- Common workflows: [Search recipes](?p=guides/search-recipes)
+
+==============================================================================
+DOCS: Search recipes (guides/search-recipes)
+URL: /slg/docs/?p=guides/search-recipes
+==============================================================================
+
+# Search recipes
+
+These are practical `slg` workflows for code trees, logs, and large repositories.
+
+## Search a tree with regex
+
+```bash
+slg "TODO|FIXME" src
+```
+
+This is the default mode. The first positional is the pattern; later positionals are roots.
+
+## Search a tree with literal text
+
+```bash
+slg -F "TODO:" .
+slg -Q "TODO:" .
+```
+
+Use `-F` / `-Q` when you want byte-substring matching instead of regex syntax.
+
+## Lean on automatic fixed matching
+
+```bash
+slg TODO src
+```
+
+When the pattern has no regex metacharacters, `slg` automatically uses the fixed matcher. This is the current implementation behavior even without `-F`.
+
+## Case-insensitive search
+
+```bash
+slg -i "error" logs
+slg -S "todo" src
+```
+
+- `-i` always requests case-insensitive matching
+- `-S` turns on ignore-case only when the pattern has no ASCII uppercase letters
+
+## Show only matching file paths
+
+```bash
+slg -l "TODO" .
+```
+
+This is the grep-style “files with matches” path.
+
+## Print headings instead of repeating paths
+
+```bash
+slg --heading "TODO" src
+```
+
+This prints a file header once, then match lines underneath it.
+
+## List searchable files without searching content
+
+```bash
+slg --files src
+slg src --files --max-depth 0
+```
+
+`--files` is useful when you want to inspect the traversal result, debug ignore behavior, or hand the file list to another tool.
+
+## Search hidden content and VCS trees
+
+```bash
+slg --hidden --no-ignore-vcs "version" .
+```
+
+`--no-ignore-vcs` alone is not enough to walk `.git`, `.hg`, or `.svn`, because those directories are still hidden unless `--hidden` is also set.
+
+## Disable ignore rules completely
+
+```bash
+slg --no-ignore "needle" .
+```
+
+This re-enables hidden/common/VCS paths and ignore-file matches as search candidates, except that hidden entries still require `--hidden` to be traversed.
+
+## Search binary-looking files anyway
+
+```bash
+slg --text -F "PK\x03\x04" artifacts
+```
+
+By default, `slg` skips files that contain a NUL byte in the first 1024 bytes.
+
+## Stop after the first useful result
+
+```bash
+slg -q "panic" logs
+```
+
+`--quiet` is an early-exit mode, not a silent mode. It prints the first matching line or path, flushes output, then stops.
+
+## Tune parallel traversal
+
+```bash
+slg --jobs auto "TODO" .
+slg --jobs auto --file-batch 128 "TODO" .
+slg --files --parallel-files --jobs 8 .
+```
+
+- Search mode uses parallel traversal when `--jobs` resolves above `1`
+- `--files` needs `--parallel-files` before it parallelizes listing
+
+## Search for values that begin with `-`
+
+```bash
+slg -F -- --no-ignore-files .
+slg -- --path-like-value
+```
+
+Use `--` to stop flag parsing.
+
+## Print columns and stats
+
+```bash
+slg --column --stats "TODO" src
+```
+
+`--column` adds a 1-based byte column to each match line. `--stats` prints the summary to stderr.
+
+==============================================================================
+DOCS: `slg` (cli/slg)
+URL: /slg/docs/?p=cli/slg
+==============================================================================
+
+# `slg`
+
+`slg` is the canonical CLI entrypoint for Silk Line Grep.
+
+## Synopsis
+
+```text
+slg [options] <pattern> [path ...]
+slg --files [options] [path ...]
+```
+
+## Primary modes
+
+### Search mode
+
+Search file contents below one or more filesystem roots:
+
+```bash
+slg TODO src
+slg -F "TODO:" .
+```
+
+The first positional is the pattern. Any later positional arguments are treated as root paths.
+
+### File-list mode
+
+List the files that would be searched, without searching content:
+
+```bash
+slg --files src
+slg src --files --max-depth 0
+```
+
+In this mode, every positional argument is treated as a root path.
+
+## Parsing model
+
+- Options may appear before or after positional arguments
+- `--` ends option parsing
+- If no paths are provided, the root is `.` in both modes
+- Long options that take values accept either `--flag value` or `--flag=value`
+- Short options that take values use a separate argument
+- Concurrency knobs accept `auto` case-insensitively
+- `--color` accepts only lowercase `auto|always|never`
+
+## Input model
+
+`slg` is **filesystem-only**:
+
+- roots can be regular files
+- roots can be directories
+- `-` is not stdin shorthand; it is treated like any other positional value
+- there is no URL input mode
+- there is no rc/config file layer
+
+See [Input types and parsing](?p=cli/input-types-and-parsing) for the exact rules.
+
+## Matching defaults
+
+- regex is the default public surface
+- patterns with no regex metacharacters are automatically handled by the fixed matcher in the current implementation
+- `-F`, `-Q`, `--fixed-string`, `--literal`, and `--fixed-strings` force literal matching
+- `-i` enables case-insensitive matching
+- `-S` enables smart-case behavior
+
+See [Patterns and matching](?p=cli/patterns-and-matching).
+
+## Traversal defaults
+
+By default `slg`:
+
+- skips hidden files and directories
+- skips `.git`, `.hg`, and `.svn`
+- skips a small set of common heavy directories
+- reads `.gitignore`, `.ignore`, and `.agignore`
+- does not follow symlinks
+
+See [Traversal and ignores](?p=cli/traversal-and-ignores).
+
+## Output and exit status
+
+Exit status:
+
+- `0` — at least one match was found, or `--files` completed successfully
+- `1` — no matches were found
+- `2` — parse error, runtime error, or output failure
+
+See [Output and exit codes](?p=cli/output-and-exit-codes) and [Diagnostics](?p=cli/diagnostics).
+
+## No config file
+
+`slg` does not currently read a user config file or project config file at runtime.
+
+The only runtime environment knob is `NO_COLOR`, and only when color mode is `auto`.
+
+## Next
+
+- Exact roots and positionals: [Input types and parsing](?p=cli/input-types-and-parsing)
+- Exhaustive flags: [Options reference](?p=cli/options-reference)
+- Reader-friendly manual: [`slg(1)`](?p=man/slg-1)
+
+==============================================================================
+DOCS: Input types and parsing (cli/input-types-and-parsing)
+URL: /slg/docs/?p=cli/input-types-and-parsing
+==============================================================================
+
+# Input types and parsing
+
+This page is the exact downstream input model for `slg`.
+
+## Search mode positionals
+
+Search mode is:
+
+```text
+slg [options] <pattern> [path ...]
+```
+
+Rules:
+
+- the **first** positional argument is the pattern
+- every later positional argument is a root path
+- if no root paths are provided, `slg` uses `.`
+
+Examples:
+
+```bash
+slg TODO
+slg TODO src
+slg TODO src tests
+slg src TODO --hidden
+```
+
+Because options may appear before or after positionals, all four shapes are valid as long as search mode still has a first positional pattern.
+
+## File-list mode positionals
+
+File-list mode is:
+
+```text
+slg --files [options] [path ...]
+```
+
+Rules:
+
+- every positional argument is a root path
+- if no root paths are provided, `slg` uses `.`
+
+Examples:
+
+```bash
+slg --files
+slg --files src
+slg src --files --max-depth 0
+```
+
+## End of option parsing
+
+Use `--` when a pattern or path begins with `-`:
+
+```bash
+slg -F -- --no-ignore-files .
+slg -- --path-that-starts-with-a-dash
+```
+
+Everything after `--` is positional.
+
+## Supported root types
+
+### Regular files
+
+If a root is a file, `slg` searches or lists that file directly.
+
+```bash
+slg TODO README.md
+slg --files README.md
+```
+
+### Directories
+
+If a root is a directory, `slg` walks it recursively.
+
+```bash
+slg TODO src
+slg --files src
+```
+
+### Symlinks
+
+Symlinks are not followed unless `--follow` is set.
+
+```bash
+slg --follow TODO linked-tree
+```
+
+Following symlinks may loop when the directory graph loops.
+
+### Hidden entries
+
+Hidden files and directories are skipped unless `--hidden` is set.
+
+```bash
+slg --hidden TODO .
+slg --files --hidden .
+```
+
+## Unsupported input types
+
+`slg` does **not** currently have:
+
+- stdin mode
+- URL mode
+- socket/stream input mode
+- shell-style glob expansion for root arguments
+
+Important consequences:
+
+- `slg -` treats `-` as a literal pattern or path, depending on position
+- quoting a glob preserves it as a literal positional value unless your shell expands it first
+- only ignore files provide glob syntax, and only inside ignore rules
+
+## No stdin shorthand
+
+There is no `grep`-style stdin special case.
+
+These are **not** equivalent:
+
+```bash
+printf 'TODO\n' | slg TODO
+slg TODO -
+```
+
+The first form pipes bytes to `slg`, but `slg` has no stdin search path and will still parse only filesystem roots. The second form treats `-` as a literal root path named `-`.
+
+## Value flags after positionals
+
+Value-taking options can appear after roots:
+
+```bash
+slg src --files --max-depth 0
+slg -F TODO src --jobs 8
+```
+
+This is part of the parser’s public behavior.
+
+## No runtime config layer
+
+`slg` does not load a config file or environment-based runtime profile. Use CLI flags for behavior changes.
+
+==============================================================================
+DOCS: Patterns and matching (cli/patterns-and-matching)
+URL: /slg/docs/?p=cli/patterns-and-matching
+==============================================================================
+
+# Patterns and matching
+
+This page documents how `slg` interprets patterns once parsing is complete.
+
+## Regex is the public default
+
+Without a literal flag, `<pattern>` is treated as a regular expression:
+
+```bash
+slg "TODO|FIXME" src
+slg "^fn main" src
+```
+
+## Automatic fixed matching
+
+Patterns that contain no regex metacharacters are automatically handled by the fixed matcher in the current implementation.
+
+That means this:
+
+```bash
+slg TODO src
+```
+
+behaves like a literal substring search even though `-F` was not provided.
+
+Use `-F` anyway when you want to make the intent explicit.
+
+## Force literal matching
+
+These flags are equivalent:
+
+- `-F`
+- `-Q`
+- `--fixed-string`
+- `--literal`
+- `--fixed-strings`
+
+Examples:
+
+```bash
+slg -F "TODO:" .
+slg -Q "std::task" src
+```
+
+## Case behavior
+
+### `-i`, `--ignore-case`
+
+```bash
+slg -i "error" logs
+```
+
+- regex mode delegates ignore-case to the regex engine
+- fixed-string mode uses ASCII-only case folding
+
+### `-S`, `--smart-case`
+
+```bash
+slg -S "todo" src
+slg -S "Todo" src
+```
+
+Smart-case only enables ignore-case when:
+
+- `-i` was not already set
+- the pattern has **no** ASCII uppercase letters
+
+So:
+
+- `slg -S todo src` becomes case-insensitive
+- `slg -S Todo src` stays case-sensitive
+
+### `--no-smart-case`
+
+This disables smart-case explicitly. It is the default state.
+
+## Match count limit
+
+Use `-m`, `--max-count` to stop after `N` matching lines per file:
+
+```bash
+slg -m 3 TODO src
+```
+
+Use `0` for unlimited.
+
+Current parser behavior:
+
+- `--max-count 3` works
+- `--max-count=3` works
+- `--max-count auto` is accepted
+- `--max-count=auto` is rejected
+
+For stable downstream use, prefer numeric values.
+
+## Matching is line-based
+
+`slg` searches one line at a time.
+
+Important consequences:
+
+- output is line-oriented
+- regex matching is evaluated per line
+- fixed strings that contain an actual newline cannot match
+
+## Binary detection
+
+By default, `slg` skips files that look binary.
+
+The current rule is:
+
+- if a file contains a NUL byte in the first 1024 bytes, it is treated as binary-like
+
+Use `--text` to force searching those files:
+
+```bash
+slg --text "needle" artifacts
+```
+
+## Pattern failures
+
+Invalid patterns fail with exit status `2`.
+
+Typical causes:
+
+- malformed regex syntax
+- an empty pattern after shell expansion or quoting
+
+See [Diagnostics](?p=cli/diagnostics).
+
+==============================================================================
+DOCS: Traversal and ignores (cli/traversal-and-ignores)
+URL: /slg/docs/?p=cli/traversal-and-ignores
+==============================================================================
+
+# Traversal and ignores
+
+This page documents exactly what `slg` walks, skips, and re-enables.
+
+## Traversal flags
+
+### `--hidden`
+
+Include hidden files and directories:
+
+```bash
+slg --hidden TODO .
+```
+
+Without this flag, dot-prefixed names are skipped.
+
+### `--follow`
+
+Follow symlinks:
+
+```bash
+slg --follow TODO linked-tree
+```
+
+This may loop if the directory graph loops.
+
+### `--max-depth`
+
+Limit recursion depth:
+
+```bash
+slg --max-depth 0 TODO src
+slg --files --max-depth 2 src
+```
+
+Rules:
+
+- `0` means “only the root itself”
+- positive values allow deeper recursion
+- negative values are currently accepted and behave like “unlimited”
+
+For downstream use, prefer explicit non-negative values.
+
+## Default ignore behavior
+
+By default, `slg` enables all three ignore sources:
+
+- **common heavy directories** — `node_modules`, `build`, `dist`, `target`, `tmp`, `.cache`
+- **VCS directories** — `.git`, `.hg`, `.svn`
+- **per-directory ignore files** — `.gitignore`, `.ignore`, `.agignore`
+
+## Master toggles
+
+Disable all ignore sources:
+
+```bash
+slg --no-ignore TODO .
+```
+
+Re-enable all ignore sources:
+
+```bash
+slg --ignore TODO .
+```
+
+## Individual ignore toggles
+
+Enable:
+
+- `--ignore-common`
+- `--ignore-vcs`
+- `--ignore-files`
+
+Disable:
+
+- `--no-ignore-common`
+- `--no-ignore-vcs`
+- `--no-ignore-files`
+
+## VCS directories and `--hidden`
+
+This is a common source of confusion:
+
+```bash
+slg --no-ignore-vcs TODO .
+```
+
+does **not** imply:
+
+```bash
+slg --hidden --no-ignore-vcs TODO .
+```
+
+VCS directories are still hidden directories, so you need `--hidden` as well if you want to walk them.
+
+## Ignore file syntax
+
+The supported ignore-file subset is pragmatic rather than full gitignore semantics.
+
+Supported:
+
+- `.gitignore`, `.ignore`, `.agignore`
+- blank lines and `#` comments
+- `!` negation
+- trailing `/` for directory-only rules
+- leading `/` anchoring for name-only patterns
+- `*` and `?`
+- `**` as a full path segment
+
+Examples:
+
+```text
+# ignore log files
+*.log
+
+# keep one specific file
+!keep.log
+
+# ignore a directory
+build/
+
+# root-only name match
+/anchored.txt
+```
+
+Not currently supported:
+
+- backslash escaping
+- character classes like `[a-z]`
+- git’s full “re-include requires parent directories to be unignored” rule
+
+## Search mode and `--files` mode share traversal
+
+The same traversal and ignore logic is used for:
+
+- search mode
+- `--files` mode
+
+The difference is only what gets printed.
+
+## Typical recipes
+
+Search everything except default ignored paths:
+
+```bash
+slg TODO .
+```
+
+Search hidden files too:
+
+```bash
+slg --hidden TODO .
+```
+
+Search even VCS directories:
+
+```bash
+slg --hidden --no-ignore-vcs TODO .
+```
+
+Ignore no ignore files:
+
+```bash
+slg --no-ignore-files TODO .
+```
+
+Ignore nothing:
+
+```bash
+slg --hidden --no-ignore TODO .
+```
+
+==============================================================================
+DOCS: Parallelism (cli/parallelism)
+URL: /slg/docs/?p=cli/parallelism
+==============================================================================
+
+# Parallelism
+
+`slg` can traverse and search in parallel, but the control surface is explicit and intentionally bounded.
+
+## The core knob: `--jobs`
+
+```bash
+slg --jobs auto TODO .
+slg --jobs 1 TODO .
+slg --jobs 8 TODO .
+```
+
+Rules:
+
+- `0` or `auto` means automatic sizing
+- `1` forces single-threaded mode
+- values above `1` enable task-based parallel traversal/search
+
+`--threads` is an alias for `--jobs`.
+
+`--no-parallel` is the same as `--jobs 1`.
+
+## Search mode vs `--files`
+
+Search mode parallelizes when jobs resolve above `1`.
+
+`--files` mode only parallelizes listing when `--parallel-files` is also set:
+
+```bash
+slg --files --parallel-files --jobs 8 .
+```
+
+Without `--parallel-files`, file-list mode stays effectively serial.
+
+## Worker and scheduler controls
+
+### `--max-workers`
+
+Cap worker tasks:
+
+```bash
+slg --jobs auto --max-workers 4 TODO .
+```
+
+`0` means “no explicit cap”.
+
+### `--split-depth`
+
+Control how deep directory subtrees are split into parallel jobs:
+
+```bash
+slg --jobs auto --split-depth 2 TODO .
+```
+
+`0` or `auto` means automatic sizing.
+
+### `--queue-cap`
+
+Bound the job queue:
+
+```bash
+slg --jobs auto --queue-cap 512 TODO .
+```
+
+### `--target-jobs`
+
+Stop splitting once roughly `N` subtrees have been scheduled:
+
+```bash
+slg --jobs auto --target-jobs 256 TODO .
+```
+
+### `--max-jobs-total`
+
+Cap total enqueued jobs across the run:
+
+```bash
+slg --jobs auto --max-jobs-total 4096 TODO .
+```
+
+### `--file-batch`
+
+Parallelize inside flat, file-heavy directories by batching files into jobs:
+
+```bash
+slg --jobs auto --file-batch 128 TODO .
+```
+
+Use `--no-file-jobs` to disable this and `--file-jobs` to re-enable it.
+
+## Flag syntax rules
+
+Concurrency flags accept:
+
+- `--flag value`
+- `--flag=value`
+- `auto` in any ASCII case for the knobs that support it
+
+Examples:
+
+```bash
+slg --jobs=auto TODO .
+slg --queue-cap AUTO TODO .
+slg --split-depth=2 TODO .
+```
+
+## Current bounds and clamps
+
+The current implementation clamps large values to keep the parallel engine bounded.
+
+| Flag | Auto value accepted | Current hard clamp |
+| --- | --- | --- |
+| `--jobs`, `--threads` | yes | `1024` |
+| `--max-workers` | no | `1023` |
+| `--split-depth` | yes | `8` |
+| `--queue-cap` | yes | `65536` |
+| `--target-jobs` | yes | `1048576` |
+| `--max-jobs-total` | yes | `1048576` |
+| `--file-batch` | yes | `4096` |
+
+These are public enough to document because they affect operator expectations.
+
+## Practical advice
+
+- Start with `--jobs auto`
+- Add `--stats` before tuning anything
+- Reach for `--file-batch` in flat directories with many files
+- Reach for `--split-depth` when the tree is very branchy
+- Use `--jobs 1` to reproduce a result without parallel scheduling
+
+## Examples
+
+Single-threaded for debugging:
+
+```bash
+slg --jobs 1 TODO .
+```
+
+Auto-parallel search:
+
+```bash
+slg --jobs auto TODO .
+```
+
+Parallel listing:
+
+```bash
+slg --files --parallel-files --jobs 8 .
+```
+
+Flat-directory tuning:
+
+```bash
+slg --jobs auto --file-batch 64 --queue-cap 256 TODO build
+```
+
+==============================================================================
+DOCS: Output and exit codes (cli/output-and-exit-codes)
+URL: /slg/docs/?p=cli/output-and-exit-codes
+==============================================================================
+
+# Output and exit codes
+
+This page documents what `slg` prints, where it prints it, and how it exits.
+
+## Stdout vs stderr
+
+- match results go to **stdout**
+- file-list output from `--files` goes to **stdout**
+- stats from `--stats` go to **stderr**
+- diagnostics go to **stderr**
+
+## Default match format
+
+Default search output is path + line number + line text:
+
+```text
+path:line:text
+```
+
+Example:
+
+```text
+src/main.slk:42:return 0;
+```
+
+Line numbers are 1-based and enabled by default.
+
+## Column format
+
+Use `--column` to add the match column:
+
+```bash
+slg --column TODO src
+```
+
+Output shape:
+
+```text
+path:line:column:text
+```
+
+The column is a 1-based byte offset.
+
+`--column` requires line numbers, so this is invalid:
+
+```bash
+slg --column --no-line-number TODO src
+```
+
+## File header mode
+
+Use `--heading` to print a file header once and then emit match lines without the repeated path prefix:
+
+```bash
+slg --heading TODO src
+```
+
+This is useful when many matches come from the same file.
+
+## File-only outputs
+
+### `-l`, `--files-with-matches`
+
+Print only matching file paths:
+
+```bash
+slg -l TODO src
+```
+
+### `--files`
+
+List files that would be searched:
+
+```bash
+slg --files src
+```
+
+This mode never searches file contents.
+
+## `--quiet`
+
+`--quiet` is an early-exit mode, not a silent mode.
+
+Behavior:
+
+- print the first matching line or path
+- flush output
+- stop immediately
+
+Example:
+
+```bash
+slg -q TODO src
+```
+
+## Stats summary
+
+Use `--stats` to print a summary to stderr:
+
+```bash
+slg --stats TODO src
+```
+
+Current fields:
+
+- `files_searched`
+- `files_matched`
+- `match_lines`
+- `errors`
+- `time_ms`
+
+Example shape:
+
+```text
+slg stats: files_searched=128 files_matched=9 match_lines=14 errors=0 time_ms=23
+```
+
+## Color
+
+Color is controlled by:
+
+- `--color auto|always|never`
+- `--no-color`
+- `NO_COLOR`
+
+Rules:
+
+- `always` always emits ANSI colors
+- `never` never emits ANSI colors
+- `auto` enables color only when the target fd is a TTY and `NO_COLOR` is not set
+
+## Exit status
+
+### `0`
+
+- at least one match was found
+- or `--files` completed successfully
+
+### `1`
+
+- no matches were found
+
+### `2`
+
+- CLI parse error
+- invalid pattern
+- runtime I/O failure
+- output failure
+
+## Examples
+
+Search with plain output:
+
+```bash
+slg TODO src
+```
+
+Search with columns and stats:
+
+```bash
+slg --column --stats TODO src
+```
+
+List only matching files:
+
+```bash
+slg -l TODO src
+```
+
+==============================================================================
+DOCS: Options reference (cli/options-reference)
+URL: /slg/docs/?p=cli/options-reference
+==============================================================================
+
+# Options reference
+
+This page lists every public CLI flag on `slg`.
+
+## Pattern and matching
+
+| Flag | Applies in search mode | Applies in `--files` mode | Meaning |
+| --- | --- | --- | --- |
+| `-F`, `--fixed-string` | yes | parsed but has no effect | Treat the pattern as a literal byte substring |
+| `-Q`, `--literal` | yes | parsed but has no effect | Alias for fixed-string mode |
+| `--fixed-strings` | yes | parsed but has no effect | Alias for fixed-string mode |
+| `-i`, `--ignore-case` | yes | parsed but has no effect | Case-insensitive matching |
+| `-S`, `--smart-case` | yes | parsed but has no effect | Enable ignore-case only for lowercase/no-uppercase patterns |
+| `--no-smart-case` | yes | parsed but has no effect | Disable smart-case |
+| `-m`, `--max-count <n>` | yes | parsed but has no effect | Stop after `n` matching lines per file; `0` means unlimited |
+
+## Traversal
+
+| Flag | Applies in search mode | Applies in `--files` mode | Meaning |
+| --- | --- | --- | --- |
+| `--hidden` | yes | yes | Include hidden files and directories |
+| `--follow` | yes | yes | Follow symlinks |
+| `--max-depth <n>` | yes | yes | Limit recursion depth; `0` means root-only |
+| `--no-ignore` | yes | yes | Disable all ignore sources |
+| `--ignore` | yes | yes | Re-enable all ignore sources |
+| `--ignore-common` | yes | yes | Re-enable skipping common heavy directories |
+| `--ignore-vcs` | yes | yes | Re-enable skipping `.git`, `.hg`, `.svn` |
+| `--ignore-files` | yes | yes | Re-enable reading ignore files |
+| `--no-ignore-common` | yes | yes | Stop skipping common heavy directories |
+| `--no-ignore-vcs` | yes | yes | Stop skipping VCS directories |
+| `--no-ignore-files` | yes | yes | Stop reading ignore files |
+
+## Parallelism
+
+| Flag | Applies in search mode | Applies in `--files` mode | Meaning |
+| --- | --- | --- | --- |
+| `-j`, `--jobs <n>` | yes | yes | Parallel task count; `0` or `auto` means automatic sizing |
+| `--threads <n>` | yes | yes | Alias for `--jobs` |
+| `--max-workers <n>` | yes | yes | Cap worker tasks |
+| `--split-depth <n>` | yes | yes | Limit subtree split depth |
+| `--queue-cap <n>` | yes | yes | Bound the job queue |
+| `--target-jobs <n>` | yes | yes | Stop splitting once roughly `n` subtrees are scheduled |
+| `--max-jobs-total <n>` | yes | yes | Cap total enqueued jobs |
+| `--file-batch <n>` | yes | yes | Files per file-batch job |
+| `--no-file-jobs` | yes | yes | Disable file-batch jobs |
+| `--file-jobs` | yes | yes | Re-enable file-batch jobs |
+| `--parallel-files` | no effect | yes | Parallelize file-list mode when jobs resolve above `1` |
+| `--no-parallel` | yes | yes | Same as `--jobs 1` |
+
+## File handling and output
+
+| Flag | Applies in search mode | Applies in `--files` mode | Meaning |
+| --- | --- | --- | --- |
+| `--text` | yes | parsed but has no effect | Search files that look binary |
+| `-l`, `--files-with-matches` | yes | parsed but has no effect | Print only matching file paths |
+| `--heading` | yes | parsed but has no effect | Print a file header before matches |
+| `-n`, `--line-number` | yes | parsed but has no effect | Show line numbers; default on |
+| `--no-line-number` | yes | parsed but has no effect | Suppress line numbers |
+| `--no-numbers` | yes | parsed but has no effect | Alias for `--no-line-number` |
+| `--column` | yes | parsed but has no effect | Show the 1-based byte column; requires line numbers |
+| `--stats` | yes | yes | Print summary stats to stderr |
+| `-q`, `--quiet` | yes | yes | Print the first matching line/path and exit early |
+| `--files` | switches mode | n/a | List searchable files instead of searching content |
+
+## Color and meta
+
+| Flag | Applies in search mode | Applies in `--files` mode | Meaning |
+| --- | --- | --- | --- |
+| `--color <mode>` | yes | yes | `auto`, `always`, or `never` |
+| `--no-color` | yes | yes | Same as `--color never` |
+| `-h`, `--help` | yes | yes | Print help and exit |
+| `-V`, `--version` | yes | yes | Print version and exit |
+
+## Flag syntax rules
+
+- long value-taking flags accept `--flag value` and `--flag=value`
+- short value-taking flags use a separate argument
+- concurrency knobs accept `auto` case-insensitively
+- `--color` accepts only lowercase `auto|always|never`
+- `--max-count auto` is accepted, but `--max-count=auto` is not
+- `--max-depth -1` is accepted and behaves like unlimited depth
+
+## Mode notes
+
+Search-only flags are still parsed in `--files` mode, but many of them have no effect because listing prints only path output.
+
+That means commands like this parse successfully:
+
+```bash
+slg --files -F TODO src
+```
+
+but only the traversal/listing behavior matters.
+
+==============================================================================
+DOCS: Diagnostics (cli/diagnostics)
+URL: /slg/docs/?p=cli/diagnostics
+==============================================================================
+
+# Diagnostics
+
+This page documents the public exit codes plus the most important user-visible diagnostics.
+
+## Exit status
+
+- `0` — match found, or `--files` completed successfully
+- `1` — no matches found
+- `2` — parse error, pattern error, runtime error, or output failure
+
+## Parse-time diagnostics
+
+### Missing pattern
+
+Example:
+
+```text
+slg: missing <pattern>. Try: slg --help
+```
+
+Cause:
+
+- search mode was selected
+- no positional pattern was provided
+
+### Unknown flag
+
+Example:
+
+```text
+slg: unknown flag: --wat. Try: slg --help
+```
+
+Cause:
+
+- the parser does not recognize the flag
+
+### Missing value for a flag
+
+Example:
+
+```text
+slg: missing value for --jobs
+```
+
+Cause:
+
+- a value-taking flag was passed without a following value
+
+### Invalid value for a flag
+
+Examples:
+
+```text
+slg: invalid value for --jobs: expected integer or auto
+slg: invalid value for --max-workers: expected integer
+slg: invalid value for --color: expected auto|always|never
+```
+
+Cause:
+
+- the value did not match the accepted parser shape for that flag
+
+### `--column` without line numbers
+
+Example:
+
+```text
+slg: --column requires line numbers (remove --no-line-number)
+```
+
+Cause:
+
+- `--column` was combined with `--no-line-number` / `--no-numbers`
+
+## Pattern diagnostics
+
+### Invalid regex pattern
+
+Example:
+
+```text
+slg: invalid pattern (regex compile failed)
+```
+
+Cause:
+
+- regex compilation failed
+
+### Invalid pattern
+
+Example:
+
+```text
+slg: invalid pattern
+```
+
+Cause:
+
+- the pattern was empty or otherwise invalid for the matcher
+
+## Runtime I/O diagnostics
+
+These are reported on stderr and generally return exit status `2`.
+
+### Failed to open a file
+
+Example shape:
+
+```text
+path/to/file: failed to open
+```
+
+Typical causes:
+
+- the file does not exist
+- permissions do not allow reading it
+
+### Failed to open a directory
+
+Example shape:
+
+```text
+path/to/dir: failed to open directory
+```
+
+Typical causes:
+
+- the directory does not exist
+- permissions block traversal
+
+### Failed to read
+
+Example shape:
+
+```text
+path/to/file: failed to read
+```
+
+Typical causes:
+
+- short-lived I/O failure while reading file bytes
+
+### Failed to read file size
+
+Example shape:
+
+```text
+path/to/file: failed to read file size
+```
+
+### Failed to mmap
+
+Example shape:
+
+```text
+path/to/file: failed to mmap
+```
+
+Large files currently use an `mmap` path after a small prefix probe.
+
+### Out of memory
+
+Example shape:
+
+```text
+path/to/tree: out of memory
+```
+
+This can come from traversal state, ignore-file parsing, or output buffering.
+
+## Output failure
+
+If stdout is not writable, `slg` treats that as an error and exits `2`.
+
+This matters in pipelines, redirections, and broken pipes.
+
+## Stats and error counts
+
+When `--stats` is enabled, the stderr summary includes an `errors=` field.
+
+That count tracks runtime/search/output issues observed during the run.
+
+## Troubleshooting checklist
+
+1. Re-run with a smaller root set to isolate the failing path.
+2. Use `--files` to inspect traversal separately from matching.
+3. Add `--hidden` when you expect dot-prefixed paths.
+4. Add `--hidden --no-ignore-vcs` when you expect `.git`, `.hg`, or `.svn`.
+5. Add `--no-ignore-files` when ignore rules may be hiding the target path.
+6. Add `--text` when the file looks binary.
+7. Use `--jobs 1` to remove parallel scheduling from the problem.
+
+==============================================================================
+DOCS: `slg` (1) — Silk Line Grep (man/slg-1)
+URL: /slg/docs/?p=man/slg-1
+==============================================================================
+
+# `slg` (1) — Silk Line Grep
+
+This page is the reader-friendly website form of the shipped `slg(1)` manual.
+
+## Name
+
+`slg` — Silk Line Grep, a fast recursive file + pattern search tool
+
+## Synopsis
+
+```text
+slg [options] <pattern> [path ...]
+slg --files [options] [path ...]
+```
+
+## Description
+
+`slg` recursively walks directory trees and either:
+
+- searches file contents for matching lines
+- or lists the files that would be searched
+
+By default, the public surface treats the pattern as regex syntax.
+
+Current implementation note:
+
+- when a pattern contains no regex metacharacters, `slg` automatically uses the fixed matcher
+
+Options may appear before or after positional arguments.
+
+In search mode:
+
+- the first positional argument is the pattern
+- later positionals are root paths
+
+In `--files` mode:
+
+- every positional argument is a root path
+
+If no paths are provided, `slg` uses the current directory (`.`).
+
+Use `--` to end option parsing.
+
+## Options
+
+### Pattern and matching
+
+- `-F`, `--fixed-string` — literal byte substring matching
+- `-Q`, `--literal` — alias for fixed-string mode
+- `--fixed-strings` — alias for fixed-string mode
+- `-i`, `--ignore-case` — case-insensitive matching
+- `-S`, `--smart-case` — ignore-case only when the pattern has no ASCII uppercase
+- `--no-smart-case` — disable smart-case
+- `-m`, `--max-count <n>` — stop after `n` matching lines per file; `0` means unlimited
+
+### Traversal
+
+- `--hidden` — include hidden files and directories
+- `--follow` — follow symlinks
+- `--max-depth <n>` — limit recursion depth; `0` means only the root
+- `--no-ignore` — disable all ignore sources
+- `--ignore` — re-enable all ignore sources
+- `--ignore-common`, `--no-ignore-common` — control the built-in heavy-directory skip list
+- `--ignore-vcs`, `--no-ignore-vcs` — control skipping `.git`, `.hg`, `.svn`
+- `--ignore-files`, `--no-ignore-files` — control reading `.gitignore`, `.ignore`, `.agignore`
+
+### Parallelism
+
+- `-j`, `--jobs <n>` — parallel task count; `0` or `auto` means automatic sizing
+- `--threads <n>` — alias for `--jobs`
+- `--max-workers <n>` — cap worker tasks
+- `--split-depth <n>` — bound directory split depth
+- `--queue-cap <n>` — bound the job queue
+- `--target-jobs <n>` — stop splitting once roughly `n` subtrees are scheduled
+- `--max-jobs-total <n>` — cap total enqueued jobs
+- `--file-batch <n>` — files per file-batch job
+- `--no-file-jobs`, `--file-jobs` — disable or enable file-batch jobs
+- `--parallel-files` — parallelize `--files` traversal when jobs resolve above `1`
+- `--no-parallel` — same as `--jobs 1`
+
+### File handling
+
+- `--text` — search files that look binary
+
+### Output
+
+- `-l`, `--files-with-matches` — print only matching file paths
+- `--heading` — print a file header before matches
+- `-n`, `--line-number` — show line numbers; default on
+- `--no-line-number`, `--no-numbers` — suppress line numbers
+- `--column` — print the 1-based byte column; requires line numbers
+- `--stats` — print summary stats to stderr
+- `-q`, `--quiet` — print the first matching line/path and exit early
+- `--files` — list files instead of searching file contents
+
+### Color
+
+- `--color auto|always|never`
+- `--no-color`
+
+### Meta
+
+- `-h`, `--help`
+- `-V`, `--version`
+
+## Exit status
+
+- `0` — match found, or `--files` completed successfully
+- `1` — no matches found
+- `2` — parse error, pattern error, runtime error, or output failure
+
+## Environment
+
+- `NO_COLOR` — disables color in `--color auto` mode
+
+`slg` does not currently read a runtime config file.
+
+## Examples
+
+Regex search:
+
+```bash
+slg "TODO|FIXME" src
+```
+
+Literal search:
+
+```bash
+slg -F "TODO:" .
+```
+
+Hidden + VCS search:
+
+```bash
+slg --hidden --no-ignore-vcs "version" .
+```
+
+List files only:
+
+```bash
+slg --files src
+```
+
+Parallel listing:
+
+```bash
+slg --files --parallel-files --jobs 8 .
+```
+
+## Notes
+
+- `slg` is filesystem-only
+- `-` is not stdin shorthand
+- matching is line-based
+- binary detection is NUL-in-the-first-1024-bytes unless `--text` is set
+- ignore-file support is a pragmatic subset, not full gitignore semantics
+
+For exact downstream details, continue with:
+
+- [Input types and parsing](?p=cli/input-types-and-parsing)
+- [Patterns and matching](?p=cli/patterns-and-matching)
+- [Traversal and ignores](?p=cli/traversal-and-ignores)
+- [Options reference](?p=cli/options-reference)

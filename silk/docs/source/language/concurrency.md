@@ -8,7 +8,7 @@ Concurrency in Silk is built around two orthogonal function modifiers:
 plus structured concurrency blocks (`async { ... }` and `task { ... }`)
 intended to provide **structured concurrency**.
 
-- The runtime manages a thread pool to execute tasks.
+- The runtime can manage a thread pool to execute tasks.
 - The compiler is intended to enforce task-safety rules when values cross task
   boundaries (Send/Sync-like constraints).
 
@@ -35,13 +35,14 @@ implemented by the compiler/runtime today.
   - **receive** (`yield <task_handle>`) in value position: blocks until the task
     produces its next value and yields `T`.
 - `yield` on a temporary task handle is eager in the current subset:
-  - `yield <task_expr>` where `<task_expr>` is not a named handle drains/joins
-    the task and yields its final value `T` (so the temporary handle does not
-    leak).
+  - `yield <task_expr>` where `<task_expr>` is not a named handle drains the
+    task (joining thread-per-call tasks) and yields its final value `T` (so the
+    temporary handle does not leak).
 - `yield * <task_handle>` in value position drains a task:
   - `yield * Task(T)` receives **all** remaining values from the task, joins
-    the worker thread, and yields a collected `T[]` result (with the task’s
-    final return value as the last element).
+    the worker thread (thread-per-call tasks), and yields a collected `T[]`
+    result (with the task’s final return value as the last element). Pooled
+    tasks (`attr(task=pool)`) skip the join.
 - `yield * <task_handle>;` as a statement inside a task function forwards values:
   - drains the right-hand task and forwards all remaining values to the
     enclosing task’s receiver, then joins/cleans up the drained task.
@@ -115,21 +116,25 @@ must be synchronized by the program.
     (fibers), so awaiting a pending `Promise(T)` can park and resume without
     blocking the OS thread.
   - The current implementation uses stackful coroutines in `libsilk_rt`
-    rather than a compiler state-machine coroutine transform. The long-term
-    design remains a compiler transform + stable `std::runtime::event_loop`
-    surface (see `docs/compiler/async-runtime.md`).
-  - Current limitation: coroutine spawning for `async fn` calls is not reliable
-    in a multi-threaded process yet. In this snapshot, starting an OS-thread
-    task (`task fn`) and then spawning stackful async coroutines can crash
-    (SIGILL). Workarounds:
-    - keep `std::io::async`-based I/O and `await *` composition in a
-      single-threaded async program for now,
-    - if you need threads, restrict cross-thread async usage to the low-level
-      promise constructors in `std::runtime::event_loop` (`sleep_ms`,
-      `fd_wait_readable`, `fd_wait_writable`), which do not spawn new coroutines.
-  - Awaiting a `Task(T)` is still rejected; use `yield` / `yield *` for task values.
-- The runtime subset implements `task` execution using OS threads (via
-  `pthread_create` on `linux/x86_64`); it is not yet a work-stealing pool.
+    (`src/silk_rt_async.c`) rather than a compiler state-machine coroutine
+    transform. The long-term design remains a compiler transform + stable
+    `std::runtime::event_loop` surface (see `docs/compiler/async-runtime.md`).
+  - The shipped executor is **thread-affine**:
+    - only the thread that created the executor may spawn and drive stackful
+      coroutines (stackful coroutines are never migrated across OS threads),
+    - `std::runtime::event_loop::{poll,deinit}` must be called on that same
+      thread,
+    - other OS threads (including `task fn` workers) may still call `async fn`
+      entrypoints, but those calls run synchronously (no coroutine spawn), and
+      `await` on a non-owner thread blocks the OS thread until the promise is
+      resolved.
+  - Awaiting a `Task(T)` is rejected by design; use `yield` / `yield *` for task values.
+- The runtime subset implements `task` execution using OS threads:
+  - By default, calling a `task fn` spawns a dedicated OS thread (via
+    `pthread_create` on hosted POSIX targets).
+  - When the callee is annotated with `attr(task=pool)` / `attr(task_pool)`,
+    calls are scheduled on the global task pool (queue-based + simple work
+    stealing between workers). The pool is created lazily.
 - Full Send/Sync-style checking (beyond the conservative boundary restriction
   described above) is not implemented yet. In particular, the compiler does not
   attempt to prove absence of data races for shared state; programs must use
@@ -174,7 +179,8 @@ handles**:
 
 - A `Promise(T)` handle may be **awaited at most once**. `await` consumes the handle.
 - A `Task(T)` handle may be **drained/joined at most once** via `yield *`
-  (and `yield` on a temporary task expression drains/joins as well).
+  (and `yield` on a temporary task expression drains as well, joining
+  thread-per-call tasks).
 - Handles are **non-copyable**: you may not copy a handle into another binding
   or use it as a normal value expression.
 - A consumed handle may not be used again (including attempting to `await` it a
@@ -192,10 +198,13 @@ In the current compiler subset, `Task(T)` and `Promise(T)` handles are stored in
 heap-allocated handle memory:
 
 - `await` unwraps a promise and then frees the promise handle storage.
-- `yield *` drains/joins a task and then frees the task handle storage.
+- `yield *` drains a task and then frees the task handle storage (joining
+  thread-per-call tasks).
 - If a handle is **not consumed** (`await`/`yield *`), the compiler inserts
   automatic cleanup when the handle binding is overwritten or goes out of scope:
-  - `Task(T)` cleanup joins the worker thread and then frees the handle storage.
+  - `Task(T)` cleanup joins the worker thread (thread-per-call tasks) and then
+    frees the handle storage. Pooled tasks (`attr(task=pool)`) skip the join
+    since there is no per-call worker thread to join.
   - `Promise(T)` cleanup frees the handle storage.
 
 Because tasks are implemented using OS threads in the current subset, this
@@ -218,7 +227,9 @@ In the intended model for tasks:
 - Outside the task, `yield <task_handle>` blocks until the task produces its
   next value and yields it.
 - `yield * <task_handle>` drains all remaining task values and then joins the
-  worker thread for cleanup, yielding a collected `T[]` in value position.
+  worker thread for cleanup (thread-per-call tasks). Pooled tasks
+  (`attr(task=pool)`) skip the join. In value position, `yield *` yields a
+  collected `T[]`.
 - `yield * <task_handle>;` as a statement forwards all remaining values from the
   right-hand task to the enclosing task’s receiver and then joins/cleans up the
   drained task.
@@ -255,11 +266,37 @@ lexical block.
 
 ## Future Work: Runtime and Safety
 
-The long-term design is to provide:
+Silk’s concurrency model intentionally separates:
 
-- a well-defined `Task(T)` handle type,
-- scheduler-backed lowering of `task` calls into non-blocking spawns,
-- `await` that unwraps promises and propagates errors/contracts,
-- `yield` / `yield *` that receive/drain tasks without blocking the OS thread,
-- structured blocks (`async { ... }` / `task { ... }`) that provide well-delimited lifetimes,
-- static rules for data-race prevention and safe sharing across tasks.
+- **I/O-bound concurrency** (`async`, driven by an executor/event loop), from
+- **CPU-bound parallelism** (`task`, executed on OS threads).
+
+Long-term work focuses on making this split ergonomic, predictable, and safe.
+
+Planned work:
+
+- Stabilize `Task(T)` / `Promise(T)` ownership and ergonomics:
+  - move-only handles that can be stored in structs and collections,
+  - stable join/drain APIs (and cancellation where applicable).
+- Specify and implement typed-error contract behavior across `async`/`await`
+  (including how `?` propagation composes with `await`).
+- Lower `task fn` calls to a scheduler-backed pool by default (instead of
+  spawning a dedicated OS thread per call), with explicit controls for worker
+  counts and backpressure.
+- Integrate `yield` / `yield *` with the async executor when used inside `async`
+  code so waiting on task output can suspend the current async function instead
+  of blocking the OS thread.
+- Make structured blocks (`async { ... }` / `task { ... }`) runtime-backed
+  scopes with well-delimited lifetimes (spawn/join and cancellation on early
+  exit), composed with `std::abort_controller`.
+- Replace the current conservative “no `&T` across task boundaries” rule with a
+  more expressive Send/Sync-style system for cross-task values and shared
+  handles.
+
+Non-goals / design constraints:
+
+- `async` is cooperative: there is no preemptive async scheduling.
+- `await Task(T)` remains rejected; task values are consumed via `yield` /
+  `yield *`.
+- Hosted async coroutines are not migrated across OS threads; parallelism is
+  expressed via `task` and explicit synchronization.

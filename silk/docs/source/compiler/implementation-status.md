@@ -1,72 +1,73 @@
 # Implementation status
 
-This page is a downstream-facing snapshot of what the **reference** Silk compiler/toolchain supports **end-to-end** today.
-It is intentionally high-level: each language / stdlib / compiler document includes an “Implementation status” section with
-the precise, feature-specific subset.
+This page is a downstream-facing snapshot of what the **reference** Silk compiler and toolchain support end-to-end
+today. It is intentionally high-level: each language, standard-library, and compiler page carries the feature-specific
+details for its own current subset.
 
 Use this page to answer:
 
-- “What targets can I build for?”
-- “What does the toolchain do end-to-end vs. what is design work?”
-- “Where do I look when something is rejected?”
+- What targets and artifact kinds can I rely on today?
+- Which parts of Silk are implemented end-to-end versus specified ahead of implementation?
+- Where should I look when the compiler rejects a program?
 
-## Supported targets (end-to-end)
+## What works end-to-end today
 
-Silk has a **hosted** baseline for native systems targets and an IR→WASM backend for `wasm32` targets.
+Silk’s current toolchain surface is strongest in three places:
 
-- `linux-x86_64` (hosted): primary target for end-to-end bring-up.
-  - Output kinds: executable, object (`.o`), static archive (`.a`), shared library (`.so`).
-  - Debug mode support (stack traces for `assert`, Z3 reproduction scripts on failed proofs).
-  - REPL support (`silk repl`).
-- `wasm32-unknown-unknown`: build WebAssembly modules for embedding.
-  - Emits `memory` plus `main` when present, or an export-only module that exposes `export fn` declarations.
-  - Note: Silk `int` currently lowers to wasm `i64`, so exported functions using `int` surface as `i64` in wasm.
-- `wasm32-wasi`: build WASI-compatible WebAssembly modules.
-  - Emits `_start () -> void` and calls `fn main () -> int`, exiting via `wasi_snapshot_preview1.proc_exit`.
-  - The `main(argc, argv)` entrypoint form is not supported yet for WASI.
-- Other targets: not implemented end-to-end yet.
+- **Hosted native bring-up on `linux/x86_64`**
+  - `silk check`, `silk test`, `silk build`, `silk doc`, `silk man`, `silk env`, `silk format`, and `silk package`
+    are all part of the public CLI surface.
+  - Native outputs currently cover executables, object files, static archives, and shared libraries.
+  - Hosted runtime features such as async/task execution, diagnostics, and Z3-backed Formal Silk verification are
+    documented and exercised here first.
+- **WebAssembly targets**
+  - `wasm32-unknown-unknown` for embedder-facing WebAssembly modules.
+  - `wasm32-wasi` for WASI-style entrypoints.
+  - See [WebAssembly back-end](?p=compiler/backend-wasm) and [Run WASI modules in Node](?p=usage/howto-run-wasi-node).
+- **Package and distribution tooling**
+  - `silk.toml` package manifests, package-target builds, and package lint/inspection are part of the public workflow.
+  - See [Package manifests](?p=compiler/package-manifests), [Package distribution](?p=compiler/package-distribution),
+    and [`silk-package` (1)](?p=man/silk-package.1).
 
-Details and exact flags live in: [`silk` CLI](?p=compiler/cli-silk) and [WebAssembly back-end](?p=compiler/backend-wasm).
+## Broader target bring-up
 
-## What’s “supported” vs. “design”
+The front-end, package loader, diagnostics, documentation tooling, and much of the ABI reference are broader than the
+hosted `linux/x86_64` baseline. In particular:
 
-Across the docs:
+- Silk documents additional native targets for const-main and ABI-oriented bring-up in the CLI and ABI references.
+- The exact target matrix changes faster than this high-level page, so use:
+  - [CLI reference](?p=compiler/cli-silk)
+  - [C99 ABI and `libsilk.a`](?p=compiler/abi-libsilk)
+  - [`silk` (1)](?p=man/silk.1)
 
-- “Implementation status” sections describe what the reference compiler accepts and lowers end-to-end.
-- The spec and concept docs also describe the broader language design, even when a feature is not yet fully implemented.
-- When the compiler rejects a construct, it should do so with a stable error code when the error kind is known.
+## Supported public surfaces
 
-For “what just happened?”, start with: [Compiler Diagnostics](?p=compiler/diagnostics).
+These are user-facing and expected to stay in sync with the compiler:
 
-## Toolchain surfaces (public)
+- `silk check` — parse, resolve imports, type-check, and optionally verify.
+- `silk test` — compile and run language-level tests with TAP output.
+- `silk build` — emit artifacts for the selected target and output kind.
+- `silk package inspect|lint` — inspect distributable package metadata and validate package roots.
+- `silk doc` / `silk man` — extract and render documentation from Silkdoc comments.
+- `silk env` / `silk format` — environment inspection and source formatting.
+- `silk-lsp` — editor-facing diagnostics, navigation, hover, completion, and related language tooling.
 
-These are expected to work on supported targets:
+## How to read the rest of the docs
 
-- `silk check` — parse + type-check a module set.
-- `silk test` — compile + run language-level `test` declarations (TAP output).
-- `silk build` — build artifacts for the active target (`--target`).
-- `silk doc` / `silk man` — generate/view docs from Silkdoc comments.
-- `silk-lsp` — language-server process for editor integrations (diagnostics and navigation; see [LSP](?p=compiler/lsp-silk)).
+Across the site:
 
-## Feature bring-up notes (common)
+- **Guides** teach the common workflow and give runnable examples.
+- **Reference pages** define the syntax, semantics, and current compiler subset.
+- **The spec** describes the full intended language surface, even when implementation is still catching up.
 
-Some language features depend on runtime and back-end support, so “parses + type-checks” may arrive before “runs
-everywhere”.
+When you need the exact behavior of a feature, prefer the feature page over this summary.
 
-Two examples:
+## If the compiler rejects your program
 
-- Concurrency (`async` / `task`): a hosted runtime exists on `linux-x86_64`, and the language-level subset is documented in
-  [Concurrency](?p=language/concurrency) and [Async runtime](?p=compiler/async-runtime).
-- Formal verification (Formal Silk): directives such as `#require` / `#assure` / `#invariant` make proofs mandatory for the
-  module set (Z3-backed). Start with: [Formal Silk guide](?p=guides/formal-silk) and
-  [Formal verification reference](?p=language/formal-verification).
+Work in this order:
 
-## If you hit a gap
-
-- Look up the error code in: [Compiler Diagnostics](?p=compiler/diagnostics).
-- Check the feature’s “Implementation status” section (language / stdlib / compiler page).
-- If the docs say it should work, file an issue in the Silk compiler repository with:
-  - the smallest repro,
-  - your target (`--target`),
-  - and the full diagnostic output.
+1. Look up the reported code in [Compiler diagnostics](?p=compiler/diagnostics).
+2. Check the feature’s own “Implementation status” section in the language, stdlib, or compiler reference page.
+3. Confirm the active target and package/build mode in [CLI reference](?p=compiler/cli-silk).
+4. If the docs say the feature should work, file a minimal repro against the Silk compiler repository.
 

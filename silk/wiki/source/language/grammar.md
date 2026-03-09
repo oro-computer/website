@@ -9,10 +9,9 @@ This wiki page is a reading guide, not a replacement for the grammar itself.
 
 - Use the grammar when you need the exact token-level surface form.
 - Use the concept docs (`docs/language/*.md`) for semantics and type rules.
-- Use the runnable examples embedded throughout the docs for working reference programs.
+- Use `tests/silk/pass_*.slk` for runnable examples.
 
 ## Example
-
 ```silk
 import std::io;
 
@@ -25,4 +24,4 @@ fn main () -> int {
 ## See also
 
 - Canonical grammar: `docs/language/grammar.md`
-- Syntax tour: `wiki/language/syntax-tour.md`
+- Syntax tour: `docs/wiki/language/syntax-tour.md`

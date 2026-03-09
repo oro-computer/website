@@ -16,7 +16,6 @@ return expr;
 ```
 
 ## Example
-
 ```silk
 fn add1 (x: int) -> int {
   return x + 1;
@@ -30,4 +29,4 @@ fn main () -> int {
 ## See also
 
 - Canonical spec: `docs/language/flow-return.md`
-- `test` blocks allow `return;`: `wiki/language/testing.md`
+- `test` blocks allow `return;`: `docs/wiki/language/testing.md`

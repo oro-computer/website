@@ -129,6 +129,7 @@ impl Channel(T) as std::interfaces::IsEmpty {
 
 impl ChannelBorrow(T) {
   public fn send (self: &ChannelBorrow(T), value: T) -> SyncFailed?;
+  public fn wait_fd (self: &ChannelBorrow(T)) -> int?;
 }
 
 impl ChannelSender(T) {
@@ -194,3 +195,47 @@ Notes:
 - `Channel(T).try_recv()` returns `None` when the channel is empty. Use
   `is_closed()` to distinguish between “empty” and “closed and empty” when
   needed.
+- `ChannelBorrow(T).wait_fd()` returns a file descriptor that becomes readable
+  when the channel transitions from empty to non-empty, or when the channel is
+  closed. This is intended for `poll(2)`/`select(2)`/`epoll(7)` style waiting
+  (for example: wait on both a TTY fd and a channel at the same time).
+  - `wait_fd()` returns `None` when the current runtime cannot provide a pollable
+    channel handle.
+  - Do not read from or close the returned fd. It is owned by the channel and
+    is used as an internal wake mechanism; consuming bytes from it can
+    desynchronize the readiness signal.
+
+Example (wait on `/dev/tty` *or* a channel):
+
+```silk
+import io from "std/io";
+import event_loop from "std/runtime/event_loop";
+import sync from "std/sync";
+
+export async fn main () -> int {
+  let tty_fd: int = match (io::tty_open()) {
+    Ok(fd) => fd,
+    Err(_) => return 2,
+  };
+
+  let ch: sync::Channel(u64) = match (sync::Channel(u64).init(1)) {
+    Ok(c) => c,
+    Err(_) => return 3,
+  };
+
+  let r: sync::ChannelBorrow(u64) = ch.borrow();
+  if let Some(wfd) = r.wait_fd() {
+    // `which` is 0 when `tty_fd` is readable, 1 when the channel is readable.
+    let which: i64 = await event_loop::fd_wait_readable2(tty_fd, wfd);
+    if which == 1 {
+      // Drain the channel (or observe close).
+      let _ = r.try_recv();
+    }
+
+    // For more than two sources, use `fd_wait_readable_any(fds_ptr, fds_len)`
+    // and pass an `i64[]` of fds.
+  }
+
+  return 0;
+}
+```

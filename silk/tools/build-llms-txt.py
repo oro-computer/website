@@ -363,7 +363,8 @@ def build_llms_txt(site_root: Path) -> str:
         body.append(content.rstrip())
         body.append("")
 
-    return "\n".join(body).rstrip() + "\n"
+    text = "\n".join(body).rstrip() + "\n"
+    return re.sub(r"[ \t]+\n", "\n", text)
 
 
 def normalize_generated_line(text: str) -> str:

@@ -41,4 +41,4 @@ The buffer memory is owned by `libsilk.a` and must be released with `silk_bytes_
 
 - `silk_compiler` (3)
 - `libsilk` (7)
-- `docs/compiler/abi-libsilk.md`
+- `?p=compiler/abi-libsilk`

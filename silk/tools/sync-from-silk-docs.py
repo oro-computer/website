@@ -32,6 +32,7 @@ KEEP_DOCS_PREFIXES = (
 KEEP_DOCS_FILES = {
     # Website-owned landing/start.
     "start.md",
+    "compiler/implementation-status.md",
     # Website-owned, downstream-facing rewrites.
     "usage/cli-examples.md",
     "usage/howto-custom-stdlib-root.md",
@@ -51,11 +52,7 @@ KEEP_DOCS_FILES = {
     "usage/tutorials/06-async-io-streams-abort.md",
     # Website-owned copy edits to avoid repo-internal wording/refs.
     "compiler/backend-wasm.md",
-    "compiler/abi-libsilk.md",
-    "compiler/cli-silk.md",
-    "compiler/lsp-silk.md",
     "compiler/testing-strategy.md",
-    "compiler/vendored-deps.md",
     "compiler/zig-api.md",
     "language/conventions.md",
     "language/cheat-sheet.md",
@@ -68,7 +65,6 @@ KEEP_DOCS_FILES = {
     "language/typed-errors.md",
     # Removed feature stubs (kept for search + historical context).
     "language/refinement-types.md",
-    "man/silk.1.md",
     "std/crypto.md",
     "std/json.md",
     "std/url.md",
@@ -103,6 +99,31 @@ def should_skip(rel: str, keep_files: set[str], keep_prefixes: tuple[str, ...]) 
     return False
 
 
+def normalize_shared_markdown(markdown: str) -> str:
+    markdown = markdown.replace("https://oro.computer/silk/docs/?p=", "?p=")
+    markdown = markdown.replace("https://oro.computer/silk/wiki/?p=", "wiki/?p=")
+
+    markdown = re.sub(r"(?m)^(\s*#{2,6}\s+)Syntax\s+\(Selected\)\s*$", r"\1Syntax", markdown)
+    markdown = re.sub(
+        r"(?m)^(\s*#{2,6}\s+)(Example|Examples)\s+\(Works today\)(?::\s*(.+))?\s*$",
+        lambda m: f"{m.group(1)}{m.group(2)}" + (f": {m.group(3)}" if m.group(3) else ""),
+        markdown,
+    )
+    markdown = re.sub(
+        r"(?m)^(\s*#{2,6}\s+)Works today(?::\s*(.+))?\s*$",
+        lambda m: f"{m.group(1)}Example" + (f": {m.group(2)}" if m.group(2) else ""),
+        markdown,
+    )
+    markdown = re.sub(
+        r"(?m)^(\s*#{2,6}\s+)What works today(?:\s*\([^)]*\))?\s*$",
+        r"\1Current subset",
+        markdown,
+    )
+    markdown = re.sub(r"(?m)^Works today\b", "Current subset", markdown)
+    markdown = markdown.replace("examples labeled “Works today”", "examples labeled “Example”")
+    return markdown
+
+
 def sanitize_wiki_markdown(markdown: str) -> str:
     """
     The upstream Silk wiki is written for repo contributors and sometimes
@@ -112,6 +133,8 @@ def sanitize_wiki_markdown(markdown: str) -> str:
     This function keeps the useful parts of those lines while removing the
     internal-only references.
     """
+
+    markdown = normalize_shared_markdown(markdown)
 
     out_lines: list[str] = []
 
@@ -232,9 +255,11 @@ def sanitize_docs_markdown(markdown: str) -> str:
             out,
             flags=re.I,
         )
+        out = re.sub(r"\bwhat works today\b", "current implementation notes", out, flags=re.I)
 
         return out
 
+    markdown = normalize_shared_markdown(markdown)
     markdown = drop_named_section(markdown, "Arenas")
     markdown = drop_named_section(markdown, "Tests")
 

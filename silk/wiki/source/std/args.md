@@ -6,7 +6,6 @@
 Canonical doc: `docs/std/args.md`.
 
 ## Example
-
 ```silk
 import args from "std/args";
 import { println } from "std/io";

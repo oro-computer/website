@@ -6,7 +6,6 @@ etc) and produce a `Duration` value.
 Canonical doc: `docs/language/literals-duration.md`.
 
 ## Example
-
 ```silk
 fn main () -> int {
   let a: Duration = 10ms;
@@ -20,4 +19,4 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/language/literals-duration.md`
-- `Duration` and `Instant`: `wiki/language/duration-instant.md`
+- `Duration` and `Instant`: `docs/wiki/language/duration-instant.md`

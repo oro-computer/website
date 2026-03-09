@@ -40,11 +40,19 @@ For larger projects, describe the module set in `silk.toml` and use `--package`:
 silk check --package .
 silk test  --package .
 silk build --package .
+silk package inspect --package .
+silk package lint --package .
 ```
+
+Use `inspect` to confirm the package name, version, definitions, dependencies,
+and declared artifacts. Use `lint` before installation or publication to catch
+missing definition files, bad artifact paths, or incomplete `[dist]` coverage.
 
 Reference:
 
 - [Package manifests](?p=compiler/package-manifests)
+- [Package distribution](?p=compiler/package-distribution)
+- [`silk-package` (1)](?p=man/silk-package.1)
 - [CLI examples](?p=usage/cli-examples)
 
 ## Build from source (reference compiler)

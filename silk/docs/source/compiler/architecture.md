@@ -18,15 +18,15 @@ The compiler is implemented in Zig and organized into three major layers:
   - IR representation for Silk programs, including regions, buffers, concurrency, and FFI constructs (see `docs/compiler/ir-overview.md` for the current IR design and roadmap).
   - Optimizations that respect the language’s safety guarantees.
 - Back-end:
-  - Code generation for executables, static libraries, and shared libraries using an Silk-owned backend (IR + codegen), not by “transpiling to C”.
+  - Code generation for executables, static libraries, and shared libraries using a Silk-owned backend (IR + codegen), not by “transpiling to C”.
   - Emission of object files and archives that can be linked into executables and libraries.
   - C99 ABI mappings for interop with `libsilk.a`.
 
 In terms of concrete targets and file formats, the back-end MUST eventually support:
 
 - ELF for Unix-like systems:
-  - initial implementation is `linux/x86_64` only (already prototyped for constant-expression `main`),
-  - `linux/aarch64` (ARM64) is a required future target,
+  - `linux/x86_64` is the initial full IR-backed target (executables, objects, static libraries, and shared libraries).
+  - `linux/aarch64` (ARM64) is a required future IR-backed target (beyond const-only executables).
   - position-independent code and shared objects (`.so`) for dynamic libraries.
 - Mach-O for macOS:
   - both Intel (`x86_64`) and Apple Silicon (`arm64`) MUST be supported,
@@ -35,14 +35,25 @@ In terms of concrete targets and file formats, the back-end MUST eventually supp
   - initially `x86_64`, with other architectures considered later as needed,
   - DLLs for dynamic loading.
 
-The current ELF-only constant-expression backend is a temporary first slice targeting `linux/x86_64`; Mach-O, PE/COFF, and additional architectures (notably ARM64 on Linux and macOS), as well as full object-file, archive (`.a`), and shared-library emission, are explicit future requirements and MUST be planned and implemented as the back-end matures.
+Current snapshot (Silk (ABI) 0.2.0):
+
+- `src/backend_const.zig` provides a **target-aware const-main stub backend** that emits minimal executables for a fully-constant executable entrypoint (`main` reduces to a constant integer; supports `fn main () -> int` and the standard `fn main(argc: int, argv: u64) -> int` form when arguments are unused):
+  - ELF64: `linux-x86_64`, `linux-aarch64`, `android-aarch64`
+  - Mach-O 64-bit: `macos-x86_64`, `macos-aarch64`, `ios-aarch64`
+  - PE32+: `windows-x86_64`, `windows-aarch64`
+  This backend does not link the full runtime/stdlib; it only encodes “exit with this integer”.
+- `src/backend_ir_elf.zig` provides an **IR→ELF backend** for `linux-x86_64` outputs (a growing subset of the language, including multi-function programs, rodata, and link-input builds).
+  This backend is host-agnostic for `linux-x86_64` outputs: it can emit Linux ELF artifacts even when the compiler itself is running on a non-`linux/x86_64` host.
+- `src/backend_wasm_ir.zig` provides the IR-backed backend for `wasm32-unknown-unknown` and `wasm32-wasi` outputs.
+
+Mach-O and PE/COFF IR-backed object/static/shared library emission, and additional IR-backed architectures (notably AArch64) are explicit future requirements and MUST be planned and implemented as the back-end matures.
 
 An initial IR-driven, native backend is being prototyped alongside the existing constant-expression emitter:
 
 - the front-end (parser + checker) produces `ast.Module` values,
 - a lowering pass in `src/lower_ir.zig` translates a constrained subset of `fn main() -> int` programs into `ir.Function` graphs, using integer arithmetic, comparisons, and simple control flow (`Br` / `BrCond`),
 - a target-independent IR interpreter in `src/ir_eval.zig` provides reference semantics for these IR functions,
-- the existing ELF64 emitter in `src/backend_const.zig` still constructs the final executable image by writing a minimal ELF64 file for `linux/x86_64` whose entrypoint performs a `sys_exit(value)` system call,
+- the constant-expression backend emits a minimal target-specific executable stub (ELF64/Mach-O/PE32+) whose entrypoint terminates the process with the evaluated `main` return value,
 - a dedicated IR→ELF backend module (`src/backend_ir_elf.zig`) will gradually assume responsibility for emitting native code directly from `ir.Function` graphs, starting with a single-function, integer-returning subset and expanding as more language features are lowered to IR.
 
 ### Packages, Modules, Imports, and Exports

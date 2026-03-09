@@ -14,8 +14,8 @@ into lowering in `src/lower_ir.zig`. It provides:
 - stackful coroutines (fibers) using `ucontext`,
 - a single-threaded executor/event loop that can drive `async fn main () -> int`,
 - `await` as a true suspension point (parks the current fiber instead of blocking the OS thread),
-- basic async timers and fd readiness wait,
-- opportunistic Linux `io_uring` usage for timeouts and fd polling when available.
+- basic async timers, fd readiness wait, and async `read`/`write`,
+- opportunistic Linux `io_uring` usage for timeouts, fd polling, and completion-based I/O when available.
 
 Structured concurrency blocks (`async { ... }` / `task { ... }`) are still lexical-only today;
 they do not yet have cancellation/join semantics enforced by a runtime-backed scope.
@@ -48,25 +48,77 @@ The compiler lowering currently uses these runtime functions (all bundled into t
 runtime C objects linked into hosted outputs):
 
 - `silk_rt_async_spawn(entry_ptr: u64, promise_handle: u64) -> i32`
-  - schedules a coroutine when an executor is active, otherwise runs it synchronously and
+  - schedules a coroutine when an executor is active on the current OS thread (the
+    executor owner thread); otherwise runs it synchronously on the calling thread and
     resolves the promise immediately.
 - `silk_rt_async_await(promise_handle: u64) -> void`
-  - if the promise is pending, parks the current coroutine and yields to the executor.
+  - if the promise is pending:
+    - on the executor owner thread: parks the current coroutine (when inside a coroutine)
+      or drives the executor until completion (when called from non-coroutine code),
+    - on other OS threads: blocks the OS thread until the promise is resolved.
 - `silk_rt_async_destroy(promise_handle: u64) -> void`
   - destroys a promise handle; if it is still pending, it awaits it first.
 - `silk_rt_async_block_on_main0/2(entry_ptr: u64, [argc: i64, argv: u64]) -> i64`
   - creates an executor/event loop, spawns the async `main` promise, and drives it to completion.
 
+The runtime also exposes an explicit executor/event-loop surface (used by
+`std::runtime::event_loop`):
+
+- `silk_rt_async_event_loop_init() -> u64`
+  - creates a single global executor/event loop instance and returns its handle,
+    or returns `0` when initialization fails or an executor is already active.
+- `silk_rt_async_event_loop_deinit(handle: u64) -> void`
+  - shuts down the global executor/event loop instance.
+- `silk_rt_async_event_loop_wake(handle: u64) -> i64`
+  - wakes a blocked poll (for example from another OS thread); returns `0` on
+    success, otherwise a positive error code.
+- `silk_rt_async_event_loop_poll(handle: u64, timeout_ms: i64) -> i64`
+  - polls the executor/event loop for up to `timeout_ms` milliseconds and
+    returns a backend-defined progress count, or returns `-<code>` on failure.
+
 The runtime also exposes low-level awaitable building blocks:
 
 - `silk_rt_async_sleep_ms(ms: i64) -> u64`
 - `silk_rt_async_fd_wait_readable(fd: i64) -> u64`
+- `silk_rt_async_fd_wait_readable2(fd0: i64, fd1: i64) -> u64`
+- `silk_rt_async_fd_wait_readable_any(fds_ptr: u64, fds_len: i64) -> u64`
 - `silk_rt_async_fd_wait_writable(fd: i64) -> u64`
+- `silk_rt_async_io_read(fd: i64, buf: u64, len: i64) -> u64`
+- `silk_rt_async_io_write(fd: i64, buf: u64, len: i64) -> u64`
+- `silk_rt_async_net_accept(fd: i64) -> u64`
+- `silk_rt_async_net_connect_ipv4(fd: i64, a: i64, b: i64, c: i64, d: i64, port: u16) -> u64`
+- `silk_rt_async_net_connect_ipv6(fd: i64, addr_hi: u64, addr_lo: u64, port: u16, scope_id: i64) -> u64`
 
 These are intended to be wrapped by stable `std::runtime::event_loop` / `std::task` /
 `std::io` surfaces as that layer is brought up. In the current stdlib snapshot,
 timers and fd readiness are exposed via `std::runtime::event_loop`, and sleep
-helpers are wrapped as `std::task::{sleep_ms_async,sleep_async}`.
+helpers are wrapped as `std::task::{sleep_ms_async,sleep_async}`. As of the
+current hosted runtime snapshot, `silk_rt_async_io_{read,write}` return
+`Promise(i64)` handles (lowered as a `u64` promise handle) whose payload is the operation result:
+- `>= 0` is the byte count,
+- `< 0` is `-errno` (for example `-EINTR`).
+
+The socket helpers follow the same convention:
+
+- `silk_rt_async_net_accept` payload:
+  - `>= 0` is the accepted connection fd,
+  - `< 0` is `-errno`.
+- `silk_rt_async_net_connect_*` payload:
+  - `0` is success,
+  - `< 0` is `-errno`.
+
+For `silk_rt_async_fd_wait_readable2`, the promise payload is:
+
+- `0` when `fd0` becomes readable,
+- `1` when `fd1` becomes readable,
+- `< 0` as `-errno` when the wait fails.
+
+For `silk_rt_async_fd_wait_readable_any`, the promise payload is:
+
+- `0..fds_len-1` (the index of the fd that became readable),
+- `< 0` as `-errno` when the wait fails.
+
+`fds_ptr` must point to `i64[fds_len]` values (each element is a file descriptor).
 
 ### Executor/event loop (current)
 
@@ -76,6 +128,15 @@ The current executor is single-threaded and cooperative:
 - timers are managed with a deadline min-heap,
 - fd readiness is managed via `poll(2)` watchers,
 - cross-thread wake uses `eventfd`.
+  - the executor is thread-affine: only the thread that created the executor may drive it.
+
+Note on signal masks:
+
+- `ucontext` saves/restores the thread signal mask as part of the context.
+- The runtime syncs coroutine and executor contexts to the current thread mask before
+  swapping contexts, so `await`/executor polling does not restore a stale mask.
+  This is required for thread-level signal masking patterns like `std::signal`
+  (`signalfd(2)` on Linux).
 
 On Linux, the runtime attempts to initialize an `io_uring` instance. When available, it
 uses:
@@ -87,11 +148,13 @@ falling back to `poll(2)` when `io_uring` is unavailable.
 
 Limitations (current):
 
-- The stable `std::runtime::event_loop` surface is still incomplete:
-  - `sleep_ms` and `fd_wait_{readable,writable}` are implemented and wired to the hosted runtime,
-  - but the explicit `Handle`/`init`/`poll` API is still a stub placeholder.
+- The `std::runtime::event_loop` handle surface is still limited:
+  - only one global executor/event loop instance may be active at a time,
+  - `std::runtime::event_loop::init()` fails when an executor is already active
+    (for example inside `async fn main`).
 - No structured-concurrency scope semantics yet (cancellation/joining on early exit).
-- No completion-based `io_uring` I/O ops yet (read/write/accept/connect still use blocking paths).
+- Completion-based I/O is implemented for `read`/`write`/`accept`/`connect` when `io_uring` is available.
+  - Cancellation is still follow-up work.
 
 ## Goals
 

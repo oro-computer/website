@@ -21,7 +21,6 @@ import std::set;
 ## Examples
 
 ### Example: `SetMap(u64)` basic usage
-
 ```silk
 import std::set;
 import std::result;

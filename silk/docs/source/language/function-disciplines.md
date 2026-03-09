@@ -85,8 +85,13 @@ Today:
   - calling a `task fn` yields `Task(T)`,
   - calling an `async fn` yields `Promise(T)`,
   - calling an `async task fn` yields `Promise(Task(T))`,
-  - `yield` sends task values (`yield v;`) and receives task values (`yield t`),
-    and `yield * t` drains/collects remaining task values into `T[]`,
+  - `yield` supports both statement and expression forms:
+    - statement forms (only inside an enclosing `task fn` / `async task fn`):
+      - `yield v;` sends a value to the task’s yield stream,
+      - `yield * t;` forwards all values from `t` into the task’s yield stream,
+    - expression forms:
+      - `yield t` receives the next yielded value from `t`,
+      - `yield * t` drains/collects remaining values from `t` into `T[]`,
   - `await` unwraps `Promise(T)` and yields `T` (`await Task(T)` is rejected),
     and `await * ps` unwraps `Promise(T)[]` into `T[]`.
 - `await <expr>` and `async { ... }` / `task { ... }` blocks are enforced as
@@ -94,15 +99,22 @@ Today:
   - `await` is only permitted inside `async` functions (including `async task fn`),
   - `async { ... }` / `task { ... }` blocks are only permitted inside `async` functions.
 - `yield <expr>` is enforced as a **task-only** construct:
-  - `yield` is permitted only inside `task` functions (`task fn` / `async task fn`)
-    and inside `task { ... }` / `task loop { ... }` blocks.
+  - `yield` expression forms (`yield t` / `yield * t`) are permitted only inside
+    `task` functions (`task fn` / `async task fn`) and inside `task { ... }` /
+    `task loop { ... }` blocks.
+  - `yield` statement forms (`yield v;` / `yield * t;`) require an enclosing
+    `task fn` / `async task fn`.
 - Lowering/codegen implements `task` execution using OS threads on `linux/x86_64`
   and implements `yield`/`yield *` for task values plus `await` for promises.
+  - By default, each `task fn` call spawns a dedicated OS thread.
+  - When a `task fn` / `async task fn` is annotated with `attr(task=pool)` (or
+    `attr(task_pool)`), calls are scheduled on the global task pool instead.
   - On hosted `linux/x86_64`, the compiler ships a bring-up async runtime
-    so `await` is a true suspension point:
+    (`src/silk_rt_async.c`) so `await` is a true suspension point:
     - awaiting a pending `Promise(T)` parks the current fiber and allows other
       runnable fibers to execute (it does not block the OS thread),
-    - outside an active executor, awaiting may fall back to blocking behavior.
+    - outside the executor owner thread (including when no executor is active),
+      `await` blocks the OS thread until the promise resolves.
     - the long-term design remains a compiler coroutine transform plus a stable
       `std::runtime::event_loop` API; see `docs/compiler/async-runtime.md`.
   - `async { ... }` / `task { ... }` blocks are still lexical blocks in the
@@ -112,7 +124,8 @@ Today:
   - `fn (x: int) -> x + 1` (expression body),
   - `fn (x: int) -> int { return x + 1; }` (block body).
   - `fn (x: int) { ... }` (block body, implicit `void` result).
-  - Function expressions may not declare `&T` parameters.
+  - Function expressions may not declare `&Struct` parameters; only single-slot
+    scalar `&T` parameters (for example `&int`) are supported in the current subset.
   - Function expressions are eligible for purity inference (“auto-pure”):
     - when the body satisfies the `pure` rules, the function value is treated
       as `pure` for call checking (it may be called from `pure` code),

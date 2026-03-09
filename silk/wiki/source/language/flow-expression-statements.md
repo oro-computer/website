@@ -10,7 +10,6 @@ Canonical spec: `docs/language/flow-expression-statements.md`.
 - Implemented subset + restrictions: `docs/language/flow-expression-statements.md`
 
 ## Example: assignment + increment
-
 ```silk
 fn main () -> int {
   let mut x: int = 0;
@@ -23,4 +22,4 @@ fn main () -> int {
 ## See also
 
 - Canonical spec: `docs/language/flow-expression-statements.md`
-- Operators: `wiki/language/operators.md`
+- Operators: `docs/wiki/language/operators.md`

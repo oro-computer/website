@@ -11,7 +11,6 @@ Canonical spec: `docs/language/structs-impls-layout.md`.
 - Implemented subset + layout model: `docs/language/structs-impls-layout.md`
 
 ## Syntax
-
 ```silk
 struct Point {
   x: int,
@@ -28,7 +27,6 @@ impl Point {
 ## Examples
 
 ### Example: struct literal + method call
-
 ```silk
 struct Point {
   x: int,

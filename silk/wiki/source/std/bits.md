@@ -4,8 +4,7 @@
 
 Canonical doc: `docs/std/bits.md`.
 
-## Supported behavior
-
+## Current subset
 Implemented in `std/bits.slk`:
 
 - Byte swaps:

@@ -5,7 +5,6 @@ Silk has the boolean type `bool` with literals `true` and `false`.
 Canonical doc: `docs/language/literals-boolean.md`.
 
 ## Example
-
 ```silk
 fn main () -> int {
   let ok: bool = true;
