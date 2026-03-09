@@ -1,0 +1,2987 @@
+Sage · LLMS Pack
+================
+
+This file concatenates the full Sage documentation hosted on this website,
+so an LLM can answer questions using the same source of truth as readers.
+
+Generated: 2026-03-09T14:43:25+00:00
+
+How to link:
+- Docs: /sage/docs/?p=<id>
+
+Table of contents
+-----------------
+
+Sage Docs
+- Start
+  - start — Sage Docs — /sage/docs/?p=start
+- Guides
+  - guides/getting-started — Getting started — /sage/docs/?p=guides/getting-started
+  - guides/pager-workflows — Pager workflows — /sage/docs/?p=guides/pager-workflows
+  - guides/plugins-quickstart — Plugins quickstart — /sage/docs/?p=guides/plugins-quickstart
+- CLI
+  - cli/sage — `sage` — /sage/docs/?p=cli/sage
+  - cli/inputs-and-modes — Inputs and modes — /sage/docs/?p=cli/inputs-and-modes
+  - cli/options — Options — /sage/docs/?p=cli/options
+  - cli/keys-and-commands — Keys and commands — /sage/docs/?p=cli/keys-and-commands
+  - cli/configuration — Configuration — /sage/docs/?p=cli/configuration
+  - cli/syntax-and-cache — Syntax and cache — /sage/docs/?p=cli/syntax-and-cache
+  - cli/environment-and-files — Environment and files — /sage/docs/?p=cli/environment-and-files
+  - cli/diagnostics — Diagnostics — /sage/docs/?p=cli/diagnostics
+- JavaScript APIs
+  - javascript/overview — JavaScript APIs overview — /sage/docs/?p=javascript/overview
+  - javascript/runtime — JavaScript runtime — /sage/docs/?p=javascript/runtime
+  - javascript/module-index — Module index — /sage/docs/?p=javascript/module-index
+  - javascript/all-modules — All module specifiers — /sage/docs/?p=javascript/all-modules
+  - javascript/fs — `sage:fs` — /sage/docs/?p=javascript/fs
+  - javascript/path — `sage:path` — /sage/docs/?p=javascript/path
+  - javascript/process — `sage:process` — /sage/docs/?p=javascript/process
+  - javascript/env — `sage:env` — /sage/docs/?p=javascript/env
+  - javascript/navigator — `sage:navigator` — /sage/docs/?p=javascript/navigator
+  - javascript/performance — `sage:performance` — /sage/docs/?p=javascript/performance
+  - javascript/crypto — `sage:crypto` — /sage/docs/?p=javascript/crypto
+  - javascript/uuid — `sage:uuid` — /sage/docs/?p=javascript/uuid
+  - javascript/url — `sage:url` — /sage/docs/?p=javascript/url
+  - javascript/dom — `sage:core/dom` — /sage/docs/?p=javascript/dom
+  - javascript/web — `sage:core/web` — /sage/docs/?p=javascript/web
+  - javascript/fetch — `sage:fetch` — /sage/docs/?p=javascript/fetch
+- Man Pages
+  - man/sage-1 — `sage(1)` — /sage/docs/?p=man/sage-1
+  - man/sage-7 — `sage(7)` — /sage/docs/?p=man/sage-7
+  - man/sage-plugin-api-3 — `sage-plugin-api(3)` — /sage/docs/?p=man/sage-plugin-api-3
+
+==============================================================================
+DOCS: Sage Docs (start)
+URL: /sage/docs/?p=start
+==============================================================================
+
+# Sage Docs
+
+`sage` is a fast, ergonomic terminal pager with a strong CLI story: open one file, a directory worth of files, piped stdin, or remote content, then navigate with a responsive TUI, incremental search, syntax highlighting, and optional JavaScript plugins.
+
+This documentation is organized around how you use `sage` from the command line:
+
+- **Guides** — build, install, and adopt `sage` in real workflows.
+- **CLI** — commands, modes, input types, options, keys, configuration, environment, syntax caches, and diagnostics.
+- **JavaScript APIs** — the full QuickJS plugin surface, stable `sage:*` built-in modules, globals, events, limits, and examples.
+- **Man pages** — reader-friendly versions of `sage(1)`, `sage(7)`, and `sage-plugin-api(3)`.
+
+
+For AI assistants and tooling:
+
+
+## Quick start
+
+Open a file:
+
+```bash
+sage README.md
+```
+
+Open every direct child file in a directory as tabs:
+
+```bash
+sage src/
+```
+
+Use `sage` as a pager for piped content:
+
+```bash
+PAGER=sage man printf
+git diff | sage
+```
+
+Open remote content:
+
+```bash
+sage https://example.com/
+sage ssh://user@example.com/etc/hosts
+```
+
+## Recommended reading path
+
+1. [Getting started](?p=guides/getting-started)
+2. [CLI overview (`sage`)](?p=cli/sage)
+3. [Inputs and modes](?p=cli/inputs-and-modes)
+4. [Options](?p=cli/options)
+5. [Keys and commands](?p=cli/keys-and-commands)
+6. [Configuration](?p=cli/configuration)
+7. [Syntax and cache](?p=cli/syntax-and-cache)
+8. [Diagnostics](?p=cli/diagnostics)
+9. [JavaScript runtime overview](?p=javascript/runtime)
+10. [Module index](?p=javascript/module-index)
+
+==============================================================================
+DOCS: Getting started (guides/getting-started)
+URL: /sage/docs/?p=guides/getting-started
+==============================================================================
+
+# Getting started
+
+This guide covers the downstream story: build `sage`, install it, page real inputs, then move into configuration and plugins.
+
+## Build from source
+
+From a checkout of the `sage` repository:
+
+```bash
+silk build --package .
+```
+
+The pager binary is written to:
+
+```text
+./build/bin/sage
+```
+
+The build output is intended to be distributable. A typical install flow from the build directory is:
+
+```bash
+make -C build install PREFIX=/usr/local
+```
+
+## First commands
+
+Page a file:
+
+```bash
+sage README.md
+```
+
+Page a directory as tabs:
+
+```bash
+sage src/
+```
+
+Page piped content while keeping an interactive TUI:
+
+```bash
+git show HEAD~1..HEAD | sage
+```
+
+Use it as the process pager:
+
+```bash
+PAGER=sage man printf
+```
+
+Inspect a remote document:
+
+```bash
+sage https://example.com/
+```
+
+## What `sage` accepts
+
+`sage` accepts:
+
+- local file paths
+- directories, expanded to direct child files only
+- stdin, either implicit (`... | sage`) or explicit (`sage -`)
+- network URLs: `http://`, `https://`, and `ssh://`
+
+See [Inputs and modes](?p=cli/inputs-and-modes) for the exact behavior and edge cases.
+
+## The first keys to learn
+
+- `q` — quit
+- `/` or `Ctrl-F` — search inside the active tab
+- `Ctrl-K` — find across the currently open tabs
+- `Tab` / `Shift-Tab` — move between tabs
+- `:` — command mode
+- `L` — toggle the line-number gutter
+- `?` or `h` — help overlay
+
+See the full reference in [Keys and commands](?p=cli/keys-and-commands).
+
+## Good first configuration
+
+Create `~/.sagerc`:
+
+```toml
+theme = "ocean"
+color = "auto"
+mouse = true
+syntax = true
+gutter = "auto"
+plugins = true
+```
+
+Then compile your syntax cache:
+
+```bash
+sage --compile-cache
+```
+
+See [Configuration](?p=cli/configuration) and [Syntax and cache](?p=cli/syntax-and-cache).
+
+## Next
+
+- Adopt it in shell workflows: [Pager workflows](?p=guides/pager-workflows)
+- Tune the CLI surface: [Options](?p=cli/options)
+- Add automation: [Plugins quickstart](?p=guides/plugins-quickstart)
+
+==============================================================================
+DOCS: Pager workflows (guides/pager-workflows)
+URL: /sage/docs/?p=guides/pager-workflows
+==============================================================================
+
+# Pager workflows
+
+`sage` is most useful when you treat it as a CLI tool first and a programmable runtime second. These patterns cover the common downstream workflows.
+
+## Use it as your pager
+
+For `man`:
+
+```bash
+PAGER=sage man printf
+```
+
+For `git`:
+
+```bash
+git -c core.pager=sage log -p
+git diff | sage
+```
+
+For build logs:
+
+```bash
+make 2>&1 | sage
+```
+
+When stdin is piped and stdout is still a TTY, `sage` keeps the interactive TUI and reads keys from `/dev/tty`.
+
+## Browse a source tree
+
+Open one directory as tabs:
+
+```bash
+sage src/
+```
+
+Notes:
+
+- directory expansion is non-recursive
+- only direct child files become tabs
+- subdirectories are skipped
+
+If you need a narrower set, hand the file list to `sage` explicitly:
+
+```bash
+sage src/main.js src/router.js src/theme.css
+```
+
+## Inspect URLs from the terminal
+
+HTTP(S):
+
+```bash
+sage https://example.com/
+sage https://api.github.com/repos/oro-computer/sage
+```
+
+SSH:
+
+```bash
+sage ssh://user@example.com/etc/hosts
+```
+
+Remote inputs are read-only. Syntax selection may come from the URL path or, when needed, an HTTP `Content-Type` hint.
+
+## Use pass-through mode intentionally
+
+When `stdout` is not a TTY, `sage` does not enter the TUI. It falls back to a streaming branch.
+
+Examples:
+
+```bash
+sage README.md > /tmp/readme.copy
+cat README.md | sage > /tmp/readme.copy
+```
+
+Current behavior to understand:
+
+- the pass-through branch streams bytes directly
+- it does not enter the pager UI
+- it does not load plugins
+- it does not expand directories or resolve network URLs
+
+See [Inputs and modes](?p=cli/inputs-and-modes) for the exact rules.
+
+## Adopt command mode
+
+Useful command-mode examples:
+
+```text
+:42        jump to line 42
+:-2        jump near the end of the file
+:bn        next tab
+:bp        previous tab
+:tab 3     jump to tab 3
+:set syntax=toml
+:set syntax=auto
+```
+
+Command mode is the fastest way to move around once the TUI is open.
+
+==============================================================================
+DOCS: Plugins quickstart (guides/plugins-quickstart)
+URL: /sage/docs/?p=guides/plugins-quickstart
+==============================================================================
+
+# Plugins quickstart
+
+`sage` can load JavaScript plugins in the interactive TUI path. Plugins are a good fit when you want:
+
+- event-driven automation
+- custom `:` commands
+- bounded filesystem state
+- shell-outs to helper tools
+- lightweight network requests
+
+## Install a plugin
+
+Create the plugin directory:
+
+```bash
+mkdir -p ~/.config/sage/plugins
+```
+
+Add `~/.config/sage/plugins/10-hello.js`:
+
+```js
+on('open', ({ path, tab, tab_count }) => {
+  console.info('open', path, `tab=${tab}/${tab_count}`)
+})
+
+command('hello', (args) => {
+  console.log('hello', String(args || '').trim())
+})
+```
+
+Open a file with plugin logging enabled:
+
+```bash
+SAGE_CONSOLE_LEVEL=info sage README.md
+```
+
+Then run:
+
+```text
+:hello from-plugin
+```
+
+## Loading rules
+
+Plugins are loaded from `*.js` files in lexicographic order from:
+
+1. `--plugins-dir PATH` or `.sagerc` `plugins_dir`, unless `SAGE_PLUGINS_DIR` is set
+2. `SAGE_PLUGINS_DIR`
+3. `XDG_CONFIG_HOME/sage/plugins`
+4. `$HOME/.config/sage/plugins`
+
+Disable plugins with any of:
+
+```bash
+sage --no-plugins README.md
+SAGE_NO_PLUGINS=1 sage README.md
+```
+
+## A few real examples
+
+The upstream repository already includes a good example set:
+
+- [`examples/plugins/00-log-events.js`](https://github.com/oro-computer/sage/blob/master/examples/plugins/00-log-events.js)
+- [`examples/plugins/10-commands.js`](https://github.com/oro-computer/sage/blob/master/examples/plugins/10-commands.js)
+- [`examples/plugins/60-fs.js`](https://github.com/oro-computer/sage/blob/master/examples/plugins/60-fs.js)
+- [`examples/plugins/70-process.js`](https://github.com/oro-computer/sage/blob/master/examples/plugins/70-process.js)
+- [`examples/plugins/80-fetch.js`](https://github.com/oro-computer/sage/blob/master/examples/plugins/80-fetch.js)
+
+## What plugins can import
+
+Stable built-in modules:
+
+- `sage:fs`
+- `sage:path`
+- `sage:process`
+- `sage:env`
+- `sage:navigator`
+- `sage:performance`
+- `sage:crypto`
+- `sage:uuid`
+- `sage:url`
+- `sage:core/dom`
+- `sage:core/web`
+- `sage:fetch`
+
+See [JavaScript APIs overview](?p=javascript/overview) and [Module index](?p=javascript/module-index).
+
+## Limits and caveats
+
+- each plugin gets its own QuickJS runtime/context
+- load time, per-event time, memory, and stack are bounded
+- handler exceptions are typically logged, not fatal to `sage`
+- duplicate plugin command names all run; dispatch does not stop at the first handler
+- this is an automation runtime with guardrails, not an OS sandbox
+
+See [JavaScript runtime](?p=javascript/runtime) for the exact rules.
+
+==============================================================================
+DOCS: `sage` (cli/sage)
+URL: /sage/docs/?p=cli/sage
+==============================================================================
+
+# `sage`
+
+`sage` is the canonical CLI entrypoint for the pager.
+
+## Synopsis
+
+```bash
+sage [OPTIONS] [PATH ...]
+sage --compile-cache
+sage --list-syntax
+sage --index-only [PATH|-]
+```
+
+## Primary modes
+
+### Interactive pager
+
+When `stdout` is a TTY, `sage` opens the TUI:
+
+```bash
+sage README.md
+sage src/
+printf 'hello\n' | sage
+sage https://example.com/
+```
+
+Features available in this mode:
+
+- tabs
+- search and find
+- syntax highlighting
+- mouse support
+- JavaScript plugins
+
+### Syntax cache compiler
+
+Compile syntax definitions from your config directory into the cache:
+
+```bash
+sage --compile-cache
+```
+
+### Syntax index lister
+
+Print the compiled syntax keys:
+
+```bash
+sage --list-syntax
+```
+
+Add `--verbose` to also print key-to-cache mappings on `stderr`.
+
+### Index-only mode
+
+Build the background line index, print stats, and exit:
+
+```bash
+sage --index-only README.md
+sage --index-only -
+```
+
+This is mostly useful for performance testing and debugging very large inputs.
+
+### Help and version
+
+```bash
+sage --help
+sage --version
+```
+
+## Examples
+
+Use as a pager for `man`:
+
+```bash
+PAGER=sage man printf
+```
+
+Search case-insensitively:
+
+```bash
+sage -i README.md
+```
+
+Search with regex:
+
+```bash
+sage -R README.md
+```
+
+Change the theme:
+
+```bash
+sage --theme ocean README.md
+sage --theme light README.md
+```
+
+Force safe mode for plugins:
+
+```bash
+sage --no-plugins README.md
+```
+
+## Exit status
+
+- `0` — success
+- `2` — error
+
+See [Diagnostics](?p=cli/diagnostics) for common failure cases.
+
+## Next
+
+- Exact input behavior: [Inputs and modes](?p=cli/inputs-and-modes)
+- Every flag: [Options](?p=cli/options)
+- Keybindings and `:` commands: [Keys and commands](?p=cli/keys-and-commands)
+
+==============================================================================
+DOCS: Inputs and modes (cli/inputs-and-modes)
+URL: /sage/docs/?p=cli/inputs-and-modes
+==============================================================================
+
+# Inputs and modes
+
+This page is the exact downstream input model for `sage`.
+
+## Accepted input types
+
+### Local file paths
+
+```bash
+sage README.md
+sage /var/log/system.log
+```
+
+### Directories
+
+```bash
+sage src/
+```
+
+Directory behavior:
+
+- expansion is non-recursive
+- every direct child file becomes a tab
+- direct child directories are skipped
+- if a directory has no direct child files, the original path is kept so the open failure is visible
+
+### Stdin
+
+Implicit stdin:
+
+```bash
+git diff | sage
+```
+
+Explicit stdin:
+
+```bash
+sage -
+```
+
+Important stdin caveats:
+
+- `sage` with no paths and interactive stdin prints help instead of blocking
+- `sage -` with interactive stdin also prints help instead of blocking
+- `-` cannot be combined with other inputs
+
+### Network URLs
+
+HTTP(S):
+
+```bash
+sage https://example.com/
+```
+
+SSH:
+
+```bash
+sage ssh://user@example.com/etc/hosts
+```
+
+Remote inputs are read-only.
+
+## Interactive mode vs pass-through mode
+
+### Interactive mode
+
+If `stdout` is a TTY, `sage` starts the TUI.
+
+This includes:
+
+- interactive navigation
+- tabs
+- search and find
+- syntax highlighting
+- plugins
+- mouse interaction
+
+When stdin is piped and stdout is still a TTY, `sage` reads keys from `/dev/tty` so the session stays interactive.
+
+### Pass-through mode
+
+If `stdout` is not a TTY, `sage` does not enter the TUI.
+
+Examples:
+
+```bash
+sage README.md > /tmp/out
+cat README.md | sage > /tmp/out
+```
+
+Current pass-through behavior:
+
+- it streams stdin if the path is `-`
+- otherwise it streams the first positional path only
+- it does not enter the pager
+- it does not expand directories
+- it does not resolve network URLs
+- it does not load plugins
+
+That means pass-through mode is a different code path from the TUI.
+
+## Syntax selection for each input kind
+
+### Local paths
+
+Syntax selection uses:
+
+1. `:set syntax=...` overrides
+2. `.sagerc` `syntax_map`
+3. compiled syntax index matches
+
+### URLs
+
+For URLs, `sage` ignores query strings and fragments for syntax selection.
+
+Example:
+
+```text
+https://example.com/api/data.json?pretty=1#section
+```
+
+The `.json` path still participates in syntax selection.
+
+If the URL path has no useful extension, `sage` may use the HTTP `Content-Type` as a hint. The built-in content-type mapping includes:
+
+- `json`
+- `html`
+- `css`
+- `js`
+- `ts`
+- `xml`
+- `md`
+- `yaml`
+- `csv`
+
+### Stdin
+
+Stdin does not get syntax highlighting automatically. Use a per-tab override:
+
+```text
+:set syntax=diff
+:set syntax=json
+:set syntax=auto
+```
+
+## End-of-options marker
+
+`--` ends option parsing. Everything after it is treated as a path.
+
+This matters when a path begins with `-`:
+
+```bash
+sage -- --literal-file-named-like-a-flag
+```
+
+==============================================================================
+DOCS: Options (cli/options)
+URL: /sage/docs/?p=cli/options
+==============================================================================
+
+# Options
+
+This page documents every public CLI flag on `sage`.
+
+## General
+
+- `-h`, `--help` — show help and exit
+- `-V`, `--version` — show version and exit
+- `-v`, `--verbose` — verbose logging to `stderr`; also raises the default plugin console threshold to `debug`
+- `--` — end option parsing
+
+## Standalone modes
+
+- `--compile-cache` — compile syntax sources from `XDG_CONFIG_HOME/sage/syntax` into the syntax cache
+- `--list-syntax` — print compiled syntax keys, one per line
+- `--index-only [PATH|-]` — build the background line index, print stats, and exit
+
+## Plugin control
+
+- `--no-plugins` — disable JavaScript plugins
+- `--plugins-dir PATH` — load plugins from `PATH`, unless `SAGE_PLUGINS_DIR` is set
+
+## UI and theme
+
+- `--color MODE` — `auto`, `always`, or `never`
+- `--no-color` — same as `--color never`
+- `--theme NAME` — `default`, `ocean`, or `light`
+- `--gutter`, `--line-numbers` — always show the line-number gutter
+- `--no-gutter`, `--no-line-numbers` — never show the line-number gutter
+- `--mouse` — enable mouse wheel scrolling and mouse interactions
+- `--no-mouse` — disable mouse interactions
+- `--no-alt-screen` — stay on the main terminal screen instead of using the alternate screen buffer
+
+Notes:
+
+- gutter default is `auto`
+- mouse default is `on`
+- alt-screen default is `on`
+
+## Content handling and safety
+
+- `--syntax` — enable syntax highlighting
+- `--no-syntax` — disable syntax highlighting
+- `--ansi` — allow ANSI SGR sequences from content
+- `--no-ansi` — sanitize all escape sequences from content
+- `--raw` — render bytes as-is; unsafe for untrusted input
+- `--binary` — allow NUL bytes in input
+
+Important interactions:
+
+- `--ansi` is on by default
+- when syntax highlighting is active, `sage` disables content-SGR pass-through to avoid mixing two SGR streams
+- `--raw` bypasses the safety sanitization path
+
+## Search
+
+- `-R`, `--regex` — use regex search
+- `-i`, `--ignore-case` — case-insensitive search
+
+Defaults:
+
+- search is literal by default
+- search is case-sensitive by default
+
+## Configuration files
+
+- `--rc PATH` — read configuration from `PATH`
+- `--no-rc` — do not read any config file
+
+Load order and precedence are covered in [Configuration](?p=cli/configuration).
+
+## Example option sets
+
+Safe, minimal session:
+
+```bash
+sage --no-plugins --no-mouse --no-ansi README.md
+```
+
+High-contrast, always-colored UI:
+
+```bash
+sage --color always --theme ocean README.md
+```
+
+Regex search defaults, light theme:
+
+```bash
+sage -R --theme light src/
+```
+
+Index-only perf run:
+
+```bash
+sage --verbose --index-only large.log
+```
+
+==============================================================================
+DOCS: Keys and commands (cli/keys-and-commands)
+URL: /sage/docs/?p=cli/keys-and-commands
+==============================================================================
+
+# Keys and commands
+
+This is the full interactive key and command reference for `sage`.
+
+## Navigation
+
+| Key | Action |
+| --- | --- |
+| `q` | Quit |
+| `Ctrl-C` | Quit, or copy the active selection when one exists |
+| `j`, `d`, `Down` | Scroll down one visual line |
+| `k`, `u`, `Up` | Scroll up one visual line |
+| `Space`, `PageDown`, `Ctrl-D` | Page down |
+| `b`, `PageUp`, `Ctrl-U` | Page up |
+| `Right`, `Left` | Page forward / back |
+| `gg`, `Home` | Jump to top |
+| `G`, `End` | Jump to bottom |
+
+## Tabs
+
+| Key | Action |
+| --- | --- |
+| `Tab` | Next tab |
+| `Shift-Tab` | Previous tab |
+| `0`-`9` | Jump to tab number; `0` selects the last tab |
+| mouse click on a tab | Activate that tab |
+
+Tabs are 1-indexed.
+
+## Search
+
+| Key | Action |
+| --- | --- |
+| `/`, `Ctrl-F` | Start incremental search in the active tab |
+| `n` | Next match |
+| `p` | Previous match |
+| `Esc` | Cancel the in-flight search and clear selection state |
+| double-click | Set the search query to the clicked word |
+
+Search defaults are controlled by:
+
+- `-R`, `--regex`
+- `-i`, `--ignore-case`
+- `.sagerc` `regex`
+- `.sagerc` `ignore_case`
+
+## Find across tabs
+
+`Ctrl-K` opens the find modal and searches across the currently open tabs.
+
+Inside the modal:
+
+- `Up` / `Down` — move through results
+- `Tab` / `Shift-Tab` — move focus
+- `Enter` or click — jump to the selected result
+- mouse wheel — scroll results
+- `Esc` — close the modal
+
+For local files, `sage` shells out to the configured or default external find tool. For URL-backed tabs, the content is resolved through the URL handling path.
+
+See [Syntax and cache](?p=cli/syntax-and-cache) and [Environment and files](?p=cli/environment-and-files) for `find_cmd`.
+
+## Help and view toggles
+
+| Key | Action |
+| --- | --- |
+| `L` | Toggle the line-number gutter |
+| `?`, `h` | Toggle the help overlay |
+
+## Selection
+
+With mouse support enabled:
+
+- left-drag selects text in the content area
+- the gutter is excluded from selection
+- `Ctrl-C` copies the active selection via OSC 52
+- `Esc` clears the selection
+
+Some terminals and muxers use `Shift` to bypass application mouse reporting for terminal-native selection.
+
+## Command mode
+
+Press `:` to enter command mode.
+
+### Built-in commands
+
+| Command | Action |
+| --- | --- |
+| `:q`, `:quit` | Quit |
+| `:N` | Jump to line `N` |
+| `:0` | Jump to line 1 |
+| `:-N` | Count backward from the end |
+| `:bn`, `:buffer-next`, `:tn`, `:tab-next` | Next tab |
+| `:bp`, `:buffer-prev`, `:buffer-previous`, `:tp`, `:tab-prev`, `:tab-previous` | Previous tab |
+| `:tab N` | Jump to tab `N` |
+| `:tN`, `:t N` | Alias for `:tab N` |
+| `:set syntax=KEY` | Override syntax for the current tab |
+| `:set syntax=` | Clear the override |
+| `:set syntax=auto` | Clear the override |
+
+### Notes
+
+- built-in commands are handled before plugin commands
+- plugin command names are normalized to trimmed lowercase
+- unknown commands are offered to every loaded plugin in order
+- duplicate plugin command names all run
+
+==============================================================================
+DOCS: Configuration (cli/configuration)
+URL: /sage/docs/?p=cli/configuration
+==============================================================================
+
+# Configuration
+
+`sage` reads configuration from `.sagerc`, a TOML file.
+
+## Load order
+
+If `--rc PATH` is provided, `sage` reads that file.
+
+Otherwise it checks:
+
+1. `SAGERC`
+2. `./.sagerc`
+3. `$HOME/.sagerc`
+
+Command-line flags override configuration values.
+
+## Failure behavior
+
+- invalid `.sagerc` TOML is a warning on `stderr`
+- the pager continues running with defaults and whatever valid keys were already applied
+- an explicit unreadable `--rc PATH` is treated more strictly than `SAGERC`
+
+## Example `.sagerc`
+
+```toml
+theme = "ocean"
+color = "auto"
+alt_screen = true
+mouse = true
+
+ansi = true
+syntax = true
+gutter = "auto"
+
+regex = false
+ignore_case = false
+
+plugins = true
+plugin_load_timeout_ms = 500
+plugin_event_timeout_ms = 50
+plugin_mem_limit_mb = 64
+plugin_stack_limit_kb = 1024
+
+[syntax_map]
+"Makefile" = "make"
+"*.service" = "ini"
+"sagerc" = "toml"
+```
+
+## Core keys
+
+### UI
+
+- `theme` — `"default"`, `"ocean"`, `"light"`
+- `color` — `"auto"`, `"always"`, `"never"`
+- `alt_screen` / `alt-screen` — boolean
+- `no_alt_screen` / `no-alt-screen` — boolean
+- `mouse` — boolean
+- `gutter`, `line_numbers`, `line-numbers` — `"auto"`, `"always"`, `"never"`, or boolean
+
+Boolean gutter values map to:
+
+- `true` → `"always"`
+- `false` → `"never"`
+
+### Content handling
+
+- `ansi` — boolean
+- `syntax` — boolean
+- `raw`, `unsafe_raw` — boolean
+- `binary`, `allow_binary` — boolean
+
+### Search
+
+- `regex` — boolean
+- `ignore_case`, `ignore-case` — boolean
+- `find`, `find_cmd`, `find-cmd` — string or array
+
+`find_cmd` details:
+
+- string form is whitespace-split, not shell-parsed
+- array form preserves each argument exactly
+
+Examples:
+
+```toml
+find_cmd = "rg --vimgrep --"
+```
+
+```toml
+find_cmd = ["rg", "--vimgrep", "--"]
+```
+
+### Plugins
+
+- `plugins` — boolean
+- `no_plugins`, `no-plugins` — boolean
+- `plugins_dir`, `plugins-dir` — absolute path
+- `plugin_log`, `plugin-log`, `plugin_log_path`, `plugin-log-path` — absolute path
+- `plugin_load_timeout_ms`, `plugin-load-timeout-ms` — integer milliseconds
+- `plugin_event_timeout_ms`, `plugin-event-timeout-ms` — integer milliseconds
+- `plugin_mem_limit_mb`, `plugin-mem-limit-mb` — integer mebibytes
+- `plugin_stack_limit_kb`, `plugin-stack-limit-kb` — integer kibibytes
+
+### Palette overrides
+
+These keys accept numbers in `0..255`:
+
+- `status_bg`
+- `status_fg`
+- `status_dim`
+- `brand`
+- `accent`
+- `warn`
+- `err`
+- `mode_regex`
+- `match_bg`
+- `match_fg`
+
+Syntax palette overrides:
+
+- `syn_comment`
+- `syn_string`
+- `syn_number`
+- `syn_keyword`
+- `syn_type`
+- `syn_function`
+- `syn_constant`
+- `syn_operator`
+- `syn_heading`
+- `syn_emphasis`
+- `syn_preproc`
+
+## `syntax_map`
+
+`syntax_map` maps names or patterns to syntax keys.
+
+Matching rules:
+
+- exact basename, for example `"Makefile"`
+- exact extension, for example `"toml"` or `"rs"`
+- glob patterns with `*` and `?`
+- globs match the basename unless the pattern contains `/`
+
+Examples:
+
+```toml
+[syntax_map]
+"Makefile" = "make"
+"*.bashrc" = "bash"
+"*.service" = "ini"
+"sagerc" = "toml"
+```
+
+## Precedence summary
+
+From highest to lowest:
+
+1. command-line flags
+2. `--rc PATH`
+3. `SAGERC`
+4. `./.sagerc`
+5. `$HOME/.sagerc`
+6. built-in defaults
+
+==============================================================================
+DOCS: Syntax and cache (cli/syntax-and-cache)
+URL: /sage/docs/?p=cli/syntax-and-cache
+==============================================================================
+
+# Syntax and cache
+
+`sage` can apply syntax highlighting to local paths and URL-backed content.
+
+## Source and cache directories
+
+By default:
+
+- syntax sources live in `XDG_CONFIG_HOME/sage/syntax` (usually `~/.config/sage/syntax`)
+- compiled syntax caches live in `XDG_CACHE_HOME/sage/syntax` (usually `~/.cache/sage/syntax`)
+
+You can override cache lookup with:
+
+```bash
+SAGE_SYNTAX_CACHE_DIR=/path/to/cache sage README.md
+```
+
+## Build the cache
+
+Compile user syntax sources:
+
+```bash
+sage --compile-cache
+```
+
+List compiled syntax keys:
+
+```bash
+sage --list-syntax
+```
+
+Verbose mode adds key-to-cache mappings on `stderr`:
+
+```bash
+sage --verbose --list-syntax
+```
+
+## Supported source formats
+
+The syntax compiler accepts a subset of:
+
+- `.sublime-syntax`
+- `.tmLanguage`
+- `.tmLanguage.json`
+- `.cson`
+
+## Syntax selection order
+
+When syntax highlighting is enabled, `sage` chooses a syntax key in this order:
+
+1. per-tab `:set syntax=...`
+2. `.sagerc` `syntax_map`
+3. compiled syntax index matches for the path, including first-line rules from syntax sources
+4. a URL syntax hint, such as HTTP `Content-Type`
+
+## URL-aware syntax selection
+
+For URLs:
+
+- query strings are ignored for syntax selection
+- fragments are ignored for syntax selection
+- if the path is not informative, `sage` may use `Content-Type`
+
+The built-in `Content-Type` mapping covers:
+
+| Content type family | Syntax key |
+| --- | --- |
+| `application/json`, `text/json`, `*+json` | `json` |
+| `text/html`, `application/xhtml+xml` | `html` |
+| `text/css` | `css` |
+| JavaScript media types | `js` |
+| TypeScript media types | `ts` |
+| `application/xml`, `text/xml`, `*+xml` | `xml` |
+| Markdown types | `md` |
+| YAML types | `yaml` |
+| `text/csv` | `csv` |
+
+## Bundled caches
+
+`sage` also supports bundled syntax caches in distributable layouts:
+
+- build layout: `<root>/bin/sage` with `<root>/syntax/`
+- installed layout: `<prefix>/bin/sage` with `<prefix>/share/sage/syntax/`
+
+## Per-tab overrides
+
+Force syntax:
+
+```text
+:set syntax=diff
+:set syntax=json
+```
+
+Return to automatic selection:
+
+```text
+:set syntax=
+:set syntax=auto
+```
+
+This is especially useful for stdin, because piped content does not receive automatic syntax highlighting.
+
+==============================================================================
+DOCS: Environment and files (cli/environment-and-files)
+URL: /sage/docs/?p=cli/environment-and-files
+==============================================================================
+
+# Environment and files
+
+This page collects every environment variable and important filesystem location used by `sage`.
+
+## Environment variables
+
+### Core CLI
+
+| Variable | Meaning |
+| --- | --- |
+| `SAGERC` | Path to a `.sagerc` file |
+| `NO_COLOR` | Disables UI colors when `color = "auto"` |
+| `XDG_CONFIG_HOME` | Base config directory |
+| `XDG_CACHE_HOME` | Base cache directory |
+| `SAGE_SYNTAX_CACHE_DIR` | Overrides syntax cache lookup |
+
+### Plugin loading and logging
+
+| Variable | Meaning |
+| --- | --- |
+| `SAGE_NO_PLUGINS` | Disables plugin loading |
+| `SAGE_PLUGINS_DIR` | Overrides the plugins directory |
+| `SAGE_PLUGIN_LOG` | Overrides the plugin log path |
+| `SAGE_PLUGIN_LOG_STDERR` | Sends plugin logs to `stderr`; debug-only because it can corrupt the TUI |
+| `SAGE_CONSOLE_LEVEL` | Console threshold for plugin logging |
+
+### Plugin limits
+
+| Variable | Meaning |
+| --- | --- |
+| `SAGE_PLUGIN_LOAD_TIMEOUT_MS` | Plugin bootstrap/load budget |
+| `SAGE_PLUGIN_EVENT_TIMEOUT_MS` | Per-event budget |
+| `SAGE_PLUGIN_MEM_LIMIT_MB` | QuickJS memory limit |
+| `SAGE_PLUGIN_STACK_LIMIT_KB` | QuickJS stack limit |
+
+### HTTPS and fetch
+
+| Variable | Meaning |
+| --- | --- |
+| `SSL_CERT_FILE` | PEM CA bundle used for HTTPS fetch |
+| `SAGE_FETCH_INSECURE` | Non-zero disables HTTPS certificate verification |
+
+## Default files and directories
+
+| Path | Purpose |
+| --- | --- |
+| `~/.config/sage/syntax/` | Default syntax source directory |
+| `~/.cache/sage/syntax/` | Default compiled syntax cache directory |
+| `~/.config/sage/plugins/` | Default plugin directory |
+| `~/.cache/sage/plugins.log` | Default plugin log file |
+| `./.sagerc` | Project-local config |
+| `~/.sagerc` | Fallback user config |
+
+Plugin state lives under:
+
+```text
+~/.local/state/sage/plugins/
+```
+
+`XDG_STATE_HOME` overrides that base when set.
+
+Each plugin receives its own data directory derived from the plugin filename.
+
+If the state directory cannot be resolved, the host falls back to a temporary directory under `/tmp/sage/plugins`.
+
+## Find tool defaults
+
+Unless `find_cmd` is configured, `sage` chooses the first available tool:
+
+1. `rg --vimgrep -- <query> <...files>`
+2. `ag --vimgrep -- <query> <...files>`
+3. `slg -- <query> <...files>`
+4. `grep -inH -- <query> <...files>`
+
+The parser accepts both:
+
+- vimgrep-style `path:line:col:text`
+- grep-style `path:line:text`
+
+## Distribution layout
+
+The `build/` directory is intended to be distributable.
+
+Typical install flow:
+
+```bash
+make -C build install PREFIX=/usr/local
+```
+
+Expected layouts:
+
+- build layout: `<root>/bin/sage`, `<root>/syntax/`
+- installed layout: `<prefix>/bin/sage`, `<prefix>/share/sage/syntax/`
+
+==============================================================================
+DOCS: Diagnostics (cli/diagnostics)
+URL: /sage/docs/?p=cli/diagnostics
+==============================================================================
+
+# Diagnostics
+
+This page documents the public exit codes plus the most important user-visible warnings and errors.
+
+## Exit status
+
+- `0` — success
+- `2` — error
+
+## Common messages
+
+### `sage: cannot combine '-' with multiple files`
+
+Cause:
+
+- `-` represents stdin, and stdin is single-use
+
+Fix:
+
+- run `sage -` by itself
+- or replace `-` with real file paths
+
+### `sage: failed to open input`
+
+Cause:
+
+- the input path could not be opened
+- the URL fetch failed
+- stdin spooling failed
+
+Fix:
+
+- check the path or URL
+- confirm permissions
+- for URLs, verify network reachability and scheme support
+
+### `sage: invalid config TOML (...)`
+
+Cause:
+
+- `.sagerc` could not be parsed as TOML
+
+Behavior:
+
+- this is a warning on `stderr`
+- `sage` continues running
+
+Fix:
+
+- validate the TOML
+- compare against [Configuration](?p=cli/configuration)
+
+### Syntax cache failures
+
+Examples:
+
+- `sage: no compiled syntax index found (run --compile-cache)`
+- `sage: unsupported syntax index version`
+- `sage: XDG config dir unavailable`
+- `sage: XDG cache dir unavailable`
+
+Fix:
+
+```bash
+sage --compile-cache
+```
+
+If the XDG directories are overridden, verify the environment values.
+
+## Security-related behavior
+
+### `--raw`
+
+`--raw` is unsafe:
+
+- it renders bytes as-is
+- untrusted input may execute terminal control sequences
+
+Use it only for trusted inputs.
+
+### `--no-ansi`
+
+`--no-ansi` fully sanitizes escape sequences from content. This is the safer choice for untrusted piped content.
+
+### Current pass-through branch
+
+When `stdout` is not a TTY, `sage` enters a streaming branch instead of the TUI. Current behavior to understand:
+
+- it does not load plugins
+- it does not apply the full interactive safety path
+- it does not expand directories
+- it does not handle network URLs
+
+Treat non-TTY stdout as a separate operational mode.
+
+## Troubleshooting checklist
+
+1. Re-run with `--verbose`.
+2. Disable plugins with `--no-plugins`.
+3. Disable mouse with `--no-mouse`.
+4. Disable alternate screen with `--no-alt-screen`.
+5. Disable ANSI passthrough with `--no-ansi`.
+6. Rebuild the syntax cache with `--compile-cache`.
+7. If plugins are involved, inspect `SAGE_PLUGIN_LOG`.
+
+==============================================================================
+DOCS: JavaScript APIs overview (javascript/overview)
+URL: /sage/docs/?p=javascript/overview
+==============================================================================
+
+# JavaScript APIs overview
+
+`sage` can load JavaScript plugins in the interactive TUI path. Plugins run as ES modules on top of QuickJS and can extend the pager with custom commands, event handlers, bounded filesystem state, child-process helpers, and HTTP(S) requests.
+
+## What is stable
+
+Stable public surfaces:
+
+- globals installed by the bootstrap
+- host events
+- `command(name, fn)` and `exec(cmd)`
+- built-in ES modules under the `sage:*` namespace
+
+Stable modules:
+
+- `sage:fs`
+- `sage:path`
+- `sage:process`
+- `sage:env`
+- `sage:navigator`
+- `sage:performance`
+- `sage:crypto`
+- `sage:uuid`
+- `sage:url`
+- `sage:core/dom`
+- `sage:core/web`
+- `sage:fetch`
+
+## What is not stable
+
+These exist for implementation support and should not be treated as public API:
+
+- `sage:core/global`
+- `sage:internal/host`
+
+## Reading order
+
+1. [JavaScript runtime](?p=javascript/runtime)
+2. [Module index](?p=javascript/module-index)
+3. [All module specifiers](?p=javascript/all-modules)
+4. Module pages for the APIs you plan to use
+
+## Example plugin
+
+```js
+import fs from 'sage:fs'
+import process from 'sage:process'
+
+on('open', async ({ path }) => {
+  console.info('opened', path)
+  console.info('cwd', await process.cwd())
+})
+
+command('peek', async (args) => {
+  const target = String(args || '').trim()
+  if (!target) return
+  const text = await fs.readFile(target, { encoding: 'utf8', maxBytes: 4096 })
+  console.log(text.slice(0, 200))
+})
+```
+
+Install it under `~/.config/sage/plugins/`.
+
+==============================================================================
+DOCS: JavaScript runtime (javascript/runtime)
+URL: /sage/docs/?p=javascript/runtime
+==============================================================================
+
+# JavaScript runtime
+
+This page describes the full plugin runtime model: how plugins load, what globals are installed, what events exist, and where the limits are.
+
+## Loading model
+
+Plugins are:
+
+- loaded only in the interactive TUI path
+- discovered from `*.js` files in lexicographic order
+- evaluated as ES modules
+- each run in their own QuickJS runtime/context
+
+Plugin directory resolution:
+
+1. `--plugins-dir PATH` or `.sagerc` `plugins_dir`, unless `SAGE_PLUGINS_DIR` is set
+2. `SAGE_PLUGINS_DIR`
+3. `XDG_CONFIG_HOME/sage/plugins`
+4. `$HOME/.config/sage/plugins`
+
+Disable plugins with:
+
+- `--no-plugins`
+- `SAGE_NO_PLUGINS=1`
+- `.sagerc` `plugins = false`
+
+## Import rules
+
+- `import ... from 'sage:...'` works for built-in modules
+- relative imports are allowed only for filesystem modules within the plugin’s real path tree
+- bare imports are rejected
+- relative imports from `sage:*` modules are rejected
+- top-level `await` is not supported and disables the plugin at load time
+
+## Globals
+
+### Runtime detection
+
+- `isSageRuntime === true`
+
+### Event system
+
+- `EventTarget`
+- `Event`
+- `CustomEvent`
+- `MessageEvent`
+- `addEventListener(type, fn)`
+- `removeEventListener(type, fn)`
+- `dispatchEvent(ev)`
+- `on(type, fn)`
+- `once(type, fn)`
+- `off(type, fn)`
+
+`addEventListener` receives an event object. `on` and `once` receive the payload directly.
+
+### Logging
+
+- `console.log`
+- `console.info`
+- `console.warn`
+- `console.error`
+- `console.verbose`
+- `console.debug`
+
+Logging is filtered by `SAGE_CONSOLE_LEVEL`:
+
+- `silent`, `none`, `off`
+- `error`
+- `warn`
+- `info`, `log`
+- `verbose`
+- `debug`
+- numeric levels `-1..4`
+
+Default threshold:
+
+- `warn`
+- `debug` when `sage` runs with `--verbose`
+
+### Timers
+
+- `queueMicrotask(fn)`
+- `setTimeout(fn, ms, ...args)`
+- `clearTimeout(id)`
+- `setInterval(fn, ms, ...args)`
+- `clearInterval(id)`
+- `sleep(ms)`
+
+Timer callbacks still run under the per-event budget.
+
+### Commands
+
+- `command(name, fn)`
+- `exec(cmd)`
+
+Behavior:
+
+- `name` is trimmed and lowercased
+- plugin commands receive the command tail as a string
+- handlers may be async
+- built-in `:` commands run first
+- unknown commands are offered to every loaded plugin in order
+- duplicate command names all run
+- `exec(cmd)` trims an optional leading `:`
+
+## Host events
+
+| Event | Payload |
+| --- | --- |
+| `open` | `{ path, tab, tab_count }` |
+| `tab_change` | `{ from, to, tab_count }` |
+| `search` | `{ query, regex, ignore_case }` |
+| `copy` | `{ bytes }` |
+| `quit` | no payload |
+
+Example:
+
+```js
+on('search', ({ query, regex, ignore_case }) => {
+  console.info('search', JSON.stringify({ query, regex, ignore_case }))
+})
+```
+
+## Security model
+
+The runtime has guardrails, but it is not a secure sandbox.
+
+Strong boundaries:
+
+- per-plugin QuickJS runtime/context
+- module-root import confinement
+- plugin load and event timeouts
+- plugin memory and stack limits
+- bounded `sage:fs` access
+- per-plugin disable on timeout or fatal runtime failure
+
+Non-boundaries you should document honestly:
+
+- `sage:process.exec()` runs `/bin/sh -c` as the current user
+- `sage:env.set()` and `sage:env.unset()` mutate the host process environment
+- `fetch()` can make outbound HTTP(S) requests
+
+## Default limits
+
+| Limit | Default |
+| --- | --- |
+| plugin load timeout | `500ms` |
+| per-event timeout | `50ms` |
+| memory limit | `64MiB` |
+| stack limit | `1024KiB` |
+| `exec(cmd)` queue length | `256` |
+| `exec(cmd)` command length | `4096` characters |
+
+## Logging and failure behavior
+
+- most handler exceptions are caught and logged
+- async rejections are logged
+- timer callback exceptions are logged
+- timeouts disable the offending plugin
+- if the plugin log file cannot be opened, logs fall back to `/dev/null` unless `SAGE_PLUGIN_LOG_STDERR=1`
+
+## Example references
+
+- [`examples/plugins/00-log-events.js`](https://github.com/oro-computer/sage/blob/master/examples/plugins/00-log-events.js)
+- [`examples/plugins/10-commands.js`](https://github.com/oro-computer/sage/blob/master/examples/plugins/10-commands.js)
+- [`examples/plugins/20-session-stats.js`](https://github.com/oro-computer/sage/blob/master/examples/plugins/20-session-stats.js)
+
+==============================================================================
+DOCS: Module index (javascript/module-index)
+URL: /sage/docs/?p=javascript/module-index
+==============================================================================
+
+# Module index
+
+This is the stable built-in module surface for Sage plugins.
+
+| Module | Purpose |
+| --- | --- |
+| [`sage:fs`](?p=javascript/fs) | Bounded filesystem access for open local tabs and plugin state |
+| [`sage:path`](?p=javascript/path) | Minimal POSIX-style path helpers |
+| [`sage:process`](?p=javascript/process) | Process metadata and bounded shell execution |
+| [`sage:env`](?p=javascript/env) | Process environment helpers |
+| [`sage:navigator`](?p=javascript/navigator) | Browser-like `navigator` object |
+| [`sage:performance`](?p=javascript/performance) | `performance.now()` and `timeOrigin` |
+| [`sage:crypto`](?p=javascript/crypto) | Random bytes and UUID v4 |
+| [`sage:uuid`](?p=javascript/uuid) | UUID v4 and v7 helpers |
+| [`sage:url`](?p=javascript/url) | WHATWG-style `URL` and `URLSearchParams` |
+| [`sage:core/dom`](?p=javascript/dom) | `DOMException` and `structuredClone` |
+| [`sage:core/web`](?p=javascript/web) | WHATWG-style web primitives |
+| [`sage:fetch`](?p=javascript/fetch) | Host-backed WHATWG-style `fetch()` |
+
+Internal implementation modules exist, but downstream code should not rely on them as stable API:
+
+- `sage:core/global`
+- `sage:internal/host`
+
+See also: [All module specifiers](?p=javascript/all-modules)
+
+==============================================================================
+DOCS: All module specifiers (javascript/all-modules)
+URL: /sage/docs/?p=javascript/all-modules
+==============================================================================
+
+# All module specifiers
+
+Public, stable module specifiers:
+
+```text
+sage:fs
+sage:path
+sage:process
+sage:env
+sage:navigator
+sage:performance
+sage:crypto
+sage:uuid
+sage:url
+sage:core/dom
+sage:core/web
+sage:fetch
+```
+
+Present in the runtime but not part of the stable downstream surface:
+
+```text
+sage:core/global
+sage:internal/host
+```
+
+Use the stable list for plugin code you expect to keep working across releases.
+
+==============================================================================
+DOCS: `sage:fs` (javascript/fs)
+URL: /sage/docs/?p=javascript/fs
+==============================================================================
+
+# `sage:fs`
+
+`sage:fs` provides bounded filesystem access for plugins.
+
+## Import
+
+```js
+import fs from 'sage:fs'
+```
+
+Named exports:
+
+```js
+import {
+  dataDir,
+  exists,
+  readFile,
+  readDataFile,
+  writeFile,
+  appendFile,
+  readdir,
+} from 'sage:fs'
+```
+
+## What it can access
+
+- currently open local files
+- the plugin’s own data directory
+
+It does not give arbitrary filesystem access.
+
+## API
+
+### `fs.dataDir()`
+
+Returns the plugin data directory path.
+
+### `await fs.exists(path)`
+
+Returns `true` if `path` exists and is readable in the plugin sandbox.
+
+### `await fs.readFile(path, opts?)`
+
+Reads a currently open local file, or a file in the plugin data directory.
+
+`opts` may be:
+
+- `'utf8'`
+- `'utf-8'`
+- `{ encoding: 'utf8' | 'utf-8', maxBytes?: number }`
+- `{ maxBytes?: number }`
+
+Return type:
+
+- string when `encoding` is set
+- `Uint8Array` otherwise
+
+### `await fs.readDataFile(name, opts?)`
+
+Reads a file from the plugin data directory by relative name.
+
+### `await fs.writeFile(name, data)`
+
+Writes a plugin data file.
+
+`data` may be:
+
+- string
+- `Uint8Array`
+- `ArrayBuffer`
+
+### `await fs.appendFile(name, data)`
+
+Appends to a plugin data file.
+
+### `await fs.readdir()`
+
+Lists the files in the plugin data directory.
+
+## Limits
+
+- reads default to `256KiB`
+- reads are capped at `4MiB`
+- writes are capped at `4MiB` per call
+- plugin data filenames must be relative; absolute paths and traversal are rejected by the host
+
+## Example: read the current tab and persist state
+
+```js
+import fs from 'sage:fs'
+
+on('open', async ({ path }) => {
+  try {
+    const text = await fs.readFile(path, { encoding: 'utf8', maxBytes: 4096 })
+    console.info('first line', JSON.stringify(text.split('\n', 1)[0] || ''))
+  } catch (err) {
+    console.warn('read failed', String(err))
+  }
+})
+
+command('state-save', async () => {
+  await fs.appendFile('history.log', `saved=${new Date().toISOString()}\n`)
+  console.info(await fs.readdir())
+})
+```
+
+## Upstream examples
+
+- [`examples/plugins/60-fs.js`](https://github.com/oro-computer/sage/blob/master/examples/plugins/60-fs.js)
+
+==============================================================================
+DOCS: `sage:path` (javascript/path)
+URL: /sage/docs/?p=javascript/path
+==============================================================================
+
+# `sage:path`
+
+`sage:path` is a small POSIX-style path helper module.
+
+## Import
+
+```js
+import path from 'sage:path'
+```
+
+Named exports are also available:
+
+```js
+import { isAbsolute, normalize, join, dirname, basename, extname, resolve } from 'sage:path'
+```
+
+## API
+
+- `path.isAbsolute(p)`
+- `path.normalize(p)`
+- `path.join(...parts)`
+- `path.dirname(p)`
+- `path.basename(p, ext?)`
+- `path.extname(p)`
+- `path.resolve(...parts)`
+
+## Example
+
+```js
+import path from 'sage:path'
+
+command('path-demo', () => {
+  console.info(path.join('/tmp', 'sage', 'demo.txt'))
+  console.info(path.dirname('/tmp/sage/demo.txt'))
+  console.info(path.basename('/tmp/sage/demo.txt'))
+  console.info(path.extname('/tmp/sage/demo.txt'))
+  console.info(path.resolve('plugins', '../plugins/10-hello.js'))
+})
+```
+
+## Upstream examples
+
+- [`examples/plugins/72-imports.js`](https://github.com/oro-computer/sage/blob/master/examples/plugins/72-imports.js)
+
+==============================================================================
+DOCS: `sage:process` (javascript/process)
+URL: /sage/docs/?p=javascript/process
+==============================================================================
+
+# `sage:process`
+
+`sage:process` exposes process metadata plus bounded shell execution.
+
+## Import
+
+```js
+import process from 'sage:process'
+```
+
+Named exports:
+
+```js
+import { pid, ppid, cwd, exec } from 'sage:process'
+```
+
+## API
+
+### `process.pid`
+
+Host process ID.
+
+### `process.ppid`
+
+Parent process ID.
+
+### `await process.cwd()`
+
+Returns the current working directory as a string.
+
+### `await process.exec(cmd, opts?)`
+
+Runs:
+
+```text
+/bin/sh -c <cmd>
+```
+
+Options:
+
+- `timeoutMs` — default `30000`
+- `maxBytes` — default `1048576`
+
+Resolve shape:
+
+```js
+{
+  code,
+  stdout,
+  stderr,
+  timedOut,
+  truncated,
+  signal
+}
+```
+
+Important behavior:
+
+- non-zero exit does **not** reject
+- timeout rejects
+- output truncation rejects
+- the host hard-caps timeout at ten minutes
+- the host hard-caps output at `16MiB`
+
+## Example
+
+```js
+import process from 'sage:process'
+
+command('cwd', async () => {
+  console.info(await process.cwd())
+})
+
+command('sh', async (args) => {
+  const cmd = String(args || '').trim()
+  if (!cmd) return
+  const res = await process.exec(cmd, { timeoutMs: 5000, maxBytes: 256 * 1024 })
+  console.info('code', res.code)
+  console.info('stdout', JSON.stringify(res.stdout))
+  console.info('stderr', JSON.stringify(res.stderr))
+})
+```
+
+## Upstream examples
+
+- [`examples/plugins/70-process.js`](https://github.com/oro-computer/sage/blob/master/examples/plugins/70-process.js)
+
+==============================================================================
+DOCS: `sage:env` (javascript/env)
+URL: /sage/docs/?p=javascript/env
+==============================================================================
+
+# `sage:env`
+
+`sage:env` reads and mutates the host process environment.
+
+## Import
+
+```js
+import env from 'sage:env'
+```
+
+Named exports:
+
+```js
+import { get, set, unset } from 'sage:env'
+```
+
+## API
+
+- `await env.get(name)`
+- `await env.set(name, value, { overwrite?: boolean }?)`
+- `await env.unset(name)`
+
+## Important caveat
+
+This is not plugin-local state. It mutates the real process environment of the host pager.
+
+Use it only when that is the behavior you want.
+
+## Example
+
+```js
+import env from 'sage:env'
+
+command('env-get', async (args) => {
+  const name = String(args || '').trim()
+  if (!name) return
+  console.info(await env.get(name))
+})
+```
+
+## Upstream examples
+
+- [`examples/plugins/70-process.js`](https://github.com/oro-computer/sage/blob/master/examples/plugins/70-process.js)
+
+==============================================================================
+DOCS: `sage:navigator` (javascript/navigator)
+URL: /sage/docs/?p=javascript/navigator
+==============================================================================
+
+# `sage:navigator`
+
+`sage:navigator` exposes a browser-like `navigator` object.
+
+## Import
+
+```js
+import navigator, { Navigator } from 'sage:navigator'
+```
+
+Exports:
+
+- default export: `navigator`
+- named export: `Navigator`
+
+## Available properties
+
+- `navigator.appName`
+- `navigator.appVersion`
+- `navigator.userAgent`
+
+The bootstrap also installs `navigator` on `globalThis`.
+
+## Example
+
+```js
+import navigator from 'sage:navigator'
+
+command('ua', () => {
+  console.info(navigator.userAgent)
+})
+```
+
+## Related
+
+- runtime detection: `isSageRuntime === true`
+- logging example: [`examples/plugins/00-log-events.js`](https://github.com/oro-computer/sage/blob/master/examples/plugins/00-log-events.js)
+
+==============================================================================
+DOCS: `sage:performance` (javascript/performance)
+URL: /sage/docs/?p=javascript/performance
+==============================================================================
+
+# `sage:performance`
+
+`sage:performance` provides a small `Performance` implementation.
+
+## Import
+
+```js
+import performance, { Performance, installGlobals } from 'sage:performance'
+```
+
+The bootstrap already installs `performance` globally.
+
+Named exports:
+
+- `Performance`
+- `performance`
+- `installGlobals`
+- default export `performance`
+
+## API
+
+- `performance.now()`
+- `performance.timeOrigin`
+- `installGlobals()`
+
+## Example
+
+```js
+import performance from 'sage:performance'
+
+command('perf', () => {
+  console.info('now', performance.now().toFixed(3))
+  console.info('timeOrigin', performance.timeOrigin)
+})
+```
+
+## Upstream examples
+
+- [`examples/plugins/82-crypto.js`](https://github.com/oro-computer/sage/blob/master/examples/plugins/82-crypto.js)
+
+==============================================================================
+DOCS: `sage:crypto` (javascript/crypto)
+URL: /sage/docs/?p=javascript/crypto
+==============================================================================
+
+# `sage:crypto`
+
+`sage:crypto` provides random bytes and UUID v4 generation.
+
+## Import
+
+```js
+import crypto, { Crypto, installGlobals } from 'sage:crypto'
+```
+
+The bootstrap already installs `crypto` globally.
+
+Named exports:
+
+- `Crypto`
+- `crypto`
+- `installGlobals`
+- default export `crypto`
+
+## API
+
+### `crypto.getRandomValues(typedArray)`
+
+Fills an integer typed array with secure random bytes.
+
+Rules:
+
+- only integer typed arrays are accepted
+- the request is capped at `65536` bytes
+
+### `crypto.randomUUID()`
+
+Returns a UUID v4 string.
+
+### `installGlobals()`
+
+Installs `crypto` on `globalThis`.
+
+## Example
+
+```js
+import crypto from 'sage:crypto'
+
+command('rand', () => {
+  const bytes = new Uint8Array(16)
+  crypto.getRandomValues(bytes)
+  console.info(Array.from(bytes))
+})
+
+command('uuid', () => {
+  console.info(crypto.randomUUID())
+})
+```
+
+## Upstream examples
+
+- [`examples/plugins/82-crypto.js`](https://github.com/oro-computer/sage/blob/master/examples/plugins/82-crypto.js)
+
+==============================================================================
+DOCS: `sage:uuid` (javascript/uuid)
+URL: /sage/docs/?p=javascript/uuid
+==============================================================================
+
+# `sage:uuid`
+
+`sage:uuid` provides explicit UUID helper functions.
+
+## Import
+
+```js
+import uuid from 'sage:uuid'
+```
+
+Named exports:
+
+```js
+import { v4, v7 } from 'sage:uuid'
+```
+
+## API
+
+- `uuid.v4()`
+- `uuid.v7(unixMs?)`
+
+`uuid.v7()` accepts an optional Unix millisecond timestamp.
+
+## Example
+
+```js
+import uuid from 'sage:uuid'
+
+command('uuid-demo', () => {
+  console.info(uuid.v4())
+  console.info(uuid.v7())
+  console.info(uuid.v7(Date.now()))
+})
+```
+
+## Upstream examples
+
+- [`examples/plugins/85-uuid.js`](https://github.com/oro-computer/sage/blob/master/examples/plugins/85-uuid.js)
+
+==============================================================================
+DOCS: `sage:url` (javascript/url)
+URL: /sage/docs/?p=javascript/url
+==============================================================================
+
+# `sage:url`
+
+`sage:url` implements WHATWG-style `URL` and `URLSearchParams`.
+
+## Import
+
+```js
+import url, { URL, URLSearchParams, installGlobals } from 'sage:url'
+```
+
+The bootstrap also installs `URL` and `URLSearchParams` globally.
+
+Exports:
+
+- `URL`
+- `URLSearchParams`
+- `installGlobals()`
+- default export `{ URL, URLSearchParams, installGlobals }`
+
+## `URLSearchParams`
+
+Constructor inputs:
+
+- another `URLSearchParams`
+- query string
+- array of `[name, value]` pairs
+- iterable of pairs
+- plain object
+
+API:
+
+- `new URLSearchParams(init?)`
+- `.size`
+- `.append(name, value)`
+- `.delete(name, value?)`
+- `.get(name)`
+- `.getAll(name)`
+- `.has(name, value?)`
+- `.set(name, value)`
+- `.sort()`
+- `.forEach(fn, thisArg?)`
+- `.entries()`, `.keys()`, `.values()`, iteration
+- `.toString()`
+
+## `URL`
+
+API:
+
+- `new URL(url, base?)`
+- `URL.parse(url, base?)`
+- `URL.canParse(url, base?)`
+- `.href`
+- `.origin`
+- `.protocol`
+- `.username`
+- `.password`
+- `.host`
+- `.hostname`
+- `.port`
+- `.pathname`
+- `.search`
+- `.searchParams`
+- `.hash`
+- `.toString()`
+- `.toJSON()`
+
+Notes:
+
+- `searchParams` stays live with the owning URL
+- `URL.parse()` returns `null` instead of throwing
+- `URL.canParse()` returns a boolean
+
+## Example
+
+```js
+import { URL } from 'sage:url'
+
+command('url-demo', () => {
+  const u = new URL('/rel/path?x=1', 'https://example.com/base/dir/')
+  u.searchParams.append('ts', String(Date.now()))
+  console.info(u.href)
+  console.info(URL.canParse('https://example.com'))
+})
+```
+
+## Upstream examples
+
+- [`examples/plugins/81-url.js`](https://github.com/oro-computer/sage/blob/master/examples/plugins/81-url.js)
+
+==============================================================================
+DOCS: `sage:core/dom` (javascript/dom)
+URL: /sage/docs/?p=javascript/dom
+==============================================================================
+
+# `sage:core/dom`
+
+`sage:core/dom` provides `DOMException` and `structuredClone`.
+
+## Import
+
+```js
+import dom, { DOMException, structuredClone, installGlobals } from 'sage:core/dom'
+```
+
+The bootstrap also installs both on `globalThis`.
+
+Exports:
+
+- `DOMException`
+- `structuredClone(value, options?)`
+- `installGlobals()`
+- default export `{ DOMException, structuredClone, installGlobals }`
+
+## `DOMException`
+
+```js
+const err = new DOMException('The operation was aborted.', 'AbortError')
+```
+
+Available behavior:
+
+- `name`
+- `message`
+- `code`
+- standard DOMException numeric constants on the constructor
+
+## `structuredClone(value, options?)`
+
+Supported broadly for:
+
+- primitives
+- `ArrayBuffer`
+- typed arrays and `DataView`
+- `Date`
+- `RegExp`
+- `Map`
+- `Set`
+- `URL`
+- `URLSearchParams`
+- `Headers`
+- `Error`
+- plain objects and arrays
+- cyclic graphs
+
+Not supported:
+
+- transfer lists
+- functions
+- symbols
+- accessor properties
+- arbitrary custom object types
+
+When unsupported, it throws `DOMException` with `name === 'DataCloneError'`.
+
+## Example
+
+```js
+import { DOMException, structuredClone } from 'sage:core/dom'
+
+command('dom-demo', () => {
+  const src = { map: new Map([['k', 1]]) }
+  src.self = src
+  const clone = structuredClone(src)
+  console.info(clone.self === clone)
+
+  try {
+    structuredClone({ fn() {} })
+  } catch (err) {
+    console.info(err.name, err.message)
+  }
+})
+```
+
+## Upstream examples
+
+- [`examples/plugins/83-dom.js`](https://github.com/oro-computer/sage/blob/master/examples/plugins/83-dom.js)
+
+==============================================================================
+DOCS: `sage:core/web` (javascript/web)
+URL: /sage/docs/?p=javascript/web
+==============================================================================
+
+# `sage:core/web`
+
+`sage:core/web` provides a host-free, in-memory set of WHATWG-style web primitives.
+
+## Import
+
+```js
+import {
+  TextEncoder,
+  TextDecoder,
+  ReadableStream,
+  Blob,
+  FormData,
+  Headers,
+  Request,
+  Response,
+  AbortController,
+  AbortSignal,
+  toHostFetchRequest,
+  installGlobals,
+} from 'sage:core/web'
+```
+
+The bootstrap also installs all of these on `globalThis`.
+
+Exports:
+
+- `TextEncoder`
+- `TextDecoder`
+- `ReadableStream`
+- `Blob`
+- `FormData`
+- `Headers`
+- `Request`
+- `Response`
+- `AbortController`
+- `AbortSignal`
+- `toHostFetchRequest(req)`
+- `installGlobals()`
+- default export containing the same public surface
+
+## Text encoding
+
+### `TextEncoder`
+
+- `new TextEncoder()`
+- `.encode(string)`
+
+### `TextDecoder`
+
+- `new TextDecoder(label?)`
+- `.decode(bytes)`
+
+## `ReadableStream`
+
+This is a minimal in-memory readable stream.
+
+Supported constructor inputs:
+
+- `Uint8Array`
+- `ArrayBuffer`
+- typed arrays
+- arrays of chunks
+
+API:
+
+- `new ReadableStream(source?)`
+- `.locked`
+- `.getReader()`
+- `.cancel()`
+- async iteration
+
+The reader object supports:
+
+- `await reader.read()`
+- `await reader.cancel()`
+- `reader.releaseLock()`
+
+## `Blob`
+
+Constructor parts may include strings, byte arrays, typed arrays, `ArrayBuffer`, and other `Blob` instances.
+
+API:
+
+- `new Blob(parts?, { type? }?)`
+- `.size`
+- `.type`
+- `await .arrayBuffer()`
+- `await .text()`
+- `.stream()`
+- `.slice(start?, end?, type?)`
+
+## `FormData`
+
+API:
+
+- `new FormData()`
+- `.append(name, value, filename?)`
+- `.set(name, value, filename?)`
+- `.get(name)`
+- `.getAll(name)`
+- `.has(name)`
+- `.delete(name)`
+- `.forEach(fn, thisArg?)`
+- `.entries()`, `.keys()`, `.values()`, iteration
+
+`Blob` values are encoded as multipart form-data with a generated boundary.
+
+## `Headers`
+
+Constructor inputs:
+
+- another `Headers`
+- arrays of pairs
+- iterables of pairs
+- plain objects
+
+API:
+
+- `new Headers(init?)`
+- `.append(name, value)`
+- `.set(name, value)`
+- `.get(name)`
+- `.has(name)`
+- `.delete(name)`
+- `.forEach(fn, thisArg?)`
+- `.entries()`, `.keys()`, `.values()`, iteration
+
+Header names are normalized to lowercase.
+
+## `Request`
+
+API:
+
+- `new Request(input, init?)`
+- `.url`
+- `.method`
+- `.headers`
+- `.signal`
+- `.body`
+- `.bodyUsed`
+- `.clone()`
+- `await .arrayBuffer()`
+- `await .text()`
+- `await .json()`
+- `await .blob()`
+
+Notes:
+
+- `GET` and `HEAD` cannot have bodies
+- string bodies default to `text/plain;charset=UTF-8`
+- `Blob` bodies set `content-type` when the blob has one
+
+## `Response`
+
+API:
+
+- `new Response(body?, init?)`
+- `.ok`
+- `.status`
+- `.statusText`
+- `.headers`
+- `.url`
+- `.body`
+- `.bodyUsed`
+- `.clone()`
+- `await .arrayBuffer()`
+- `await .text()`
+- `await .json()`
+- `await .blob()`
+- `Response.json(data, init?)`
+
+## Host bridge helper
+
+### `toHostFetchRequest(req)`
+
+Converts a `Request` instance into the host wire shape used by `sage:fetch`.
+
+This is mostly useful if you are building helpers on top of the fetch bridge itself.
+
+## Abort API
+
+### `AbortSignal`
+
+- `.aborted`
+- `.reason`
+- `.throwIfAborted()`
+
+### `AbortController`
+
+- `.signal`
+- `.abort(reason?)`
+
+## `installGlobals()`
+
+Installs the web primitives on `globalThis`.
+
+## Example
+
+```js
+import { Blob, FormData, Headers, Request, Response, AbortController } from 'sage:core/web'
+
+command('web-demo', async () => {
+  const fd = new FormData()
+  fd.append('hello', 'world')
+
+  const req = new Request('https://example.com/', { method: 'POST', body: fd })
+  console.info(req.method, req.headers.get('content-type'))
+
+  const res = Response.json({ ok: true })
+  console.info(await res.text())
+
+  const ac = new AbortController()
+  ac.abort()
+  console.info(ac.signal.aborted)
+})
+```
+
+==============================================================================
+DOCS: `sage:fetch` (javascript/fetch)
+URL: /sage/docs/?p=javascript/fetch
+==============================================================================
+
+# `sage:fetch`
+
+`sage:fetch` is the host-backed WHATWG-style network module.
+
+## Import
+
+```js
+import fetch, {
+  Headers,
+  Request,
+  Response,
+  FormData,
+  Blob,
+  AbortController,
+  AbortSignal,
+  installGlobals,
+} from 'sage:fetch'
+```
+
+The bootstrap also installs `fetch` globally.
+
+Exports:
+
+- `fetch`
+- `installGlobals()`
+- re-exported `TextEncoder`, `TextDecoder`, `ReadableStream`, `Blob`, `FormData`, `Headers`, `Request`, `Response`, `AbortController`, `AbortSignal`
+- default export containing the same public surface
+
+## API
+
+### `await fetch(input, init?)`
+
+Standard inputs:
+
+- URL string
+- `Request`
+
+Standard `init` fields are supported through `Request`.
+
+Sage-specific `init` fields:
+
+- `timeoutMs` — default `30000`
+- `maxBytes` — default `16777216`
+- `followRedirects` — default `true`
+
+The `signal` field is supported through the request/init object.
+
+### `installGlobals()`
+
+Installs `fetch` on `globalThis`, and installs the web primitives if they are missing.
+
+## Behavior
+
+- only `http` and `https` are supported
+- redirects are capped at 10
+- responses are fully buffered in memory
+- TLS verifies system CAs by default
+- `SAGE_FETCH_INSECURE=1` disables certificate verification
+- `SSL_CERT_FILE` can point to a PEM CA bundle
+
+## Example: GET
+
+```js
+command('fetch', async (args) => {
+  const url = String(args || '').trim() || 'https://example.com/'
+  const res = await fetch(url, { timeoutMs: 15000, maxBytes: 1024 * 1024 })
+  console.info(res.status, res.statusText)
+  console.log((await res.text()).slice(0, 300))
+})
+```
+
+## Example: abort
+
+```js
+command('fetch-abort', async () => {
+  const ac = new AbortController()
+  ac.abort()
+
+  try {
+    await fetch('https://example.com/', { signal: ac.signal })
+  } catch (err) {
+    console.warn(err.name, err.message)
+  }
+})
+```
+
+## Example: `FormData`
+
+```js
+command('fetch-post-form', async () => {
+  const body = new FormData()
+  body.append('hello', 'world')
+  body.append('ts', String(Date.now()))
+
+  const res = await fetch('https://httpbin.org/post', {
+    method: 'POST',
+    body,
+    timeoutMs: 15000,
+    maxBytes: 1024 * 1024,
+  })
+
+  console.log((await res.text()).slice(0, 300))
+})
+```
+
+## Upstream examples
+
+- [`examples/plugins/80-fetch.js`](https://github.com/oro-computer/sage/blob/master/examples/plugins/80-fetch.js)
+
+==============================================================================
+DOCS: `sage(1)` (man/sage-1)
+URL: /sage/docs/?p=man/sage-1
+==============================================================================
+
+# `sage(1)`
+
+`sage(1)` is the command reference for the pager itself. This page mirrors the man page in website form so downstream readers do not have to context-switch into `man`.
+
+## Synopsis
+
+```bash
+sage [OPTIONS] [PATH ...]
+sage --compile-cache
+sage --list-syntax
+sage --index-only [PATH]
+```
+
+## What `sage(1)` defines
+
+### Description and modes
+
+The man page defines the user-facing CLI modes:
+
+- normal interactive paging
+- `--compile-cache`
+- `--list-syntax`
+- `--index-only`
+- `--help`
+- `--version`
+
+It also defines the two top-level execution branches:
+
+- interactive TUI when `stdout` is a TTY
+- pass-through behavior when `stdout` is not a TTY
+
+### Options
+
+`sage(1)` is the authoritative option list for:
+
+- general flags
+- plugin toggles
+- UI color, theme, gutter, mouse, and alternate-screen behavior
+- syntax and ANSI behavior
+- raw/binary safety flags
+- regex and ignore-case search defaults
+- config-file selection
+
+Read the fuller website breakdown in [Options](?p=cli/options).
+
+### Keybindings and command mode
+
+`sage(1)` defines:
+
+- navigation keys
+- tab keys
+- search keys
+- `Ctrl-K` find
+- `:` command mode
+- selection behavior
+- `:set syntax=...` per-tab overrides
+
+Read the fuller website breakdown in [Keys and commands](?p=cli/keys-and-commands).
+
+### Syntax, config, environment, and files
+
+The man page also defines:
+
+- syntax highlighting defaults
+- syntax source and cache directories
+- `.sagerc` load order
+- environment variables
+- file locations
+- exit statuses
+- example invocations
+- security notes for `--raw`
+
+The fuller website references are:
+
+- [Syntax and cache](?p=cli/syntax-and-cache)
+- [Configuration](?p=cli/configuration)
+- [Environment and files](?p=cli/environment-and-files)
+- [Diagnostics](?p=cli/diagnostics)
+
+## Best companion pages
+
+- [CLI overview (`sage`)](?p=cli/sage)
+- [Inputs and modes](?p=cli/inputs-and-modes)
+- [Options](?p=cli/options)
+- [Keys and commands](?p=cli/keys-and-commands)
+- [Configuration](?p=cli/configuration)
+- [Environment and files](?p=cli/environment-and-files)
+- [Diagnostics](?p=cli/diagnostics)
+
+## Upstream source
+
+- [`man/sage.1`](https://github.com/oro-computer/sage/blob/master/man/sage.1)
+
+==============================================================================
+DOCS: `sage(7)` (man/sage-7)
+URL: /sage/docs/?p=man/sage-7
+==============================================================================
+
+# `sage(7)`
+
+`sage(7)` is the conceptual manual page for the pager. It explains how the CLI behaves beyond the flag list in `sage(1)`.
+
+## What `sage(7)` defines
+
+### Inputs
+
+`sage(7)` defines the supported input kinds:
+
+- local file paths
+- directories, expanded non-recursively
+- stdin
+- `http://`, `https://`, and `ssh://` URLs
+
+It also calls out URL-specific syntax selection behavior.
+
+Read the fuller website breakdown in [Inputs and modes](?p=cli/inputs-and-modes).
+
+### Tabs, search, and find
+
+`sage(7)` is the reference for:
+
+- how tabs behave
+- the difference between search and find
+- the external find tool fallback order
+- how result parsing works for vimgrep-style and grep-style tools
+
+Read the fuller website breakdown in [Keys and commands](?p=cli/keys-and-commands) and [Environment and files](?p=cli/environment-and-files).
+
+### Syntax selection and cache layout
+
+`sage(7)` defines:
+
+- syntax selection order
+- `syntax_map`
+- cache and source directories
+- bundled-cache layouts for build and installed trees
+
+Read the fuller website breakdown in [Syntax and cache](?p=cli/syntax-and-cache).
+
+### Plugins, security, and distribution
+
+`sage(7)` also introduces:
+
+- plugin support at a conceptual level
+- security notes for sanitization and `--raw`
+- the intended distributable `build/` layout
+
+The fuller website references are:
+
+- [Plugins quickstart](?p=guides/plugins-quickstart)
+- [JavaScript runtime](?p=javascript/runtime)
+- [Diagnostics](?p=cli/diagnostics)
+
+## Best companion pages
+
+- [Inputs and modes](?p=cli/inputs-and-modes)
+- [Syntax and cache](?p=cli/syntax-and-cache)
+- [Configuration](?p=cli/configuration)
+- [Environment and files](?p=cli/environment-and-files)
+- [Plugins quickstart](?p=guides/plugins-quickstart)
+
+## Upstream source
+
+- [`man/sage.7`](https://github.com/oro-computer/sage/blob/master/man/sage.7)
+
+==============================================================================
+DOCS: `sage-plugin-api(3)` (man/sage-plugin-api-3)
+URL: /sage/docs/?p=man/sage-plugin-api-3
+==============================================================================
+
+# `sage-plugin-api(3)`
+
+`sage-plugin-api(3)` is the manual page for the JavaScript plugin runtime. This page mirrors the man page in website form and points into the fuller module documentation.
+
+## What `sage-plugin-api(3)` defines
+
+### Loading and import rules
+
+The man page defines:
+
+- plugin directory resolution
+- lexicographic `*.js` loading
+- interactive-TUI-only loading
+- safe-mode disable paths
+- ESM-only evaluation
+- import confinement rules
+- the top-level-`await` restriction
+
+Read the fuller website breakdown in [JavaScript runtime](?p=javascript/runtime).
+
+### Globals and events
+
+The man page enumerates:
+
+- runtime detection
+- the event bus globals
+- console methods and log thresholds
+- timer functions
+- command registration
+- host events and payload shapes
+- the browser-like `navigator`
+
+Read the fuller website breakdown in [JavaScript runtime](?p=javascript/runtime).
+
+### Built-in modules
+
+`sage-plugin-api(3)` defines the public `sage:*` modules and their high-level contracts.
+
+Read the fuller website breakdown in:
+
+- [Module index](?p=javascript/module-index)
+- [`sage:fs`](?p=javascript/fs)
+- [`sage:path`](?p=javascript/path)
+- [`sage:process`](?p=javascript/process)
+- [`sage:env`](?p=javascript/env)
+- [`sage:navigator`](?p=javascript/navigator)
+- [`sage:performance`](?p=javascript/performance)
+- [`sage:crypto`](?p=javascript/crypto)
+- [`sage:uuid`](?p=javascript/uuid)
+- [`sage:url`](?p=javascript/url)
+- [`sage:core/dom`](?p=javascript/dom)
+- [`sage:core/web`](?p=javascript/web)
+- [`sage:fetch`](?p=javascript/fetch)
+
+### Limits, environment, and files
+
+The man page is also the authoritative short reference for:
+
+- plugin load and event budgets
+- memory and stack limits
+- plugin-related environment variables
+- plugin log paths
+- plugin data directory locations
+
+Read the fuller website breakdown in [JavaScript runtime](?p=javascript/runtime) and [Environment and files](?p=cli/environment-and-files).
+
+## Best companion pages
+
+- [JavaScript runtime](?p=javascript/runtime)
+- [Module index](?p=javascript/module-index)
+- [`sage:fs`](?p=javascript/fs)
+- [`sage:process`](?p=javascript/process)
+- [`sage:fetch`](?p=javascript/fetch)
+
+## Upstream source
+
+- [`man/sage-plugin-api.3`](https://github.com/oro-computer/sage/blob/master/man/sage-plugin-api.3)

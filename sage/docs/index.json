@@ -1,0 +1,187 @@
+{
+  "generatedAt": "2026-03-09T14:30:00+00:00",
+  "kind": "docs",
+  "count": 31,
+  "sections": [
+    {
+      "name": "overview",
+      "items": [
+        {
+          "id": "start",
+          "title": "Sage Docs",
+          "file": "start.md"
+        }
+      ]
+    },
+    {
+      "name": "guides",
+      "items": [
+        {
+          "id": "guides/getting-started",
+          "title": "Getting started",
+          "file": "guides/getting-started.md"
+        },
+        {
+          "id": "guides/pager-workflows",
+          "title": "Pager workflows",
+          "file": "guides/pager-workflows.md"
+        },
+        {
+          "id": "guides/plugins-quickstart",
+          "title": "Plugins quickstart",
+          "file": "guides/plugins-quickstart.md"
+        }
+      ]
+    },
+    {
+      "name": "cli",
+      "items": [
+        {
+          "id": "cli/sage",
+          "title": "`sage`",
+          "file": "cli/sage.md"
+        },
+        {
+          "id": "cli/inputs-and-modes",
+          "title": "Inputs and modes",
+          "file": "cli/inputs-and-modes.md"
+        },
+        {
+          "id": "cli/options",
+          "title": "Options",
+          "file": "cli/options.md"
+        },
+        {
+          "id": "cli/keys-and-commands",
+          "title": "Keys and commands",
+          "file": "cli/keys-and-commands.md"
+        },
+        {
+          "id": "cli/configuration",
+          "title": "Configuration",
+          "file": "cli/configuration.md"
+        },
+        {
+          "id": "cli/syntax-and-cache",
+          "title": "Syntax and cache",
+          "file": "cli/syntax-and-cache.md"
+        },
+        {
+          "id": "cli/environment-and-files",
+          "title": "Environment and files",
+          "file": "cli/environment-and-files.md"
+        },
+        {
+          "id": "cli/diagnostics",
+          "title": "Diagnostics",
+          "file": "cli/diagnostics.md"
+        }
+      ]
+    },
+    {
+      "name": "javascript",
+      "items": [
+        {
+          "id": "javascript/overview",
+          "title": "JavaScript APIs overview",
+          "file": "javascript/overview.md"
+        },
+        {
+          "id": "javascript/runtime",
+          "title": "JavaScript runtime",
+          "file": "javascript/runtime.md"
+        },
+        {
+          "id": "javascript/module-index",
+          "title": "Module index",
+          "file": "javascript/module-index.md"
+        },
+        {
+          "id": "javascript/all-modules",
+          "title": "All module specifiers",
+          "file": "javascript/all-modules.md"
+        },
+        {
+          "id": "javascript/fs",
+          "title": "`sage:fs`",
+          "file": "javascript/fs.md"
+        },
+        {
+          "id": "javascript/path",
+          "title": "`sage:path`",
+          "file": "javascript/path.md"
+        },
+        {
+          "id": "javascript/process",
+          "title": "`sage:process`",
+          "file": "javascript/process.md"
+        },
+        {
+          "id": "javascript/env",
+          "title": "`sage:env`",
+          "file": "javascript/env.md"
+        },
+        {
+          "id": "javascript/navigator",
+          "title": "`sage:navigator`",
+          "file": "javascript/navigator.md"
+        },
+        {
+          "id": "javascript/performance",
+          "title": "`sage:performance`",
+          "file": "javascript/performance.md"
+        },
+        {
+          "id": "javascript/crypto",
+          "title": "`sage:crypto`",
+          "file": "javascript/crypto.md"
+        },
+        {
+          "id": "javascript/uuid",
+          "title": "`sage:uuid`",
+          "file": "javascript/uuid.md"
+        },
+        {
+          "id": "javascript/url",
+          "title": "`sage:url`",
+          "file": "javascript/url.md"
+        },
+        {
+          "id": "javascript/dom",
+          "title": "`sage:core/dom`",
+          "file": "javascript/dom.md"
+        },
+        {
+          "id": "javascript/web",
+          "title": "`sage:core/web`",
+          "file": "javascript/web.md"
+        },
+        {
+          "id": "javascript/fetch",
+          "title": "`sage:fetch`",
+          "file": "javascript/fetch.md"
+        }
+      ]
+    },
+    {
+      "name": "man",
+      "items": [
+        {
+          "id": "man/sage-1",
+          "title": "`sage(1)`",
+          "file": "man/sage-1.md"
+        },
+        {
+          "id": "man/sage-7",
+          "title": "`sage(7)`",
+          "file": "man/sage-7.md"
+        },
+        {
+          "id": "man/sage-plugin-api-3",
+          "title": "`sage-plugin-api(3)`",
+          "file": "man/sage-plugin-api-3.md"
+        }
+      ]
+    }
+  ]
+}

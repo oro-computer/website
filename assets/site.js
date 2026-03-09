@@ -78,6 +78,9 @@
     if (path.includes("/runtime/") || path.endsWith("/runtime")) {
       return new URL("runtime/llms.txt", root).toString();
     }
+    if (path.includes("/sage/") || path.endsWith("/sage")) {
+      return new URL("sage/llms.txt", root).toString();
+    }
     return new URL("llms.txt", root).toString();
   }
 

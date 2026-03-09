@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Oro Runtime · Oro Computer</title>
+    <title>Sage · Oro Computer</title>
     <meta
       name="description"
-      content="Oro Runtime embeds the platform WebView and provides high-level oro:* JavaScript APIs for native capabilities."
+      content="Sage is a fast, ergonomic terminal pager for files, directories, stdin, and remote content, with syntax highlighting and a robust JavaScript plugin API."
     />
     <meta name="theme-color" content="#101012" />
     <link rel="icon" type="image/png" href="../docs/branding/assets/logo-icon-small.png" sizes="32x32" />
@@ -15,7 +15,6 @@
     <script src="../assets/highlight/highlight.min.js" defer></script>
     <script src="../assets/highlight/languages/javascript.min.js" defer></script>
     <script src="../assets/highlight/languages/bash.min.js" defer></script>
-    <script src="../assets/highlight/languages/xml.min.js" defer></script>
     <script src="../assets/highlight/languages/toml.js" defer></script>
   </head>
   <body>
@@ -35,104 +34,95 @@
           </a>
           <nav class="nav" aria-label="Primary navigation">
             <a href="../">Home</a>
-            <a href="./">Runtime</a>
-            <a href="./docs/">Docs</a>
+            <a href="../runtime/">Runtime</a>
             <a href="../silk/">Silk</a>
-            <a href="../sage/">Sage</a>
-            <a href="https://github.com/oro-computer/oro-runtime" target="_blank" rel="noreferrer">GitHub</a>
+            <a href="./">Sage</a>
+            <a href="./docs/">Docs</a>
+            <a href="https://github.com/oro-computer/sage" target="_blank" rel="noreferrer">GitHub</a>
             <a href="../#contact">Contact</a>
-            <a class="button button-primary" href="./docs/?p=guides/hello-world">Hello world</a>
+            <a class="button button-primary" href="./docs/?p=guides/getting-started">Get started</a>
           </nav>
         </div>
       </div>
     </header>
 
     <main id="main">
-      <section class="hero" aria-label="Oro Runtime overview">
+      <section class="hero" aria-label="Sage overview">
         <div class="container">
           <div class="hero-grid">
             <div class="hero-copy">
-              <div class="hero-kicker">Oro Runtime</div>
-              <h1>A native runtime for web applications.</h1>
+              <div class="hero-kicker">Sage</div>
+              <h1>A fast, ergonomic terminal pager.</h1>
               <p class="lede">
-                Build UI with HTML/CSS, behavior with JavaScript, and import native capabilities as explicit ES modules under
-                <code>oro:*</code> — without platform-specific application code.
+                Page local files, whole directories, piped stdin, and remote content with a responsive TUI, strong search and
+                find workflows, syntax highlighting, and a robust JavaScript plugin API.
               </p>
               <div class="hero-actions">
                 <a class="button button-primary" href="./docs/">Read the docs</a>
+                <a class="button" href="./docs/?p=cli/sage">CLI</a>
                 <a class="button" href="./docs/?p=javascript/overview">JavaScript APIs</a>
-                <a class="button" href="./docs/?p=cli/oroc">CLI</a>
-                <a class="button button-quiet" href="https://github.com/oro-computer/oro-runtime" target="_blank" rel="noreferrer">GitHub</a>
+                <a class="button button-quiet" href="https://github.com/oro-computer/sage" target="_blank" rel="noreferrer">GitHub</a>
               </div>
             </div>
 
-            <div class="panel" aria-label="Hello world">
+            <div class="panel" aria-label="CLI examples">
               <div class="panel-header">
-                <div class="panel-title">Hello world</div>
-                <a class="button button-quiet" href="./docs/?p=guides/hello-world">Guide</a>
+                <div class="panel-title">CLI examples</div>
+                <a class="button button-quiet" href="./docs/?p=cli/sage">Reference</a>
               </div>
               <div class="panel-body">
-                <pre><code class="language-plaintext">hello/
-  oro.toml
-  copy-map.toml
-  src/
-    index.html
-    main.js</code></pre>
-                <pre><code class="language-bash">oroc run .
-oroc build .</code></pre>
-                <p><code>globalThis.isOroRuntime === true</code> when running inside Oro Runtime.</p>
+                <pre><code class="language-bash">sage README.md
+sage src/
+git diff | sage
+sage https://example.com/
+sage --compile-cache</code></pre>
+                <p>Inputs can be files, directories, stdin, `http://`, `https://`, or `ssh://` URLs.</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="section" aria-label="Programming model">
+      <section class="section" aria-label="Why Sage">
         <div class="container">
           <div class="prose">
-            <h2>Programming model</h2>
-            <p>
-              The web platform is the UI toolkit. Oro Runtime adds an explicit capability layer (<code>oro:*</code>) plus a
-              bundling story that feels like shipping a website.
-            </p>
+            <h2>Why Sage</h2>
+            <p>A pager-first CLI with a real documentation and automation surface.</p>
           </div>
 
           <div class="card-grid mt-lg">
             <div class="card col-span-4">
               <div class="card-body">
-                <h3 class="card-title">Web standards</h3>
+                <h3 class="card-title">Real input coverage</h3>
                 <div class="card-meta">
-                  DOM, ES modules, <code>fetch</code>, URLs, WebCrypto, WebAssembly, and modern browser APIs — because your app
-                  runs inside the platform WebView.
+                  Open one file, a directory worth of files, piped stdin, or remote content without changing tools.
                 </div>
                 <div class="card-links">
-                  <a class="button button-quiet" href="./docs/?p=guides/project-layout">Project layout</a>
+                  <a class="button button-quiet" href="./docs/?p=cli/inputs-and-modes">Inputs and modes</a>
                 </div>
               </div>
             </div>
 
             <div class="card col-span-4">
               <div class="card-body">
-                <h3 class="card-title">Explicit capabilities</h3>
+                <h3 class="card-title">Operator ergonomics</h3>
                 <div class="card-meta">
-                  Import native functionality as ES modules under <code>oro:*</code>. Start with
-                  <code>oro:application</code>, <code>oro:window</code>, and <code>oro:hooks</code>.
+                  Incremental search, cross-tab find, tab navigation, command mode, line index generation, syntax caches, and mouse support.
                 </div>
                 <div class="card-links">
-                  <a class="button button-quiet" href="./docs/?p=javascript/module-index">Module index</a>
+                  <a class="button button-quiet" href="./docs/?p=cli/keys-and-commands">Keys and commands</a>
                 </div>
               </div>
             </div>
 
             <div class="card col-span-4">
               <div class="card-body">
-                <h3 class="card-title">Bundle and ship</h3>
+                <h3 class="card-title">Programmable runtime</h3>
                 <div class="card-meta">
-                  Define what enters your bundle via <code>copy_map</code>. Build outputs land under <code>./build</code> by
-                  default.
+                  QuickJS plugins can react to pager events, register commands, persist bounded state, and make HTTP(S) requests.
                 </div>
                 <div class="card-links">
-                  <a class="button button-quiet" href="./docs/?p=guides/build-and-package">Build and package</a>
+                  <a class="button button-quiet" href="./docs/?p=javascript/runtime">JavaScript runtime</a>
                 </div>
               </div>
             </div>
@@ -144,46 +134,44 @@ oroc build .</code></pre>
         <div class="container">
           <div class="prose">
             <h2>Docs map</h2>
-            <p>A short path through the CLI, configuration, and the full JavaScript API surface.</p>
+            <p>A CLI-first path through usage, configuration, plugins, and the full JavaScript API surface.</p>
           </div>
 
           <div class="list mt-lg">
             <a class="list-row" href="./docs/?p=start">
               <div>
                 <div class="list-title">Start</div>
-                <div class="list-desc">Hello world, reading path, and the runtime’s programming model.</div>
+                <div class="list-desc">Quick start, reading path, and what Sage covers.</div>
               </div>
               <div class="list-meta">Docs</div>
             </a>
-            <a class="list-row" href="./docs/?p=guides/hello-world">
+            <a class="list-row" href="./docs/?p=guides/getting-started">
               <div>
                 <div class="list-title">Guides</div>
-                <div class="list-desc">Project layout, build and package, and windows and messaging.</div>
+                <div class="list-desc">Build, install, adopt Sage as a pager, and ship plugins.</div>
               </div>
               <div class="list-meta">Guides</div>
             </a>
-            <a class="list-row" href="./docs/?p=cli/oroc">
+            <a class="list-row" href="./docs/?p=cli/sage">
               <div>
                 <div class="list-title">CLI</div>
-                <div class="list-desc"><code>oroc</code> commands, flags, environment variables, and workflow helpers.</div>
+                <div class="list-desc"><code>sage</code> modes, input types, flags, keys, config, syntax caches, and diagnostics.</div>
               </div>
               <div class="list-meta">CLI</div>
-            </a>
-            <a class="list-row" href="./docs/?p=config/overview">
-              <div>
-                <div class="list-title">Configuration</div>
-                <div class="list-desc"><code>oro.toml</code>, <code>.ororc</code>, and <code>copy_map</code>.</div>
-              </div>
-              <div class="list-meta">Config</div>
             </a>
             <a class="list-row" href="./docs/?p=javascript/overview">
               <div>
                 <div class="list-title">JavaScript APIs</div>
-                <div class="list-desc">
-                  Overview, module index, and the exhaustive list of importable <code>oro:*</code> specifiers.
-                </div>
+                <div class="list-desc">Plugin runtime, stable <code>sage:*</code> modules, globals, events, and examples.</div>
               </div>
               <div class="list-meta">API</div>
+            </a>
+            <a class="list-row" href="./docs/?p=man/sage-1">
+              <div>
+                <div class="list-title">Man pages</div>
+                <div class="list-desc"><code>sage(1)</code>, <code>sage(7)</code>, and <code>sage-plugin-api(3)</code> in reader-friendly form.</div>
+              </div>
+              <div class="list-meta">Man</div>
             </a>
           </div>
         </div>
@@ -193,7 +181,7 @@ oroc build .</code></pre>
     <footer class="site-footer">
       <div class="container">
         <div class="footer-inner">
-          <strong>Oro Runtime</strong>
+          <strong>Sage</strong>
           <span>© <span data-year>2026</span> Oro Computer.</span>
         </div>
       </div>
