@@ -10,6 +10,25 @@ Use this page to answer:
 - Which parts of Silk are implemented end-to-end versus specified ahead of implementation?
 - Where should I look when the compiler rejects a program?
 
+## Quick sanity check
+
+If you want a fast read on what your local toolchain can do today, start here:
+
+```sh
+silk check hello.slk
+silk build hello.slk -o build/hello
+silk package lint
+silk env
+```
+
+- `silk check` tells you whether the parser, resolver, checker, and verifier all
+  accept the current module set.
+- `silk build` tells you whether the selected backend can lower that checked
+  program to the target artifact you want.
+- `silk package lint` validates package-root metadata and distribution shape.
+- `silk env` shows the resolved environment that affects stdlib and package
+  discovery.
+
 ## What works end-to-end today
 
 Silk’s current toolchain surface is strongest in three places:
@@ -70,4 +89,3 @@ Work in this order:
 2. Check the feature’s own “Implementation status” section in the language, stdlib, or compiler reference page.
 3. Confirm the active target and package/build mode in [CLI reference](?p=compiler/cli-silk).
 4. If the docs say the feature should work, file a minimal repro against the Silk compiler repository.
-

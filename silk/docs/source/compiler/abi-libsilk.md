@@ -17,8 +17,8 @@ If you want the shortest path to a working embedder, start with [`libsilk` quick
 
 ### Linking on `linux/x86_64` (vendored Z3)
 
-On `linux/x86_64`, `libsilk.a` vendors Z3 (via `vendor/lib/x64-linux/libz3.a`) to
-support Formal Silk verification. The vendored Z3 static library is built as
+On `linux/x86_64`, `libsilk.a` bundles Z3 to support Formal Silk verification.
+That vendored Z3 static library is built as
 **C++**, so downstream embedders linking against `libsilk.a` MUST also link the
 system C++ runtime and any required system libraries:
 
@@ -209,9 +209,9 @@ The initial C header provided in the Silk compiler repository defines:
   - `wasm32-wasi` (and other `wasm32` triples containing `wasi`).
 
   For `wasm32` targets, only `SILK_OUTPUT_EXECUTABLE` is supported. The output
-  bytes are a final WebAssembly module (`.wasm`) produced by the IR-backed wasm
-  backend (`src/backend_wasm_ir.zig`), with a smaller constant-only fallback for
-  programs that fit the constant subset.
+  bytes are a final WebAssembly module (`.wasm`) produced by the current
+  WebAssembly backend, with a smaller constant-only fallback for programs that
+  fit the constant subset.
 
   The wasm backend is still early-stage, but it is no longer limited
   to single-module constant programs:
@@ -547,8 +547,8 @@ The initial C header provided in the Silk compiler repository defines:
               scalar calling convention on `linux/x86_64` (integer-like
               scalars in `rdi`..`r9`, `f32`/`f64` in `xmm0`..`xmm7`, with
               additional arguments spilled to the stack); helpers may have
-              more than six integer parameters, and this path is exercised
-              in both Zig tests and C tests (see `c-tests/build_exec_helper_params*.c`), or
+              more than six integer parameters, and this path is covered by the
+              reference implementation’s ABI regression suite, or
           - a final `if` statement whose condition is a boolean expression:
             - for the purely constant subset, the condition is a
               **compile‑time boolean literal** (`true` or `false`) and each

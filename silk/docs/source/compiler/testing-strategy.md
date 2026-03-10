@@ -2,6 +2,18 @@
 
 This document defines how we validate the compiler, ABI, and standard library.
 
+For downstream users, the practical takeaway is simple:
+
+```sh
+silk check app.slk
+silk test app.slk
+silk build app.slk -o build/app
+```
+
+The reference implementation uses deeper Zig/C/Silk validation behind the
+scenes, but the public CLI loop above remains the first smoke test for any
+language or stdlib feature.
+
 ## Goals
 
 - Ensure that the Zig implementation and the C99 ABI behave identically for all semantics specified in `docs/`.

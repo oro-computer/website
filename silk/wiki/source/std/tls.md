@@ -18,8 +18,7 @@ import std::tls;
 ## Examples
 
 ### Example: in-memory client/server handshake (MemPipe)
-This example uses `MemPipe` so it does not require sockets. It is kept runnable
-as `tests/silk/pass_std_tls_mem_handshake.slk`.
+This example uses `MemPipe` so it does not require sockets.
 
 ```silk
 import mem from "std/runtime/mem.slk";
@@ -234,4 +233,4 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/tls.md`
-- End-to-end fixture: `tests/silk/pass_std_tls_mem_handshake.slk`
+- `std::crypto`: `docs/std/crypto.md`

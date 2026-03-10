@@ -292,7 +292,5 @@ Implemented end-to-end:
 - Block scoping for runtime `let`/`var` bindings and nested blocks.
 - Formal Silk `#const` declarations (parsed, type-checked, and rejected if used at runtime).
 
-Examples that exercise the implemented subset:
-
-- `tests/silk/pass_let_locals.slk`
-- `tests/silk/pass_spec_const_while.slk`
+The examples on this page cover local `let` / `var` bindings, nested block
+scopes, and Formal Silk `#const` declarations in statement position.

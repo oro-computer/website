@@ -13,6 +13,25 @@ The goal is to provide diagnostics that are:
 - consumable by humans (caret snippets, notes/help where appropriate),
 - easy to test (deterministic formatting; the canonical text contains no ANSI escapes).
 
+## Quick Workflow
+
+When a Silk command fails, work in this order:
+
+```sh
+silk check app.slk
+silk check --debug app.slk
+silk build app.slk -o build/app
+```
+
+1. Read the error code (`E...`) first.
+2. Use the caret span to find the exact token or expression being rejected.
+3. Follow any `= note:` / `= help:` guidance.
+4. Jump from the code family to the relevant reference page:
+   - imports / packages → package and module docs,
+   - borrow / move / task rules → language reference,
+   - verification failures → Formal Silk pages,
+   - backend errors → target and build docs.
+
 ## Terminology
 
 - **Source span**: a byte range in the UTF‑8 source buffer (`offset`, `length`).
@@ -44,6 +63,17 @@ Rules:
   - for a zero-length span, print a single `^`,
   - otherwise print `^` repeated for the span length, clipped to the line end if needed.
 - The canonical text format contains no ANSI color escapes.
+
+Example:
+
+```text
+error[E2037]: task fn uses a non-task-safe type at a task boundary
+ --> worker.slk:4:18
+  |
+4 | task fn run (p: &Pair) -> int {
+  |                  ^^^^^ non-opaque references may not cross task boundaries
+  = help: pass an owned value or a task-safe borrow/view type instead
+```
 
 ## Manifest and Config Errors
 
@@ -91,9 +121,28 @@ Examples of help/suggestion content the compiler may emit:
 - guidance to include additional modules in the build/module set when an import
   refers to a package or file that is not present.
 
+Example:
+
+```text
+error[E1001]: unknown imported package
+ --> app.slk:1:8
+  |
+1 | import ui from "ui";
+  |        ^^ unknown package `ui`
+  = help: add the dependency to silk.toml or extend SILK_PACKAGE_PATH
+```
+
 ## Error Codes (Initial Set)
 
 The compiler assigns a stable code to each currently supported error kind.
+
+Common lookup flow:
+
+- `E0...` → parser rejected the surface syntax.
+- `E1...` → import, file, or package resolution failed.
+- `E2...` → checker rejected the program’s types, control flow, or language rules.
+- `E3...` → Formal Silk could not prove the requested obligation.
+- `E4...` → the program checked successfully, but the selected backend cannot lower it yet.
 
 ### Parsing
 

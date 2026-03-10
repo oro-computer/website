@@ -15,9 +15,24 @@ highlighting for editors that consume tmLanguage grammars (TextMate, VS Code, Su
 2. Restart TextMate.
 3. Open an `.slk` (or `.silk`) file and confirm it is recognized as `Silk`.
 
+Example setup:
+
+```sh
+mkdir -p ~/Library/Application\ Support/TextMate/Bundles/Silk.tmbundle/Syntaxes
+cp textmate/silk.tmLanguage.json \
+  ~/Library/Application\ Support/TextMate/Bundles/Silk.tmbundle/Syntaxes/silk.tmLanguage.json
+```
+
 ## VS Code
 
 A grammar-only VS Code extension is included under `textmate/vscode/`. To try it, open that directory in VS Code and press `F5` to launch an Extension Development Host.
+
+Minimal local workflow:
+
+```sh
+cd textmate/vscode
+code .
+```
 
 For LSP-backed features (diagnostics, hover, go-to-definition), use the `silk-lsp` language server with an appropriate
 client (see [LSP protocol and server](?p=compiler/lsp-silk) and [Vim integration](?p=usage/editor-vim)).

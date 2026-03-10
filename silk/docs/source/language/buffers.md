@@ -48,3 +48,35 @@ provides a minimal buffer surface in `std::`:
 As the compiler/runtime grows, the intrinsic `Buffer(T)` surface described in
 this document is expected to become the lowest-level building block under
 typed collections, with verifier-friendly contracts layered above it.
+
+## Practical Today: `std::buffer` and `std::vector`
+
+Until the full intrinsic surface lands, downstream code should usually reach
+for the current stdlib layers directly:
+
+```silk
+import std::buffer;
+import std::vector;
+
+fn main () -> int {
+  let mut bytes = match std::buffer::BufferU8.init(4) {
+    Ok(v) => v,
+    Err(_) => return 1,
+  };
+  if bytes.push(1 as u8) != None { bytes.drop(); return 2; }
+  if bytes.push(2 as u8) != None { bytes.drop(); return 3; }
+
+  let mut values = std::vector::Vector(int).empty();
+  if values.push(10) != None { values.drop(); bytes.drop(); return 4; }
+  if values.push(20) != None { values.drop(); bytes.drop(); return 5; }
+
+  values.drop();
+  bytes.drop();
+  return 0;
+}
+```
+
+- Use `std::buffer::BufferU8` when you need explicit packed-byte ownership.
+- Use `std::vector::Vector(T)` for typed, growable storage.
+- Keep raw allocation details inside `std::runtime::mem` and stdlib helpers
+  rather than open-coding them in application code.

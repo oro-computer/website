@@ -8,7 +8,7 @@ If your host is C or C++, start with [`libsilk` quickstart](?p=compiler/libsilk-
 
 ## What the Zig module exports
 
-The upstream `src/silk.zig` module exports four public pieces:
+The public Zig module exports four main pieces:
 
 - `silk.OutputKind` — alias of the embedding output-kind enum.
 - `silk.Error` — `error{ OutOfMemory, Failed }`.
@@ -35,7 +35,7 @@ The wrapper uses a small error set:
 
 ## Add `silk` to a Zig build
 
-The Silk repository exports a Zig module named `silk` from its `build.zig`.
+The Silk project exposes a Zig module named `silk`.
 
 ```zig
 const silk_dep = b.dependency("silk", .{

@@ -2,6 +2,17 @@
 
 The `Duration` and `Instant` types have specialized literal support.
 
+## Example
+
+```silk
+fn main () -> int {
+  let fast: Duration = 10ms;
+  let slow: Duration = 2s;
+  let total: Duration = fast + slow;
+  return if total > fast { 0 } else { 1 };
+}
+```
+
 ## Syntax (Implemented Subset)
 
 Duration literals are written as a decimal integer or decimal float immediately
@@ -41,6 +52,13 @@ nanosecond count.
   toward zero to an integral nanosecond count.
 
 If the scaled value does not fit in `i64`, compilation fails.
+
+Example consequences:
+
+- `1500ms` and `1.5s` produce the same `Duration` value.
+- `1.25ms` rounds toward zero at nanosecond precision.
+- `999999999999999999999s` is rejected at compile time because the scaled value
+  does not fit in `i64`.
 
 Compiler requirements:
 

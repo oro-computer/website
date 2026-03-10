@@ -9,4 +9,14 @@ Use Formal Silk instead:
 - `#require` on `struct` declarations (struct requirements proved at
  construction sites).
 
-See `docs/language/formal-verification.md`.
+Example:
+
+```silk
+#require x >= 0;
+#assure result == x + 1;
+fn inc (x: int) -> int {
+  return x + 1;
+}
+```
+
+See [Formal verification](../docs/?p=language/formal-verification).

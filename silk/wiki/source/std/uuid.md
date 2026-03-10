@@ -61,4 +61,4 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/uuid.md`
-- End-to-end fixture: `tests/silk/pass_std_uuid_basic.slk`
+- String formatting helpers: `docs/std/strings.md`

@@ -12,9 +12,18 @@ Linguist.
 
 If you maintain downstream Silk projects, copy these lines into your project’s `.gitattributes`:
 
-```
+```text
 *.slk linguist-language=Silk
 *.slk linguist-detectable=true
 ```
 
 Adjust or extend the entries if you use additional Silk-related file extensions.
+
+Example:
+
+```sh
+printf '%s\n' \
+  '*.slk linguist-language=Silk' \
+  '*.slk linguist-detectable=true' >> .gitattributes
+git add .gitattributes
+```

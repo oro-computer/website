@@ -43,8 +43,7 @@ See:
 
 - `docs/language/errors.md` (overview),
 - `docs/std/result.md` (recoverable `Result(T, E)`),
-- `docs/std/url.md` and `examples/feature_errors_recoverable_url_parse.slk`
-  (recoverable URL parsing example).
+- `docs/std/url.md` (recoverable URL parsing example).
 
 ## Declaring Error Types (`error`)
 

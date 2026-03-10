@@ -8,11 +8,23 @@ Use it when you want:
 - examples that show how a feature feels in real code
 - a gentler progression than the full reference material
 
-If you want the canonical, detailed specification and toolchain reference, use: [Silk Docs](docs/start.md).
+If you want the canonical, detailed specification and toolchain reference, use
+[Silk Docs](../docs/?p=start).
+
+## Minimal shape
+
+```silk
+import std::io::println;
+
+fn main () -> int {
+  println("hello from silk");
+  return 0;
+}
+```
 
 ## Start here
 
-- New project: [Getting started](docs/usage/getting-started.md)
+- New project: [Getting started](../docs/?p=usage/getting-started)
 - Language: [Overview](?p=language/cheat-sheet)
 - Standard library: [Overview](?p=std/overview)
-- Tooling: [CLI](docs/guides/cli.md)
+- Tooling: [CLI](../docs/?p=guides/cli)

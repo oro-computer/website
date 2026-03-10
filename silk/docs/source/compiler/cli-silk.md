@@ -445,9 +445,10 @@ The initial implementation is intentionally smaller and focuses on:
         }
         ```
 
-      - value-producing `if` expressions whose branch bodies are single expressions (current subset restriction), including optionals:
-        - `tests/silk/pass_if_expr_basic.slk` (`let v: int = if cond { 123 } else { 456 };`)
-        - `tests/silk/pass_if_expr_optional_call.slk` (`let m: i64? = if flag { f() } else { g() };`)
+      - value-producing `if` expressions whose branch bodies are single expressions
+        (current subset restriction), including forms such as:
+        - `let v: int = if cond { 123 } else { 456 };`
+        - `let m: i64? = if flag { f() } else { g() };`
 
       - and small helper programs with boolean locals and `if` / `else`, such as:
 

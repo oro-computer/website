@@ -13,8 +13,8 @@ final `.wasm` module from the compiler’s IR (CFG-based lowering for the curren
 subset), plus a smaller constant-only fallback:
 
 - Implementations:
-  - IR→WASM backend: `src/backend_wasm_ir.zig` (primary path),
-  - constant-only emitter: `src/backend_wasm.zig` (fallback path).
+  - IR-backed wasm backend (primary path),
+  - constant-only emitter (fallback path).
 - Supported targets:
   - `wasm32-unknown-unknown`:
     - emits a `.wasm` module exporting `memory` plus exported functions,
@@ -42,6 +42,39 @@ subset), plus a smaller constant-only fallback:
 The CLI exposes these targets via `silk build --target ...` and the shorthand
 `silk build --arch wasm32|wasm32-wasi` (see `docs/compiler/cli-silk.md` and
 `docs/man/silk.1.md`).
+
+## Quickstart
+
+### WASI executable
+
+```silk
+import std::io;
+
+fn main () -> int {
+  std::io::println("hello from wasm wasi");
+  return 0;
+}
+```
+
+```sh
+silk build main.slk --target wasm32-wasi -o build/app.wasm
+```
+
+### Embedder-facing module
+
+```silk
+export fn add (a: int, b: int) -> int {
+  return a + b;
+}
+```
+
+```sh
+silk build math.slk --target wasm32-unknown-unknown -o build/math.wasm
+```
+
+In the current subset, the resulting module exports the supported `export fn`
+surface from the root package and can be loaded by a JS or native wasm
+embedder.
 
 ## Goals
 

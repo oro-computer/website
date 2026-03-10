@@ -2,6 +2,30 @@
 
 This document contains the formal grammar and lexical specification for Silk as used by the compiler implementation.
 
+## Example
+
+Small surface example:
+
+```silk
+package app;
+
+import std::io::println;
+
+fn main () -> int {
+  println("hello");
+  return 0;
+}
+```
+
+Relevant grammar slice:
+
+```text
+Module      ::= (PackageDecl | ModuleDecl)? ImportDecl* TopLevelDecl*
+PackageDecl ::= 'package' PackagePath ';'
+ImportDecl  ::= 'import' ImportSpec ';'
+FnDecl      ::= 'fn' NameToken '(' ParamListOpt ')' ReturnTypeOpt Block
+```
+
 ## Lexical Structure (Overview)
 
 The lexer operates over:

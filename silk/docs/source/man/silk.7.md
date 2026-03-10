@@ -16,6 +16,23 @@ Silk is a native compiler toolchain with:
 - an embedding API (`libsilk` (7) and the `silk_*` functions documented in section 3),
 - and a standard library under the `std::` namespace.
 
+## Quickstart
+
+The typical loop is:
+
+```sh
+silk check hello.slk
+silk build hello.slk -o build/hello
+./build/hello
+```
+
+For package-based workflows:
+
+```sh
+silk package inspect --package ./silk.toml
+silk build --package ./silk.toml
+```
+
 Online documentation:
 
 - `https://oro.computer/silk` (entry point)

@@ -287,11 +287,5 @@ Not implemented yet:
 - General block expressions (`{ stmt* <expr> }`) outside the specific `if`
   expression form.
 
-Examples that exercise the implemented subset:
-
-- `tests/silk/pass_if_bool.slk`
-- `tests/silk/pass_if_logical.slk`
-- `tests/silk/pass_bool_local_if.slk`
-- `tests/silk/pass_nested_if_while.slk`
-- `tests/silk/pass_if_expr_basic.slk`
-- `tests/silk/pass_if_let_chain_optional_result_basic.slk`
+The examples on this page cover the implemented subset for boolean `if`,
+logical conditions, nested control flow, and current `if`-expression forms.

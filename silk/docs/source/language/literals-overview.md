@@ -26,6 +26,20 @@ Silk includes the following literal categories:
 
 Each literal form has well-defined syntax and type inference rules that the compiler must implement.
 
+## Example
+
+```silk
+let n: int = 42;
+let d: Duration = 250ms;
+let ok: bool = true;
+let ch: char = 's';
+let msg: string = "silk";
+let pair = { x: 1, y: 2 };
+```
+
+The dedicated pages below define the exact syntax and current subset rules for
+each literal family.
+
 See:
 
 - `literals-numeric.md`

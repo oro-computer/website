@@ -74,4 +74,4 @@ fn main () -> int {
 ## See also
 
 - Canonical spec: `docs/language/typed-errors.md`
-- Fixtures: `tests/silk/pass_typed_errors_*.slk`
+- Error overview: `docs/language/errors.md`

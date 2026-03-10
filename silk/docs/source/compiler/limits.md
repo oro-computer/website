@@ -14,13 +14,13 @@ cap is also documented in the relevant language document (for example
 
 - **Silk source file max size (per file)**: **64 MiB**
   - Applies to:
-    - the `silk` CLI (`src/driver.zig`),
-    - the Zig wrapper API that loads sources from disk (`src/silk.zig`),
-    - the C ABI entrypoints that load sources from disk (`src/abi.zig`),
-    - the LSP server file loader (`src/lsp_main.zig`).
+    - the `silk` CLI,
+    - the Zig wrapper API when it loads sources from disk,
+    - the C ABI entrypoints that load sources from disk,
+    - the LSP server file loader.
   - Rationale: avoid unbounded allocations while still allowing large modules.
 - **Package manifest max size**: **1 MiB**
-  - Applies to reading `silk.toml` (`src/package_manifest.zig`).
+  - Applies to reading `silk.toml`.
 
 ## Front-End (Type Checker) Structural Limits
 
@@ -35,7 +35,7 @@ uses `CheckError.UnsupportedExpression` as a shared “not supported yet” / �
 an internal cap” path. This will be refined into dedicated “limit exceeded”
 diagnostics as the compiler matures.
 
-Current caps (`src/checker.zig`):
+Current caps:
 
 - **Top-level bindings per module**: **16384**
 - **Local bindings per function**: **1024**
@@ -59,7 +59,7 @@ See `docs/language/varargs.md` for the surface rules and current representation.
 
 ## Lowering / IR Limits
 
-Current caps (`src/lower_ir.zig`):
+Current caps:
 
 - **Lowering binding environment size (per function)**: **1024**
   - This is the maximum number of simultaneously in-scope bindings that the IR
@@ -75,7 +75,37 @@ The current const-evaluator used for the `fn main() -> int` constant
 program path builds a small environment of constant top-level `let` bindings
 that `main` may reference.
 
-- **Const-eval environment bindings**: **4096** (`src/backend_const.zig`)
+- **Const-eval environment bindings**: **4096**
 
 If a module exceeds this, additional candidate bindings are ignored for the
 purposes of const-evaluating `main` in that path.
+
+## Practical examples
+
+### Fixed array length cap
+
+```silk
+let xs: u8[4096] = [0; 4096];
+```
+
+This is within the current supported cap. Larger fixed lengths may be rejected
+by the current compiler subset.
+
+### Varargs pack capacity
+
+```silk
+std::io::println("{d} {d} {d}", 1, 2, 3);
+```
+
+Ordinary calls stay far below the current varargs pack cap. Extremely wide
+varargs calls can hit the implementation guardrail even when the surface syntax
+is otherwise valid.
+
+## User-facing guidance
+
+- Treat these as current toolchain limits, not language guarantees.
+- When a limit is hit today, the diagnostic may still surface as a broader
+  “current subset” rejection rather than a dedicated “limit exceeded” code.
+- If a limit materially affects your downstream workload, check the relevant
+  feature page and the [Diagnostics reference](?p=compiler/diagnostics) before
+  assuming the construct is semantically unsupported.

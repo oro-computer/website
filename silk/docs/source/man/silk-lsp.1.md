@@ -25,6 +25,29 @@ The LSP behavior and supported requests are documented at [LSP and editor integr
 
 - `SILK_STD_ROOT` — default stdlib root (used when `--std-root` is not provided).
 
+## Examples
+
+Start the server with the default stdlib root:
+
+```sh
+silk-lsp
+```
+
+Start the server with an explicit stdlib root:
+
+```sh
+silk-lsp --std-root /opt/oro/silk/std
+```
+
+Minimal editor command configuration:
+
+```json
+{
+  "command": ["silk-lsp"],
+  "filetypes": ["silk"]
+}
+```
+
 ## See Also
 
 - [`silk` (1)](?p=man/silk.1)

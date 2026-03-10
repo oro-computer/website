@@ -289,9 +289,10 @@ The interface must support:
 - a way to wake the executor from other threads (task pool → event loop),
 - a polling primitive used by the executor’s main loop.
 
-The exact Silk-level signatures are specified in `std/runtime/event_loop.slk` and are expected
-to evolve during bring-up, but the long-term contract should avoid exposing raw platform
-struct layouts directly to user code.
+The current downstream-facing surface is documented in
+[`std::runtime::event_loop`](?p=std/runtime-event-loop). The exact signatures
+may continue to evolve during bring-up, but the long-term contract should avoid
+exposing raw platform struct layouts directly to user code.
 
 ## Linux Backend: `io_uring`
 

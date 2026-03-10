@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-03-10T03:23:46+00:00
+Generated: 2026-03-10T15:26:53+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -5229,6 +5229,30 @@ URL: /silk/docs/?p=language/grammar
 
 This document contains the formal grammar and lexical specification for Silk as used by the compiler implementation.
 
+## Example
+
+Small surface example:
+
+```silk
+package app;
+
+import std::io::println;
+
+fn main () -> int {
+  println("hello");
+  return 0;
+}
+```
+
+Relevant grammar slice:
+
+```text
+Module      ::= (PackageDecl | ModuleDecl)? ImportDecl* TopLevelDecl*
+PackageDecl ::= 'package' PackagePath ';'
+ImportDecl  ::= 'import' ImportSpec ';'
+FnDecl      ::= 'fn' NameToken '(' ParamListOpt ')' ReturnTypeOpt Block
+```
+
 ## Lexical Structure (Overview)
 
 The lexer operates over:
@@ -9003,6 +9027,20 @@ Silk includes the following literal categories:
 
 Each literal form has well-defined syntax and type inference rules that the compiler must implement.
 
+## Example
+
+```silk
+let n: int = 42;
+let d: Duration = 250ms;
+let ok: bool = true;
+let ch: char = 's';
+let msg: string = "silk";
+let pair = { x: 1, y: 2 };
+```
+
+The dedicated pages below define the exact syntax and  rules for
+each literal family.
+
 See:
 
 - `literals-numeric.md`
@@ -9533,6 +9571,17 @@ URL: /silk/docs/?p=language/literals-duration
 
 The `Duration` and `Instant` types have specialized literal support.
 
+## Example
+
+```silk
+fn main () -> int {
+  let fast: Duration = 10ms;
+  let slow: Duration = 2s;
+  let total: Duration = fast + slow;
+  return if total > fast { 0 } else { 1 };
+}
+```
+
 ## Syntax
 
 Duration literals are written as a decimal integer or decimal float immediately
@@ -9573,6 +9622,13 @@ nanosecond count.
 
 If the scaled value does not fit in `i64`, compilation fails.
 
+Example consequences:
+
+- `1500ms` and `1.5s` produce the same `Duration` value.
+- `1.25ms` rounds toward zero at nanosecond precision.
+- `999999999999999999999s` is rejected at compile time because the scaled value
+  does not fit in `i64`.
+
 Compiler requirements:
 
 - Implement lexing rules that distinguish unit suffixes from identifiers.
@@ -9596,6 +9652,20 @@ Key ideas:
 - Duration literals represent time spans with unit suffixes and are converted into
   integral ticks.
 - Operators cover arithmetic, comparisons, and construction from scalars.
+
+## Example
+
+```silk
+fn main () -> int {
+  let start: Instant = 0;
+  let step: Duration = 250ms;
+  let finish: Instant = start + step + 1s;
+  let elapsed: Duration = finish - start;
+
+  if elapsed == 1250ms { return 0; }
+  return 1;
+}
+```
 
 ## Representation
 
@@ -10954,6 +11024,12 @@ For unrecoverable logic bugs and contract violations, Silk uses **typed
 errors** (`error`, `panic`, and `T | ErrorType...`), specified in
 `docs/language/typed-errors.md`.
 
+Practical rule:
+
+- use `Result(T, E)` / `T?` for input, parse, I/O, and environment failures,
+- use typed errors only for contract violations and logic bugs that should not
+  be silently recovered from.
+
 ## Design Goals
 
 - Error signaling is explicit and typed (no hidden global error state).
@@ -10978,10 +11054,58 @@ Silk distinguishes between:
 tagged result (`std::url::URLResult`), so callers can report an error and keep
 going without aborting.
 
-A runnable example that wraps `URLResult` into `std::result::Result` and parses
-all command-line arguments is in:
+```silk
+import std::io::println;
+import std::url;
 
-- `examples/feature_errors_recoverable_url_parse.slk`
+fn main () -> int {
+  let value = match std::url::parse("https://oro.computer/silk/docs/") {
+    Ok(v) => v,
+    Err(err) => {
+      println("invalid url: {s}", std::url::error_message(err.kind));
+      return 1;
+    },
+  };
+
+  let href = match value.href() {
+    Ok(v) => v,
+    Err(_) => return 2,
+  };
+  println("{s}", href.as_string());
+  return 0;
+}
+```
+
+This is the preferred shape for routine failures: the caller decides whether to
+retry, log, substitute a default, or stop the current operation.
+
+### Example: Typed error for a contract violation
+
+```silk
+error NegativeInput {
+  value: int,
+}
+
+fn require_non_negative (value: int) -> int | NegativeInput {
+  if value < 0 {
+    panic NegativeInput{ value: value };
+  }
+  return value;
+}
+
+fn main () -> int {
+  match (require_non_negative(-7)) {
+    value => return value,
+    err: NegativeInput => {
+      std::io::eprintln("bug: unexpected negative value {d}", err.value);
+      return 2;
+    },
+  }
+}
+```
+
+Here the failure is part of the function contract rather than an ordinary input
+validation result.
 
 ## Error Representation
 
@@ -11120,8 +11244,7 @@ See:
 
 - `docs/language/errors.md` (overview),
 - `docs/std/result.md` (recoverable `Result(T, E)`),
-- `docs/std/url.md` and `examples/feature_errors_recoverable_url_parse.slk`
-  (recoverable URL parsing example).
+- `docs/std/url.md` (recoverable URL parsing example).
 
 ## Declaring Error Types (`error`)
 
@@ -12085,6 +12208,38 @@ Compiler requirements:
 - Treat `Buffer(T)` as an intrinsic type with special semantics.
 - Ensure the verifier has enough information to reason about buffer safety.
 - Coordinate with the standard library so that safe collections are built on top of `Buffer(T)`.
+
+## Practical Today: `std::buffer` and `std::vector`
+
+Until the full intrinsic surface lands, downstream code should usually reach
+for the current stdlib layers directly:
+
+```silk
+import std::buffer;
+import std::vector;
+
+fn main () -> int {
+  let mut bytes = match std::buffer::BufferU8.init(4) {
+    Ok(v) => v,
+    Err(_) => return 1,
+  };
+  if bytes.push(1 as u8) != None { bytes.drop(); return 2; }
+  if bytes.push(2 as u8) != None { bytes.drop(); return 3; }
+
+  let mut values = std::vector::Vector(int).empty();
+  if values.push(10) != None { values.drop(); bytes.drop(); return 4; }
+  if values.push(20) != None { values.drop(); bytes.drop(); return 5; }
+
+  values.drop();
+  bytes.drop();
+  return 0;
+}
+```
+
+- Use `std::buffer::BufferU8` when you need explicit packed-byte ownership.
+- Use `std::vector::Vector(T)` for typed, growable storage.
+- Keep raw allocation details inside `std::runtime::mem` and stdlib helpers
+  rather than open-coding them in application code.
 
 ==============================================================================
 DOCS: Concurrency (language/concurrency)
@@ -14758,6 +14913,23 @@ must be migrated as they are touched.
 
 This document exists to keep `std::` APIs consistent across modules.
 
+## Quick Reference
+
+Use these patterns unless a module has a stronger, domain-specific reason not
+to:
+
+```silk
+// Prefer Result(...) when callers need error detail.
+public fn parse (s: string) -> std::result::Result(Value, ParseFailed);
+
+// Prefer T? when absence is the only failure mode.
+public fn pop (mut self: &Stack(T)) -> T?;
+
+// Prefer an owning handle + borrow view for cross-task use.
+public fn sender (self: &Channel(T)) -> std::result::Result(ChannelSender(T), SyncFailed);
+public fn borrow (self: &Channel(T)) -> ChannelBorrow(T);
+```
+
 ## Public vs Internal API
 
 - Only `export` declarations are considered part of the stable public surface.
@@ -14837,6 +15009,22 @@ needing to know internal sentinel values or manually fill out large structs.
     or an optional error return) when allocation fails,
   - `empty()` exists for infallible construction.
 
+Example:
+
+```silk
+struct ReserveFailed { code: int }
+
+fn reserve_bytes () -> ReserveFailed? {
+  let mut buf = std::buffer::BufferU8.empty();
+  match (std::buffer::BufferU8.init(4096)) {
+    Ok(v) => { buf = v; },
+    Err(_) => return ReserveFailed{ code: 1 },
+  }
+  buf.drop();
+  return None;
+}
+```
+
 ## Errors
 
 Silk supports both typed errors (`docs/language/typed-errors.md`) and
@@ -14869,6 +15057,18 @@ APIs should follow these rules:
   invariant violations, and resource exhaustion must be surfaced as recoverable
   errors.
 
+Example:
+
+```silk
+struct ParseBoolFailed { code: int }
+
+public fn parse_bool_flag (s: string) -> std::result::Result(bool, ParseBoolFailed) {
+  if s == "true" { return Ok(true); }
+  if s == "false" { return Ok(false); }
+  return Err(ParseBoolFailed{ code: 1 });
+}
+```
+
 ## Concurrency and Thread Safety
 
 Silk’s hosted `task` concurrency runs on OS threads. `std::` APIs must make it
@@ -14889,6 +15089,36 @@ Conventions:
     (often as an optional parameter),
   - callers should create and own an `AbortController` and call `abort()` to
     request cancellation.
+
+Example:
+
+```silk
+task fn producer (tx: std::sync::ChannelSender(u64)) -> int {
+  if tx.send(42) != None { return 1; }
+  return 0;
+}
+
+async fn main () -> int {
+  task {
+    let mut ch = match std::sync::Channel(u64).init(1) {
+      Ok(v) => v,
+      Err(_) => return 1,
+    };
+    let tx = match ch.sender() {
+      Ok(v) => v,
+      Err(_) => { ch.destroy(); return 2; },
+    };
+
+    let h = producer(tx);
+    let value = ch.recv();
+    let rc: int = yield h;
+    ch.destroy();
+
+    if rc != 0 { return 3; }
+    return if value == Some(42) { 0 } else { 4 };
+  }
+}
+```
 
 ## Formal Silk Contracts
 
@@ -25240,12 +25470,21 @@ Linguist.
 
 If you maintain downstream Silk projects, copy these lines into your project’s `.gitattributes`:
 
-```
+```text
 *.slk linguist-language=Silk
 *.slk linguist-detectable=true
 ```
 
 Adjust or extend the entries if you use additional Silk-related file extensions.
+
+Example:
+
+```sh
+printf '%s\n' \
+  '*.slk linguist-language=Silk' \
+  '*.slk linguist-detectable=true' >> .gitattributes
+git add .gitattributes
+```
 
 ==============================================================================
 DOCS: Vim Integration for Silk (usage/editor-vim)
@@ -25616,9 +25855,24 @@ highlighting for editors that consume tmLanguage grammars (TextMate, VS Code, Su
 2. Restart TextMate.
 3. Open an `.slk` (or `.silk`) file and confirm it is recognized as `Silk`.
 
+Example setup:
+
+```sh
+mkdir -p ~/Library/Application\ Support/TextMate/Bundles/Silk.tmbundle/Syntaxes
+cp textmate/silk.tmLanguage.json \
+  ~/Library/Application\ Support/TextMate/Bundles/Silk.tmbundle/Syntaxes/silk.tmLanguage.json
+```
+
 ## VS Code
 
 A grammar-only VS Code extension is included under `textmate/vscode/`. To try it, open that directory in VS Code and press `F5` to launch an Extension Development Host.
+
+Minimal local workflow:
+
+```sh
+cd textmate/vscode
+code .
+```
 
 For LSP-backed features (diagnostics, hover, go-to-definition), use the `silk-lsp` language server with an appropriate
 client (see [LSP protocol and server](?p=compiler/lsp-silk) and [Vim integration](?p=usage/editor-vim)).
@@ -26242,9 +26496,10 @@ The initial implementation is intentionally smaller and focuses on:
         }
         ```
 
-      - value-producing `if` expressions whose branch bodies are single expressions ( restriction), including optionals:
-        - `tests/silk/pass_if_expr_basic.slk` (`let v: int = if cond { 123 } else { 456 };`)
-        - `tests/silk/pass_if_expr_optional_call.slk` (`let m: i64? = if flag { f() } else { g() };`)
+      - value-producing `if` expressions whose branch bodies are single expressions
+        ( restriction), including forms such as:
+        - `let v: int = if cond { 123 } else { 456 };`
+        - `let m: i64? = if flag { f() } else { g() };`
 
       - and small helper programs with boolean locals and `if` / `else`, such as:
 
@@ -27878,6 +28133,15 @@ URL: /silk/docs/?p=compiler/stdlib-integration
 
 This document describes how the `std::` package integrates with the compiler and the CLI.
 
+Use this page when you need to answer:
+
+- how `import std::...;` is resolved,
+- when the default stdlib is auto-loaded,
+- how to swap in an alternate stdlib root,
+- and what `--nostd` actually changes.
+
+## Core model
+
 Key requirements:
 
 - `std::` is a distinct package:
@@ -27891,6 +28155,68 @@ Compiler responsibilities:
   - linking the default stdlib,
   - specifying an alternate stdlib,
   - ensuring FFI and ABI remain stable regardless of the stdlib implementation.
+
+## Default workflow
+
+In the common case, you do not need to configure anything explicitly:
+
+```sh
+silk check app.slk
+silk build app.slk -o build/app
+```
+
+If `app.slk` imports `std::io`, `std::fs`, or other `std::...` modules, the
+toolchain resolves them from the configured stdlib root and links the hosted
+runtime pieces required by those modules for the active target.
+
+## Selecting a stdlib root
+
+The public control points are:
+
+- `--std-root <path>` (or equivalent CLI aliases documented in
+  [`silk` CLI](?p=compiler/cli-silk)) to point at a specific stdlib tree,
+- `SILK_STD_ROOT` as the default when the flag is not provided,
+- `--nostd` to disable stdlib auto-loading entirely.
+
+Example:
+
+```sh
+silk check app.slk --std-root /opt/oro/silk/std
+silk build app.slk --std-root /opt/oro/silk/std -o build/app
+```
+
+The alternate root must still provide the public `std::` module surface your
+program imports.
+
+## `--nostd`
+
+`--nostd` means:
+
+- `import std::...;` no longer resolves automatically,
+- hosted stdlib archives are not linked automatically,
+- and only the explicit module set / package graph you pass to the compiler is
+  considered.
+
+This is mainly useful for bring-up, freestanding targets, or experiments with a
+replacement stdlib.
+
+```sh
+silk check freestanding.slk --nostd
+silk build freestanding.slk --nostd --target wasm32-unknown-unknown -o out.wasm
+```
+
+## Packages and distribution
+
+For package builds, stdlib integration still follows the same rules: the
+package graph from `silk.toml` is resolved first, then `std::...` imports are
+resolved from the active stdlib root.
+
+See also:
+
+- [Package manifests](?p=compiler/package-manifests)
+- [Package distribution](?p=compiler/package-distribution)
+- [CLI reference](?p=compiler/cli-silk)
+- [Standard library overview](?p=std/overview)
 
 ==============================================================================
 DOCS: WebAssembly Back-End (`wasm32` / `wasm64`) (compiler/backend-wasm)
@@ -27911,8 +28237,8 @@ final `.wasm` module from the compiler’s IR (CFG-based lowering for the curren
 subset), plus a smaller constant-only fallback:
 
 - Implementations:
-  - IR→WASM backend: `src/backend_wasm_ir.zig` (primary path),
-  - constant-only emitter: `src/backend_wasm.zig` (fallback path).
+  - IR-backed wasm backend (primary path),
+  - constant-only emitter (fallback path).
 - Supported targets:
   - `wasm32-unknown-unknown`:
     - emits a `.wasm` module exporting `memory` plus exported functions,
@@ -27940,6 +28266,39 @@ subset), plus a smaller constant-only fallback:
 The CLI exposes these targets via `silk build --target ...` and the shorthand
 `silk build --arch wasm32|wasm32-wasi` (see `docs/compiler/cli-silk.md` and
 `docs/man/silk.1.md`).
+
+## Quickstart
+
+### WASI executable
+
+```silk
+import std::io;
+
+fn main () -> int {
+  std::io::println("hello from wasm wasi");
+  return 0;
+}
+```
+
+```sh
+silk build main.slk --target wasm32-wasi -o build/app.wasm
+```
+
+### Embedder-facing module
+
+```silk
+export fn add (a: int, b: int) -> int {
+  return a + b;
+}
+```
+
+```sh
+silk build math.slk --target wasm32-unknown-unknown -o build/math.wasm
+```
+
+In Silk, the resulting module exports the supported `export fn`
+surface from the root package and can be loaded by a JS or native wasm
+embedder.
 
 ## Goals
 
@@ -28390,9 +28749,10 @@ The interface must support:
 - a way to wake the executor from other threads (task pool → event loop),
 - a polling primitive used by the executor’s main loop.
 
-The exact Silk-level signatures are specified in `std/runtime/event_loop.slk` and are expected
-to evolve during bring-up, but the long-term contract should avoid exposing raw platform
-struct layouts directly to user code.
+The current downstream-facing surface is documented in
+[`std::runtime::event_loop`](?p=std/runtime-event-loop). The exact signatures
+may continue to evolve during bring-up, but the long-term contract should avoid
+exposing raw platform struct layouts directly to user code.
 
 ## Linux Backend: `io_uring`
 
@@ -28941,6 +29301,25 @@ The goal is to provide diagnostics that are:
 - consumable by humans (caret snippets, notes/help where appropriate),
 - easy to test (deterministic formatting; the canonical text contains no ANSI escapes).
 
+## Quick Workflow
+
+When a Silk command fails, work in this order:
+
+```sh
+silk check app.slk
+silk check --debug app.slk
+silk build app.slk -o build/app
+```
+
+1. Read the error code (`E...`) first.
+2. Use the caret span to find the exact token or expression being rejected.
+3. Follow any `= note:` / `= help:` guidance.
+4. Jump from the code family to the relevant reference page:
+   - imports / packages → package and module docs,
+   - borrow / move / task rules → language reference,
+   - verification failures → Formal Silk pages,
+   - backend errors → target and build docs.
+
 ## Terminology
 
 - **Source span**: a byte range in the UTF‑8 source buffer (`offset`, `length`).
@@ -28972,6 +29351,17 @@ Rules:
   - for a zero-length span, print a single `^`,
   - otherwise print `^` repeated for the span length, clipped to the line end if needed.
 - The canonical text format contains no ANSI color escapes.
+
+Example:
+
+```text
+error[E2037]: task fn uses a non-task-safe type at a task boundary
+ --> worker.slk:4:18
+  |
+4 | task fn run (p: &Pair) -> int {
+  |                  ^^^^^ non-opaque references may not cross task boundaries
+  = help: pass an owned value or a task-safe borrow/view type instead
+```
 
 ## Manifest and Config Errors
 
@@ -29019,9 +29409,28 @@ Examples of help/suggestion content the compiler may emit:
 - guidance to include additional modules in the build/module set when an import
   refers to a package or file that is not present.
 
+Example:
+
+```text
+error[E1001]: unknown imported package
+ --> app.slk:1:8
+  |
+1 | import ui from "ui";
+  |        ^^ unknown package `ui`
+  = help: add the dependency to silk.toml or extend SILK_PACKAGE_PATH
+```
+
 ## Error Codes (Initial Set)
 
 The compiler assigns a stable code to each currently supported error kind.
+
+Common lookup flow:
+
+- `E0...` → parser rejected the surface syntax.
+- `E1...` → import, file, or package resolution failed.
+- `E2...` → checker rejected the program’s types, control flow, or language rules.
+- `E3...` → Formal Silk could not prove the requested obligation.
+- `E4...` → the program checked successfully, but the selected backend cannot lower it yet.
 
 ### Parsing
 
@@ -29211,13 +29620,13 @@ cap is also documented in the relevant language document (for example
 
 - **Silk source file max size (per file)**: **64 MiB**
   - Applies to:
-    - the `silk` CLI (`src/driver.zig`),
-    - the Zig wrapper API that loads sources from disk (`src/silk.zig`),
-    - the C ABI entrypoints that load sources from disk (`src/abi.zig`),
-    - the LSP server file loader (`src/lsp_main.zig`).
+    - the `silk` CLI,
+    - the Zig wrapper API when it loads sources from disk,
+    - the C ABI entrypoints that load sources from disk,
+    - the LSP server file loader.
   - Rationale: avoid unbounded allocations while still allowing large modules.
 - **Package manifest max size**: **1 MiB**
-  - Applies to reading `silk.toml` (`src/package_manifest.zig`).
+  - Applies to reading `silk.toml`.
 
 ## Front-End (Type Checker) Structural Limits
 
@@ -29232,7 +29641,7 @@ uses `CheckError.UnsupportedExpression` as a shared “not supported yet” / �
 an internal cap” path. This will be refined into dedicated “limit exceeded”
 diagnostics as the compiler matures.
 
-Current caps (`src/checker.zig`):
+Current caps:
 
 - **Top-level bindings per module**: **16384**
 - **Local bindings per function**: **1024**
@@ -29256,7 +29665,7 @@ See `docs/language/varargs.md` for the surface rules and current representation.
 
 ## Lowering / IR Limits
 
-Current caps (`src/lower_ir.zig`):
+Current caps:
 
 - **Lowering binding environment size (per function)**: **1024**
   - This is the maximum number of simultaneously in-scope bindings that the IR
@@ -29272,10 +29681,40 @@ The current const-evaluator used for the `fn main() -> int` constant
 program path builds a small environment of constant top-level `let` bindings
 that `main` may reference.
 
-- **Const-eval environment bindings**: **4096** (`src/backend_const.zig`)
+- **Const-eval environment bindings**: **4096**
 
 If a module exceeds this, additional candidate bindings are ignored for the
 purposes of const-evaluating `main` in that path.
+
+## Practical examples
+
+### Fixed array length cap
+
+```silk
+let xs: u8[4096] = [0; 4096];
+```
+
+This is within the current supported cap. Larger fixed lengths may be rejected
+by the compiler.
+
+### Varargs pack capacity
+
+```silk
+std::io::println("{d} {d} {d}", 1, 2, 3);
+```
+
+Ordinary calls stay far below the current varargs pack cap. Extremely wide
+varargs calls can hit the implementation guardrail even when the surface syntax
+is otherwise valid.
+
+## User-facing guidance
+
+- Treat these as current toolchain limits, not language guarantees.
+- When a limit is hit today, the diagnostic may still surface as a broader
+  “” rejection rather than a dedicated “limit exceeded” code.
+- If a limit materially affects your downstream workload, check the relevant
+  feature page and the [Diagnostics reference](?p=compiler/diagnostics) before
+  assuming the construct is semantically unsupported.
 
 ==============================================================================
 DOCS: Testing Strategy (Zig + C99 + Silk) (compiler/testing-strategy)
@@ -29285,6 +29724,18 @@ URL: /silk/docs/?p=compiler/testing-strategy
 # Testing Strategy (Zig + C99 + Silk)
 
 This document defines how we validate the compiler, ABI, and standard library.
+
+For downstream users, the practical takeaway is simple:
+
+```sh
+silk check app.slk
+silk test app.slk
+silk build app.slk -o build/app
+```
+
+The reference implementation uses deeper Zig/C/Silk validation behind the
+scenes, but the public CLI loop above remains the first smoke test for any
+language or stdlib feature.
 
 ## Goals
 
@@ -29393,11 +29844,45 @@ The `silk-lsp` binary is built and installed alongside the `silk` CLI:
   - `--std-root <path>` overrides the stdlib root used for resolving `import std::...;`.
   - `--nostd` disables stdlib auto-loading entirely.
 
+Minimal local smoke test:
+
+```sh
+silk-lsp --std-root ./std
+```
+
+Then send standard LSP framing on stdin:
+
+```text
+Content-Length: 65
+
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}
+```
+
+The server replies with an `initialize` result advertising the capabilities
+documented below. This is often the quickest way to confirm that an editor issue
+is in the client wiring rather than in the server binary itself.
+
 Typical client configurations (e.g., Vim/Neovim LSP, VS Code, or other LSP frontends) should:
 
 - set the command to `["silk-lsp"]`,
 - enable standard LSP text document synchronization,
 - refrain from sending requests beyond the capabilities advertised in `initialize` (hover, diagnostics, shutdown/exit).
+
+Minimal launch examples:
+
+```json
+{
+  "command": ["silk-lsp"],
+  "filetypes": ["silk"]
+}
+```
+
+```json
+{
+  "command": ["silk-lsp", "--std-root", "/opt/oro/silk/std"],
+  "filetypes": ["silk"]
+}
+```
 
 ## Transport and Protocol
 
@@ -29408,6 +29893,14 @@ The language server:
 - implements JSON-RPC 2.0 semantics (`jsonrpc: "2.0"`, `id`, `method`, `params`, `result` / `error`).
 
 The server does not depend on any external networking libraries; it uses Zig standard library I/O and JSON support.
+
+Minimal wire example:
+
+```text
+Content-Length: 92
+
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{},"rootUri":null}}
+```
 
 Position handling note:
 
@@ -29503,7 +29996,7 @@ Known limitations in this initial support:
 The server provides a minimal implementation of `textDocument/completion`:
 
 - Completion items are offered for:
-  - all language keywords defined in `src/token.zig` (via `keywordTable()`),
+  - all Silk language keywords,
   - all distinct identifiers lexed from the current document (names that are not recognized as keywords),
   - symbol-aware suggestions from the current package and imported packages (functions, lets, ext, structs, enums, interfaces, errors),
   - imported names from module-specifier imports (`import { ... } from "...";` and `import alias from "...";`) when resolvable,
@@ -32155,6 +32648,29 @@ The LSP behavior and supported requests are documented at [LSP and editor integr
 
 - `SILK_STD_ROOT` — default stdlib root (used when `--std-root` is not provided).
 
+## Examples
+
+Start the server with the default stdlib root:
+
+```sh
+silk-lsp
+```
+
+Start the server with an explicit stdlib root:
+
+```sh
+silk-lsp --std-root /opt/oro/silk/std
+```
+
+Minimal editor command configuration:
+
+```json
+{
+  "command": ["silk-lsp"],
+  "filetypes": ["silk"]
+}
+```
+
 ## See Also
 
 - [`silk` (1)](?p=man/silk.1)
@@ -32412,6 +32928,23 @@ Silk is a native compiler toolchain with:
 - a CLI entrypoint (`silk` (1)),
 - an embedding API (`libsilk` (7) and the `silk_*` functions documented in section 3),
 - and a standard library under the `std::` namespace.
+
+## Quickstart
+
+The typical loop is:
+
+```sh
+silk check hello.slk
+silk build hello.slk -o build/hello
+./build/hello
+```
+
+For package-based workflows:
+
+```sh
+silk package inspect --package ./silk.toml
+silk build --package ./silk.toml
+```
 
 Online documentation:
 
@@ -45880,14 +46413,26 @@ Use it when you want:
 - examples that show how a feature feels in real code
 - a gentler progression than the full reference material
 
-If you want the canonical, detailed specification and toolchain reference, use: [Silk Docs](docs/start.md).
+If you want the canonical, detailed specification and toolchain reference, use
+[Silk Docs](../docs/?p=start).
+
+## Minimal shape
+
+```silk
+import std::io::println;
+
+fn main () -> int {
+  println("hello from silk");
+  return 0;
+}
+```
 
 ## Start here
 
-- New project: [Getting started](docs/usage/getting-started.md)
+- New project: [Getting started](../docs/?p=usage/getting-started)
 - Language: [Overview](?p=language/cheat-sheet)
 - Standard library: [Overview](?p=std/overview)
-- Tooling: [CLI](docs/guides/cli.md)
+- Tooling: [CLI](../docs/?p=guides/cli)
 
 ==============================================================================
 WIKI: Syntax tour (language/syntax-tour)
@@ -46416,7 +46961,7 @@ This wiki page is a reading guide, not a replacement for the grammar itself.
 
 - Use the grammar when you need the exact token-level surface form.
 - Use the concept docs (`docs/language/*.md`) for semantics and type rules.
-- Use `tests/silk/pass_*.slk` for runnable examples.
+- Use the syntax tour and concept pages for runnable examples.
 
 ## Example
 ```silk
@@ -46430,8 +46975,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical grammar: `docs/language/grammar.md`
-- Syntax tour: `docs/wiki/language/syntax-tour.md`
+- Canonical grammar: `../docs/?p=language/grammar`
+- Syntax tour: `?p=language/syntax-tour`
 
 ==============================================================================
 WIKI: Doc comments (language/doc-comments)
@@ -46678,7 +47223,7 @@ fn main () -> int {
 
 - Canonical spec: `docs/language/optional.md`
 - `match` expressions: `docs/language/flow-match.md`
-- Optional-related fixtures: `tests/silk/pass_optional_*.slk`
+- Syntax tour: `docs/language/syntax-tour.md`
 
 ==============================================================================
 WIKI: Mutability (`mut`) (language/mutability)
@@ -47112,7 +47657,20 @@ URL: /silk/wiki/?p=language/struct-requirements
 Use `#require` on a `struct` to state requirements that must hold for all
 values constructed for that type.
 
-See `docs/language/struct-requirements.md` and `docs/language/formal-verification.md`.
+```silk
+struct Port {
+  value: int,
+}
+
+#require value >= 0;
+#require value <= 65535;
+```
+
+Use this when an invariant belongs to the type itself, not just to one helper
+function.
+
+See [Struct requirements](../docs/?p=language/struct-requirements) and
+[Formal verification](../docs/?p=language/formal-verification).
 
 ==============================================================================
 WIKI: Interfaces (language/interfaces)
@@ -47216,7 +47774,7 @@ fn main () -> int {
 
 - Canonical spec: `docs/language/enums.md`
 - `match` expressions: `docs/language/flow-match.md`
-- Enum fixtures: `tests/silk/pass_enum_*`
+- Syntax tour: `docs/language/syntax-tour.md`
 
 ==============================================================================
 WIKI: Errors and assertions (language/errors)
@@ -47322,7 +47880,7 @@ fn main () -> int {
 ## See also
 
 - Canonical spec: `docs/language/typed-errors.md`
-- Fixtures: `tests/silk/pass_typed_errors_*.slk`
+- Error overview: `docs/language/errors.md`
 
 ==============================================================================
 WIKI: Borrow checker (design) (language/borrow-checker)
@@ -47830,7 +48388,17 @@ Use Formal Silk instead:
 - `#require` on `struct` declarations (struct requirements proved at
  construction sites).
 
-See `docs/language/formal-verification.md`.
+Example:
+
+```silk
+#require x >= 0;
+#assure result == x + 1;
+fn inc (x: int) -> int {
+  return x + 1;
+}
+```
+
+See [Formal verification](../docs/?p=language/formal-verification).
 
 ==============================================================================
 WIKI: Dependent types (const parameters) (design) (language/dependent-types)
@@ -48705,7 +49273,7 @@ fn main () -> int {
 
 - Canonical doc: `docs/std/process.md`
 - Environment helpers: `docs/wiki/std/env.md`
-- End-to-end fixture: `tests/silk/pass_std_process_getcwd_chdir.slk`
+- Runtime/process boundary: `docs/std/runtime.md`
 
 ==============================================================================
 WIKI: `std::path` (std/path)
@@ -48765,7 +49333,7 @@ fn main () -> int {
 
 - Canonical doc: `docs/std/path.md`
 - Filesystem: `docs/wiki/std/filesystem.md`
-- End-to-end fixture: `tests/silk/pass_std_path_basic.slk`
+- Strings: `docs/std/strings.md`
 
 ==============================================================================
 WIKI: `std::fs` (std/filesystem)
@@ -48902,7 +49470,7 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/json.md`
-- End-to-end fixture: `tests/silk/pass_std_json_basic.slk`
+- Typed results and errors: `docs/std/result.md`
 
 ==============================================================================
 WIKI: `std::toml` (std/toml)
@@ -48995,7 +49563,7 @@ answer = 42
 ## See also
 
 - Canonical doc: `docs/std/toml.md`
-- End-to-end fixture: `tests/silk/pass_std_toml_basic.slk`
+- Result handling: `docs/std/result.md`
 
 ==============================================================================
 WIKI: `std::url` (std/url)
@@ -49196,7 +49764,7 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/url.md`
-- End-to-end fixture: `tests/silk/pass_std_url_basic.slk`
+- Error handling patterns: `docs/language/errors.md`
 
 ==============================================================================
 WIKI: `std::semver` (std/semver)
@@ -49301,7 +49869,7 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/uuid.md`
-- End-to-end fixture: `tests/silk/pass_std_uuid_basic.slk`
+- String formatting helpers: `docs/std/strings.md`
 
 ==============================================================================
 WIKI: `std::net` (std/networking)
@@ -49476,9 +50044,7 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/crypto.md`
-- End-to-end fixtures:
-  - `tests/silk/pass_std_crypto_libsodium_basic.slk`
-  - `tests/silk/pass_std_crypto_aead_basic.slk`
+- Strings and byte helpers: `docs/std/strings.md`
 
 ==============================================================================
 WIKI: `std::tls` (std/tls)
@@ -49500,8 +50066,7 @@ import std::tls;
 ## Examples
 
 ### Example: in-memory client/server handshake (MemPipe)
-This example uses `MemPipe` so it does not require sockets. It is kept runnable
-as `tests/silk/pass_std_tls_mem_handshake.slk`.
+This example uses `MemPipe` so it does not require sockets.
 
 ```silk
 import mem from "std/runtime/mem.slk";
@@ -49716,7 +50281,7 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/tls.md`
-- End-to-end fixture: `tests/silk/pass_std_tls_mem_handshake.slk`
+- `std::crypto`: `docs/std/crypto.md`
 
 ==============================================================================
 WIKI: `std::runtime` (std/runtime)
@@ -49772,7 +50337,7 @@ fn main () -> int {
 
 - Canonical doc: `docs/std/runtime.md`
 - Std package structure and swappability: `docs/std/package-structure.md`
-- End-to-end fixture (build metadata): `tests/silk/pass_std_runtime_build_is_debug.slk`
+- Event loop surface: `docs/std/runtime-event-loop.md`
 
 ==============================================================================
 WIKI: `std::task` (std/task)
@@ -49873,10 +50438,7 @@ async fn main () -> int {
 
 - Canonical doc: `docs/std/sync.md`
 - Concurrency: `docs/language/concurrency.md`
-- End-to-end fixtures:
-  - `tests/silk/pass_std_sync_channel_u64.slk`
-  - `tests/silk/pass_std_sync_mutex_condvar.slk`
-  - `tests/silk/pass_std_sync_cancellation_token.slk`
+- `std::task`: `docs/std/task.md`
 
 ==============================================================================
 WIKI: `std::temporal` (std/temporal)

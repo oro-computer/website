@@ -7,7 +7,7 @@ Canonical doc: `docs/std/vector.md`.
 
 ## Status
 
-- Implemented subset + design: a usable subset is implemented in `std/vector.slk`.
+- Implemented subset + design: a usable subset is implemented today.
 - Details: `docs/std/vector.md`
 
 ## Importing

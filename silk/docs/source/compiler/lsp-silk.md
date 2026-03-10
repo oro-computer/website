@@ -26,11 +26,45 @@ The `silk-lsp` binary is built and installed alongside the `silk` CLI:
   - `--std-root <path>` overrides the stdlib root used for resolving `import std::...;`.
   - `--nostd` disables stdlib auto-loading entirely.
 
+Minimal local smoke test:
+
+```sh
+silk-lsp --std-root ./std
+```
+
+Then send standard LSP framing on stdin:
+
+```text
+Content-Length: 65
+
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}
+```
+
+The server replies with an `initialize` result advertising the capabilities
+documented below. This is often the quickest way to confirm that an editor issue
+is in the client wiring rather than in the server binary itself.
+
 Typical client configurations (e.g., Vim/Neovim LSP, VS Code, or other LSP frontends) should:
 
 - set the command to `["silk-lsp"]`,
 - enable standard LSP text document synchronization,
 - refrain from sending requests beyond the capabilities advertised in `initialize` (hover, diagnostics, shutdown/exit).
+
+Minimal launch examples:
+
+```json
+{
+  "command": ["silk-lsp"],
+  "filetypes": ["silk"]
+}
+```
+
+```json
+{
+  "command": ["silk-lsp", "--std-root", "/opt/oro/silk/std"],
+  "filetypes": ["silk"]
+}
+```
 
 ## Transport and Protocol
 
@@ -41,6 +75,14 @@ The language server:
 - implements JSON-RPC 2.0 semantics (`jsonrpc: "2.0"`, `id`, `method`, `params`, `result` / `error`).
 
 The server does not depend on any external networking libraries; it uses Zig standard library I/O and JSON support.
+
+Minimal wire example:
+
+```text
+Content-Length: 92
+
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{},"rootUri":null}}
+```
 
 Position handling note:
 
@@ -136,7 +178,7 @@ Known limitations in this initial support:
 The server provides a minimal implementation of `textDocument/completion`:
 
 - Completion items are offered for:
-  - all language keywords defined in `src/token.zig` (via `keywordTable()`),
+  - all Silk language keywords,
   - all distinct identifiers lexed from the current document (names that are not recognized as keywords),
   - symbol-aware suggestions from the current package and imported packages (functions, lets, ext, structs, enums, interfaces, errors),
   - imported names from module-specifier imports (`import { ... } from "...";` and `import alias from "...";`) when resolvable,
