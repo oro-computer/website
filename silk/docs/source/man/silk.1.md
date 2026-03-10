@@ -362,7 +362,7 @@ See also: `silk-env` (1) for a complete list of environment variables printed by
 
 ## See Also
 
-- `silk-build` (1), `silk-package` (1), `silk-check` (1), `silk-test` (1), `silk-doc` (1), `silk-man` (1), `silk-cc` (1), `silk-lsp` (1)
-- `silk` (7)
-- `libsilk` (7)
-- `https://oro.computer/silk`
+- [`silk-build` (1)](?p=man/silk-build.1), [`silk-package` (1)](?p=man/silk-package.1), [`silk-check` (1)](?p=man/silk-check.1), [`silk-test` (1)](?p=man/silk-test.1), [`silk-doc` (1)](?p=man/silk-doc.1), [`silk-man` (1)](?p=man/silk-man.1), [`silk-cc` (1)](?p=man/silk-cc.1), [`silk-lsp` (1)](?p=man/silk-lsp.1)
+- [`silk` (7)](?p=man/silk.7)
+- [`libsilk` (7)](?p=man/libsilk.7)
+- [https://oro.computer/silk](https://oro.computer/silk)

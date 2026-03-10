@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-03-09T16:34:24+00:00
+Generated: 2026-03-10T03:23:46+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -126,6 +126,7 @@ Silk Docs
   - std/tls — `std::tls` — /silk/docs/?p=std/tls
   - std/ssh2 — `std::ssh2` — /silk/docs/?p=std/ssh2
   - std/runtime — `std::runtime` — /silk/docs/?p=std/runtime
+  - std/runtime-event-loop — `std::runtime::event_loop` — /silk/docs/?p=std/runtime-event-loop
   - std/signal — `std::signal` — /silk/docs/?p=std/signal
   - std/task — `std::task` — /silk/docs/?p=std/task
   - std/sync — `std::sync` — /silk/docs/?p=std/sync
@@ -166,6 +167,7 @@ Silk Docs
   - compiler/architecture — Compiler Architecture — /silk/docs/?p=compiler/architecture
   - compiler/implementation-status — Implementation Status — /silk/docs/?p=compiler/implementation-status
   - compiler/cli-silk — `silk` CLI — /silk/docs/?p=compiler/cli-silk
+  - compiler/libsilk-quickstart — `libsilk` quickstart — /silk/docs/?p=compiler/libsilk-quickstart
   - compiler/package-manifests — Package Manifests (`silk.toml`) — /silk/docs/?p=compiler/package-manifests
   - compiler/package-distribution — Silk Package Distribution — /silk/docs/?p=compiler/package-distribution
   - compiler/build-scripts — Build Modules (`build.slk`) — /silk/docs/?p=compiler/build-scripts
@@ -178,7 +180,7 @@ Silk Docs
   - compiler/testing-strategy — Testing Strategy (Zig + C99 + Silk) — /silk/docs/?p=compiler/testing-strategy
   - compiler/lsp-silk — Silk Language Server (LSP) — /silk/docs/?p=compiler/lsp-silk
   - compiler/abi-libsilk — C99 ABI and `libsilk.a` — /silk/docs/?p=compiler/abi-libsilk
-  - compiler/zig-api — Zig Embedding API (Programmatic Compilation) — /silk/docs/?p=compiler/zig-api
+  - compiler/zig-api — Zig Embedding API — /silk/docs/?p=compiler/zig-api
   - compiler/vendored-deps — Vendored Dependencies — /silk/docs/?p=compiler/vendored-deps
 - Man
   - man/silk.1 — `silk` (1) — Silk Language Compiler — /silk/docs/?p=man/silk.1
@@ -639,44 +641,36 @@ import std::http;
 import std::net;
 import std::io::println;
 
-fn trap (T;) -> T { std::abort(); }
-
 fn main () -> int {
   let addr = net::SocketAddrV4.loopback(8080);
 
-  let listener_r = net::TcpListener.listen(addr, 16);
-  if listener_r.is_err() {
-    println("listen failed");
-    return 1;
-  }
-  let mut listener: net::TcpListener = match (listener_r) {
+  let mut listener = match net::TcpListener.listen(addr, 16) {
     Ok(v) => v,
-    Err(_) => trap(net::TcpListener;),
+    Err(_) => {
+      println("listen failed");
+      return 1;
+    },
   };
 
   println("listening on 127.0.0.1:8080 (try: curl http://127.0.0.1:8080/)");
 
-  let stream_r = listener.accept();
-  if stream_r.is_err() {
-    listener.close();
-    println("accept failed");
-    return 2;
-  }
-  let stream: net::TcpStream = match (stream_r) {
+  let stream = match listener.accept() {
     Ok(v) => v,
-    Err(_) => trap(net::TcpStream;),
+    Err(_) => {
+      listener.close();
+      println("accept failed");
+      return 2;
+    },
   };
 
   let mut conn = http::Connection.from_stream(stream);
-  let req_r = conn.read_request();
-  if req_r.is_err() {
-    conn.close();
-    listener.close();
-    return 3;
-  }
-  let req: http::Request = match (req_r) {
+  let req = match conn.read_request() {
     Ok(v) => v,
-    Err(_) => trap(http::Request;),
+    Err(_) => {
+      conn.close();
+      listener.close();
+      return 3;
+    },
   };
 
   println("got {s} {s}", req.method(), req.target());
@@ -714,11 +708,9 @@ fn main () -> int {
   let msg_ptr: u64 = std::runtime::mem::string_ptr(msg);
   let msg_len: i64 = std::runtime::mem::string_len(msg);
 
-  let out_r = std::buffer::BufferU8.init(32);
-  if out_r.is_err() { return 2; }
-  let mut out: std::buffer::BufferU8 = match (out_r) {
+  let mut out = match std::buffer::BufferU8.init(32) {
     Ok(v) => v,
-    Err(_) => std::buffer::BufferU8.empty(),
+    Err(_) => return 2,
   };
 
   let hash_err: std::crypto::CryptoError? = std::crypto::hash::blake2b(
@@ -3987,8 +3979,8 @@ Example:
 
 ```silk
 fn main () -> int {
-  let x: int = 0;
-  let y: int = match (x) {
+  let x = 0;
+  let y = match (x) {
     0 => 1,
     _ => 2,
   };
@@ -4171,9 +4163,9 @@ import std::result;
 import std::strings::String;
 
 fn main () -> int {
-  let s: String = match String.from_string("hello") {
+  let s = match String.from_string("hello") {
     Ok(v) => v,
-    Err(_) => String.empty(),
+    Err(_) => return 1,
   };
   return s.len as int;
 }
@@ -7252,7 +7244,7 @@ Implementation status (current compiler subset):
 
 - Supported end-to-end: primitives, nominal `struct` types, optionals (`T?`),
   `&Struct` references (in function parameter types and as local values
-  produced by `new` / calls that return `&Struct`), and array/slice types
+  produced by `new` or returned from calls), and array/slice types
   (`T[N]`, `T[]`) over element types that lower to a fixed scalar-slot sequence
   In Silk (including array literals, indexing reads, and
   iterable `for` loops). Indexed assignment targets (`xs[i] = v`) are supported
@@ -7677,8 +7669,11 @@ Key requirements:
 
 Current implementation notes:
 
-- `&Struct` is supported in function parameter types and as local values when
-  produced by heap allocation (`new`) or by calls that return `&Struct`.
+- `&Struct` is supported in function parameter types and as local values:
+  - heap-backed `&Struct` values from `new` are refcounted in the current
+    subset,
+  - calls may also return borrowed `&Struct` values tied to input lifetimes
+    (for example identity-style helpers that return an input reference).
 - `&T` where `T` is a **single-slot scalar primitive** (for example `&bool`,
   `&int`, `&u64`, `&f64`) is supported in function parameter types and as local
   values when produced by the borrow operator `&expr`.
@@ -8247,11 +8242,16 @@ the compiler implements:
     (currently implemented for `&Struct`; for example `let r: &Pair = pair;`).
   These borrows are checked with conservative **lexical lifetime** rules (they
   may not escape the scope of the borrowed stack storage).
-- Local bindings of `&Struct` values that originate from heap allocation (`new`)
-  or from calls that return `&Struct`:
-  - these `&Struct` values are refcounted in Silk,
-  - copying a `&Struct` binding (e.g. `let g: &File = f;`) creates an alias to
-    the same underlying heap allocation and increments the refcount.
+- Local bindings of `&Struct` values that originate from heap allocation
+  (`new`) are refcounted in Silk:
+  - copying such a binding (e.g. `let g: &File = f;`) creates an alias to the
+    same underlying heap allocation and increments the refcount.
+- Calls that return `&Struct` may return either:
+  - an owning heap reference (for example a value that ultimately originated
+    from `new`), or
+  - a borrowed reference tied to an input parameter.
+  Treat the lifetime as part of the API contract; a returned `&Struct` is not
+  implicitly “owned heap data” just because it came from a call.
 
 ## Borrow Safety Rules ()
 
@@ -11418,6 +11418,54 @@ borrows and borrowed `&T` values so obvious use-after-scope cases are rejected
 (for example returning a slice borrowed from a local fixed array, or returning
 `&T` borrowed from a local struct binding).
 
+## Examples
+
+### Returning a borrow of a parameter is allowed
+
+```silk
+fn tail (xs: int[]) -> int[] {
+  return &xs[1..];
+}
+```
+
+The returned slice is still borrowed from the caller-owned `xs` storage, so the
+borrow does not outlive its origin.
+
+### Returning a borrow of a local is rejected
+
+```silk
+struct Pair {
+  a: int,
+  b: int,
+}
+
+fn bad_ref () -> &Pair {
+  let p: Pair = Pair{ a: 1, b: 2 };
+  return &p; // rejected: `p` is stack storage owned by this function
+}
+```
+
+### Per-call mutable aliasing is rejected
+
+```silk
+struct Pair {
+  a: int,
+  b: int,
+}
+
+fn swap(mut a: &Pair, mut b: &Pair) -> void {
+  let t = a.a;
+  a.a = b.a;
+  b.a = t;
+}
+
+fn main () -> int {
+  let mut p: Pair = Pair{ a: 1, b: 2 };
+  swap(mut p, mut p); // rejected: two mutable borrows of the same base in one call
+  return 0;
+}
+```
+
 ## Lexical Lifetimes
 
 Slices (`T[]`) are non-owning views. Slice range borrows create slices that
@@ -11456,6 +11504,37 @@ Returning a reference is permitted when the returned `&T` ultimately refers to
 an input reference parameter (that is, storage owned by the caller), and not to
 stack locals.
 
+## Borrowing Across Tasks and Suspension Points
+
+Current downstream guidance:
+
+- Keep ordinary borrows (`&T`, `T[]`, sub-slices) inside a single lexical,
+  synchronous region whenever possible.
+- Do not try to pass non-opaque references across `task fn` boundaries; the
+  checker rejects them today (see `docs/language/concurrency.md`).
+- When data must cross a task boundary or outlive the current lexical region,
+  prefer an owned value or a dedicated handle/view pair such as
+  `Channel(T)` + `ChannelBorrow(T)` or `AbortSignal` + `AbortSignalBorrow`.
+- Restrictions around borrows that remain live across `await` points are still
+  conservative and part of the ongoing design; prefer owned values around
+  suspension points until the full model is stabilized.
+
+Example pattern:
+
+```silk
+struct Pair { x: int, y: int }
+
+async fn read_after_wait (p: &Pair) -> int {
+  let x = p.x;
+  await std::task::sleep_ms_async(1);
+  return x;
+}
+```
+
+Copy or move the data you need before `await`; do not rely on a borrow staying
+usable across a suspension point unless that specific API contract is
+documented.
+
 ## Ownership Transfer (`move`)
 
 Silk’s safe subset includes a small explicit ownership-transfer form:
@@ -11488,8 +11567,10 @@ In Silk, ownership transfer is intentionally conservative:
 
 As the language grows, borrow checking is expected to expand to cover:
 
-- borrowed references as first-class values (`&expr` producing `&T` values),
-- references and borrows in more positions (locals, fields, returns),
+- borrowed references in richer positions and aggregates (especially fields and
+  more complex return-position flows),
+- richer first-class reference support beyond the current `&Struct` /
+  single-slot-scalar subset,
 - lifetime/region inference across control flow,
 - explicit disambiguation when multiple input references exist (for example a
   label syntax like `as A` to tie a return reference to a specific input),
@@ -11592,6 +11673,10 @@ region context is established with `with` (see `docs/language/regions.md`).
   bytes instead of calling the heap allocator.
 - On last-release, region-backed `new` allocations run `drop` (when defined),
   but do not free their backing storage (region memory is not reclaimed by RC).
+- Anonymous-region forms (`with <bytes> { ... }` and `with <bytes> from ...`)
+  have an important current limitation: escaped pointers / `&Struct` values are
+  not fully rejected yet, so treat them as block-scoped even if the checker
+  accepts an escape.
 
 #### Reference counting rules
 
@@ -11606,6 +11691,24 @@ region context is established with `with` (see `docs/language/regions.md`).
 - Passing `new` directly as a call argument to a `&Struct` parameter allocates a
   temporary and releases it after the call completes.
 - When an RC release decrements the count to `0`, the allocation is freed.
+
+Example:
+
+```silk
+struct Node {
+  value: int,
+}
+
+fn read (n: &Node) -> int {
+  return n.value;
+}
+
+fn main () -> int {
+  let a = new Node{ value: 1 };
+  let b: &Node = a; // aliases the same allocation and retains it
+  return read(b);
+}
+```
 
 ## Destructors (`Drop`)
 
@@ -11731,6 +11834,13 @@ Conceptually, a `Region` value contains:
 Copying a `Region` value copies the handle; copies refer to the same backing
 store and cursor.
 
+Concurrency note ():
+
+- The docs do **not** guarantee that concurrent allocation through copies of the
+  same `Region` is synchronized. Even though `Region` may be passed as a value,
+  downstream code should treat a region as task-local and avoid sharing one
+  region across concurrent tasks.
+
 ### Declaring a region
 
 A region declaration has the surface form:
@@ -11800,6 +11910,13 @@ fn main () -> int {
   return 0;
 }
 ```
+
+Important current limitation:
+
+- Treat allocations made inside `with <bytes> { ... }` as block-scoped. The
+  compiler does not yet reject every escape of a pointer / `&Struct` allocated
+  from an anonymous region, but the cursor is reset when the anonymous region
+  is reused, so escaped values are not a stable contract.
 
 Rules ():
 
@@ -11988,6 +12105,47 @@ intended to provide **structured concurrency**.
 - The compiler is intended to enforce task-safety rules when values cross task
   boundaries (Send/Sync-like constraints).
 
+## Examples
+
+### `task` inside `async fn` + `yield *`
+
+```silk
+task fn worker (x: int) -> int {
+  return x + 1;
+}
+
+async fn main () -> int {
+  task {
+    let values: int[] = yield * worker(10);
+    return values[0];
+  }
+}
+```
+
+### `Task(Promise(T))` composition: `await * yield *`
+
+```silk
+async fn add1 (x: int) -> int {
+  return x + 1;
+}
+
+task fn produce_promises (n: int) -> Promise(int) {
+  var i: int = 0;
+  while i < n {
+    yield add1(i);
+    i = i + 1;
+  }
+  return add1(n);
+}
+
+async fn main () -> int {
+  task {
+    let values: int[] = await * yield * produce_promises(3);
+    return values[0];
+  }
+}
+```
+
 ## Core Keywords: `async` and `task`
 
 ### `async`
@@ -12164,9 +12322,11 @@ values) and `await` (promise values) are implemented in Silk
 now ships a bring-up async runtime (single-threaded executor + stackful
 coroutines in `libsilk_rt`) so `await` can suspend and resume without blocking
 the OS thread. A compiler state-machine coroutine transform, structured
-concurrency scope semantics, and task-safety (`Send`/`Sync`)-like rules remain
-future work. See `docs/language/concurrency.md` for the concurrency model and
-implementation status.
+concurrency scope semantics, and richer Send/Sync-style reasoning remain future
+work. The current compiler already enforces an initial task-boundary safety
+rule (`E2037`) that rejects non-opaque references across `task fn` boundaries.
+See `docs/language/concurrency.md` for the concurrency model and implementation
+status.
 
 ## Overview
 
@@ -12181,14 +12341,44 @@ The language design distinguishes:
 - `async task fn` — async function executed as a separate task (self-contained
   worker).
 
+## Example
+
+```silk
+pure fn add (x: int, y: int) -> int {
+  return x + y;
+}
+
+task fn worker (x: int) -> int {
+  return add(x, 1);
+}
+
+async fn answer () -> int {
+  return 42;
+}
+
+async fn main () -> int {
+  let p = answer();
+
+  task {
+    let values: int[] = yield * worker(41);
+    let v: int = await p;
+    if values[0] != 42 { return 1; }
+    if v != 42 { return 2; }
+    return 0;
+  }
+}
+```
+
 ## Intended Call Rules (Design)
 
 The checker is expected to enforce:
 
 - `pure` code may call only `pure` code (and cannot perform I/O or mutation
   outside local, non-escaping temporaries).
-- `task` code may call `task` and `pure` code, and must satisfy task-safety
-  rules for captured/argument data.
+- `task` code may call `task`, `pure`, and `async` code, but any resulting
+  `Task(T)` / `Promise(T)` handles must be consumed explicitly with
+  `yield` / `yield *` / `await`, and task-boundary argument/result data must
+  satisfy the current task-safety rules.
 - `async` code may `await` other async operations; it may call `pure` code and
   may offload blocking work via explicit adapters (planned intrinsics).
 
@@ -12257,8 +12447,8 @@ Today:
   - By default, each `task fn` call spawns a dedicated OS thread.
   - When a `task fn` / `async task fn` is annotated with `attr(task=pool)` (or
     `attr(task_pool)`), calls are scheduled on the global task pool instead.
-  - On hosted `linux/x86_64`, the compiler ships a bring-up async runtime
-    (`src/silk_rt_async.c`) so `await` is a true suspension point:
+  - On hosted `linux/x86_64`, the compiler ships a bundled bring-up async
+    runtime so `await` is a true suspension point:
     - awaiting a pending `Promise(T)` parks the current fiber and allows other
       runnable fibers to execute (it does not block the OS thread),
     - outside the executor owner thread (including when no executor is active),
@@ -14419,6 +14609,39 @@ to be:
 - **POSIX-first** for OS interactions (initial hosted baseline), while still
   supporting freestanding/embedded builds via a smaller “core” subset.
 
+## A small `std::` program
+
+```silk
+import std::io::println;
+import std::url;
+import std::uuid;
+
+fn main () -> int {
+  let id = match std::uuid::random::v7_now() {
+    Ok(v) => v,
+    Err(_) => return 1,
+  };
+
+  let page = match std::url::parse("https://oro.computer/silk/docs/") {
+    Ok(v) => v,
+    Err(_) => return 2,
+  };
+
+  let id_text = match id.to_string_lower() {
+    Ok(v) => v,
+    Err(_) => return 3,
+  };
+  let href = match page.href() {
+    Ok(v) => v,
+    Err(_) => return 4,
+  };
+
+  println(id_text.as_string());
+  println(href.as_string());
+  return 0;
+}
+```
+
 See also:
 
 - `docs/std/package-structure.md` (namespace + linkage + swappability)
@@ -15387,14 +15610,15 @@ URL: /silk/docs/?p=std/io
 
 # `std::io`
 
-Basic stdin reads and stdout/stderr writes
-are implemented in `std/io.slk` via `std::runtime::io`; buffered and
-async I/O remain future work.
+Basic stdin reads, stdout/stderr
+writes, tty helpers, and initial async-aware wrappers are implemented today.
+Buffered I/O and broader async stream/file integration remain future work.
 
 `std::io` provides console and basic stream I/O.
 
-Hosted baseline: POSIX file descriptors and blocking I/O. Future extensions may
-include async integration.
+Hosted baseline: POSIX file descriptors and blocking I/O, plus initial
+hosted async integration through `std::io::async` and
+`std::runtime::event_loop`.
 
 See also:
 
@@ -15494,8 +15718,11 @@ Notes:
   Abortable variants (`read_abortable` / `write_abortable`) accept an optional
   `std::abort_controller::AbortSignalBorrow` and return `IOErrorKind::Aborted`
   when cancelled.
-  Note: in Silk, aborts are observed before starting an I/O
-  attempt; they do not interrupt an in-flight operation.
+  Note: in Silk, these `read` / `write` wrappers observe aborts
+  conservatively around each I/O attempt; they do not interrupt an in-flight
+  read/write operation. Lower-level readiness waits in
+  `std::runtime::event_loop` can be more responsive when a pollable abort fd is
+  available.
 - `std::io::stream` provides task-based adapters that connect POSIX/WASI file
   descriptors (`fd`) with `std::stream` (`ReadableStream` / `WritableStream`):
   - `std::io::stream::pipe_fd_to_stream` / `pipe_fd_to_stream_abortable`
@@ -15528,15 +15755,12 @@ fn main () -> int {
   }
 
   while true {
-    let r: std::io::IOResult = std::io::read_stdin(std::arrays::ByteSlice{ ptr: buf, len: 64 });
-    if r.is_err() {
-      std::runtime::mem::free(buf);
-      return 3;
-    }
-
-    let n: int = match (r) {
+    let n = match std::io::read_stdin(std::arrays::ByteSlice{ ptr: buf, len: 64 }) {
       std::io::IOResult::Ok(v) => v,
-      std::io::IOResult::Err(_) => 0,
+      std::io::IOResult::Err(_) => {
+        std::runtime::mem::free(buf);
+        return 3;
+      },
     };
     if n == 0 {
       break;
@@ -15753,37 +15977,23 @@ so output precision is limited to `f64` precision in Silk.
 ```silk
 import { println } from "std/io";
 import format from "std/fmt";
-import std::fmt;
-import std::strings;
-import std::result;
-
-type StringAllocResult = std::result::Result(std::strings::String, std::fmt::Error);
 
 fn main () -> int {
-  const a = 1;
-  const b = 2;
-
-  let hello_r: StringAllocResult = format("hello {}", "world");
-  if hello_r.is_err() {
-    return 1;
-  }
-  let mut hello: std::strings::String = match (hello_r) {
-    StringAllocResult::Ok(v) => v,
-    StringAllocResult::Err(_) => std::strings::String.empty(),
+  let mut hello = match format("hello {}", "world") {
+    Ok(v) => v,
+    Err(_) => return 1,
   };
 
-  let sum_r: StringAllocResult = format("a + b = {}", a + b);
-  if sum_r.is_err() {
-    hello.drop();
-    return 2;
-  }
-  let mut sum: std::strings::String = match (sum_r) {
-    StringAllocResult::Ok(v) => v,
-    StringAllocResult::Err(_) => std::strings::String.empty(),
+  let mut sum = match format("a + b = {}", 1 + 2) {
+    Ok(v) => v,
+    Err(_) => {
+      hello.drop();
+      return 2;
+    },
   };
 
   println("{}", hello.as_string());
-  println("sum of {}", sum.as_string());
+  println("{}", sum.as_string());
   sum.drop();
   hello.drop();
   return 0;
@@ -16452,11 +16662,9 @@ type Map = std::map::HashMap(u64, int);
 type InitResult = std::result::Result(Map, std::memory::AllocFailed);
 
 fn main () -> int {
-  let init_r: InitResult = Map.init(16);
-  if init_r.is_err() { return 1; }
-  let mut m: Map = match (init_r) {
-    InitResult::Ok(v) => v,
-    InitResult::Err(_) => Map.empty(),
+  let mut m = match Map.init(16) {
+    Ok(v) => v,
+    Err(_) => return 1,
   };
   let put_r = m.put(1, 10);
   if put_r.is_err() { m.drop(); return 2; }
@@ -16481,11 +16689,9 @@ fn hash_u64 (k: u64) -> u64 { return k; }
 fn eq_u64 (a: u64, b: u64) -> bool { return a == b; }
 
 fn main () -> int {
-  let init_r: InitResult = Map.init_with(16, hash_u64, eq_u64);
-  if init_r.is_err() { return 1; }
-  let mut m: Map = match (init_r) {
-    InitResult::Ok(v) => v,
-    InitResult::Err(_) => Map.empty_with(hash_u64, eq_u64),
+  let mut m = match Map.init_with(16, hash_u64, eq_u64) {
+    Ok(v) => v,
+    Err(_) => return 1,
   };
   m.drop();
   return 0;
@@ -16613,6 +16819,48 @@ In Silk:
 
 ## Hash Set (`SetMap(T)`)
 
+### Example: membership and uniqueness
+
+```silk
+import std::set;
+
+type TagSet = std::set::SetMap(u64);
+
+fn main () -> int {
+  let mut tags = match TagSet.init(4) {
+    Ok(v) => v,
+    Err(_) => return 1,
+  };
+
+  let first = match tags.insert(7) {
+    Ok(v) => v,
+    Err(_) => {
+      tags.drop();
+      return 2;
+    },
+  };
+  let second = match tags.insert(7) {
+    Ok(v) => v,
+    Err(_) => {
+      tags.drop();
+      return 3;
+    },
+  };
+
+  if !first || second {
+    tags.drop();
+    return 4;
+  }
+  if !tags.contains(7) || tags.len() != 1 {
+    tags.drop();
+    return 5;
+  }
+
+  tags.drop();
+  return 0;
+}
+```
+
 ### Core API
 
 `SetMap` requires hashing and equality functions. For common element types,
@@ -16662,6 +16910,60 @@ Complexity expectations:
 ## Ordered Set (`TreeSet(T)`)
 
 `TreeSet(T)` is an ordered set. It requires an ordering function.
+
+### Example: sorted iteration
+
+```silk
+import std::set;
+
+type SortedInts = std::set::TreeSet(int);
+
+fn cmp_int (a: int, b: int) -> int {
+  if a < b { return -1; }
+  if a > b { return 1; }
+  return 0;
+}
+
+fn main () -> int {
+  let mut values = SortedInts.init(cmp_int);
+
+  let added3 = match values.insert(3) {
+    Ok(v) => v,
+    Err(_) => {
+      values.drop();
+      return 1;
+    },
+  };
+  let added1 = match values.insert(1) {
+    Ok(v) => v,
+    Err(_) => {
+      values.drop();
+      return 2;
+    },
+  };
+  let added2 = match values.insert(2) {
+    Ok(v) => v,
+    Err(_) => {
+      values.drop();
+      return 3;
+    },
+  };
+
+  if !added3 || !added1 || !added2 {
+    values.drop();
+    return 4;
+  }
+
+  let mut it = values.iter();
+  if it.next() != Some(1) { values.drop(); return 5; }
+  if it.next() != Some(2) { values.drop(); return 6; }
+  if it.next() != Some(3) { values.drop(); return 7; }
+  if it.next() != None { values.drop(); return 8; }
+
+  values.drop();
+  return 0;
+}
+```
 
 ### Core API
 
@@ -18824,6 +19126,51 @@ which forwards to `std::url::parse`.
 - `set(name: string, value: string) -> std::memory::OutOfMemory?`
 - `sort() -> std::memory::OutOfMemory?` — stable sort by decoded name, then re-serialize.
 
+## Example: parse, resolve, and mutate query params
+
+```silk
+import std::url;
+
+fn main () -> int {
+  let base = match std::url::parse("https://example.com/docs/index.html") {
+    Ok(v) => v,
+    Err(_) => return 1,
+  };
+
+  let rel = match std::url::parse_with_base("../guides/intro?lang=silk", base) {
+    Ok(v) => v,
+    Err(_) => return 2,
+  };
+
+  let href = match rel.href() {
+    Ok(v) => v,
+    Err(_) => return 3,
+  };
+  if href.as_string() != "https://example.com/guides/intro?lang=silk" {
+    return 4;
+  }
+
+  let mut params = match URLSearchParams.from_string("?lang=silk&tab=overview") {
+    Ok(v) => v,
+    Err(_) => return 5,
+  };
+
+  if params.set("tab", "reference") != None {
+    return 6;
+  }
+
+  let qs = match params.to_string() {
+    Ok(v) => v,
+    Err(_) => return 7,
+  };
+  if qs.as_string() != "lang=silk&tab=reference" {
+    return 8;
+  }
+
+  return 0;
+}
+```
+
 ## Notes
 
 - This module does not implement the JavaScript `URL` object API (setters, live `searchParams` binding, etc.); it provides a low-level URL record plus helpers that follow the WHATWG parsing and serialization rules.
@@ -18899,22 +19246,22 @@ Notes:
 import std::semver;
 
 fn main () -> int {
-  let r = std::semver::parse("1.2.3-alpha.1+build.5");
-  if r.is_err() { return 1; }
-  let v: std::semver::Version = match (r) {
+  let v = match std::semver::parse("1.2.3-alpha.1+build.5") {
     Ok(v) => v,
-    Err(_) => std::semver::Version{ major: 0, minor: 0, patch: 0, prerelease: None, build: None },
+    Err(_) => return 1,
   };
 
   if v.major != 1 { return 2; }
   if v.prerelease == None { return 3; }
 
-  let ar = std::semver::parse("1.0.0-alpha");
-  let br = std::semver::parse("1.0.0");
-  if ar.is_err() { return 4; }
-  if br.is_err() { return 5; }
-  let a: std::semver::Version = match (ar) { Ok(v) => v, Err(_) => std::semver::Version{ major: 0, minor: 0, patch: 0, prerelease: None, build: None } };
-  let b: std::semver::Version = match (br) { Ok(v) => v, Err(_) => std::semver::Version{ major: 0, minor: 0, patch: 0, prerelease: None, build: None } };
+  let a = match std::semver::parse("1.0.0-alpha") {
+    Ok(v) => v,
+    Err(_) => return 4,
+  };
+  let b = match std::semver::parse("1.0.0") {
+    Ok(v) => v,
+    Err(_) => return 5,
+  };
   if a.cmp(b) >= 0 { return 6; }
 
   return 0;
@@ -18972,6 +19319,38 @@ API notes:
   - `ParseError.offset` reports the byte offset into the original input string.
 - `UUID.to_string_lower() -> Result(String, OutOfMemory)` allocates an owned
   string.
+
+## Example: parse + generate + inspect
+
+```silk
+import std::uuid;
+
+fn main () -> int {
+  let parsed = match std::uuid::parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8") {
+    Ok(v) => v,
+    Err(_) => return 1,
+  };
+
+  let dns = std::uuid::namespace_dns();
+  let named = match std::uuid::v5(dns, "www.widgets.com") {
+    Ok(v) => v,
+    Err(_) => return 2,
+  };
+
+  let text = match named.to_string_lower() {
+    Ok(v) => v,
+    Err(_) => return 3,
+  };
+  if text.as_string() != "21f7f8de-8051-5b89-8680-0195ef798b6a" {
+    return 4;
+  }
+
+  if parsed.version() != 1 { return 5; }
+  if named.version() != 5 { return 6; }
+  if !named.is_rfc4122() { return 7; }
+  return 0;
+}
+```
 
 ## Version and Variant
 
@@ -19616,20 +19995,12 @@ Notes:
 import std::http;
 import std::net;
 
-fn trap (T;) -> T {
-  std::abort();
-}
-
 export fn main () -> int {
   // Plain HTTP to a loopback server (no DNS in the current stdlib).
   let addr = net::SocketAddrV4.loopback(8080);
-  let stream_r = net::TCPStream.connect(addr);
-  if stream_r.is_err() {
-    return 1;
-  }
-  let stream: net::TCPStream = match (stream_r) {
-    net::TCPStreamResult::Ok(v) => v,
-    net::TCPStreamResult::Err(_) => trap(net::TCPStream;),
+  let stream = match net::TCPStream.connect(addr) {
+    Ok(v) => v,
+    Err(_) => return 1,
   };
 
   let mut conn = http::Connection.from_stream(stream);
@@ -19639,14 +20010,12 @@ export fn main () -> int {
     return 2;
   }
 
-  let resp_r = conn.read_response();
-  if resp_r.is_err() {
-    conn.close();
-    return 3;
-  }
-  let resp: http::Response = match (resp_r) {
-    http::ResponseResult::Ok(v) => v,
-    http::ResponseResult::Err(_) => trap(http::Response;),
+  let resp = match conn.read_response() {
+    Ok(v) => v,
+    Err(_) => {
+      conn.close();
+      return 3;
+    },
   };
   let _ = resp.status_code();
   conn.close();
@@ -20083,6 +20452,17 @@ Each stream has a bounded in-memory queue. The `cap` is expressed in **chunks**
   (otherwise they return `Err(StreamFailed)` with `kind() == InvalidInput`).
 - `WritableStream.write()` blocks while the queue is full.
 - `ReadableStream.read()` blocks while the queue is empty (until closed or errored).
+- `WritableStream.try_write()` does **not** block:
+  - it returns `None` on success,
+  - it returns `Some(StreamFailed{ kind: Full, ... })` when backpressure would
+    block the caller.
+- `ReadableStream.try_read()` does **not** block:
+  - it returns `Ok(Read::Chunk(...))` when a chunk is immediately available,
+  - `Ok(Read::Done)` when the stream has ended cleanly,
+  - `Ok(Read::Pending)` when the queue is currently empty but the stream is
+    still open,
+  - `Err(StreamFailed)` when the stream has been aborted or another runtime
+    failure occurred.
 
 ### Close vs cancel vs abort
 
@@ -20126,14 +20506,9 @@ task fn consumer (r: std::stream::ReadableStream) -> int { ... }
 
 async fn main () -> int {
   task {
-    let pt_r = std::stream::PassThroughStream.init_default();
-    if pt_r.is_err() { return 1; }
-    let mut pt: std::stream::PassThroughStream = match (pt_r) {
+    let mut pt = match std::stream::PassThroughStream.init_default() {
       Ok(v) => v,
-      Err(_) => std::stream::PassThroughStream{
-        readable: std::stream::ReadableStream.invalid(),
-        writable: std::stream::WritableStream.invalid(),
-      },
+      Err(_) => return 1,
     };
 
     let w = pt.take_writable();
@@ -20172,14 +20547,9 @@ import std::stream;
 
 async fn main () -> int {
   task {
-    let pt_r: std::stream::PassThroughResult = std::stream::PassThroughStream.init(2);
-    if pt_r.is_err() { return 1; }
-    let mut pt: std::stream::PassThroughStream = match (pt_r) {
+    let mut pt = match std::stream::PassThroughStream.init(2) {
       Ok(v) => v,
-      Err(_) => std::stream::PassThroughStream{
-        readable: std::stream::ReadableStream.invalid(),
-        writable: std::stream::WritableStream.invalid(),
-      },
+      Err(_) => return 1,
     };
 
     let w = pt.take_writable();
@@ -20188,10 +20558,14 @@ async fn main () -> int {
     let hr = std::fs::stream::pipe_file_to_stream("input.txt", w, 4096);
     let hw = std::fs::stream::pipe_stream_to_file(r, "output.txt", 420);
 
-    let rr: std::stream::PipeResult = yield hr;
-    let rw: std::stream::PipeResult = yield hw;
-    if rr.is_err() { return 2; }
-    if rw.is_err() { return 3; }
+    match (yield hr) {
+      Ok(_) => {},
+      Err(_) => return 2,
+    }
+    match (yield hw) {
+      Ok(_) => {},
+      Err(_) => return 3,
+    }
     return 0;
   }
 }
@@ -20207,14 +20581,13 @@ async fn main () -> int {
 To make piping cooperatively cancellable, use `pipe_to_abortable` with an
 `std::abort_controller::AbortSignalBorrow`. in Silk, aborts are
 observed between read/write steps; they do not yet interrupt a blocking
-`ReadableStream.read()` call.
+`ReadableStream.read()` / `WritableStream.write()` call.
 
 ```silk
 import std::stream;
 
 fn run_pipeline (src: std::stream::ReadableStream, dst: std::stream::WritableStream) -> int {
-  let r = std::stream::pipe_to(src, dst);
-  return match (r) {
+  return match std::stream::pipe_to(src, dst) {
     Ok(_) => 0,
     Err(_) => 1,
   };
@@ -20223,8 +20596,10 @@ fn run_pipeline (src: std::stream::ReadableStream, dst: std::stream::WritableStr
 
 ## Notes
 
-- The  uses blocking primitives; it is intended to become
-  suspension-friendly once the async runtime exists.
+- The  uses blocking OS-thread primitives for stream reads and
+  writes even though the hosted async runtime now exists. In other words,
+  `std::stream` is available today, but `ReadableStream.read()` /
+  `WritableStream.write()` do not yet suspend an async coroutine directly.
 - Drop semantics are designed to avoid leaked pipes:
   - dropping `ReadableStream` cancels the stream (writers start failing),
   - dropping `WritableStream` closes the stream
@@ -20313,6 +20688,48 @@ Key design rules:
   - `ErrorType?` where `None` is success,
   - `std::result::Result(T, ErrorType)` where `Ok(T)` is success and `Err(ErrorType)` is failure
     (use `Result(bool, ErrorType)` for fallible predicates).
+
+## Example: init, hash, wipe
+
+```silk
+import std::arrays;
+import std::buffer;
+import std::crypto;
+import std::crypto::hash;
+import std::runtime::mem;
+
+fn main () -> int {
+  if std::crypto::init() != None {
+    return 1;
+  }
+
+  let msg = "hello from silk";
+  let mut out = match std::buffer::BufferU8.init(32) {
+    Ok(v) => v,
+    Err(_) => return 2,
+  };
+
+  let err = std::crypto::hash::blake2b(
+    mut out,
+    32,
+    std::arrays::ByteSlice{
+      ptr: std::runtime::mem::string_ptr(msg),
+      len: std::runtime::mem::string_len(msg),
+    }
+  );
+  if err != None {
+    out.drop();
+    return 3;
+  }
+
+  let wipe = std::crypto::memzero(out.as_bytes());
+  out.drop();
+  if wipe != None {
+    return 4;
+  }
+  return 0;
+}
+```
 
 ### AEAD (`std::crypto::aead`)
 
@@ -20637,6 +21054,30 @@ non-POSIX, embedded, sandboxed runtimes) should be able to provide their own
 runtime implementation by supplying an alternate stdlib root with compatible
 `std::runtime::...` modules.
 
+## Example: build metadata
+
+Most downstream programs use higher-level modules like `std::fs`, `std::io`, and
+`std::process`. `std::runtime` exists underneath them, but the build metadata
+surface is also directly useful:
+
+```silk
+import std::io::println;
+import std::runtime::build;
+
+fn main () -> int {
+  println(build::kind());
+  println(build::mode());
+  println(build::version());
+
+  if build::is_debug() {
+    println("debug build");
+  } else {
+    println("non-debug build");
+  }
+  return 0;
+}
+```
+
 ## Motivation
 
 - `std::fs`, `std::task`, `std::sync`, and other OS-facing std modules need
@@ -20801,30 +21242,28 @@ Runtime areas in the shipped stdlib:
     default heap allocation unless an embedder installs an allocator via
     `silk_rt_set_allocator`.
 
-Follow-ups are expected to introduce additional runtime areas:
+Hosted async runtime area available today:
 
-- Async event loop / executor integration (`std::runtime::event_loop`) for hosted `async`/`await`:
-  - the compiler already ships a bundled bring-up executor in `libsilk_rt`
-    (`src/silk_rt_async.c`) and lowers `async`/`await` to it on the hosted
-    `linux/x86_64` target,
-  - the `std::runtime::event_loop` module now exposes low-level awaitable
-    building blocks (timers + fd readiness, including `fd_wait_readable2` and `fd_wait_readable_any`) and an explicit `Handle`/`poll`
-    surface for manually driving the hosted executor/event loop. Higher-level
-    async adapters are still follow-up work
-    (see `docs/compiler/async-runtime.md`).
+- `std::runtime::event_loop` for hosted `async`/`await`:
+  - the compiler already ships a bundled bring-up executor in `libsilk_rt` and
+    lowers `async`/`await` to it on the hosted `linux/x86_64` target,
+  - the module exposes low-level awaitable readiness/timer helpers plus an
+    explicit `Handle` polling surface for manually driving the hosted executor,
   - the hosted executor is thread-affine: `Handle.poll()` / `Handle.deinit()`
     must be called from the same OS thread that created the handle; cross-thread
-    wake is supported via `Handle.wake()`.
-  - abort-aware wrappers exist for cooperative cancellation (`std::abort_controller`):
+    wake is supported via `Handle.wake()`,
+  - abort-aware wrappers exist for cooperative cancellation
+    (`std::abort_controller`):
     - `sleep_ms_abortable(ms, sig) -> bool`
     - `fd_wait_readable_abortable(fd, sig) -> bool`
     - `fd_wait_writable_abortable(fd, sig) -> bool`
-    In Silk, aborts are generally observed only before/after the
-    awaited operation. For `fd_wait_readable_abortable`, when the runtime can
-    provide a pollable abort fd (`AbortSignalBorrow.wait_fd()`), aborts can
-    interrupt an in-flight wait by awaiting `fd_wait_readable2(fd, abort_fd)`.
-    When no pollable abort fd is available, it falls back to the before/after
-    checks.
+    In Silk, `read` / `write` style async wrappers still observe
+    aborts conservatively around each I/O attempt, but
+    `fd_wait_readable_abortable` can interrupt an in-flight readiness wait when
+    the runtime can obtain a pollable abort fd from
+    `AbortSignalBorrow.wait_fd()`.
+  - see `docs/std/runtime-event-loop.md` for the current downstream-facing
+    guide to this module.
 - WASI networking (via WASI sockets or similar proposals) when supported by the toolchain targets.
 
 ## Providing a Custom Runtime
@@ -20895,6 +21334,107 @@ Archive member naming requirement (current scheme):
 The in-repo `make stdlib` target produces archives with this naming scheme.
 
 ==============================================================================
+DOCS: `std::runtime::event_loop` (std/runtime-event-loop)
+URL: /silk/docs/?p=std/runtime-event-loop
+==============================================================================
+
+# `std::runtime::event_loop`
+
+
+This module exposes the low-level hosted executor/event-loop surface used by
+compiler-lowered `async` code and by async-aware stdlib helpers.
+
+Most downstream code should prefer higher-level wrappers such as
+`std::task::sleep_ms_async` and `std::io::async`. Reach for
+`std::runtime::event_loop` directly when you need:
+
+- fd readiness waits,
+- manual polling of the hosted executor,
+- or explicit integration with pollable resources such as
+  `AbortSignalBorrow.wait_fd()` and `ChannelBorrow.wait_fd()`.
+
+See also:
+
+- `docs/compiler/async-runtime.md`
+- `docs/std/runtime.md`
+- `docs/std/task.md`
+- `docs/std/io.md`
+
+## Current Surface
+
+The current hosted subset includes:
+
+- awaitable readiness helpers:
+  - `fd_wait_readable(fd)`
+  - `fd_wait_writable(fd)`
+  - `fd_wait_readable2(fd0, fd1)`
+  - `fd_wait_readable_any(fds_ptr, fds_len)`
+- abort-aware helpers:
+  - `sleep_ms_abortable(ms, sig) -> bool`
+  - `fd_wait_readable_abortable(fd, sig) -> bool`
+  - `fd_wait_writable_abortable(fd, sig) -> bool`
+- an explicit executor handle surface:
+  - `init()`
+  - `Handle.poll(timeout_ms)`
+  - `Handle.wake()`
+  - `Handle.deinit()`
+
+Current semantics documented elsewhere in the site:
+
+- `await fd_wait_readable2(fd0, fd1)` resolves to `0` when `fd0` becomes
+  readable, `1` when `fd1` becomes readable, and a negative value on failure
+  (`-errno` in the hosted runtime).
+- `await fd_wait_readable_any(fds_ptr, fds_len)` resolves to the ready-fd index
+  `0..fds_len-1`, or a negative value on failure.
+- `Handle.poll()` / `Handle.deinit()` are thread-affine: call them from the same
+  OS thread that created the handle.
+- Only one global hosted executor/event-loop instance may be active at a time.
+
+## Cancellation
+
+`std::runtime::event_loop` is the lowest-level place where abort-aware waiting
+is currently documented.
+
+- `sleep_ms_abortable` and the `fd_wait_*_abortable` helpers return `true` when
+  the awaited operation completed normally and `false` when cancellation wins.
+- For readiness waits, cancellation can be stronger than a simple
+  “check-before/check-after” model:
+  - when `AbortSignalBorrow.wait_fd()` returns a pollable fd, the runtime can
+    wait on both the target fd and the abort fd and cancel an in-flight
+    readiness wait,
+  - when no pollable abort fd is available, the helpers fall back to
+    cooperative before/after checks.
+- Higher-level `std::io::async::{read_abortable,write_abortable}` wrappers are
+  still more conservative: they check cancellation around each read/write
+  attempt rather than interrupting an in-flight operation.
+
+## Examples
+
+### Wait for either of two fds
+
+```silk
+import event_loop from "std/runtime/event_loop";
+
+async fn wait_either (fd0: int, fd1: int) -> int {
+  let which: i64 = await event_loop::fd_wait_readable2(fd0, fd1);
+  if which < 0 { return -1; }
+  return which as int;
+}
+```
+
+### Wait on a dynamic fd set
+
+```silk
+import std::runtime::event_loop;
+
+async fn wait_any (fds_mem: u64, fds_len: i64) -> int {
+  let which: i64 = await std::runtime::event_loop::fd_wait_readable_any(fds_mem, fds_len);
+  if which < 0 { return -1; }
+  return which as int;
+}
+```
+
+==============================================================================
 DOCS: `std::signal` (std/signal)
 URL: /silk/docs/?p=std/signal
 ==============================================================================
@@ -20950,11 +21490,10 @@ import std::runtime::mem;
 import std::signal;
 
 async fn main () -> int {
-  let sfd_r: std::signal::SignalFDResult = std::signal::SignalFD.open(std::signal::SIGWINCH);
-  if sfd_r.is_err() {
-    return 1;
-  }
-  let sfd: std::signal::SignalFD = std::signal::SignalFDResult.ok_value(sfd_r) ?? std::signal::SignalFD{};
+  let sfd = match std::signal::SignalFD.open(std::signal::SIGWINCH) {
+    Ok(v) => v,
+    Err(_) => return 1,
+  };
 
   // Wait until a resize signal is pending.
   let fds_mem: u64 = std::runtime::mem::alloc(8);
@@ -20965,13 +21504,11 @@ async fn main () -> int {
   std::runtime::mem::free(fds_mem);
   if which != 0 { return 3; }
 
-  let signo_r: std::signal::SignalReadResult = sfd.read_signo();
-  if signo_r.is_err() {
-    return 4;
-  }
-
   // Now re-query terminal size and redraw.
-  let _signo: int = std::signal::SignalReadResult.ok_value(signo_r) ?? 0;
+  let _signo = match sfd.read_signo() {
+    Ok(v) => v,
+    Err(_) => return 4,
+  };
   let _size: std::io::TTYSize? = std::io::tty_size(std::runtime::io::STDIN_FD);
   return 0;
 }
@@ -21013,6 +21550,33 @@ See also:
 - `docs/std/sync.md` (`Mutex`, `Condvar`, and channels)
 - `docs/std/runtime.md` (pluggable runtime layer under `std::task`)
 
+## Examples
+
+### Blocking sleep on the current OS thread
+
+```silk
+import std::task;
+
+fn main () -> int {
+  let n = std::task::available_parallelism();
+  std::task::yield_now();
+  std::task::sleep_ms(1);
+  if n < 1 { return 1; }
+  return 0;
+}
+```
+
+### Awaitable sleep under the hosted executor
+
+```silk
+import std::task;
+
+async fn main () -> int {
+  await std::task::sleep_ms_async(10);
+  return 0;
+}
+```
+
 ## API
 
 ```silk
@@ -21052,7 +21616,7 @@ Notes:
   higher-level concurrency utilities. It is implemented using a hosted libc
   query (`get_nprocs`) and clamps to `>= 1`.
 - `yield_now()` and `sleep_ms()` are blocking thread operations (they are not
-  async-aware.
+  async-aware).
 - `sleep_ms(ms)` is implemented by converting `ms` to microseconds and calling
   `std::runtime::task::sleep_us`; large sleeps may be performed in chunks.
 - `sleep_ms_async(ms)` returns a `Promise(void)` that can be awaited inside
@@ -21110,7 +21674,8 @@ See also:
   implement `Drop` and are **move-only** in safe code (ownership transfers by
   value; they are not copyable).
 - To share a handle across tasks without transferring ownership, prefer the
-  `*Borrow` view types (for example `ChannelBorrow(T)`, `MutexBorrow`).
+  documented `*Borrow` view types (for example `ChannelBorrow(T)` and
+  `CancellationTokenBorrow`).
   `*Borrow` values are non-owning, copyable views; the owner must keep the
   backing handle alive for the duration of all borrows.
 - For multi-producer patterns, pass `ChannelSender(T)` to worker tasks and
@@ -21289,6 +21854,90 @@ Notes:
     is used as an internal wake mechanism; consuming bytes from it can
     desynchronize the readiness signal.
 
+## Example: channel borrow across a task boundary
+
+```silk
+import sync from "std/sync";
+
+type ChanU64 = sync::Channel(u64);
+
+task fn producer (c: sync::ChannelBorrow(u64)) -> int {
+  if c.send(42) != None { return 10; }
+  return 0;
+}
+
+async fn main () -> int {
+  task {
+    let mut c = match ChanU64.init(1) {
+      Ok(v) => v,
+      Err(_) => return 100,
+    };
+
+    let h = producer(c.borrow());
+
+    let v1: u64 = (c.recv() ?? 0);
+    c.close();
+    let v2: u64 = (c.recv() ?? 99);
+
+    let rc_values: int[] = yield * h;
+    let rc: int = rc_values[0];
+    c.destroy();
+
+    if rc != 0 { return 11; }
+    if v1 != 42 { return 1; }
+    if v2 != 99 { return 2; }
+    return 0;
+  }
+}
+```
+
+## Example: `ChannelSender(T)` for multi-producer shutdown
+
+```silk
+import sync from "std/sync";
+
+type ChanU64 = sync::Channel(u64);
+
+task fn producer (tx: sync::ChannelSender(u64), value: u64) -> int {
+  if tx.send(value) != None { return 1; }
+  return 0;
+}
+
+async fn main () -> int {
+  task {
+    let mut c = match ChanU64.init(2) {
+      Ok(v) => v,
+      Err(_) => return 10,
+    };
+
+    let tx0 = match c.sender() {
+      Ok(v) => v,
+      Err(_) => { c.destroy(); return 11; },
+    };
+    let tx1 = match tx0.clone() {
+      Ok(v) => v,
+      Err(_) => { c.destroy(); return 12; },
+    };
+
+    let h0 = producer(tx0, 1);
+    let h1 = producer(tx1, 2);
+
+    let a = c.recv();
+    let b = c.recv();
+    let done = c.recv(); // None after the last sender drops
+
+    let rc0: int = yield h0;
+    let rc1: int = yield h1;
+    c.destroy();
+
+    if rc0 != 0 || rc1 != 0 { return 13; }
+    if a == None || b == None { return 14; }
+    if done != None { return 15; }
+    return 0;
+  }
+}
+```
+
 Example (wait on `/dev/tty` *or* a channel):
 
 ```silk
@@ -21297,17 +21946,17 @@ import event_loop from "std/runtime/event_loop";
 import sync from "std/sync";
 
 export async fn main () -> int {
-  let tty_fd: int = match (io::tty_open()) {
+  let tty_fd = match (io::tty_open()) {
     Ok(fd) => fd,
     Err(_) => return 2,
   };
 
-  let ch: sync::Channel(u64) = match (sync::Channel(u64).init(1)) {
+  let ch = match (sync::Channel(u64).init(1)) {
     Ok(c) => c,
     Err(_) => return 3,
   };
 
-  let r: sync::ChannelBorrow(u64) = ch.borrow();
+  let r = ch.borrow();
   if let Some(wfd) = r.wait_fd() {
     // `which` is 0 when `tty_fd` is readable, 1 when the channel is readable.
     let which: i64 = await event_loop::fd_wait_readable2(tty_fd, wfd);
@@ -21589,19 +22238,12 @@ impl AbortSignalBorrow {
 without transferring ownership, pass a borrow view:
 
 ```silk
-let ctl_r = std::abort_controller::AbortController.init();
-if ctl_r.is_err() {
-  // Handle OutOfMemory.
-} else {
-  let ctl: std::abort_controller::AbortController = match (ctl_r) {
-    Ok(v) => v,
-    Err(_) => std::abort_controller::AbortController{
-      signal: std::abort_controller::AbortSignal{ handle: 0 },
-    },
-  };
-  let sig: std::abort_controller::AbortSignalBorrow = ctl.signal();
-  // Pass `sig` into tasks/operations.
-}
+let controller = match std::abort_controller::AbortController.init() {
+  Ok(v) => v,
+  Err(_) => return 1, // Handle OutOfMemory.
+};
+let sig = controller.signal();
+// Pass `sig` into tasks/operations while `controller` remains alive.
 
 task fn worker (sig: std::abort_controller::AbortSignalBorrow) -> int {
   if sig.is_aborted() { return 0; }
@@ -21611,7 +22253,8 @@ task fn worker (sig: std::abort_controller::AbortSignalBorrow) -> int {
 ```
 
 This pattern keeps ownership with the creator while allowing other threads to
-observe and wait on the abort signal.
+observe and wait on the abort signal. A borrowed signal must not outlive the
+owning controller.
 
 ==============================================================================
 DOCS: `std::sqlite` (std/sqlite)
@@ -21899,10 +22542,20 @@ fn main () -> int {
   let mut tar_bytes: std::buffer::BufferU8 = w.take_buffer();
 
   var r: std::tar::Reader = std::tar::Reader.from_bytes(tar_bytes.as_bytes());
-  let e_r_opt: std::tar::EntryResult? = r.next();
-  if e_r_opt == None { tar_bytes.drop(); return 5; }
-  let e_r: std::tar::EntryResult = match (e_r_opt) { Some(v) => v, None => std::tar::EntryResult.err(std::tar::TarFailed{ code: 0, requested: 0 }) };
-  if e_r.is_err() { tar_bytes.drop(); return 6; }
+  let e_r = match r.next() {
+    Some(v) => v,
+    None => {
+      tar_bytes.drop();
+      return 5;
+    },
+  };
+  match (e_r) {
+    Ok(_) => {},
+    Err(_) => {
+      tar_bytes.drop();
+      return 6;
+    },
+  }
 
   var out: std::buffer::BufferU8 = std::buffer::BufferU8.empty();
   if r.read_to_end(mut out) != None { out.drop(); tar_bytes.drop(); return 7; }
@@ -22113,25 +22766,17 @@ fn main (argc: int, argv: u64) -> int {
   let a = std::args::Args.init(argc, argv);
   let mut fs = std::flag::FlagSet.init();
 
-  let verbose_r = fs.bool({ name: "verbose", alias: "v", default_value: false, usage: "enable verbose logging" });
-  let out_r = fs.string({ name: "out", alias: "", default_value: "out.txt", usage: "output path" });
-  let input_r = fs.positional_string("input", "input file");
-
-  if verbose_r.is_err() { fs.drop(); return 2; }
-  if out_r.is_err() { fs.drop(); return 2; }
-  if input_r.is_err() { fs.drop(); return 2; }
-
-  let verbose: std::flag::BoolFlag = match (verbose_r) {
+  let verbose = match fs.bool({ name: "verbose", alias: "v", default_value: false, usage: "enable verbose logging" }) {
     Ok(v) => v,
-    Err(_) => {},
+    Err(_) => { fs.drop(); return 2; },
   };
-  let out: std::flag::StringFlag = match (out_r) {
+  let out = match fs.string({ name: "out", alias: "", default_value: "out.txt", usage: "output path" }) {
     Ok(v) => v,
-    Err(_) => {},
+    Err(_) => { fs.drop(); return 2; },
   };
-  let input: std::flag::PosString = match (input_r) {
+  let input = match fs.positional_string("input", "input file") {
     Ok(v) => v,
-    Err(_) => {},
+    Err(_) => { fs.drop(); return 2; },
   };
 
   let parsed_r = fs.parse_args(a, 1);
@@ -22366,8 +23011,8 @@ import c from "std/ffi/c";
 ext lib_version = fn () -> u64; // returns `const char*`
 
 fn main () -> int {
-  let p: u64 = lib_version();
-  let v: string = c::cstr_string(p);
+  let p = lib_version();
+  let v = c::cstr_string(p);
   return if v == "" { 1 } else { 0 };
 }
 ```
@@ -22679,11 +23324,9 @@ import std::wasm;
 type ImportMap = std::map::HashMap(std::wasm::ImportFuncName, std::wasm::HostCall);
 
 fn main () -> int {
-  let r = ImportMap.init(8, std::wasm::hash_import_func_name, std::wasm::eq_import_func_name);
-  if r.is_err() { return 1; }
-  let mut m: ImportMap = match (r) {
+  let mut m = match ImportMap.init(8, std::wasm::hash_import_func_name, std::wasm::eq_import_func_name) {
     Ok(v) => v,
-    Err(_) => ImportMap.empty(std::wasm::hash_import_func_name, std::wasm::eq_import_func_name),
+    Err(_) => return 1,
   };
 
   // Link the wasm import `(import "env" "add1" ...)` to a host callback.
@@ -22831,12 +23474,9 @@ using BufferU8 = std::buffer::BufferU8;
 using U64Slice = std::arrays::Slice(u64);
 
 fn main () -> int {
-
-  let r: EngineResult = Engine.init_default();
-  if r.is_err() { return 1; }
-  let engine: Engine = match (r) {
+  let engine = match Engine.init_default() {
     Ok(v) => v,
-    Err(_) => Engine{ max_stack: 0, max_call_depth: 0, max_memory_pages: 0 },
+    Err(_) => return 1,
   };
 
   // Minimal wasm module:
@@ -22853,11 +23493,9 @@ fn main () -> int {
     10, 6, 1, 4, 0, 65, 7, 11
   ];
 
-  let buf_r = BufferU8.init(39);
-  if buf_r.is_err() { return 2; }
-  let mut buf: BufferU8 = match (buf_r) {
+  let mut buf = match BufferU8.init(39) {
     Ok(v) => v,
-    Err(_) => BufferU8.empty(),
+    Err(_) => return 2,
   };
   var i: i64 = 0;
   while i < 39 {
@@ -22870,35 +23508,28 @@ fn main () -> int {
   }
   let bytes: ByteSlice = buf.as_bytes();
 
-  let m_r: ModuleResult = engine.compile(bytes);
+  let mut m = match engine.compile(bytes) {
+    Ok(v) => v,
+    Err(_) => {
+      buf.drop();
+      return 2;
+    },
+  };
   buf.drop();
-  if m_r.is_err() { return 2; }
-  let mut m: Module = match (m_r) {
+
+  let mut inst = match m.instantiate() {
     Ok(v) => v,
-    Err(_) => Module.empty(),
+    Err(_) => return 3,
   };
 
-  let inst_r: InstanceResult = m.instantiate();
-  if inst_r.is_err() { return 3; }
-  let mut inst: Instance = match (inst_r) {
-    Ok(v) => v,
-    Err(_) => Instance.empty(),
-  };
-
-  let f_opt: Func? = inst.export_func("answer");
-  if f_opt == None { return 4; }
-  let f: Func = f_opt ?? Func{ index: 0 };
+  let Some(f) = inst.export_func("answer") else { return 4; };
 
   let args: U64Slice = { ptr: 0, len: 0 };
-  let call_r: CallResult = inst.call(f, args);
-  if call_r.is_err() { return 5; }
-
-  let out_opt: Val? = match (call_r) {
+  let out_opt = match inst.call(f, args) {
     Ok(v) => v,
-    Err(_) => None,
+    Err(_) => return 5,
   };
-  if out_opt == None { return 6; }
-  let out: Val = out_opt ?? Val.i32(0);
+  let Some(out) = out_opt else { return 6; };
 
   let got_opt: i32? = out.as_i32();
   if got_opt == None { return 7; }
@@ -23000,6 +23631,34 @@ Important current limitation (compiler subset):
 - The compiler does not yet implement packed C struct layout. As a result,
   these bindings use `u64` pointers for C pointer parameters and do not rely on
   passing user-defined structs by value to C.
+
+## Example: minimal OpenGL import
+
+For downstream users, the first step is usually proving that the generated
+bindings resolve and that the correct loader library is linked:
+
+```silk
+import std::graphics::opengl;
+import std::io::println;
+
+fn main () -> int {
+  println("std::graphics::opengl is linked");
+  return 0;
+}
+```
+
+Hosted build:
+
+```bash
+silk build hello_gl.slk -o build/hello_gl --needed libGL.so.1
+```
+
+Equivalent loader flags for the other generated namespaces:
+
+```bash
+silk build hello_gles.slk -o build/hello_gles --needed libGLESv2.so.2
+silk build hello_vk.slk -o build/hello_vk --needed libvulkan.so.1
+```
 
 ==============================================================================
 DOCS: `std::image` — Image Codecs + Color (std/image)
@@ -23117,6 +23776,40 @@ The `Document` API exposes:
 
 All names and raw values are represented as `SpanId`s that can be rendered to
 `string` views via `Document.span_text(span_id)`.
+
+## Example: parse and inspect an interface
+
+```silk
+import std::idl::web;
+import std::io::println;
+
+fn main () -> int {
+  let src = `[Exposed=Window]
+interface Console {
+  undefined log(DOMString message);
+};`;
+
+  let doc = match std::idl::web::parse(src) {
+    Ok(v) => v,
+    Err(err) => {
+      println("parse failed at {d}:{d}: {s}", err.line, err.column, err.message());
+      return 1;
+    },
+  };
+
+  if doc.def_count() != 1 {
+    return 2;
+  }
+
+  let name_span = match doc.def_name(0) {
+    Some(v) => v,
+    None => return 3,
+  };
+
+  println(doc.span_text(name_span));
+  return 0;
+}
+```
 
 ## Current Grammar Coverage (Initial)
 
@@ -23319,6 +24012,49 @@ managed by Z3. Convert them to a Silk `string` view using:
 The returned `string` is a borrowed view; it is valid only while the Z3-owned
 storage remains valid.
 
+## Example: minimal satisfiable solver
+
+Because the raw bindings expose C strings as `u64`, pass symbol names with
+`std::runtime::mem::string_ptr(...)`.
+
+```silk
+import std::ffi::c;
+import std::io::println;
+import std::runtime::mem;
+import std::runtime::z3;
+
+fn main () -> int {
+  let cfg = std::runtime::z3::Z3_mk_config();
+  let ctx = std::runtime::z3::Z3_mk_context_rc(cfg);
+  std::runtime::z3::Z3_del_config(cfg);
+
+  let solver = std::runtime::z3::Z3_mk_solver(ctx);
+  std::runtime::z3::Z3_solver_inc_ref(ctx, solver);
+
+  let sort = std::runtime::z3::Z3_mk_int_sort(ctx);
+  let x_name = std::runtime::z3::Z3_mk_string_symbol(ctx, std::runtime::mem::string_ptr("x"));
+  let x = std::runtime::z3::Z3_mk_const(ctx, x_name, sort);
+  let zero = std::runtime::z3::Z3_mk_int64(ctx, 0, sort);
+  let gt = std::runtime::z3::Z3_mk_gt(ctx, x, zero);
+
+  std::runtime::z3::Z3_solver_assert(ctx, solver, gt);
+  if std::runtime::z3::Z3_solver_check(ctx, solver) != std::runtime::z3::Z3_L_TRUE {
+    std::runtime::z3::Z3_solver_dec_ref(ctx, solver);
+    std::runtime::z3::Z3_del_context(ctx);
+    return 1;
+  }
+
+  let model = std::runtime::z3::Z3_solver_get_model(ctx, solver);
+  std::runtime::z3::Z3_model_inc_ref(ctx, model);
+  println(std::ffi::c::cstr_borrow(std::runtime::z3::Z3_model_to_string(ctx, model)));
+
+  std::runtime::z3::Z3_model_dec_ref(ctx, model);
+  std::runtime::z3::Z3_solver_dec_ref(ctx, solver);
+  std::runtime::z3::Z3_del_context(ctx);
+  return 0;
+}
+```
+
 ## Platform Support
 
 The current toolchain auto-link behavior for `std::runtime::z3` is supported
@@ -23412,6 +24148,31 @@ The initial surface is intentionally small:
 
 The module is expected to grow incrementally as we map more of the upstream API
 into a stable Silk wrapper layer.
+
+## Example: toolchain smoke test
+
+The most reliable downstream check today is verifying that the module resolves
+and that the hosted toolchain auto-links the staged ggml archives:
+
+```silk
+import std::ggml;
+import std::io::println;
+
+fn main () -> int {
+  println("std::ggml is available");
+  return 0;
+}
+```
+
+Build it after staging vendored dependencies:
+
+```bash
+zig build deps
+silk build hello_ggml.slk -o build/hello_ggml
+```
+
+On the hosted `linux/x86_64` baseline, importing `std::ggml` is enough for
+`silk build` to link the staged ggml archives automatically.
 
 ==============================================================================
 DOCS: `std::limits` (std/limits)
@@ -24016,15 +24777,28 @@ For full language semantics and limitations, see:
 - pass `AbortSignalBorrow` into work that should stop early,
 - abort once, from any thread/task.
 
-See a runnable program:
+Minimal pattern:
 
-- `examples/feature_concurrency_abort_controller.slk`
+```silk
+import std::abort_controller;
 
-Build and run (from a checkout of the Silk compiler repository):
+task fn worker (sig: std::abort_controller::AbortSignalBorrow) -> int {
+  if sig.is_aborted() { return 0; }
+  return 1;
+}
 
-```bash
-silk build examples/feature_concurrency_abort_controller.slk -o build/abort_controller
-./build/abort_controller
+async fn main () -> int {
+  let controller = match std::abort_controller::AbortController.init() {
+    Ok(v) => v,
+    Err(_) => return 1,
+  };
+
+  task {
+    controller.abort();
+    let rc: int = yield worker(controller.signal());
+    return rc;
+  }
+}
 ```
 
 ## 2) High-quality async I/O (`std::io::async`)
@@ -24039,29 +24813,31 @@ Important rule: `write` may write fewer bytes than requested. “High-quality”
 I/O loops must handle partial writes (and partial reads when you need an exact
 length).
 
-See a runnable example that:
+The core readiness-wait shape is:
 
-- creates two pipes,
-- runs a pure-`async` producer/copy/consumer pipeline,
-- composes the pipeline with `await * [...]`,
-- aborts after a timeout using `AbortController` (cooperative cancellation),
-- uses a `write_all_abortable` loop to handle partial writes correctly.
+```silk
+import std::abort_controller;
+import std::runtime::event_loop;
 
-Example:
+async fn wait_readable_or_abort (fd: int, sig: std::abort_controller::AbortSignalBorrow) -> int {
+  let abort_fd = match sig.wait_fd() {
+    Some(v) => v,
+    None => return 1,
+  };
 
-- `examples/feature_io_async_pipe_copy_abortable.slk`
-
-Build and run (from a checkout of the Silk compiler repository):
-
-```bash
-silk build examples/feature_io_async_pipe_copy_abortable.slk -o build/async_copy
-./build/async_copy
+  let which: i64 = await std::runtime::event_loop::fd_wait_readable2(fd, abort_fd);
+  if which == 0 { return 0; }
+  return 1;
+}
 ```
 
 Notes ():
 
-- Aborts are cooperative: they are checked before/after awaited waits.
-  Aborts do not yet interrupt an in-flight sleep or fd wait.
+- Aborts are cooperative, but the details depend on the layer:
+  - `std::runtime::event_loop::fd_wait_readable_abortable` can interrupt an
+    in-flight readiness wait when `AbortSignalBorrow.wait_fd()` is available.
+  - `std::io::async::{read_abortable,write_abortable}` still observe aborts
+    conservatively around each I/O attempt.
 - This example intentionally avoids `task fn` threads. In the current hosted
   runtime, spawning stackful async coroutines in a multi-threaded process is
   not reliable yet. Keep `std::io::async`-based I/O pipelines single-threaded
@@ -24082,27 +24858,41 @@ To connect OS resources to streams:
 
 - `std::io::stream` pipes fd ↔ stream (`ReadableStream` / `WritableStream`).
 
-See a runnable example that builds a pipeline:
+Minimal wiring:
 
-fd → stream → uppercase transform → stream → fd
+```silk
+import std::stream;
 
-Example:
+async fn main () -> int {
+  task {
+    let mut t = match std::stream::TransformStream.init_default() {
+      Ok(v) => v,
+      Err(_) => return 1,
+    };
 
-- `examples/feature_stream_transform_uppercase_fd.slk`
+    let input = t.take_writable();
+    let output = t.take_readable();
+    let transform_in = t.take_transform_readable();
+    let transform_out = t.take_transform_writable();
 
-Build and run (from a checkout of the Silk compiler repository):
-
-```bash
-silk build examples/feature_stream_transform_uppercase_fd.slk -o build/stream_upper
-./build/stream_upper
+    // Producers write to `input`.
+    // A transformer task reads from `transform_in` and writes to `transform_out`.
+    // Consumers read from `output`.
+    input.close();
+    output.destroy();
+    transform_in.destroy();
+    transform_out.destroy();
+    return 0;
+  }
+}
 ```
 
 ## Next steps
 
-- If you want a quick, runnable reference, prefer the `examples/` programs in
-  the Silk compiler repository alongside the docs.
-- For network I/O, start with `examples/std_net_tcp_loopback.slk` and
-  `docs/std/networking.md` (`std::net::stream` provides `TcpStream` ↔ stream adapters).
+- For network I/O, start with `docs/std/networking.md`
+  (`std::net::stream` provides `TcpStream` ↔ stream adapters).
+- For low-level readiness waits and manual executor driving, read
+  `docs/std/runtime-event-loop.md`.
 
 ==============================================================================
 DOCS: CLI usage examples (usage/cli-examples)
@@ -25365,7 +26155,7 @@ The initial implementation is intentionally smaller and focuses on:
       - matching on optionals via `match <scrutinee> { None => <expr>, Some(<name|_>) => <expr>, }` (exactly one `None` arm and one `Some(...)` arm; arm bodies are expressions),
       - unwrapping optionals via `??` with short-circuit evaluation of the fallback expression (including unwrapping `T??` to `T?`),
       - and passing/returning optionals between helpers at ABI boundaries as `(bool tag, payload0, payload1, ...)`, where the payload slots follow the lowering of the underlying non-optional type (for example `string?` is `(bool, u64 ptr, i64 len)`).
-      - for non-executable outputs, exported functions may accept and return these optionals; see `docs/compiler/abi-libsilk.md` for the exact C ABI mapping.
+      - for non-executable outputs, exported functions may accept and return these optionals; see [C ABI (`libsilk`)](?p=compiler/abi-libsilk) for the exact C ABI mapping.
     - on `linux/x86_64`, the current backend also supports a limited external call subset:
       - top-level `ext` declarations of external functions (`ext name = fn (T, ...) -> R;`) may be called like normal functions from Silk code,
       - these calls are supported for all output kinds:
@@ -25596,7 +26386,7 @@ Top-level commands:
     - `--c-header <path>` writes a generated C header at `<path>` that declares the root package’s exported symbols (`export fn` prototypes and `export let` extern declarations) for consumption from C/C++,
     - this option is only meaningful for non-executable outputs (`--kind object|static|shared`) and is rejected for `--kind executable`,
     - to keep the C ABI surface obvious and stable, `--c-header` requires the *root package* (the package of the first input module) to be the **global package** (i.e. omit `package ...;` in the exported library’s sources),
-    - the generated header encodes the current ABI rules described in `docs/compiler/abi-libsilk.md`, including:
+    - the generated header encodes the current ABI rules described in [C ABI (`libsilk`)](?p=compiler/abi-libsilk), including:
       - `string` values use `SilkString { ptr, len }` (from `silk.h`),
       - optionals and 3+ slot structs are lowered at call boundaries as multiple scalar parameters (so C prototypes for such parameters use flattened arguments rather than by-value C struct parameters).
   - For programs outside the supported subset that nonetheless type-check, exits non-zero with a clear `E4001` / `E4002` diagnostic (instead of a generic “code generation is not implemented yet” message).
@@ -25631,6 +26421,206 @@ Future commands (not yet implemented, but documented for roadmap clarity):
 
 - CLI behavior must be mirrored in `docs/man/silk.1.md`.
 - Examples of typical build invocations and workflows should also be documented under `docs/usage/cli-examples.md`.
+
+==============================================================================
+DOCS: `libsilk` quickstart (compiler/libsilk-quickstart)
+URL: /silk/docs/?p=compiler/libsilk-quickstart
+==============================================================================
+
+# `libsilk` quickstart
+
+`libsilk.a` is the public C99 embedding surface for driving Silk compilation from native host tools, editors, build systems, and language integrations.
+
+If you want the full ABI contract, read [C ABI (`libsilk`)](?p=compiler/abi-libsilk). This page is the shortest path to a working embedder.
+
+## Start here
+
+1. Include `silk.h`.
+2. Link `libsilk.a`.
+3. Create a `SilkCompiler`.
+4. Add one or more source buffers.
+5. Build either to the filesystem or to an in-memory `SilkBytes` buffer.
+6. On failure, read `silk_compiler_last_error` and format it with `silk_error_format`.
+7. Destroy the compiler, and free any `SilkBytes` output with `silk_bytes_free`.
+
+On `linux/x86_64`, `libsilk.a` vendors Z3 and must also link the host C++ runtime:
+
+```sh
+cc -std=c99 -Wall -Wextra \
+   -I/path/to/include your_app.c \
+   -L/path/to/lib -lsilk \
+   -lstdc++ -lpthread -lm
+```
+
+## Smallest working embedder
+
+This example builds a tiny executable from an in-memory Silk module. It avoids `std::` imports so you can focus on the embedding flow first.
+
+```c
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "silk.h"
+
+static SilkString silk_cstr(const char *s) {
+  SilkString out;
+  out.ptr = (char *)s;
+  out.len = (int64_t)strlen(s);
+  return out;
+}
+
+static int fail_with_last_error(SilkCompiler *compiler) {
+  SilkError *err = silk_compiler_last_error(compiler);
+  char buf[4096];
+  size_t n;
+
+  if (!err) {
+    fputs("unknown Silk compiler error\n", stderr);
+    return 1;
+  }
+
+  n = silk_error_format(err, buf, sizeof buf);
+  if (n >= sizeof buf) {
+    n = sizeof buf - 1;
+  }
+  buf[n] = '\0';
+
+  fputs(buf, stderr);
+  fputc('\n', stderr);
+  return 1;
+}
+
+int main(void) {
+  SilkCompiler *compiler = silk_compiler_create();
+  int rc = 0;
+
+  if (!compiler) {
+    return 1;
+  }
+
+  if (!silk_compiler_add_source_buffer(
+        compiler,
+        silk_cstr("main.slk"),
+        silk_cstr("fn main () -> int { return 0; }\n"))) {
+    rc = fail_with_last_error(compiler);
+    goto done;
+  }
+
+  if (!silk_compiler_build(
+        compiler,
+        SILK_OUTPUT_EXECUTABLE,
+        silk_cstr("build/hello"))) {
+    rc = fail_with_last_error(compiler);
+    goto done;
+  }
+
+done:
+  silk_compiler_destroy(compiler);
+  return rc;
+}
+```
+
+## Common paths
+
+### Build an artifact on disk
+
+Use `silk_compiler_build` when you want the compiler to write:
+
+- an executable,
+- a relocatable object,
+- a static library,
+- or a shared library.
+
+Start with:
+
+- [`silk_compiler` (3)](?p=man/silk_compiler.3)
+- [C ABI (`libsilk`)](?p=compiler/abi-libsilk)
+
+### Generate a C header for exported Silk symbols
+
+For non-executable outputs, call `silk_compiler_set_c_header` before the build:
+
+```c
+silk_compiler_set_c_header(compiler, silk_cstr("build/mylib.h"));
+silk_compiler_build(compiler, SILK_OUTPUT_SHARED, silk_cstr("build/libmylib.so"));
+```
+
+The detailed ABI lowering rules for exported `string`, optionals, and multi-slot structs live here:
+
+- [C ABI (`libsilk`)](?p=compiler/abi-libsilk)
+- [`silk_compiler` (3)](?p=man/silk_compiler.3)
+
+### Build to memory instead of the filesystem
+
+Use `silk_compiler_build_to_bytes` when the host wants to own the output bytes directly, for example when:
+
+- emitting a `.wasm` module into an application-managed buffer,
+- storing an object file in a cache,
+- or passing an artifact to another tool without creating a temporary file.
+
+```c
+SilkBytes out = {0};
+
+if (!silk_compiler_build_to_bytes(compiler, SILK_OUTPUT_OBJECT, &out)) {
+  return fail_with_last_error(compiler);
+}
+
+/* use out.ptr / out.len */
+silk_bytes_free(&out);
+```
+
+Reference pages:
+
+- [`silk_bytes` (3)](?p=man/silk_bytes.3)
+- [C ABI (`libsilk`)](?p=compiler/abi-libsilk)
+
+### Format diagnostics for users
+
+The normal failure path is:
+
+1. call a `silk_compiler_*` function,
+2. if it returns `false`, fetch `silk_compiler_last_error`,
+3. format that error with `silk_error_format`.
+
+For the full two-pass formatting pattern, read:
+
+- [`silk_error` (3)](?p=man/silk_error.3)
+- [Compiler diagnostics](?p=compiler/diagnostics)
+
+### Check ABI compatibility at startup
+
+Embedders that ship their own copy of `silk.h` should call `silk_abi_get_version` when they start and reject incompatible library versions explicitly.
+
+Reference:
+
+- [`silk_abi_get_version` (3)](?p=man/silk_abi_get_version.3)
+
+## When you need `std::`
+
+The smallest example above uses no standard library modules. Real applications usually do.
+
+When your Silk sources import `std::...`, configure the compiler before adding sources:
+
+- `silk_compiler_set_std_root` to point at the stdlib root,
+- `silk_compiler_set_stdlib` to select the stdlib package name,
+- `silk_compiler_set_nostd(true)` only when you intentionally want a filesystem-free embedder with no stdlib auto-loading.
+
+Reference:
+
+- [CLI reference](?p=compiler/cli-silk)
+- [Standard library integration](?p=compiler/stdlib-integration)
+- [`libsilk` (7)](?p=man/libsilk.7)
+
+## See also
+
+- [Zig embedding API](?p=compiler/zig-api)
+- [C ABI (`libsilk`)](?p=compiler/abi-libsilk)
+- [`libsilk` (7)](?p=man/libsilk.7)
+- [`silk_compiler` (3)](?p=man/silk_compiler.3)
+- [`silk_error` (3)](?p=man/silk_error.3)
+- [`silk_bytes` (3)](?p=man/silk_bytes.3)
+- [`silk_abi_get_version` (3)](?p=man/silk_abi_get_version.3)
 
 ==============================================================================
 DOCS: Package Manifests (`silk.toml`) (compiler/package-manifests)
@@ -27068,7 +28058,8 @@ responsible for lowering Silk IR values into the wasm value stack.
   not.
 
 The module/name convention and supported import surface must be documented in
-`docs/language/ext.md` (WASM-specific subsection) and in CLI docs.
+[External declarations (`ext`)](?p=language/ext) (WASM-specific subsection) and in
+[CLI reference](?p=compiler/cli-silk).
 
 ### WASI integration
 
@@ -27118,8 +28109,8 @@ This document now serves two roles:
 - Specify the longer-term architecture (compiler coroutine transform + richer event loop)
   that the current implementation is expected to evolve toward.
 
-The current hosted async runtime is implemented in C in `src/silk_rt_async.c` and wired
-into lowering in `src/lower_ir.zig`. It provides:
+The current hosted async runtime is implemented in the bundled hosted runtime
+and wired into compiler lowering. It provides:
 
 - stackful coroutines (fibers) using `ucontext`,
 - a single-threaded executor/event loop that can drive `async fn main () -> int`,
@@ -27136,6 +28127,23 @@ See also:
 - function disciplines: `docs/language/function-disciplines.md`
 - runtime layering: `docs/std/runtime.md`
 - current blocking hosted utilities: `docs/std/task.md`, `docs/std/io.md`, `docs/std/networking.md`
+
+## Example: async executable entrypoint
+
+The current hosted runtime already drives `async fn main () -> int` for normal
+executables:
+
+```silk
+import std::task;
+
+async fn main () -> int {
+  await std::task::sleep_ms_async(10);
+  return 0;
+}
+```
+
+When built as an executable, the entry stub creates the hosted executor/event
+loop, spawns the `Promise(int)` for `main`, and drives it to completion.
 
 ## Current Implementation (Shipped)
 
@@ -27602,7 +28610,8 @@ multi-scalar values at function ABI boundaries (parameters and results) by
 lowering a single surface-language value into multiple scalar slots:
 
 - `string` is lowered as `{ ptr: u64, len: i64 }` and returns via `rax`/`rdx` on
-  `linux/x86_64` (see `docs/language/ext.md` and `docs/compiler/abi-libsilk.md`).
+  `linux/x86_64` (see [External declarations (`ext`)](?p=language/ext) and
+  [C ABI (`libsilk`)](?p=compiler/abi-libsilk)).
 - For the initial `struct` subset (see `docs/language/structs-impls-layout.md`),
   a struct value is lowered as 1+ scalar slots in source field order. Each
   field may contribute one or more slots (for example, `string` contributes
@@ -28673,10 +29682,12 @@ URL: /silk/docs/?p=compiler/abi-libsilk
 
 This document defines the C99 ABI and the interface of the `libsilk.a` static library.
 
+If you want the shortest path to a working embedder, start with [`libsilk` quickstart](?p=compiler/libsilk-quickstart).
+
 ## Goals
 
 - Provide a stable C ABI for embedders.
-- Mirror the external-declaration semantics described in `docs/language/ext.md`.
+- Mirror the external-declaration semantics described in [External declarations (`ext`)](?p=language/ext).
 - Keep the ABI small, explicit, and well-documented.
 
 ## Library & Headers
@@ -29342,7 +30353,7 @@ The initial C header provided in the Silk compiler repository defines:
   ```
 
   - `silk_error_format` returns a human-readable diagnostic message. When the compiler can associate the error with a source span, the formatted message includes the module name/path plus line/column and a caret snippet.
-  - The text format and initial stable error code set are specified in `docs/compiler/diagnostics.md`. Embedders should treat the formatted message as user-facing text (not a stable machine-readable protocol).
+  - The text format and initial stable error code set are specified in [Diagnostics](?p=compiler/diagnostics). Embedders should treat the formatted message as user-facing text (not a stable machine-readable protocol).
 
 Ownership, lifetime, and thread-safety guarantees for these APIs must be clearly documented and kept in sync with the implementation.
 
@@ -29357,131 +30368,599 @@ In addition, the embedding ABI must clearly distinguish:
 - functions that consume Silk‑owned values (e.g. `SilkString` whose storage is owned by the runtime) versus
 - functions that take ownership of data supplied by the embedder (and are responsible for freeing it via documented APIs).
 
-Any deviation from the mappings documented in `docs/language/ext.md` must be justified here and reflected in tests.
+Any deviation from the mappings documented in [External declarations](?p=language/ext) must be justified here and reflected in tests.
+
+## Embedder checklist
+
+For downstream embedders, the most important rules are:
+
+- Treat every `SilkString` passed into the ABI as **borrowed input**:
+  - `libsilk` copies configuration strings and source buffers,
+  - callers retain ownership of the original C storage.
+- Treat every `SilkModule *` and `SilkError *` returned by the ABI as
+  **compiler-owned**:
+  - never free them directly,
+  - never cache them across later compiler operations unless the docs
+    explicitly guarantee that lifetime.
+- Treat every `SilkBytes` returned by `silk_compiler_build_to_bytes` as
+  **library-owned output**:
+  - free it only with `silk_bytes_free`,
+  - do not pass `bytes.ptr` to `free()`.
+- Create output directories yourself before calling `silk_compiler_build`;
+  unlike the CLI, the C ABI does not create parent directories.
+- Use one `SilkCompiler` per logical build job. A compiler instance is not
+  specified as thread-safe.
+- Expect the last-error object to be overwritten by later operations. Format or
+  copy diagnostics promptly when a call fails.
+
+## End-to-end examples
+
+These examples are intentionally small and downstream-focused. They show the
+normal embedder patterns rather than internal compiler tests.
+
+### Example: build a tiny executable on disk
+
+```c
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "silk.h"
+
+static SilkString silk_cstr(const char *s) {
+  SilkString out;
+  out.ptr = (char *)s;
+  out.len = (int64_t)strlen(s);
+  return out;
+}
+
+static void print_last_error(SilkCompiler *compiler) {
+  SilkError *err = silk_compiler_last_error(compiler);
+  if (!err) {
+    fputs("libsilk: unknown error\n", stderr);
+    return;
+  }
+
+  size_t need = silk_error_format(err, NULL, 0);
+  char *buf = (char *)malloc(need + 1);
+  if (!buf) {
+    fputs("libsilk: failed to allocate error buffer\n", stderr);
+    return;
+  }
+
+  silk_error_format(err, buf, need + 1);
+  fprintf(stderr, "%s\n", buf);
+  free(buf);
+}
+
+int main(void) {
+  SilkCompiler *compiler = silk_compiler_create();
+  if (!compiler) {
+    return 1;
+  }
+
+  if (!silk_compiler_set_stdlib(compiler, silk_cstr("std"))) {
+    print_last_error(compiler);
+    silk_compiler_destroy(compiler);
+    return 1;
+  }
+
+  if (!silk_compiler_add_source_buffer(
+        compiler,
+        silk_cstr("main.slk"),
+        silk_cstr("fn main() -> int { return 0; }\n"))) {
+    print_last_error(compiler);
+    silk_compiler_destroy(compiler);
+    return 1;
+  }
+
+  if (!silk_compiler_build(
+        compiler,
+        SILK_OUTPUT_EXECUTABLE,
+        silk_cstr("build/libsilk-demo"))) {
+    print_last_error(compiler);
+    silk_compiler_destroy(compiler);
+    return 1;
+  }
+
+  silk_compiler_destroy(compiler);
+  return 0;
+}
+```
+
+Notes:
+
+- `build/` must already exist.
+- This example stays within the currently implemented executable subset by using
+  a constant `main`.
+
+### Example: build a wasm module to memory
+
+```c
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "silk.h"
+
+static SilkString silk_cstr(const char *s) {
+  SilkString out;
+  out.ptr = (char *)s;
+  out.len = (int64_t)strlen(s);
+  return out;
+}
+
+int main(void) {
+  SilkCompiler *compiler = silk_compiler_create();
+  SilkBytes bytes = {0};
+  int rc = 1;
+
+  if (!compiler) {
+    return 1;
+  }
+
+  if (!silk_compiler_set_target(compiler, silk_cstr("wasm32-unknown-unknown"))) {
+    goto fail;
+  }
+
+  if (!silk_compiler_add_source_buffer(
+        compiler,
+        silk_cstr("main.slk"),
+        silk_cstr("fn main() -> int { return 7; }\n"))) {
+    goto fail;
+  }
+
+  if (!silk_compiler_build_to_bytes(
+        compiler,
+        SILK_OUTPUT_EXECUTABLE,
+        &bytes)) {
+    goto fail;
+  }
+
+  if (bytes.len < 4 || memcmp(bytes.ptr, "\0asm", 4) != 0) {
+    goto fail;
+  }
+
+  rc = 0;
+
+fail:
+  silk_bytes_free(&bytes);
+  silk_compiler_destroy(compiler);
+  return rc;
+}
+```
+
+This is the normal pattern for sandboxed embedders:
+
+- configure the target,
+- compile into `SilkBytes`,
+- validate or store the bytes,
+- release them with `silk_bytes_free`.
+
+### Example: emit an object file and generated C header
+
+```c
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "silk.h"
+
+static SilkString silk_cstr(const char *s) {
+  SilkString out;
+  out.ptr = (char *)s;
+  out.len = (int64_t)strlen(s);
+  return out;
+}
+
+int main(void) {
+  SilkCompiler *compiler = silk_compiler_create();
+  if (!compiler) {
+    return 1;
+  }
+
+  if (!silk_compiler_set_c_header(compiler, silk_cstr("build/demo.h"))) {
+    silk_compiler_destroy(compiler);
+    return 1;
+  }
+
+  if (!silk_compiler_add_source_buffer(
+        compiler,
+        silk_cstr("lib.slk"),
+        silk_cstr(
+          "export fn add(a: int, b: int) -> int { return a + b; }\n"))) {
+    silk_compiler_destroy(compiler);
+    return 1;
+  }
+
+  if (!silk_compiler_build(
+        compiler,
+        SILK_OUTPUT_OBJECT,
+        silk_cstr("build/demo.o"))) {
+    silk_compiler_destroy(compiler);
+    return 1;
+  }
+
+  silk_compiler_destroy(compiler);
+  return 0;
+}
+```
+
+This is the usual path when a C or C++ host wants:
+
+- a compiled Silk object/library,
+- plus a generated C header matching the exported ABI surface.
+
+### Example: two-pass diagnostic formatting
+
+```c
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "silk.h"
+
+static SilkString silk_cstr(const char *s) {
+  SilkString out;
+  out.ptr = (char *)s;
+  out.len = (int64_t)strlen(s);
+  return out;
+}
+
+int main(void) {
+  SilkCompiler *compiler = silk_compiler_create();
+  if (!compiler) {
+    return 1;
+  }
+
+  (void)silk_compiler_add_source_buffer(
+    compiler,
+    silk_cstr("broken.slk"),
+    silk_cstr("fn main() -> int { return ; }\n"));
+
+  if (!silk_compiler_build(
+        compiler,
+        SILK_OUTPUT_EXECUTABLE,
+        silk_cstr("build/should-not-exist"))) {
+    SilkError *err = silk_compiler_last_error(compiler);
+    size_t need = silk_error_format(err, NULL, 0);
+    char *buf = (char *)malloc(need + 1);
+    if (buf) {
+      silk_error_format(err, buf, need + 1);
+      fprintf(stderr, "%s\n", buf);
+      free(buf);
+    }
+  }
+
+  silk_compiler_destroy(compiler);
+  return 0;
+}
+```
+
+The important rule here is that `SilkError *` is still owned by the compiler.
+Copy the formatted text if you need it after the next compiler operation.
 
 ## See Also
 
-- `libsilk` (7) — C99 ABI manpage for embedders.
+- [`libsilk` (7)](?p=man/libsilk.7) — C99 ABI manpage for embedders.
+- [`silk_compiler` (3)](?p=man/silk_compiler.3)
+- [`silk_error` (3)](?p=man/silk_error.3)
+- [`silk_bytes` (3)](?p=man/silk_bytes.3)
+- [`silk_abi_get_version` (3)](?p=man/silk_abi_get_version.3)
+- [Zig embedding API](?p=compiler/zig-api)
 - `silk.h` — public C header shipped with the library.
 
 ==============================================================================
-DOCS: Zig Embedding API (Programmatic Compilation) (compiler/zig-api)
+DOCS: Zig Embedding API (compiler/zig-api)
 URL: /silk/docs/?p=compiler/zig-api
 ==============================================================================
 
-# Zig Embedding API (Programmatic Compilation)
+# Zig Embedding API
 
-This document specifies the Zig-facing embedding API for using the Silk
-compiler programmatically from Zig code.
+This page documents the Zig-facing embedding surface exported as the `silk` module.
 
-It complements (and is intentionally aligned with) the C99 embedding API
-documented in `docs/compiler/abi-libsilk.md`.
+It wraps the same compiler engine used by the `silk` CLI and the C ABI in `libsilk.a`, but presents it as Zig slices, Zig error unions, and owned Zig values instead of raw C handles.
 
-## Goals
+If your host is C or C++, start with [`libsilk` quickstart](?p=compiler/libsilk-quickstart) and [C ABI (`libsilk`)](?p=compiler/abi-libsilk). If your host is Zig, this is the primary downstream reference.
 
-- Allow Zig programs to compile Silk sources into:
-  - native executables,
-  - ELF relocatable objects (`.o`),
-  - static libraries (`.a`),
-  - shared libraries (`.so`),
-  using the same implementation as the `silk` CLI and `libsilk.a`.
-- Support filesystem-free embedding flows by building artifacts into owned
-  in-memory byte buffers (and by allowing stdlib auto-loading to be disabled).
-- Provide a Zig-friendly wrapper (slices, enums, error unions) over the
-  existing embedding surface, while keeping the error semantics consistent.
-- Keep the API small and stable: for feature gaps, return an error and surface
-  details via the same “last error” mechanism as the C API.
+## What the Zig module exports
 
-## Relationship to the C ABI
+The upstream `src/silk.zig` module exports four public pieces:
 
-The Zig embedding API is a thin wrapper over the same implementation that backs
-`libsilk.a`.
+- `silk.OutputKind` — alias of the embedding output-kind enum.
+- `silk.Error` — `error{ OutOfMemory, Failed }`.
+- `silk.OwnedBytes` — owned in-memory build output with `slice()` and `deinit()`.
+- `silk.Compiler` — the main embedding handle.
 
-Practical implications:
+### `silk.OutputKind`
 
-- The supported language subset and backend constraints are the same as the
-  CLI and C API for a given build of the compiler.
-- When an operation fails, the compiler records a human-readable last error.
-  Zig callers can retrieve it via `Compiler.lastErrorAlloc`.
-- The Zig API does not require `@cImport`; it reuses the Zig implementation
-  directly.
+Use one of these output kinds when building:
 
-## Public Module
+- `.SILK_OUTPUT_EXECUTABLE`
+- `.SILK_OUTPUT_STATIC_LIBRARY`
+- `.SILK_OUTPUT_SHARED_LIBRARY`
+- `.SILK_OUTPUT_OBJECT`
 
-The Silk compiler repository exports a Zig module named `silk` from `build.zig`
-for downstream dependencies.
+For wasm targets, see [WASM backend](?p=compiler/backend-wasm) and [C ABI (`libsilk`)](?p=compiler/abi-libsilk) for the currently supported output subset.
 
-Downstream build snippet (illustrative):
+### `silk.Error`
+
+The wrapper uses a small error set:
+
+- `error.OutOfMemory` — wrapper-side allocation failure (for example `Compiler.init`, `lastErrorAlloc`, or Zig-side buffer setup).
+- `error.Failed` — the underlying compiler rejected the operation; inspect `Compiler.lastErrorAlloc(...)` for the diagnostic text.
+
+## Add `silk` to a Zig build
+
+The Silk repository exports a Zig module named `silk` from its `build.zig`.
 
 ```zig
-const silk = b.dependency("silk", .{ .target = target, .optimize = optimize });
-exe.root_module.addImport("silk", silk.module("silk"));
+const silk_dep = b.dependency("silk", .{
+    .target = target,
+    .optimize = optimize,
+});
+
+exe.root_module.addImport("silk", silk_dep.module("silk"));
 exe.root_module.link_libc = true;
 ```
 
 Notes:
 
-- The compiler implementation uses libc for filesystem and process I/O in the
-  current prototype; downstream artifacts that import the `silk` module should
-  link libc.
-- The module is source-based: depending on it compiles the compiler into your
-  Zig program (this is intended for embedding).
+- The module is source-based: depending on it compiles the Silk compiler into your Zig program.
+- Downstream artifacts that import `silk` should link libc.
+- If you instead want to link the compiled static library from C or C++, use [C ABI (`libsilk`)](?p=compiler/abi-libsilk).
 
-## `Compiler` API
+## Smallest working example
 
-The `silk` module exposes a `Compiler` type for constructing a compilation:
+This is the shortest practical Zig embedder: one in-memory Silk source buffer, one executable output, and one reusable diagnostic printer.
+
+```zig
+const std = @import("std");
+const silk = @import("silk");
+
+fn reportCompilerFailure(
+    compiler: *silk.Compiler,
+    allocator: std.mem.Allocator,
+) !void {
+    if (try compiler.lastErrorAlloc(allocator)) |msg_with_nul| {
+        defer allocator.free(msg_with_nul);
+        const msg = std.mem.trimRight(u8, msg_with_nul, "\x00");
+        std.debug.print("{s}\n", .{msg});
+    } else {
+        std.debug.print("unknown Silk compiler error\n", .{});
+    }
+}
+
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var compiler = try silk.Compiler.init();
+    defer compiler.deinit();
+
+    compiler.addSourceBuffer(
+        "main.slk",
+        "fn main () -> int { return 0; }\n",
+    ) catch |err| switch (err) {
+        error.Failed => {
+            try reportCompilerFailure(&compiler, allocator);
+            return err;
+        },
+        else => return err,
+    };
+
+    compiler.build(.SILK_OUTPUT_EXECUTABLE, "hello") catch |err| switch (err) {
+        error.Failed => {
+            try reportCompilerFailure(&compiler, allocator);
+            return err;
+        },
+        else => return err,
+    };
+}
+```
+
+This example uses no `std::` imports, so it does not need a stdlib root yet.
+
+## Common workflows
+
+### Compile on-disk sources
+
+If your host tool already has `.slk` files on disk, use `addSourceFile`.
+
+```zig
+const std = @import("std");
+const silk = @import("silk");
+
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var compiler = try silk.Compiler.init();
+    defer compiler.deinit();
+
+    try compiler.setStdRoot("./std");
+    try compiler.addSourceFile(allocator, "src/main.slk");
+    try compiler.addSourceFile(allocator, "src/util.slk");
+    try compiler.build(.SILK_OUTPUT_EXECUTABLE, "app");
+}
+```
+
+Notes:
+
+- `addSourceFile` reads the file from the current working directory.
+- The current wrapper caps file size at 64 MiB per file.
+- The path you pass also becomes the logical module name used in diagnostics.
+
+### Build to memory
+
+Use `buildToBytes` when the host wants the artifact in memory instead of on disk.
+
+```zig
+const std = @import("std");
+const silk = @import("silk");
+
+pub fn main() !void {
+    var compiler = try silk.Compiler.init();
+    defer compiler.deinit();
+
+    try compiler.setTargetTriple("wasm32-wasi");
+    try compiler.addSourceBuffer(
+        "main.slk",
+        "fn main () -> int { return 0; }\n",
+    );
+
+    var wasm = try compiler.buildToBytes(.SILK_OUTPUT_EXECUTABLE);
+    defer wasm.deinit();
+
+    const wasm_bytes = wasm.slice();
+    _ = wasm_bytes;
+}
+```
+
+`silk.OwnedBytes` is the exact type returned by `buildToBytes`:
+
+- `slice()` returns the output as `[]u8`.
+- `deinit()` frees the owned bytes.
+
+### Build a shared library and generate a C header
+
+The Zig wrapper exposes the same header-generation and ELF metadata knobs as the C ABI.
 
 ```zig
 const silk = @import("silk");
 
-var compiler = try silk.Compiler.init();
-defer compiler.deinit();
+pub fn buildLibrary() !void {
+    var compiler = try silk.Compiler.init();
+    defer compiler.deinit();
 
-try compiler.setStdRoot("./std");
-try compiler.addSourceBuffer("main.slk", "fn main () -> int { return 0; }");
-try compiler.build(.SILK_OUTPUT_EXECUTABLE, "out/hello");
+    try compiler.addSourceBuffer(
+        "lib.slk",
+        \\export fn add (a: int, b: int) -> int {
+        \\  return a + b;
+        \\}
+    );
+    try compiler.setCHeader("libadd.h");
+    try compiler.setSoname("libadd.so");
+    try compiler.addRunpath("$ORIGIN");
+    try compiler.build(.SILK_OUTPUT_SHARED_LIBRARY, "libadd.so");
+}
 ```
 
-For filesystem-free output, use `buildToBytes`:
+For ABI lowering details of exported `string`, optionals, and structs, read [C ABI (`libsilk`)](?p=compiler/abi-libsilk).
 
-```zig
-var exe_bytes = try compiler.buildToBytes(.SILK_OUTPUT_EXECUTABLE);
-defer exe_bytes.deinit();
-```
+## `Compiler` API
 
-### Configuration
+`silk.Compiler` is a thin wrapper over the C embedding handle. It owns one compilation session.
 
-The wrapper mirrors the existing embedding knobs:
+### Lifecycle
 
-- stdlib selection:
-  - `setStdRoot(path)` to select the root for `import std::...;` resolution,
-  - `setStdlib(name)` to select the stdlib package name (default `std`).
-- stdlib auto-loading can be disabled (for sandboxed/WASM-like embedding) via:
-  - `setNoStd(true)`.
-- target selection: `setTargetTriple(triple)` (currently only a narrow subset
-  of targets is implemented by the backend).
-- optimization level: `setOptimizationLevel(0..3)`.
-- dynamic linking metadata for outputs that support it:
-  - `addNeededLibrary(soname)`,
-  - `addRunpath(path)`,
-  - `setSoname(soname)`.
+- `init() -> silk.Error!Compiler`
+- `deinit()`
 
-### Error handling
+Create a compiler, configure it, add sources, build, then destroy it.
 
-Most operations return `error.Failed` on error, with details available via:
+### Stdlib and verification configuration
 
-- `lastErrorAlloc(allocator) -> ?[]u8` (returns an owned UTF-8 message slice).
+- `setStdlib(stdlib_name: []const u8)`
+  - Selects the stdlib package name, usually `"std"`.
+- `setStdRoot(std_root: []const u8)`
+  - Points the compiler at the stdlib source root for `import std::...;`.
+- `setNoStd(nostd: bool)`
+  - Disables filesystem-based stdlib auto-loading.
+- `setDebug(debug: bool)`
+  - Enables debug-mode behavior, including runtime assert traces on supported native targets and Z3 debug output when verification fails.
+- `setNoHeap(no_heap: bool)`
+  - Enables the same no-heap mode as `silk --noheap`.
+- `setZ3Lib(path: []const u8)`
+  - Overrides the Z3 dynamic library path used for Formal Silk verification.
+- `setStdArchive(path: []const u8)`
+  - Overrides the stdlib archive path used for prebuilt stdlib linkage.
 
-The last error is overwritten by subsequent operations, matching the C API.
+These correspond directly to the CLI and C ABI surfaces documented in [CLI reference](?p=compiler/cli-silk), [Standard library integration](?p=compiler/stdlib-integration), and [C ABI (`libsilk`)](?p=compiler/abi-libsilk).
 
-## Stability and scope
+### Target and output configuration
 
-The Zig embedding API is intended to remain stable in lockstep with the C ABI
-and the `docs/` specification. Any change to this API must update:
+- `setTargetTriple(target_triple: []const u8)`
+  - Examples: `"linux-x86_64"`, `"x86_64-linux-gnu"`, `"wasm32-unknown-unknown"`, `"wasm32-wasi"`.
+- `setOptimizationLevel(level: u8)`
+  - Valid levels are `0` through `3`.
+- `setCHeader(path: []const u8)`
+  - Configures generated C header output for non-executable builds.
+- `addNeededLibrary(soname: []const u8)`
+  - Adds a `DT_NEEDED` entry for executable/shared outputs.
+- `addRunpath(path: []const u8)`
+  - Adds one runpath element for executable/shared outputs.
+- `setSoname(soname: []const u8)`
+  - Sets `DT_SONAME` for shared outputs.
 
-- this document,
-- the corresponding ABI documentation (for example `docs/compiler/abi-libsilk.md`),
-- and add/adjust Zig tests that exercise the affected surface.
+These knobs matter only for the output kinds that support them. The detailed native-output rules are defined in [C ABI (`libsilk`)](?p=compiler/abi-libsilk).
+
+### Adding sources
+
+- `addSourceBuffer(name: []const u8, contents: []const u8)`
+  - Adds an in-memory UTF-8 source buffer.
+- `addSourceFile(allocator: std.mem.Allocator, path: []const u8)`
+  - Reads a `.slk` file from disk and then adds it as a source buffer.
+
+Use `addSourceBuffer` when the host already owns the text. Use `addSourceFile` when the host wants the wrapper to read from the filesystem.
+
+### Building
+
+- `build(kind: silk.OutputKind, output_path: []const u8)`
+  - Writes the artifact to the filesystem.
+- `buildToBytes(kind: silk.OutputKind) -> silk.Error!silk.OwnedBytes`
+  - Returns the artifact in an owned memory buffer.
+
+`build` does not create parent directories. Create them before calling the compiler.
+
+### Diagnostics
+
+- `lastErrorAlloc(allocator: std.mem.Allocator) -> !?[]u8`
+
+This is the Zig-facing equivalent of `silk_compiler_last_error` + `silk_error_format`.
+
+Behavior:
+
+- returns `null` when the compiler has no recorded last error,
+- otherwise returns an owned UTF-8 buffer,
+- the caller must free that buffer with the allocator it used.
+
+The current implementation returns the formatted message with the trailing NUL emitted by the underlying C formatter, so trimming `"\x00"` is the simplest way to produce a plain Zig text slice for display.
+
+## Choosing between the Zig API and the C ABI
+
+Use the Zig module when:
+
+- your host application is already Zig,
+- you want `[]const u8` inputs instead of C strings,
+- you want Zig error unions and owned Zig values,
+- you want to stay in a single-language host integration.
+
+Use the C ABI when:
+
+- your host is C or C++,
+- you need to link `libsilk.a` directly,
+- you need generated headers for downstream C consumers,
+- you want the stable public ABI surface independent of Zig source integration.
+
+The two surfaces drive the same compiler engine and should stay aligned.
+
+## See also
+
+- [`libsilk` quickstart](?p=compiler/libsilk-quickstart)
+- [C ABI (`libsilk`)](?p=compiler/abi-libsilk)
+- [`libsilk` (7)](?p=man/libsilk.7)
+- [`silk_compiler` (3)](?p=man/silk_compiler.3)
+- [`silk_error` (3)](?p=man/silk_error.3)
+- [Compiler diagnostics](?p=compiler/diagnostics)
 
 ==============================================================================
 DOCS: Vendored Dependencies (compiler/vendored-deps)
@@ -29988,10 +31467,10 @@ See also: `silk-env` (1) for a complete list of environment variables printed by
 
 ## See Also
 
-- `silk-build` (1), `silk-package` (1), `silk-check` (1), `silk-test` (1), `silk-doc` (1), `silk-man` (1), `silk-cc` (1), `silk-lsp` (1)
-- `silk` (7)
-- `libsilk` (7)
-- `https://oro.computer/silk`
+- [`silk-build` (1)](?p=man/silk-build.1), [`silk-package` (1)](?p=man/silk-package.1), [`silk-check` (1)](?p=man/silk-check.1), [`silk-test` (1)](?p=man/silk-test.1), [`silk-doc` (1)](?p=man/silk-doc.1), [`silk-man` (1)](?p=man/silk-man.1), [`silk-cc` (1)](?p=man/silk-cc.1), [`silk-lsp` (1)](?p=man/silk-lsp.1)
+- [`silk` (7)](?p=man/silk.7)
+- [`libsilk` (7)](?p=man/libsilk.7)
+- [https://oro.computer/silk](https://oro.computer/silk)
 
 ==============================================================================
 DOCS: `slc` (1) — Alias of `silk build` (man/slc.1)
@@ -30023,7 +31502,7 @@ See `silk-build` (1) for full documentation of options, arguments, and behavior.
 
 ## See Also
 
-- `silk` (1), `silk-build` (1)
+- [`silk` (1)](?p=man/silk.1), [`silk-build` (1)](?p=man/silk-build.1)
 
 ==============================================================================
 DOCS: `slcc` (1) — Alias of `silk cc` (man/slcc.1)
@@ -30054,7 +31533,7 @@ See `silk-cc` (1) for details, including the default `-I`/`-L`/`-lsilk` flags.
 
 ## See Also
 
-- `silk` (1), `silk-cc` (1)
+- [`silk` (1)](?p=man/silk.1), [`silk-cc` (1)](?p=man/silk-cc.1)
 
 ==============================================================================
 DOCS: `silk-build` (1) — Build Silk Artifacts (man/silk-build.1)
@@ -30084,7 +31563,7 @@ URL: /silk/docs/?p=man/silk-build.1
 - explicit inputs (`<input> ...`), or
 - a package module set from a manifest (`silk.toml`) using `--package` / `--pkg`.
 
-For package builds, outputs are selected by the manifest `[[target]]` entries. See `?p=compiler/package-manifests`.
+For package builds, outputs are selected by the manifest `[[target]]` entries. See [Package manifests](?p=compiler/package-manifests).
 
 When explicit input files are used (no `--package`), the `silk` CLI may load additional packages into the module set by resolving bare-specifier package imports (for example `import util from "util";`) from the package search path (`SILK_PACKAGE_PATH`).
 
@@ -30122,9 +31601,9 @@ Notes:
 - `.so` inputs only affect executable/shared outputs (static archives cannot record dynamic dependencies).
 - script-style entrypoints: when building an executable, if the **first** `.slk` input contains top-level statements (after the normal `package`/`module` header and `import` block) and does not define an explicit `main`, `silk build` synthesizes an implicit `fn main() -> int` that executes those statements and then returns `0`.
 - for `--kind executable`, `--std-lib` / `--std <path>.a` is currently rejected when linking additional `.c`/`.o`/`.a` inputs (std sources are compiled into the build instead).
-- on `linux-x86_64`, when `std::ggml` is present in the module set (or when linked `.o`/`.a` inputs reference `silk_ggml_init`), `silk build` automatically links the vendored ggml archives produced by `zig build deps` (see `?p=std/ggml`).
-- on `linux-x86_64`, when `std::image::png` / `std::image::jpeg` are present in the module set (or when linked `.o`/`.a` inputs reference the shim symbols), `silk build` automatically links the vendored image archives produced by `zig build deps` (see `?p=std/image`).
-- on `linux-x86_64`, when `std::xml` is present in the module set (or when linked `.o`/`.a` inputs reference `silk_xml_node_name_ptr`), `silk build` automatically links the vendored libxml2 archives produced by `zig build deps` (see `?p=std/xml`).
+- on `linux-x86_64`, when `std::ggml` is present in the module set (or when linked `.o`/`.a` inputs reference `silk_ggml_init`), `silk build` automatically links the vendored ggml archives produced by `zig build deps` (see [`std::ggml`](?p=std/ggml)).
+- on `linux-x86_64`, when `std::image::png` / `std::image::jpeg` are present in the module set (or when linked `.o`/`.a` inputs reference the shim symbols), `silk build` automatically links the vendored image archives produced by `zig build deps` (see [`std::image`](?p=std/image)).
+- on `linux-x86_64`, when `std::xml` is present in the module set (or when linked `.o`/`.a` inputs reference `silk_xml_node_name_ptr`), `silk build` automatically links the vendored libxml2 archives produced by `zig build deps` (see [`std::xml`](?p=std/xml)).
 
 ## Options
 
@@ -30137,11 +31616,11 @@ Notes:
 - `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`).
 - `--debug`, `-g` — enable debug build mode (also enables extra Formal Silk debug output when verification fails).
 - `--feature <spec>`, `-F<spec>` — enable a build feature for `attr(feature="...")` queries and declaration gating. Repeatable.
-  - Spec forms: `NAME` or `NAME=VALUE` (see `?p=language/attributes`).
+  - Spec forms: `NAME` or `NAME=VALUE` (see [Attributes](?p=language/attributes)).
   - For package builds, you may target a specific package with `PKG/NAME` or
     `PKG/NAME=VALUE` (for example `ui/tui` or `ui/tui=false`).
 - `-O <0-3>` — set optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`). `-O1`+ prunes unused extern symbols before code generation and prunes unreachable functions in executable builds (typically reducing output size).
-- `--noheap` — reject heap allocation in the supported subset (see `?p=language/memory-model` and `?p=compiler/cli-silk`).
+- `--noheap` — reject heap allocation in the supported subset (see [Memory model](?p=language/memory-model) and [`silk` CLI](?p=compiler/cli-silk)).
 - `-p <path>`, `--prefix <path>` — install/uninstall prefix (default: `$PREFIX` when set, otherwise `/usr/local`).
 - `--destdir <path>` — stage install/uninstall paths under `<destdir><prefix>/...`.
 
@@ -30184,7 +31663,7 @@ Native compilation:
 
 Linker metadata (executable/shared only):
 
-- `--ldflag <arg>` — add a link-related argument (repeatable). In the current toolchain these are translated into `--needed`/`--runpath`/`--soname`/`--elf-interp` effects (see `?p=compiler/package-manifests`).
+- `--ldflag <arg>` — add a link-related argument (repeatable). In the current toolchain these are translated into `--needed`/`--runpath`/`--soname`/`--elf-interp` effects (see [Package manifests](?p=compiler/package-manifests)).
 - `--needed <soname>` — add a `DT_NEEDED` entry (repeatable).
 - `--runpath <path>` — add a `DT_RUNPATH` entry (repeatable).
 - `--rpath <path>` — alias of `--runpath`.
@@ -30262,9 +31741,9 @@ silk build uninstall -p /tmp/silk-prefix
 
 ## See Also
 
-- `silk` (1), `silk-check` (1), `silk-test` (1)
-- `?p=compiler/cli-silk`
-- `?p=compiler/package-manifests`
+- [`silk` (1)](?p=man/silk.1), [`silk-check` (1)](?p=man/silk-check.1), [`silk-test` (1)](?p=man/silk-test.1)
+- [`silk` CLI](?p=compiler/cli-silk)
+- [Package manifests](?p=compiler/package-manifests)
 
 ==============================================================================
 DOCS: `silk-package` (1) — Inspect And Lint Silk Packages (man/silk-package.1)
@@ -30331,10 +31810,10 @@ silk package lint
 
 ## See Also
 
-- `silk` (1)
-- `silk-build` (1)
-- `?p=compiler/package-manifests`
-- `?p=compiler/package-distribution`
+- [`silk` (1)](?p=man/silk.1)
+- [`silk-build` (1)](?p=man/silk-build.1)
+- [Package manifests](?p=compiler/package-manifests)
+- [Package distribution](?p=compiler/package-distribution)
 
 ==============================================================================
 DOCS: `silk-check` (1) — Parse and Type-Check (man/silk-check.1)
@@ -30378,7 +31857,7 @@ When explicit input files are used (no `--package`), the `silk` CLI may load add
 - `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`; valid only with `--verify`).
 - `--debug`, `-g` — emit Z3 debug output and write `.smt2` dumps for failing Formal Silk obligations (valid only with `--verify`).
 - `--feature <spec>`, `-F<spec>` — enable a build feature for `attr(feature="...")` queries and declaration gating. Repeatable.
-  - Spec forms: `NAME` or `NAME=VALUE` (see `?p=language/attributes`).
+  - Spec forms: `NAME` or `NAME=VALUE` (see [Attributes](?p=language/attributes)).
   - For package builds, you may target a specific package with `PKG/NAME` or
     `PKG/NAME=VALUE` (for example `ui/tui` or `ui/tui=false`).
 - `--package <dir|manifest>`, `--pkg <dir|manifest>` — load the module set from a `silk.toml` manifest instead of explicit input files.
@@ -30414,9 +31893,9 @@ silk check --package .
 
 ## See Also
 
-- `silk` (1), `silk-build` (1)
-- `?p=compiler/cli-silk`
-- `?p=compiler/diagnostics`
+- [`silk` (1)](?p=man/silk.1), [`silk-build` (1)](?p=man/silk-build.1)
+- [`silk` CLI](?p=compiler/cli-silk)
+- [Diagnostics](?p=compiler/diagnostics)
 
 ==============================================================================
 DOCS: `silk-test` (1) — Run Language-Level Tests (man/silk-test.1)
@@ -30456,7 +31935,7 @@ When explicit input files are used (no `--package`), the `silk` CLI may load add
 - `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`).
 - `--debug`, `-g` — enable debug build mode (also enables extra Formal Silk debug output when verification fails).
 - `--feature <spec>`, `-F<spec>` — enable a build feature for `attr(feature="...")` queries and declaration gating. Repeatable.
-  - Spec forms: `NAME` or `NAME=VALUE` (see `?p=language/attributes`).
+  - Spec forms: `NAME` or `NAME=VALUE` (see [Attributes](?p=language/attributes)).
   - For package builds, you may target a specific package with `PKG/NAME` or
     `PKG/NAME=VALUE` (for example `ui/tui` or `ui/tui=false`).
 - `-O <0-3>` — set optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`). `-O1`+ prunes unused extern symbols before code generation and prunes unreachable functions in executable builds (typically reducing output size).
@@ -30499,9 +31978,9 @@ silk test --package . --filter url
 
 ## See Also
 
-- `silk` (1), `silk-build` (1)
-- `?p=compiler/cli-silk`
-- `?p=language/testing`
+- [`silk` (1)](?p=man/silk.1), [`silk-build` (1)](?p=man/silk-build.1)
+- [`silk` CLI](?p=compiler/cli-silk)
+- [Testing](?p=language/testing)
 
 ==============================================================================
 DOCS: `silk-doc` (1) — Generate Documentation (Markdown or Manpages) (man/silk-doc.1)
@@ -30538,7 +32017,7 @@ In manpage mode, the rendered manpage section is derived from doc tags:
 - `@misc` → section 7
 - otherwise API docs → section 3
 
-Doc tag semantics are specified in `?p=language/doc-comments`.
+Doc tag semantics are specified in [Doc comments](?p=language/doc-comments).
 
 ## Options
 
@@ -30576,9 +32055,9 @@ silk doc --man std::flag -o std_flag.3
 
 ## See Also
 
-- `silk` (1)
-- `silk-man` (1)
-- `?p=compiler/cli-silk`
+- [`silk` (1)](?p=man/silk.1)
+- [`silk-man` (1)](?p=man/silk-man.1)
+- [`silk` CLI](?p=compiler/cli-silk)
 
 ==============================================================================
 DOCS: `silk-format` (1) — Format Silk Source Files (man/silk-format.1)
@@ -30641,8 +32120,8 @@ silk format --check .
 
 ## See Also
 
-- `silk` (1)
-- `silk-check` (1)
+- [`silk` (1)](?p=man/silk.1)
+- [`silk-check` (1)](?p=man/silk-check.1)
 
 ==============================================================================
 DOCS: `silk-lsp` (1) — Language Server Protocol (LSP) Server (man/silk-lsp.1)
@@ -30665,7 +32144,7 @@ URL: /silk/docs/?p=man/silk-lsp.1
 
 `silk-lsp` speaks the Language Server Protocol over stdin/stdout for editor integrations.
 
-The LSP behavior and supported requests are documented at `?p=compiler/lsp-silk`.
+The LSP behavior and supported requests are documented at [LSP and editor integration](?p=compiler/lsp-silk).
 
 ## Options
 
@@ -30678,8 +32157,8 @@ The LSP behavior and supported requests are documented at `?p=compiler/lsp-silk`
 
 ## See Also
 
-- `silk` (1)
-- `?p=compiler/lsp-silk`
+- [`silk` (1)](?p=man/silk.1)
+- [LSP and editor integration](?p=compiler/lsp-silk)
 
 ==============================================================================
 DOCS: `silk-env` (1) — Print `silk` CLI Environment (man/silk-env.1)
@@ -30738,9 +32217,9 @@ silk env
 
 ## See Also
 
-- `silk` (1)
-- `silk-cc` (1)
-- `silk-build` (1)
+- [`silk` (1)](?p=man/silk.1)
+- [`silk-cc` (1)](?p=man/silk-cc.1)
+- [`silk-build` (1)](?p=man/silk-build.1)
 
 ==============================================================================
 DOCS: `silk-man` (1) — View Manpages Derived from Source Docs (man/silk-man.1)
@@ -30775,7 +32254,7 @@ URL: /silk/docs/?p=man/silk-man.1
 - CLI pages defined by doc blocks tagged with `@cli` (intended for man section 1),
 - API pages derived from declaration docs (intended for man section 3).
 
-The doc-comment tag semantics are specified in `?p=language/doc-comments`.
+The doc-comment tag semantics are specified in [Doc comments](?p=language/doc-comments).
 
 Notes:
 
@@ -30859,8 +32338,8 @@ silk man std::result::design
 
 ## See Also
 
-- `silk` (1), `silk-doc` (1)
-- `?p=language/doc-comments`
+- [`silk` (1)](?p=man/silk.1), [`silk-doc` (1)](?p=man/silk-doc.1)
+- [Doc comments](?p=language/doc-comments)
 
 ==============================================================================
 DOCS: `silk-cc` (1) — C Compiler Wrapper for `libsilk` (man/silk-cc.1)
@@ -30907,8 +32386,8 @@ silk cc -std=c99 -Wall -Wextra your_app.c -o your_app
 
 ## See Also
 
-- `silk` (1)
-- `libsilk` (7)
+- [`silk` (1)](?p=man/silk.1)
+- [`libsilk` (7)](?p=man/libsilk.7)
 - `include/silk.h`
 
 ==============================================================================
@@ -30950,13 +32429,13 @@ type-checks but uses a construct outside this subset, builds fail with
 The supported subset is documented in:
 
 - `silk` (1) (see the `build` command and its notes),
-- `?p=compiler/cli-silk`,
+- [`silk` CLI](?p=compiler/cli-silk),
 - and the feature-specific implementation-status sections throughout the reference docs.
 
 ## Source Layout
 
 - Silk source files use the `.slk` extension.
-- Package builds are driven by a manifest file named `silk.toml` (see `?p=compiler/package-manifests`).
+- Package builds are driven by a manifest file named `silk.toml` (see [Package manifests](?p=compiler/package-manifests)).
 - The default stdlib implementation is a directory tree rooted at `std/` and is imported via `import std::...;`.
 
 ## Standard Library
@@ -30965,9 +32444,9 @@ The `std::` package namespace is the primary stdlib surface. The compiler can au
 
 See:
 
-- `?p=std/overview` for module inventory and conventions,
-- `?p=std/conventions` for ownership and error-handling patterns,
-- `?p=compiler/cli-silk` for stdlib root selection and archive linking behavior.
+- [Standard library overview](?p=std/overview) for module inventory and conventions,
+- [Standard library conventions](?p=std/conventions) for ownership and error-handling patterns,
+- [`silk` CLI](?p=compiler/cli-silk) for stdlib root selection and archive linking behavior.
 
 ## Formal Silk
 
@@ -30975,16 +32454,16 @@ Formal Silk verification is an optional part of the toolchain. The verifier uses
 
 See:
 
-- `?p=language/formal-verification`
-- `?p=compiler/diagnostics` (verifier diagnostics)
+- [Formal verification](?p=language/formal-verification)
+- [Diagnostics](?p=compiler/diagnostics) (verifier diagnostics)
 
 ## See Also
 
-- `silk` (1)
-- `silk-build` (1), `silk-package` (1), `silk-check` (1), `silk-test` (1), `silk-doc` (1), `silk-man` (1), `silk-cc` (1)
-- `silk_compiler` (3), `silk_error` (3), `silk_bytes` (3), `silk_abi_get_version` (3)
-- `libsilk` (7)
-- `https://oro.computer/silk`
+- [`silk` (1)](?p=man/silk.1)
+- [`silk-build` (1)](?p=man/silk-build.1), [`silk-package` (1)](?p=man/silk-package.1), [`silk-check` (1)](?p=man/silk-check.1), [`silk-test` (1)](?p=man/silk-test.1), [`silk-doc` (1)](?p=man/silk-doc.1), [`silk-man` (1)](?p=man/silk-man.1), [`silk-cc` (1)](?p=man/silk-cc.1)
+- [`silk_compiler` (3)](?p=man/silk_compiler.3), [`silk_error` (3)](?p=man/silk_error.3), [`silk_bytes` (3)](?p=man/silk_bytes.3), [`silk_abi_get_version` (3)](?p=man/silk_abi_get_version.3)
+- [`libsilk` (7)](?p=man/libsilk.7)
+- [https://oro.computer/silk](https://oro.computer/silk)
 
 ==============================================================================
 DOCS: `libsilk` (7) — C99 ABI for the Silk Compiler (man/libsilk.7)
@@ -31097,7 +32576,9 @@ Embedders are expected to:
 - drive compilation by creating a `SilkCompiler` handle, adding source buffers, and invoking `silk_compiler_build`,
 - inspect error details via `silk_compiler_last_error` and `silk_error_format`.
 
-This manpage summarizes the ABI; the normative specification lives at `?p=compiler/abi-libsilk`.
+This manpage summarizes the ABI; the normative specification lives at [C ABI (`libsilk`)](?p=compiler/abi-libsilk).
+
+For the shortest working path from “I have a host application” to “I can compile Silk code”, start with [`libsilk` quickstart](?p=compiler/libsilk-quickstart).
 
 ## Types
 
@@ -31272,7 +32753,7 @@ bool silk_compiler_set_debug(SilkCompiler *compiler,
   - debug-mode lowering for supported native outputs (e.g. stack traces on
     failed `assert` for `linux/x86_64`),
   - additional Z3 debug output and `.smt2` dump emission on failing Formal Silk
-    verification (see `?p=language/formal-verification`).
+    verification (see [Formal verification](?p=language/formal-verification)).
 - `--debug` is currently incompatible with `--noheap`.
 
 ### No-heap build mode (`noheap`)
@@ -31615,7 +33096,7 @@ size_t silk_error_format(const SilkError *error,
   - always NUL‑terminates if `buffer_len > 0`,
   - returns the number of bytes that would be required to format the full message, **excluding** the terminating NUL.
 - If the return value is greater than or equal to `buffer_len`, the message was truncated.
-- The formatted message is intended for end-user display and follows the standard compiler diagnostic format (error code + optional file/line/column + caret snippet) as specified at `?p=compiler/diagnostics`.
+- The formatted message is intended for end-user display and follows the standard compiler diagnostic format (error code + optional file/line/column + caret snippet) as specified at [Diagnostics](?p=compiler/diagnostics).
 
 Callers can use a two‑step pattern:
 
@@ -31675,11 +33156,11 @@ compiler:
 
 - On `linux/x86_64`, the compiler can emit native ELF64 executables, objects,
   static libraries, and shared libraries for the current IR subset documented
-  in `?p=compiler/abi-libsilk` (structured control flow, helper calls,
+  in [C ABI (`libsilk`)](?p=compiler/abi-libsilk) (structured control flow, helper calls,
   limited `string`/`struct`/optional support, and a limited FFI subset).
 - On `wasm32-unknown-unknown` and `wasm32-wasi`, executable builds emit `.wasm`
   modules for the current IR-backed wasm32 subset documented in
-  `?p=compiler/abi-libsilk` (including multi-module builds, export-only
+  [C ABI (`libsilk`)](?p=compiler/abi-libsilk) (including multi-module builds, export-only
   modules, and `ext` imports under `env.<name>`).
 - On other targets, no code generation backend is available yet.
 - For well‑typed programs outside these subsets, `silk_compiler_build` fails
@@ -31691,6 +33172,138 @@ When Formal Silk verification syntax is present (for example `#require`,
 Formal Silk verifier and fails the build if verification conditions cannot be
 proven. The verifier is currently skipped for `std::...` modules until it
 covers the full std surface.
+
+## Examples
+
+### Minimal executable build
+
+```c
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "silk.h"
+
+static SilkString silk_cstr(const char *s) {
+  SilkString out;
+  out.ptr = (char *)s;
+  out.len = (int64_t)strlen(s);
+  return out;
+}
+
+int main(void) {
+  SilkCompiler *compiler = silk_compiler_create();
+  if (!compiler) {
+    return 1;
+  }
+
+  if (!silk_compiler_add_source_buffer(
+        compiler,
+        silk_cstr("main.slk"),
+        silk_cstr("fn main() -> int { return 0; }\n"))) {
+    silk_compiler_destroy(compiler);
+    return 1;
+  }
+
+  if (!silk_compiler_build(
+        compiler,
+        SILK_OUTPUT_EXECUTABLE,
+        silk_cstr("build/hello"))) {
+    silk_compiler_destroy(compiler);
+    return 1;
+  }
+
+  silk_compiler_destroy(compiler);
+  return 0;
+}
+```
+
+### In-memory wasm build
+
+```c
+#include <stdint.h>
+#include <string.h>
+
+#include "silk.h"
+
+static SilkString silk_cstr(const char *s) {
+  SilkString out;
+  out.ptr = (char *)s;
+  out.len = (int64_t)strlen(s);
+  return out;
+}
+
+int main(void) {
+  SilkCompiler *compiler = silk_compiler_create();
+  SilkBytes bytes = {0};
+  int rc = 1;
+
+  if (!compiler) {
+    return 1;
+  }
+
+  if (!silk_compiler_set_target(compiler, silk_cstr("wasm32-unknown-unknown"))) {
+    goto done;
+  }
+
+  if (!silk_compiler_add_source_buffer(
+        compiler,
+        silk_cstr("main.slk"),
+        silk_cstr("fn main() -> int { return 7; }\n"))) {
+    goto done;
+  }
+
+  if (!silk_compiler_build_to_bytes(
+        compiler,
+        SILK_OUTPUT_EXECUTABLE,
+        &bytes)) {
+    goto done;
+  }
+
+  if (bytes.len >= 4 && memcmp(bytes.ptr, "\0asm", 4) == 0) {
+    rc = 0;
+  }
+
+done:
+  silk_bytes_free(&bytes);
+  silk_compiler_destroy(compiler);
+  return rc;
+}
+```
+
+### Two-pass error formatting
+
+```c
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "silk.h"
+
+static SilkString silk_cstr(const char *s) {
+  SilkString out;
+  out.ptr = (char *)s;
+  out.len = (int64_t)strlen(s);
+  return out;
+}
+
+static void print_last_error(SilkCompiler *compiler) {
+  SilkError *err = silk_compiler_last_error(compiler);
+  size_t need = silk_error_format(err, NULL, 0);
+  char *buf = (char *)malloc(need + 1);
+  if (!buf) {
+    return;
+  }
+
+  silk_error_format(err, buf, need + 1);
+  fprintf(stderr, "%s\n", buf);
+  free(buf);
+}
+```
+
+Use that helper immediately after a failed compiler operation; the `SilkError`
+object is overwritten by later calls on the same compiler instance.
 
 ## Environment
 
@@ -31707,10 +33320,10 @@ covers the full std surface.
 
 ## See Also
 
-- `silk` (1) — Silk language compiler CLI.
-- `silk_abi_get_version` (3), `silk_compiler` (3), `silk_error` (3), `silk_bytes` (3)
-- `silk` (7)
-- `?p=compiler/abi-libsilk` — normative ABI spec.
+- [`silk` (1)](?p=man/silk.1) — Silk language compiler CLI.
+- [`silk_abi_get_version` (3)](?p=man/silk_abi_get_version.3), [`silk_compiler` (3)](?p=man/silk_compiler.3), [`silk_error` (3)](?p=man/silk_error.3), [`silk_bytes` (3)](?p=man/silk_bytes.3)
+- [`silk` (7)](?p=man/silk.7)
+- [C ABI (`libsilk`)](?p=compiler/abi-libsilk) — normative ABI spec.
 - `silk.h` — C99 ABI header in the source tree.
 
 ==============================================================================
@@ -31762,11 +33375,32 @@ Embedders must not free or dereference the `SilkError` object directly.
 - The return value is the number of bytes required to format the full message, excluding the terminating NUL.
 - If the return value is `>= buffer_len`, the message was truncated.
 
+## Example
+
+After a failed compiler call, two-pass formatting is the normal embedder
+pattern:
+
+```c
+SilkError *err = silk_compiler_last_error(compiler);
+size_t need = silk_error_format(err, NULL, 0);
+char *buf = (char *)malloc(need + 1);
+if (!buf) {
+  return;
+}
+
+silk_error_format(err, buf, need + 1);
+fprintf(stderr, "%s\n", buf);
+free(buf);
+```
+
+Format the message before issuing more compiler operations; the compiler owns
+the `SilkError` object and may replace it on the next failure.
+
 ## See Also
 
-- `silk_compiler` (3)
-- `libsilk` (7)
-- `?p=compiler/abi-libsilk`
+- [`silk_compiler` (3)](?p=man/silk_compiler.3)
+- [`libsilk` (7)](?p=man/libsilk.7)
+- [C ABI (`libsilk`)](?p=compiler/abi-libsilk)
 
 ==============================================================================
 DOCS: `silk_bytes` (3) — Manage Owned Build Output Buffers (man/silk_bytes.3)
@@ -31812,11 +33446,28 @@ The buffer memory is owned by `libsilk.a` and must be released with `silk_bytes_
 - It is safe to call this with a `SilkBytes` whose `ptr` is `NULL`.
 - After freeing, the buffer contents must not be accessed.
 
+## Example
+
+After configuring the compiler and adding sources:
+
+```c
+SilkBytes bytes = {0};
+
+if (!silk_compiler_build_to_bytes(compiler, SILK_OUTPUT_EXECUTABLE, &bytes)) {
+  return 1;
+}
+
+fwrite(bytes.ptr, 1, (size_t)bytes.len, stdout);
+silk_bytes_free(&bytes);
+```
+
+Use `silk_bytes_free` exactly once for each successful `build_to_bytes` call.
+
 ## See Also
 
-- `silk_compiler` (3)
-- `libsilk` (7)
-- `?p=compiler/abi-libsilk`
+- [`silk_compiler` (3)](?p=man/silk_compiler.3)
+- [`libsilk` (7)](?p=man/libsilk.7)
+- [C ABI (`libsilk`)](?p=compiler/abi-libsilk)
 
 ==============================================================================
 DOCS: `silk_compiler` (3) — Embed the Silk Compiler (man/silk_compiler.3)
@@ -31878,7 +33529,9 @@ Typical workflow:
 5. On error, retrieve diagnostics via `silk_compiler_last_error` and `silk_error_format` (see `silk_error` (3)).
 6. Destroy the compiler with `silk_compiler_destroy`.
 
-The canonical ABI specification lives at `?p=compiler/abi-libsilk`.
+The canonical ABI specification lives at [C ABI (`libsilk`)](?p=compiler/abi-libsilk).
+
+For the shortest end-to-end embedding path, start with [`libsilk` quickstart](?p=compiler/libsilk-quickstart).
 
 ## Configuration
 
@@ -31916,11 +33569,109 @@ The `name` parameter is used for diagnostics and does not need to correspond to 
 
 The `SilkCompiler` object is not currently specified as thread-safe. Confine it to one thread or synchronize access.
 
+## Examples
+
+### Build a tiny executable
+
+```c
+#include <stdint.h>
+#include <string.h>
+
+#include "silk.h"
+
+static SilkString silk_cstr(const char *s) {
+  SilkString out;
+  out.ptr = (char *)s;
+  out.len = (int64_t)strlen(s);
+  return out;
+}
+
+int main(void) {
+  SilkCompiler *compiler = silk_compiler_create();
+  if (!compiler) {
+    return 1;
+  }
+
+  if (!silk_compiler_add_source_buffer(
+        compiler,
+        silk_cstr("main.slk"),
+        silk_cstr("fn main() -> int { return 0; }\n"))) {
+    silk_compiler_destroy(compiler);
+    return 1;
+  }
+
+  if (!silk_compiler_build(
+        compiler,
+        SILK_OUTPUT_EXECUTABLE,
+        silk_cstr("build/embedded-app"))) {
+    silk_compiler_destroy(compiler);
+    return 1;
+  }
+
+  silk_compiler_destroy(compiler);
+  return 0;
+}
+```
+
+### Build a library object and generated header
+
+Using the same `silk_cstr` helper from the previous example:
+
+```c
+SilkCompiler *compiler = silk_compiler_create();
+if (!compiler) {
+  return 1;
+}
+
+if (!silk_compiler_set_c_header(compiler, silk_cstr("build/demo.h"))) {
+  silk_compiler_destroy(compiler);
+  return 1;
+}
+
+if (!silk_compiler_add_source_buffer(
+      compiler,
+      silk_cstr("lib.slk"),
+      silk_cstr("export fn add(a: int, b: int) -> int { return a + b; }\n"))) {
+  silk_compiler_destroy(compiler);
+  return 1;
+}
+
+if (!silk_compiler_build(
+      compiler,
+      SILK_OUTPUT_OBJECT,
+      silk_cstr("build/demo.o"))) {
+  silk_compiler_destroy(compiler);
+  return 1;
+}
+```
+
+### Build to memory instead of the filesystem
+
+After adding sources and setting the desired target:
+
+```c
+SilkBytes bytes = {0};
+
+if (!silk_compiler_set_target(compiler, silk_cstr("wasm32-unknown-unknown"))) {
+  return 1;
+}
+
+if (!silk_compiler_build_to_bytes(
+      compiler,
+      SILK_OUTPUT_EXECUTABLE,
+      &bytes)) {
+  return 1;
+}
+
+/* consume bytes.ptr / bytes.len */
+silk_bytes_free(&bytes);
+```
+
 ## See Also
 
-- `silk_error` (3), `silk_bytes` (3), `silk_abi_get_version` (3)
-- `libsilk` (7)
-- `?p=compiler/abi-libsilk`
+- [`silk_error` (3)](?p=man/silk_error.3), [`silk_bytes` (3)](?p=man/silk_bytes.3), [`silk_abi_get_version` (3)](?p=man/silk_abi_get_version.3)
+- [`libsilk` (7)](?p=man/libsilk.7)
+- [C ABI (`libsilk`)](?p=compiler/abi-libsilk)
 
 ==============================================================================
 DOCS: `silk_abi_get_version` (3) — Query the `libsilk` ABI Version (man/silk_abi_get_version.3)
@@ -31965,10 +33716,31 @@ Embedders should compare the runtime version returned by this function with the 
 
 None.
 
+## Example
+
+```c
+int runtime_major = 0;
+int runtime_minor = 0;
+int runtime_patch = 0;
+
+silk_abi_get_version(&runtime_major, &runtime_minor, &runtime_patch);
+
+if (runtime_major != SILK_ABI_VERSION_MAJOR) {
+  fprintf(stderr, "libsilk ABI major mismatch\n");
+  return 1;
+}
+```
+
+The usual policy is:
+
+- require an exact major match,
+- optionally warn when minor/patch differ,
+- and refuse to run when your embedding layer depends on newer ABI features.
+
 ## See Also
 
-- `libsilk` (7)
-- `?p=compiler/abi-libsilk`
+- [`libsilk` (7)](?p=man/libsilk.7)
+- [C ABI (`libsilk`)](?p=compiler/abi-libsilk)
 
 ==============================================================================
 DOCS: Silk Specification (2026) (spec/2026)
@@ -33923,7 +35695,7 @@ Implementation status (current compiler subset):
 
 - Supported end-to-end: primitives, nominal `struct` types, optionals (`T?`),
   `&Struct` references (in function parameter types and as local values
-  produced by `new` / calls that return `&Struct`), and array/slice types
+  produced by `new` or returned from calls), and array/slice types
   (`T[N]`, `T[]`) over element types that lower to a fixed scalar-slot sequence
   In Silk (including array literals, indexing reads, and
   iterable `for` loops). Indexed assignment targets (`xs[i] = v`) are supported
@@ -34017,9 +35789,12 @@ The core categories are:
 - Reference (borrow): `&T`
   - Examples: `&User`.
   - Notes: reference type; in Silk, `&Struct` may appear in
-    parameter types and as local values when produced by `new` or by calls that
-    return `&Struct`. Mutability follows the `mut` borrow contract and per-call
-    aliasing rules described in `Mutability`.
+    parameter types and as local values:
+    - heap-backed `&Struct` values from `new` are refcounted in the current
+      subset,
+    - calls may also return borrowed `&Struct` values tied to input lifetimes.
+    Mutability follows the `mut` borrow contract and per-call aliasing rules
+    described in `Mutability`.
 - Arrays / Slices: `T[]`, `T[N]`
   - Examples: `i32[]`, `byte[32]`.
   - Notes: dynamic slice vs fixed length (compile‑time `N`). In the current
@@ -34341,8 +36116,11 @@ Key requirements:
 
 Current implementation notes:
 
-- `&Struct` is supported in function parameter types and as local values when
-  produced by heap allocation (`new`) or by calls that return `&Struct`.
+- `&Struct` is supported in function parameter types and as local values:
+  - heap-backed `&Struct` values from `new` are refcounted in the current
+    subset,
+  - calls may also return borrowed `&Struct` values tied to input lifetimes
+    (for example identity-style helpers that return an input reference).
 - Borrowed `&Struct` references may also be created from stack values:
   - via the borrow operator `&expr` on borrowable lvalues, and
   - via implicit borrow coercions in contexts that expect `&T`
@@ -36102,9 +37880,9 @@ import std::result;
 import std::strings::String;
 
 fn main () -> int {
-  let s: String = match String.from_string("hello") {
+  let s = match String.from_string("hello") {
     Ok(v) => v,
-    Err(_) => String.empty(),
+    Err(_) => return 1,
   };
   return s.len as int;
 }
@@ -38452,11 +40230,16 @@ the compiler implements:
     (for example `let r: &Pair = pair;`).
   These borrows are checked with conservative **lexical lifetime** rules (they
   may not escape the scope of the borrowed stack storage).
-- Local bindings of `&Struct` values that originate from heap allocation (`new`)
-  or from calls that return `&Struct`:
-  - these `&Struct` values are refcounted in Silk,
-  - copying a `&Struct` binding (e.g. `let g: &File = f;`) creates an alias to
-    the same underlying heap allocation and increments the refcount.
+- Local bindings of `&Struct` values that originate from heap allocation
+  (`new`) are refcounted in Silk:
+  - copying such a binding (e.g. `let g: &File = f;`) creates an alias to the
+    same underlying heap allocation and increments the refcount.
+- Calls that return `&Struct` may return either:
+  - an owning heap reference (for example a value that ultimately originated
+    from `new`), or
+  - a borrowed reference tied to an input parameter.
+  Treat the lifetime as part of the API contract; a returned `&Struct` is not
+  implicitly “owned heap data” just because it came from a call.
 
 ### Borrow Safety Rules ()
 
@@ -38870,8 +40653,10 @@ In Silk, ownership transfer is intentionally conservative:
 
 As the language grows, borrow checking is expected to expand to cover:
 
-- borrowed references as first-class values (`&expr` producing `&T` values),
-- references and borrows in more positions (locals, fields, returns),
+- richer first-class borrow support beyond the current `&Struct` /
+  single-slot-scalar subset,
+- borrowed references in richer positions and aggregates (especially fields and
+  more complex return-position flows),
 - lifetime/region inference across control flow,
 - explicit disambiguation when multiple input references exist (for example a
   label syntax like `as A` to tie a return reference to a specific input),
@@ -45675,11 +47460,9 @@ In the current toolchain, buffer-like functionality is provided via `std::`:
 import std::buffer;
 
 fn main () -> int {
-  let b_r = BufferU8.init(4);
-  if b_r.is_err() { return 1; }
-  let mut b: BufferU8 = match (b_r) {
+  let mut b = match BufferU8.init(4) {
     Ok(v) => v,
-    Err(_) => BufferU8.empty(),
+    Err(_) => return 1,
   };
   b.push(1 as u8);
   b.drop();
@@ -45786,7 +47569,7 @@ task fn worker (x: int) -> int {
 ## See also
 
 - Canonical doc: `docs/language/function-disciplines.md`
-- Concurrency: `docs/wiki/language/concurrency.md`
+- Concurrency: `docs/language/concurrency.md`
 
 ==============================================================================
 WIKI: Const Functions (`const fn`) (language/const-functions)
@@ -46532,11 +48315,9 @@ import std::vector;
 type Vec = std::vector::Vector(int);
 
 fn main () -> int {
-  let v_r = Vec.init(4);
-  if v_r.is_err() { return 0; }
-  let mut v: Vec = match (v_r) {
+  let mut v = match Vec.init(4) {
     Ok(v) => v,
-    Err(_) => Vec.empty(),
+    Err(_) => return 0,
   };
   v.push(1);
   v.push(2);
@@ -46583,11 +48364,9 @@ type Map = std::map::HashMap(u64, int);
 type InitResult = std::result::Result(Map, std::memory::AllocFailed);
 
 fn main () -> int {
-  let init_r: InitResult = Map.init(16);
-  if init_r.is_err() { return 2; }
-  let mut m: Map = match (init_r) {
+  let mut m = match Map.init(16) {
     InitResult::Ok(v) => v,
-    InitResult::Err(_) => Map.empty(),
+    InitResult::Err(_) => return 2,
   };
   m.put(1, 10);
   let v: int = m.get(1) ?? 0;
@@ -46634,11 +48413,9 @@ type InitResult = std::result::Result(Set, std::memory::AllocFailed);
 type InsertResult = std::result::Result(bool, std::memory::OutOfMemory);
 
 fn main () -> int {
-  let init_r: InitResult = Set.init(4);
-  if init_r.is_err() { return 1; }
-  let mut s: Set = match (init_r) {
+  let mut s = match Set.init(4) {
     InitResult::Ok(v) => v,
-    InitResult::Err(_) => Set.empty(),
+    InitResult::Err(_) => return 1,
   };
 
   let insert_r: InsertResult = s.insert(1);
@@ -46679,11 +48456,9 @@ import std::buffer;
 import std::buffer;
 
 fn main () -> int {
-  let b_r = BufferU8.init(4);
-  if b_r.is_err() { return 1; }
-  let mut b: BufferU8 = match (b_r) {
+  let mut b = match BufferU8.init(4) {
     Ok(v) => v,
-    Err(_) => BufferU8.empty(),
+    Err(_) => return 1,
   };
   b.push(1 as u8);
   b.push(2 as u8);
@@ -46904,13 +48679,9 @@ import std::process;
 import std::strings;
 
 fn main () -> int {
-  let cwd_r: std::process::GetCwdResult = std::process::getcwd();
-  if cwd_r.is_err() {
-    return 1;
-  }
-  let mut cwd: std::strings::String = match (cwd_r) {
+  let mut cwd = match std::process::getcwd() {
     std::process::GetCwdResult::Ok(v) => v,
-    std::process::GetCwdResult::Err(_) => std::strings::String.empty(),
+    std::process::GetCwdResult::Err(_) => return 1,
   };
 
   let err1: std::process::ChdirFailed? = std::process::chdir("/");
@@ -47070,61 +48841,50 @@ fn main () -> int {
   let mut doc: Document = Document{};
   let input: string = `{"a":1,"b":true,"c":null,"d":["x","y"],"u":"\u0041"}`;
 
-  let root_r: std::json::ParseResult = doc.parse(input);
-  if root_r.is_err() {
-    doc.drop();
-    return 1;
-  }
+  let root = match doc.parse(input) {
+    Ok(v) => v,
+    Err(_) => {
+      doc.drop();
+      return 1;
+    },
+  };
   if !doc.is_ok() {
     doc.drop();
     return 2;
   }
 
-  let root: i64 = match (root_r) {
-    Ok(v) => v,
-    Err(_) => 0 as i64,
-  };
-
-  let u_id_opt = doc.object_get(root, "u");
-  if u_id_opt == None {
+  let Some(u_id) = doc.object_get(root, "u") else {
     doc.drop();
     return 3;
-  }
-  let u_id: i64 = u_id_opt ?? 0 as i64;
-  let u_opt = doc.as_string(u_id);
-  if u_opt == None {
+  };
+  let Some(u) = doc.as_string(u_id) else {
     doc.drop();
     return 4;
-  }
-  if (u_opt ?? "") != "A" {
+  };
+  if u != "A" {
     doc.drop();
     return 5;
   }
 
-  let a_id_opt = doc.object_get(root, "a");
-  if a_id_opt == None {
+  let Some(a_id) = doc.object_get(root, "a") else {
     doc.drop();
     return 6;
-  }
-  let a_id: i64 = a_id_opt ?? 0 as i64;
-  let a_num_opt = std::json::number_as_i64(doc, a_id);
-  if a_num_opt == None {
+  };
+  let Some(a_num) = std::json::number_as_i64(doc, a_id) else {
     doc.drop();
     return 7;
-  }
-  if (a_num_opt ?? 0 as i64) != 1 {
+  };
+  if a_num != 1 {
     doc.drop();
     return 8;
   }
 
-  let compact_r: StringAllocResult = std::json::stringify(doc, root);
-  if compact_r.is_err() {
-    doc.drop();
-    return 9;
-  }
-  let mut compact: std::strings::String = match (compact_r) {
+  let mut compact = match std::json::stringify(doc, root) {
     StringAllocResult::Ok(v) => v,
-    StringAllocResult::Err(_) => std::strings::String.empty(),
+    StringAllocResult::Err(_) => {
+      doc.drop();
+      return 9;
+    },
   };
   let expected: string = `{"a":1,"b":true,"c":null,"d":["x","y"],"u":"A"}`;
   if compact.as_string() != expected {
@@ -47508,13 +49268,9 @@ import std::memory;
 type StringAllocResult = std::result::Result(std::strings::String, std::memory::OutOfMemory);
 
 fn uuid_string_eq (u: UUID, expected: string) -> bool {
-  let r: StringAllocResult = u.to_string_lower();
-  if r.is_err() {
-    return false;
-  }
-  let mut s: std::strings::String = match (r) {
+  let mut s = match u.to_string_lower() {
     Ok(v) => v,
-    Err(_) => std::strings::String.empty(),
+    Err(_) => return false,
   };
   let ok: bool = s.as_string() == expected;
   s.drop();
@@ -47523,20 +49279,16 @@ fn uuid_string_eq (u: UUID, expected: string) -> bool {
 
 fn main () -> int {
   let s0: string = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
-  let u0_r: std::uuid::ParseResult = std::uuid::parse(s0);
-  if u0_r.is_err() { return 1; }
-  let u0: UUID = match (u0_r) {
+  let u0 = match std::uuid::parse(s0) {
     Ok(v) => v,
-    Err(_) => { hi: 0, lo: 0 },
+    Err(_) => return 1,
   };
   if !uuid_string_eq(u0, s0) { return 2; }
 
   let dns: UUID = std::uuid::namespace_dns();
-  let v5_dns_r: std::uuid::UUIDResult = std::uuid::v5(dns, "www.widgets.com");
-  if v5_dns_r.is_err() { return 3; }
-  let v5_dns: UUID = match (v5_dns_r) {
+  let v5_dns = match std::uuid::v5(dns, "www.widgets.com") {
     Ok(v) => v,
-    Err(_) => { hi: 0, lo: 0 },
+    Err(_) => return 3,
   };
   if !uuid_string_eq(v5_dns, "21f7f8de-8051-5b89-8680-0195ef798b6a") { return 4; }
 
@@ -47614,11 +49366,9 @@ fn main () -> int {
   }
 
   // memzero: wipe a buffer in place.
-  let wipe_r = std::buffer::BufferU8.init(16);
-  if wipe_r.is_err() { return 2; }
-  let mut wipe: std::buffer::BufferU8 = match (wipe_r) {
+  let mut wipe = match std::buffer::BufferU8.init(16) {
     Ok(v) => v,
-    Err(_) => std::buffer::BufferU8.empty(),
+    Err(_) => return 2,
   };
 
   var i: i64 = 0;
@@ -47648,16 +49398,16 @@ fn main () -> int {
   let msg_ptr: u64 = std::runtime::mem::string_ptr(msg);
   let msg_len: i64 = std::runtime::mem::string_len(msg);
 
-  let out_r = std::buffer::BufferU8.init(32);
-  let expected_r = std::buffer::BufferU8.init(32);
-  if out_r.is_err() || expected_r.is_err() { return 2; }
-  let mut out: std::buffer::BufferU8 = match (out_r) {
+  let mut out = match std::buffer::BufferU8.init(32) {
     Ok(v) => v,
-    Err(_) => std::buffer::BufferU8.empty(),
+    Err(_) => return 2,
   };
-  let mut expected: std::buffer::BufferU8 = match (expected_r) {
+  let mut expected = match std::buffer::BufferU8.init(32) {
     Ok(v) => v,
-    Err(_) => std::buffer::BufferU8.empty(),
+    Err(_) => {
+      out.drop();
+      return 2;
+    },
   };
 
   // Expected digest: bddd813c634239723171ef3fee98579b94964e3bb1cb3e427262c8c068d52319
@@ -48052,7 +49802,7 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/task.md`
-- Concurrency model: `docs/wiki/language/concurrency.md`
+- Concurrency model: `docs/language/concurrency.md`
 
 ==============================================================================
 WIKI: `std::sync` (std/sync)
@@ -48073,42 +49823,47 @@ import std::sync;
 
 ## Examples
 
-### Example: `Channel(u64)` across `task`s
+### Example: `ChannelSender(u64)` across `task`s
 ```silk
 import sync from "std/sync";
 
 type ChanU64 = sync::Channel(u64);
 
-task fn producer (c: sync::ChannelBorrow(u64)) -> int {
-  let err: sync::SyncFailed? = c.send(42);
-  if err != None { return 10; }
+task fn producer (tx: sync::ChannelSender(u64), value: u64) -> int {
+  if tx.send(value) != None { return 10; }
   return 0;
 }
 
 async fn main () -> int {
   task {
-    let c_r = ChanU64.init(1);
-    if c_r.is_err() {
-      return 100;
-    }
-    let mut c: ChanU64 = match (c_r) {
+    let mut c = match ChanU64.init(1) {
       Ok(v) => v,
-      Err(_) => ChanU64.invalid(),
+      Err(_) => return 100,
     };
 
-    let h = producer(c.borrow());
+    let tx0 = match c.sender() {
+      Ok(v) => v,
+      Err(_) => { c.destroy(); return 101; },
+    };
+    let tx1 = match tx0.clone() {
+      Ok(v) => v,
+      Err(_) => { c.destroy(); return 102; },
+    };
+
+    let h0 = producer(tx0, 40);
+    let h1 = producer(tx1, 2);
 
     let v1: u64 = (c.recv() ?? 0);
-    c.close();
-    let v2: u64 = (c.recv() ?? 99);
+    let v2: u64 = (c.recv() ?? 0);
+    let end = c.recv();
 
-    let rc_values: int[] = yield * h;
-    let rc: int = rc_values[0];
+    let rc0: int = yield h0;
+    let rc1: int = yield h1;
     c.destroy();
 
-    if rc != 0 { return 11; }
-    if v1 != 42 { return 1; }
-    if v2 != 99 { return 2; }
+    if rc0 != 0 || rc1 != 0 { return 11; }
+    if v1 + v2 != 42 { return 1; }
+    if end != None { return 2; }
     return 0;
   }
 }
@@ -48117,7 +49872,7 @@ async fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/sync.md`
-- Concurrency: `docs/wiki/language/concurrency.md`
+- Concurrency: `docs/language/concurrency.md`
 - End-to-end fixtures:
   - `tests/silk/pass_std_sync_channel_u64.slk`
   - `tests/silk/pass_std_sync_mutex_condvar.slk`

@@ -41,6 +41,54 @@ borrows and borrowed `&T` values so obvious use-after-scope cases are rejected
 (for example returning a slice borrowed from a local fixed array, or returning
 `&T` borrowed from a local struct binding).
 
+## Examples
+
+### Returning a borrow of a parameter is allowed
+
+```silk
+fn tail (xs: int[]) -> int[] {
+  return &xs[1..];
+}
+```
+
+The returned slice is still borrowed from the caller-owned `xs` storage, so the
+borrow does not outlive its origin.
+
+### Returning a borrow of a local is rejected
+
+```silk
+struct Pair {
+  a: int,
+  b: int,
+}
+
+fn bad_ref () -> &Pair {
+  let p: Pair = Pair{ a: 1, b: 2 };
+  return &p; // rejected: `p` is stack storage owned by this function
+}
+```
+
+### Per-call mutable aliasing is rejected
+
+```silk
+struct Pair {
+  a: int,
+  b: int,
+}
+
+fn swap(mut a: &Pair, mut b: &Pair) -> void {
+  let t = a.a;
+  a.a = b.a;
+  b.a = t;
+}
+
+fn main () -> int {
+  let mut p: Pair = Pair{ a: 1, b: 2 };
+  swap(mut p, mut p); // rejected: two mutable borrows of the same base in one call
+  return 0;
+}
+```
+
 ## Lexical Lifetimes (Implemented Subset)
 
 Slices (`T[]`) are non-owning views. Slice range borrows create slices that
@@ -79,6 +127,37 @@ Returning a reference is permitted when the returned `&T` ultimately refers to
 an input reference parameter (that is, storage owned by the caller), and not to
 stack locals.
 
+## Borrowing Across Tasks and Suspension Points
+
+Current downstream guidance:
+
+- Keep ordinary borrows (`&T`, `T[]`, sub-slices) inside a single lexical,
+  synchronous region whenever possible.
+- Do not try to pass non-opaque references across `task fn` boundaries; the
+  checker rejects them today (see `docs/language/concurrency.md`).
+- When data must cross a task boundary or outlive the current lexical region,
+  prefer an owned value or a dedicated handle/view pair such as
+  `Channel(T)` + `ChannelBorrow(T)` or `AbortSignal` + `AbortSignalBorrow`.
+- Restrictions around borrows that remain live across `await` points are still
+  conservative and part of the ongoing design; prefer owned values around
+  suspension points until the full model is stabilized.
+
+Example pattern:
+
+```silk
+struct Pair { x: int, y: int }
+
+async fn read_after_wait (p: &Pair) -> int {
+  let x = p.x;
+  await std::task::sleep_ms_async(1);
+  return x;
+}
+```
+
+Copy or move the data you need before `await`; do not rely on a borrow staying
+usable across a suspension point unless that specific API contract is
+documented.
+
 ## Ownership Transfer (`move`) (Implemented Subset)
 
 Silk’s safe subset includes a small explicit ownership-transfer form:
@@ -111,8 +190,10 @@ In the current subset, ownership transfer is intentionally conservative:
 
 As the language grows, borrow checking is expected to expand to cover:
 
-- borrowed references as first-class values (`&expr` producing `&T` values),
-- references and borrows in more positions (locals, fields, returns),
+- borrowed references in richer positions and aggregates (especially fields and
+  more complex return-position flows),
+- richer first-class reference support beyond the current `&Struct` /
+  single-slot-scalar subset,
 - lifetime/region inference across control flow,
 - explicit disambiguation when multiple input references exist (for example a
   label syntax like `as A` to tie a return reference to a specific input),

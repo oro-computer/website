@@ -183,6 +183,17 @@ Each stream has a bounded in-memory queue. The `cap` is expressed in **chunks**
   (otherwise they return `Err(StreamFailed)` with `kind() == InvalidInput`).
 - `WritableStream.write()` blocks while the queue is full.
 - `ReadableStream.read()` blocks while the queue is empty (until closed or errored).
+- `WritableStream.try_write()` does **not** block:
+  - it returns `None` on success,
+  - it returns `Some(StreamFailed{ kind: Full, ... })` when backpressure would
+    block the caller.
+- `ReadableStream.try_read()` does **not** block:
+  - it returns `Ok(Read::Chunk(...))` when a chunk is immediately available,
+  - `Ok(Read::Done)` when the stream has ended cleanly,
+  - `Ok(Read::Pending)` when the queue is currently empty but the stream is
+    still open,
+  - `Err(StreamFailed)` when the stream has been aborted or another runtime
+    failure occurred.
 
 ### Close vs cancel vs abort
 
@@ -226,14 +237,9 @@ task fn consumer (r: std::stream::ReadableStream) -> int { ... }
 
 async fn main () -> int {
   task {
-    let pt_r = std::stream::PassThroughStream.init_default();
-    if pt_r.is_err() { return 1; }
-    let mut pt: std::stream::PassThroughStream = match (pt_r) {
+    let mut pt = match std::stream::PassThroughStream.init_default() {
       Ok(v) => v,
-      Err(_) => std::stream::PassThroughStream{
-        readable: std::stream::ReadableStream.invalid(),
-        writable: std::stream::WritableStream.invalid(),
-      },
+      Err(_) => return 1,
     };
 
     let w = pt.take_writable();
@@ -272,14 +278,9 @@ import std::stream;
 
 async fn main () -> int {
   task {
-    let pt_r: std::stream::PassThroughResult = std::stream::PassThroughStream.init(2);
-    if pt_r.is_err() { return 1; }
-    let mut pt: std::stream::PassThroughStream = match (pt_r) {
+    let mut pt = match std::stream::PassThroughStream.init(2) {
       Ok(v) => v,
-      Err(_) => std::stream::PassThroughStream{
-        readable: std::stream::ReadableStream.invalid(),
-        writable: std::stream::WritableStream.invalid(),
-      },
+      Err(_) => return 1,
     };
 
     let w = pt.take_writable();
@@ -288,10 +289,14 @@ async fn main () -> int {
     let hr = std::fs::stream::pipe_file_to_stream("input.txt", w, 4096);
     let hw = std::fs::stream::pipe_stream_to_file(r, "output.txt", 420);
 
-    let rr: std::stream::PipeResult = yield hr;
-    let rw: std::stream::PipeResult = yield hw;
-    if rr.is_err() { return 2; }
-    if rw.is_err() { return 3; }
+    match (yield hr) {
+      Ok(_) => {},
+      Err(_) => return 2,
+    }
+    match (yield hw) {
+      Ok(_) => {},
+      Err(_) => return 3,
+    }
     return 0;
   }
 }
@@ -307,14 +312,13 @@ async fn main () -> int {
 To make piping cooperatively cancellable, use `pipe_to_abortable` with an
 `std::abort_controller::AbortSignalBorrow`. In the current subset, aborts are
 observed between read/write steps; they do not yet interrupt a blocking
-`ReadableStream.read()` call.
+`ReadableStream.read()` / `WritableStream.write()` call.
 
 ```silk
 import std::stream;
 
 fn run_pipeline (src: std::stream::ReadableStream, dst: std::stream::WritableStream) -> int {
-  let r = std::stream::pipe_to(src, dst);
-  return match (r) {
+  return match std::stream::pipe_to(src, dst) {
     Ok(_) => 0,
     Err(_) => 1,
   };
@@ -323,8 +327,10 @@ fn run_pipeline (src: std::stream::ReadableStream, dst: std::stream::WritableStr
 
 ## Notes
 
-- The current subset uses blocking primitives; it is intended to become
-  suspension-friendly once the async runtime exists.
+- The current subset uses blocking OS-thread primitives for stream reads and
+  writes even though the hosted async runtime now exists. In other words,
+  `std::stream` is available today, but `ReadableStream.read()` /
+  `WritableStream.write()` do not yet suspend an async coroutine directly.
 - Drop semantics are designed to avoid leaked pipes:
   - dropping `ReadableStream` cancels the stream (writers start failing),
   - dropping `WritableStream` closes the stream

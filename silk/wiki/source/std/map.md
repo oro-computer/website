@@ -30,11 +30,9 @@ type Map = std::map::HashMap(u64, int);
 type InitResult = std::result::Result(Map, std::memory::AllocFailed);
 
 fn main () -> int {
-  let init_r: InitResult = Map.init(16);
-  if init_r.is_err() { return 2; }
-  let mut m: Map = match (init_r) {
+  let mut m = match Map.init(16) {
     InitResult::Ok(v) => v,
-    InitResult::Err(_) => Map.empty(),
+    InitResult::Err(_) => return 2,
   };
   m.put(1, 10);
   let v: int = m.get(1) ?? 0;

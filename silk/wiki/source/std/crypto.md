@@ -35,11 +35,9 @@ fn main () -> int {
   }
 
   // memzero: wipe a buffer in place.
-  let wipe_r = std::buffer::BufferU8.init(16);
-  if wipe_r.is_err() { return 2; }
-  let mut wipe: std::buffer::BufferU8 = match (wipe_r) {
+  let mut wipe = match std::buffer::BufferU8.init(16) {
     Ok(v) => v,
-    Err(_) => std::buffer::BufferU8.empty(),
+    Err(_) => return 2,
   };
 
   var i: i64 = 0;
@@ -69,16 +67,16 @@ fn main () -> int {
   let msg_ptr: u64 = std::runtime::mem::string_ptr(msg);
   let msg_len: i64 = std::runtime::mem::string_len(msg);
 
-  let out_r = std::buffer::BufferU8.init(32);
-  let expected_r = std::buffer::BufferU8.init(32);
-  if out_r.is_err() || expected_r.is_err() { return 2; }
-  let mut out: std::buffer::BufferU8 = match (out_r) {
+  let mut out = match std::buffer::BufferU8.init(32) {
     Ok(v) => v,
-    Err(_) => std::buffer::BufferU8.empty(),
+    Err(_) => return 2,
   };
-  let mut expected: std::buffer::BufferU8 = match (expected_r) {
+  let mut expected = match std::buffer::BufferU8.init(32) {
     Ok(v) => v,
-    Err(_) => std::buffer::BufferU8.empty(),
+    Err(_) => {
+      out.drop();
+      return 2;
+    },
   };
 
   // Expected digest: bddd813c634239723171ef3fee98579b94964e3bb1cb3e427262c8c068d52319

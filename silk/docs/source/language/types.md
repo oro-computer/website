@@ -6,7 +6,7 @@ Implementation status (current compiler subset):
 
 - Supported end-to-end: primitives, nominal `struct` types, optionals (`T?`),
   `&Struct` references (in function parameter types and as local values
-  produced by `new` / calls that return `&Struct`), and array/slice types
+  produced by `new` or returned from calls), and array/slice types
   (`T[N]`, `T[]`) over element types that lower to a fixed scalar-slot sequence
   in the current backend subset (including array literals, indexing reads, and
   iterable `for` loops). Indexed assignment targets (`xs[i] = v`) are supported
@@ -431,8 +431,11 @@ Key requirements:
 
 Current implementation notes:
 
-- `&Struct` is supported in function parameter types and as local values when
-  produced by heap allocation (`new`) or by calls that return `&Struct`.
+- `&Struct` is supported in function parameter types and as local values:
+  - heap-backed `&Struct` values from `new` are refcounted in the current
+    subset,
+  - calls may also return borrowed `&Struct` values tied to input lifetimes
+    (for example identity-style helpers that return an input reference).
 - `&T` where `T` is a **single-slot scalar primitive** (for example `&bool`,
   `&int`, `&u64`, `&f64`) is supported in function parameter types and as local
   values when produced by the borrow operator `&expr`.

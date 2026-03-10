@@ -12,6 +12,30 @@ non-POSIX, embedded, sandboxed runtimes) should be able to provide their own
 runtime implementation by supplying an alternate stdlib root with compatible
 `std::runtime::...` modules.
 
+## Example: build metadata
+
+Most downstream programs use higher-level modules like `std::fs`, `std::io`, and
+`std::process`. `std::runtime` exists underneath them, but the build metadata
+surface is also directly useful:
+
+```silk
+import std::io::println;
+import std::runtime::build;
+
+fn main () -> int {
+  println(build::kind());
+  println(build::mode());
+  println(build::version());
+
+  if build::is_debug() {
+    println("debug build");
+  } else {
+    println("non-debug build");
+  }
+  return 0;
+}
+```
+
 ## Motivation
 
 - `std::fs`, `std::task`, `std::sync`, and other OS-facing std modules need
@@ -176,30 +200,28 @@ Implemented runtime areas in the shipped stdlib:
     default heap allocation unless an embedder installs an allocator via
     `silk_rt_set_allocator`.
 
-Follow-ups are expected to introduce additional runtime areas:
+Hosted async runtime area available today:
 
-- Async event loop / executor integration (`std::runtime::event_loop`) for hosted `async`/`await`:
-  - the compiler already ships a bundled bring-up executor in `libsilk_rt`
-    (`src/silk_rt_async.c`) and lowers `async`/`await` to it on the hosted
-    `linux/x86_64` target,
-  - the `std::runtime::event_loop` module now exposes low-level awaitable
-    building blocks (timers + fd readiness, including `fd_wait_readable2` and `fd_wait_readable_any`) and an explicit `Handle`/`poll`
-    surface for manually driving the hosted executor/event loop. Higher-level
-    async adapters are still follow-up work
-    (see `docs/compiler/async-runtime.md`).
+- `std::runtime::event_loop` for hosted `async`/`await`:
+  - the compiler already ships a bundled bring-up executor in `libsilk_rt` and
+    lowers `async`/`await` to it on the hosted `linux/x86_64` target,
+  - the module exposes low-level awaitable readiness/timer helpers plus an
+    explicit `Handle` polling surface for manually driving the hosted executor,
   - the hosted executor is thread-affine: `Handle.poll()` / `Handle.deinit()`
     must be called from the same OS thread that created the handle; cross-thread
-    wake is supported via `Handle.wake()`.
-  - abort-aware wrappers exist for cooperative cancellation (`std::abort_controller`):
+    wake is supported via `Handle.wake()`,
+  - abort-aware wrappers exist for cooperative cancellation
+    (`std::abort_controller`):
     - `sleep_ms_abortable(ms, sig) -> bool`
     - `fd_wait_readable_abortable(fd, sig) -> bool`
     - `fd_wait_writable_abortable(fd, sig) -> bool`
-    In the current subset, aborts are generally observed only before/after the
-    awaited operation. For `fd_wait_readable_abortable`, when the runtime can
-    provide a pollable abort fd (`AbortSignalBorrow.wait_fd()`), aborts can
-    interrupt an in-flight wait by awaiting `fd_wait_readable2(fd, abort_fd)`.
-    When no pollable abort fd is available, it falls back to the before/after
-    checks.
+    In the current subset, `read` / `write` style async wrappers still observe
+    aborts conservatively around each I/O attempt, but
+    `fd_wait_readable_abortable` can interrupt an in-flight readiness wait when
+    the runtime can obtain a pollable abort fd from
+    `AbortSignalBorrow.wait_fd()`.
+  - see `docs/std/runtime-event-loop.md` for the current downstream-facing
+    guide to this module.
 - WASI networking (via WASI sockets or similar proposals) when supported by the toolchain targets.
 
 ## Providing a Custom Runtime

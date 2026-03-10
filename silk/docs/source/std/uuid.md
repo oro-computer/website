@@ -45,6 +45,38 @@ API notes:
 - `UUID.to_string_lower() -> Result(String, OutOfMemory)` allocates an owned
   string.
 
+## Example: parse + generate + inspect
+
+```silk
+import std::uuid;
+
+fn main () -> int {
+  let parsed = match std::uuid::parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8") {
+    Ok(v) => v,
+    Err(_) => return 1,
+  };
+
+  let dns = std::uuid::namespace_dns();
+  let named = match std::uuid::v5(dns, "www.widgets.com") {
+    Ok(v) => v,
+    Err(_) => return 2,
+  };
+
+  let text = match named.to_string_lower() {
+    Ok(v) => v,
+    Err(_) => return 3,
+  };
+  if text.as_string() != "21f7f8de-8051-5b89-8680-0195ef798b6a" {
+    return 4;
+  }
+
+  if parsed.version() != 1 { return 5; }
+  if named.version() != 5 { return 6; }
+  if !named.is_rfc4122() { return 7; }
+  return 0;
+}
+```
+
 ## Version and Variant
 
 - `UUID.version()` returns the 4-bit version field (0..15).

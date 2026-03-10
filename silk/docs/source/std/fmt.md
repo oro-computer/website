@@ -137,37 +137,23 @@ so output precision is limited to `f64` precision in the current subset.
 ```silk
 import { println } from "std/io";
 import format from "std/fmt";
-import std::fmt;
-import std::strings;
-import std::result;
-
-type StringAllocResult = std::result::Result(std::strings::String, std::fmt::Error);
 
 fn main () -> int {
-  const a = 1;
-  const b = 2;
-
-  let hello_r: StringAllocResult = format("hello {}", "world");
-  if hello_r.is_err() {
-    return 1;
-  }
-  let mut hello: std::strings::String = match (hello_r) {
-    StringAllocResult::Ok(v) => v,
-    StringAllocResult::Err(_) => std::strings::String.empty(),
+  let mut hello = match format("hello {}", "world") {
+    Ok(v) => v,
+    Err(_) => return 1,
   };
 
-  let sum_r: StringAllocResult = format("a + b = {}", a + b);
-  if sum_r.is_err() {
-    hello.drop();
-    return 2;
-  }
-  let mut sum: std::strings::String = match (sum_r) {
-    StringAllocResult::Ok(v) => v,
-    StringAllocResult::Err(_) => std::strings::String.empty(),
+  let mut sum = match format("a + b = {}", 1 + 2) {
+    Ok(v) => v,
+    Err(_) => {
+      hello.drop();
+      return 2;
+    },
   };
 
   println("{}", hello.as_string());
-  println("sum of {}", sum.as_string());
+  println("{}", sum.as_string());
   sum.drop();
   hello.drop();
   return 0;

@@ -24,13 +24,9 @@ import std::process;
 import std::strings;
 
 fn main () -> int {
-  let cwd_r: std::process::GetCwdResult = std::process::getcwd();
-  if cwd_r.is_err() {
-    return 1;
-  }
-  let mut cwd: std::strings::String = match (cwd_r) {
+  let mut cwd = match std::process::getcwd() {
     std::process::GetCwdResult::Ok(v) => v,
-    std::process::GetCwdResult::Err(_) => std::strings::String.empty(),
+    std::process::GetCwdResult::Err(_) => return 1,
   };
 
   let err1: std::process::ChdirFailed? = std::process::chdir("/");

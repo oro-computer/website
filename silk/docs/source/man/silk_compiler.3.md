@@ -53,7 +53,9 @@ Typical workflow:
 5. On error, retrieve diagnostics via `silk_compiler_last_error` and `silk_error_format` (see `silk_error` (3)).
 6. Destroy the compiler with `silk_compiler_destroy`.
 
-The canonical ABI specification lives at `?p=compiler/abi-libsilk`.
+The canonical ABI specification lives at [C ABI (`libsilk`)](?p=compiler/abi-libsilk).
+
+For the shortest end-to-end embedding path, start with [`libsilk` quickstart](?p=compiler/libsilk-quickstart).
 
 ## Configuration
 
@@ -91,8 +93,106 @@ The `name` parameter is used for diagnostics and does not need to correspond to 
 
 The `SilkCompiler` object is not currently specified as thread-safe. Confine it to one thread or synchronize access.
 
+## Examples
+
+### Build a tiny executable
+
+```c
+#include <stdint.h>
+#include <string.h>
+
+#include "silk.h"
+
+static SilkString silk_cstr(const char *s) {
+  SilkString out;
+  out.ptr = (char *)s;
+  out.len = (int64_t)strlen(s);
+  return out;
+}
+
+int main(void) {
+  SilkCompiler *compiler = silk_compiler_create();
+  if (!compiler) {
+    return 1;
+  }
+
+  if (!silk_compiler_add_source_buffer(
+        compiler,
+        silk_cstr("main.slk"),
+        silk_cstr("fn main() -> int { return 0; }\n"))) {
+    silk_compiler_destroy(compiler);
+    return 1;
+  }
+
+  if (!silk_compiler_build(
+        compiler,
+        SILK_OUTPUT_EXECUTABLE,
+        silk_cstr("build/embedded-app"))) {
+    silk_compiler_destroy(compiler);
+    return 1;
+  }
+
+  silk_compiler_destroy(compiler);
+  return 0;
+}
+```
+
+### Build a library object and generated header
+
+Using the same `silk_cstr` helper from the previous example:
+
+```c
+SilkCompiler *compiler = silk_compiler_create();
+if (!compiler) {
+  return 1;
+}
+
+if (!silk_compiler_set_c_header(compiler, silk_cstr("build/demo.h"))) {
+  silk_compiler_destroy(compiler);
+  return 1;
+}
+
+if (!silk_compiler_add_source_buffer(
+      compiler,
+      silk_cstr("lib.slk"),
+      silk_cstr("export fn add(a: int, b: int) -> int { return a + b; }\n"))) {
+  silk_compiler_destroy(compiler);
+  return 1;
+}
+
+if (!silk_compiler_build(
+      compiler,
+      SILK_OUTPUT_OBJECT,
+      silk_cstr("build/demo.o"))) {
+  silk_compiler_destroy(compiler);
+  return 1;
+}
+```
+
+### Build to memory instead of the filesystem
+
+After adding sources and setting the desired target:
+
+```c
+SilkBytes bytes = {0};
+
+if (!silk_compiler_set_target(compiler, silk_cstr("wasm32-unknown-unknown"))) {
+  return 1;
+}
+
+if (!silk_compiler_build_to_bytes(
+      compiler,
+      SILK_OUTPUT_EXECUTABLE,
+      &bytes)) {
+  return 1;
+}
+
+/* consume bytes.ptr / bytes.len */
+silk_bytes_free(&bytes);
+```
+
 ## See Also
 
-- `silk_error` (3), `silk_bytes` (3), `silk_abi_get_version` (3)
-- `libsilk` (7)
-- `?p=compiler/abi-libsilk`
+- [`silk_error` (3)](?p=man/silk_error.3), [`silk_bytes` (3)](?p=man/silk_bytes.3), [`silk_abi_get_version` (3)](?p=man/silk_abi_get_version.3)
+- [`libsilk` (7)](?p=man/libsilk.7)
+- [C ABI (`libsilk`)](?p=compiler/abi-libsilk)

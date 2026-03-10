@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-03-09T16:22:11+00:00",
+  "generatedAt": "2026-03-10T03:16:35+00:00",
   "kind": "docs",
-  "count": 180,
+  "count": 182,
   "sections": [
     {
       "name": "overview",
@@ -562,6 +562,11 @@
           "file": "std/runtime.md"
         },
         {
+          "id": "std/runtime-event-loop",
+          "title": "`std::runtime::event_loop`",
+          "file": "std/runtime-event-loop.md"
+        },
+        {
           "id": "std/signal",
           "title": "`std::signal`",
           "file": "std/signal.md"
@@ -762,6 +767,11 @@
           "file": "compiler/cli-silk.md"
         },
         {
+          "id": "compiler/libsilk-quickstart",
+          "title": "`libsilk` quickstart",
+          "file": "compiler/libsilk-quickstart.md"
+        },
+        {
           "id": "compiler/package-manifests",
           "title": "Package Manifests (`silk.toml`)",
           "file": "compiler/package-manifests.md"
@@ -823,7 +833,7 @@
         },
         {
           "id": "compiler/zig-api",
-          "title": "Zig Embedding API (Programmatic Compilation)",
+          "title": "Zig Embedding API",
           "file": "compiler/zig-api.md"
         },
         {

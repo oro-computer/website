@@ -189,10 +189,20 @@ fn main () -> int {
   let mut tar_bytes: std::buffer::BufferU8 = w.take_buffer();
 
   var r: std::tar::Reader = std::tar::Reader.from_bytes(tar_bytes.as_bytes());
-  let e_r_opt: std::tar::EntryResult? = r.next();
-  if e_r_opt == None { tar_bytes.drop(); return 5; }
-  let e_r: std::tar::EntryResult = match (e_r_opt) { Some(v) => v, None => std::tar::EntryResult.err(std::tar::TarFailed{ code: 0, requested: 0 }) };
-  if e_r.is_err() { tar_bytes.drop(); return 6; }
+  let e_r = match r.next() {
+    Some(v) => v,
+    None => {
+      tar_bytes.drop();
+      return 5;
+    },
+  };
+  match (e_r) {
+    Ok(_) => {},
+    Err(_) => {
+      tar_bytes.drop();
+      return 6;
+    },
+  }
 
   var out: std::buffer::BufferU8 = std::buffer::BufferU8.empty();
   if r.read_to_end(mut out) != None { out.drop(); tar_bytes.drop(); return 7; }

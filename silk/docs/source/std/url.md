@@ -72,6 +72,51 @@ which forwards to `std::url::parse`.
 - `set(name: string, value: string) -> std::memory::OutOfMemory?`
 - `sort() -> std::memory::OutOfMemory?` — stable sort by decoded name, then re-serialize.
 
+## Example: parse, resolve, and mutate query params
+
+```silk
+import std::url;
+
+fn main () -> int {
+  let base = match std::url::parse("https://example.com/docs/index.html") {
+    Ok(v) => v,
+    Err(_) => return 1,
+  };
+
+  let rel = match std::url::parse_with_base("../guides/intro?lang=silk", base) {
+    Ok(v) => v,
+    Err(_) => return 2,
+  };
+
+  let href = match rel.href() {
+    Ok(v) => v,
+    Err(_) => return 3,
+  };
+  if href.as_string() != "https://example.com/guides/intro?lang=silk" {
+    return 4;
+  }
+
+  let mut params = match URLSearchParams.from_string("?lang=silk&tab=overview") {
+    Ok(v) => v,
+    Err(_) => return 5,
+  };
+
+  if params.set("tab", "reference") != None {
+    return 6;
+  }
+
+  let qs = match params.to_string() {
+    Ok(v) => v,
+    Err(_) => return 7,
+  };
+  if qs.as_string() != "lang=silk&tab=reference" {
+    return 8;
+  }
+
+  return 0;
+}
+```
+
 ## Notes
 
 - This module does not implement the JavaScript `URL` object API (setters, live `searchParams` binding, etc.); it provides a low-level URL record plus helpers that follow the WHATWG parsing and serialization rules.

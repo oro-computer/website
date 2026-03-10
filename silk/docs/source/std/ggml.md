@@ -81,3 +81,28 @@ The initial surface is intentionally small:
 
 The module is expected to grow incrementally as we map more of the upstream API
 into a stable Silk wrapper layer.
+
+## Example: toolchain smoke test
+
+The most reliable downstream check today is verifying that the module resolves
+and that the hosted toolchain auto-links the staged ggml archives:
+
+```silk
+import std::ggml;
+import std::io::println;
+
+fn main () -> int {
+  println("std::ggml is available");
+  return 0;
+}
+```
+
+Build it after staging vendored dependencies:
+
+```bash
+zig build deps
+silk build hello_ggml.slk -o build/hello_ggml
+```
+
+On the hosted `linux/x86_64` baseline, importing `std::ggml` is enough for
+`silk build` to link the staged ggml archives automatically.

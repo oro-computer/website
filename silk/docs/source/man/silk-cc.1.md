@@ -38,6 +38,6 @@ silk cc -std=c99 -Wall -Wextra your_app.c -o your_app
 
 ## See Also
 
-- `silk` (1)
-- `libsilk` (7)
+- [`silk` (1)](?p=man/silk.1)
+- [`libsilk` (7)](?p=man/libsilk.7)
 - `include/silk.h`

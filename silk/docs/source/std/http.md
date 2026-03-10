@@ -101,20 +101,12 @@ Notes:
 import std::http;
 import std::net;
 
-fn trap (T;) -> T {
-  std::abort();
-}
-
 export fn main () -> int {
   // Plain HTTP to a loopback server (no DNS in the current stdlib).
   let addr = net::SocketAddrV4.loopback(8080);
-  let stream_r = net::TCPStream.connect(addr);
-  if stream_r.is_err() {
-    return 1;
-  }
-  let stream: net::TCPStream = match (stream_r) {
-    net::TCPStreamResult::Ok(v) => v,
-    net::TCPStreamResult::Err(_) => trap(net::TCPStream;),
+  let stream = match net::TCPStream.connect(addr) {
+    Ok(v) => v,
+    Err(_) => return 1,
   };
 
   let mut conn = http::Connection.from_stream(stream);
@@ -124,14 +116,12 @@ export fn main () -> int {
     return 2;
   }
 
-  let resp_r = conn.read_response();
-  if resp_r.is_err() {
-    conn.close();
-    return 3;
-  }
-  let resp: http::Response = match (resp_r) {
-    http::ResponseResult::Ok(v) => v,
-    http::ResponseResult::Err(_) => trap(http::Response;),
+  let resp = match conn.read_response() {
+    Ok(v) => v,
+    Err(_) => {
+      conn.close();
+      return 3;
+    },
   };
   let _ = resp.status_code();
   conn.close();

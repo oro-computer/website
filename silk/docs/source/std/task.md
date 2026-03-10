@@ -19,6 +19,33 @@ See also:
 - `docs/std/sync.md` (`Mutex`, `Condvar`, and channels)
 - `docs/std/runtime.md` (pluggable runtime layer under `std::task`)
 
+## Examples
+
+### Blocking sleep on the current OS thread
+
+```silk
+import std::task;
+
+fn main () -> int {
+  let n = std::task::available_parallelism();
+  std::task::yield_now();
+  std::task::sleep_ms(1);
+  if n < 1 { return 1; }
+  return 0;
+}
+```
+
+### Awaitable sleep under the hosted executor
+
+```silk
+import std::task;
+
+async fn main () -> int {
+  await std::task::sleep_ms_async(10);
+  return 0;
+}
+```
+
 ## Implemented API
 
 ```silk
@@ -58,7 +85,7 @@ Notes:
   higher-level concurrency utilities. It is implemented using a hosted libc
   query (`get_nprocs`) and clamps to `>= 1`.
 - `yield_now()` and `sleep_ms()` are blocking thread operations (they are not
-  async-aware.
+  async-aware).
 - `sleep_ms(ms)` is implemented by converting `ms` to microseconds and calling
   `std::runtime::task::sleep_us`; large sleeps may be performed in chunks.
 - `sleep_ms_async(ms)` returns a `Promise(void)` that can be awaited inside

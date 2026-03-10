@@ -25,15 +25,28 @@ For full language semantics and limitations, see:
 - pass `AbortSignalBorrow` into work that should stop early,
 - abort once, from any thread/task.
 
-See a runnable program:
+Minimal pattern:
 
-- `examples/feature_concurrency_abort_controller.slk`
+```silk
+import std::abort_controller;
 
-Build and run (from a checkout of the Silk compiler repository):
+task fn worker (sig: std::abort_controller::AbortSignalBorrow) -> int {
+  if sig.is_aborted() { return 0; }
+  return 1;
+}
 
-```bash
-silk build examples/feature_concurrency_abort_controller.slk -o build/abort_controller
-./build/abort_controller
+async fn main () -> int {
+  let controller = match std::abort_controller::AbortController.init() {
+    Ok(v) => v,
+    Err(_) => return 1,
+  };
+
+  task {
+    controller.abort();
+    let rc: int = yield worker(controller.signal());
+    return rc;
+  }
+}
 ```
 
 ## 2) High-quality async I/O (`std::io::async`)
@@ -48,29 +61,31 @@ Important rule: `write` may write fewer bytes than requested. “High-quality”
 I/O loops must handle partial writes (and partial reads when you need an exact
 length).
 
-See a runnable example that:
+The core readiness-wait shape is:
 
-- creates two pipes,
-- runs a pure-`async` producer/copy/consumer pipeline,
-- composes the pipeline with `await * [...]`,
-- aborts after a timeout using `AbortController` (cooperative cancellation),
-- uses a `write_all_abortable` loop to handle partial writes correctly.
+```silk
+import std::abort_controller;
+import std::runtime::event_loop;
 
-Example:
+async fn wait_readable_or_abort (fd: int, sig: std::abort_controller::AbortSignalBorrow) -> int {
+  let abort_fd = match sig.wait_fd() {
+    Some(v) => v,
+    None => return 1,
+  };
 
-- `examples/feature_io_async_pipe_copy_abortable.slk`
-
-Build and run (from a checkout of the Silk compiler repository):
-
-```bash
-silk build examples/feature_io_async_pipe_copy_abortable.slk -o build/async_copy
-./build/async_copy
+  let which: i64 = await std::runtime::event_loop::fd_wait_readable2(fd, abort_fd);
+  if which == 0 { return 0; }
+  return 1;
+}
 ```
 
 Notes (current subset):
 
-- Aborts are cooperative: they are checked before/after awaited waits.
-  Aborts do not yet interrupt an in-flight sleep or fd wait.
+- Aborts are cooperative, but the details depend on the layer:
+  - `std::runtime::event_loop::fd_wait_readable_abortable` can interrupt an
+    in-flight readiness wait when `AbortSignalBorrow.wait_fd()` is available.
+  - `std::io::async::{read_abortable,write_abortable}` still observe aborts
+    conservatively around each I/O attempt.
 - This example intentionally avoids `task fn` threads. In the current hosted
   runtime, spawning stackful async coroutines in a multi-threaded process is
   not reliable yet. Keep `std::io::async`-based I/O pipelines single-threaded
@@ -91,24 +106,38 @@ To connect OS resources to streams:
 
 - `std::io::stream` pipes fd ↔ stream (`ReadableStream` / `WritableStream`).
 
-See a runnable example that builds a pipeline:
+Minimal wiring:
 
-fd → stream → uppercase transform → stream → fd
+```silk
+import std::stream;
 
-Example:
+async fn main () -> int {
+  task {
+    let mut t = match std::stream::TransformStream.init_default() {
+      Ok(v) => v,
+      Err(_) => return 1,
+    };
 
-- `examples/feature_stream_transform_uppercase_fd.slk`
+    let input = t.take_writable();
+    let output = t.take_readable();
+    let transform_in = t.take_transform_readable();
+    let transform_out = t.take_transform_writable();
 
-Build and run (from a checkout of the Silk compiler repository):
-
-```bash
-silk build examples/feature_stream_transform_uppercase_fd.slk -o build/stream_upper
-./build/stream_upper
+    // Producers write to `input`.
+    // A transformer task reads from `transform_in` and writes to `transform_out`.
+    // Consumers read from `output`.
+    input.close();
+    output.destroy();
+    transform_in.destroy();
+    transform_out.destroy();
+    return 0;
+  }
+}
 ```
 
 ## Next steps
 
-- If you want a quick, runnable reference, prefer the `examples/` programs in
-  the Silk compiler repository alongside the docs.
-- For network I/O, start with `examples/std_net_tcp_loopback.slk` and
-  `docs/std/networking.md` (`std::net::stream` provides `TcpStream` ↔ stream adapters).
+- For network I/O, start with `docs/std/networking.md`
+  (`std::net::stream` provides `TcpStream` ↔ stream adapters).
+- For low-level readiness waits and manual executor driving, read
+  `docs/std/runtime-event-loop.md`.

@@ -26,7 +26,7 @@
 - CLI pages defined by doc blocks tagged with `@cli` (intended for man section 1),
 - API pages derived from declaration docs (intended for man section 3).
 
-The doc-comment tag semantics are specified in `?p=language/doc-comments`.
+The doc-comment tag semantics are specified in [Doc comments](?p=language/doc-comments).
 
 Notes:
 
@@ -110,5 +110,5 @@ silk man std::result::design
 
 ## See Also
 
-- `silk` (1), `silk-doc` (1)
-- `?p=language/doc-comments`
+- [`silk` (1)](?p=man/silk.1), [`silk-doc` (1)](?p=man/silk-doc.1)
+- [Doc comments](?p=language/doc-comments)

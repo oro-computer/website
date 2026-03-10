@@ -21,4 +21,4 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: `docs/std/task.md`
-- Concurrency model: `docs/wiki/language/concurrency.md`
+- Concurrency model: `docs/language/concurrency.md`

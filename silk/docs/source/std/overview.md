@@ -22,6 +22,39 @@ to be:
 - **POSIX-first** for OS interactions (initial hosted baseline), while still
   supporting freestanding/embedded builds via a smaller “core” subset.
 
+## A small `std::` program
+
+```silk
+import std::io::println;
+import std::url;
+import std::uuid;
+
+fn main () -> int {
+  let id = match std::uuid::random::v7_now() {
+    Ok(v) => v,
+    Err(_) => return 1,
+  };
+
+  let page = match std::url::parse("https://oro.computer/silk/docs/") {
+    Ok(v) => v,
+    Err(_) => return 2,
+  };
+
+  let id_text = match id.to_string_lower() {
+    Ok(v) => v,
+    Err(_) => return 3,
+  };
+  let href = match page.href() {
+    Ok(v) => v,
+    Err(_) => return 4,
+  };
+
+  println(id_text.as_string());
+  println(href.as_string());
+  return 0;
+}
+```
+
 See also:
 
 - `docs/std/package-structure.md` (namespace + linkage + swappability)

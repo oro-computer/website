@@ -85,6 +85,10 @@ region context is established with `with` (see `docs/language/regions.md`).
   bytes instead of calling the heap allocator.
 - On last-release, region-backed `new` allocations run `drop` (when defined),
   but do not free their backing storage (region memory is not reclaimed by RC).
+- Anonymous-region forms (`with <bytes> { ... }` and `with <bytes> from ...`)
+  have an important current limitation: escaped pointers / `&Struct` values are
+  not fully rejected yet, so treat them as block-scoped even if the checker
+  accepts an escape.
 
 #### Reference counting rules (current compiler)
 
@@ -99,6 +103,24 @@ region context is established with `with` (see `docs/language/regions.md`).
 - Passing `new` directly as a call argument to a `&Struct` parameter allocates a
   temporary and releases it after the call completes.
 - When an RC release decrements the count to `0`, the allocation is freed.
+
+Example:
+
+```silk
+struct Node {
+  value: int,
+}
+
+fn read (n: &Node) -> int {
+  return n.value;
+}
+
+fn main () -> int {
+  let a = new Node{ value: 1 };
+  let b: &Node = a; // aliases the same allocation and retains it
+  return read(b);
+}
+```
 
 ## Destructors (`Drop`) (Implemented subset)
 

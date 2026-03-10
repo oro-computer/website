@@ -17,11 +17,9 @@ import std::buffer;
 import std::buffer;
 
 fn main () -> int {
-  let b_r = BufferU8.init(4);
-  if b_r.is_err() { return 1; }
-  let mut b: BufferU8 = match (b_r) {
+  let mut b = match BufferU8.init(4) {
     Ok(v) => v,
-    Err(_) => BufferU8.empty(),
+    Err(_) => return 1,
   };
   b.push(1 as u8);
   b.push(2 as u8);

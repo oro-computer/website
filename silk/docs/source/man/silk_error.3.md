@@ -42,8 +42,29 @@ Embedders must not free or dereference the `SilkError` object directly.
 - The return value is the number of bytes required to format the full message, excluding the terminating NUL.
 - If the return value is `>= buffer_len`, the message was truncated.
 
+## Example
+
+After a failed compiler call, two-pass formatting is the normal embedder
+pattern:
+
+```c
+SilkError *err = silk_compiler_last_error(compiler);
+size_t need = silk_error_format(err, NULL, 0);
+char *buf = (char *)malloc(need + 1);
+if (!buf) {
+  return;
+}
+
+silk_error_format(err, buf, need + 1);
+fprintf(stderr, "%s\n", buf);
+free(buf);
+```
+
+Format the message before issuing more compiler operations; the compiler owns
+the `SilkError` object and may replace it on the next failure.
+
 ## See Also
 
-- `silk_compiler` (3)
-- `libsilk` (7)
-- `?p=compiler/abi-libsilk`
+- [`silk_compiler` (3)](?p=man/silk_compiler.3)
+- [`libsilk` (7)](?p=man/libsilk.7)
+- [C ABI (`libsilk`)](?p=compiler/abi-libsilk)

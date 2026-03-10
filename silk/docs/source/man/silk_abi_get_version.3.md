@@ -36,7 +36,28 @@ Embedders should compare the runtime version returned by this function with the 
 
 None.
 
+## Example
+
+```c
+int runtime_major = 0;
+int runtime_minor = 0;
+int runtime_patch = 0;
+
+silk_abi_get_version(&runtime_major, &runtime_minor, &runtime_patch);
+
+if (runtime_major != SILK_ABI_VERSION_MAJOR) {
+  fprintf(stderr, "libsilk ABI major mismatch\n");
+  return 1;
+}
+```
+
+The usual policy is:
+
+- require an exact major match,
+- optionally warn when minor/patch differ,
+- and refuse to run when your embedding layer depends on newer ABI features.
+
 ## See Also
 
-- `libsilk` (7)
-- `?p=compiler/abi-libsilk`
+- [`libsilk` (7)](?p=man/libsilk.7)
+- [C ABI (`libsilk`)](?p=compiler/abi-libsilk)

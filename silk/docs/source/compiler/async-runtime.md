@@ -8,8 +8,8 @@ This document now serves two roles:
 - Specify the longer-term architecture (compiler coroutine transform + richer event loop)
   that the current implementation is expected to evolve toward.
 
-The current hosted async runtime is implemented in C in `src/silk_rt_async.c` and wired
-into lowering in `src/lower_ir.zig`. It provides:
+The current hosted async runtime is implemented in the bundled hosted runtime
+and wired into compiler lowering. It provides:
 
 - stackful coroutines (fibers) using `ucontext`,
 - a single-threaded executor/event loop that can drive `async fn main () -> int`,
@@ -26,6 +26,23 @@ See also:
 - function disciplines: `docs/language/function-disciplines.md`
 - runtime layering: `docs/std/runtime.md`
 - current blocking hosted utilities: `docs/std/task.md`, `docs/std/io.md`, `docs/std/networking.md`
+
+## Example: async executable entrypoint
+
+The current hosted runtime already drives `async fn main () -> int` for normal
+executables:
+
+```silk
+import std::task;
+
+async fn main () -> int {
+  await std::task::sleep_ms_async(10);
+  return 0;
+}
+```
+
+When built as an executable, the entry stub creates the hosted executor/event
+loop, spawns the `Promise(int)` for `main`, and drives it to completion.
 
 ## Current Implementation (Shipped)
 

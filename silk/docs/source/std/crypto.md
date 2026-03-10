@@ -74,6 +74,48 @@ Key design rules:
   - `std::result::Result(T, ErrorType)` where `Ok(T)` is success and `Err(ErrorType)` is failure
     (use `Result(bool, ErrorType)` for fallible predicates).
 
+## Example: init, hash, wipe
+
+```silk
+import std::arrays;
+import std::buffer;
+import std::crypto;
+import std::crypto::hash;
+import std::runtime::mem;
+
+fn main () -> int {
+  if std::crypto::init() != None {
+    return 1;
+  }
+
+  let msg = "hello from silk";
+  let mut out = match std::buffer::BufferU8.init(32) {
+    Ok(v) => v,
+    Err(_) => return 2,
+  };
+
+  let err = std::crypto::hash::blake2b(
+    mut out,
+    32,
+    std::arrays::ByteSlice{
+      ptr: std::runtime::mem::string_ptr(msg),
+      len: std::runtime::mem::string_len(msg),
+    }
+  );
+  if err != None {
+    out.drop();
+    return 3;
+  }
+
+  let wipe = std::crypto::memzero(out.as_bytes());
+  out.drop();
+  if wipe != None {
+    return 4;
+  }
+  return 0;
+}
+```
+
 ### AEAD (`std::crypto::aead`)
 
 The current AEAD surface provides two constructions:

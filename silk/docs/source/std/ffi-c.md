@@ -78,8 +78,8 @@ import c from "std/ffi/c";
 ext lib_version = fn () -> u64; // returns `const char*`
 
 fn main () -> int {
-  let p: u64 = lib_version();
-  let v: string = c::cstr_string(p);
+  let p = lib_version();
+  let v = c::cstr_string(p);
   return if v == "" { 1 } else { 0 };
 }
 ```

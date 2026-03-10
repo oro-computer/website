@@ -97,11 +97,9 @@ import std::wasm;
 type ImportMap = std::map::HashMap(std::wasm::ImportFuncName, std::wasm::HostCall);
 
 fn main () -> int {
-  let r = ImportMap.init(8, std::wasm::hash_import_func_name, std::wasm::eq_import_func_name);
-  if r.is_err() { return 1; }
-  let mut m: ImportMap = match (r) {
+  let mut m = match ImportMap.init(8, std::wasm::hash_import_func_name, std::wasm::eq_import_func_name) {
     Ok(v) => v,
-    Err(_) => ImportMap.empty(std::wasm::hash_import_func_name, std::wasm::eq_import_func_name),
+    Err(_) => return 1,
   };
 
   // Link the wasm import `(import "env" "add1" ...)` to a host callback.
@@ -249,12 +247,9 @@ using BufferU8 = std::buffer::BufferU8;
 using U64Slice = std::arrays::Slice(u64);
 
 fn main () -> int {
-
-  let r: EngineResult = Engine.init_default();
-  if r.is_err() { return 1; }
-  let engine: Engine = match (r) {
+  let engine = match Engine.init_default() {
     Ok(v) => v,
-    Err(_) => Engine{ max_stack: 0, max_call_depth: 0, max_memory_pages: 0 },
+    Err(_) => return 1,
   };
 
   // Minimal wasm module:
@@ -271,11 +266,9 @@ fn main () -> int {
     10, 6, 1, 4, 0, 65, 7, 11
   ];
 
-  let buf_r = BufferU8.init(39);
-  if buf_r.is_err() { return 2; }
-  let mut buf: BufferU8 = match (buf_r) {
+  let mut buf = match BufferU8.init(39) {
     Ok(v) => v,
-    Err(_) => BufferU8.empty(),
+    Err(_) => return 2,
   };
   var i: i64 = 0;
   while i < 39 {
@@ -288,35 +281,28 @@ fn main () -> int {
   }
   let bytes: ByteSlice = buf.as_bytes();
 
-  let m_r: ModuleResult = engine.compile(bytes);
+  let mut m = match engine.compile(bytes) {
+    Ok(v) => v,
+    Err(_) => {
+      buf.drop();
+      return 2;
+    },
+  };
   buf.drop();
-  if m_r.is_err() { return 2; }
-  let mut m: Module = match (m_r) {
+
+  let mut inst = match m.instantiate() {
     Ok(v) => v,
-    Err(_) => Module.empty(),
+    Err(_) => return 3,
   };
 
-  let inst_r: InstanceResult = m.instantiate();
-  if inst_r.is_err() { return 3; }
-  let mut inst: Instance = match (inst_r) {
-    Ok(v) => v,
-    Err(_) => Instance.empty(),
-  };
-
-  let f_opt: Func? = inst.export_func("answer");
-  if f_opt == None { return 4; }
-  let f: Func = f_opt ?? Func{ index: 0 };
+  let Some(f) = inst.export_func("answer") else { return 4; };
 
   let args: U64Slice = { ptr: 0, len: 0 };
-  let call_r: CallResult = inst.call(f, args);
-  if call_r.is_err() { return 5; }
-
-  let out_opt: Val? = match (call_r) {
+  let out_opt = match inst.call(f, args) {
     Ok(v) => v,
-    Err(_) => None,
+    Err(_) => return 5,
   };
-  if out_opt == None { return 6; }
-  let out: Val = out_opt ?? Val.i32(0);
+  let Some(out) = out_opt else { return 6; };
 
   let got_opt: i32? = out.as_i32();
   if got_opt == None { return 7; }

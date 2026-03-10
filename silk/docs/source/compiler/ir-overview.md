@@ -134,7 +134,8 @@ multi-scalar values at function ABI boundaries (parameters and results) by
 lowering a single surface-language value into multiple scalar slots:
 
 - `string` is lowered as `{ ptr: u64, len: i64 }` and returns via `rax`/`rdx` on
-  `linux/x86_64` (see `docs/language/ext.md` and `docs/compiler/abi-libsilk.md`).
+  `linux/x86_64` (see [External declarations (`ext`)](?p=language/ext) and
+  [C ABI (`libsilk`)](?p=compiler/abi-libsilk)).
 - For the initial `struct` subset (see `docs/language/structs-impls-layout.md`),
   a struct value is lowered as 1+ scalar slots in source field order. Each
   field may contribute one or more slots (for example, `string` contributes

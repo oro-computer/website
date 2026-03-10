@@ -32,13 +32,13 @@ type-checks but uses a construct outside this subset, builds fail with
 The supported subset is documented in:
 
 - `silk` (1) (see the `build` command and its notes),
-- `?p=compiler/cli-silk`,
+- [`silk` CLI](?p=compiler/cli-silk),
 - and the feature-specific implementation-status sections throughout the reference docs.
 
 ## Source Layout
 
 - Silk source files use the `.slk` extension.
-- Package builds are driven by a manifest file named `silk.toml` (see `?p=compiler/package-manifests`).
+- Package builds are driven by a manifest file named `silk.toml` (see [Package manifests](?p=compiler/package-manifests)).
 - The default stdlib implementation is a directory tree rooted at `std/` and is imported via `import std::...;`.
 
 ## Standard Library
@@ -47,9 +47,9 @@ The `std::` package namespace is the primary stdlib surface. The compiler can au
 
 See:
 
-- `?p=std/overview` for module inventory and conventions,
-- `?p=std/conventions` for ownership and error-handling patterns,
-- `?p=compiler/cli-silk` for stdlib root selection and archive linking behavior.
+- [Standard library overview](?p=std/overview) for module inventory and conventions,
+- [Standard library conventions](?p=std/conventions) for ownership and error-handling patterns,
+- [`silk` CLI](?p=compiler/cli-silk) for stdlib root selection and archive linking behavior.
 
 ## Formal Silk
 
@@ -57,13 +57,13 @@ Formal Silk verification is an optional part of the toolchain. The verifier uses
 
 See:
 
-- `?p=language/formal-verification`
-- `?p=compiler/diagnostics` (verifier diagnostics)
+- [Formal verification](?p=language/formal-verification)
+- [Diagnostics](?p=compiler/diagnostics) (verifier diagnostics)
 
 ## See Also
 
-- `silk` (1)
-- `silk-build` (1), `silk-package` (1), `silk-check` (1), `silk-test` (1), `silk-doc` (1), `silk-man` (1), `silk-cc` (1)
-- `silk_compiler` (3), `silk_error` (3), `silk_bytes` (3), `silk_abi_get_version` (3)
-- `libsilk` (7)
-- `https://oro.computer/silk`
+- [`silk` (1)](?p=man/silk.1)
+- [`silk-build` (1)](?p=man/silk-build.1), [`silk-package` (1)](?p=man/silk-package.1), [`silk-check` (1)](?p=man/silk-check.1), [`silk-test` (1)](?p=man/silk-test.1), [`silk-doc` (1)](?p=man/silk-doc.1), [`silk-man` (1)](?p=man/silk-man.1), [`silk-cc` (1)](?p=man/silk-cc.1)
+- [`silk_compiler` (3)](?p=man/silk_compiler.3), [`silk_error` (3)](?p=man/silk_error.3), [`silk_bytes` (3)](?p=man/silk_bytes.3), [`silk_abi_get_version` (3)](?p=man/silk_abi_get_version.3)
+- [`libsilk` (7)](?p=man/libsilk.7)
+- [https://oro.computer/silk](https://oro.computer/silk)

@@ -35,6 +35,48 @@ In the current subset:
 
 ## Hash Set (`SetMap(T)`)
 
+### Example: membership and uniqueness
+
+```silk
+import std::set;
+
+type TagSet = std::set::SetMap(u64);
+
+fn main () -> int {
+  let mut tags = match TagSet.init(4) {
+    Ok(v) => v,
+    Err(_) => return 1,
+  };
+
+  let first = match tags.insert(7) {
+    Ok(v) => v,
+    Err(_) => {
+      tags.drop();
+      return 2;
+    },
+  };
+  let second = match tags.insert(7) {
+    Ok(v) => v,
+    Err(_) => {
+      tags.drop();
+      return 3;
+    },
+  };
+
+  if !first || second {
+    tags.drop();
+    return 4;
+  }
+  if !tags.contains(7) || tags.len() != 1 {
+    tags.drop();
+    return 5;
+  }
+
+  tags.drop();
+  return 0;
+}
+```
+
 ### Core API
 
 `SetMap` requires hashing and equality functions. For common element types,
@@ -84,6 +126,60 @@ Complexity expectations:
 ## Ordered Set (`TreeSet(T)`)
 
 `TreeSet(T)` is an ordered set. It requires an ordering function.
+
+### Example: sorted iteration
+
+```silk
+import std::set;
+
+type SortedInts = std::set::TreeSet(int);
+
+fn cmp_int (a: int, b: int) -> int {
+  if a < b { return -1; }
+  if a > b { return 1; }
+  return 0;
+}
+
+fn main () -> int {
+  let mut values = SortedInts.init(cmp_int);
+
+  let added3 = match values.insert(3) {
+    Ok(v) => v,
+    Err(_) => {
+      values.drop();
+      return 1;
+    },
+  };
+  let added1 = match values.insert(1) {
+    Ok(v) => v,
+    Err(_) => {
+      values.drop();
+      return 2;
+    },
+  };
+  let added2 = match values.insert(2) {
+    Ok(v) => v,
+    Err(_) => {
+      values.drop();
+      return 3;
+    },
+  };
+
+  if !added3 || !added1 || !added2 {
+    values.drop();
+    return 4;
+  }
+
+  let mut it = values.iter();
+  if it.next() != Some(1) { values.drop(); return 5; }
+  if it.next() != Some(2) { values.drop(); return 6; }
+  if it.next() != Some(3) { values.drop(); return 7; }
+  if it.next() != None { values.drop(); return 8; }
+
+  values.drop();
+  return 0;
+}
+```
 
 ### Core API
 

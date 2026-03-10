@@ -80,11 +80,9 @@ type Map = std::map::HashMap(u64, int);
 type InitResult = std::result::Result(Map, std::memory::AllocFailed);
 
 fn main () -> int {
-  let init_r: InitResult = Map.init(16);
-  if init_r.is_err() { return 1; }
-  let mut m: Map = match (init_r) {
-    InitResult::Ok(v) => v,
-    InitResult::Err(_) => Map.empty(),
+  let mut m = match Map.init(16) {
+    Ok(v) => v,
+    Err(_) => return 1,
   };
   let put_r = m.put(1, 10);
   if put_r.is_err() { m.drop(); return 2; }
@@ -109,11 +107,9 @@ fn hash_u64 (k: u64) -> u64 { return k; }
 fn eq_u64 (a: u64, b: u64) -> bool { return a == b; }
 
 fn main () -> int {
-  let init_r: InitResult = Map.init_with(16, hash_u64, eq_u64);
-  if init_r.is_err() { return 1; }
-  let mut m: Map = match (init_r) {
-    InitResult::Ok(v) => v,
-    InitResult::Err(_) => Map.empty_with(hash_u64, eq_u64),
+  let mut m = match Map.init_with(16, hash_u64, eq_u64) {
+    Ok(v) => v,
+    Err(_) => return 1,
   };
   m.drop();
   return 0;

@@ -1,13 +1,14 @@
 # `std::io`
 
-Status: **Design + initial implementation**. Basic stdin reads and stdout/stderr writes
-are implemented in `std/io.slk` via `std::runtime::io`; buffered and
-async I/O remain future work.
+Status: **Design + initial implementation**. Basic stdin reads, stdout/stderr
+writes, tty helpers, and initial async-aware wrappers are implemented today.
+Buffered I/O and broader async stream/file integration remain future work.
 
 `std::io` provides console and basic stream I/O.
 
-Hosted baseline: POSIX file descriptors and blocking I/O. Future extensions may
-include async integration.
+Hosted baseline: POSIX file descriptors and blocking I/O, plus initial
+hosted async integration through `std::io::async` and
+`std::runtime::event_loop`.
 
 See also:
 
@@ -107,8 +108,11 @@ Notes:
   Abortable variants (`read_abortable` / `write_abortable`) accept an optional
   `std::abort_controller::AbortSignalBorrow` and return `IOErrorKind::Aborted`
   when cancelled.
-  Note: in the current subset, aborts are observed before starting an I/O
-  attempt; they do not interrupt an in-flight operation.
+  Note: in the current subset, these `read` / `write` wrappers observe aborts
+  conservatively around each I/O attempt; they do not interrupt an in-flight
+  read/write operation. Lower-level readiness waits in
+  `std::runtime::event_loop` can be more responsive when a pollable abort fd is
+  available.
 - `std::io::stream` provides task-based adapters that connect POSIX/WASI file
   descriptors (`fd`) with `std::stream` (`ReadableStream` / `WritableStream`):
   - `std::io::stream::pipe_fd_to_stream` / `pipe_fd_to_stream_abortable`
@@ -141,15 +145,12 @@ fn main () -> int {
   }
 
   while true {
-    let r: std::io::IOResult = std::io::read_stdin(std::arrays::ByteSlice{ ptr: buf, len: 64 });
-    if r.is_err() {
-      std::runtime::mem::free(buf);
-      return 3;
-    }
-
-    let n: int = match (r) {
+    let n = match std::io::read_stdin(std::arrays::ByteSlice{ ptr: buf, len: 64 }) {
       std::io::IOResult::Ok(v) => v,
-      std::io::IOResult::Err(_) => 0,
+      std::io::IOResult::Err(_) => {
+        std::runtime::mem::free(buf);
+        return 3;
+      },
     };
     if n == 0 {
       break;

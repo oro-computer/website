@@ -31,7 +31,7 @@ When explicit input files are used (no `--package`), the `silk` CLI may load add
 - `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`).
 - `--debug`, `-g` — enable debug build mode (also enables extra Formal Silk debug output when verification fails).
 - `--feature <spec>`, `-F<spec>` — enable a build feature for `attr(feature="...")` queries and declaration gating. Repeatable.
-  - Spec forms: `NAME` or `NAME=VALUE` (see `?p=language/attributes`).
+  - Spec forms: `NAME` or `NAME=VALUE` (see [Attributes](?p=language/attributes)).
   - For package builds, you may target a specific package with `PKG/NAME` or
     `PKG/NAME=VALUE` (for example `ui/tui` or `ui/tui=false`).
 - `-O <0-3>` — set optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`). `-O1`+ prunes unused extern symbols before code generation and prunes unreachable functions in executable builds (typically reducing output size).
@@ -74,6 +74,6 @@ silk test --package . --filter url
 
 ## See Also
 
-- `silk` (1), `silk-build` (1)
-- `?p=compiler/cli-silk`
-- `?p=language/testing`
+- [`silk` (1)](?p=man/silk.1), [`silk-build` (1)](?p=man/silk-build.1)
+- [`silk` CLI](?p=compiler/cli-silk)
+- [Testing](?p=language/testing)

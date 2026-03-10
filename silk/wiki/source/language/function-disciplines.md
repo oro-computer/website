@@ -23,4 +23,4 @@ task fn worker (x: int) -> int {
 ## See also
 
 - Canonical doc: `docs/language/function-disciplines.md`
-- Concurrency: `docs/wiki/language/concurrency.md`
+- Concurrency: `docs/language/concurrency.md`

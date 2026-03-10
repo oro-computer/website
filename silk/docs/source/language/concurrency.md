@@ -12,6 +12,47 @@ intended to provide **structured concurrency**.
 - The compiler is intended to enforce task-safety rules when values cross task
   boundaries (Send/Sync-like constraints).
 
+## Examples
+
+### `task` inside `async fn` + `yield *`
+
+```silk
+task fn worker (x: int) -> int {
+  return x + 1;
+}
+
+async fn main () -> int {
+  task {
+    let values: int[] = yield * worker(10);
+    return values[0];
+  }
+}
+```
+
+### `Task(Promise(T))` composition: `await * yield *`
+
+```silk
+async fn add1 (x: int) -> int {
+  return x + 1;
+}
+
+task fn produce_promises (n: int) -> Promise(int) {
+  var i: int = 0;
+  while i < n {
+    yield add1(i);
+    i = i + 1;
+  }
+  return add1(n);
+}
+
+async fn main () -> int {
+  task {
+    let values: int[] = await * yield * produce_promises(3);
+    return values[0];
+  }
+}
+```
+
 ## Implementation Status (Current Compiler)
 
 This document describes the **language design** for concurrency and the subset
@@ -115,9 +156,9 @@ must be synchronized by the program.
   - `await` is a true suspension point backed by a single-threaded executor
     (fibers), so awaiting a pending `Promise(T)` can park and resume without
     blocking the OS thread.
-  - The current implementation uses stackful coroutines in `libsilk_rt`
-    (`src/silk_rt_async.c`) rather than a compiler state-machine coroutine
-    transform. The long-term design remains a compiler transform + stable
+  - The current implementation uses stackful coroutines in the bundled hosted
+    runtime rather than a compiler state-machine coroutine transform. The
+    long-term design remains a compiler transform + stable
     `std::runtime::event_loop` surface (see `docs/compiler/async-runtime.md`).
   - The shipped executor is **thread-affine**:
     - only the thread that created the executor may spawn and drive stackful
@@ -141,11 +182,21 @@ must be synchronized by the program.
   explicit synchronization for any shared mutation.
 - A small initial set of standard-library primitives exists now under
   `std::task` and `std::sync` for the hosted `linux/x86_64` subset. These are
-  mostly blocking primitives today; integrating OS-facing std modules with the
-  async executor/event loop is follow-up work.
+  mostly blocking primitives today.
+  - Initial async-aware stdlib surfaces already exist under
+    `std::runtime::event_loop` and `std::io::async`.
+  - Broader integration of OS-facing std modules with the async executor/event
+    loop is still follow-up work.
 - For cooperative cancellation across tasks and `async` functions, `std::`
   provides WHATWG-style abort signals via `std::abort_controller` (see
   `docs/std/abort-controller.md`).
+
+Important current rule for regions:
+
+- Do not share the same `Region` across concurrent tasks. `Region` is a
+  copyable handle, but concurrent cursor updates are not specified as
+  synchronized in the current subset. Treat regions as task-local allocation
+  contexts unless and until explicit cross-task semantics are documented.
 
 ## Core Keywords: `async` and `task`
 

@@ -16,9 +16,11 @@ values) and `await` (promise values) are implemented in the current subset
 now ships a bring-up async runtime (single-threaded executor + stackful
 coroutines in `libsilk_rt`) so `await` can suspend and resume without blocking
 the OS thread. A compiler state-machine coroutine transform, structured
-concurrency scope semantics, and task-safety (`Send`/`Sync`)-like rules remain
-future work. See `docs/language/concurrency.md` for the concurrency model and
-implementation status.
+concurrency scope semantics, and richer Send/Sync-style reasoning remain future
+work. The current compiler already enforces an initial task-boundary safety
+rule (`E2037`) that rejects non-opaque references across `task fn` boundaries.
+See `docs/language/concurrency.md` for the concurrency model and implementation
+status.
 
 ## Overview
 
@@ -33,14 +35,44 @@ The language design distinguishes:
 - `async task fn` — async function executed as a separate task (self-contained
   worker).
 
+## Example
+
+```silk
+pure fn add (x: int, y: int) -> int {
+  return x + y;
+}
+
+task fn worker (x: int) -> int {
+  return add(x, 1);
+}
+
+async fn answer () -> int {
+  return 42;
+}
+
+async fn main () -> int {
+  let p = answer();
+
+  task {
+    let values: int[] = yield * worker(41);
+    let v: int = await p;
+    if values[0] != 42 { return 1; }
+    if v != 42 { return 2; }
+    return 0;
+  }
+}
+```
+
 ## Intended Call Rules (Design)
 
 The checker is expected to enforce:
 
 - `pure` code may call only `pure` code (and cannot perform I/O or mutation
   outside local, non-escaping temporaries).
-- `task` code may call `task` and `pure` code, and must satisfy task-safety
-  rules for captured/argument data.
+- `task` code may call `task`, `pure`, and `async` code, but any resulting
+  `Task(T)` / `Promise(T)` handles must be consumed explicitly with
+  `yield` / `yield *` / `await`, and task-boundary argument/result data must
+  satisfy the current task-safety rules.
 - `async` code may `await` other async operations; it may call `pure` code and
   may offload blocking work via explicit adapters (planned intrinsics).
 
@@ -109,8 +141,8 @@ Today:
   - By default, each `task fn` call spawns a dedicated OS thread.
   - When a `task fn` / `async task fn` is annotated with `attr(task=pool)` (or
     `attr(task_pool)`), calls are scheduled on the global task pool instead.
-  - On hosted `linux/x86_64`, the compiler ships a bring-up async runtime
-    (`src/silk_rt_async.c`) so `await` is a true suspension point:
+  - On hosted `linux/x86_64`, the compiler ships a bundled bring-up async
+    runtime so `await` is a true suspension point:
     - awaiting a pending `Promise(T)` parks the current fiber and allows other
       runnable fibers to execute (it does not block the OS thread),
     - outside the executor owner thread (including when no executor is active),

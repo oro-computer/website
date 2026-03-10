@@ -104,7 +104,9 @@ Embedders are expected to:
 - drive compilation by creating a `SilkCompiler` handle, adding source buffers, and invoking `silk_compiler_build`,
 - inspect error details via `silk_compiler_last_error` and `silk_error_format`.
 
-This manpage summarizes the ABI; the normative specification lives at `?p=compiler/abi-libsilk`.
+This manpage summarizes the ABI; the normative specification lives at [C ABI (`libsilk`)](?p=compiler/abi-libsilk).
+
+For the shortest working path from “I have a host application” to “I can compile Silk code”, start with [`libsilk` quickstart](?p=compiler/libsilk-quickstart).
 
 ## Types
 
@@ -279,7 +281,7 @@ bool silk_compiler_set_debug(SilkCompiler *compiler,
   - debug-mode lowering for supported native outputs (e.g. stack traces on
     failed `assert` for `linux/x86_64`),
   - additional Z3 debug output and `.smt2` dump emission on failing Formal Silk
-    verification (see `?p=language/formal-verification`).
+    verification (see [Formal verification](?p=language/formal-verification)).
 - `--debug` is currently incompatible with `--noheap`.
 
 ### No-heap build mode (`noheap`)
@@ -622,7 +624,7 @@ size_t silk_error_format(const SilkError *error,
   - always NUL‑terminates if `buffer_len > 0`,
   - returns the number of bytes that would be required to format the full message, **excluding** the terminating NUL.
 - If the return value is greater than or equal to `buffer_len`, the message was truncated.
-- The formatted message is intended for end-user display and follows the standard compiler diagnostic format (error code + optional file/line/column + caret snippet) as specified at `?p=compiler/diagnostics`.
+- The formatted message is intended for end-user display and follows the standard compiler diagnostic format (error code + optional file/line/column + caret snippet) as specified at [Diagnostics](?p=compiler/diagnostics).
 
 Callers can use a two‑step pattern:
 
@@ -682,11 +684,11 @@ compiler:
 
 - On `linux/x86_64`, the compiler can emit native ELF64 executables, objects,
   static libraries, and shared libraries for the current IR subset documented
-  in `?p=compiler/abi-libsilk` (structured control flow, helper calls,
+  in [C ABI (`libsilk`)](?p=compiler/abi-libsilk) (structured control flow, helper calls,
   limited `string`/`struct`/optional support, and a limited FFI subset).
 - On `wasm32-unknown-unknown` and `wasm32-wasi`, executable builds emit `.wasm`
   modules for the current IR-backed wasm32 subset documented in
-  `?p=compiler/abi-libsilk` (including multi-module builds, export-only
+  [C ABI (`libsilk`)](?p=compiler/abi-libsilk) (including multi-module builds, export-only
   modules, and `ext` imports under `env.<name>`).
 - On other targets, no code generation backend is available yet.
 - For well‑typed programs outside these subsets, `silk_compiler_build` fails
@@ -698,6 +700,138 @@ When Formal Silk verification syntax is present (for example `#require`,
 Formal Silk verifier and fails the build if verification conditions cannot be
 proven. The verifier is currently skipped for `std::...` modules until it
 covers the full std surface.
+
+## Examples
+
+### Minimal executable build
+
+```c
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "silk.h"
+
+static SilkString silk_cstr(const char *s) {
+  SilkString out;
+  out.ptr = (char *)s;
+  out.len = (int64_t)strlen(s);
+  return out;
+}
+
+int main(void) {
+  SilkCompiler *compiler = silk_compiler_create();
+  if (!compiler) {
+    return 1;
+  }
+
+  if (!silk_compiler_add_source_buffer(
+        compiler,
+        silk_cstr("main.slk"),
+        silk_cstr("fn main() -> int { return 0; }\n"))) {
+    silk_compiler_destroy(compiler);
+    return 1;
+  }
+
+  if (!silk_compiler_build(
+        compiler,
+        SILK_OUTPUT_EXECUTABLE,
+        silk_cstr("build/hello"))) {
+    silk_compiler_destroy(compiler);
+    return 1;
+  }
+
+  silk_compiler_destroy(compiler);
+  return 0;
+}
+```
+
+### In-memory wasm build
+
+```c
+#include <stdint.h>
+#include <string.h>
+
+#include "silk.h"
+
+static SilkString silk_cstr(const char *s) {
+  SilkString out;
+  out.ptr = (char *)s;
+  out.len = (int64_t)strlen(s);
+  return out;
+}
+
+int main(void) {
+  SilkCompiler *compiler = silk_compiler_create();
+  SilkBytes bytes = {0};
+  int rc = 1;
+
+  if (!compiler) {
+    return 1;
+  }
+
+  if (!silk_compiler_set_target(compiler, silk_cstr("wasm32-unknown-unknown"))) {
+    goto done;
+  }
+
+  if (!silk_compiler_add_source_buffer(
+        compiler,
+        silk_cstr("main.slk"),
+        silk_cstr("fn main() -> int { return 7; }\n"))) {
+    goto done;
+  }
+
+  if (!silk_compiler_build_to_bytes(
+        compiler,
+        SILK_OUTPUT_EXECUTABLE,
+        &bytes)) {
+    goto done;
+  }
+
+  if (bytes.len >= 4 && memcmp(bytes.ptr, "\0asm", 4) == 0) {
+    rc = 0;
+  }
+
+done:
+  silk_bytes_free(&bytes);
+  silk_compiler_destroy(compiler);
+  return rc;
+}
+```
+
+### Two-pass error formatting
+
+```c
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "silk.h"
+
+static SilkString silk_cstr(const char *s) {
+  SilkString out;
+  out.ptr = (char *)s;
+  out.len = (int64_t)strlen(s);
+  return out;
+}
+
+static void print_last_error(SilkCompiler *compiler) {
+  SilkError *err = silk_compiler_last_error(compiler);
+  size_t need = silk_error_format(err, NULL, 0);
+  char *buf = (char *)malloc(need + 1);
+  if (!buf) {
+    return;
+  }
+
+  silk_error_format(err, buf, need + 1);
+  fprintf(stderr, "%s\n", buf);
+  free(buf);
+}
+```
+
+Use that helper immediately after a failed compiler operation; the `SilkError`
+object is overwritten by later calls on the same compiler instance.
 
 ## Environment
 
@@ -714,8 +848,8 @@ covers the full std surface.
 
 ## See Also
 
-- `silk` (1) — Silk language compiler CLI.
-- `silk_abi_get_version` (3), `silk_compiler` (3), `silk_error` (3), `silk_bytes` (3)
-- `silk` (7)
-- `?p=compiler/abi-libsilk` — normative ABI spec.
+- [`silk` (1)](?p=man/silk.1) — Silk language compiler CLI.
+- [`silk_abi_get_version` (3)](?p=man/silk_abi_get_version.3), [`silk_compiler` (3)](?p=man/silk_compiler.3), [`silk_error` (3)](?p=man/silk_error.3), [`silk_bytes` (3)](?p=man/silk_bytes.3)
+- [`silk` (7)](?p=man/silk.7)
+- [C ABI (`libsilk`)](?p=compiler/abi-libsilk) — normative ABI spec.
 - `silk.h` — C99 ABI header in the source tree.

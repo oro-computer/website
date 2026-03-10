@@ -358,7 +358,7 @@ The initial implementation is intentionally smaller and focuses on:
       - matching on optionals via `match <scrutinee> { None => <expr>, Some(<name|_>) => <expr>, }` (exactly one `None` arm and one `Some(...)` arm; arm bodies are expressions),
       - unwrapping optionals via `??` with short-circuit evaluation of the fallback expression (including unwrapping `T??` to `T?`),
       - and passing/returning optionals between helpers at ABI boundaries as `(bool tag, payload0, payload1, ...)`, where the payload slots follow the lowering of the underlying non-optional type (for example `string?` is `(bool, u64 ptr, i64 len)`).
-      - for non-executable outputs, exported functions may accept and return these optionals; see `docs/compiler/abi-libsilk.md` for the exact C ABI mapping.
+      - for non-executable outputs, exported functions may accept and return these optionals; see [C ABI (`libsilk`)](?p=compiler/abi-libsilk) for the exact C ABI mapping.
     - on `linux/x86_64`, the current backend also supports a limited external call subset:
       - top-level `ext` declarations of external functions (`ext name = fn (T, ...) -> R;`) may be called like normal functions from Silk code,
       - these calls are supported for all output kinds:
@@ -589,7 +589,7 @@ Top-level commands:
     - `--c-header <path>` writes a generated C header at `<path>` that declares the root package’s exported symbols (`export fn` prototypes and `export let` extern declarations) for consumption from C/C++,
     - this option is only meaningful for non-executable outputs (`--kind object|static|shared`) and is rejected for `--kind executable`,
     - to keep the C ABI surface obvious and stable, `--c-header` requires the *root package* (the package of the first input module) to be the **global package** (i.e. omit `package ...;` in the exported library’s sources),
-    - the generated header encodes the current ABI rules described in `docs/compiler/abi-libsilk.md`, including:
+    - the generated header encodes the current ABI rules described in [C ABI (`libsilk`)](?p=compiler/abi-libsilk), including:
       - `string` values use `SilkString { ptr, len }` (from `silk.h`),
       - optionals and 3+ slot structs are lowered at call boundaries as multiple scalar parameters (so C prototypes for such parameters use flattened arguments rather than by-value C struct parameters).
   - For programs outside the supported subset that nonetheless type-check, exits non-zero with a clear `E4001` / `E4002` diagnostic (instead of a generic “code generation is not implemented yet” message).

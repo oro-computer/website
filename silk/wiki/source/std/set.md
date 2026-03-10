@@ -31,11 +31,9 @@ type InitResult = std::result::Result(Set, std::memory::AllocFailed);
 type InsertResult = std::result::Result(bool, std::memory::OutOfMemory);
 
 fn main () -> int {
-  let init_r: InitResult = Set.init(4);
-  if init_r.is_err() { return 1; }
-  let mut s: Set = match (init_r) {
+  let mut s = match Set.init(4) {
     InitResult::Ok(v) => v,
-    InitResult::Err(_) => Set.empty(),
+    InitResult::Err(_) => return 1,
   };
 
   let insert_r: InsertResult = s.insert(1);

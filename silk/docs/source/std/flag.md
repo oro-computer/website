@@ -136,25 +136,17 @@ fn main (argc: int, argv: u64) -> int {
   let a = std::args::Args.init(argc, argv);
   let mut fs = std::flag::FlagSet.init();
 
-  let verbose_r = fs.bool({ name: "verbose", alias: "v", default_value: false, usage: "enable verbose logging" });
-  let out_r = fs.string({ name: "out", alias: "", default_value: "out.txt", usage: "output path" });
-  let input_r = fs.positional_string("input", "input file");
-
-  if verbose_r.is_err() { fs.drop(); return 2; }
-  if out_r.is_err() { fs.drop(); return 2; }
-  if input_r.is_err() { fs.drop(); return 2; }
-
-  let verbose: std::flag::BoolFlag = match (verbose_r) {
+  let verbose = match fs.bool({ name: "verbose", alias: "v", default_value: false, usage: "enable verbose logging" }) {
     Ok(v) => v,
-    Err(_) => {},
+    Err(_) => { fs.drop(); return 2; },
   };
-  let out: std::flag::StringFlag = match (out_r) {
+  let out = match fs.string({ name: "out", alias: "", default_value: "out.txt", usage: "output path" }) {
     Ok(v) => v,
-    Err(_) => {},
+    Err(_) => { fs.drop(); return 2; },
   };
-  let input: std::flag::PosString = match (input_r) {
+  let input = match fs.positional_string("input", "input file") {
     Ok(v) => v,
-    Err(_) => {},
+    Err(_) => { fs.drop(); return 2; },
   };
 
   let parsed_r = fs.parse_args(a, 1);

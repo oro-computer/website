@@ -82,8 +82,8 @@ Example:
 
 ```silk
 fn main () -> int {
-  let x: int = 0;
-  let y: int = match (x) {
+  let x = 0;
+  let y = match (x) {
     0 => 1,
     _ => 2,
   };
@@ -267,9 +267,9 @@ import std::result;
 import std::strings::String;
 
 fn main () -> int {
-  let s: String = match String.from_string("hello") {
+  let s = match String.from_string("hello") {
     Ok(v) => v,
-    Err(_) => String.empty(),
+    Err(_) => return 1,
   };
   return s.len as int;
 }

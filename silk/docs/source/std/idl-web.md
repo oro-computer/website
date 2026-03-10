@@ -50,6 +50,40 @@ The `Document` API exposes:
 All names and raw values are represented as `SpanId`s that can be rendered to
 `string` views via `Document.span_text(span_id)`.
 
+## Example: parse and inspect an interface
+
+```silk
+import std::idl::web;
+import std::io::println;
+
+fn main () -> int {
+  let src = `[Exposed=Window]
+interface Console {
+  undefined log(DOMString message);
+};`;
+
+  let doc = match std::idl::web::parse(src) {
+    Ok(v) => v,
+    Err(err) => {
+      println("parse failed at {d}:{d}: {s}", err.line, err.column, err.message());
+      return 1;
+    },
+  };
+
+  if doc.def_count() != 1 {
+    return 2;
+  }
+
+  let name_span = match doc.def_name(0) {
+    Some(v) => v,
+    None => return 3,
+  };
+
+  println(doc.span_text(name_span));
+  return 0;
+}
+```
+
 ## Current Grammar Coverage (Initial)
 
 Implemented as a **lenient** parser that can preserve and skip unknown

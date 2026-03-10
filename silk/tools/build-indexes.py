@@ -168,6 +168,7 @@ STD_ORDER = [
     "std/ssh2",
     # Runtime + concurrency
     "std/runtime",
+    "std/runtime-event-loop",
     "std/signal",
     "std/task",
     "std/sync",
@@ -221,6 +222,7 @@ COMPILER_ORDER = [
     "compiler/architecture",
     "compiler/implementation-status",
     "compiler/cli-silk",
+    "compiler/libsilk-quickstart",
     "compiler/package-manifests",
     "compiler/package-distribution",
     "compiler/build-scripts",

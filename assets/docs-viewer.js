@@ -102,6 +102,41 @@
     }
   }
 
+  function getRepoPathRef(raw) {
+    if (!githubRepo || !githubRef) return null;
+    const path = normalizeRelPath(raw);
+    if (!path) return null;
+
+    const repoPath =
+      path === "build.zig" ||
+      path === "build.zig.zon" ||
+      path === "src" ||
+      path === "tests" ||
+      path === "examples" ||
+      path === "include" ||
+      path === "vendor" ||
+      path === "c-tests" ||
+      path === "std" ||
+      path.startsWith("src/") ||
+      path.startsWith("tests/") ||
+      path.startsWith("examples/") ||
+      path.startsWith("include/") ||
+      path.startsWith("vendor/") ||
+      path.startsWith("c-tests/") ||
+      path.startsWith("std/");
+
+    if (!repoPath) return null;
+
+    const isFile = /\.[a-z0-9]+$/i.test(path);
+    const base = `https://github.com/${githubRepo}`;
+    return {
+      path,
+      href: isFile
+        ? `${base}/blob/${githubRef}/${path}`
+        : `${base}/tree/${githubRef}/${path}`,
+    };
+  }
+
   function normalizeRelPath(input) {
     if (!input) return null;
     let path = String(input);
@@ -859,25 +894,15 @@
         if (!code.isConnected) continue;
       }
 
-      // Convert repository-relative example paths like `examples/foo.slk` into
-      // clickable GitHub links when the current docs viewer declares a repo.
-      if (
-        githubRepo &&
-        githubRef &&
-        (raw.startsWith("examples/") || raw.startsWith("tests/"))
-      ) {
-        const isFile = /\.[a-z0-9]+$/i.test(raw);
-        const base = `https://github.com/${githubRepo}`;
-        const href = isFile
-          ? `${base}/blob/${githubRef}/${raw}`
-          : `${base}/tree/${githubRef}/${raw}`;
-
+      // Convert repository-relative source/example paths into clickable GitHub links.
+      const repoRef = getRepoPathRef(raw);
+      if (repoRef) {
         const a = document.createElement("a");
         a.className = "docs-inline-code";
-        a.href = href;
+        a.href = repoRef.href;
         a.target = "_blank";
         a.rel = "noreferrer";
-        a.textContent = raw;
+        a.textContent = repoRef.path;
         code.replaceWith(a);
         continue;
       }

@@ -160,7 +160,8 @@ responsible for lowering Silk IR values into the wasm value stack.
   not.
 
 The module/name convention and supported import surface must be documented in
-`docs/language/ext.md` (WASM-specific subsection) and in CLI docs.
+[External declarations (`ext`)](?p=language/ext) (WASM-specific subsection) and in
+[CLI reference](?p=compiler/cli-silk).
 
 ### WASI integration
 

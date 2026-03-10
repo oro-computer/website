@@ -148,44 +148,36 @@ import std::http;
 import std::net;
 import std::io::println;
 
-fn trap (T;) -> T { std::abort(); }
-
 fn main () -> int {
   let addr = net::SocketAddrV4.loopback(8080);
 
-  let listener_r = net::TcpListener.listen(addr, 16);
-  if listener_r.is_err() {
-    println("listen failed");
-    return 1;
-  }
-  let mut listener: net::TcpListener = match (listener_r) {
+  let mut listener = match net::TcpListener.listen(addr, 16) {
     Ok(v) => v,
-    Err(_) => trap(net::TcpListener;),
+    Err(_) => {
+      println("listen failed");
+      return 1;
+    },
   };
 
   println("listening on 127.0.0.1:8080 (try: curl http://127.0.0.1:8080/)");
 
-  let stream_r = listener.accept();
-  if stream_r.is_err() {
-    listener.close();
-    println("accept failed");
-    return 2;
-  }
-  let stream: net::TcpStream = match (stream_r) {
+  let stream = match listener.accept() {
     Ok(v) => v,
-    Err(_) => trap(net::TcpStream;),
+    Err(_) => {
+      listener.close();
+      println("accept failed");
+      return 2;
+    },
   };
 
   let mut conn = http::Connection.from_stream(stream);
-  let req_r = conn.read_request();
-  if req_r.is_err() {
-    conn.close();
-    listener.close();
-    return 3;
-  }
-  let req: http::Request = match (req_r) {
+  let req = match conn.read_request() {
     Ok(v) => v,
-    Err(_) => trap(http::Request;),
+    Err(_) => {
+      conn.close();
+      listener.close();
+      return 3;
+    },
   };
 
   println("got {s} {s}", req.method(), req.target());
@@ -223,11 +215,9 @@ fn main () -> int {
   let msg_ptr: u64 = std::runtime::mem::string_ptr(msg);
   let msg_len: i64 = std::runtime::mem::string_len(msg);
 
-  let out_r = std::buffer::BufferU8.init(32);
-  if out_r.is_err() { return 2; }
-  let mut out: std::buffer::BufferU8 = match (out_r) {
+  let mut out = match std::buffer::BufferU8.init(32) {
     Ok(v) => v,
-    Err(_) => std::buffer::BufferU8.empty(),
+    Err(_) => return 2,
   };
 
   let hash_err: std::crypto::CryptoError? = std::crypto::hash::blake2b(

@@ -78,3 +78,31 @@ Important current limitation (compiler subset):
 - The compiler does not yet implement packed C struct layout. As a result,
   these bindings use `u64` pointers for C pointer parameters and do not rely on
   passing user-defined structs by value to C.
+
+## Example: minimal OpenGL import
+
+For downstream users, the first step is usually proving that the generated
+bindings resolve and that the correct loader library is linked:
+
+```silk
+import std::graphics::opengl;
+import std::io::println;
+
+fn main () -> int {
+  println("std::graphics::opengl is linked");
+  return 0;
+}
+```
+
+Hosted build:
+
+```bash
+silk build hello_gl.slk -o build/hello_gl --needed libGL.so.1
+```
+
+Equivalent loader flags for the other generated namespaces:
+
+```bash
+silk build hello_gles.slk -o build/hello_gles --needed libGLESv2.so.2
+silk build hello_vk.slk -o build/hello_vk --needed libvulkan.so.1
+```

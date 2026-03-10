@@ -56,6 +56,13 @@ Conceptually, a `Region` value contains:
 Copying a `Region` value copies the handle; copies refer to the same backing
 store and cursor.
 
+Concurrency note (current subset):
+
+- The docs do **not** guarantee that concurrent allocation through copies of the
+  same `Region` is synchronized. Even though `Region` may be passed as a value,
+  downstream code should treat a region as task-local and avoid sharing one
+  region across concurrent tasks.
+
 ### Declaring a region
 
 A region declaration has the surface form:
@@ -125,6 +132,13 @@ fn main () -> int {
   return 0;
 }
 ```
+
+Important current limitation:
+
+- Treat allocations made inside `with <bytes> { ... }` as block-scoped. The
+  compiler does not yet reject every escape of a pointer / `&Struct` allocated
+  from an anonymous region, but the cursor is reset when the anonymous region
+  is reused, so escaped values are not a stable contract.
 
 Rules (current subset):
 
