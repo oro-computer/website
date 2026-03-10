@@ -184,8 +184,8 @@ Runtime behavior (current compiler subset):
 
 Notes:
 
-- Failed assertions are currently isolated by the `silk test` runner (each
-  test runs in its own process). Future work may allow reporting failed
-  assertions without process isolation (for example by lowering `assert` to a
-  typed error in test contexts).
+- Failed assertions are already isolated by the `silk test` runner (each test
+  runs in its own process), so one crashing test does not abort the whole test
+  suite. Outside `silk test`, failed assertions still abort the current
+  program/process.
 - See also: `docs/language/testing.md`.

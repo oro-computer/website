@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-03-10T15:26:53+00:00
+Generated: 2026-03-10T16:50:08+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -6229,9 +6229,9 @@ Syntax:
 @throws <description...>
 ```
 
-Note: the language does not yet have a stable error type; `@throws` is
-documentation-only until `Result(T, E)` and error conventions are fully
-implemented.
+Note: Silk now has typed errors and `Result(T, E)` conventions. `@throws`
+remains documentation-only because doc comments are not yet checked against
+function signatures.
 
 ### `@external`
 
@@ -11189,10 +11189,10 @@ Runtime behavior (current compiler subset):
 
 Notes:
 
-- Failed assertions are currently isolated by the `silk test` runner (each
-  test runs in its own process). Future work may allow reporting failed
-  assertions without process isolation (for example by lowering `assert` to a
-  typed error in test contexts).
+- Failed assertions are already isolated by the `silk test` runner (each test
+  runs in its own process), so one crashing test does not abort the whole test
+  suite. Outside `silk test`, failed assertions still abort the current
+  program/process.
 - See also: `docs/language/testing.md`.
 
 ==============================================================================
@@ -12534,23 +12534,32 @@ The checker is expected to enforce:
   `Task(T)` / `Promise(T)` handles must be consumed explicitly with
   `yield` / `yield *` / `await`, and task-boundary argument/result data must
   satisfy the current task-safety rules.
-- `async` code may `await` other async operations; it may call `pure` code and
-  may offload blocking work via explicit adapters (planned intrinsics).
+- `async` code may `await` other async operations; it may call `pure` code and,
+  in the hosted subset, may use explicit adapters such as `std::task`,
+  `std::io::async`, and `std::runtime::event_loop` to hand waiting work to the
+  runtime.
 
 Crossing discipline boundaries is intended to be explicit and diagnostic-driven
 (for example suggesting the correct adapter/intrinsic).
 
-## Standard Intrinsics
+## Current Hosted Adapters
 
-The standard library is expected to provide typed adapters to cross boundaries
-safely (names and exact signatures are design work):
+The in-tree stdlib already exposes a small hosted adapter surface for common
+discipline crossings:
 
-- lifting sync work onto a task pool,
-- presenting a task as an async operation,
-- running blocking work from async without stalling the event loop,
-- structured spawn/join primitives.
+- awaitable sleep via
+  `std::task::{sleep_ms_async,sleep_async,sleep_until_async}`,
+- fd readiness and abort-aware waits via `std::runtime::event_loop`,
+- minimal async fd wrappers via
+  `std::io::async::{read,write,read_abortable,write_abortable}`,
+- task-pool scheduling selection via `attr(task=pool)` / `attr(task_pool)` on
+  `task fn` and `async task fn`.
 
-These APIs are not yet present in the in-tree `std/` implementation.
+Still missing from the broader design:
+
+- a first-class `run_blocking` / task-to-promise bridge,
+- general structured spawn/join helpers,
+- richer scheduler-backed structured-concurrency scopes.
 
 ## Implementation Notes
 
@@ -16060,8 +16069,13 @@ key point is that `std::fs` and `std::net` can reuse the same I/O traits.
   - `std::task` includes awaitable sleep helpers (`sleep_ms_async`, `sleep_async`),
   - `std::io::async` provides minimal `async fn` wrappers over fd-based
     `read`/`write` using the hosted async runtime I/O ops.
-  Broader async I/O surface (buffered async I/O, sockets, filesystem streams,
-  cancellation, and `select`-style waiting) remains future work.
+  Async socket support already exists for TCP `connect` / `accept` in
+  `std::net`, task-based filesystem/fd stream adapters already exist under
+  `std::io::stream`, and abort-aware variants (`read_abortable` /
+  `write_abortable`) plus abortable readiness waits already exist today.
+  Broader async I/O coverage (buffered async I/O, richer async socket/file I/O,
+  stronger in-flight cancellation, and `select`-style waiting) remains future
+  work.
 
 ==============================================================================
 DOCS: `std::fmt` (std/fmt)
@@ -19779,7 +19793,10 @@ Async integration (current snapshot):
   with a `poll(2)` fallback backend and optional `io_uring` acceleration.
 - On other targets, these `async fn` wrappers complete immediately by performing the
   blocking socket operation.
-- Cancellation of in-flight socket operations is still follow-up work.
+- Abort-aware fd waits already exist under `std::runtime::event_loop`, but
+  cancellation of in-flight socket `connect` / `accept` operations remains
+  limited; higher-level async wrappers still use conservative before/after
+  checks.
 
 `std::net` provides networking primitives on POSIX systems.
 
@@ -20104,18 +20121,21 @@ export fn tcp_listen (addr: SocketAddr) -> Result(TCPListener, NetError);
 
 ## Blocking vs Async
 
-The initial hosted baseline may be blocking I/O. Once the language’s async
-model is implemented, `std::net` should provide:
+The hosted baseline now includes a small async subset alongside the blocking
+socket APIs. Today `std::net` provides:
 
-- non-blocking sockets + integration with an event loop,
-- `async fn` wrappers for common operations,
+- non-blocking `connect` / `accept` integration with the hosted event loop,
+- `async fn` wrappers for those common operations,
 - integration with task offloading for blocking adapters (design target:
   `std::task::run_blocking()`; until that exists, users can explicitly use a
   `task fn` wrapper around blocking calls).
 
 ## Future Work
 
-- DNS resolution, TLS integration (as optional packages).
+- broader async socket read/write coverage,
+- richer async cancellation semantics,
+- deeper TLS/HTTPS integration with the async runtime and broader protocol
+  coverage.
 
 ==============================================================================
 DOCS: `std::http` (std/http)
@@ -26062,7 +26082,7 @@ This document describes the command-line interface of the `silk` compiler from t
 
 ## Core Responsibilities
 
-At maturity, the `silk` CLI should:
+`silk` is the downstream entrypoint for the Silk toolchain. Today it is used to:
 
 - Compile Silk source files into:
   - executables,
@@ -26076,7 +26096,7 @@ At maturity, the `silk` CLI should:
   - configure external and ABI-related behaviors where appropriate (e.g. visibility of `libsilk.a` symbols, header emission).
 - Emit clear diagnostics with stable error codes and machine‑readable output when requested.
 
-The initial implementation is intentionally smaller and focuses on:
+The current command surface includes:
 
 - global options:
   - `--help` / `-h` — print global usage and exit,
@@ -26519,9 +26539,9 @@ The initial implementation is intentionally smaller and focuses on:
         ```
   - for programs that type‑check but fall outside both the constant subset and the current IR‑based backend subset, `silk build` exits non‑zero with `E4001` diagnostics that point at the rejected construct (or `E4002` when the backend fails unexpectedly).
 
-## High-Level Command Model (Initial Implementation)
+## High-Level Command Model (Current Toolchain)
 
-The initial CLI implementation supports a small, well-defined subset of the eventual UX.
+The CLI supports the following user-facing commands today.
 
 Top-level commands:
 
@@ -26667,10 +26687,6 @@ Top-level commands:
   - On `linux/x86_64`, also adds `-lstdc++ -lpthread -lm` (vendored Z3 is built as C++).
   - Passes through additional arguments verbatim to the underlying compiler (files, flags, `-o`, `-I`, `-L`, etc.).
   - Wrapper usage can be displayed via `silk help cc` (since `silk cc --help` is passed through to the underlying compiler; `slcc --help` prints wrapper usage).
-
-Future commands (not yet implemented, but documented for roadmap clarity):
-
-- `silk abi header` — emit `silk.h` and ABI descriptions for embedders.
 
 ## Documentation & Manpages
 
@@ -28566,11 +28582,11 @@ The runtime also exposes low-level awaitable building blocks:
 - `silk_rt_async_net_connect_ipv4(fd: i64, a: i64, b: i64, c: i64, d: i64, port: u16) -> u64`
 - `silk_rt_async_net_connect_ipv6(fd: i64, addr_hi: u64, addr_lo: u64, port: u16, scope_id: i64) -> u64`
 
-These are intended to be wrapped by stable `std::runtime::event_loop` / `std::task` /
-`std::io` surfaces as that layer is brought up. In the current stdlib snapshot,
-timers and fd readiness are exposed via `std::runtime::event_loop`, and sleep
-helpers are wrapped as `std::task::{sleep_ms_async,sleep_async}`. As of the
-current hosted runtime snapshot, `silk_rt_async_io_{read,write}` return
+These are already wrapped today by stable downstream-facing surfaces:
+`std::runtime::event_loop` exposes timers and fd readiness waits,
+`std::task` exposes awaitable sleep helpers, and `std::io::async` exposes
+minimal async `read` / `write` wrappers. As of the current hosted runtime
+snapshot, `silk_rt_async_io_{read,write}` return
 `Promise(i64)` handles (lowered as a `u64` promise handle) whose payload is the operation result:
 - `>= 0` is the byte count,
 - `< 0` is `-errno` (for example `-EINTR`).
@@ -28631,7 +28647,11 @@ Limitations (current):
     (for example inside `async fn main`).
 - No structured-concurrency scope semantics yet (cancellation/joining on early exit).
 - Completion-based I/O is implemented for `read`/`write`/`accept`/`connect` when `io_uring` is available.
-  - Cancellation is still follow-up work.
+  - Cancellation is currently stronger for timers/readiness waits than for
+    in-flight socket/file operations:
+    - `std::runtime::event_loop` abortable helpers can cancel waits,
+    - higher-level `std::io::async` / `std::net` wrappers still observe aborts
+      conservatively around each operation attempt.
 
 ## Goals
 
@@ -28725,14 +28745,16 @@ Initial requirements:
 - Exiting early (typed error propagation, `panic`, `break`, `return`) triggers cancellation
   of children, followed by joining/draining them before control leaves the scope.
 
-Cancellation semantics must be explicit in the runtime and observable in `std::...` APIs
-(for example, async socket reads should become cancellable).
+Cancellation semantics must be explicit in the runtime and observable in
+`std::...` APIs. Today this is strongest for timers and readiness waits; richer
+in-flight socket and file-operation cancellation remains incomplete.
 
 ## Runtime Layering (`std::runtime`)
 
-The async executor and event loop will be exposed under `std::runtime` as a new runtime area.
+The async executor and event loop are exposed today under `std::runtime` as
+`std::runtime::event_loop`.
 
-### Proposed new runtime area
+### Current runtime area
 
 - `std::runtime::event_loop` — stable interface used by the compiler-generated coroutine
   runtime and by async-aware stdlib code.
@@ -29818,9 +29840,13 @@ URL: /silk/docs/?p=compiler/lsp-silk
 
 # Silk Language Server (LSP)
 
-This document specifies the initial Language Server Protocol (LSP) implementation for Silk.
+This document specifies the current Language Server Protocol (LSP)
+implementation for Silk.
 
-The goal of the language server is to provide editor and IDE integrations (diagnostics, and eventually features like completion and hover) while remaining a thin, spec-driven wrapper around the existing compiler front-end.
+The goal of the language server is to provide editor and IDE integrations
+(diagnostics, hover, go-to-definition, completion, signature help, and
+document symbols) while remaining a thin, spec-driven wrapper around the
+existing compiler front-end.
 
 ## Overview
 
@@ -29866,7 +29892,8 @@ Typical client configurations (e.g., Vim/Neovim LSP, VS Code, or other LSP front
 
 - set the command to `["silk-lsp"]`,
 - enable standard LSP text document synchronization,
-- refrain from sending requests beyond the capabilities advertised in `initialize` (hover, diagnostics, shutdown/exit).
+- refrain from sending requests beyond the capabilities advertised in
+  `initialize`.
 
 Minimal launch examples:
 
@@ -30120,7 +30147,9 @@ For responsiveness while typing:
 - `didChange` diagnostics are computed for the changed document by parsing it and type-checking it against the cached module set (imports + std modules). The cache is not rebuilt on every change.
 - A full module-set parse + resolve + type-check (including imports) is performed on `didSave`, and diagnostics are published for all affected modules.
 
-The current front-end exposes errors as simple error codes (e.g. `UnexpectedToken`, `TypeMismatch`) without rich spans. The initial LSP implementation therefore follows these rules:
+The current front-end already exposes stable error codes plus primary spans for
+many parse/type errors, but richer secondary labels and notes are still
+incomplete. The current LSP implementation therefore follows these rules:
 
 - Parse errors:
   - reported at the location of the unexpected token using the token’s line/column and length,
@@ -30141,8 +30170,11 @@ As the compiler evolves to carry richer diagnostic information (spans, notes, la
 
 The initial `silk-lsp` implementation explicitly does **not** provide:
 
-- full semantic completions with scope-precise filtering and type inference (beyond the current heuristic symbol index),
-- cross-file go-to-definition / references,
+- full semantic completions with scope-precise filtering and type inference
+  (beyond the current heuristic symbol index),
+- cross-file references (go-to-definition already works across the current
+  module set, resolved imports, and loaded std modules, but not arbitrary
+  unopened workspace files),
 - semantic tokens or inlay hints,
 - code actions or formatting.
 
@@ -30190,8 +30222,8 @@ If you want the shortest path to a working embedder, start with [`libsilk` quick
 
 ### Linking on `linux/x86_64` (vendored Z3)
 
-On `linux/x86_64`, `libsilk.a` vendors Z3 (via `vendor/lib/x64-linux/libz3.a`) to
-support Formal Silk verification. The vendored Z3 static library is built as
+On `linux/x86_64`, `libsilk.a` bundles Z3 to support Formal Silk verification.
+That vendored Z3 static library is built as
 **C++**, so downstream embedders linking against `libsilk.a` MUST also link the
 system C++ runtime and any required system libraries:
 
@@ -30382,9 +30414,9 @@ The initial C header provided in the Silk compiler repository defines:
   - `wasm32-wasi` (and other `wasm32` triples containing `wasi`).
 
   For `wasm32` targets, only `SILK_OUTPUT_EXECUTABLE` is supported. The output
-  bytes are a final WebAssembly module (`.wasm`) produced by the IR-backed wasm
-  backend (`src/backend_wasm_ir.zig`), with a smaller constant-only fallback for
-  programs that fit the constant subset.
+  bytes are a final WebAssembly module (`.wasm`) produced by the current
+  WebAssembly backend, with a smaller constant-only fallback for programs that
+  fit the constant subset.
 
   The wasm backend is still early-stage, but it is no longer limited
   to single-module constant programs:
@@ -30720,8 +30752,8 @@ The initial C header provided in the Silk compiler repository defines:
               scalar calling convention on `linux/x86_64` (integer-like
               scalars in `rdi`..`r9`, `f32`/`f64` in `xmm0`..`xmm7`, with
               additional arguments spilled to the stack); helpers may have
-              more than six integer parameters, and this path is exercised
-              in both Zig tests and C tests (see `c-tests/build_exec_helper_params*.c`), or
+              more than six integer parameters, and this path is covered by the
+              reference implementation’s ABI regression suite, or
           - a final `if` statement whose condition is a boolean expression:
             - for the purely constant subset, the condition is a
               **compile‑time boolean literal** (`true` or `false`) and each
@@ -31164,7 +31196,7 @@ If your host is C or C++, start with [`libsilk` quickstart](?p=compiler/libsilk-
 
 ## What the Zig module exports
 
-The upstream `src/silk.zig` module exports four public pieces:
+The public Zig module exports four main pieces:
 
 - `silk.OutputKind` — alias of the embedding output-kind enum.
 - `silk.Error` — `error{ OutOfMemory, Failed }`.
@@ -31191,7 +31223,7 @@ The wrapper uses a small error set:
 
 ## Add `silk` to a Zig build
 
-The Silk repository exports a Zig module named `silk` from its `build.zig`.
+The Silk project exposes a Zig module named `silk`.
 
 ```zig
 const silk_dep = b.dependency("silk", .{
@@ -31598,8 +31630,6 @@ URL: /silk/docs/?p=man/silk.1
 
 # `silk` (1) — Silk Language Compiler
 
-> NOTE: This is the Markdown source for the eventual man 1 page for `silk`. The roff-formatted manpage should be generated from this content.
-
 ## Name
 
 `silk` — compile Silk source code and packages.
@@ -31626,7 +31656,11 @@ URL: /silk/docs/?p=man/silk.1
 
 ## Description
 
-`silk` is the command-line compiler for the Silk language. It reads Silk source files, performs parsing and type checking, and (in the initial implementation) can build simple executable programs for a small, documented subset of the language. As the compiler matures, `silk` will grow to support full code generation for executables, static libraries, and shared libraries.
+`silk` is the command-line driver for the Silk toolchain. It parses, checks,
+optionally verifies, documents, and builds Silk source files and packages. The
+current toolchain supports REPL usage, package inspection/linting, doc/man
+generation, and artifact builds for executables, object files, static
+libraries, and shared libraries on the supported hosted targets.
 
 For command-specific help, run `silk help <command>` or see the corresponding manpages (`silk-build` (1), `silk-package` (1), `silk-check` (1), `silk-test` (1), `silk-doc` (1), `silk-man` (1), `silk-cc` (1), `silk-env` (1), `silk-format` (1)). For a toolchain overview, see `silk` (7).
 
@@ -31646,7 +31680,7 @@ When stderr is a TTY, `silk` may decorate diagnostics with ANSI colors. Set `NO_
 
 ## Options
 
-For the initial implementation, the supported options are:
+Current command surface:
 
 - **Global options:**
   - `--help` / `-h` — show global usage and exit.
@@ -31770,7 +31804,7 @@ For the initial implementation, the supported options are:
       - `wasm32` → `wasm32-unknown-unknown`,
       - `wasm32-wasi` → `wasm32-wasi`,
       - for convenience, `--arch` also accepts full target triples recognized by `--target`.
-    - `--target <triple>` — select the compilation target (initial implementation):
+    - `--target <triple>` — select the compilation target:
       - `linux-x86_64` (default; emits ELF64 binaries as described below),
       - common `x86_64-*-linux-*` triples such as `x86_64-linux-gnu` are accepted as aliases for `linux-x86_64`,
       - const-main-only native executable output (no IR backend yet; requires a constant-expression `main` that reduces to a constant integer; supports `fn main () -> int` and `fn main(argc: int, argv: u64) -> int` when arguments are unused):
@@ -31972,7 +32006,6 @@ URL: /silk/docs/?p=man/slc.1
 
 # `slc` (1) — Alias of `silk build`
 
-> NOTE: This is the Markdown source for the eventual man 1 page for `slc`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -32004,7 +32037,6 @@ URL: /silk/docs/?p=man/slcc.1
 
 # `slcc` (1) — Alias of `silk cc`
 
-> NOTE: This is the Markdown source for the eventual man 1 page for `slcc`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -32035,7 +32067,6 @@ URL: /silk/docs/?p=man/silk-build.1
 
 # `silk-build` (1) — Build Silk Artifacts
 
-> NOTE: This is the Markdown source for the eventual man 1 page for `silk build`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -32315,7 +32346,6 @@ URL: /silk/docs/?p=man/silk-check.1
 
 # `silk-check` (1) — Parse and Type-Check
 
-> NOTE: This is the Markdown source for the eventual man 1 page for `silk check`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -32397,7 +32427,6 @@ URL: /silk/docs/?p=man/silk-test.1
 
 # `silk-test` (1) — Run Language-Level Tests
 
-> NOTE: This is the Markdown source for the eventual man 1 page for `silk test`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -32482,7 +32511,6 @@ URL: /silk/docs/?p=man/silk-doc.1
 
 # `silk-doc` (1) — Generate Documentation (Markdown or Manpages)
 
-> NOTE: This is the Markdown source for the eventual man 1 page for `silk doc`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -32559,7 +32587,6 @@ URL: /silk/docs/?p=man/silk-format.1
 
 # `silk-format` (1) — Format Silk Source Files
 
-> NOTE: This is the Markdown source for the eventual man 1 page for `silk format`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -32623,7 +32650,6 @@ URL: /silk/docs/?p=man/silk-lsp.1
 
 # `silk-lsp` (1) — Language Server Protocol (LSP) Server
 
-> NOTE: This is the Markdown source for the eventual man 1 page for `silk-lsp`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -32683,7 +32709,6 @@ URL: /silk/docs/?p=man/silk-env.1
 
 # `silk-env` (1) — Print `silk` CLI Environment
 
-> NOTE: This is the Markdown source for the eventual man 1 page for `silk env`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -32744,7 +32769,6 @@ URL: /silk/docs/?p=man/silk-man.1
 
 # `silk-man` (1) — View Manpages Derived from Source Docs
 
-> NOTE: This is the Markdown source for the eventual man 1 page for `silk man`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -32864,7 +32888,6 @@ URL: /silk/docs/?p=man/silk-cc.1
 
 # `silk-cc` (1) — C Compiler Wrapper for `libsilk`
 
-> NOTE: This is the Markdown source for the eventual man 1 page for `silk cc`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -32913,7 +32936,6 @@ URL: /silk/docs/?p=man/silk.7
 
 # `silk` (7) — Silk Toolchain Overview
 
-> NOTE: This is the Markdown source for the eventual man 7 page for Silk. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -33005,7 +33027,6 @@ URL: /silk/docs/?p=man/libsilk.7
 
 # `libsilk` (7) — C99 ABI for the Silk Compiler
 
-> NOTE: This is the Markdown source for a man 7 page describing the C99 embedding ABI exposed by `libsilk.a`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -33866,7 +33887,6 @@ URL: /silk/docs/?p=man/silk_error.3
 
 # `silk_error` (3) — Retrieve and Format Compiler Errors
 
-> NOTE: This is the Markdown source for the eventual man 3 page for `SilkError` formatting and retrieval. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -33942,7 +33962,6 @@ URL: /silk/docs/?p=man/silk_bytes.3
 
 # `silk_bytes` (3) — Manage Owned Build Output Buffers
 
-> NOTE: This is the Markdown source for the eventual man 3 page for `SilkBytes` output buffers. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -34009,7 +34028,6 @@ URL: /silk/docs/?p=man/silk_compiler.3
 
 # `silk_compiler` (3) — Embed the Silk Compiler
 
-> NOTE: This is the Markdown source for the eventual man 3 page for the `SilkCompiler` embedding API. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -34213,7 +34231,6 @@ URL: /silk/docs/?p=man/silk_abi_get_version.3
 
 # `silk_abi_get_version` (3) — Query the `libsilk` ABI Version
 
-> NOTE: This is the Markdown source for the eventual man 3 page for `silk_abi_get_version`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -40349,10 +40366,10 @@ Runtime behavior (current compiler subset):
 
 Notes:
 
-- Failed assertions are currently isolated by the `silk test` runner (each
-  test runs in its own process). Future work may allow reporting failed
-  assertions without process isolation (for example by lowering `assert` to a
-  typed error in test contexts).
+- Failed assertions are already isolated by the `silk test` runner (each test
+  runs in its own process), so one crashing test does not abort the whole test
+  suite. Outside `silk test`, failed assertions still abort the current
+  program/process.
 - See also: `Testing`.
 
 ## Typed Errors (`error`, `panic`, and `T | ErrorType...`)
@@ -42490,23 +42507,32 @@ The checker is expected to enforce:
   outside local, non-escaping temporaries).
 - `task` code may call `task` and `pure` code, and must satisfy task-safety
   rules for captured/argument data.
-- `async` code may `await` other async operations; it may call `pure` code and
-  may offload blocking work via explicit adapters (planned intrinsics).
+- `async` code may `await` other async operations; it may call `pure` code and,
+  in the hosted subset, may use explicit adapters such as `std::task`,
+  `std::io::async`, and `std::runtime::event_loop` to hand waiting work to the
+  runtime.
 
 Crossing discipline boundaries is intended to be explicit and diagnostic-driven
 (for example suggesting the correct adapter/intrinsic).
 
-### Standard Intrinsics
+### Current Hosted Adapters
 
-The standard library is expected to provide typed adapters to cross boundaries
-safely (names and exact signatures are design work):
+The in-tree stdlib already exposes a small hosted adapter surface for common
+discipline crossings:
 
-- lifting sync work onto a task pool,
-- presenting a task as an async operation,
-- running blocking work from async without stalling the event loop,
-- structured spawn/join primitives.
+- awaitable sleep via
+  `std::task::{sleep_ms_async,sleep_async,sleep_until_async}`,
+- fd readiness and abort-aware waits via `std::runtime::event_loop`,
+- minimal async fd wrappers via
+  `std::io::async::{read,write,read_abortable,write_abortable}`,
+- task-pool scheduling selection via `attr(task=pool)` / `attr(task_pool)` on
+  `task fn` and `async task fn`.
 
-These APIs are not yet present in the in-tree `std/` implementation.
+Still missing from the broader design:
+
+- a first-class `run_blocking` / task-to-promise bridge,
+- general structured spawn/join helpers,
+- richer scheduler-backed structured-concurrency scopes.
 
 ### Implementation Notes
 
@@ -44646,9 +44672,9 @@ Syntax:
 @throws <description...>
 ```
 
-Note: the language does not yet have a stable error type; `@throws` is
-documentation-only until `Result(T, E)` and error conventions are fully
-implemented.
+Note: Silk now has typed errors and `Result(T, E)` conventions. `@throws`
+remains documentation-only because doc comments are not yet checked against
+function signatures.
 
 #### `@external`
 

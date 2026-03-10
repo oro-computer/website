@@ -107,9 +107,9 @@ Syntax:
 @throws <description...>
 ```
 
-Note: the language does not yet have a stable error type; `@throws` is
-documentation-only until `Result(T, E)` and error conventions are fully
-implemented.
+Note: Silk now has typed errors and `Result(T, E)` conventions. `@throws`
+remains documentation-only because doc comments are not yet checked against
+function signatures.
 
 ### `@external`
 

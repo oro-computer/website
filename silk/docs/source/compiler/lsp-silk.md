@@ -1,8 +1,12 @@
 # Silk Language Server (LSP)
 
-This document specifies the initial Language Server Protocol (LSP) implementation for Silk.
+This document specifies the current Language Server Protocol (LSP)
+implementation for Silk.
 
-The goal of the language server is to provide editor and IDE integrations (diagnostics, and eventually features like completion and hover) while remaining a thin, spec-driven wrapper around the existing compiler front-end.
+The goal of the language server is to provide editor and IDE integrations
+(diagnostics, hover, go-to-definition, completion, signature help, and
+document symbols) while remaining a thin, spec-driven wrapper around the
+existing compiler front-end.
 
 ## Overview
 
@@ -48,7 +52,8 @@ Typical client configurations (e.g., Vim/Neovim LSP, VS Code, or other LSP front
 
 - set the command to `["silk-lsp"]`,
 - enable standard LSP text document synchronization,
-- refrain from sending requests beyond the capabilities advertised in `initialize` (hover, diagnostics, shutdown/exit).
+- refrain from sending requests beyond the capabilities advertised in
+  `initialize`.
 
 Minimal launch examples:
 
@@ -302,7 +307,9 @@ For responsiveness while typing:
 - `didChange` diagnostics are computed for the changed document by parsing it and type-checking it against the cached module set (imports + std modules). The cache is not rebuilt on every change.
 - A full module-set parse + resolve + type-check (including imports) is performed on `didSave`, and diagnostics are published for all affected modules.
 
-The current front-end exposes errors as simple error codes (e.g. `UnexpectedToken`, `TypeMismatch`) without rich spans. The initial LSP implementation therefore follows these rules:
+The current front-end already exposes stable error codes plus primary spans for
+many parse/type errors, but richer secondary labels and notes are still
+incomplete. The current LSP implementation therefore follows these rules:
 
 - Parse errors:
   - reported at the location of the unexpected token using the token’s line/column and length,
@@ -323,8 +330,11 @@ As the compiler evolves to carry richer diagnostic information (spans, notes, la
 
 The initial `silk-lsp` implementation explicitly does **not** provide:
 
-- full semantic completions with scope-precise filtering and type inference (beyond the current heuristic symbol index),
-- cross-file go-to-definition / references,
+- full semantic completions with scope-precise filtering and type inference
+  (beyond the current heuristic symbol index),
+- cross-file references (go-to-definition already works across the current
+  module set, resolved imports, and loaded std modules, but not arbitrary
+  unopened workspace files),
 - semantic tokens or inlay hints,
 - code actions or formatting.
 

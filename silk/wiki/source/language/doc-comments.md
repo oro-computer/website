@@ -1,9 +1,13 @@
 # Doc comments
 
 Silk supports both line and block doc comments. They attach to the following
-declaration (like many C/Rust-style doc systems).
+declaration, similar to other C/Rust-style doc systems.
 
-Canonical doc: `docs/language/doc-comments.md`.
+Canonical doc: [Doc comments](../docs/?p=language/doc-comments).
+
+`@throws` is still documentation-only, but Silk already has typed errors and
+`Result(T, E)` conventions. The current limitation is that doc comments are not
+yet checked against function signatures.
 
 ## Syntax
 
@@ -22,4 +26,5 @@ fn other () -> int { return 0; }
 
 ## See also
 
-- Canonical doc: `docs/language/doc-comments.md`
+- [Canonical doc](../docs/?p=language/doc-comments)
+- [Typed errors](?p=language/typed-errors)

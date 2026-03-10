@@ -194,6 +194,77 @@ pre {
   background: rgba(250, 248, 244, 0.06);
 }
 
+.nav a[aria-current="page"] {
+  color: var(--color-fg);
+  border-color: rgba(250, 248, 244, 0.16);
+  background: rgba(250, 248, 244, 0.09);
+}
+
+.site-subnav {
+  display: flex;
+  flex: 1 0 100%;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+  width: 100%;
+  padding: 0.95rem 0 0.15rem;
+  border-top: 1px solid rgba(250, 248, 244, 0.08);
+}
+
+.site-subnav-parent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.42rem 0.78rem;
+  border-radius: 999px;
+  border: 1px solid rgba(250, 248, 244, 0.16);
+  background: linear-gradient(135deg, rgba(246, 201, 69, 0.14), rgba(91, 59, 162, 0.14));
+  color: var(--color-fg);
+  font-family: var(--font-display);
+  font-size: 0.93rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.site-subnav-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(250, 248, 244, 0.7);
+}
+
+.site-subnav-links {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.site-subnav-links a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: rgba(250, 248, 244, 0.04);
+  color: var(--color-muted);
+  text-decoration: none;
+}
+
+.site-subnav-links a:hover,
+.site-subnav-links a:focus-visible {
+  color: var(--color-fg);
+  border-color: rgba(250, 248, 244, 0.12);
+  background: rgba(250, 248, 244, 0.08);
+}
+
+.site-subnav-links a[aria-current="page"] {
+  color: var(--color-fg);
+  border-color: rgba(246, 201, 69, 0.38);
+  background: linear-gradient(135deg, rgba(246, 201, 69, 0.14), rgba(91, 59, 162, 0.12));
+}
+
 .menu {
   position: relative;
 }
@@ -1253,6 +1324,19 @@ pre code {
 }
 
 @media (max-width: 720px) {
+  .site-subnav {
+    gap: 0.65rem;
+    padding-top: 0.8rem;
+  }
+
+  .site-subnav-parent {
+    font-size: 0.88rem;
+  }
+
+  .site-subnav-links {
+    gap: 0.4rem;
+  }
+
   .section {
     padding: var(--section-y-mobile) 0;
   }

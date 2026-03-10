@@ -1,6 +1,6 @@
 # `std::toml`
 
-`std::toml` provides TOML parsing (initial implementation + expanded subset).
+`std::toml` provides an implemented TOML parsing subset.
 
 Canonical doc: `docs/std/toml.md`.
 

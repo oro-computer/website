@@ -180,13 +180,16 @@ must be synchronized by the program.
   described above) is not implemented yet. In particular, the compiler does not
   attempt to prove absence of data races for shared state; programs must use
   explicit synchronization for any shared mutation.
-- A small initial set of standard-library primitives exists now under
-  `std::task` and `std::sync` for the hosted `linux/x86_64` subset. These are
-  mostly blocking primitives today.
-  - Initial async-aware stdlib surfaces already exist under
-    `std::runtime::event_loop` and `std::io::async`.
-  - Broader integration of OS-facing std modules with the async executor/event
-    loop is still follow-up work.
+- A small hosted stdlib baseline exists now under `std::task`, `std::sync`,
+  `std::runtime::event_loop`, and `std::io::async` for the hosted
+  `linux/x86_64` subset.
+  - `std::task` / `std::sync` are still mostly blocking primitives today.
+  - `std::runtime::event_loop` already provides executor-backed timers,
+    fd-readiness waits, and abort-aware waits; `std::io::async` adds minimal
+    async `read` / `write` wrappers on top.
+  - Broader integration of OS-facing std modules (for example buffered
+    filesystem streams and richer socket cancellation) with the async
+    executor/event loop remains follow-up work.
 - For cooperative cancellation across tasks and `async` functions, `std::`
   provides WHATWG-style abort signals via `std::abort_controller` (see
   `docs/std/abort-controller.md`).

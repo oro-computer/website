@@ -73,23 +73,32 @@ The checker is expected to enforce:
   `Task(T)` / `Promise(T)` handles must be consumed explicitly with
   `yield` / `yield *` / `await`, and task-boundary argument/result data must
   satisfy the current task-safety rules.
-- `async` code may `await` other async operations; it may call `pure` code and
-  may offload blocking work via explicit adapters (planned intrinsics).
+- `async` code may `await` other async operations; it may call `pure` code and,
+  in the hosted subset, may use explicit adapters such as `std::task`,
+  `std::io::async`, and `std::runtime::event_loop` to hand waiting work to the
+  runtime.
 
 Crossing discipline boundaries is intended to be explicit and diagnostic-driven
 (for example suggesting the correct adapter/intrinsic).
 
-## Standard Intrinsics (Planned)
+## Current Hosted Adapters
 
-The standard library is expected to provide typed adapters to cross boundaries
-safely (names and exact signatures are design work):
+The in-tree stdlib already exposes a small hosted adapter surface for common
+discipline crossings:
 
-- lifting sync work onto a task pool,
-- presenting a task as an async operation,
-- running blocking work from async without stalling the event loop,
-- structured spawn/join primitives.
+- awaitable sleep via
+  `std::task::{sleep_ms_async,sleep_async,sleep_until_async}`,
+- fd readiness and abort-aware waits via `std::runtime::event_loop`,
+- minimal async fd wrappers via
+  `std::io::async::{read,write,read_abortable,write_abortable}`,
+- task-pool scheduling selection via `attr(task=pool)` / `attr(task_pool)` on
+  `task fn` and `async task fn`.
 
-These APIs are not yet present in the in-tree `std/` implementation.
+Still missing from the broader design:
+
+- a first-class `run_blocking` / task-to-promise bridge,
+- general structured spawn/join helpers,
+- richer scheduler-backed structured-concurrency scopes.
 
 ## Implementation Notes (Current Compiler)
 

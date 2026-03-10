@@ -11,7 +11,7 @@ This document describes the command-line interface of the `silk` compiler from t
 
 ## Core Responsibilities
 
-At maturity, the `silk` CLI should:
+`silk` is the downstream entrypoint for the Silk toolchain. Today it is used to:
 
 - Compile Silk source files into:
   - executables,
@@ -25,7 +25,7 @@ At maturity, the `silk` CLI should:
   - configure external and ABI-related behaviors where appropriate (e.g. visibility of `libsilk.a` symbols, header emission).
 - Emit clear diagnostics with stable error codes and machine‑readable output when requested.
 
-The initial implementation is intentionally smaller and focuses on:
+The current command surface includes:
 
 - global options:
   - `--help` / `-h` — print global usage and exit,
@@ -468,9 +468,9 @@ The initial implementation is intentionally smaller and focuses on:
         ```
   - for programs that type‑check but fall outside both the constant subset and the current IR‑based backend subset, `silk build` exits non‑zero with `E4001` diagnostics that point at the rejected construct (or `E4002` when the backend fails unexpectedly).
 
-## High-Level Command Model (Initial Implementation)
+## High-Level Command Model (Current Toolchain)
 
-The initial CLI implementation supports a small, well-defined subset of the eventual UX.
+The CLI supports the following user-facing commands today.
 
 Top-level commands:
 
@@ -616,10 +616,6 @@ Top-level commands:
   - On `linux/x86_64`, also adds `-lstdc++ -lpthread -lm` (vendored Z3 is built as C++).
   - Passes through additional arguments verbatim to the underlying compiler (files, flags, `-o`, `-I`, `-L`, etc.).
   - Wrapper usage can be displayed via `silk help cc` (since `silk cc --help` is passed through to the underlying compiler; `slcc --help` prints wrapper usage).
-
-Future commands (not yet implemented, but documented for roadmap clarity):
-
-- `silk abi header` — emit `silk.h` and ABI descriptions for embedders.
 
 ## Documentation & Manpages
 

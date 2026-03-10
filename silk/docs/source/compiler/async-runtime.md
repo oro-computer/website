@@ -106,11 +106,11 @@ The runtime also exposes low-level awaitable building blocks:
 - `silk_rt_async_net_connect_ipv4(fd: i64, a: i64, b: i64, c: i64, d: i64, port: u16) -> u64`
 - `silk_rt_async_net_connect_ipv6(fd: i64, addr_hi: u64, addr_lo: u64, port: u16, scope_id: i64) -> u64`
 
-These are intended to be wrapped by stable `std::runtime::event_loop` / `std::task` /
-`std::io` surfaces as that layer is brought up. In the current stdlib snapshot,
-timers and fd readiness are exposed via `std::runtime::event_loop`, and sleep
-helpers are wrapped as `std::task::{sleep_ms_async,sleep_async}`. As of the
-current hosted runtime snapshot, `silk_rt_async_io_{read,write}` return
+These are already wrapped today by stable downstream-facing surfaces:
+`std::runtime::event_loop` exposes timers and fd readiness waits,
+`std::task` exposes awaitable sleep helpers, and `std::io::async` exposes
+minimal async `read` / `write` wrappers. As of the current hosted runtime
+snapshot, `silk_rt_async_io_{read,write}` return
 `Promise(i64)` handles (lowered as a `u64` promise handle) whose payload is the operation result:
 - `>= 0` is the byte count,
 - `< 0` is `-errno` (for example `-EINTR`).
@@ -171,7 +171,11 @@ Limitations (current):
     (for example inside `async fn main`).
 - No structured-concurrency scope semantics yet (cancellation/joining on early exit).
 - Completion-based I/O is implemented for `read`/`write`/`accept`/`connect` when `io_uring` is available.
-  - Cancellation is still follow-up work.
+  - Cancellation is currently stronger for timers/readiness waits than for
+    in-flight socket/file operations:
+    - `std::runtime::event_loop` abortable helpers can cancel waits,
+    - higher-level `std::io::async` / `std::net` wrappers still observe aborts
+      conservatively around each operation attempt.
 
 ## Goals
 
@@ -265,14 +269,16 @@ Initial requirements:
 - Exiting early (typed error propagation, `panic`, `break`, `return`) triggers cancellation
   of children, followed by joining/draining them before control leaves the scope.
 
-Cancellation semantics must be explicit in the runtime and observable in `std::...` APIs
-(for example, async socket reads should become cancellable).
+Cancellation semantics must be explicit in the runtime and observable in
+`std::...` APIs. Today this is strongest for timers and readiness waits; richer
+in-flight socket and file-operation cancellation remains incomplete.
 
 ## Runtime Layering (`std::runtime`)
 
-The async executor and event loop will be exposed under `std::runtime` as a new runtime area.
+The async executor and event loop are exposed today under `std::runtime` as
+`std::runtime::event_loop`.
 
-### Proposed new runtime area
+### Current runtime area
 
 - `std::runtime::event_loop` — stable interface used by the compiler-generated coroutine
   runtime and by async-aware stdlib code.

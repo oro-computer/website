@@ -13,7 +13,10 @@ Async integration (current snapshot):
   with a `poll(2)` fallback backend and optional `io_uring` acceleration.
 - On other targets, these `async fn` wrappers complete immediately by performing the
   blocking socket operation.
-- Cancellation of in-flight socket operations is still follow-up work.
+- Abort-aware fd waits already exist under `std::runtime::event_loop`, but
+  cancellation of in-flight socket `connect` / `accept` operations remains
+  limited; higher-level async wrappers still use conservative before/after
+  checks.
 
 `std::net` provides networking primitives on POSIX systems.
 
@@ -338,15 +341,18 @@ export fn tcp_listen (addr: SocketAddr) -> Result(TCPListener, NetError);
 
 ## Blocking vs Async
 
-The initial hosted baseline may be blocking I/O. Once the language’s async
-model is implemented, `std::net` should provide:
+The hosted baseline now includes a small async subset alongside the blocking
+socket APIs. Today `std::net` provides:
 
-- non-blocking sockets + integration with an event loop,
-- `async fn` wrappers for common operations,
+- non-blocking `connect` / `accept` integration with the hosted event loop,
+- `async fn` wrappers for those common operations,
 - integration with task offloading for blocking adapters (design target:
   `std::task::run_blocking()`; until that exists, users can explicitly use a
   `task fn` wrapper around blocking calls).
 
 ## Future Work
 
-- DNS resolution, TLS integration (as optional packages).
+- broader async socket read/write coverage,
+- richer async cancellation semantics,
+- deeper TLS/HTTPS integration with the async runtime and broader protocol
+  coverage.

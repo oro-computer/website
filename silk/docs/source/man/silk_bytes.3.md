@@ -1,6 +1,5 @@
 # `silk_bytes` (3) — Manage Owned Build Output Buffers
 
-> NOTE: This is the Markdown source for the eventual man 3 page for `SilkBytes` output buffers. The roff-formatted manpage should be generated from this content.
 
 ## Name
 

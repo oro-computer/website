@@ -371,6 +371,21 @@
       out = out.replace(/\bcurrently\s+not\b/gi, "not");
       out = out.replace(/\(\s*\)/g, "");
 
+      if (kind === "wiki") {
+        out = out.replace(
+          /^(\s*(?:[-*+]\s+)?)Canonical (?:doc|spec|design doc):\s*/i,
+          "$1Canonical docs: "
+        );
+        out = out.replace(
+          /^(\s*(?:[-*+]\s+)?)Details:\s*/i,
+          "$1Full reference: "
+        );
+        out = out.replace(
+          /^(\s*(?:[-*+]\s+)?)Implemented subset (?:is documented in detail|is documented|notes|details|rules|syntax notes|tests|diagnostics|restrictions):\s*/i,
+          "$1Full reference: "
+        );
+      }
+
       // Tidy up extra whitespace introduced by rewrites.
       const leading = (out.match(/^\s*/) || [""])[0];
       let body = out.slice(leading.length);

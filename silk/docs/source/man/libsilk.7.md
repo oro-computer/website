@@ -1,6 +1,5 @@
 # `libsilk` (7) — C99 ABI for the Silk Compiler
 
-> NOTE: This is the Markdown source for a man 7 page describing the C99 embedding ABI exposed by `libsilk.a`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 

@@ -220,5 +220,10 @@ key point is that `std::fs` and `std::net` can reuse the same I/O traits.
   - `std::task` includes awaitable sleep helpers (`sleep_ms_async`, `sleep_async`),
   - `std::io::async` provides minimal `async fn` wrappers over fd-based
     `read`/`write` using the hosted async runtime I/O ops.
-  Broader async I/O surface (buffered async I/O, sockets, filesystem streams,
-  cancellation, and `select`-style waiting) remains future work.
+  Async socket support already exists for TCP `connect` / `accept` in
+  `std::net`, task-based filesystem/fd stream adapters already exist under
+  `std::io::stream`, and abort-aware variants (`read_abortable` /
+  `write_abortable`) plus abortable readiness waits already exist today.
+  Broader async I/O coverage (buffered async I/O, richer async socket/file I/O,
+  stronger in-flight cancellation, and `select`-style waiting) remains future
+  work.

@@ -1,7 +1,6 @@
 # `std::json`
 
-`std::json` provides JSON parsing and stringifying (initial implementation + expanded
-subset).
+`std::json` provides an implemented JSON parsing and stringifying subset.
 
 Canonical doc: `docs/std/json.md`.
 

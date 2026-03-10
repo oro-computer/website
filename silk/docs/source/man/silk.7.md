@@ -1,6 +1,5 @@
 # `silk` (7) — Silk Toolchain Overview
 
-> NOTE: This is the Markdown source for the eventual man 7 page for Silk. The roff-formatted manpage should be generated from this content.
 
 ## Name
 

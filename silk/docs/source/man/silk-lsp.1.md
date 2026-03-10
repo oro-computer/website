@@ -1,6 +1,5 @@
 # `silk-lsp` (1) — Language Server Protocol (LSP) Server
 
-> NOTE: This is the Markdown source for the eventual man 1 page for `silk-lsp`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 

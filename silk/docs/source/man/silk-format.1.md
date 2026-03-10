@@ -1,6 +1,5 @@
 # `silk-format` (1) — Format Silk Source Files
 
-> NOTE: This is the Markdown source for the eventual man 1 page for `silk format`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 

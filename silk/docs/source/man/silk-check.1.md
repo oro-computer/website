@@ -1,6 +1,5 @@
 # `silk-check` (1) — Parse and Type-Check
 
-> NOTE: This is the Markdown source for the eventual man 1 page for `silk check`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 

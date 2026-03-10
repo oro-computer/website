@@ -1,14 +1,16 @@
 # `std::io`
 
 `std::io` provides basic stdin/stdout/stderr I/O and a small formatting surface
-(`print`/`println`).
+(`print` / `println`).
 
-Canonical doc: `docs/std/io.md`.
+Canonical doc: [`std::io`](../docs/?p=std/io).
 
 ## Status
 
-- Design + initial implementation: basic reads/writes are implemented via `std::runtime::io`.
-- Details: `docs/std/io.md`
+- Basic reads/writes, formatted stdout/stderr helpers, `std::io::async`, and
+  task-based `std::io::stream` adapters exist today.
+- Buffered I/O and broader fully async file/stream coverage are still
+  incomplete; use the canonical doc for the precise current subset.
 
 ## Importing
 
@@ -30,6 +32,6 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/io.md`
-- Format strings: `docs/std/fmt.md`
-- Runtime backend: `docs/std/runtime.md`
+- [Canonical doc](../docs/?p=std/io)
+- [Format strings](../docs/?p=std/fmt)
+- [Runtime backend](?p=std/runtime)

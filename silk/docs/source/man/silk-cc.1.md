@@ -1,6 +1,5 @@
 # `silk-cc` (1) — C Compiler Wrapper for `libsilk`
 
-> NOTE: This is the Markdown source for the eventual man 1 page for `silk cc`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 

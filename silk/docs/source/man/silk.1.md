@@ -1,7 +1,5 @@
 # `silk` (1) — Silk Language Compiler
 
-> NOTE: This is the Markdown source for the eventual man 1 page for `silk`. The roff-formatted manpage should be generated from this content.
-
 ## Name
 
 `silk` — compile Silk source code and packages.
@@ -28,7 +26,11 @@
 
 ## Description
 
-`silk` is the command-line compiler for the Silk language. It reads Silk source files, performs parsing and type checking, and (in the initial implementation) can build simple executable programs for a small, documented subset of the language. As the compiler matures, `silk` will grow to support full code generation for executables, static libraries, and shared libraries.
+`silk` is the command-line driver for the Silk toolchain. It parses, checks,
+optionally verifies, documents, and builds Silk source files and packages. The
+current toolchain supports REPL usage, package inspection/linting, doc/man
+generation, and artifact builds for executables, object files, static
+libraries, and shared libraries on the supported hosted targets.
 
 For command-specific help, run `silk help <command>` or see the corresponding manpages (`silk-build` (1), `silk-package` (1), `silk-check` (1), `silk-test` (1), `silk-doc` (1), `silk-man` (1), `silk-cc` (1), `silk-env` (1), `silk-format` (1)). For a toolchain overview, see `silk` (7).
 
@@ -48,7 +50,7 @@ When stderr is a TTY, `silk` may decorate diagnostics with ANSI colors. Set `NO_
 
 ## Options
 
-For the initial implementation, the supported options are:
+Current command surface:
 
 - **Global options:**
   - `--help` / `-h` — show global usage and exit.
@@ -172,7 +174,7 @@ For the initial implementation, the supported options are:
       - `wasm32` → `wasm32-unknown-unknown`,
       - `wasm32-wasi` → `wasm32-wasi`,
       - for convenience, `--arch` also accepts full target triples recognized by `--target`.
-    - `--target <triple>` — select the compilation target (initial implementation):
+    - `--target <triple>` — select the compilation target (current supported set):
       - `linux-x86_64` (default; emits ELF64 binaries as described below),
       - common `x86_64-*-linux-*` triples such as `x86_64-linux-gnu` are accepted as aliases for `linux-x86_64`,
       - const-main-only native executable output (no IR backend yet; requires a constant-expression `main` that reduces to a constant integer; supports `fn main () -> int` and `fn main(argc: int, argv: u64) -> int` when arguments are unused):

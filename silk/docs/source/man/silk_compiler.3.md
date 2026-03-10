@@ -1,6 +1,5 @@
 # `silk_compiler` (3) — Embed the Silk Compiler
 
-> NOTE: This is the Markdown source for the eventual man 3 page for the `SilkCompiler` embedding API. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
