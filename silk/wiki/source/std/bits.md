@@ -2,7 +2,7 @@
 
 `std::bits` is the standard bit-manipulation and byte-order helper module.
 
-Canonical doc: `docs/std/bits.md`.
+[Canonical doc](../docs/?p=std/bits).
 
 ## Current subset
 Implemented in `std/bits.slk`:

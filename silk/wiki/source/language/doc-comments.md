@@ -3,7 +3,7 @@
 Silk supports both line and block doc comments. They attach to the following
 declaration, similar to other C/Rust-style doc systems.
 
-Canonical doc: [Doc comments](../docs/?p=language/doc-comments).
+[Canonical doc](../docs/?p=language/doc-comments).
 
 `@throws` is still documentation-only, but Silk already has typed errors and
 `Result(T, E)` conventions. The current limitation is that doc comments are not

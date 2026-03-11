@@ -3,7 +3,7 @@
 `std::task` provides hosted task/runtime helpers, including sleep/yield
 operations.
 
-Canonical doc: [`std::task`](../docs/?p=std/task).
+[Canonical doc](../docs/?p=std/task).
 
 ## Status
 

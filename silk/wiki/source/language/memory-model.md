@@ -1,7 +1,7 @@
 # Memory model
 
 This page is a learning-oriented companion to the canonical memory model:
-`docs/language/memory-model.md`.
+[Memory Model (Stack, Heap, and Moves)](../docs/?p=language/memory-model).
 
 At a high level:
 
@@ -12,7 +12,7 @@ At a high level:
 
 ## Status
 
-- Canonical spec + implementation notes: `docs/language/memory-model.md`
+- Canonical spec + implementation notes: [Memory Model (Stack, Heap, and Moves)](../docs/?p=language/memory-model)
 
 ## Example: `new` + reference field access
 ```silk
@@ -29,5 +29,5 @@ fn main () -> int {
 
 ## See also
 
-- Regions (`with`): `docs/wiki/language/regions.md`
-- `Drop` and cleanup hooks: `docs/std/interfaces.md`
+- Regions (`with`): [Regions (with)](?p=language/regions)
+- `Drop` and cleanup hooks: [std::interfaces](../docs/?p=std/interfaces)

@@ -5,12 +5,12 @@
 - `SetMap(T)` (unordered set, open addressing),
 - `TreeSet(T)` (ordered set, red-black tree).
 
-Canonical doc: `docs/std/set.md`.
+[Canonical doc](../docs/?p=std/set).
 
 ## Status
 
 - Implemented subset: usable in the current compiler subset with documented limits.
-- Details: `docs/std/set.md`
+- [Details](../docs/?p=std/set)
 
 ## Importing
 
@@ -47,5 +47,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/set.md`
-- Iterator protocol: `docs/std/interfaces.md`
+- [Canonical doc](../docs/?p=std/set)
+- Iterator protocol: [std::interfaces](../docs/?p=std/interfaces)

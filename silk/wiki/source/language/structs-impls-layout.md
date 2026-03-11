@@ -4,11 +4,11 @@
 value. `impl` blocks attach methods (and special methods like `constructor`
 and `drop`) to a type.
 
-Canonical spec: `docs/language/structs-impls-layout.md`.
+[Canonical spec](../docs/?p=language/structs-impls-layout).
 
 ## Status
 
-- Implemented subset + layout model: `docs/language/structs-impls-layout.md`
+- Implemented subset + layout model: [Structs, Impl Blocks, and Memory Layout](../docs/?p=language/structs-impls-layout)
 
 ## Syntax
 ```silk
@@ -52,6 +52,6 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/structs-impls-layout.md`
-- Mutability and `mut &T`: `docs/language/mutability.md`
-- Enums and matching: `docs/language/enums.md`, `docs/language/flow-match.md`
+- [Canonical spec](../docs/?p=language/structs-impls-layout)
+- Mutability and `mut &T`: [Mutability](../docs/?p=language/mutability)
+- Enums and matching: [enum Types](../docs/?p=language/enums), [match Expression (and Statement)](../docs/?p=language/flow-match)

@@ -4,7 +4,7 @@
 orientation layer; use the canonical docs for the full API surface, current
 limits, and target-specific details.
 
-Canonical doc: [Standard library overview](../docs/?p=std/overview).
+[Canonical doc](../docs/?p=std/overview).
 
 ## Status
 

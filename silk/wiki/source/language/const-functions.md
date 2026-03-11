@@ -3,7 +3,7 @@
 `const fn` marks a function as eligible for **compile-time evaluation**.
 
 This wiki page is an overview. The canonical specification is
-`docs/language/const-functions.md`.
+[Const Functions (const fn)](../docs/?p=language/const-functions).
 
 ## Example
 
@@ -32,6 +32,6 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/const-functions.md`
-- `const` bindings: `docs/language/flow-blocks-statements.md`
-- Function modifiers (`pure`/`async`/`task`): `docs/language/function-disciplines.md`
+- [Canonical spec](../docs/?p=language/const-functions)
+- `const` bindings: [Blocks and Statement Composition](../docs/?p=language/flow-blocks-statements)
+- Function modifiers (`pure`/`async`/`task`): [Function Disciplines (pure, task, async)](../docs/?p=language/function-disciplines)

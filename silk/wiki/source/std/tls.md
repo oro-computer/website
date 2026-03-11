@@ -2,12 +2,12 @@
 
 `std::tls` provides TLS client/server primitives (hosted baseline via mbedTLS).
 
-Canonical doc: `docs/std/tls.md`.
+[Canonical doc](../docs/?p=std/tls).
 
 ## Status
 
 - Implemented subset + design: `Session` + `MemPipe` are implemented for hosted targets.
-- Details: `docs/std/tls.md`
+- [Details](../docs/?p=std/tls)
 
 ## Importing
 
@@ -232,5 +232,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/tls.md`
-- `std::crypto`: `docs/std/crypto.md`
+- [Canonical doc](../docs/?p=std/tls)
+- `std::crypto`: [std::crypto](../docs/?p=std/crypto)

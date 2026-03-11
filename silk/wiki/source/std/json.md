@@ -2,12 +2,12 @@
 
 `std::json` provides an implemented JSON parsing and stringifying subset.
 
-Canonical doc: `docs/std/json.md`.
+[Canonical doc](../docs/?p=std/json).
 
 ## Status
 
 - Implemented subset + design: parsing and stringify are implemented; the DOM/query surface is still evolving.
-- Details: `docs/std/json.md`
+- [Details](../docs/?p=std/json)
 
 ## Importing
 
@@ -102,5 +102,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/json.md`
-- Typed results and errors: `docs/std/result.md`
+- [Canonical doc](../docs/?p=std/json)
+- Typed results and errors: [std::result](../docs/?p=std/result)

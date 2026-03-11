@@ -4,7 +4,7 @@ Interfaces declare method signatures that types (or modules) can conform to via
 `impl ... as ...` (or `module ... as ...`). This is the basis for protocol-like
 surfaces such as iterators and Drop.
 
-Canonical spec: [Interfaces](../docs/?p=language/interfaces).
+[Canonical spec](../docs/?p=language/interfaces).
 
 ## Status
 

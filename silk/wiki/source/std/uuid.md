@@ -2,12 +2,12 @@
 
 `std::uuid` provides UUID primitives (parsing, formatting, and variants).
 
-Canonical doc: `docs/std/uuid.md`.
+[Canonical doc](../docs/?p=std/uuid).
 
 ## Status
 
 - Implemented (v1/v3/v4/v5/v6/v7/v8 parsing + formatting + constructors).
-- Details: `docs/std/uuid.md`
+- [Details](../docs/?p=std/uuid)
 
 ## Importing
 
@@ -60,5 +60,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/uuid.md`
-- String formatting helpers: `docs/std/strings.md`
+- [Canonical doc](../docs/?p=std/uuid)
+- String formatting helpers: [std::strings](../docs/?p=std/strings)

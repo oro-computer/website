@@ -2,11 +2,11 @@
 
 Blocks (`{ ... }`) group statements and introduce a new scope.
 
-Canonical spec: `docs/language/flow-blocks-statements.md`.
+[Canonical spec](../docs/?p=language/flow-blocks-statements).
 
 ## Status
 
-- Implemented subset + syntax notes: `docs/language/flow-blocks-statements.md`
+- Implemented subset + syntax notes: [Blocks and Statement Composition](../docs/?p=language/flow-blocks-statements)
 
 ## Example: scope boundaries
 ```silk
@@ -25,5 +25,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/flow-blocks-statements.md`
-- Expression statements: `docs/wiki/language/flow-expression-statements.md`
+- [Canonical spec](../docs/?p=language/flow-blocks-statements)
+- Expression statements: [Expression statements](?p=language/flow-expression-statements)

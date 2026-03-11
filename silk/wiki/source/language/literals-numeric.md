@@ -3,7 +3,7 @@
 Silk supports integer and floating-point literals, including base prefixes
 suffixes as defined in the canonical spec.
 
-Canonical doc: `docs/language/literals-numeric.md`.
+[Canonical doc](../docs/?p=language/literals-numeric).
 
 ## Example
 ```silk
@@ -20,5 +20,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/language/literals-numeric.md`
-- Operators: `docs/wiki/language/operators.md`
+- [Canonical doc](../docs/?p=language/literals-numeric)
+- Operators: [Operators](?p=language/operators)

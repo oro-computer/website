@@ -4,7 +4,7 @@
 primitives (I/O, filesystem, time, threads, allocation) from higher-level
 `std::...` modules.
 
-Canonical doc: [`std::runtime`](../docs/?p=std/runtime).
+[Canonical doc](../docs/?p=std/runtime).
 
 ## Status
 

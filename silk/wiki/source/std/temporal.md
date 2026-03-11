@@ -3,7 +3,7 @@
 `std::temporal` provides `Instant`/`Duration` helpers and time-related
 utilities.
 
-Canonical doc: `docs/std/temporal.md`.
+[Canonical doc](../docs/?p=std/temporal).
 
 ## Example
 ```silk
@@ -20,5 +20,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/temporal.md`
-- Time types: `docs/wiki/language/duration-instant.md`
+- [Canonical doc](../docs/?p=std/temporal)
+- Time types: [Duration and Instant](?p=language/duration-instant)

@@ -8,11 +8,11 @@ Currently, enums support:
 - tuple variants (`E::B(x)`),
 - exhaustive `match` expressions over enum values (restricted subset; no guards).
 
-Canonical spec: `docs/language/enums.md`.
+[Canonical spec](../docs/?p=language/enums).
 
 ## Status
 
-- Implemented subset + representation: `docs/language/enums.md`
+- Implemented subset + representation: [enum Types](../docs/?p=language/enums)
 
 ## Syntax
 ```silk
@@ -42,6 +42,6 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/enums.md`
-- `match` expressions: `docs/language/flow-match.md`
-- Syntax tour: `docs/language/syntax-tour.md`
+- [Canonical spec](../docs/?p=language/enums)
+- `match` expressions: [match Expression (and Statement)](../docs/?p=language/flow-match)
+- Syntax tour: [Silk Syntax Tour (Soup to Nuts)](../docs/?p=language/syntax-tour)

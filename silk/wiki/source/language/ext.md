@@ -3,12 +3,12 @@
 `ext` declares foreign symbols so Silk code can call C (or wasm imports)
 access foreign variables.
 
-Canonical spec: `docs/language/ext.md`.
+[Canonical spec](../docs/?p=language/ext).
 
 ## Status
 
-- Current supported `ext` subset + ABI notes: `docs/language/ext.md`
-- Embedding ABI contract: `docs/compiler/abi-libsilk.md`
+- Current supported `ext` subset + ABI notes: [External Declarations (ext)](../docs/?p=language/ext)
+- Embedding ABI contract: [C99 ABI and libsilk.a](../docs/?p=compiler/abi-libsilk)
 
 ## Syntax
 ```silk
@@ -54,5 +54,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/ext.md`
-- ABI details for `string` and optionals: `docs/compiler/abi-libsilk.md`
+- [Canonical spec](../docs/?p=language/ext)
+- ABI details for `string` and optionals: [C99 ABI and libsilk.a](../docs/?p=compiler/abi-libsilk)

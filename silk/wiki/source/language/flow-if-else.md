@@ -6,11 +6,11 @@ In the current compiler subset, `if` is a statement that chooses which block
 executes. The broader language design includes expression-oriented forms; see
 the canonical spec for details.
 
-Canonical spec: `docs/language/flow-if-else.md`.
+[Canonical spec](../docs/?p=language/flow-if-else).
 
 ## Status
 
-- Implemented subset + tests: `docs/language/flow-if-else.md`
+- Implemented subset + tests: [if / else](../docs/?p=language/flow-if-else)
 
 ## Syntax
 
@@ -54,5 +54,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/flow-if-else.md`
-- `match` (expression): `docs/language/flow-match.md`
+- [Canonical spec](../docs/?p=language/flow-if-else)
+- `match` (expression): [match Expression (and Statement)](../docs/?p=language/flow-match)

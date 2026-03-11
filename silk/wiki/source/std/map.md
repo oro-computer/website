@@ -5,12 +5,12 @@
 - `HashMap(K, V)` (unordered, hash table),
 - `TreeMap(K, V)` (ordered, red-black tree).
 
-Canonical doc: `docs/std/map.md`.
+[Canonical doc](../docs/?p=std/map).
 
 ## Status
 
 - Implemented subset: usable in the current compiler subset with documented limits.
-- Details: `docs/std/map.md`
+- [Details](../docs/?p=std/map)
 
 ## Importing
 
@@ -43,5 +43,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/map.md`
-- Removed builtin `map(K, V)`: `docs/language/types.md`
+- [Canonical doc](../docs/?p=std/map)
+- Removed builtin `map(K, V)`: [Types](../docs/?p=language/types)

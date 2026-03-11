@@ -3,7 +3,7 @@
 `std::interfaces` defines shared std protocol interfaces such as `Drop`,
 `Len`, and `Iterator(T)`.
 
-Canonical doc: `docs/std/interfaces.md`.
+[Canonical doc](../docs/?p=std/interfaces).
 
 ## Example: `Iterator(T)` and `next() -> T?`
 ```silk
@@ -34,5 +34,5 @@ impl CounterIter as std::interfaces::Iterator(int) {
 
 ## See also
 
-- Canonical doc: `docs/std/interfaces.md`
-- `for` iterator iteration: `docs/wiki/language/flow-for.md`
+- [Canonical doc](../docs/?p=std/interfaces)
+- `for` iterator iteration: [for loops](?p=language/flow-for)

@@ -3,12 +3,12 @@
 `std::result` standardizes the common “success or error” return shape as
 `Result(T, E)` so APIs across `std::` compose cleanly.
 
-Canonical doc: `docs/std/result.md`.
+[Canonical doc](../docs/?p=std/result).
 
 ## Status
 
 - Implemented (current representation is a tagged union enum).
-- Details: `docs/std/result.md`
+- [Details](../docs/?p=std/result)
 
 ## Importing
 
@@ -34,5 +34,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/result.md`
-- Error model: `docs/language/errors.md`, `docs/language/typed-errors.md`
+- [Canonical doc](../docs/?p=std/result)
+- Error model: [Errors](../docs/?p=language/errors), [Typed Errors (error, panic, and T | ErrorType...)](../docs/?p=language/typed-errors)

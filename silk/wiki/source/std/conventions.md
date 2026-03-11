@@ -3,12 +3,12 @@
 `std::` modules follow shared conventions for naming, ownership/allocation,
 error reporting.
 
-Canonical doc: `docs/std/conventions.md`.
+[Canonical doc](../docs/?p=std/conventions).
 
 ## Status
 
 - Design document: use as a guideline for new `std::` APIs.
-- Details: `docs/std/conventions.md`
+- [Details](../docs/?p=std/conventions)
 
 ## Key conventions (selected)
 
@@ -47,5 +47,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/conventions.md`
-- Typed errors: `docs/wiki/language/typed-errors.md`
+- [Canonical doc](../docs/?p=std/conventions)
+- Typed errors: [Typed errors (error, panic, and T | ErrorType...)](?p=language/typed-errors)

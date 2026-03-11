@@ -3,7 +3,7 @@
 This page describes how `std::` modules are organized and how the compiler
 finds and links them (including std-root selection and archive wiring).
 
-Canonical doc: [`std::` package structure](../docs/?p=std/package-structure).
+[Canonical doc](../docs/?p=std/package-structure).
 
 ## Status
 

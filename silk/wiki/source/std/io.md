@@ -3,7 +3,7 @@
 `std::io` provides basic stdin/stdout/stderr I/O and a small formatting surface
 (`print` / `println`).
 
-Canonical doc: [`std::io`](../docs/?p=std/io).
+[Canonical doc](../docs/?p=std/io).
 
 ## Status
 

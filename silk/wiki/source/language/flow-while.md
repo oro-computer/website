@@ -2,11 +2,11 @@
 
 Use `while` for condition-controlled looping.
 
-Canonical spec: `docs/language/flow-while.md`.
+[Canonical spec](../docs/?p=language/flow-while).
 
 ## Status
 
-- Implemented subset + tests: `docs/language/flow-while.md`
+- Implemented subset + tests: [while Loop](../docs/?p=language/flow-while)
 
 ## Syntax
 
@@ -33,5 +33,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/flow-while.md`
-- `break` / `continue`: `docs/wiki/language/flow-break.md`, `docs/wiki/language/flow-continue.md`
+- [Canonical spec](../docs/?p=language/flow-while)
+- `break` / `continue`: [break](?p=language/flow-break), [continue](?p=language/flow-continue)

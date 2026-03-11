@@ -3,12 +3,12 @@
 `std::crypto` provides cryptography primitives (hosted baseline via libsodium
 in the current design).
 
-Canonical doc: `docs/std/crypto.md`.
+[Canonical doc](../docs/?p=std/crypto).
 
 ## Status
 
 - Implemented subset + design: core libsodium-backed primitives are implemented on the hosted baseline.
-- Details: `docs/std/crypto.md`
+- [Details](../docs/?p=std/crypto)
 
 ## Importing
 
@@ -144,5 +144,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/crypto.md`
-- Strings and byte helpers: `docs/std/strings.md`
+- [Canonical doc](../docs/?p=std/crypto)
+- Strings and byte helpers: [std::strings](../docs/?p=std/strings)

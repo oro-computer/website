@@ -4,12 +4,12 @@
 by string-building helpers. It follows a Zig-`std.fmt`-style format-string
 syntax.
 
-Canonical doc: `docs/std/fmt.md`.
+[Canonical doc](../docs/?p=std/fmt).
 
 ## Status
 
 - Implemented subset is available to support `std::io` printing.
-- Details: `docs/std/fmt.md`
+- [Details](../docs/?p=std/fmt)
 
 ## Examples
 
@@ -25,5 +25,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/fmt.md`
-- Printing: `docs/std/io.md`
+- [Canonical doc](../docs/?p=std/fmt)
+- Printing: [std::io](../docs/?p=std/io)

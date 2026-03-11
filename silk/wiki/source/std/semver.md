@@ -5,7 +5,7 @@
 - strict parsing of `MAJOR.MINOR.PATCH[-PRERELEASE][+BUILD]`
 - SemVer precedence comparison (build metadata is ignored)
 
-Canonical doc: `docs/std/semver.md`.
+[Canonical doc](../docs/?p=std/semver).
 
 ## Quick example
 

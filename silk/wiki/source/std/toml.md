@@ -2,12 +2,12 @@
 
 `std::toml` provides an implemented TOML parsing subset.
 
-Canonical doc: `docs/std/toml.md`.
+[Canonical doc](../docs/?p=std/toml).
 
 ## Status
 
 - Implemented subset + design: parsing is implemented; serialization is planned.
-- Details: `docs/std/toml.md`
+- [Details](../docs/?p=std/toml)
 
 ## Importing
 
@@ -88,5 +88,5 @@ answer = 42
 
 ## See also
 
-- Canonical doc: `docs/std/toml.md`
-- Result handling: `docs/std/result.md`
+- [Canonical doc](../docs/?p=std/toml)
+- Result handling: [std::result](../docs/?p=std/result)

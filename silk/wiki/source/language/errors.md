@@ -7,7 +7,7 @@ unrecoverable logic bugs and contract violations.
 This page focuses on assertions and the high-level model; see typed errors for
 the full rules.
 
-Canonical doc: [Errors and assertions](../docs/?p=language/errors).
+[Canonical doc](../docs/?p=language/errors).
 
 In the current toolchain, failed assertions inside `silk test` are isolated per
 test process, so one crashing test does not abort the whole test suite. Outside

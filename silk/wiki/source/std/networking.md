@@ -4,7 +4,7 @@
 including byte-order helpers, TCP/UDP sockets, DNS resolution helpers, and a
 small async subset.
 
-Canonical doc: [`std::net`](../docs/?p=std/networking).
+[Canonical doc](../docs/?p=std/networking).
 
 ## Status
 

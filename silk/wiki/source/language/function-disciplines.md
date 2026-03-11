@@ -8,7 +8,7 @@ Function modifiers declare constraints and concurrency behavior:
 - `const fn` for compile-time-evaluable functions (see
   [?p=language/const-functions](?p=language/const-functions))
 
-Canonical doc: [Function disciplines](../docs/?p=language/function-disciplines).
+[Canonical doc](../docs/?p=language/function-disciplines).
 
 ## Status
 

@@ -2,12 +2,12 @@
 
 `std::path` provides path manipulation helpers.
 
-Canonical doc: `docs/std/path.md`.
+[Canonical doc](../docs/?p=std/path).
 
 ## Status
 
 - Implemented subset is available (POSIX-style `/` paths).
-- Details: `docs/std/path.md`
+- [Details](../docs/?p=std/path)
 
 ## Importing
 
@@ -54,6 +54,6 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/path.md`
-- Filesystem: `docs/wiki/std/filesystem.md`
-- Strings: `docs/std/strings.md`
+- [Canonical doc](../docs/?p=std/path)
+- Filesystem: [std::fs](?p=std/filesystem)
+- Strings: [std::strings](../docs/?p=std/strings)

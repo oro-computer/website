@@ -7,7 +7,7 @@ Silk concurrency is built around:
 - `await` for promises,
 - `yield` / `yield *` for task values.
 
-Canonical doc: [Concurrency](../docs/?p=language/concurrency).
+[Canonical doc](../docs/?p=language/concurrency).
 
 ## Status
 
