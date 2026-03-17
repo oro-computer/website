@@ -1,6 +1,6 @@
 # `std::fmt`
 
-Status: **Design + initial implementation**. The initial formatting engine is implemented
+Status: **Implemented subset + design**. The formatting engine is implemented
 in `std/fmt.slk` and is intentionally scoped to the current compiler/backend
 subset (no generics, no runtime interface dispatch).
 

@@ -41,7 +41,7 @@ contracts as authoritative.
 
 ## Rules (Current Implemented Subset)
 
-The initial implementation intentionally supports only unions whose member
+The current compiler subset intentionally supports only unions whose member
 types have a safe, well-defined representation in the current compiler/backend
 subset.
 

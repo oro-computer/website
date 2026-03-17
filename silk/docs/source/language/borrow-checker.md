@@ -158,6 +158,59 @@ Copy or move the data you need before `await`; do not rely on a borrow staying
 usable across a suspension point unless that specific API contract is
 documented.
 
+## Practical lifecycle patterns
+
+### Return a borrow of caller-owned data
+
+This is the simplest good pattern: the caller owns the storage, and the callee
+returns a subview of it.
+
+```silk
+fn payload (frame: u8[]) -> u8[] {
+  return &frame[14..];
+}
+```
+
+### Keep ordinary borrows inside one synchronous region
+
+Use borrows for local structure and readability, then finish the work before
+you cross an `await` or task boundary.
+
+```silk
+fn sum_head (xs: int[]) -> int {
+  let head: int[] = &xs[0..2];
+  return head[0] + head[1];
+}
+```
+
+### Move owned data across task boundaries
+
+When work crosses a task boundary, prefer an owned value rather than a borrow.
+
+```silk
+struct Job {
+  id: int,
+  retries: int,
+}
+
+task fn process (job: Job) -> int {
+  return job.id + job.retries;
+}
+
+async fn main () -> int {
+  task {
+    let values: int[] = yield * process(Job{ id: 41, retries: 1 });
+    return values[0] - 42;
+  }
+}
+```
+
+This is the current downstream rule of thumb:
+
+- ordinary borrows stay local,
+- owned values cross task boundaries,
+- borrow-handle APIs such as `AbortSignalBorrow` are the explicit exception.
+
 ## Ownership Transfer (`move`) (Implemented Subset)
 
 Silk’s safe subset includes a small explicit ownership-transfer form:
@@ -186,7 +239,7 @@ In the current subset, ownership transfer is intentionally conservative:
   - `let y = x;` consumes `x`,
   - `y = x;` consumes `x`.
 
-## Planned Expansion
+## Remaining gaps and planned expansion
 
 As the language grows, borrow checking is expected to expand to cover:
 

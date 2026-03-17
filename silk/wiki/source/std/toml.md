@@ -6,7 +6,8 @@
 
 ## Status
 
-- Implemented subset + design: parsing is implemented; serialization is planned.
+- Parsing and basic querying are implemented in the current subset.
+- Serialization is not part of the current TOML surface.
 - [Details](../docs/?p=std/toml)
 
 ## Importing

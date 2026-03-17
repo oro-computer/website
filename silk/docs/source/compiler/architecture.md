@@ -22,11 +22,14 @@ The compiler is implemented in Zig and organized into three major layers:
   - Emission of object files and archives that can be linked into executables and libraries.
   - C99 ABI mappings for interop with `libsilk.a`.
 
-In terms of concrete targets and file formats, the back-end MUST eventually support:
+In terms of concrete targets and file formats, the back-end surface today plus
+the explicit roadmap requirements are:
 
 - ELF for Unix-like systems:
-  - `linux/x86_64` is the initial full IR-backed target (executables, objects, static libraries, and shared libraries).
-  - `linux/aarch64` (ARM64) is a required future IR-backed target (beyond const-only executables).
+  - `linux/x86_64` is the current full IR-backed target (executables, objects,
+    static libraries, and shared libraries).
+  - `linux/aarch64` (ARM64) remains a required future IR-backed target (beyond
+    const-only executables).
   - position-independent code and shared objects (`.so`) for dynamic libraries.
 - Mach-O for macOS:
   - both Intel (`x86_64`) and Apple Silicon (`arm64`) MUST be supported,
@@ -46,15 +49,21 @@ Current snapshot (Silk (ABI) 0.2.0):
   This backend is host-agnostic for `linux-x86_64` outputs: it can emit Linux ELF artifacts even when the compiler itself is running on a non-`linux/x86_64` host.
 - `src/backend_wasm_ir.zig` provides the IR-backed backend for `wasm32-unknown-unknown` and `wasm32-wasi` outputs.
 
-Mach-O and PE/COFF IR-backed object/static/shared library emission, and additional IR-backed architectures (notably AArch64) are explicit future requirements and MUST be planned and implemented as the back-end matures.
+Mach-O and PE/COFF IR-backed object/static/shared library emission, and
+additional IR-backed architectures (notably AArch64), remain explicit roadmap
+requirements.
 
-An initial IR-driven, native backend is being prototyped alongside the existing constant-expression emitter:
+A growing IR-driven native backend exists alongside the constant-expression
+emitter:
 
 - the front-end (parser + checker) produces `ast.Module` values,
 - a lowering pass in `src/lower_ir.zig` translates a constrained subset of `fn main() -> int` programs into `ir.Function` graphs, using integer arithmetic, comparisons, and simple control flow (`Br` / `BrCond`),
 - a target-independent IR interpreter in `src/ir_eval.zig` provides reference semantics for these IR functions,
 - the constant-expression backend emits a minimal target-specific executable stub (ELF64/Mach-O/PE32+) whose entrypoint terminates the process with the evaluated `main` return value,
-- a dedicated IR→ELF backend module (`src/backend_ir_elf.zig`) will gradually assume responsibility for emitting native code directly from `ir.Function` graphs, starting with a single-function, integer-returning subset and expanding as more language features are lowered to IR.
+- a dedicated IR→ELF backend module (`src/backend_ir_elf.zig`) is progressively
+  assuming responsibility for emitting native code directly from `ir.Function`
+  graphs, starting with a constrained subset and expanding as more language
+  features are lowered to IR.
 
 ### Packages, Modules, Imports, and Exports
 
@@ -88,10 +97,10 @@ that spec.
 
 The implementation must remain spec-driven: any architectural decision should be traceable back to a document in `docs/`.
 
-### Executable Entrypoint (Initial Rule)
+### Executable Entrypoint (Current Rule)
 
-For executable builds driven via the C ABI (`SILK_OUTPUT_EXECUTABLE`) and,
-eventually, the `silk` CLI, the compiler enforces a simple, explicit entrypoint:
+For executable builds driven via the C ABI (`SILK_OUTPUT_EXECUTABLE`) and the
+`silk` CLI, the compiler currently enforces a simple, explicit entrypoint:
 
 - there MUST be exactly one top-level function with the signature:
 
@@ -104,10 +113,11 @@ eventually, the `silk` CLI, the compiler enforces a simple, explicit entrypoint:
   - returns `int`,
   - serves as the process entrypoint when an executable is produced.
 
-In the initial bring-up, this requirement is enforced by the front-end (via
-`silk_compiler_build`) and a minimal back-end that supports only constant
-integer `main` functions. This is a temporary measure; the long-term back-end
-is a true Silk code generator, not a C transpiler.
+This requirement is enforced today by the front-end plus the current build
+backends exposed through both `silk_compiler_build` and the `silk` CLI. The
+const-main bring-up path is still documented because some targets remain
+const-only, but the broader direction is already a true Silk code generator,
+not a C transpiler.
 
 ## Module Layout (Draft)
 

@@ -1,6 +1,6 @@
 # Web IDL (`std::idl::web`)
 
-Status: **Implemented subset (initial implementation)**.
+Status: **Implemented subset**.
 
 This module provides a Web IDL parser plus an ergonomic, query-oriented API for
 inspecting the parsed document.

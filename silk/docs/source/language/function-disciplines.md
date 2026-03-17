@@ -8,16 +8,16 @@ Const functions (`const fn`) are specified separately in
 `docs/language/const-functions.md`. The `const` modifier is orthogonal to the
 discipline system described here (a `const fn` may also be declared `pure`).
 
-Status: **design in progress**, but the current compiler subset now implements
+Status: **Implemented subset + design**. The current compiler subset implements
 `pure fn` parsing and a strict purity checker. Concurrency disciplines (`task` /
 `async`) are parsed and `Task(T)` / `Promise(T)` handles plus `yield` (task
 values) and `await` (promise values) are implemented in the current subset
 (`await Task(T)` is rejected). On the hosted `linux/x86_64` target, the compiler
-now ships a bring-up async runtime (single-threaded executor + stackful
+now ships a hosted async runtime (single-threaded executor + stackful
 coroutines in `libsilk_rt`) so `await` can suspend and resume without blocking
 the OS thread. A compiler state-machine coroutine transform, structured
 concurrency scope semantics, and richer Send/Sync-style reasoning remain future
-work. The current compiler already enforces an initial task-boundary safety
+work. The current compiler already enforces a conservative task-boundary safety
 rule (`E2037`) that rejects non-opaque references across `task fn` boundaries.
 See `docs/language/concurrency.md` for the concurrency model and implementation
 status.
@@ -91,6 +91,10 @@ discipline crossings:
 - fd readiness and abort-aware waits via `std::runtime::event_loop`,
 - minimal async fd wrappers via
   `std::io::async::{read,write,read_abortable,write_abortable}`,
+- async TCP connect/accept via
+  `std::net::{TCPStream.connect_async,TCPListener.accept_async}`,
+- task-based fd/socket stream adapters via `std::io::stream` and
+  `std::net::stream`,
 - task-pool scheduling selection via `attr(task=pool)` / `attr(task_pool)` on
   `task fn` and `async task fn`.
 
@@ -150,7 +154,7 @@ Today:
   - By default, each `task fn` call spawns a dedicated OS thread.
   - When a `task fn` / `async task fn` is annotated with `attr(task=pool)` (or
     `attr(task_pool)`), calls are scheduled on the global task pool instead.
-  - On hosted `linux/x86_64`, the compiler ships a bundled bring-up async
+  - On hosted `linux/x86_64`, the compiler ships a bundled hosted async
     runtime so `await` is a true suspension point:
     - awaiting a pending `Promise(T)` parks the current fiber and allows other
       runnable fibers to execute (it does not block the OS thread),

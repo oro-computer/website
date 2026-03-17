@@ -6,7 +6,8 @@
 
 ## Status
 
-- Implemented subset + design: parsing and stringify are implemented; the DOM/query surface is still evolving.
+- Parsing, querying, and stringify are implemented in the current subset.
+- The remaining gaps are higher-level DOM conveniences, not basic JSON I/O.
 - [Details](../docs/?p=std/json)
 
 ## Importing

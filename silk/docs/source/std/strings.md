@@ -1,8 +1,8 @@
 # `std::strings`
 
-Status: **Initial implementation (expanded)**. A small but growing subset is
-implemented in `std/strings.slk` to support early toolchain bring-up; the rest
-of this document describes the intended long-term API.
+Status: **Implemented subset + design**. A focused subset is implemented in
+`std/strings.slk` today, and the rest of this document records the broader API
+shape planned around that shipped surface.
 
 This module provides string utilities and abstractions built on top of the core
 `string` type (UTF-8 bytes) and the `Buffer(T)` intrinsic.

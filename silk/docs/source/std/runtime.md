@@ -203,7 +203,7 @@ Implemented runtime areas in the shipped stdlib:
 Hosted async runtime area available today:
 
 - `std::runtime::event_loop` for hosted `async`/`await`:
-  - the compiler already ships a bundled bring-up executor in `libsilk_rt` and
+  - the compiler already ships a bundled hosted executor in `libsilk_rt` and
     lowers `async`/`await` to it on the hosted `linux/x86_64` target,
   - the module exposes low-level awaitable readiness/timer helpers plus an
     explicit `Handle` polling surface for manually driving the hosted executor,

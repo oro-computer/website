@@ -16,6 +16,9 @@ The key design choice is **opt-in by syntax**:
 Formal Silk is meant to be used the way you actually write systems code: small, local assertions around the parts that are
 easy to get subtly wrong (boundary checks, invariants, protocol rules, and “this must never happen” assumptions).
 
+If you want a step-by-step walkthrough, start with
+[`Tutorial 7: Formal Silk in real code`](?p=usage/tutorials/07-formal-silk).
+
 ## Where directives live
 
 Formal Silk directives attach to **specific syntactic sites**:
@@ -289,7 +292,153 @@ fn main () -> int {
 
 See the reference for the exact accepted subset and the Z3 mapping: [`Formal Silk`](?p=language/formal-verification)
 
+### Build metadata in proofs
+
+Formal Silk can reason about build metadata, which is useful when you want to
+state “this helper is only valid in test builds” or “this proof assumes a
+package version floor”.
+
+```silk
+#require BUILD_MODE == "test";
+#assure result == 0;
+fn test_only_status () -> int {
+  return 0;
+}
+
+#require BUILD_VERSION_MAJOR >= 1;
+#assure result >= 0;
+fn stable_api_floor () -> int {
+  return 0;
+}
+```
+
+The current built-in metadata names are:
+
+- `BUILD_KIND`, `BUILD_MODE`, `BUILD_VERSION`
+- `BUILD_VERSION_MAJOR`, `BUILD_VERSION_MINOR`, `BUILD_VERSION_PATCH`
+
+### Opaque contracts for precompiled helpers
+
+Formal Silk is still useful when the implementation body lives somewhere else.
+If a declaration has a visible contract but no visible body, the verifier treats
+the call as opaque: it proves the preconditions, then assumes the
+postconditions.
+
+```silk
+#require bytes >= 0;
+#assure result >= bytes;
+fn align_up_page (bytes: int) -> int;
+
+fn main () -> int {
+  let size = align_up_page(4096);
+  #assert size >= 4096;
+  return 0;
+}
+```
+
+This is a practical way to document and verify assumptions around:
+
+- allocator shims,
+- precompiled libraries,
+- host calls reached through a prototype surface.
+
+### Real-world example: packet layout and constructor safety
+
+`#require` on a `struct` is the right tool when the invariant belongs to the
+type itself rather than to one helper function.
+
+```silk
+#require header_len == 8 || header_len == 12;
+#require payload_len >= 0;
+#require total_len == header_len + payload_len;
+struct FrameLayout {
+  header_len: int,
+  payload_len: int,
+  total_len: int,
+}
+
+fn main () -> int {
+  let layout = FrameLayout{
+    header_len: 8,
+    payload_len: 24,
+    total_len: 32,
+  };
+
+  return layout.total_len - 32;
+}
+```
+
+This style works well for:
+
+- wire headers,
+- on-disk record layouts,
+- buffer descriptors,
+- length/capacity pairs.
+
+### Real-world example: progress guarantees in a bounded loop
+
+`#variant` and `#monovariant` are most valuable when a loop is easy to get
+almost-right but expensive to debug after the fact.
+
+```silk
+fn main () -> int {
+  let budget: int = 16;
+  #const original_budget = budget;
+
+  let mut used: int = 0;
+  #invariant used >= 0;
+  #invariant used <= original_budget;
+  #variant original_budget - used;
+  #monovariant used;
+  while used < budget {
+    used += 1;
+  }
+
+  #assert used == original_budget;
+  return 0;
+}
+```
+
+This is a good fit for:
+
+- retry budgets,
+- scan cursors,
+- parser offsets,
+- bounded work queues.
+
+### Reusing `std::formal` theories
+
+When the same proof shape appears repeatedly, prefer a shared theory rather
+than restating the same bounds boilerplate in every function:
+
+```silk
+import { nonnegative_i64, bounds_i64 } from "std/formal";
+
+#theory nonnegative_i64(len);
+#theory bounds_i64(index, len);
+#assure result == index;
+fn checked_offset (index: i64, len: i64) -> i64 {
+  return index;
+}
+```
+
+This is the right pattern for parsers, pointer/length APIs, and any codebase
+that wants a consistent verified vocabulary.
+
 <!-- tabs:end -->
+
+## Choosing the right directive
+
+- Use `#require` when a caller must establish a fact before entering a
+  function.
+- Use `#assure` when a callee guarantees something about its return value.
+- Use `#assert` when a fact matters only at one point inside a block.
+- Use `#require` on a `struct` when the invariant belongs to the data type
+  itself.
+- Use `#invariant` / `#variant` / `#monovariant` when a property spans loop
+  iterations.
+- Use `theory` / `#theory` when the same proof shape appears in more than one
+  place or more than one module.
 
 ## Why it’s valuable
 
@@ -302,6 +451,23 @@ Formal verification is most useful where bugs are expensive:
 
 Silk’s approach keeps verification lightweight and local: you opt in where it buys you confidence.
 
+## A practical workflow
+
+For most downstream code, the loop is:
+
+```bash
+silk check verified_logic.slk
+silk build verified_logic.slk --debug -o build/verified_logic
+z3 -smt2 .silk/z3/silk_z3_m0_0.smt2
+```
+
+Suggested habit:
+
+1. start with a single `#assert` or `#require`,
+2. introduce `#const` names when an expression becomes hard to read,
+3. extract a `theory` only after the proof shape repeats,
+4. use `--debug` only when the normal diagnostic is not enough.
+
 ## Debugging failed proofs
 
 When a proof fails, the compiler reports a normal diagnostic at the annotation site.
@@ -311,3 +477,10 @@ SMT‑LIB reproduction script you can replay with an external Z3 binary.
 
 The workflow is intentionally pragmatic: when a proof fails, you should be able to iterate the same way you iterate on type
 errors — with good diagnostics and small edits.
+
+The most common Formal Silk diagnostics in practice are:
+
+- `E3001` / `E3002` / `E3003` for loop invariants and variants,
+- `E3006` for `#assert` and theory obligations,
+- `E3007` for contracted calls whose preconditions are not provable,
+- `E3008` for non-monotonic `#monovariant` expressions.

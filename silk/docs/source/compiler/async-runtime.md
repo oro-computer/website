@@ -1,6 +1,6 @@
 # Async Runtime (Hosted)
 
-Status: **Bring-up implementation (linux/x86_64 hosted)**.
+Status: **Implemented subset + design (linux/x86_64 hosted)**.
 
 This document now serves two roles:
 
@@ -231,7 +231,7 @@ The compiler is responsible for:
 - computing which locals must be stored in the frame across each suspension point,
 - preserving typed-error and `panic` semantics during the transform.
 
-Note: the current shipped bring-up does **not** yet implement this state-machine transform.
+Note: the current shipped hosted runtime does **not** yet implement this state-machine transform.
 Instead, `async fn` bodies execute on stackful coroutines provided by the runtime (`ucontext`)
 and suspension points yield back to the executor by swapping contexts. The long-term plan is
 to migrate from stackful coroutines to an explicit compiler transform once the async surface
@@ -297,7 +297,7 @@ The interface must support:
 
 The current downstream-facing surface is documented in
 [`std::runtime::event_loop`](?p=std/runtime-event-loop). The exact signatures
-may continue to evolve during bring-up, but the long-term contract should avoid
+may continue to evolve while the hosted runtime surface stabilizes, but the long-term contract should avoid
 exposing raw platform struct layouts directly to user code.
 
 ## Linux Backend: `io_uring`

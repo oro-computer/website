@@ -1,35 +1,40 @@
 # `std::formal`
 
-`std::formal` provides reusable Formal Silk theories (“standard lemmas”) used
-by stdlib code and downstream verified code.
+`std::formal` provides reusable Formal Silk theories for common proof shapes:
+
+- non-negative lengths and counters,
+- non-null pointers,
+- bounds checks,
+- slice and vector well-formedness.
 
 [Canonical doc](../docs/?p=std/formal).
 
-## Status
-
-- Implemented subset is available (initial theory set).
-- [Details](../docs/?p=std/formal)
-
 ## Importing
-
-Theories are imported via file imports and applied with `#theory`:
 
 ```silk
 import { nonnegative_i64, bounds_i64 } from "std/formal";
 ```
 
-## Examples
+## Example
 
-### Example: applying standard theories
 ```silk
 import { nonnegative_i64, bounds_i64 } from "std/formal";
 
 #theory nonnegative_i64(len);
 #theory bounds_i64(index, len);
-fn get_at (index: i64, len: i64) -> i64 {
+#assure result == index;
+fn checked_index (index: i64, len: i64) -> i64 {
   return index;
 }
 ```
+
+## Current theory set
+
+- `nonnegative_i64`
+- `nonnull_u64`
+- `bounds_i64`
+- `slice_well_formed`
+- `vector_well_formed`
 
 ## See also
 

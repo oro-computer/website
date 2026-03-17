@@ -1,6 +1,6 @@
 # `std::process`
 
-Status: **Work in progress** (hosted POSIX baseline).
+Status: **Implemented subset + design** (hosted POSIX baseline).
 
 `std::process` provides access to process-level operations that are not tied to
 environment variables, such as the current working directory.

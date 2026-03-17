@@ -2,9 +2,10 @@
 
 The `if` / `else` construct provides branching based on a boolean condition.
 
-In the current compiler subset, `if` is a **statement** that selects which
-block of statements executes. The broader language design also includes
-expression-oriented forms; those are documented as planned where relevant.
+In the current compiler subset, `if` works in both roles:
+
+- as a **statement** that selects which block executes, and
+- as an **expression** for the documented value-producing subset.
 
 ## Surface Syntax (Current Implemented Subset)
 

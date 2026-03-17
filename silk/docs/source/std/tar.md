@@ -1,6 +1,6 @@
 # `std::tar`
 
-Status: **Design + initial implementation**. `std::tar` provides a portable,
+Status: **Implemented subset + design**. `std::tar` provides a portable,
 streaming tar reader/writer for building and inspecting tar archives without
 loading whole archives into memory.
 

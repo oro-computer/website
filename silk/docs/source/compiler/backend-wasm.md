@@ -1,16 +1,15 @@
 # WebAssembly Back-End (`wasm32` / `wasm64`)
 
-Status: **Design + initial implementation**.
+Status: **Implemented subset + design**.
 
-This document records the initial design and constraints for targeting
-WebAssembly from the Silk compiler back-end. It is intended to guide future
-implementation work and keep the compiler architecture spec-driven.
+This document records the current implemented subset and remaining design
+constraints for targeting WebAssembly from the Silk compiler back-end.
 
 ## Current Implementation (Phase 1, IR-backed wasm32)
 
-The Silk compiler repository now includes an initial `wasm32` back-end capable of emitting a
-final `.wasm` module from the compiler’s IR (CFG-based lowering for the current
-subset), plus a smaller constant-only fallback:
+The Silk compiler repository now includes a `wasm32` back-end capable of
+emitting a final `.wasm` module from the compiler’s IR (CFG-based lowering for
+the current subset), plus a smaller constant-only fallback:
 
 - Implementations:
   - IR-backed wasm backend (primary path),
@@ -37,7 +36,8 @@ subset), plus a smaller constant-only fallback:
     IR subset.
   - does not yet support the concurrency runtime on wasm targets (no `task` /
     `async` lowering to a wasm-native scheduler); programs using concurrency
-    constructs may fail code generation with a “not implemented yet” error.
+    constructs are currently outside the wasm backend subset and are rejected
+    during code generation.
 
 The CLI exposes these targets via `silk build --target ...` and the shorthand
 `silk build --arch wasm32|wasm32-wasi` (see `docs/compiler/cli-silk.md` and
@@ -87,7 +87,7 @@ embedder.
 - Preserve Silk’s “native compiler” principle: this is Silk-owned codegen (no C
   transpilation).
 
-## Non-Goals (for initial implementation)
+## Non-Goals (current phase)
 
 - A full WASM toolchain replacement (linker, LTO, debug formats) on day one.
 - A single “portable” stdlib archive usable across all WASM environments
@@ -99,7 +99,7 @@ embedder.
 
 ### Module kinds
 
-The initial back-end should emit a *final* `.wasm` module (not a relocatable
+The current back-end emits a *final* `.wasm` module (not a relocatable
 object) for the supported subset, analogous to the current `linux/x86_64`
 “emit a final ELF image” approach.
 

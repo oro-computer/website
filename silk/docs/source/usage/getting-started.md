@@ -93,6 +93,7 @@ Reference: [Vendored deps](?p=compiler/vendored-deps)
 ## Where to go next
 
 - Guides: [What Silk is for](?p=guides/purpose) · [Hello world](?p=guides/hello-world) · [Language tour](?p=guides/language-tour)
+- Formal verification: [Formal Silk](?p=guides/formal-silk) · [Tutorial 7: Formal Silk in real code](?p=usage/tutorials/07-formal-silk)
 - Language quick reference: [Cheat sheet](?p=language/cheat-sheet)
 - Standard library: [Overview](?p=std/overview)
 - Embedding: [C ABI (`libsilk`)](?p=compiler/abi-libsilk) · [Zig embedding API](?p=compiler/zig-api)

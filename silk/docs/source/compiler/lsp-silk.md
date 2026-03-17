@@ -101,7 +101,7 @@ Position handling note:
 The server supports the standard LSP initialization sequence:
 
 - `initialize` (request):
-  - Advertised capabilities (initial version):
+  - Advertised capabilities (current version):
     - `positionEncoding`: `"utf-16"` (the server currently operates in UTF-16 positions for maximum client compatibility).
     - `textDocumentSync`:
       - `openClose: true`,
@@ -117,17 +117,19 @@ The server supports the standard LSP initialization sequence:
     - `signatureHelpProvider`:
       - trigger characters `(` and `,`,
       - provides function and method signatures for the current call.
-    - No references/rename, semantic tokens, or other advanced features are claimed in the initial implementation.
+    - No references/rename, semantic tokens, or other advanced features are
+      claimed in the current implementation.
 - The server uses `rootUri` (or `rootPath`) to help locate a stdlib root when no explicit `--std-root` or `SILK_STD_ROOT` is set.
 - `initialized` (notification):
   - Accepted but does not currently trigger additional behavior.
 - `shutdown` (request) and `exit` (notification) are honored as in the LSP spec.
 - Requests received after `shutdown` (other than `exit`) are treated as invalid and answered with an error response.
-- `$\/cancelRequest` notifications are accepted and ignored; the initial server does not track per-request cancellation state.
+- `$\/cancelRequest` notifications are accepted and ignored; the current server
+  does not track per-request cancellation state.
 
-Any future capabilities (completion, hover, goto definition, etc.) must be documented here before being implemented.
+Any newly added capability must be documented here before being advertised.
 
-## Hover (Initial Support)
+## Hover (Current Support)
 
 The server provides a minimal implementation of `textDocument/hover`:
 
@@ -152,9 +154,9 @@ The server provides a minimal implementation of `textDocument/hover`:
 
 As the front-end grows richer (e.g. with symbol tables and more detailed type information), hover semantics may be extended to include resolved types and declaration summaries; such changes must be reflected here before being implemented.
 
-## Go to Definition (Initial Support)
+## Go to Definition (Current Support)
 
-The server provides an initial implementation of `textDocument/definition`:
+The server provides the current implementation of `textDocument/definition`:
 
 - Definition requests are handled for the current contents of an open document.
 - The server first consults the module-set symbol index (open docs + resolved imports + std modules) to resolve:
@@ -172,7 +174,7 @@ The server provides an initial implementation of `textDocument/definition`:
 - Constructor calls (`new Type(...)`) resolve to the `fn constructor` declaration when the constructor overload set is unambiguous; otherwise the server falls back to the `struct Type` declaration.
 - If symbol resolution fails, the server falls back to a lexical scan of the current file for the first matching `let`/`fn`/`ext`/`struct`/`enum`/`interface`/`error` declaration.
 
-Known limitations in this initial support:
+Known limitations in the current support:
 
 - local block scopes and shadowing are only modeled for `let`-style bindings (not for match-expression binders),
 - ambiguous names across multiple imports are not disambiguated; the first match wins,

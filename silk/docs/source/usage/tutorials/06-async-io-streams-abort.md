@@ -141,3 +141,5 @@ async fn main () -> int {
   (`std::net::stream` provides `TcpStream` ↔ stream adapters).
 - For low-level readiness waits and manual executor driving, read
   `docs/std/runtime-event-loop.md`.
+- For compile-time proofs around bounds, invariants, and contracts, continue to
+  [Tutorial 7: Formal Silk in real code](?p=usage/tutorials/07-formal-silk).

@@ -15,6 +15,9 @@ Silk concurrency is built around:
   `std::runtime::event_loop`, and `std::io::async`.
 - `std::task` / `std::sync` are still mostly blocking primitives today; richer
   async coverage and structured-concurrency runtime semantics remain incomplete.
+- Hosted async TCP `connect` / `accept` already exist under `std::net`, and
+  task-based fd/socket stream adapters already exist under `std::io::stream`
+  and `std::net::stream`.
 
 ## Examples
 ### `task` inside `async fn` + `yield *`

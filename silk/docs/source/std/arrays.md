@@ -1,6 +1,6 @@
 # `std::arrays`
 
-Status: **Design + initial implementation**. A generic `Slice(T)` view type is provided
+Status: **Implemented subset + design**. A generic `Slice(T)` view type is provided
 for early FFI-friendly bridging; higher-level owning containers live in
 `std::vector`.
 

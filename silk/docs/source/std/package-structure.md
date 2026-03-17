@@ -1,9 +1,9 @@
 # `std::` Module Structure
 
-Status: **Design + initial implementation**. This describes the intended organization and
-build integration for `std::`. A first, minimal slice of the build integration
-is implemented (auto-resolving `std::...` imports from a configurable stdlib
-root), while most std APIs remain unimplemented.
+Status: **Implemented subset + design**. This describes the organization and
+build integration for `std::`. Auto-resolving `std::...` imports from a
+configurable stdlib root is implemented today, and the in-tree stdlib already
+ships a broad hosted subset across core, runtime, and systems modules.
 
 This document defines how the standard library is organized and how it is made
 available to user programs.

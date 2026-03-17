@@ -1,6 +1,6 @@
 # `std::io`
 
-Status: **Design + initial implementation**. Basic stdin reads, stdout/stderr
+Status: **Implemented subset + design**. Basic stdin reads, stdout/stderr
 writes, tty helpers, and initial async-aware wrappers are implemented today.
 Buffered I/O and broader async stream/file integration remain future work.
 
@@ -215,7 +215,7 @@ key point is that `std::fs` and `std::net` can reuse the same I/O traits.
 
 - Buffered I/O wrappers (`BufReader`, `BufWriter`).
 - Async-aware adapters:
-  - the hosted `linux/x86_64` toolchain now ships a bring-up async executor and
+  - the hosted `linux/x86_64` toolchain now ships a hosted async executor and
     exposes timers + fd readiness via `std::runtime::event_loop`,
   - `std::task` includes awaitable sleep helpers (`sleep_ms_async`, `sleep_async`),
   - `std::io::async` provides minimal `async fn` wrappers over fd-based

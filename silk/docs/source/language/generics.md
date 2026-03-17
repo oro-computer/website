@@ -2,7 +2,7 @@
 
 This document specifies Silk’s parameterized type and declaration syntax.
 
-Status: **in progress**. Silk’s generics are **compile-time** features:
+Status: **Implemented subset + design**. Silk’s generics are **compile-time** features:
 parameterized declarations are **monomorphized** into concrete, fully specified
 types and functions at build time (there are no runtime type parameters).
 
@@ -163,10 +163,10 @@ impl Data(T) { /* ... */ }
 This rule keeps method receiver typing unambiguous and makes monomorphization
 explicit.
 
-## Functions (initial parsed surface form)
+## Functions (current supported surface form)
 
-Generic functions require a way to declare type/const parameters distinct from
-value parameters. The initial parsed surface form is:
+Generic functions declare type/const parameters distinct from value parameters
+using the compile-time/runtime split. The current supported surface form is:
 
 ```silk
 fn get_first(T, N: usize; v: &T[N]) -> T {

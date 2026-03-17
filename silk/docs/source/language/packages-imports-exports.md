@@ -631,7 +631,7 @@ Rules:
 - `export` is not allowed inside blocks; it applies only to module-level
   declarations. Inside `impl` blocks, `public` controls method visibility and
   `export` is reserved for static members.
-- The initial implementation supports `export` on:
+- The current compiler subset supports `export` on:
   - functions (`export fn ...`), including a declaration-only prototype form
     (`export fn name(...) -> T;`) used for header-style interface modules,
   - `let` and `const` bindings (`export let ...`, `export const ...`).

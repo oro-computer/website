@@ -193,8 +193,8 @@ The initial C header provided in the Silk compiler repository defines:
   auto-loaded `import std::...;` modules.
 
   `silk_compiler_set_target` selects the code generation target. The
-  `target_triple` string is copied. The initial implementation recognizes the
-  same targets as the CLI (`silk build --list-targets`), including:
+  `target_triple` string is copied. The current supported set matches the CLI
+  (`silk build --list-targets`), including:
 
   - `linux-x86_64` (default), and common `x86_64-*-linux-*` triples such as
     `x86_64-linux-gnu` and `x86_64-unknown-linux-gnu`,
@@ -423,7 +423,7 @@ The initial C header provided in the Silk compiler repository defines:
         - within function bodies, the compiler supports a small `string`/`regexp` expression subset:
           - `string`: string literals, `let` bindings of `string`, `return` of a `string` value, direct calls to `string`-returning helpers, and `==`/`!=`/`<`/`<=`/`>`/`>=` comparisons over `string` values (producing `bool`),
           - `regexp`: regex literals (`/pattern/flags`), `let` bindings of `regexp`, `return` of a `regexp` value, and direct calls between helpers that accept/return `regexp`,
-          - other string operations (concatenation, indexing, etc.) are not implemented yet; higher-level regex matching lives in `std::regex` and is routed through `ext` calls.
+          - other string operations (concatenation, indexing, etc.) remain outside the current backend subset; higher-level regex matching lives in `std::regex` and is routed through `ext` calls.
       - within the current `linux/x86_64` IR subset, `i128`/`u128`/`f128` values are supported at ABI boundaries using the stable C99 `{ lo, hi }` struct shapes:
         - parameters lower to two integer-like scalars (`u64 lo`, then `u64`/`i64 hi`) and consume integer argument locations,
         - results return as two integer-like scalars in `rax`/`rdx`,

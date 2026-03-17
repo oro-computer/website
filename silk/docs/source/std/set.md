@@ -5,7 +5,7 @@
 - `SetMap(T)` — an unordered set backed by an open-addressing hash table.
 - `TreeSet(T)` — an ordered set backed by a red-black tree.
 
-Status: **initial implementation**. The API is specified here; it
+Status: **Implemented subset + design**. The API is specified here; it
 targets the current compiler/backend subset and will grow as the language gains
 first-class move/Drop semantics for values stored inside heap-backed data
 structures.

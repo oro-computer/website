@@ -1,6 +1,6 @@
 # `std::flag`
 
-Status: **Design + initial implementation**. `std::flag` provides a small, robust command
+Status: **Implemented subset + design**. `std::flag` provides a small, robust command
 line argument parser modeled after Go’s `flag` package, but shaped to match
 `std::` conventions (explicit `Result(...)` errors, no leaky out-params, and a
 clear separation between flags, positionals, and `--` rest arguments).

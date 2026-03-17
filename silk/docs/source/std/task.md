@@ -4,7 +4,7 @@ Status: **Implemented subset**. This module provides a small hosted baseline for
 task/runtime utilities on `linux/x86_64`.
 
 This is **not** the full structured-concurrency design, but the hosted
-`linux/x86_64` toolchain now ships a bring-up async executor (fibers) used to
+`linux/x86_64` toolchain now ships a hosted async executor (fibers) used to
 make `await` a true suspension point. In the current subset:
 
 - `yield` / `yield *` are still blocking OS-thread operations (task runtime is thread-based).

@@ -1,22 +1,28 @@
 # Refinement types (removed)
 
-The earlier refinement-type design (types annotated with `where` predicates) is
-removed.
+Silk no longer uses a separate refinement-type surface.
 
-Use Formal Silk instead:
+Use:
 
-- `#require` / `#assure` on functions,
-- `#require` on `struct` declarations (struct requirements proved at
- construction sites).
+- `#require` / `#assure` for function contracts,
+- `#require` on `struct` declarations for type-level invariants,
+- `#assert` for local proof points,
+- const parameters for compile-time shape.
 
-Example:
+## Example
 
 ```silk
-#require x >= 0;
-#assure result == x + 1;
-fn inc (x: int) -> int {
-  return x + 1;
+#require len >= 0;
+#require cap >= len;
+struct BufferState {
+  ptr: u64,
+  len: int,
+  cap: int,
 }
 ```
 
-See [Formal verification](../docs/?p=language/formal-verification).
+## See also
+
+- [Formal verification](../docs/?p=language/formal-verification)
+- [Struct requirements](../docs/?p=language/struct-requirements)
+- [Dependent types](../docs/?p=language/dependent-types)

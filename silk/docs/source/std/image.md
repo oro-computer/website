@@ -1,6 +1,6 @@
 # `std::image` — Image Codecs + Color
 
-Status: **design + initial implementation**. `std::image` provides:
+Status: **Implemented subset + design**. `std::image` provides:
 
 - `std::image::color` — color value types and conversion helpers (pure Silk),
 - `std::image::png` — PNG decode/encode backed by libpng,

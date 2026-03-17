@@ -1,6 +1,6 @@
 # `std::math`
 
-Status: **Design + initial implementation**. This module provides linear
+Status: **Implemented subset + design**. This module provides linear
 algebra utilities intended for graphics and general-purpose computation.
 
 The initial focus is:

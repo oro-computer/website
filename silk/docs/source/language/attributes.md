@@ -17,7 +17,7 @@ Values may be:
 
 ## Implementation status
 
-Status: **in progress**.
+Status: **Implemented subset + design**.
 
 Implemented in the current compiler subset:
 
@@ -72,6 +72,30 @@ In the current subset, key/value items use one of:
 - `=`, `<`, `<=`, `>`, `>=` for numeric toolchain keys (for example
   `silk_minor>=2`).
 
+### Value forms
+
+Annotation items may carry:
+
+- booleans:
+  - `attr(enabled=true)`
+  - `attr(experimental=false)`
+- integers:
+  - `attr(tier=1)`
+  - `attr(silk_minor>=2)`
+- strings:
+  - `attr(owner="runtime")`
+  - `attr(feature="renderer=software")`
+- identifiers (treated as string values):
+  - `attr(abi=c)`
+  - `attr(task=pool)`
+
+In practice this gives you two categories of attributes:
+
+- **project metadata** that humans and tooling may read (`owner`, `tier`,
+  `unstable`, `internal`, ...), and
+- **compiler-recognized keys** such as `arch`, `os`, `target`, `feature`,
+  `abi`, `task`, and the toolchain version keys.
+
 ### Annotation form (prefix)
 
 Attributes may prefix most declarations:
@@ -119,6 +143,12 @@ if attr(os="linux") && (attr(arch="x86_64") || attr(arch="wasm32")) {
 `attr(...)` queries are compile-time only; they are evaluated by the compiler
 and do not exist as runtime calls.
 
+Important distinction:
+
+- annotation-form attributes can carry arbitrary tags/key/value metadata,
+- query-form `attr(...)` has built-in compile-time semantics only for the keys
+  documented on this page.
+
 ## Built-in attribute keys (current subset)
 
 The current compiler subset recognizes the following keys in queries and
@@ -137,6 +167,27 @@ conditional compilation contexts:
 - Toolchain version keys (numeric; compare against an integer literal using `=`, `<`, `<=`, `>`, `>=`):
   - `silk_major`, `silk_minor`, `silk_patch`
   - `silk_abi_major`, `silk_abi_minor`, `silk_abi_patch`
+
+## User-defined tags and key/value metadata
+
+The compiler accepts user-defined tags and key/value items in annotation form:
+
+```silk
+attr(public_api, owner="runtime", tier=1)
+fn parse_config () -> int {
+  return 0;
+}
+```
+
+Use these when you want declaration-local metadata for:
+
+- generated docs,
+- linting and policy tools,
+- internal review or release processes.
+
+In the current subset, these user-defined items are metadata only. They do not
+participate in conditional compilation unless they use one of the built-in
+semantic keys documented on this page.
 
 ## ABI selection (`abi=c`) and `c_fn`
 
@@ -165,8 +216,7 @@ The task pool is:
 
 - created lazily on the first pooled task submission,
 - backed by OS worker threads,
-- implemented as a queue-based pool with simple work stealing between workers
-  (see `src/silk_rt_task_pool.c`).
+- implemented as a queue-based pool with simple work stealing between workers.
 
 ### Configuration
 
@@ -269,3 +319,110 @@ Precedence:
   features for the same dependency package. If the same feature name is
   assigned multiple different values for a single package, the build fails
   unless a CLI `--feature <package>/<spec>` entry overrides it.
+
+## Real-world patterns
+
+### Platform-specific declarations
+
+Use declaration gating when the implementation should disappear entirely on
+non-matching targets:
+
+```silk
+attr(os="linux") fn platform_name () -> string {
+  return "linux";
+}
+
+attr(target="wasm32-wasi") fn platform_name () -> string {
+  return "wasi";
+}
+```
+
+Only the matching declaration is included in the build.
+
+### Feature-valued backend selection
+
+Feature values are a practical way to choose between real implementations:
+
+```silk
+fn renderer_name () -> string {
+  if attr(feature="renderer=webgpu") {
+    return "webgpu";
+  } else if attr(feature="renderer=software") {
+    return "software";
+  } else {
+    return "default";
+  }
+}
+```
+
+Examples of useful feature values:
+
+- `renderer=webgpu`
+- `tls=boringssl`
+- `crypto=fips`
+- `ui=tui`
+
+### Toolchain and ABI gating
+
+Use numeric toolchain keys for version-dependent source:
+
+```silk
+fn abi_ready () -> int {
+  if attr(silk_abi_major>=0) && attr(silk_abi_minor>=2) {
+    return 0;
+  }
+  return 1;
+}
+```
+
+Use `abi=c` when the type itself must carry a C ABI:
+
+```silk
+type LogCallback = attr(abi=c) fn (u64, u64) -> void;
+```
+
+### Scheduling blocking work on the task pool
+
+Use task-pool attributes when the function is safe to run on the shared worker
+pool:
+
+```silk
+attr(task=pool)
+task fn hash_chunk (chunk_id: int) -> int {
+  return chunk_id;
+}
+```
+
+This is a good fit for:
+
+- CPU-heavy hashing or compression,
+- per-file indexing work,
+- bounded batches of blocking OS work.
+
+## Practical feature workflows
+
+### Root package features
+
+```toml
+[build]
+features = ["tui", "renderer=software", "tls=false"]
+```
+
+### Dependency-scoped features
+
+```toml
+[dependencies]
+ui = { path = "../ui", sha256 = "sha256:...", features = ["tui", "theme=dark"] }
+```
+
+### CLI overrides
+
+```bash
+silk build --package . \
+  --feature tui \
+  --feature renderer=software \
+  --feature ui/theme=dark
+```
+
+This model lets one package compile with `attr(feature="tui")` while another
+dependency in the same graph sees a different feature set.

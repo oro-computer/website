@@ -205,6 +205,7 @@ USAGE_ORDER = [
     "usage/tutorials/04-filesystem",
     "usage/tutorials/05-concurrency",
     "usage/tutorials/06-async-io-streams-abort",
+    "usage/tutorials/07-formal-silk",
     # Practical references
     "usage/cli-examples",
     "usage/howto-custom-stdlib-root",

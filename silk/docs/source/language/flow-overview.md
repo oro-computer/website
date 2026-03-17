@@ -37,10 +37,10 @@ Implemented end-to-end in the current compiler:
 - Expression statements for calls and assignments only
   (`docs/language/flow-expression-statements.md`)
 
-Not implemented yet (design exists, but the current parser/checker do not
-accept these end-to-end):
+Additional control-flow forms with narrower current subsets:
 
-- `if` as a value-producing expression form
+- `if` as a value-producing expression form is implemented for the documented
+  subset; see `docs/language/flow-if-else.md`.
 
 When in doubt, consult:
 

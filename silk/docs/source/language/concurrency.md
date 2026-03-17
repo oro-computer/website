@@ -152,7 +152,7 @@ must be synchronized by the program.
 
 ### Important Limitations
 
-- Hosted async runtime bring-up exists on the hosted `linux/x86_64` target:
+- Hosted async runtime support exists on the hosted `linux/x86_64` target:
   - `await` is a true suspension point backed by a single-threaded executor
     (fibers), so awaiting a pending `Promise(T)` can park and resume without
     blocking the OS thread.
@@ -187,6 +187,9 @@ must be synchronized by the program.
   - `std::runtime::event_loop` already provides executor-backed timers,
     fd-readiness waits, and abort-aware waits; `std::io::async` adds minimal
     async `read` / `write` wrappers on top.
+  - Hosted async networking already covers TCP `connect` / `accept`, and
+    task-based stream adapters already exist under `std::io::stream` and
+    `std::net::stream`.
   - Broader integration of OS-facing std modules (for example buffered
     filesystem streams and richer socket cancellation) with the async
     executor/event loop remains follow-up work.
@@ -200,6 +203,62 @@ Important current rule for regions:
   copyable handle, but concurrent cursor updates are not specified as
   synchronized in the current subset. Treat regions as task-local allocation
   contexts unless and until explicit cross-task semantics are documented.
+
+## Recommended downstream patterns
+
+### Use `async fn` for waits, timers, and readiness
+
+When the work is mostly “wait until something is ready,” keep it in `async`
+code and await a promise-returning helper.
+
+```silk
+import std::abort_controller;
+import std::runtime::event_loop;
+
+async fn wait_readable (fd: int) -> int {
+  let ctl = match std::abort_controller::AbortController.init() {
+    Ok(v) => v,
+    Err(_) => return -1,
+  };
+
+  let ready: bool = await std::runtime::event_loop::fd_wait_readable_abortable(fd, ctl.signal());
+  if !ready { return 1; }
+  return 0;
+}
+```
+
+### Use `task fn` for owned CPU-bound work
+
+When the work should run on an OS thread or pooled worker, pass owned inputs
+and drain the task explicitly.
+
+```silk
+struct Job {
+  id: int,
+  retries: int,
+}
+
+attr(task=pool)
+task fn hash_job (job: Job) -> int {
+  return job.id + job.retries;
+}
+
+async fn main () -> int {
+  task {
+    let values: int[] = yield * hash_job(Job{ id: 41, retries: 1 });
+    return values[0] - 42;
+  }
+}
+```
+
+### Keep borrows local; use borrow-handle APIs deliberately
+
+The current subset is easiest to reason about when:
+
+- borrowed views (`&T`, `T[]`) stay inside one lexical synchronous region,
+- owned values cross `task` boundaries,
+- and dedicated borrow handles such as `AbortSignalBorrow` or `ChannelBorrow`
+  are used only through their documented APIs.
 
 ## Core Keywords: `async` and `task`
 
@@ -318,7 +377,7 @@ In the current compiler subset, these forms parse and type-check, but they do
 not yet introduce any runtime scheduling; they currently behave like a normal
 lexical block.
 
-## Future Work: Runtime and Safety
+## Remaining Work: Runtime and Safety
 
 Silk’s concurrency model intentionally separates:
 

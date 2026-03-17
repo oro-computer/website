@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-03-10T16:50:08+00:00
+Generated: 2026-03-17T18:53:24+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -155,6 +155,7 @@ Silk Docs
   - usage/tutorials/04-filesystem — Tutorial 4: filesystem basics (`std::fs`) — /silk/docs/?p=usage/tutorials/04-filesystem
   - usage/tutorials/05-concurrency — Tutorial 5: concurrency basics (`async`, `task`, `yield`, `await`) — /silk/docs/?p=usage/tutorials/05-concurrency
   - usage/tutorials/06-async-io-streams-abort — Tutorial 6: Async I/O + Streams + Abort Signals — /silk/docs/?p=usage/tutorials/06-async-io-streams-abort
+  - usage/tutorials/07-formal-silk — Tutorial 7: Formal Silk in real code — /silk/docs/?p=usage/tutorials/07-formal-silk
   - usage/cli-examples — CLI usage examples — /silk/docs/?p=usage/cli-examples
   - usage/howto-custom-stdlib-root — How-To: Use a Custom Stdlib Root (and Runtime) — /silk/docs/?p=usage/howto-custom-stdlib-root
   - usage/howto-run-wasi-node — How-To: Run `wasm32-wasi` Output in Node.js — /silk/docs/?p=usage/howto-run-wasi-node
@@ -243,7 +244,7 @@ Silk Wiki
   - language/enums — Enums — /silk/wiki/?p=language/enums
   - language/errors — Errors and assertions — /silk/wiki/?p=language/errors
   - language/typed-errors — Typed errors (`error`, `panic`, and `T | ErrorType...`) — /silk/wiki/?p=language/typed-errors
-  - language/borrow-checker — Borrow checker (design) — /silk/wiki/?p=language/borrow-checker
+  - language/borrow-checker — Borrow checker — /silk/wiki/?p=language/borrow-checker
   - language/memory-model — Memory model — /silk/wiki/?p=language/memory-model
   - language/regions — Regions (`with`) — /silk/wiki/?p=language/regions
   - language/buffers — Buffers (`Buffer(T)`) (design) — /silk/wiki/?p=language/buffers
@@ -256,7 +257,7 @@ Silk Wiki
   - language/testing — Testing (`test`) — /silk/wiki/?p=language/testing
   - language/formal-verification — Formal verification (Formal Silk) — /silk/wiki/?p=language/formal-verification
   - language/refinement-types — Refinement types (removed) — /silk/wiki/?p=language/refinement-types
-  - language/dependent-types — Dependent types (const parameters) (design) — /silk/wiki/?p=language/dependent-types
+  - language/dependent-types — Dependent types (const parameters) — /silk/wiki/?p=language/dependent-types
   - language/conventions — Conventions — /silk/wiki/?p=language/conventions
 - Standard library
   - std/overview — Standard library overview (`std::`) — /silk/wiki/?p=std/overview
@@ -360,6 +361,7 @@ Start here:
 - Guides: [Hello world](?p=guides/hello-world) · [Language tour](?p=guides/language-tour) · [Modules & packages](?p=guides/modules-and-packages)
 - Guides: [Standard library](?p=guides/standard-library) · [CLI and toolchain](?p=guides/cli)
 - Guides: [Testing](?p=guides/testing) · [Formal Silk](?p=guides/formal-silk)
+- Tutorials: [Concurrency basics](?p=usage/tutorials/05-concurrency) · [Async I/O + Streams + Abort Signals](?p=usage/tutorials/06-async-io-streams-abort) · [Formal Silk in real code](?p=usage/tutorials/07-formal-silk)
 - Spec: [Silk Spec (2026)](/silk/spec/2026/)
 
 ==============================================================================
@@ -1908,6 +1910,9 @@ The key design choice is **opt-in by syntax**:
 Formal Silk is meant to be used the way you actually write systems code: small, local assertions around the parts that are
 easy to get subtly wrong (boundary checks, invariants, protocol rules, and “this must never happen” assumptions).
 
+If you want a step-by-step walkthrough, start with
+[`Tutorial 7: Formal Silk in real code`](?p=usage/tutorials/07-formal-silk).
+
 ## Where directives live
 
 Formal Silk directives attach to **specific syntactic sites**:
@@ -2181,7 +2186,153 @@ fn main () -> int {
 
 See the reference for the exact accepted subset and the Z3 mapping: [`Formal Silk`](?p=language/formal-verification)
 
+### Build metadata in proofs
+
+Formal Silk can reason about build metadata, which is useful when you want to
+state “this helper is only valid in test builds” or “this proof assumes a
+package version floor”.
+
+```silk
+#require BUILD_MODE == "test";
+#assure result == 0;
+fn test_only_status () -> int {
+  return 0;
+}
+
+#require BUILD_VERSION_MAJOR >= 1;
+#assure result >= 0;
+fn stable_api_floor () -> int {
+  return 0;
+}
+```
+
+The current built-in metadata names are:
+
+- `BUILD_KIND`, `BUILD_MODE`, `BUILD_VERSION`
+- `BUILD_VERSION_MAJOR`, `BUILD_VERSION_MINOR`, `BUILD_VERSION_PATCH`
+
+### Opaque contracts for precompiled helpers
+
+Formal Silk is still useful when the implementation body lives somewhere else.
+If a declaration has a visible contract but no visible body, the verifier treats
+the call as opaque: it proves the preconditions, then assumes the
+postconditions.
+
+```silk
+#require bytes >= 0;
+#assure result >= bytes;
+fn align_up_page (bytes: int) -> int;
+
+fn main () -> int {
+  let size = align_up_page(4096);
+  #assert size >= 4096;
+  return 0;
+}
+```
+
+This is a practical way to document and verify assumptions around:
+
+- allocator shims,
+- precompiled libraries,
+- host calls reached through a prototype surface.
+
+### Real-world example: packet layout and constructor safety
+
+`#require` on a `struct` is the right tool when the invariant belongs to the
+type itself rather than to one helper function.
+
+```silk
+#require header_len == 8 || header_len == 12;
+#require payload_len >= 0;
+#require total_len == header_len + payload_len;
+struct FrameLayout {
+  header_len: int,
+  payload_len: int,
+  total_len: int,
+}
+
+fn main () -> int {
+  let layout = FrameLayout{
+    header_len: 8,
+    payload_len: 24,
+    total_len: 32,
+  };
+
+  return layout.total_len - 32;
+}
+```
+
+This style works well for:
+
+- wire headers,
+- on-disk record layouts,
+- buffer descriptors,
+- length/capacity pairs.
+
+### Real-world example: progress guarantees in a bounded loop
+
+`#variant` and `#monovariant` are most valuable when a loop is easy to get
+almost-right but expensive to debug after the fact.
+
+```silk
+fn main () -> int {
+  let budget: int = 16;
+  #const original_budget = budget;
+
+  let mut used: int = 0;
+  #invariant used >= 0;
+  #invariant used <= original_budget;
+  #variant original_budget - used;
+  #monovariant used;
+  while used < budget {
+    used += 1;
+  }
+
+  #assert used == original_budget;
+  return 0;
+}
+```
+
+This is a good fit for:
+
+- retry budgets,
+- scan cursors,
+- parser offsets,
+- bounded work queues.
+
+### Reusing `std::formal` theories
+
+When the same proof shape appears repeatedly, prefer a shared theory rather
+than restating the same bounds boilerplate in every function:
+
+```silk
+import { nonnegative_i64, bounds_i64 } from "std/formal";
+
+#theory nonnegative_i64(len);
+#theory bounds_i64(index, len);
+#assure result == index;
+fn checked_offset (index: i64, len: i64) -> i64 {
+  return index;
+}
+```
+
+This is the right pattern for parsers, pointer/length APIs, and any codebase
+that wants a consistent verified vocabulary.
+
 <!-- tabs:end -->
+
+## Choosing the right directive
+
+- Use `#require` when a caller must establish a fact before entering a
+  function.
+- Use `#assure` when a callee guarantees something about its return value.
+- Use `#assert` when a fact matters only at one point inside a block.
+- Use `#require` on a `struct` when the invariant belongs to the data type
+  itself.
+- Use `#invariant` / `#variant` / `#monovariant` when a property spans loop
+  iterations.
+- Use `theory` / `#theory` when the same proof shape appears in more than one
+  place or more than one module.
 
 ## Why it’s valuable
 
@@ -2194,6 +2345,23 @@ Formal verification is most useful where bugs are expensive:
 
 Silk’s approach keeps verification lightweight and local: you opt in where it buys you confidence.
 
+## A practical workflow
+
+For most downstream code, the loop is:
+
+```bash
+silk check verified_logic.slk
+silk build verified_logic.slk --debug -o build/verified_logic
+z3 -smt2 .silk/z3/silk_z3_m0_0.smt2
+```
+
+Suggested habit:
+
+1. start with a single `#assert` or `#require`,
+2. introduce `#const` names when an expression becomes hard to read,
+3. extract a `theory` only after the proof shape repeats,
+4. use `--debug` only when the normal diagnostic is not enough.
+
 ## Debugging failed proofs
 
 When a proof fails, the compiler reports a normal diagnostic at the annotation site.
@@ -2203,6 +2371,13 @@ SMT‑LIB reproduction script you can replay with an external Z3 binary.
 
 The workflow is intentionally pragmatic: when a proof fails, you should be able to iterate the same way you iterate on type
 errors — with good diagnostics and small edits.
+
+The most common Formal Silk diagnostics in practice are:
+
+- `E3001` / `E3002` / `E3003` for loop invariants and variants,
+- `E3006` for `#assert` and theory obligations,
+- `E3007` for contracted calls whose preconditions are not provable,
+- `E3008` for non-monotonic `#monovariant` expressions.
 
 ==============================================================================
 DOCS: Silk Syntax Tour (Soup to Nuts) (language/syntax-tour)
@@ -2553,13 +2728,12 @@ fn log (fmt: string, ...args: std::fmt::Arg) -> void {
 }
 ```
 
-#### Generic function parameter split (`;`) (Design, parsed but rejected)
+#### Generic function parameter split (`;`)
 
 Generic functions use `;` to separate compile-time parameters from value parameters:
 
 ```silk
-// Design (currently rejected with `E2016`).
-fn get_first(T, N: int; xs: &T[N]) -> T {
+fn get_first(T, N: usize; xs: &T[N]) -> T {
   return xs[0];
 }
 ```
@@ -2924,8 +3098,8 @@ fn main () -> int {
 }
 ```
 
-See `docs/language/generics.md` for  limits (notably `E2016` for
-const parameters/arguments and generic functions).
+See `docs/language/generics.md` for the current monomorphized subset and the
+remaining unsupported generic forms that still report `E2016`.
 
 ## 6. Statements (Inside Blocks)
 
@@ -3382,7 +3556,7 @@ Operator precedence and associativity follow the rules in `docs/language/operato
 
 See `docs/language/flow-*.md` for details.
 
-Executable entrypoint (initial rule):
+Executable entrypoint (current rule):
 
 - A minimal executable module defines exactly one top-level function:
 
@@ -3621,9 +3795,10 @@ URL: /silk/docs/?p=language/flow-if-else
 
 The `if` / `else` construct provides branching based on a boolean condition.
 
-In Silk, `if` is a **statement** that selects which
-block of statements executes. The broader language design also includes
-expression-oriented forms; those are documented as planned where relevant.
+In Silk, `if` works in both roles:
+
+- as a **statement** that selects which block executes, and
+- as an **expression** for the documented value-producing subset.
 
 ## Surface Syntax
 
@@ -5917,6 +6092,30 @@ In Silk, key/value items use one of:
 - `=`, `<`, `<=`, `>`, `>=` for numeric toolchain keys (for example
   `silk_minor>=2`).
 
+### Value forms
+
+Annotation items may carry:
+
+- booleans:
+  - `attr(enabled=true)`
+  - `attr(experimental=false)`
+- integers:
+  - `attr(tier=1)`
+  - `attr(silk_minor>=2)`
+- strings:
+  - `attr(owner="runtime")`
+  - `attr(feature="renderer=software")`
+- identifiers (treated as string values):
+  - `attr(abi=c)`
+  - `attr(task=pool)`
+
+In practice this gives you two categories of attributes:
+
+- **project metadata** that humans and tooling may read (`owner`, `tier`,
+  `unstable`, `internal`, ...), and
+- **compiler-recognized keys** such as `arch`, `os`, `target`, `feature`,
+  `abi`, `task`, and the toolchain version keys.
+
 ### Annotation form (prefix)
 
 Attributes may prefix most declarations:
@@ -5964,6 +6163,12 @@ if attr(os="linux") && (attr(arch="x86_64") || attr(arch="wasm32")) {
 `attr(...)` queries are compile-time only; they are evaluated by the compiler
 and do not exist as runtime calls.
 
+Important distinction:
+
+- annotation-form attributes can carry arbitrary tags/key/value metadata,
+- query-form `attr(...)` has built-in compile-time semantics only for the keys
+  documented on this page.
+
 ## Built-in attribute keys ()
 
 the compiler recognizes the following keys in queries and
@@ -5982,6 +6187,27 @@ conditional compilation contexts:
 - Toolchain version keys (numeric; compare against an integer literal using `=`, `<`, `<=`, `>`, `>=`):
   - `silk_major`, `silk_minor`, `silk_patch`
   - `silk_abi_major`, `silk_abi_minor`, `silk_abi_patch`
+
+## User-defined tags and key/value metadata
+
+The compiler accepts user-defined tags and key/value items in annotation form:
+
+```silk
+attr(public_api, owner="runtime", tier=1)
+fn parse_config () -> int {
+  return 0;
+}
+```
+
+Use these when you want declaration-local metadata for:
+
+- generated docs,
+- linting and policy tools,
+- internal review or release processes.
+
+In Silk, these user-defined items are metadata only. They do not
+participate in conditional compilation unless they use one of the built-in
+semantic keys documented on this page.
 
 ## ABI selection (`abi=c`) and `c_fn`
 
@@ -6010,8 +6236,7 @@ The task pool is:
 
 - created lazily on the first pooled task submission,
 - backed by OS worker threads,
-- Designed as a queue-based pool with simple work stealing between workers
-  (see `src/silk_rt_task_pool.c`).
+- Designed as a queue-based pool with simple work stealing between workers.
 
 ### Configuration
 
@@ -6115,6 +6340,113 @@ Precedence:
   assigned multiple different values for a single package, the build fails
   unless a CLI `--feature <package>/<spec>` entry overrides it.
 
+## Real-world patterns
+
+### Platform-specific declarations
+
+Use declaration gating when the implementation should disappear entirely on
+non-matching targets:
+
+```silk
+attr(os="linux") fn platform_name () -> string {
+  return "linux";
+}
+
+attr(target="wasm32-wasi") fn platform_name () -> string {
+  return "wasi";
+}
+```
+
+Only the matching declaration is included in the build.
+
+### Feature-valued backend selection
+
+Feature values are a practical way to choose between real implementations:
+
+```silk
+fn renderer_name () -> string {
+  if attr(feature="renderer=webgpu") {
+    return "webgpu";
+  } else if attr(feature="renderer=software") {
+    return "software";
+  } else {
+    return "default";
+  }
+}
+```
+
+Examples of useful feature values:
+
+- `renderer=webgpu`
+- `tls=boringssl`
+- `crypto=fips`
+- `ui=tui`
+
+### Toolchain and ABI gating
+
+Use numeric toolchain keys for version-dependent source:
+
+```silk
+fn abi_ready () -> int {
+  if attr(silk_abi_major>=0) && attr(silk_abi_minor>=2) {
+    return 0;
+  }
+  return 1;
+}
+```
+
+Use `abi=c` when the type itself must carry a C ABI:
+
+```silk
+type LogCallback = attr(abi=c) fn (u64, u64) -> void;
+```
+
+### Scheduling blocking work on the task pool
+
+Use task-pool attributes when the function is safe to run on the shared worker
+pool:
+
+```silk
+attr(task=pool)
+task fn hash_chunk (chunk_id: int) -> int {
+  return chunk_id;
+}
+```
+
+This is a good fit for:
+
+- CPU-heavy hashing or compression,
+- per-file indexing work,
+- bounded batches of blocking OS work.
+
+## Practical feature workflows
+
+### Root package features
+
+```toml
+[build]
+features = ["tui", "renderer=software", "tls=false"]
+```
+
+### Dependency-scoped features
+
+```toml
+[dependencies]
+ui = { path = "../ui", sha256 = "sha256:...", features = ["tui", "theme=dark"] }
+```
+
+### CLI overrides
+
+```bash
+silk build --package . \
+  --feature tui \
+  --feature renderer=software \
+  --feature ui/theme=dark
+```
+
+This model lets one package compile with `attr(feature="tui")` while another
+dependency in the same graph sees a different feature set.
+
 ==============================================================================
 DOCS: Silkdoc (Documentation Comments) (language/doc-comments)
 URL: /silk/docs/?p=language/doc-comments
@@ -6138,7 +6470,7 @@ Two doc-comment forms are recognized:
 In both forms, doc comments attach to the *next* declaration when they appear
 immediately before it with only whitespace/comments between them.
 
-Initial implementation scope:
+Current attachment scope:
 
 - Doc comments attach to **top-level declarations** (`package`, `module`,
   `import`, `fn`, `theory`, `let`, `struct`, `ext`, `interface`, `impl`).
@@ -7014,7 +7346,7 @@ Rules:
 - `export` is not allowed inside blocks; it applies only to module-level
   declarations. Inside `impl` blocks, `public` controls method visibility and
   `export` is reserved for static members.
-- The initial implementation supports `export` on:
+- the compiler supports `export` on:
   - functions (`export fn ...`), including a declaration-only prototype form
     (`export fn name(...) -> T;`) used for header-style interface modules,
   - `let` and `const` bindings (`export let ...`, `export const ...`).
@@ -7290,9 +7622,13 @@ Implementation status (current compiler subset):
   are not a stable user API.
 - Special-case: the nominal optional form `Option(T)` is accepted and desugared
   to `T?` in type annotations (it is not a general generics feature).
-- Parsed but rejected by the current checker: const parameters and integer
-  literal type arguments (`Foo(N: int)`, `Foo(u8, 1024)`) (`docs/compiler/diagnostics.md`, `E2016`),
-  and the removed builtin map type form (`map(K, V)`) (`E2017`; use
+- Implemented current generic surface: parameterized nominal declarations with
+  type and const parameters (for example `Wrap(T, N: usize)`), applied types
+  in type positions (`Wrap(u8, 4)`), and the generic-function surface described
+  in `docs/language/generics.md`.
+  - `E2016` remains reserved for unsupported generic forms outside the shipped
+    monomorphized subset.
+- The removed builtin map type form (`map(K, V)`) still reports `E2017`; use
   `std::map::{HashMap, TreeMap}` instead).
 - Defined in the native backend subset: 128-bit scalar primitives
   (`i128`, `u128`, `f128`).
@@ -7647,13 +7983,12 @@ The compiler must:
 
 - Treat nominal types as distinct even if their field layout is identical.
 - In the full language design, support parameterized types in all contexts
-  where the spec permits them. in Silk, **type-parameter**
-  generics are supported for nominal declarations (`struct` / `interface`) and
-  for applied types in type positions (`Name(u8)`).
-  - Const parameters and integer-literal type arguments (`Name(N: int)`,
-    `Name(u8, 1024)`) remain tracked work and are rejected (`E2016`).
-  - The `Option(T)` optional sugar described above remains supported for
-    the .
+  where the spec permits them. in Silk, monomorphized
+  generics support both type parameters and const parameters on nominal
+  declarations, plus applied types in type positions (`Name(u8)`,
+  `Wrap(u8, 4)`).
+  - The `Option(T)` optional sugar described above remains supported for the
+    .
 
 ### Parameterized type syntax (initial surface form)
 
@@ -7815,7 +8150,7 @@ contracts as authoritative.
 
 ## Rules
 
-The initial implementation intentionally supports only unions whose member
+the compiler intentionally supports only unions whose member
 types have a safe, well-defined representation in the current compiler/backend
 subset.
 
@@ -10281,7 +10616,7 @@ behavior consistent with C for the supported cases.
 memory layout.
 
 The intent is to provide “high-level” APIs without baking behavior into `struct`
-layout. In the initial implementation, `impl` blocks are *syntax and
+layout. in Silk, `impl` blocks are *syntax and
 type-checking structure*; code generation treats methods as ordinary functions
 that follow the same calling conventions as other Silk functions.
 
@@ -10453,10 +10788,59 @@ URL: /silk/docs/?p=language/struct-requirements
 
 # Struct Requirements (`#require`)
 
-Use `#require` on a `struct` to state requirements that must hold for all
-values constructed for that struct type.
+Struct requirements are **value-shape contracts** attached directly to a
+`struct`.
 
-Example:
+Use them when a property should hold for **every constructed value** of a type,
+not just for one specific function call:
+
+- `len >= 0`
+- `cap >= len`
+- `pos <= len`
+- `ptr != 0` when `len > 0`
+
+The verifier proves these requirements at construction sites such as
+`Type{ ... }` and `new Type{ ... }`.
+
+## Syntax
+
+```silk
+#require <bool-expr>;
+struct Name {
+  field: int,
+}
+```
+
+Rules in Silk:
+
+- A `struct` may have one or more `#require` directives immediately before the
+  declaration.
+- Requirement expressions may reference the struct's fields by name.
+- When Formal Silk syntax is present in the compiled module set, the verifier
+  proves all struct requirements at literal construction sites:
+  - `Type{ ... }`
+  - `new Type{ ... }`
+- Omitted fields use their normal default-initialization behavior, and the
+  verifier reasons about those values too.
+- If a struct extends a base struct, the derived struct inherits the base
+  struct's requirements.
+
+## When to use struct requirements
+
+Use a struct requirement when the property is about the **shape of the data**:
+
+- a parser cursor must stay within its byte slice,
+- a buffer length must never exceed its capacity,
+- a descriptor range must stay within a file or packet,
+- a pair of fields must remain internally consistent.
+
+Use a function `#require` when the property is about a **single operation**:
+
+- “this function only accepts non-empty input,”
+- “the caller must hold the lock,”
+- “the offset + size window must fit inside this frame.”
+
+## Example: simple identity rule
 
 ```silk
 #require id > 0;
@@ -10465,29 +10849,136 @@ struct User {
 }
 
 #assure result > 0;
-fn get_id () -> int {
+fn next_id () -> int {
   return 1;
 }
 
 fn main () -> int {
-  // This fails verification:
-  // let bad = User{ id: 0 };
-
-  let user = User{ id: get_id() };
-  return user.id;
+  let user = User{ id: next_id() };
+  return user.id - 1;
 }
 ```
 
-Rules ():
+The bad construction site is what fails:
 
-- `#require` expressions on a `struct` may reference that struct's fields by
-  name.
-- When Formal Silk syntax is present in the compiled module set, the verifier
-  proves these requirements at struct literal construction sites (`Type{ ... }`
-  and `new Type{ ... }`). If any requirement cannot be proven, compilation
-  fails.
+```silk
+// rejected: `id > 0` is not provable
+// let bad = User{ id: 0 };
+```
 
-See `docs/language/formal-verification.md`.
+## Example: slice-like view
+
+This is a typical ptr/len invariant.
+
+```silk
+#require len >= 0;
+#require len == 0 || ptr != 0;
+struct SliceU8 {
+  ptr: u64,
+  len: int,
+}
+
+fn main () -> int {
+  let empty = SliceU8{ ptr: 0, len: 0 };
+  return empty.len;
+}
+```
+
+This pattern is useful for parser inputs, mmap views, packet payloads, and FFI
+handles that carry a byte length.
+
+## Example: bounded buffer
+
+This is the most common “real” struct-requirement pattern in systems code:
+capacity must dominate length.
+
+```silk
+#require len >= 0;
+#require cap >= 0;
+#require cap >= len;
+#require cap == 0 || ptr != 0;
+struct ByteBuffer {
+  ptr: u64,
+  len: int,
+  cap: int,
+}
+
+#require extra >= 0;
+#require buf.len + extra <= buf.cap;
+#assure result == buf.len + extra;
+fn end_after_append (buf: ByteBuffer, extra: int) -> int {
+  return buf.len + extra;
+}
+```
+
+The struct requirement keeps the type well-formed; the function contract models
+the operation-specific append rule.
+
+## Example: packet cursor
+
+This is a good fit when you want parser code to stay simple while the verifier
+enforces the bounds discipline.
+
+```silk
+#require len >= 0;
+#require pos >= 0;
+#require pos <= len;
+struct PacketCursor {
+  ptr: u64,
+  len: int,
+  pos: int,
+}
+
+#require need >= 0;
+#assure result == (cursor.pos + need <= cursor.len);
+fn can_read (cursor: PacketCursor, need: int) -> bool {
+  return cursor.pos + need <= cursor.len;
+}
+```
+
+This lets downstream code model “cursor is in bounds” once and then reason
+about operation-specific windows separately.
+
+## `new`, regions, and construction sites
+
+Struct requirements are checked for both stack-style literals and `new`
+allocations:
+
+```silk
+#require bytes >= 0;
+struct Frame {
+  bytes: int,
+}
+
+fn main () -> int {
+  let a = Frame{ bytes: 1 };
+  let b: &Frame = new Frame{ bytes: a.bytes };
+  return b.bytes - 1;
+}
+```
+
+This is especially useful with [`Regions`](?p=language/regions): allocation
+strategy may change, but the constructed value still has to satisfy the same
+type-level invariants.
+
+## Debugging failed requirements
+
+When a struct requirement fails, the right fix is usually one of:
+
+- prove the field expression with a nearby helper contract,
+- add a local `#assert` before construction to make the intended fact explicit,
+- split one overloaded struct into two types with clearer invariants,
+- or move an operation-specific rule out of the type and into a function
+  `#require`.
+
+Keep the requirement itself simple and structural. If it starts describing a
+workflow, it probably belongs on a function or in a reusable `theory`.
+
+## See also
+
+- [`Formal Silk`](?p=language/formal-verification)
+- [`Formal Silk guide`](?p=guides/formal-silk)
+- [`std::formal`](?p=std/formal)
 
 ==============================================================================
 DOCS: Interfaces (language/interfaces)
@@ -10635,7 +11126,7 @@ Compiler requirements:
   - impl methods that satisfy an interface requirement may omit `public`, but
   - they may not be explicitly marked `private`.
 
-Conformance rules (initial implementation):
+Conformance rules ():
 
 - For an `interface I { fn m(p0: T0, ...) -> R; }`, the corresponding impl must
   provide a method `m` whose signature matches after accounting for the
@@ -11658,6 +12149,59 @@ Copy or move the data you need before `await`; do not rely on a borrow staying
 usable across a suspension point unless that specific API contract is
 documented.
 
+## Practical lifecycle patterns
+
+### Return a borrow of caller-owned data
+
+This is the simplest good pattern: the caller owns the storage, and the callee
+returns a subview of it.
+
+```silk
+fn payload (frame: u8[]) -> u8[] {
+  return &frame[14..];
+}
+```
+
+### Keep ordinary borrows inside one synchronous region
+
+Use borrows for local structure and readability, then finish the work before
+you cross an `await` or task boundary.
+
+```silk
+fn sum_head (xs: int[]) -> int {
+  let head: int[] = &xs[0..2];
+  return head[0] + head[1];
+}
+```
+
+### Move owned data across task boundaries
+
+When work crosses a task boundary, prefer an owned value rather than a borrow.
+
+```silk
+struct Job {
+  id: int,
+  retries: int,
+}
+
+task fn process (job: Job) -> int {
+  return job.id + job.retries;
+}
+
+async fn main () -> int {
+  task {
+    let values: int[] = yield * process(Job{ id: 41, retries: 1 });
+    return values[0] - 42;
+  }
+}
+```
+
+This is the current downstream rule of thumb:
+
+- ordinary borrows stay local,
+- owned values cross task boundaries,
+- borrow-handle APIs such as `AbortSignalBorrow` are the explicit exception.
+
 ## Ownership Transfer (`move`)
 
 Silk’s safe subset includes a small explicit ownership-transfer form:
@@ -11686,7 +12230,7 @@ In Silk, ownership transfer is intentionally conservative:
   - `let y = x;` consumes `x`,
   - `y = x;` consumes `x`.
 
-## Planned Expansion
+## Remaining gaps and planned expansion
 
 As the language grows, borrow checking is expected to expand to cover:
 
@@ -12137,6 +12681,54 @@ with a {
 }
 ```
 
+## Practical lifecycle patterns
+
+### Request-scoped scratch region
+
+Use a named region when one request, parse, or render pass needs a reusable
+scratch allocation context:
+
+```silk
+struct Frame { id: int }
+
+fn build_frame (scratch: Region, id: int) -> int {
+  with scratch {
+    let frame: &Frame = new Frame{ id: id };
+    return frame.id;
+  }
+}
+```
+
+This keeps allocation policy explicit without changing the rest of the code.
+
+### Stage work with subregions
+
+Subregions are useful when one phase of work should reuse only a slice of a
+larger scratch region:
+
+```silk
+struct Header { size: int }
+
+fn parse_header () -> int {
+  const region scratch: u8[2048];
+
+  with 256 from scratch[0..256] {
+    let h: &Header = new Header{ size: 64 };
+    return h.size;
+  }
+}
+```
+
+### Downstream rules that keep region code readable
+
+- Treat anonymous `with <bytes> { ... }` allocations as block-scoped scratch
+  storage.
+- Do not return references that were allocated from an anonymous region.
+- Do not share one `Region` across concurrent tasks.
+- Remember that last-release runs `drop` when present, but does **not** reclaim
+  the backing bytes; reclamation happens when you reset or reuse the region
+  cursor.
+
 ## Reclaiming Region Memory ()
 
 Regions are bump allocators: each allocation advances a cursor within the
@@ -12301,6 +12893,62 @@ async fn main () -> int {
 }
 ```
 
+## Recommended downstream patterns
+
+### Use `async fn` for waits, timers, and readiness
+
+When the work is mostly “wait until something is ready,” keep it in `async`
+code and await a promise-returning helper.
+
+```silk
+import std::abort_controller;
+import std::runtime::event_loop;
+
+async fn wait_readable (fd: int) -> int {
+  let ctl = match std::abort_controller::AbortController.init() {
+    Ok(v) => v,
+    Err(_) => return -1,
+  };
+
+  let ready: bool = await std::runtime::event_loop::fd_wait_readable_abortable(fd, ctl.signal());
+  if !ready { return 1; }
+  return 0;
+}
+```
+
+### Use `task fn` for owned CPU-bound work
+
+When the work should run on an OS thread or pooled worker, pass owned inputs
+and drain the task explicitly.
+
+```silk
+struct Job {
+  id: int,
+  retries: int,
+}
+
+attr(task=pool)
+task fn hash_job (job: Job) -> int {
+  return job.id + job.retries;
+}
+
+async fn main () -> int {
+  task {
+    let values: int[] = yield * hash_job(Job{ id: 41, retries: 1 });
+    return values[0] - 42;
+  }
+}
+```
+
+### Keep borrows local; use borrow-handle APIs deliberately
+
+The  is easiest to reason about when:
+
+- borrowed views (`&T`, `T[]`) stay inside one lexical synchronous region,
+- owned values cross `task` boundaries,
+- and dedicated borrow handles such as `AbortSignalBorrow` or `ChannelBorrow`
+  are used only through their documented APIs.
+
 ## Core Keywords: `async` and `task`
 
 ### `async`
@@ -12418,7 +13066,7 @@ In Silk, these forms parse and type-check, but they do
 not yet introduce any runtime scheduling; they currently behave like a normal
 lexical block.
 
-## Future Work: Runtime and Safety
+## Remaining Work: Runtime and Safety
 
 Silk’s concurrency model intentionally separates:
 
@@ -12470,15 +13118,16 @@ Const functions (`const fn`) are specified separately in
 `docs/language/const-functions.md`. The `const` modifier is orthogonal to the
 discipline system described here (a `const fn` may also be declared `pure`).
 
+the compiler implements
 `pure fn` parsing and a strict purity checker. Concurrency disciplines (`task` /
 `async`) are parsed and `Task(T)` / `Promise(T)` handles plus `yield` (task
 values) and `await` (promise values) are implemented in Silk
 (`await Task(T)` is rejected). On the hosted `linux/x86_64` target, the compiler
-now ships a bring-up async runtime (single-threaded executor + stackful
+now ships a hosted async runtime (single-threaded executor + stackful
 coroutines in `libsilk_rt`) so `await` can suspend and resume without blocking
 the OS thread. A compiler state-machine coroutine transform, structured
 concurrency scope semantics, and richer Send/Sync-style reasoning remain future
-work. The current compiler already enforces an initial task-boundary safety
+work. The current compiler already enforces a conservative task-boundary safety
 rule (`E2037`) that rejects non-opaque references across `task fn` boundaries.
 See `docs/language/concurrency.md` for the concurrency model and implementation
 status.
@@ -12552,6 +13201,10 @@ discipline crossings:
 - fd readiness and abort-aware waits via `std::runtime::event_loop`,
 - minimal async fd wrappers via
   `std::io::async::{read,write,read_abortable,write_abortable}`,
+- async TCP connect/accept via
+  `std::net::{TCPStream.connect_async,TCPListener.accept_async}`,
+- task-based fd/socket stream adapters via `std::io::stream` and
+  `std::net::stream`,
 - task-pool scheduling selection via `attr(task=pool)` / `attr(task_pool)` on
   `task fn` and `async task fn`.
 
@@ -12611,7 +13264,7 @@ Today:
   - By default, each `task fn` call spawns a dedicated OS thread.
   - When a `task fn` / `async task fn` is annotated with `attr(task=pool)` (or
     `attr(task_pool)`), calls are scheduled on the global task pool instead.
-  - On hosted `linux/x86_64`, the compiler ships a bundled bring-up async
+  - On hosted `linux/x86_64`, the compiler ships a bundled hosted async
     runtime so `await` is a true suspension point:
     - awaiting a pending `Promise(T)` parks the current fiber and allows other
       runnable fibers to execute (it does not block the OS thread),
@@ -12688,7 +13341,7 @@ Notes:
 In this document, a “compile-time value” is a value that the compiler can
 produce and manipulate during compile-time evaluation.
 
- (initial implementation target):
+:
 
 - scalar primitives:
   - `bool`
@@ -12972,10 +13625,10 @@ impl Data(T) { /* ... */ }
 This rule keeps method receiver typing unambiguous and makes monomorphization
 explicit.
 
-## Functions (initial parsed surface form)
+## Functions
 
-Generic functions require a way to declare type/const parameters distinct from
-value parameters. The initial parsed surface form is:
+Generic functions declare type/const parameters distinct from value parameters
+using the compile-time/runtime split. The current supported surface form is:
 
 ```silk
 fn get_first(T, N: usize; v: &T[N]) -> T {
@@ -14088,6 +14741,13 @@ When verification syntax is present, compilation MUST:
 
 When verification syntax is not present, compilation does not require proofs.
 
+Good companion pages:
+
+- [Guide: Formal Silk](?p=guides/formal-silk)
+- [Tutorial: Formal Silk in real code](?p=usage/tutorials/07-formal-silk)
+- [Struct requirements](?p=language/struct-requirements)
+- [`std::formal`](?p=std/formal)
+
 ## Z3 linkage and overrides
 
 On `linux/x86_64`, Silk always links the vendored Z3 static library
@@ -14147,6 +14807,73 @@ Supported operators in specification expressions ():
 
 Other operators and expression forms are currently rejected in verified code
 (see “Implementation Status” below).
+
+## Accepted value forms and built-in names ()
+
+Formal Silk uses the normal expression grammar, but the verifier currently
+accepts only a scalar/value-oriented subset.
+
+Accepted forms you can rely on today:
+
+- `bool` values and expressions:
+  - `true`, `false`
+  - `!`, `&&`, `||`
+  - equality and comparisons that yield `bool`
+- integer values and expressions:
+  - literals and named integer values
+  - unary `-` / `~`
+  - `+`, `-`, `*`, `/`, `%`
+  - `&`, `|`, `^`, `<<`, `>>`
+  - `<`, `<=`, `>`, `>=`, `==`, `!=`
+- `string` values:
+  - string literals
+  - named string values
+  - `==` / `!=`
+- layout queries:
+  - `sizeof(T)`
+  - `alignof(T)`
+  - `offsetof(T, field)`
+- built-in verifier names:
+  - `result` inside `#assure`
+  - struct field names inside struct requirements
+  - build metadata constants:
+    - `BUILD_KIND`, `BUILD_MODE`, `BUILD_VERSION`
+    - `BUILD_VERSION_MAJOR`, `BUILD_VERSION_MINOR`, `BUILD_VERSION_PATCH`
+
+Practical examples:
+
+```silk
+struct Header {
+  kind: int,
+  len: int,
+}
+
+#require mode == "safe" || mode == "fast";
+#assure result >= 0;
+fn classify (mode: string) -> int {
+  return 0;
+}
+
+fn main () -> int {
+  #assert true;
+  #assert (2 + 2) == 4;
+  #assert (8 >> 1) == 4;
+  #assert sizeof(Header) >= 16;
+  #assert alignof(Header) >= 8;
+  #assert offsetof(Header, kind) < offsetof(Header, len);
+  #assert BUILD_VERSION_MAJOR >= 0;
+  return classify("safe");
+}
+```
+
+Important current exclusions:
+
+- no struct/array construction inside specification expressions,
+- no `new` inside specification expressions,
+- no normal runtime call syntax inside specification expressions,
+- no proof over the full statement language (`match`, nested verified loops,
+  indirect calls, and many richer expression forms are still outside the
+  verified subset).
 
 ## The `ext` boundary
 
@@ -14217,9 +14944,9 @@ fn main () -> int {
 }
 ```
 
-### Function annotations (initial syntax)
+### Function annotations
 
-For functions, the initial surface syntax is:
+For functions, the current surface syntax is:
 
 ```silk
 #require <Expr>;
@@ -14271,9 +14998,9 @@ Rules ():
 Loop specifications (`#invariant`, `#variant`, `#monovariant`) follow a similar
 pattern for loops.
 
-### Loop annotations (initial syntax)
+### Loop annotations
 
-For `while` loops, the initial surface syntax is:
+For `while` loops, the current surface syntax is:
 
 ```silk
 #invariant <Expr>;
@@ -14331,6 +15058,121 @@ Rules:
   the `#assert` site. If it cannot be proven, compilation fails.
 - After a `#assert` succeeds, the asserted expression is assumed to hold for
   the remainder of the block (so later proofs may rely on it).
+
+## Worked examples
+
+These examples are intentionally close to real systems-code problems.
+
+### Type-level layout invariants
+
+Use `#require` on a `struct` when the invariant belongs to the data type
+itself:
+
+```silk
+#require header_len == 8 || header_len == 12;
+#require payload_len >= 0;
+#require total_len == header_len + payload_len;
+struct FrameLayout {
+  header_len: int,
+  payload_len: int,
+  total_len: int,
+}
+
+fn main () -> int {
+  let layout = FrameLayout{
+    header_len: 8,
+    payload_len: 24,
+    total_len: 32,
+  };
+  return layout.total_len - 32;
+}
+```
+
+This is the right shape for packet headers, record layouts, and `len` / `cap`
+pairs.
+
+### Monotonic progress inside a loop
+
+Use `#variant` and `#monovariant` to prove both termination and “cursor moves
+the right direction”:
+
+```silk
+fn main () -> int {
+  let limit: int = 8;
+  #const original_limit = limit;
+
+  let mut offset: int = 0;
+  #invariant offset >= 0;
+  #invariant offset <= original_limit;
+  #variant original_limit - offset;
+  #monovariant offset;
+  while offset < limit {
+    offset += 1;
+  }
+
+  #assert offset == original_limit;
+  return 0;
+}
+```
+
+Use this for parser offsets, retry budgets, sequence numbers, and bytes-written
+counters.
+
+### Shared proof vocabulary with `std::formal`
+
+When the same proof shape appears repeatedly, prefer a reusable theory import:
+
+```silk
+import { nonnegative_i64, bounds_i64, slice_well_formed } from "std/formal";
+
+#theory slice_well_formed(ptr, len);
+#theory nonnegative_i64(len);
+#theory bounds_i64(index, len);
+#assure result == index;
+fn checked_index (ptr: u64, len: i64, index: i64) -> i64 {
+  return index;
+}
+```
+
+This is the intended downstream pattern for pointer/length APIs, parsers, and
+container boundary checks.
+
+### Opaque contracts for precompiled helpers
+
+Declaration-only functions can still participate in verified code if they have
+contracts:
+
+```silk
+#require bytes >= 0;
+#assure result >= bytes;
+fn align_up_page (bytes: int) -> int;
+
+fn main () -> int {
+  let size = align_up_page(4096);
+  #assert size >= 4096;
+  return 0;
+}
+```
+
+The verifier proves the precondition at the call site, introduces a symbolic
+return value, and then assumes the declared postconditions.
+
+## Diagnostics you will actually see
+
+The high-value Formal Silk diagnostics in Silk are:
+
+- `E2014` — formal Silk declaration used in runtime expression
+- `E2050` — theory called like a runtime function instead of via `#theory`
+- `E3001` — loop invariant may not hold
+- `E3002` — loop variant may be negative
+- `E3003` — loop variant may not decrease
+- `E3005` — verifier initialization failed or an unsupported construct was hit
+- `E3006` — assertion may not hold
+- `E3007` — call precondition may not hold
+- `E3008` — loop monovariant may not be monotonic
+
+For deeper proof debugging, build with `--debug` and replay the emitted
+SMT-LIB2 query with `z3 -smt2 ...`.
 
 ## Theories (`theory` / `#theory`)
 
@@ -14485,7 +15327,7 @@ Rules:
   theory access, because theory use sites do not accept qualified names
   (`ns::TheoryName`) yet.
 
-### Semantics (initial subset)
+### Semantics ()
 
 When a theory is applied (`#theory Name(args);`):
 
@@ -14517,47 +15359,113 @@ URL: /silk/docs/?p=language/refinement-types
 
 # Refinement Types (Removed)
 
-Silk previously had an experimental design for **refinement types** (types
-annotated with logical predicates, often written with `where`).
+Silk previously had an experimental refinement-type design: types annotated with
+logical predicates, often written in a `where`-style form.
 
-That design has been removed in favor of a single mechanism: **Formal Silk**
-(`#require`, `#assure`, `#assert`, loop invariants/variants, and `theory`), with
-support for attaching `#require` directly to `struct` declarations.
+That design has been removed.
 
-## Replacement: Formal Silk struct requirements
+Silk now uses a clearer split:
 
-Use `#require` on a `struct` to state requirements that must hold for all
-values constructed for that struct type.
+- **Formal Silk** for proof obligations and value predicates,
+- **const parameters / dependent-type-like syntax** for compile-time shape.
 
-Example:
+## What to use instead
+
+### Function preconditions and postconditions
+
+Use `#require` and `#assure` when the rule belongs to an operation:
 
 ```silk
-#require id > 0;
-struct User {
-  id: int,
-}
-
-#assure result > 0;
-fn get_id () -> int {
-  return 1;
-}
-
-fn main () -> int {
-  let user = User{ id: get_id() };
-  return user.id;
+#require x >= 0;
+#assure result == x + 1;
+fn inc (x: int) -> int {
+  return x + 1;
 }
 ```
 
-Rules ():
+### Type-level invariants
 
-- `#require` expressions on a `struct` may reference that struct's fields by
-  name.
-- When Formal Silk syntax is present in the compiled module set, the verifier
-  proves these requirements at struct literal construction sites (`Type{ ... }`
-  and `new Type{ ... }`). If any requirement cannot be proven, compilation
-  fails.
+Use `#require` on a `struct` when the invariant belongs to the value itself:
 
-See `docs/language/formal-verification.md`.
+```silk
+#require len >= 0;
+#require cap >= len;
+struct BufferState {
+  ptr: u64,
+  len: int,
+  cap: int,
+}
+```
+
+This is the replacement for the old “refined record” use case.
+
+### Local proof points
+
+Use `#assert` when the fact matters only at one spot in the code:
+
+```silk
+fn main () -> int {
+  let used: int = 4;
+  let total: int = 8;
+  #assert used <= total;
+  return total - used;
+}
+```
+
+### Reusable proof bundles
+
+Use `theory` / `#theory` when the same proof shape appears in multiple places:
+
+```silk
+export theory bounded_window (offset: int, size: int, total: int) {
+  #require offset >= 0;
+  #require size >= 0;
+  #assure offset + size <= total;
+}
+```
+
+### Compile-time shape
+
+If the property is “this type carries a compile-time size/capacity/width,” use
+const parameters rather than a refinement predicate:
+
+```silk
+struct Digest(N: usize) {
+  bytes: u8[N],
+}
+```
+
+See [`Dependent Types`](?p=language/dependent-types).
+
+## Old refinement-type intent → current Silk surface
+
+- `PositiveInt where x > 0`
+  - use a function `#require x > 0`, or a `struct` requirement when it belongs
+    to a nominal type
+- `Buffer where len <= cap`
+  - use `#require` on the `struct`
+- `Result where predicate(result)`
+  - use `#assure`
+- repeated proof rule used in many functions
+  - use `theory`
+- compile-time-sized collection
+  - use const parameters / applied types
+
+## Why this is better downstream
+
+This split keeps the language easier to read:
+
+- types describe runtime representation and compile-time shape,
+- Formal Silk describes proof obligations,
+- and the verifier reasons about those obligations without inventing a second
+  predicate-bearing type language.
+
+## See also
+
+- [`Formal Silk`](?p=language/formal-verification)
+- [`Formal Silk guide`](?p=guides/formal-silk)
+- [`Struct Requirements`](?p=language/struct-requirements)
+- [`Dependent Types`](?p=language/dependent-types)
 
 ==============================================================================
 DOCS: Dependent Types (Const Parameters and Type-Level Computation) (language/dependent-types)
@@ -14566,80 +15474,170 @@ URL: /silk/docs/?p=language/dependent-types
 
 # Dependent Types (Const Parameters and Type-Level Computation)
 
-This document specifies Silk’s intended support for “dependent-type-like”
-patterns where types mention compile-time values (most notably integers).
+This page covers Silk’s **dependent-type-like** surface: places where a type
+mentions a compile-time value, most commonly an integer const parameter.
 
-The front-end can parse and preserve:
+Use this when the thing you want to express is about **compile-time shape**:
 
-- declaration parameter lists on `struct`, `impl`, and `fn`,
-- type application in type positions (for example `VectorN(int, 1024)`),
+- “this wrapper carries exactly `N` elements,”
+- “this helper accepts an array of length `N`,”
+- “this API preserves a compile-time capacity or digest size.”
 
-but the compiler does not yet implement constraint checking, inference, or
-monomorphization/code generation for parameterized declarations. In the current
-compiler subset, generic parameter lists and applied types are rejected during
-type checking (`docs/compiler/diagnostics.md`, `E2016`). See
-`docs/language/generics.md`.
+Use [`Formal Silk`](?p=language/formal-verification) instead when the thing you
+want to express is a **value predicate**:
 
-## Const Parameters
+- `len >= 0`
+- `cap >= len`
+- `offset + size <= total`
 
-Const parameters are compile-time values that appear in parameter lists with a
-type annotation:
+## : real, useful patterns
 
-```silk
-struct VectorN(T, N: int) { /* ... */ }
-```
+### Fixed-size wrappers
 
-Where:
-
-- `T` is a type parameter, and
-- `N: int` is a const parameter whose value must be known at compile time.
-
-The initial supported const-argument form in type application is integer
-literals (for example `VectorN(int, 1024)`).
-
-## Type-Level Computation
-
-The language intends to allow certain expressions over const parameters in type
-positions (design-only):
+This is the basic dependent-type-like pattern in Silk today:
 
 ```silk
-fn concat(T, M: int, N: int; a: VectorN(T, M), b: VectorN(T, N)) -> VectorN(T, M + N) {
-  // ...
+struct Wrap(T, N: usize) {
+  buf: T[N],
+}
+
+fn main () -> int {
+  let w: Wrap(u8, 4) = { buf: [1, 2, 3, 4] };
+  return 0;
 }
 ```
 
-This requires:
+This is useful for:
 
-- a notion of const expressions at the type level,
-- evaluation rules (and overflow behavior) for those expressions,
-- and a compilation strategy (typically monomorphization) that produces concrete
-  layouts and code for each instantiated type.
+- fixed-size digests,
+- packet headers with compile-time field widths,
+- small stack buffers,
+- array-backed ring/storage wrappers.
 
-## Function Parameter Lists (CT/RT Split)
+### Generic functions with explicit compile-time arguments
+
+Generic functions separate compile-time arguments from runtime arguments with a
+top-level `;`:
+
+```silk
+fn get_first(T, N: usize; xs: &T[N]) -> T {
+  return xs[0];
+}
+
+fn main () -> int {
+  let xs: int[4] = [10, 20, 30, 40];
+  return get_first(int, 4; xs) - 10;
+}
+```
+
+This is the right pattern when you want the call site to be completely explicit
+about both the element type and the compile-time shape.
+
+### Generic calls with inference
+
+When the runtime argument already carries enough type information, Silk can
+infer both type and const arguments:
+
+```silk
+struct Wrap(T, N: usize) {
+  buf: T[N],
+}
+
+fn take_wrap (T, N: usize; w: Wrap(T, N)) -> int {
+  return 0;
+}
+
+fn main () -> int {
+  let w: Wrap(u8, 4) = { buf: [1, 2, 3, 4] };
+  return take_wrap(w);
+}
+```
+
+The compiler infers `T = u8` and `N = 4` from the type of `w`.
+
+### Inference from array lengths
+
+Const inference also works when a runtime argument type carries a concrete
+array length:
+
+```silk
+fn take_buf (N: usize; buf: u8[N]) -> int {
+  return 0;
+}
+
+fn main () -> int {
+  let buf4: u8[4] = [1, 2, 3, 4];
+  if take_buf(4; buf4) != 0 { return 1; }
+  if take_buf(buf4) != 0 { return 2; }
+  return 0;
+}
+```
+
+This is one of the main practical values of const parameters today: APIs can
+preserve compile-time array shape without forcing every caller to repeat it.
+
+## Function parameter lists (CT/RT split)
 
 Generic functions use a single parameter list split by a top-level `;` inside
 the parentheses:
 
 ```silk
 fn id(T; x: T) -> T { return x; }
-fn g(T;) -> T { /* CT-only, rare */ }
+fn get_first(T, N: usize; v: &T[N]) -> T { return v[0]; }
 fn h(x: int) -> int { return x; } // RT-only
 ```
 
-This split is parsed and preserved by the front-end, but generic functions are
-rejected by the current checker until monomorphization is implemented
-(`docs/compiler/diagnostics.md`, `E2016`).
+Rules in Silk:
 
-## Relationship to Arrays and Collections
+- the parameters before `;` are compile-time parameters,
+- the parameters after `;` are ordinary runtime parameters,
+- compile-time arguments may be supplied explicitly at the call site,
+- or inferred from runtime arguments when possible.
 
-Const parameters are intended to power:
+## Relationship to arrays and collections
+
+Const parameters are the natural surface for:
 
 - fixed-size arrays (`T[N]`),
-- dependent-length collections (for example `VectorN(T, N)`),
-- and compile-time-checked indexing/slicing APIs.
+- compile-time-sized wrappers (`Wrap(T, N)`),
+- APIs that preserve array length or capacity through monomorphized calls.
 
-These features require additional language and runtime support beyond the
-current compiler subset.
+This is where Silk gets real value today:
+
+- compile-time-sized buffers,
+- size-preserving generic helpers,
+- explicit monomorphized APIs without runtime type metadata.
+
+## What dependent types do **not** replace
+
+Const parameters do **not** replace Formal Silk.
+
+Examples:
+
+- “this array has compile-time length `4`” → const parameter / `T[N]`
+- “this runtime `len` is non-negative” → `#require len >= 0`
+- “`cap` always dominates `len`” → `#require` on a `struct`
+- “this loop monotonically consumes bytes” → `#monovariant`
+
+Use compile-time types for **shape** and Formal Silk for **proof obligations**.
+
+## Diagnostics you will see
+
+The most relevant diagnostics in this area are:
+
+- `E2016` — unsupported generic form outside the current monomorphized subset,
+- `E2076` — generic type arguments must be fully specified at the use site,
+- `E2091` — generic function call type arguments could not be inferred.
+
+Use explicit compile-time arguments (`f(T, N; ...)`) when inference is not
+obvious enough.
+
+## See also
+
+- [`Generics (Monomorphized)`](?p=language/generics)
+- [`Types`](?p=language/types)
+- [`Formal Silk`](?p=language/formal-verification)
+- [`Refinement Types (Removed)`](?p=language/refinement-types)
 
 ==============================================================================
 DOCS: Language Spec Conventions (language/conventions)
@@ -14751,9 +15749,10 @@ URL: /silk/docs/?p=std/overview
 
 # Standard Library Overview (`std::`)
 
-The `docs/std/` directory specifies the
-intended API and structure. A minimal in-tree stdlib source tree also
-exists under `std/` (used by the toolchain to satisfy `import std::...;`).
+The `docs/std/` directory specifies
+the intended API and structure, and the in-tree stdlib source tree under
+`std/` already provides the shipped subset used by the toolchain to satisfy
+`import std::...;`.
 
 As of the compiler, the in-tree stdlib includes a
 small but functional set of utilities implemented purely in Silk (including
@@ -15169,10 +16168,10 @@ URL: /silk/docs/?p=std/package-structure
 
 # `std::` Module Structure
 
-This describes the intended organization and
-build integration for `std::`. A first, minimal slice of the build integration
-is implemented (auto-resolving `std::...` imports from a configurable stdlib
-root), while most std APIs remain unimplemented.
+This describes the organization and
+build integration for `std::`. Auto-resolving `std::...` imports from a
+configurable stdlib root is implemented today, and the in-tree stdlib already
+ships a broad hosted subset across core, runtime, and systems modules.
 
 This document defines how the standard library is organized and how it is made
 available to user programs.
@@ -16064,7 +17063,7 @@ key point is that `std::fs` and `std::net` can reuse the same I/O traits.
 
 - Buffered I/O wrappers (`BufReader`, `BufWriter`).
 - Async-aware adapters:
-  - the hosted `linux/x86_64` toolchain now ships a bring-up async executor and
+  - the hosted `linux/x86_64` toolchain now ships a hosted async executor and
     exposes timers + fd readiness via `std::runtime::event_loop`,
   - `std::task` includes awaitable sleep helpers (`sleep_ms_async`, `sleep_async`),
   - `std::io::async` provides minimal `async fn` wrappers over fd-based
@@ -16084,7 +17083,7 @@ URL: /silk/docs/?p=std/fmt
 
 # `std::fmt`
 
-The initial formatting engine is implemented
+The formatting engine is implemented
 in `std/fmt.slk` and is intentionally scoped to the current compiler/backend
 subset (no generics, no runtime interface dispatch).
 
@@ -16266,9 +17265,9 @@ URL: /silk/docs/?p=std/strings
 
 # `std::strings`
 
-A small but growing subset is
-implemented in `std/strings.slk` to support early toolchain bring-up; the rest
-of this document describes the intended long-term API.
+A focused subset is implemented in
+`std/strings.slk` today, and the rest of this document records the broader API
+shape planned around that shipped surface.
 
 This module provides string utilities and abstractions built on top of the core
 `string` type (UTF-8 bytes) and the `Buffer(T)` intrinsic.
@@ -21495,7 +22494,7 @@ Runtime areas in the shipped stdlib:
 Hosted async runtime area available today:
 
 - `std::runtime::event_loop` for hosted `async`/`await`:
-  - the compiler already ships a bundled bring-up executor in `libsilk_rt` and
+  - the compiler already ships a bundled hosted executor in `libsilk_rt` and
     lowers `async`/`await` to it on the hosted `linux/x86_64` target,
   - the module exposes low-level awaitable readiness/timer helpers plus an
     explicit `Handle` polling surface for manually driving the hosted executor,
@@ -21785,7 +22784,7 @@ This module provides a small hosted baseline for
 task/runtime utilities on `linux/x86_64`.
 
 This is **not** the full structured-concurrency design, but the hosted
-`linux/x86_64` toolchain now ships a bring-up async executor (fibers) used to
+`linux/x86_64` toolchain now ships a hosted async executor (fibers) used to
 make `await` a true suspension point. in Silk:
 
 - `yield` / `yield *` are still blocking OS-thread operations (task runtime is thread-based).
@@ -24103,23 +25102,27 @@ URL: /silk/docs/?p=std/formal
 
 # `std::formal`
 
-This module provides reusable Formal Silk theories
-that encode common proof obligations (non-negativity, bounds checks, and basic
-container invariants).
+`std::formal` exports reusable Formal Silk
+theories for the proof obligations that show up constantly in real systems
+code:
 
-These theories are intended to:
+- non-negative lengths and counters,
+- non-null pointers,
+- bounds checks,
+- and basic slice/vector well-formedness.
 
-- de-duplicate repetitive `#require` / `#assure` clauses across the standard
-  library, and
-- give downstream code a small set of “standard lemmas” for Z3-backed
-  verification.
+Use `std::formal` when the proof is common enough that you do not want to
+repeat the same `#require` / `#assure` block in every parser, container, or
+runtime helper.
 
-See `docs/language/formal-verification.md` for the Formal Silk model and
-theory semantics.
+See also:
 
-## Importing and using theories
+- [`Formal Silk`](?p=language/formal-verification)
+- [`Formal Silk guide`](?p=guides/formal-silk)
 
-Theories are imported with named imports and applied via `#theory`:
+## Importing and applying theories
+
+Theories are imported with named imports and applied with `#theory`:
 
 ```silk
 import { nonnegative_i64, bounds_i64 } from "std/formal";
@@ -24131,22 +25134,98 @@ fn get_at (index: i64, len: i64) -> i64 {
 }
 ```
 
-## Initial theory set
+This keeps the user-facing function contract compact while still letting the
+verifier reuse standard facts.
 
-The current `std::formal` module exports (at minimum) the following
-theories:
+## Current exported theory set
 
-- `nonnegative_i64(x: i64)` — proves/assumes `x >= 0`.
-- `nonnull_u64(ptr: u64)` — proves/assumes `ptr != 0`.
-- `bounds_i64(index: i64, len: i64)` — proves/assumes `0 <= index < len`.
-- `slice_well_formed(ptr: u64, len: i64)` — proves/assumes:
-  - `len >= 0`
-  - `len == 0 || ptr != 0`
-- `vector_well_formed(ptr: u64, len: i64, cap: i64)` — proves/assumes:
-  - `len >= 0`
-  - `cap >= 0`
-  - `len <= cap`
-  - `cap == 0 || ptr != 0`
+The current `std::formal` module exports these reusable theories:
+
+- `nonnegative_i64(x: i64)`
+  - proves / assumes `x >= 0`
+- `nonnull_u64(ptr: u64)`
+  - proves / assumes `ptr != 0`
+- `bounds_i64(index: i64, len: i64)`
+  - proves / assumes `0 <= index < len`
+- `slice_well_formed(ptr: u64, len: i64)`
+  - proves / assumes:
+    - `len >= 0`
+    - `len == 0 || ptr != 0`
+- `vector_well_formed(ptr: u64, len: i64, cap: i64)`
+  - proves / assumes:
+    - `len >= 0`
+    - `cap >= 0`
+    - `len <= cap`
+    - `cap == 0 || ptr != 0`
+
+## Example: parser offset checks
+
+This is the most common downstream use: make a parser helper obviously
+bounds-safe without repeating the same arithmetic proof in every call site.
+
+```silk
+import { nonnegative_i64, bounds_i64 } from "std/formal";
+
+#theory nonnegative_i64(len);
+#theory bounds_i64(index, len);
+#assure result == index;
+fn checked_index (index: i64, len: i64) -> i64 {
+  return index;
+}
+```
+
+## Example: well-formed byte slices
+
+```silk
+import { slice_well_formed } from "std/formal";
+
+#theory slice_well_formed(ptr, len);
+#assure result == len;
+fn byte_len (ptr: u64, len: i64) -> i64 {
+  return len;
+}
+```
+
+This is useful at FFI boundaries, parser front-ends, and buffer-view helpers
+where the verifier should always know “zero length may allow a null pointer;
+non-zero length does not.”
+
+## Example: composing std theories with your own
+
+`std::formal` gives you the primitives; your module can add domain-specific
+facts on top.
+
+```silk
+import { vector_well_formed } from "std/formal";
+
+export theory append_window_ok (ptr: u64, len: i64, cap: i64, extra: i64) {
+  #theory vector_well_formed(ptr, len, cap);
+  #require extra >= 0;
+  #assure len + extra <= cap;
+}
+
+#theory append_window_ok(ptr, len, cap, extra);
+#assure result == len + extra;
+fn end_after_append (ptr: u64, len: i64, cap: i64, extra: i64) -> i64 {
+  return len + extra;
+}
+```
+
+This is the intended layering:
+
+- `std::formal` for common arithmetic / shape lemmas,
+- your own theories for protocol-, container-, or product-specific rules.
+
+## When to prefer `std::formal`
+
+Reach for `std::formal` when:
+
+- the same proof shape appears in multiple modules,
+- the property is generic (`index < len`, `len <= cap`, `ptr != 0`),
+- you want a readable contract surface without repeating boilerplate.
+
+Write a local theory instead when the fact is specific to one protocol,
+container, or subsystem.
 
 ==============================================================================
 DOCS: `std::runtime::z3` — Z3 SMT Solver (C API Bindings) (std/z3)
@@ -24579,6 +25658,7 @@ Reference: [Vendored deps](?p=compiler/vendored-deps)
 ## Where to go next
 
 - Guides: [What Silk is for](?p=guides/purpose) · [Hello world](?p=guides/hello-world) · [Language tour](?p=guides/language-tour)
+- Formal verification: [Formal Silk](?p=guides/formal-silk) · [Tutorial 7: Formal Silk in real code](?p=usage/tutorials/07-formal-silk)
 - Language quick reference: [Cheat sheet](?p=language/cheat-sheet)
 - Standard library: [Overview](?p=std/overview)
 - Embedding: [C ABI (`libsilk`)](?p=compiler/abi-libsilk) · [Zig embedding API](?p=compiler/zig-api)
@@ -25143,6 +26223,240 @@ async fn main () -> int {
   (`std::net::stream` provides `TcpStream` ↔ stream adapters).
 - For low-level readiness waits and manual executor driving, read
   `docs/std/runtime-event-loop.md`.
+- For compile-time proofs around bounds, invariants, and contracts, continue to
+  [Tutorial 7: Formal Silk in real code](?p=usage/tutorials/07-formal-silk).
+
+==============================================================================
+DOCS: Tutorial 7: Formal Silk in real code (usage/tutorials/07-formal-silk)
+URL: /silk/docs/?p=usage/tutorials/07-formal-silk
+==============================================================================
+
+# Tutorial 7: Formal Silk in real code
+
+This tutorial shows how to introduce Formal Silk the same way you would
+introduce tests or types: incrementally, around code that is easy to get subtly
+wrong.
+
+You will use:
+
+- `#require` / `#assure` for function contracts,
+- `#require` on `struct` for type-level invariants,
+- `#assert` for local proof points,
+- `#invariant` / `#variant` / `#monovariant` for loops,
+- `theory` / `#theory` for reusable proof bundles.
+
+Reference pages:
+
+- [Formal Silk](?p=language/formal-verification)
+- [Struct requirements](?p=language/struct-requirements)
+- [`std::formal`](?p=std/formal)
+- [Diagnostics](?p=compiler/diagnostics)
+
+## 1) Start with a single boundary contract
+
+Create `formal_remaining.slk`:
+
+```silk
+#require total >= 0;
+#require used >= 0;
+#require used <= total;
+#assure result == total - used;
+fn remaining_bytes (total: int, used: int) -> int {
+  return total - used;
+}
+
+fn main () -> int {
+  return remaining_bytes(64, 16) - 48;
+}
+```
+
+Run the normal verification loop:
+
+```bash
+silk check formal_remaining.slk
+silk build formal_remaining.slk -o build/formal_remaining
+./build/formal_remaining
+```
+
+What this buys you:
+
+- callers must prove `used <= total`,
+- the function body must prove the postcondition,
+- downstream verified callers can reuse the postcondition.
+
+## 2) Move data invariants onto the type
+
+If the fact belongs to the type itself, put it on the `struct` instead of
+repeating it in every helper.
+
+```silk
+#require header_len == 8 || header_len == 12;
+#require payload_len >= 0;
+#require total_len == header_len + payload_len;
+struct FrameLayout {
+  header_len: int,
+  payload_len: int,
+  total_len: int,
+}
+
+fn main () -> int {
+  let frame = FrameLayout{
+    header_len: 8,
+    payload_len: 24,
+    total_len: 32,
+  };
+
+  return frame.total_len - 32;
+}
+```
+
+This is the right shape for:
+
+- packet and record headers,
+- `len` / `cap` pairs,
+- range descriptors,
+- parsed configuration values with internal constraints.
+
+## 3) Add a local proof point before the bug gets farther away
+
+`#assert` is the smallest useful Formal Silk tool. Use it where you would
+otherwise leave a comment like “this must always be true”.
+
+```silk
+fn main () -> int {
+  let header_len: int = 8;
+  let payload_len: int = 24;
+  let total_len: int = header_len + payload_len;
+
+  #assert total_len >= header_len;
+  #assert total_len >= payload_len;
+
+  return total_len - 32;
+}
+```
+
+Prefer this over prose when:
+
+- a parser offset must stay in bounds,
+- a retry budget must not go negative,
+- a capacity calculation must dominate a payload length.
+
+## 4) Prove a loop, not just its final result
+
+Loop bugs usually come from one of three failures:
+
+- the cursor leaves its valid range,
+- the progress measure stops decreasing,
+- the implementation and the intended bound drift apart.
+
+Formal Silk gives you one directive for each of those concerns.
+
+```silk
+fn main () -> int {
+  let total: int = 5;
+  #const original_total = total;
+
+  let mut processed: int = 0;
+  #invariant processed >= 0;
+  #invariant processed <= original_total;
+  #variant original_total - processed;
+  #monovariant processed;
+  while processed < total {
+    processed += 1;
+  }
+
+  #assert processed == original_total;
+  return 0;
+}
+```
+
+Interpretation:
+
+- `#invariant` keeps the loop state inside its legal range,
+- `#variant` proves termination progress,
+- `#monovariant` proves a monotonic quantity such as a cursor, sequence number,
+  or bytes-written counter.
+
+## 5) Reuse proof bundles with `theory`
+
+Once the same proof shape appears twice, stop copy/pasting it.
+
+```silk
+export theory bounded_progress (current: int, limit: int) {
+  #require limit >= 0;
+  #assure current >= 0;
+  #assure current <= limit;
+}
+
+#theory bounded_progress(sent, total);
+#assure result == total - sent;
+fn remaining (sent: int, total: int) -> int {
+  return total - sent;
+}
+```
+
+You can also import standard theories:
+
+```silk
+import { nonnegative_i64, bounds_i64 } from "std/formal";
+
+#theory nonnegative_i64(len);
+#theory bounds_i64(index, len);
+fn checked_index (index: i64, len: i64) -> i64 {
+  return index;
+}
+```
+
+Use custom `theory` declarations for domain rules and `std::formal` for common
+bounds/non-negativity/container-shape facts.
+
+## 6) Verify against precompiled or external implementations
+
+The callee does not need a visible body if you have a visible contract.
+
+```silk
+#require bytes >= 0;
+#assure result >= bytes;
+fn align_up_page (bytes: int) -> int;
+
+fn main () -> int {
+  let size = align_up_page(8192);
+  #assert size >= 8192;
+  return 0;
+}
+```
+
+This is useful for:
+
+- precompiled package dependencies,
+- ABI surfaces exposed through `libsilk`,
+- code generators that emit prototypes and contracts separately from bodies.
+
+## 7) Debug failed proofs with the normal toolchain
+
+When a proof fails, start with the normal diagnostic. If you need the raw SMT
+query, rebuild with debug output enabled.
+
+```bash
+silk build formal_remaining.slk --debug -o build/formal_remaining
+z3 -smt2 .silk/z3/silk_z3_m0_0.smt2
+```
+
+Useful diagnostics:
+
+- `E3001` — loop invariant may not hold
+- `E3002` — loop variant may be negative
+- `E3003` — loop variant may not decrease
+- `E3006` — assertion may not hold
+- `E3007` — call precondition may not hold
+- `E3008` — loop monovariant may not be monotonic
+
+## Next
+
+- Guide: [Formal Silk](?p=guides/formal-silk)
+- Reference: [Formal Silk](?p=language/formal-verification)
+- Reference: [Struct requirements](?p=language/struct-requirements)
+- Library: [`std::formal`](?p=std/formal)
 
 ==============================================================================
 DOCS: CLI usage examples (usage/cli-examples)
@@ -25926,11 +27240,14 @@ The compiler is implemented in Zig and organized into three major layers:
   - Emission of object files and archives that can be linked into executables and libraries.
   - C99 ABI mappings for interop with `libsilk.a`.
 
-In terms of concrete targets and file formats, the back-end MUST eventually support:
+In terms of concrete targets and file formats, the back-end surface today plus
+the explicit roadmap requirements are:
 
 - ELF for Unix-like systems:
-  - `linux/x86_64` is the initial full IR-backed target (executables, objects, static libraries, and shared libraries).
-  - `linux/aarch64` (ARM64) is a required future IR-backed target (beyond const-only executables).
+  - `linux/x86_64` is the current full IR-backed target (executables, objects,
+    static libraries, and shared libraries).
+  - `linux/aarch64` (ARM64) remains a required future IR-backed target (beyond
+    const-only executables).
   - position-independent code and shared objects (`.so`) for dynamic libraries.
 - Mach-O for macOS:
   - both Intel (`x86_64`) and Apple Silicon (`arm64`) MUST be supported,
@@ -25950,15 +27267,21 @@ Current snapshot (Silk (ABI) 0.2.0):
   This backend is host-agnostic for `linux-x86_64` outputs: it can emit Linux ELF artifacts even when the compiler itself is running on a non-`linux/x86_64` host.
 - `src/backend_wasm_ir.zig` provides the IR-backed backend for `wasm32-unknown-unknown` and `wasm32-wasi` outputs.
 
-Mach-O and PE/COFF IR-backed object/static/shared library emission, and additional IR-backed architectures (notably AArch64) are explicit future requirements and MUST be planned and implemented as the back-end matures.
+Mach-O and PE/COFF IR-backed object/static/shared library emission, and
+additional IR-backed architectures (notably AArch64), remain explicit roadmap
+requirements.
 
-An initial IR-driven, native backend is being prototyped alongside the existing constant-expression emitter:
+A growing IR-driven native backend exists alongside the constant-expression
+emitter:
 
 - the front-end (parser + checker) produces `ast.Module` values,
 - a lowering pass in `src/lower_ir.zig` translates a constrained subset of `fn main() -> int` programs into `ir.Function` graphs, using integer arithmetic, comparisons, and simple control flow (`Br` / `BrCond`),
 - a target-independent IR interpreter in `src/ir_eval.zig` provides reference semantics for these IR functions,
 - the constant-expression backend emits a minimal target-specific executable stub (ELF64/Mach-O/PE32+) whose entrypoint terminates the process with the evaluated `main` return value,
-- a dedicated IR→ELF backend module (`src/backend_ir_elf.zig`) will gradually assume responsibility for emitting native code directly from `ir.Function` graphs, starting with a single-function, integer-returning subset and expanding as more language features are lowered to IR.
+- a dedicated IR→ELF backend module (`src/backend_ir_elf.zig`) is progressively
+  assuming responsibility for emitting native code directly from `ir.Function`
+  graphs, starting with a constrained subset and expanding as more language
+  features are lowered to IR.
 
 ### Packages, Modules, Imports, and Exports
 
@@ -25992,10 +27315,10 @@ that spec.
 
 The implementation must remain spec-driven: any architectural decision should be traceable back to a document in `docs/`.
 
-### Executable Entrypoint (Initial Rule)
+### Executable Entrypoint (Current Rule)
 
-For executable builds driven via the C ABI (`SILK_OUTPUT_EXECUTABLE`) and,
-eventually, the `silk` CLI, the compiler enforces a simple, explicit entrypoint:
+For executable builds driven via the C ABI (`SILK_OUTPUT_EXECUTABLE`) and the
+`silk` CLI, the compiler currently enforces a simple, explicit entrypoint:
 
 - there MUST be exactly one top-level function with the signature:
 
@@ -26008,10 +27331,11 @@ eventually, the `silk` CLI, the compiler enforces a simple, explicit entrypoint:
   - returns `int`,
   - serves as the process entrypoint when an executable is produced.
 
-In the initial bring-up, this requirement is enforced by the front-end (via
-`silk_compiler_build`) and a minimal back-end that supports only constant
-integer `main` functions. This is a temporary measure; the long-term back-end
-is a true Silk code generator, not a C transpiler.
+This requirement is enforced today by the front-end plus the current build
+backends exposed through both `silk_compiler_build` and the `silk` CLI. The
+const-main bring-up path is still documented because some targets remain
+const-only, but the broader direction is already a true Silk code generator,
+not a C transpiler.
 
 ## Module Layout (Draft)
 
@@ -26404,7 +27728,7 @@ The current command surface includes:
         - the caller maintains 16-byte stack alignment before `call` (padding by one 8-byte slot when needed), and
         - results return in registers for 0–2 scalar results (integer-like in `rax`/`rdx`, floats in `xmm0`/`xmm1`), and 3+ scalar results return indirectly via a hidden sret pointer passed in `rdi` (caller-allocated return buffer),
     - on `linux/x86_64`, the same backend also supports a limited `string` subset:
-      - within function bodies, the compiler supports a small `string` expression subset: string literals, `let` bindings of `string`, `return` of a `string` value, `if` expressions that produce `string` values, direct calls to `string`-returning helpers, and `==`/`!=`/`<`/`<=`/`>`/`>=` comparisons over `string` values (producing `bool`); other string operations (concatenation, indexing, etc.) are not implemented yet,
+      - within function bodies, the compiler supports a small `string` expression subset: string literals, `let` bindings of `string`, `return` of a `string` value, `if` expressions that produce `string` values, direct calls to `string`-returning helpers, and `==`/`!=`/`<`/`<=`/`>`/`>=` comparisons over `string` values (producing `bool`); other string operations (concatenation, indexing, etc.) remain outside the backend,
       - string literals are embedded as rodata byte blobs and `.text`→rodata fixups are emitted/handled appropriately for each output kind (ELF relocations for object/static outputs; direct RIP-relative displacement patching for shared libraries and executables once the final `.text`/rodata layout is known),
     - for non-executable outputs, exported `string` constants (`export let`/`export const` with a string literal initializer; `: string` is optional) are emitted as `SilkString` data symbols for downstream C consumers, and exported functions of this subset may accept and return `string` values using the same `{ ptr: u64, len: i64 }` ABI.
     - on `linux/x86_64`, the current backend also supports a limited `struct` subset:
@@ -28242,15 +29566,14 @@ URL: /silk/docs/?p=compiler/backend-wasm
 # WebAssembly Back-End (`wasm32` / `wasm64`)
 
 
-This document records the initial design and constraints for targeting
-WebAssembly from the Silk compiler back-end. It is intended to guide future
-implementation work and keep the compiler architecture spec-driven.
+This document records the current implemented subset and remaining design
+constraints for targeting WebAssembly from the Silk compiler back-end.
 
 ## Current Implementation (Phase 1, IR-backed wasm32)
 
-The Silk compiler repository now includes an initial `wasm32` back-end capable of emitting a
-final `.wasm` module from the compiler’s IR (CFG-based lowering for the current
-subset), plus a smaller constant-only fallback:
+The Silk compiler repository now includes a `wasm32` back-end capable of
+emitting a final `.wasm` module from the compiler’s IR (CFG-based lowering for
+the ), plus a smaller constant-only fallback:
 
 - Implementations:
   - IR-backed wasm backend (primary path),
@@ -28277,7 +29600,8 @@ subset), plus a smaller constant-only fallback:
     IR subset.
   - does not yet support the concurrency runtime on wasm targets (no `task` /
     `async` lowering to a wasm-native scheduler); programs using concurrency
-    constructs may fail code generation with a “not implemented yet” error.
+    constructs are currently outside the wasm backend subset and are rejected
+    during code generation.
 
 The CLI exposes these targets via `silk build --target ...` and the shorthand
 `silk build --arch wasm32|wasm32-wasi` (see `docs/compiler/cli-silk.md` and
@@ -28327,7 +29651,7 @@ embedder.
 - Preserve Silk’s “native compiler” principle: this is Silk-owned codegen (no C
   transpilation).
 
-## Non-Goals (for initial implementation)
+## Non-Goals (current phase)
 
 - A full WASM toolchain replacement (linker, LTO, debug formats) on day one.
 - A single “portable” stdlib archive usable across all WASM environments
@@ -28339,7 +29663,7 @@ embedder.
 
 ### Module kinds
 
-The initial back-end should emit a *final* `.wasm` module (not a relocatable
+The current back-end emits a *final* `.wasm` module (not a relocatable
 object) for the supported subset, analogous to the current `linux/x86_64`
 “emit a final ELF image” approach.
 
@@ -28707,7 +30031,7 @@ The compiler is responsible for:
 - computing which locals must be stored in the frame across each suspension point,
 - preserving typed-error and `panic` semantics during the transform.
 
-Note: the current shipped bring-up does **not** yet implement this state-machine transform.
+Note: the current shipped hosted runtime does **not** yet implement this state-machine transform.
 Instead, `async fn` bodies execute on stackful coroutines provided by the runtime (`ucontext`)
 and suspension points yield back to the executor by swapping contexts. The long-term plan is
 to migrate from stackful coroutines to an explicit compiler transform once the async surface
@@ -28773,7 +30097,7 @@ The interface must support:
 
 The current downstream-facing surface is documented in
 [`std::runtime::event_loop`](?p=std/runtime-event-loop). The exact signatures
-may continue to evolve during bring-up, but the long-term contract should avoid
+may continue to evolve while the hosted runtime surface stabilizes, but the long-term contract should avoid
 exposing raw platform struct layouts directly to user code.
 
 ## Linux Backend: `io_uring`
@@ -29347,7 +30671,8 @@ silk build app.slk -o build/app
 - **Source span**: a byte range in the UTF‑8 source buffer (`offset`, `length`).
   - Displayed **line** and **column** numbers are **1-based**.
   - Columns are measured in **UTF‑8 bytes** (matching the lexer’s current `Token.column` behavior).
-- **Primary label**: the main span where the error is reported (single span in the initial implementation).
+- **Primary label**: the main span where the error is reported (single primary
+  span in the current text renderer).
 - **Note / Help**: supplemental lines that explain context or suggest a fix.
 
 ## Text Format (CLI and ABI)
@@ -29484,7 +30809,7 @@ Common lookup flow:
 - `E2013` — cannot access fields on opaque struct.
 - `E2014` — formal Silk declaration used in runtime expression.
 - `E2015` — `let` requires an initializer.
-- `E2016` — unsupported generic form in Silk (for example const parameters / const type arguments).
+- `E2016` — unsupported generic form outside the current monomorphized subset.
 - `E2017` — builtin `map(K, V)` type form was removed (use `std::map::{HashMap, TreeMap}` instead).
 - `E2018` — namespace import is not callable.
 - `E2019` — duplicate default export in a module.
@@ -29941,7 +31266,7 @@ Position handling note:
 The server supports the standard LSP initialization sequence:
 
 - `initialize` (request):
-  - Advertised capabilities (initial version):
+  - Advertised capabilities (current version):
     - `positionEncoding`: `"utf-16"` (the server currently operates in UTF-16 positions for maximum client compatibility).
     - `textDocumentSync`:
       - `openClose: true`,
@@ -29957,17 +31282,19 @@ The server supports the standard LSP initialization sequence:
     - `signatureHelpProvider`:
       - trigger characters `(` and `,`,
       - provides function and method signatures for the current call.
-    - No references/rename, semantic tokens, or other advanced features are claimed in the initial implementation.
+    - No references/rename, semantic tokens, or other advanced features are
+      claimed in the current implementation.
 - The server uses `rootUri` (or `rootPath`) to help locate a stdlib root when no explicit `--std-root` or `SILK_STD_ROOT` is set.
 - `initialized` (notification):
   - Accepted but does not currently trigger additional behavior.
 - `shutdown` (request) and `exit` (notification) are honored as in the LSP spec.
 - Requests received after `shutdown` (other than `exit`) are treated as invalid and answered with an error response.
-- `$\/cancelRequest` notifications are accepted and ignored; the initial server does not track per-request cancellation state.
+- `$\/cancelRequest` notifications are accepted and ignored; the current server
+  does not track per-request cancellation state.
 
-Any future capabilities (completion, hover, goto definition, etc.) must be documented here before being implemented.
+Any newly added capability must be documented here before being advertised.
 
-## Hover (Initial Support)
+## Hover ()
 
 The server provides a minimal implementation of `textDocument/hover`:
 
@@ -29992,9 +31319,9 @@ The server provides a minimal implementation of `textDocument/hover`:
 
 As the front-end grows richer (e.g. with symbol tables and more detailed type information), hover semantics may be extended to include resolved types and declaration summaries; such changes must be reflected here before being implemented.
 
-## Go to Definition (Initial Support)
+## Go to Definition ()
 
-The server provides an initial implementation of `textDocument/definition`:
+The server provides the current implementation of `textDocument/definition`:
 
 - Definition requests are handled for the current contents of an open document.
 - The server first consults the module-set symbol index (open docs + resolved imports + std modules) to resolve:
@@ -30012,7 +31339,7 @@ The server provides an initial implementation of `textDocument/definition`:
 - Constructor calls (`new Type(...)`) resolve to the `fn constructor` declaration when the constructor overload set is unambiguous; otherwise the server falls back to the `struct Type` declaration.
 - If symbol resolution fails, the server falls back to a lexical scan of the current file for the first matching `let`/`fn`/`ext`/`struct`/`enum`/`interface`/`error` declaration.
 
-Known limitations in this initial support:
+Known limitations in the :
 
 - local block scopes and shadowing are only modeled for `let`-style bindings (not for match-expression binders),
 - ambiguous names across multiple imports are not disambiguated; the first match wins,
@@ -30398,8 +31725,8 @@ The initial C header provided in the Silk compiler repository defines:
   auto-loaded `import std::...;` modules.
 
   `silk_compiler_set_target` selects the code generation target. The
-  `target_triple` string is copied. The initial implementation recognizes the
-  same targets as the CLI (`silk build --list-targets`), including:
+  `target_triple` string is copied. The current supported set matches the CLI
+  (`silk build --list-targets`), including:
 
   - `linux-x86_64` (default), and common `x86_64-*-linux-*` triples such as
     `x86_64-linux-gnu` and `x86_64-unknown-linux-gnu`,
@@ -30628,7 +31955,7 @@ The initial C header provided in the Silk compiler repository defines:
         - within function bodies, the compiler supports a small `string`/`regexp` expression subset:
           - `string`: string literals, `let` bindings of `string`, `return` of a `string` value, direct calls to `string`-returning helpers, and `==`/`!=`/`<`/`<=`/`>`/`>=` comparisons over `string` values (producing `bool`),
           - `regexp`: regex literals (`/pattern/flags`), `let` bindings of `regexp`, `return` of a `regexp` value, and direct calls between helpers that accept/return `regexp`,
-          - other string operations (concatenation, indexing, etc.) are not implemented yet; higher-level regex matching lives in `std::regex` and is routed through `ext` calls.
+          - other string operations (concatenation, indexing, etc.) remain outside the backend; higher-level regex matching lives in `std::regex` and is routed through `ext` calls.
       - within the current `linux/x86_64` IR subset, `i128`/`u128`/`f128` values are supported at ABI boundaries using the stable C99 `{ lo, hi }` struct shapes:
         - parameters lower to two integer-like scalars (`u64 lo`, then `u64`/`i64 hi`) and consume integer argument locations,
         - results return as two integer-like scalars in `rax`/`rdx`,
@@ -33330,7 +34657,7 @@ bool silk_compiler_set_target(SilkCompiler *compiler,
 
 - Sets the code generation target triple (for example `"x86_64-linux-gnu"`).
 - The triple is copied; errors are recorded in the compiler’s last‑error state.
-- Supported targets (initial implementation):
+- Current supported targets:
   - `linux-x86_64` (default), plus common `x86_64-*-linux-*` triples such as `x86_64-linux-gnu` and `x86_64-unknown-linux-gnu`,
   - `linux-aarch64`,
   - `android-aarch64`,
@@ -33559,9 +34886,8 @@ Return value:
       `main` contains non‑constant expressions, references to non‑constant
       values, function calls, or unsupported control flow), or if the backend
       cannot produce an executable for the current platform or output path,
-      the call returns `false` and typically records either `"code generation
-      is not implemented yet"` or `"failed to build executable output"` as the
-      last error.
+      the call returns `false` and typically records
+      `"failed to build executable output"` as the last error.
 
 #### Executable entrypoint rule
 
@@ -34386,7 +35712,7 @@ Operator precedence and associativity follow the rules in `Operators`.
 
 See `the relevant chapters of this specification` for details.
 
-Executable entrypoint (initial rule):
+Executable entrypoint (current rule):
 
 - A minimal executable module defines exactly one top-level function:
 
@@ -34840,13 +36166,12 @@ fn log (fmt: string, ...args: std::fmt::Arg) -> void {
 }
 ```
 
-##### Generic function parameter split (`;`) (Design, parsed but rejected)
+##### Generic function parameter split (`;`)
 
 Generic functions use `;` to separate compile-time parameters from value parameters:
 
 ```silk
-// Design (currently rejected with `E2016`).
-fn get_first(T, N: int; xs: &T[N]) -> T {
+fn get_first(T, N: usize; xs: &T[N]) -> T {
   return xs[0];
 }
 ```
@@ -35219,8 +36544,8 @@ fn main () -> int {
 }
 ```
 
-See `Generics (Monomorphized)` for  limits (notably `E2016` for
-const parameters/arguments and generic functions).
+See `Generics (Monomorphized)` for the current monomorphized subset and the
+remaining unsupported generic forms that still report `E2016`.
 
 ### 6. Statements (Inside Blocks)
 
@@ -36265,8 +37590,12 @@ Implementation status (current compiler subset):
   are not a stable user API.
 - Special-case: the nominal optional form `Option(T)` is accepted and desugared
   to `T?` in type annotations (it is not a general generics feature).
-- Parsed but rejected by the current checker: const parameters and integer
-  literal type arguments (`Foo(N: int)`, `Foo(u8, 1024)`) (`Compiler Diagnostics`, `E2016`),
+- Implemented current generic surface: parameterized nominal declarations with
+  type and const parameters (for example `Wrap(T, N: usize)`), applied types
+  in type positions (`Wrap(u8, 4)`), and the generic-function surface
+  described in `Generics (Monomorphized)`.
+  - `E2016` remains reserved for unsupported generic forms outside the shipped
+    monomorphized subset.
   and the removed builtin map type form (`map(K, V)`) (`E2017`; use
   `std::map::{HashMap, TreeMap}` instead).
 - Defined in the native backend subset: 128-bit scalar primitives
@@ -36620,13 +37949,12 @@ The compiler must:
 
 - Treat nominal types as distinct even if their field layout is identical.
 - In the full language design, support parameterized types in all contexts
-  where the spec permits them. in Silk, **type-parameter**
-  generics are supported for nominal declarations (`struct` / `interface`) and
-  for applied types in type positions (`Name(u8)`).
-  - Const parameters and integer-literal type arguments (`Name(N: int)`,
-    `Name(u8, 1024)`) remain tracked work and are rejected (`E2016`).
-  - The `Option(T)` optional sugar described above remains supported for
-    the .
+  where the spec permits them. in Silk, monomorphized
+  generics support both type parameters and const parameters on nominal
+  declarations, plus applied types in type positions (`Name(u8)`,
+  `Wrap(u8, 4)`).
+  - The `Option(T)` optional sugar described above remains supported for the
+    .
 
 #### Parameterized type syntax (initial surface form)
 
@@ -37676,9 +39004,10 @@ See the dedicated documents:
 
 The `if` / `else` construct provides branching based on a boolean condition.
 
-In Silk, `if` is a **statement** that selects which
-block of statements executes. The broader language design also includes
-expression-oriented forms; those are documented as planned where relevant.
+In Silk, `if` works in both roles:
+
+- as a **statement** that selects which block executes, and
+- as an **expression** for the documented value-producing subset.
 
 ### Surface Syntax
 
@@ -38712,7 +40041,7 @@ behavior consistent with C for the supported cases.
 memory layout.
 
 The intent is to provide “high-level” APIs without baking behavior into `struct`
-layout. In the initial implementation, `impl` blocks are *syntax and
+layout. in Silk, `impl` blocks are *syntax and
 type-checking structure*; code generation treats methods as ordinary functions
 that follow the same calling conventions as other Silk functions.
 
@@ -39293,7 +40622,7 @@ Compiler requirements:
   - impl methods that satisfy an interface requirement may omit `public`, but
   - they may not be explicitly marked `private`.
 
-Conformance rules (initial implementation):
+Conformance rules ():
 
 - For an `interface I { fn m(p0: T0, ...) -> R; }`, the corresponding impl must
   provide a method `m` whose signature matches after accounting for the
@@ -39950,7 +41279,7 @@ Rules:
 - `export` is not allowed inside blocks; it applies only to module-level
   declarations. Inside `impl` blocks, `public` controls method visibility and
   `export` is reserved for static members.
-- The initial implementation supports `export` on:
+- the compiler supports `export` on:
   - functions (`export fn ...`), including a declaration-only prototype form
     (`export fn name(...) -> T;`) used for header-style interface modules,
   - `let` and `const` bindings (`export let ...`, `export const ...`).
@@ -41792,9 +43121,9 @@ fn main () -> int {
 }
 ```
 
-#### Function annotations (initial syntax)
+#### Function annotations (current syntax)
 
-For functions, the initial surface syntax is:
+For functions, the current surface syntax is:
 
 ```silk
 #require <Expr>;
@@ -41846,9 +43175,9 @@ Rules ():
 Loop specifications (`#invariant`, `#variant`, `#monovariant`) follow a similar
 pattern for loops.
 
-#### Loop annotations (initial syntax)
+#### Loop annotations (current syntax)
 
-For `while` loops, the initial surface syntax is:
+For `while` loops, the current surface syntax is:
 
 ```silk
 #invariant <Expr>;
@@ -42060,7 +43389,7 @@ Rules:
   theory access, because theory use sites do not accept qualified names
   (`ns::TheoryName`) yet.
 
-#### Semantics (initial subset)
+#### Semantics ()
 
 When a theory is applied (`#theory Name(args);`):
 
@@ -42250,10 +43579,10 @@ impl Data(T) { /* ... */ }
 This rule keeps method receiver typing unambiguous and makes monomorphization
 explicit.
 
-### Functions (initial parsed surface form)
+### Functions
 
-Generic functions require a way to declare type/const parameters distinct from
-value parameters. The initial parsed surface form is:
+Generic functions declare type/const parameters distinct from value parameters
+using the compile-time/runtime split. The current supported surface form is:
 
 ```silk
 fn get_first(T, N: usize; v: &T[N]) -> T {
@@ -42352,80 +43681,89 @@ Rules:
 
 ## Dependent Types (Const Parameters and Type-Level Computation)
 
-This document specifies Silk’s intended support for “dependent-type-like”
-patterns where types mention compile-time values (most notably integers).
+This section covers Silk’s dependent-type-like surface: places where a type
+mentions a compile-time value, most commonly an integer const parameter.
 
-The front-end can parse and preserve:
 
-- declaration parameter lists on `struct`, `impl`, and `fn`,
-- type application in type positions (for example `VectorN(int, 1024)`),
+the compiler already supports:
 
-but the compiler does not yet implement constraint checking, inference, or
-monomorphization/code generation for parameterized declarations. In the current
-compiler subset, generic parameter lists and applied types are rejected during
-type checking (`Compiler Diagnostics`, `E2016`). See
-`Generics (Monomorphized)`.
+- const parameters on parameterized declarations (`struct`, `interface`,
+  `enum`, `impl`),
+- applied types with const arguments (for example `Wrap(u8, 4)`),
+- generic functions and methods using the compile-time/runtime split,
+- call-site inference of both type and const arguments when runtime arguments
+  carry enough type information.
 
-### Const Parameters
+### Const Parameters ()
 
-Const parameters are compile-time values that appear in parameter lists with a
-type annotation:
+Const parameters are compile-time integer values written with an explicit type
+annotation:
 
 ```silk
-struct VectorN(T, N: int) { /* ... */ }
+struct VectorN(T, N: usize) {
+  buf: T[N],
+}
 ```
 
 Where:
 
 - `T` is a type parameter, and
-- `N: int` is a const parameter whose value must be known at compile time.
+- `N: usize` is a const parameter whose value is known at compile time.
 
-The initial supported const-argument form in type application is integer
-literals (for example `VectorN(int, 1024)`).
-
-### Type-Level Computation
-
-The language intends to allow certain expressions over const parameters in type
-positions (design-only):
-
-```silk
-fn concat(T, M: int, N: int; a: VectorN(T, M), b: VectorN(T, N)) -> VectorN(T, M + N) {
-  // ...
-}
-```
-
-This requires:
-
-- a notion of const expressions at the type level,
-- evaluation rules (and overflow behavior) for those expressions,
-- and a compilation strategy (typically monomorphization) that produces concrete
-  layouts and code for each instantiated type.
-
-### Function Parameter Lists (CT/RT Split)
+### Generic Functions (CT/RT Split)
 
 Generic functions use a single parameter list split by a top-level `;` inside
 the parentheses:
 
 ```silk
-fn id(T; x: T) -> T { return x; }
-fn g(T;) -> T { /* CT-only, rare */ }
-fn h(x: int) -> int { return x; } // RT-only
+fn get_first(T, N: usize; xs: &T[N]) -> T {
+  return xs[0];
+}
 ```
 
-This split is parsed and preserved by the front-end, but generic functions are
-rejected by the current checker until monomorphization is implemented
-(`Compiler Diagnostics`, `E2016`).
+The parameters before `;` are compile-time parameters; the parameters after `;`
+are ordinary runtime parameters.
+
+Calls may be explicit:
+
+```silk
+let xs: int[4] = [10, 20, 30, 40];
+let x: int = get_first(int, 4; xs);
+```
+
+Or inferred:
+
+```silk
+struct Wrap(T, N: usize) {
+  buf: T[N],
+}
+
+fn take_wrap(T, N: usize; w: Wrap(T, N)) -> int {
+  return 0;
+}
+
+let w: Wrap(u8, 4) = { buf: [1, 2, 3, 4] };
+let status: int = take_wrap(w);
+```
 
 ### Relationship to Arrays and Collections
 
-Const parameters are intended to power:
+Const parameters are the natural surface for:
 
 - fixed-size arrays (`T[N]`),
-- dependent-length collections (for example `VectorN(T, N)`),
-- and compile-time-checked indexing/slicing APIs.
+- compile-time-sized wrappers (`Wrap(T, N)`),
+- APIs that preserve array length or capacity through monomorphized calls.
 
-These features require additional language and runtime support beyond the
-current compiler subset.
+### Remaining Design Work
+
+What is still beyond the :
+
+- general type-level arithmetic such as `M + N` in type positions,
+- solver-backed constraints over const parameters,
+- arbitrary value predicates attached to types.
+
+Use `Formal Silk` for value predicates and proof obligations; use const
+parameters for compile-time shape.
 
 ## Struct Requirements (`#require`)
 
@@ -42475,11 +43813,12 @@ Const functions (`const fn`) are specified separately in
 `Const Functions (`const fn`)`. The `const` modifier is orthogonal to the
 discipline system described here (a `const fn` may also be declared `pure`).
 
+the compiler implements
 `pure fn` parsing and a strict purity checker. Concurrency disciplines (`task` /
 `async`) are parsed and `Task(T)` / `Promise(T)` handles plus `yield` (task
 values) and `await` (promise values) are implemented in Silk
 (`await Task(T)` is rejected). On the hosted `linux/x86_64` target, the compiler
-now ships a bring-up async runtime (single-threaded executor + stackful
+now ships a hosted async runtime (single-threaded executor + stackful
 coroutines in `libsilk_rt`) so `await` can suspend and resume without blocking
 the OS thread. A compiler state-machine coroutine transform, structured
 concurrency scope semantics, and task-safety (`Send`/`Sync`)-like rules remain
@@ -42525,6 +43864,10 @@ discipline crossings:
 - fd readiness and abort-aware waits via `std::runtime::event_loop`,
 - minimal async fd wrappers via
   `std::io::async::{read,write,read_abortable,write_abortable}`,
+- async TCP connect/accept via
+  `std::net::{TCPStream.connect_async,TCPListener.accept_async}`,
+- task-based fd/socket stream adapters via `std::io::stream` and
+  `std::net::stream`,
 - task-pool scheduling selection via `attr(task=pool)` / `attr(task_pool)` on
   `task fn` and `async task fn`.
 
@@ -42632,7 +43975,7 @@ Notes:
 In this document, a “compile-time value” is a value that the compiler can
 produce and manipulate during compile-time evaluation.
 
- (initial implementation target):
+:
 
 - scalar primitives:
   - `bool`
@@ -42642,10 +43985,20 @@ produce and manipulate during compile-time evaluation.
   - `char`
   - `Instant`, `Duration`
 
+ - compile-time structures (POD `struct` values):
+  - a non-opaque `struct` type,
+  - with 1+ fields,
+  - where every field type is a compile-time scalar value type, and
+  - the struct does not require ownership tracking (`Drop`).
+
+  These values are lowered as a flattened sequence of scalar slots in
+  declaration order. They may be returned from and passed to `const fn`, and
+  used in `const` initializers.
+
 Planned (not yet supported for `const fn` in Silk):
 
 - `string` values (string literals are supported directly in `const` bindings),
-- aggregate values (struct/enum/optional/slice/array) as return values,
+- aggregate values beyond compile-time POD structs (enum/optional/slice/array),
 - function values as compile-time values (for higher-order const evaluation).
 
 ### Rules ()
@@ -44581,7 +45934,7 @@ Two doc-comment forms are recognized:
 In both forms, doc comments attach to the *next* declaration when they appear
 immediately before it with only whitespace/comments between them.
 
-Initial implementation scope:
+Current attachment scope:
 
 - Doc comments attach to **top-level declarations** (`package`, `module`,
   `import`, `fn`, `theory`, `let`, `struct`, `ext`, `interface`, `impl`).
@@ -45266,7 +46619,7 @@ contracts as authoritative.
 
 ### Rules
 
-The initial implementation intentionally supports only unions whose member
+the compiler intentionally supports only unions whose member
 types have a safe, well-defined representation in the current compiler/backend
 subset.
 
@@ -45502,7 +46855,8 @@ The goal is to provide diagnostics that are:
 - **Source span**: a byte range in the UTF‑8 source buffer (`offset`, `length`).
   - Displayed **line** and **column** numbers are **1-based**.
   - Columns are measured in **UTF‑8 bytes** (matching the lexer’s current `Token.column` behavior).
-- **Primary label**: the main span where the error is reported (single span in the initial implementation).
+- **Primary label**: the main span where the error is reported (single primary
+  span in the current text renderer).
 - **Note / Help**: supplemental lines that explain context or suggest a fix.
 
 ### Text Format (CLI and ABI)
@@ -45609,7 +46963,7 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2013` — cannot access fields on opaque struct.
 - `E2014` — formal Silk declaration used in runtime expression.
 - `E2015` — `let` requires an initializer.
-- `E2016` — unsupported generic form in Silk (for example const parameters / const type arguments).
+- `E2016` — unsupported generic form outside the current monomorphized subset.
 - `E2017` — builtin `map(K, V)` type form was removed (use `std::map::{HashMap, TreeMap}` instead).
 - `E2018` — namespace import is not callable.
 - `E2019` — duplicate default export in a module.
@@ -45922,7 +47276,7 @@ The initial C header provided in the Silk compiler repository defines:
   auto-loaded `import std::...;` modules.
 
   `silk_compiler_set_target` selects the code generation target. The
-  `target_triple` string is copied. The initial implementation recognizes the
+  `target_triple` string is copied. the compiler recognizes the
   same targets as the CLI (`silk build --list-targets`), including:
 
   - `linux-x86_64` (default), and common `x86_64-*-linux-*` triples such as
@@ -46152,7 +47506,7 @@ The initial C header provided in the Silk compiler repository defines:
         - within function bodies, the compiler supports a small `string`/`regexp` expression subset:
           - `string`: string literals, `let` bindings of `string`, `return` of a `string` value, direct calls to `string`-returning helpers, and `==`/`!=`/`<`/`<=`/`>`/`>=` comparisons over `string` values (producing `bool`),
           - `regexp`: regex literals (`/pattern/flags`), `let` bindings of `regexp`, `return` of a `regexp` value, and direct calls between helpers that accept/return `regexp`,
-          - other string operations (concatenation, indexing, etc.) are not implemented yet; higher-level regex matching lives in `std::regex` and is routed through `ext` calls.
+          - other string operations (concatenation, indexing, etc.) remain outside the backend; higher-level regex matching lives in `std::regex` and is routed through `ext` calls.
       - within the current `linux/x86_64` IR subset, `i128`/`u128`/`f128` values are supported at ABI boundaries using the stable C99 `{ lo, hi }` struct shapes:
         - parameters lower to two integer-like scalars (`u64 lo`, then `u64`/`i64 hi`) and consume integer argument locations,
         - results return as two integer-like scalars in `rax`/`rdx`,
@@ -46431,16 +47785,20 @@ URL: /silk/wiki/?p=start
 
 # Silk Wiki
 
-The Silk Wiki is a learning-first, example-driven reference.
+The Silk Wiki is the learning-first, example-driven side of the Silk
+documentation set.
 
 Use it when you want:
 
-- a practical explanation of a concept
-- examples that show how a feature feels in real code
-- a gentler progression than the full reference material
+- a practical explanation of a concept,
+- examples that show how a feature feels in real code,
+- a gentler progression than the full reference material.
 
-If you want the canonical, detailed specification and toolchain reference, use
-[Silk Docs](../docs/?p=start).
+Choose the layer that matches your goal:
+
+- [Wiki](?p=start) — guided explanations and compact examples,
+- [Docs](../docs/?p=start) — canonical language, stdlib, and toolchain docs,
+- [Spec](../spec/2026/) — full language/specification mirror.
 
 ## Minimal shape
 
@@ -46459,6 +47817,7 @@ fn main () -> int {
 - Language: [Overview](?p=language/cheat-sheet)
 - Standard library: [Overview](?p=std/overview)
 - Tooling: [CLI](../docs/?p=guides/cli)
+- Formal verification: [Formal Silk](?p=language/formal-verification)
 
 ==============================================================================
 WIKI: Syntax tour (language/syntax-tour)
@@ -46470,7 +47829,7 @@ URL: /silk/wiki/?p=language/syntax-tour
 The canonical syntax tour is a soup-to-nuts walkthrough of Silk surface syntax,
 with many examples and cross-links:
 
-- `docs/language/syntax-tour.md`
+- [Silk Syntax Tour (Soup to Nuts)](../docs/?p=language/syntax-tour)
 
 This wiki page keeps navigation self-contained and highlights where to look
 next when you want precise rules.
@@ -46484,8 +47843,8 @@ fn main () -> int {
 
 ## See also
 
-- Grammar: `docs/wiki/language/grammar.md`
-- Packages/imports/exports: `docs/wiki/language/packages-imports-exports.md`
+- Grammar: [Grammar](?p=language/grammar)
+- Packages/imports/exports: [Packages, imports, and exports](?p=language/packages-imports-exports)
 
 ==============================================================================
 WIKI: Cheat sheet (language/cheat-sheet)
@@ -46497,7 +47856,7 @@ URL: /silk/wiki/?p=language/cheat-sheet
 If you want a fast, high-signal overview of Silk surface syntax, start with the
 canonical cheat sheet:
 
-- `docs/language/cheat-sheet.md`
+- [Language Cheat Sheet](../docs/?p=language/cheat-sheet)
 
 This wiki page exists to keep wiki navigation self-contained; the cheat sheet
 itself is already concise and example-heavy.
@@ -46523,7 +47882,7 @@ Silk has familiar structured control flow:
 - structured matching: `match`
 - early exit: `break`, `continue`, `return`
 
-Canonical spec: `docs/language/flow-overview.md`.
+[Canonical spec](../docs/?p=language/flow-overview).
 
 ## Example
 ```silk
@@ -46546,9 +47905,9 @@ fn main () -> int {
 
 ## See also
 
-- `if` / `else`: `docs/wiki/language/flow-if-else.md`
-- `for`: `docs/wiki/language/flow-for.md`
-- `match`: `docs/wiki/language/flow-match.md`
+- `if` / `else`: [if / else](?p=language/flow-if-else)
+- `for`: [for loops](?p=language/flow-for)
+- `match`: [match](?p=language/flow-match)
 
 ==============================================================================
 WIKI: `if` / `else` (language/flow-if-else)
@@ -46559,11 +47918,12 @@ URL: /silk/wiki/?p=language/flow-if-else
 
 Use `if` / `else` for boolean branching.
 
-In Silk, `if` is a statement that chooses which block
-executes. The broader language design includes expression-oriented forms; see
-the canonical spec for details.
+In Silk, `if` works in both roles:
 
-Canonical spec: `docs/language/flow-if-else.md`.
+- as a statement that chooses which block executes, and
+- as an expression for the documented value-producing subset.
+
+[Canonical spec](../docs/?p=language/flow-if-else).
 
 ## Syntax
 
@@ -46607,8 +47967,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/flow-if-else.md`
-- `match` (expression): `docs/language/flow-match.md`
+- [Canonical spec](../docs/?p=language/flow-if-else)
+- `match` (expression): [match Expression (and Statement)](../docs/?p=language/flow-match)
 
 ==============================================================================
 WIKI: `match` (language/flow-match)
@@ -46625,7 +47985,7 @@ Currently:
 - `match <enum> { E::V => expr, ... }` is supported in a restricted exhaustive subset,
 - typed-error handling uses a separate `match (expr) { ... }` statement form (see typed errors).
 
-Canonical spec: `docs/language/flow-match.md`.
+[Canonical spec](../docs/?p=language/flow-match).
 
 ## Syntax (Current match-expression subset)
 
@@ -46668,9 +48028,9 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/flow-match.md`
-- Enums: `docs/language/enums.md`
-- Typed errors (match statement): `docs/language/typed-errors.md`
+- [Canonical spec](../docs/?p=language/flow-match)
+- Enums: [enum Types](../docs/?p=language/enums)
+- Typed errors (match statement): [Typed Errors (error, panic, and T | ErrorType...)](../docs/?p=language/typed-errors)
 
 ==============================================================================
 WIKI: `loop` (language/flow-loop)
@@ -46681,7 +48041,7 @@ URL: /silk/wiki/?p=language/flow-loop
 
 `loop { ... }` is an infinite loop that exits via `break` or `return`.
 
-Canonical spec: `docs/language/flow-loop.md`.
+[Canonical spec](../docs/?p=language/flow-loop).
 
 ## Syntax
 
@@ -46707,8 +48067,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/flow-loop.md`
-- `break`: `docs/wiki/language/flow-break.md`
+- [Canonical spec](../docs/?p=language/flow-loop)
+- `break`: [break](?p=language/flow-break)
 
 ==============================================================================
 WIKI: `while` (language/flow-while)
@@ -46719,7 +48079,7 @@ URL: /silk/wiki/?p=language/flow-while
 
 Use `while` for condition-controlled looping.
 
-Canonical spec: `docs/language/flow-while.md`.
+[Canonical spec](../docs/?p=language/flow-while).
 
 ## Syntax
 
@@ -46746,8 +48106,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/flow-while.md`
-- `break` / `continue`: `docs/wiki/language/flow-break.md`, `docs/wiki/language/flow-continue.md`
+- [Canonical spec](../docs/?p=language/flow-while)
+- `break` / `continue`: [break](?p=language/flow-break), [continue](?p=language/flow-continue)
 
 ==============================================================================
 WIKI: `for` loops (language/flow-for)
@@ -46763,7 +48123,7 @@ URL: /silk/wiki/?p=language/flow-for
 - iterator values (`for x in it { ... }` when `it.next() -> T?`),
 - and C-style headers (`for (init; cond; step) { ... }`).
 
-Canonical spec: `docs/language/flow-for.md`.
+[Canonical spec](../docs/?p=language/flow-for).
 
 ## Syntax
 ```silk
@@ -46803,8 +48163,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/flow-for.md`
-- Iterator protocol (): `docs/std/interfaces.md`
+- [Canonical spec](../docs/?p=language/flow-for)
+- Iterator protocol (): [std::interfaces](../docs/?p=std/interfaces)
 
 ==============================================================================
 WIKI: `break` (language/flow-break)
@@ -46815,7 +48175,7 @@ URL: /silk/wiki/?p=language/flow-break
 
 `break;` exits the nearest enclosing loop.
 
-Canonical spec: `docs/language/flow-break.md`.
+[Canonical spec](../docs/?p=language/flow-break).
 
 ## Syntax
 
@@ -46839,8 +48199,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/flow-break.md`
-- `continue`: `docs/wiki/language/flow-continue.md`
+- [Canonical spec](../docs/?p=language/flow-break)
+- `continue`: [continue](?p=language/flow-continue)
 
 ==============================================================================
 WIKI: `continue` (language/flow-continue)
@@ -46852,7 +48212,7 @@ URL: /silk/wiki/?p=language/flow-continue
 `continue;` skips the remainder of the current loop body and advances to the
 next iteration.
 
-Canonical spec: `docs/language/flow-continue.md`.
+[Canonical spec](../docs/?p=language/flow-continue).
 
 ## Syntax
 
@@ -46876,8 +48236,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/flow-continue.md`
-- `break`: `docs/wiki/language/flow-break.md`
+- [Canonical spec](../docs/?p=language/flow-continue)
+- `break`: [break](?p=language/flow-break)
 
 ==============================================================================
 WIKI: `return` (language/flow-return)
@@ -46888,7 +48248,7 @@ URL: /silk/wiki/?p=language/flow-return
 
 Use `return` to exit the current function.
 
-Canonical spec: `docs/language/flow-return.md`.
+[Canonical spec](../docs/?p=language/flow-return).
 
 ## Syntax
 
@@ -46910,8 +48270,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/flow-return.md`
-- `test` blocks allow `return;`: `docs/wiki/language/testing.md`
+- [Canonical spec](../docs/?p=language/flow-return)
+- `test` blocks allow `return;`: [Testing (test)](?p=language/testing)
 
 ==============================================================================
 WIKI: Expression statements (language/flow-expression-statements)
@@ -46923,7 +48283,7 @@ URL: /silk/wiki/?p=language/flow-expression-statements
 Many expressions can appear as standalone statements when followed by `;`
 (assignment, calls, `++`/`--`, and other “statement-like” expressions).
 
-Canonical spec: `docs/language/flow-expression-statements.md`.
+[Canonical spec](../docs/?p=language/flow-expression-statements).
 
 ## Example: assignment + increment
 ```silk
@@ -46937,8 +48297,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/flow-expression-statements.md`
-- Operators: `docs/wiki/language/operators.md`
+- [Canonical spec](../docs/?p=language/flow-expression-statements)
+- Operators: [Operators](?p=language/operators)
 
 ==============================================================================
 WIKI: Blocks and statements (language/flow-blocks-statements)
@@ -46949,7 +48309,7 @@ URL: /silk/wiki/?p=language/flow-blocks-statements
 
 Blocks (`{ ... }`) group statements and introduce a new scope.
 
-Canonical spec: `docs/language/flow-blocks-statements.md`.
+[Canonical spec](../docs/?p=language/flow-blocks-statements).
 
 ## Example: scope boundaries
 ```silk
@@ -46968,8 +48328,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/flow-blocks-statements.md`
-- Expression statements: `docs/wiki/language/flow-expression-statements.md`
+- [Canonical spec](../docs/?p=language/flow-blocks-statements)
+- Expression statements: [Expression statements](?p=language/flow-expression-statements)
 
 ==============================================================================
 WIKI: Grammar (language/grammar)
@@ -46978,7 +48338,7 @@ URL: /silk/wiki/?p=language/grammar
 
 # Grammar
 
-`docs/language/grammar.md` is the canonical “what the parser accepts” reference
+[Formal Grammar Spec](../docs/?p=language/grammar) is the canonical “what the parser accepts” reference
 for Silk surface syntax.
 
 This wiki page is a reading guide, not a replacement for the grammar itself.
@@ -46986,7 +48346,7 @@ This wiki page is a reading guide, not a replacement for the grammar itself.
 ## How to use the grammar
 
 - Use the grammar when you need the exact token-level surface form.
-- Use the concept docs (`docs/language/*.md`) for semantics and type rules.
+- Use the concept docs linked throughout the wiki for semantics and type rules.
 - Use the syntax tour and concept pages for runnable examples.
 
 ## Example
@@ -47001,7 +48361,7 @@ fn main () -> int {
 
 ## See also
 
-- Canonical grammar: `../docs/?p=language/grammar`
+- [Canonical grammar](../docs/?p=language/grammar)
 - Syntax tour: `?p=language/syntax-tour`
 
 ==============================================================================
@@ -47012,9 +48372,13 @@ URL: /silk/wiki/?p=language/doc-comments
 # Doc comments
 
 Silk supports both line and block doc comments. They attach to the following
-declaration (like many C/Rust-style doc systems).
+declaration, similar to other C/Rust-style doc systems.
 
-Canonical doc: `docs/language/doc-comments.md`.
+[Canonical doc](../docs/?p=language/doc-comments).
+
+`@throws` is still documentation-only, but Silk already has typed errors and
+`Result(T, E)` conventions. The current limitation is that doc comments are not
+yet checked against function signatures.
 
 ## Syntax
 
@@ -47033,7 +48397,8 @@ fn other () -> int { return 0; }
 
 ## See also
 
-- Canonical doc: `docs/language/doc-comments.md`
+- [Canonical doc](../docs/?p=language/doc-comments)
+- [Typed errors](?p=language/typed-errors)
 
 ==============================================================================
 WIKI: Packages, imports, and exports (language/packages-imports-exports)
@@ -47053,7 +48418,7 @@ Silk supports both:
 - package imports (`import std::io;`, `import ui;`),
 - file imports (`import { Name } from "./module.slk";`).
 
-Canonical spec: `docs/language/packages-imports-exports.md`.
+[Canonical spec](../docs/?p=language/packages-imports-exports).
 
 ## Syntax
 ```silk
@@ -47110,8 +48475,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/packages-imports-exports.md`
-- Std module structure rules: `docs/std/package-structure.md`
+- [Canonical spec](../docs/?p=language/packages-imports-exports)
+- Std module structure rules: [std:: Module Structure](../docs/?p=std/package-structure)
 
 ==============================================================================
 WIKI: Types (language/types)
@@ -47124,7 +48489,7 @@ Silk is a statically typed language with a small set of built-in primitive
 types and first-class user-defined types (`struct`, `enum`, `interface`).
 
 This wiki page is a learning-oriented companion to the canonical spec:
-`docs/language/types.md`.
+[Types](../docs/?p=language/types).
 
 ## Common Type Forms
 
@@ -47140,7 +48505,7 @@ let s: string = "hello";
 let maybe: int? = None;
 
 // References (borrows)
-// (Receiver/borrow rules are in `docs/language/mutability.md`.)
+// (Receiver/borrow rules are in [Mutability](../docs/?p=language/mutability).)
 // let r: &MyStruct = ...;
 
 // Arrays and slices
@@ -47177,9 +48542,9 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/types.md`
-- Type modifiers and borrow rules: `docs/language/mutability.md`
-- Generics (monomorphized): `docs/language/generics.md`
+- [Canonical spec](../docs/?p=language/types)
+- Type modifiers and borrow rules: [Mutability](../docs/?p=language/mutability)
+- Generics (monomorphized): [Generics (Monomorphized)](../docs/?p=language/generics)
 
 ==============================================================================
 WIKI: Optionals (`T?`) (language/optional)
@@ -47196,7 +48561,7 @@ Optionals represent “maybe a value” without sentinel `null`s.
 - Use `??` (coalescing), `?.` (optional field access), and `match` to consume
   optionals.
 
-Canonical spec: `docs/language/optional.md`.
+[Canonical spec](../docs/?p=language/optional).
 
 ## Syntax
 ```silk
@@ -47247,9 +48612,9 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/optional.md`
-- `match` expressions: `docs/language/flow-match.md`
-- Syntax tour: `docs/language/syntax-tour.md`
+- [Canonical spec](../docs/?p=language/optional)
+- `match` expressions: [match Expression (and Statement)](../docs/?p=language/flow-match)
+- Syntax tour: [Silk Syntax Tour (Soup to Nuts)](../docs/?p=language/syntax-tour)
 
 ==============================================================================
 WIKI: Mutability (`mut`) (language/mutability)
@@ -47261,7 +48626,7 @@ URL: /silk/wiki/?p=language/mutability
 Silk is safe-by-default: bindings and borrows are immutable unless you opt in
 to mutation.
 
-Canonical spec: `docs/language/mutability.md`.
+[Canonical spec](../docs/?p=language/mutability).
 
 ## Syntax
 ```silk
@@ -47295,8 +48660,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/mutability.md`
-- Borrow-checker design notes: `docs/wiki/language/borrow-checker.md`
+- [Canonical spec](../docs/?p=language/mutability)
+- Borrow-checker notes: [Borrow checker](?p=language/borrow-checker)
 
 ==============================================================================
 WIKI: Operators (language/operators)
@@ -47309,7 +48674,7 @@ Silk’s operators cover arithmetic, comparisons, logical operators, assignment,
 casts, ranges, optionals (`?.`, `??`), and typed-error propagation (`?`).
 
 This wiki page is a learning-oriented companion to the canonical reference:
-`docs/language/operators.md`.
+[Operators](../docs/?p=language/operators).
 
 ## Syntax
 ```silk
@@ -47353,9 +48718,9 @@ fn main () -> int {
 
 ## See also
 
-- Canonical reference: `docs/language/operators.md`
-- Optionals: `docs/language/optional.md`
-- Typed errors and `?`: `docs/language/typed-errors.md`
+- Canonical reference: [Operators](../docs/?p=language/operators)
+- Optionals: [Optional](../docs/?p=language/optional)
+- Typed errors and `?`: [Typed Errors (error, panic, and T | ErrorType...)](../docs/?p=language/typed-errors)
 
 ==============================================================================
 WIKI: Literals (language/literals-overview)
@@ -47369,7 +48734,7 @@ numbers, booleans, chars, strings, durations, and aggregates like arrays
 struct literals.
 
 This wiki page is a learning-oriented companion to the canonical spec:
-`docs/language/literals-overview.md`.
+[Literals Overview](../docs/?p=language/literals-overview).
 
 ## Syntax
 ```silk
@@ -47409,10 +48774,10 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/literals-overview.md`
-- Numeric: `docs/language/literals-numeric.md`
-- Strings/chars: `docs/language/literals-string.md`, `docs/language/literals-character.md`
-- Aggregates: `docs/language/literals-aggregate.md`
+- [Canonical spec](../docs/?p=language/literals-overview)
+- Numeric: [Numeric Literals](../docs/?p=language/literals-numeric)
+- Strings/chars: [String Literals](../docs/?p=language/literals-string), [Character Literals](../docs/?p=language/literals-character)
+- Aggregates: [Aggregate Literals](../docs/?p=language/literals-aggregate)
 
 ==============================================================================
 WIKI: Numeric literals (language/literals-numeric)
@@ -47424,7 +48789,7 @@ URL: /silk/wiki/?p=language/literals-numeric
 Silk supports integer and floating-point literals, including base prefixes
 suffixes as defined in the canonical spec.
 
-Canonical doc: `docs/language/literals-numeric.md`.
+[Canonical doc](../docs/?p=language/literals-numeric).
 
 ## Example
 ```silk
@@ -47441,8 +48806,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/language/literals-numeric.md`
-- Operators: `docs/wiki/language/operators.md`
+- [Canonical doc](../docs/?p=language/literals-numeric)
+- Operators: [Operators](?p=language/operators)
 
 ==============================================================================
 WIKI: String literals (language/literals-string)
@@ -47454,7 +48819,7 @@ URL: /silk/wiki/?p=language/literals-string
 `string` is Silk’s built-in UTF‑8 byte sequence type. String literals write a
 `string` value directly in source code.
 
-Canonical doc: `docs/language/literals-string.md`.
+[Canonical doc](../docs/?p=language/literals-string).
 
 ## Example: escapes
 ```silk
@@ -47469,8 +48834,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/language/literals-string.md`
-- `std::strings`: `docs/wiki/std/strings.md`
+- [Canonical doc](../docs/?p=language/literals-string)
+- `std::strings`: [std::strings](?p=std/strings)
 
 ==============================================================================
 WIKI: Character literals (language/literals-character)
@@ -47482,7 +48847,7 @@ URL: /silk/wiki/?p=language/literals-character
 `char` represents a Unicode scalar value. Character literals write a `char`
 value directly in source code.
 
-Canonical doc: `docs/language/literals-character.md`.
+[Canonical doc](../docs/?p=language/literals-character).
 
 ## Example
 ```silk
@@ -47497,7 +48862,7 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/language/literals-character.md`
+- [Canonical doc](../docs/?p=language/literals-character)
 
 ==============================================================================
 WIKI: Boolean literals (language/literals-boolean)
@@ -47508,7 +48873,7 @@ URL: /silk/wiki/?p=language/literals-boolean
 
 Silk has the boolean type `bool` with literals `true` and `false`.
 
-Canonical doc: `docs/language/literals-boolean.md`.
+[Canonical doc](../docs/?p=language/literals-boolean).
 
 ## Example
 ```silk
@@ -47531,7 +48896,7 @@ URL: /silk/wiki/?p=language/literals-duration
 Duration literals represent time spans with unit suffixes (`ms`, `s`, `min`,
 etc) and produce a `Duration` value.
 
-Canonical doc: `docs/language/literals-duration.md`.
+[Canonical doc](../docs/?p=language/literals-duration).
 
 ## Example
 ```silk
@@ -47546,8 +48911,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/language/literals-duration.md`
-- `Duration` and `Instant`: `docs/wiki/language/duration-instant.md`
+- [Canonical doc](../docs/?p=language/literals-duration)
+- `Duration` and `Instant`: [Duration and Instant](?p=language/duration-instant)
 
 ==============================================================================
 WIKI: `Duration` and `Instant` (language/duration-instant)
@@ -47560,7 +48925,7 @@ URL: /silk/wiki/?p=language/duration-instant
 point-in-time on a monotonic timeline. the backend treats both
 as distinct Silk types that lower to `i64` nanoseconds.
 
-Canonical doc: `docs/language/duration-instant.md`.
+[Canonical doc](../docs/?p=language/duration-instant).
 
 ## Example: `Duration` arithmetic
 ```silk
@@ -47577,9 +48942,9 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/language/duration-instant.md`
-- Duration literals: `docs/wiki/language/literals-duration.md`
-- Temporal stdlib: `docs/std/temporal.md`
+- [Canonical doc](../docs/?p=language/duration-instant)
+- Duration literals: [Duration literals](?p=language/literals-duration)
+- Temporal stdlib: [std::temporal](../docs/?p=std/temporal)
 
 ==============================================================================
 WIKI: Aggregate literals (arrays and structs) (language/literals-aggregate)
@@ -47593,7 +48958,7 @@ Aggregate literals build compound values directly in source code:
 - array literals: `[a, b, c]`
 - struct literals: `Type{ field: value, ... }`
 
-Canonical doc: `docs/language/literals-aggregate.md`.
+[Canonical doc](../docs/?p=language/literals-aggregate).
 
 ## Example
 ```silk
@@ -47611,8 +48976,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/language/literals-aggregate.md`
-- Types: `docs/wiki/language/types.md`
+- [Canonical doc](../docs/?p=language/literals-aggregate)
+- Types: [Types](?p=language/types)
 
 ==============================================================================
 WIKI: Structs and `impl` (language/structs-impls-layout)
@@ -47625,7 +48990,7 @@ URL: /silk/wiki/?p=language/structs-impls-layout
 value. `impl` blocks attach methods (and special methods like `constructor`
 and `drop`) to a type.
 
-Canonical spec: `docs/language/structs-impls-layout.md`.
+[Canonical spec](../docs/?p=language/structs-impls-layout).
 
 ## Syntax
 ```silk
@@ -47669,9 +49034,9 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/structs-impls-layout.md`
-- Mutability and `mut &T`: `docs/language/mutability.md`
-- Enums and matching: `docs/language/enums.md`, `docs/language/flow-match.md`
+- [Canonical spec](../docs/?p=language/structs-impls-layout)
+- Mutability and `mut &T`: [Mutability](../docs/?p=language/mutability)
+- Enums and matching: [enum Types](../docs/?p=language/enums), [match Expression (and Statement)](../docs/?p=language/flow-match)
 
 ==============================================================================
 WIKI: Struct requirements (`#require`) (language/struct-requirements)
@@ -47680,23 +49045,52 @@ URL: /silk/wiki/?p=language/struct-requirements
 
 # Struct requirements (`#require`)
 
-Use `#require` on a `struct` to state requirements that must hold for all
-values constructed for that type.
+Use `#require` on a `struct` when the invariant belongs to the value itself and
+must hold at every construction site.
 
 ```silk
-struct Port {
-  value: int,
+#require len >= 0;
+#require cap >= len;
+struct BufferState {
+  ptr: u64,
+  len: int,
+  cap: int,
 }
-
-#require value >= 0;
-#require value <= 65535;
 ```
 
-Use this when an invariant belongs to the type itself, not just to one helper
-function.
+This is a good fit for packet headers, range descriptors, and `len` / `cap`
+pairs.
 
-See [Struct requirements](../docs/?p=language/struct-requirements) and
-[Formal verification](../docs/?p=language/formal-verification).
+## Construction sites
+
+The verifier checks struct requirements at:
+
+- `Type{ ... }`
+- `new Type{ ... }`
+
+This means the allocation strategy may change, but the type-level invariant
+does not.
+
+## Example: parser cursor
+
+```silk
+#require len >= 0;
+#require pos >= 0;
+#require pos <= len;
+struct PacketCursor {
+  ptr: u64,
+  len: int,
+  pos: int,
+}
+```
+
+This is the right pattern when the invariant belongs to the data model rather
+than to one helper function.
+
+See:
+
+- [Canonical doc](../docs/?p=language/struct-requirements)
+- [Formal verification](?p=language/formal-verification)
 
 ==============================================================================
 WIKI: Interfaces (language/interfaces)
@@ -47709,7 +49103,7 @@ Interfaces declare method signatures that types (or modules) can conform to via
 `impl ... as ...` (or `module ... as ...`). This is the basis for protocol-like
 surfaces such as iterators and Drop.
 
-Canonical spec: `docs/language/interfaces.md`.
+[Canonical spec](../docs/?p=language/interfaces).
 
 ## Syntax
 ```silk
@@ -47750,8 +49144,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/interfaces.md`
-- Std protocols: `docs/std/interfaces.md`
+- [Canonical doc](../docs/?p=language/interfaces)
+- [Std protocols](?p=std/interfaces)
 
 ==============================================================================
 WIKI: Enums (language/enums)
@@ -47768,7 +49162,7 @@ Currently, enums support:
 - tuple variants (`E::B(x)`),
 - exhaustive `match` expressions over enum values (restricted subset; no guards).
 
-Canonical spec: `docs/language/enums.md`.
+[Canonical spec](../docs/?p=language/enums).
 
 ## Syntax
 ```silk
@@ -47798,9 +49192,9 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/enums.md`
-- `match` expressions: `docs/language/flow-match.md`
-- Syntax tour: `docs/language/syntax-tour.md`
+- [Canonical spec](../docs/?p=language/enums)
+- `match` expressions: [match Expression (and Statement)](../docs/?p=language/flow-match)
+- Syntax tour: [Silk Syntax Tour (Soup to Nuts)](../docs/?p=language/syntax-tour)
 
 ==============================================================================
 WIKI: Errors and assertions (language/errors)
@@ -47816,7 +49210,11 @@ unrecoverable logic bugs and contract violations.
 This page focuses on assertions and the high-level model; see typed errors for
 the full rules.
 
-Canonical doc: `docs/language/errors.md`.
+[Canonical doc](../docs/?p=language/errors).
+
+In the current toolchain, failed assertions inside `silk test` are isolated per
+test process, so one crashing test does not abort the whole test suite. Outside
+`silk test`, failed assertions still abort the current program.
 
 ## Example: `assert`
 ```silk
@@ -47828,9 +49226,9 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/language/errors.md`
-- Typed errors: `docs/wiki/language/typed-errors.md`
-- `Result(T, E)`: `docs/wiki/std/result.md`
+- [Canonical doc](../docs/?p=language/errors)
+- [Typed errors](?p=language/typed-errors)
+- [`Result(T, E)`](?p=std/result)
 
 ==============================================================================
 WIKI: Typed errors (`error`, `panic`, and `T | ErrorType...`) (language/typed-errors)
@@ -47847,7 +49245,15 @@ Typed errors make “this function can fail” explicit in the type system:
 - handle them with `match (expr) { ... }` (statement form + Terminal Arm Rule),
 - and propagate them with the postfix `?` operator (`call()?`).
 
-Canonical spec: `docs/language/typed-errors.md`.
+[Canonical docs](../docs/?p=language/typed-errors).
+
+## What exists today
+
+- Typed error declarations, typed error return contracts, `panic`, `match`
+  handling, and postfix `?` propagation are part of the current toolchain.
+- The canonical
+  [Typed errors](../docs/?p=language/typed-errors) page carries the full rules,
+  diagnostics, and edge cases.
 
 ## Syntax
 ```silk
@@ -47905,21 +49311,38 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/typed-errors.md`
-- Error overview: `docs/language/errors.md`
+- [Typed errors](../docs/?p=language/typed-errors)
+- [Errors and assertions](?p=language/errors)
 
 ==============================================================================
-WIKI: Borrow checker (design) (language/borrow-checker)
+WIKI: Borrow checker (language/borrow-checker)
 URL: /silk/wiki/?p=language/borrow-checker
 ==============================================================================
 
-# Borrow checker (design)
+# Borrow checker
 
-Silk’s long-term design includes a borrow-checker-style static safety layer
-over references and mutation. the compiler enforces a simpler,
-explicit `mut` borrow contract (see mutability).
+Silk’s current borrow-checking story is a shipped subset plus a larger design.
+Today the compiler already enforces lexical escape checks for slices and
+borrowed references, mutable-alias checks at call sites, and conservative
+restrictions across `task` / `await` boundaries.
 
-Canonical design doc: `docs/language/borrow-checker.md`.
+[Canonical docs](../docs/?p=language/borrow-checker).
+
+##
+
+- Returning a borrow of a local binding is rejected.
+- Returning a borrow of a parameter is allowed.
+- Mutable aliasing in one call is rejected.
+- `move` is rejected while a live borrow still exists.
+- Crossing task boundaries with non-opaque `&T` values is rejected.
+
+## What to use today
+
+- Reach for [Mutability](?p=language/mutability) for the currently enforced
+  `&T` / `mut &T` rules.
+- Reach for the canonical
+  [Borrow checker](../docs/?p=language/borrow-checker) page when you need the
+  larger lifetime, aliasing, and `await`/`yield` model.
 
 ## Example: explicit mutable borrow
 ```silk
@@ -47940,8 +49363,9 @@ fn main () -> int {
 
 ## See also
 
-- Mutability rules: `docs/wiki/language/mutability.md`
-- Canonical design doc: `docs/language/borrow-checker.md`
+- [Mutability](?p=language/mutability)
+- [Borrow checker](../docs/?p=language/borrow-checker)
+- [Concurrency](?p=language/concurrency)
 
 ==============================================================================
 WIKI: Memory model (language/memory-model)
@@ -47951,7 +49375,7 @@ URL: /silk/wiki/?p=language/memory-model
 # Memory model
 
 This page is a learning-oriented companion to the canonical memory model:
-`docs/language/memory-model.md`.
+[Memory Model (Stack, Heap, and Moves)](../docs/?p=language/memory-model).
 
 At a high level:
 
@@ -47975,8 +49399,8 @@ fn main () -> int {
 
 ## See also
 
-- Regions (`with`): `docs/wiki/language/regions.md`
-- `Drop` and cleanup hooks: `docs/std/interfaces.md`
+- Regions (`with`): [Regions (with)](?p=language/regions)
+- `Drop` and cleanup hooks: [std::interfaces](../docs/?p=std/interfaces)
 
 ==============================================================================
 WIKI: Regions (`with`) (language/regions)
@@ -47988,7 +49412,7 @@ URL: /silk/wiki/?p=language/regions
 Regions provide a fixed-size, statically allocated backing store that can be
 used as an allocation context for `new`.
 
-Canonical spec: `docs/language/regions.md`.
+[Canonical spec](../docs/?p=language/regions).
 
 ## Syntax
 ```silk
@@ -48017,9 +49441,9 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/regions.md`
-- Memory model and `new`: `docs/language/memory-model.md`
-- `--noheap` and `std::runtime::mem`: `docs/std/runtime.md`
+- [Canonical spec](../docs/?p=language/regions)
+- Memory model and `new`: [Memory Model (Stack, Heap, and Moves)](../docs/?p=language/memory-model)
+- `--noheap` and `std::runtime::mem`: [std::runtime](../docs/?p=std/runtime)
 
 ==============================================================================
 WIKI: Buffers (`Buffer(T)`) (design) (language/buffers)
@@ -48031,7 +49455,7 @@ URL: /silk/wiki/?p=language/buffers
 The long-term design includes an intrinsic `Buffer(T)` type for low-level,
 unsafe contiguous memory access, intended to sit underneath safe collections.
 
-Canonical design doc: `docs/language/buffers.md`.
+[Canonical design doc](../docs/?p=language/buffers).
 
 In the current toolchain, buffer-like functionality is provided via `std::`:
 
@@ -48056,9 +49480,9 @@ fn main () -> int {
 
 ## See also
 
-- Canonical design doc: `docs/language/buffers.md`
-- `std::buffer`: `docs/wiki/std/buffer.md`
-- `std::vector`: `docs/wiki/std/vector.md`
+- [Canonical design doc](../docs/?p=language/buffers)
+- `std::buffer`: [std::buffer](?p=std/buffer)
+- `std::vector`: [std::vector](?p=std/vector)
 
 ==============================================================================
 WIKI: Concurrency (`async`, `task`, `await`, `yield`) (language/concurrency)
@@ -48072,9 +49496,9 @@ Silk concurrency is built around:
 - `async fn` (pausable/awaitable concurrency),
 - `task fn` (parallelizable work),
 - `await` for promises,
-- `yield`/`yield *` for task values.
+- `yield` / `yield *` for task values.
 
-Canonical spec + implemented subset notes: `docs/language/concurrency.md`.
+[Canonical doc](../docs/?p=language/concurrency).
 
 ## Examples
 ### `task` inside `async fn` + `yield *`
@@ -48120,8 +49544,9 @@ async fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/concurrency.md`
-- `std::task` and `std::sync`: `docs/std/task.md`, `docs/std/sync.md`
+- [Canonical doc](../docs/?p=language/concurrency)
+- [`std::task`](?p=std/task)
+- [`std::sync`](?p=std/sync)
 
 ==============================================================================
 WIKI: Function disciplines (`pure`, `async`, `task`) (language/function-disciplines)
@@ -48135,14 +49560,19 @@ Function modifiers declare constraints and concurrency behavior:
 - `pure fn` for side-effect-free functions (checker-enforced subset)
 - `async fn` for promise-producing functions
 - `task fn` for task-producing functions
-- `const fn` for compile-time-evaluable functions (see `docs/wiki/language/const-functions.md`)
+- `const fn` for compile-time-evaluable functions (see
+  [Const functions](?p=language/const-functions))
 
-Canonical doc: `docs/language/function-disciplines.md`.
+[Canonical doc](../docs/?p=language/function-disciplines).
 
 ## Examples
 ```silk
 pure fn add (x: int, y: int) -> int {
   return x + y;
+}
+
+async fn answer () -> int {
+  return 42;
 }
 
 task fn worker (x: int) -> int {
@@ -48152,8 +49582,8 @@ task fn worker (x: int) -> int {
 
 ## See also
 
-- Canonical doc: `docs/language/function-disciplines.md`
-- Concurrency: `docs/language/concurrency.md`
+- [Canonical doc](../docs/?p=language/function-disciplines)
+- [Concurrency](?p=language/concurrency)
 
 ==============================================================================
 WIKI: Const Functions (`const fn`) (language/const-functions)
@@ -48165,7 +49595,7 @@ URL: /silk/wiki/?p=language/const-functions
 `const fn` marks a function as eligible for **compile-time evaluation**.
 
 This wiki page is an overview. The canonical specification is
-`docs/language/const-functions.md`.
+[Const Functions (const fn)](../docs/?p=language/const-functions).
 
 ## Example
 
@@ -48186,17 +49616,19 @@ fn main () -> int {
 - Const functions are intended for `const` initializer evaluation.
 - Const functions are compile-time-only: they are not callable from runtime
   code and are not emitted as runtime/linkable symbols.
-- The  targets scalar-only const evaluation; `string`/aggregate
-  return values and higher-order const evaluation are planned.
+- The  supports scalar compile-time values plus compile-time POD
+  structs.
+- `string`, non-POD aggregate values, and higher-order const evaluation remain
+  future work.
 - In Silk, `const fn` bodies must not allocate (`new`) or use
   regions/`with`, must not contain `panic`, and may only call other `const fn`
   declarations.
 
 ## See also
 
-- Canonical spec: `docs/language/const-functions.md`
-- `const` bindings: `docs/language/flow-blocks-statements.md`
-- Function modifiers (`pure`/`async`/`task`): `docs/language/function-disciplines.md`
+- [Canonical spec](../docs/?p=language/const-functions)
+- `const` bindings: [Blocks and Statement Composition](../docs/?p=language/flow-blocks-statements)
+- Function modifiers (`pure`/`async`/`task`): [Function Disciplines (pure, task, async)](../docs/?p=language/function-disciplines)
 
 ==============================================================================
 WIKI: Generics (monomorphized) (language/generics)
@@ -48209,7 +49641,7 @@ Silk generics are compile-time and monomorphized: each applied type like
 `Vector(int)` produces a concrete instantiation at build time (no runtime type
 parameters).
 
-Canonical spec: `docs/language/generics.md`.
+[Canonical spec](../docs/?p=language/generics).
 
 ## Syntax
 ```silk
@@ -48244,9 +49676,9 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/generics.md`
-- Type forms: `docs/language/types.md`
-- Std generic collections: `docs/std/vector.md`, `docs/std/map.md`, `docs/std/set.md`
+- [Canonical spec](../docs/?p=language/generics)
+- Type forms: [Types](../docs/?p=language/types)
+- Std generic collections: [std::vector](../docs/?p=std/vector), [std::map — Maps and Dictionaries](../docs/?p=std/map), [std::set — Sets](../docs/?p=std/set)
 
 ==============================================================================
 WIKI: Varargs (`...args`) (language/varargs)
@@ -48258,7 +49690,7 @@ URL: /silk/wiki/?p=language/varargs
 Silk supports “varargs” parameters to accept a variable number of trailing
 arguments, used by `std::io::print` / `std::io::println`.
 
-Canonical doc: `docs/language/varargs.md`.
+[Canonical doc](../docs/?p=language/varargs).
 
 ## Syntax
 
@@ -48280,8 +49712,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/language/varargs.md`
-- `std::fmt`: `docs/wiki/std/fmt.md`
+- [Canonical doc](../docs/?p=language/varargs)
+- `std::fmt`: [std::fmt](?p=std/fmt)
 
 ==============================================================================
 WIKI: External declarations (`ext`) (language/ext)
@@ -48293,7 +49725,7 @@ URL: /silk/wiki/?p=language/ext
 `ext` declares foreign symbols so Silk code can call C (or wasm imports)
 access foreign variables.
 
-Canonical spec: `docs/language/ext.md`.
+[Canonical spec](../docs/?p=language/ext).
 
 ## Syntax
 ```silk
@@ -48339,8 +49771,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/ext.md`
-- ABI details for `string` and optionals: `docs/compiler/abi-libsilk.md`
+- [Canonical spec](../docs/?p=language/ext)
+- ABI details for `string` and optionals: [C99 ABI and libsilk.a](../docs/?p=compiler/abi-libsilk)
 
 ==============================================================================
 WIKI: Testing (`test`) (language/testing)
@@ -48352,7 +49784,7 @@ URL: /silk/wiki/?p=language/testing
 Silk supports top-level `test` declarations that are discovered and executed by
 `silk test`.
 
-Canonical doc: `docs/language/testing.md`.
+[Canonical doc](../docs/?p=language/testing).
 
 ## Syntax
 
@@ -48366,8 +49798,8 @@ test "addition works" {
 
 ## See also
 
-- Canonical doc: `docs/language/testing.md`
-- CLI runner: `docs/compiler/cli-silk.md`
+- [Canonical doc](../docs/?p=language/testing)
+- CLI runner: [silk CLI](../docs/?p=compiler/cli-silk)
 
 ==============================================================================
 WIKI: Formal verification (Formal Silk) (language/formal-verification)
@@ -48376,15 +49808,26 @@ URL: /silk/wiki/?p=language/formal-verification
 
 # Formal verification (Formal Silk)
 
-Silk includes syntax for writing contracts and verification metadata:
+Formal Silk is Silk’s compile-time verification language. It lets you keep
+proofs close to ordinary code:
 
-- `#require` / `#assure` for pre/postconditions
-- `#assert` for local assertions
-- `#invariant` / `#variant` / `#monovariant` for loops
+- `#require` / `#assure` for function contracts,
+- `#assert` for local proof points,
+- `#invariant` / `#variant` / `#monovariant` for loops,
+- `theory` / `#theory` for reusable proof bundles.
 
-Canonical doc: `docs/language/formal-verification.md`.
+[Canonical doc](../docs/?p=language/formal-verification).
 
-## Example (Design / verifier-oriented)
+## When it is useful
+
+Formal Silk pays off most when the bug is subtle and expensive:
+
+- parser and packet bounds checks,
+- `len` / `cap` invariants,
+- protocol state assumptions,
+- monotonic counters and loop progress.
+
+## Example: function contract
 
 ```silk
 #require x >= 0;
@@ -48394,9 +49837,40 @@ fn inc (x: int) -> int {
 }
 ```
 
+## Example: loop invariant
+
+```silk
+fn main () -> int {
+  let limit: int = 4;
+  let mut i: int = 0;
+
+  #invariant i >= 0;
+  #invariant i <= limit;
+  #variant limit - i;
+  #monovariant i;
+  while i < limit {
+    i += 1;
+  }
+
+  return 0;
+}
+```
+
+## Example: reusable theory
+
+```silk
+export theory bounded_window (offset: int, size: int, total: int) {
+  #require offset >= 0;
+  #require size >= 0;
+  #assure offset + size <= total;
+}
+```
+
 ## See also
 
-- Canonical doc: `docs/language/formal-verification.md`
+- [Canonical doc](../docs/?p=language/formal-verification)
+- [Formal Silk guide](../docs/?p=guides/formal-silk)
+- [`std::formal`](../docs/?p=std/formal)
 
 ==============================================================================
 WIKI: Refinement types (removed) (language/refinement-types)
@@ -48405,50 +49879,76 @@ URL: /silk/wiki/?p=language/refinement-types
 
 # Refinement types (removed)
 
-The earlier refinement-type design (types annotated with `where` predicates) is
-removed.
+Silk no longer uses a separate refinement-type surface.
 
-Use Formal Silk instead:
+Use:
 
-- `#require` / `#assure` on functions,
-- `#require` on `struct` declarations (struct requirements proved at
- construction sites).
+- `#require` / `#assure` for function contracts,
+- `#require` on `struct` declarations for type-level invariants,
+- `#assert` for local proof points,
+- const parameters for compile-time shape.
 
-Example:
+## Example
 
 ```silk
-#require x >= 0;
-#assure result == x + 1;
-fn inc (x: int) -> int {
-  return x + 1;
+#require len >= 0;
+#require cap >= len;
+struct BufferState {
+  ptr: u64,
+  len: int,
+  cap: int,
 }
-```
-
-See [Formal verification](../docs/?p=language/formal-verification).
-
-==============================================================================
-WIKI: Dependent types (const parameters) (design) (language/dependent-types)
-URL: /silk/wiki/?p=language/dependent-types
-==============================================================================
-
-# Dependent types (const parameters) (design)
-
-This page covers Silk’s intended support for types that mention compile-time
-values (especially integers), such as dependent-length collections.
-
-Canonical design doc: `docs/language/dependent-types.md`.
-
-## Example (Design)
-
-```silk
-// Design-only sketch: a vector type with a compile-time length `N`.
-struct VectorN(T, N: int) { /* ... */ }
 ```
 
 ## See also
 
-- Canonical design doc: `docs/language/dependent-types.md`
-- Generics: `docs/wiki/language/generics.md`
+- [Formal verification](../docs/?p=language/formal-verification)
+- [Struct requirements](../docs/?p=language/struct-requirements)
+- [Dependent types](../docs/?p=language/dependent-types)
+
+==============================================================================
+WIKI: Dependent types (const parameters) (language/dependent-types)
+URL: /silk/wiki/?p=language/dependent-types
+==============================================================================
+
+# Dependent types (const parameters)
+
+Silk already supports a practical dependent-type-like subset through **const
+parameters** and applied generic types with compile-time integer arguments.
+
+[Canonical doc](../docs/?p=language/dependent-types).
+
+## Supported behavior
+
+- const parameters such as `N: usize`
+- applied types like `Wrap(u8, 4)`
+- generic functions with the `;` split
+- const/type argument inference at call sites when runtime arguments carry the
+  needed shape
+
+## Example
+
+```silk
+struct Wrap(T, N: usize) {
+  buf: T[N],
+}
+
+fn take_wrap (T, N: usize; w: Wrap(T, N)) -> int {
+  return 0;
+}
+```
+
+## Use it for
+
+- fixed-size buffers and digests
+- APIs that preserve array length or capacity
+- compile-time-sized wrappers
+
+## See also
+
+- [Canonical doc](../docs/?p=language/dependent-types)
+- [Generics](?p=language/generics)
+- [Formal verification](?p=language/formal-verification)
 
 ==============================================================================
 WIKI: Conventions (language/conventions)
@@ -48460,7 +49960,7 @@ URL: /silk/wiki/?p=language/conventions
 This page summarizes the conventions used throughout the Silk language docs:
 notation, naming, and the “implementation status” pattern.
 
-Canonical doc: `docs/language/conventions.md`.
+[Canonical doc](../docs/?p=language/conventions).
 
 ## Example: typical formatting in Silk docs
 
@@ -48476,8 +49976,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/language/conventions.md`
-- Grammar: `docs/wiki/language/grammar.md`
+- [Canonical doc](../docs/?p=language/conventions)
+- Grammar: [Grammar](?p=language/grammar)
 
 ==============================================================================
 WIKI: Standard library overview (`std::`) (std/overview)
@@ -48486,11 +49986,11 @@ URL: /silk/wiki/?p=std/overview
 
 # Standard library overview (`std::`)
 
-`std::` is the Silk standard library namespace. The `docs/std/` tree specifies
-the intended API and structure; an in-tree stdlib implementation exists
-under `std/` for the compiler.
+`std::` is the Silk standard-library namespace. This wiki page is the quick
+orientation layer; use the canonical docs for the full API surface, current
+limits, and target-specific details.
 
-Canonical doc: `docs/std/overview.md`.
+[Canonical doc](../docs/?p=std/overview).
 
 ## Importing
 
@@ -48523,9 +50023,9 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/overview.md`
-- Module structure and swappability: `docs/wiki/std/package-structure.md`
-- API conventions: `docs/wiki/std/conventions.md`
+- [Canonical doc](../docs/?p=std/overview)
+- [Module structure and swappability](?p=std/package-structure)
+- [API conventions](?p=std/conventions)
 
 ==============================================================================
 WIKI: `std::` conventions (std/conventions)
@@ -48537,7 +50037,7 @@ URL: /silk/wiki/?p=std/conventions
 `std::` modules follow shared conventions for naming, ownership/allocation,
 error reporting.
 
-Canonical doc: `docs/std/conventions.md`.
+[Canonical doc](../docs/?p=std/conventions).
 
 ## Key conventions
 
@@ -48576,8 +50076,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/conventions.md`
-- Typed errors: `docs/wiki/language/typed-errors.md`
+- [Canonical doc](../docs/?p=std/conventions)
+- Typed errors: [Typed errors (error, panic, and T | ErrorType...)](?p=language/typed-errors)
 
 ==============================================================================
 WIKI: `std::` package structure (std/package-structure)
@@ -48589,7 +50089,7 @@ URL: /silk/wiki/?p=std/package-structure
 This page describes how `std::` modules are organized and how the compiler
 finds and links them (including std-root selection and archive wiring).
 
-Canonical doc: `docs/std/package-structure.md`.
+[Canonical doc](../docs/?p=std/package-structure).
 
 ## How `std::` resolves
 
@@ -48623,8 +50123,8 @@ silk build --std-root ./my-stdlib --std-lib ./my-stdlib/libsilk_std.a main.slk
 
 ## See also
 
-- Canonical doc: `docs/std/package-structure.md`
-- Runtime interface layer: `docs/wiki/std/runtime.md`
+- [Canonical doc](../docs/?p=std/package-structure)
+- [Runtime interface layer](?p=std/runtime)
 
 ==============================================================================
 WIKI: `std::interfaces` (std/interfaces)
@@ -48636,7 +50136,7 @@ URL: /silk/wiki/?p=std/interfaces
 `std::interfaces` defines shared std protocol interfaces such as `Drop`,
 `Len`, and `Iterator(T)`.
 
-Canonical doc: `docs/std/interfaces.md`.
+[Canonical doc](../docs/?p=std/interfaces).
 
 ## Example: `Iterator(T)` and `next() -> T?`
 ```silk
@@ -48667,8 +50167,8 @@ impl CounterIter as std::interfaces::Iterator(int) {
 
 ## See also
 
-- Canonical doc: `docs/std/interfaces.md`
-- `for` iterator iteration: `docs/wiki/language/flow-for.md`
+- [Canonical doc](../docs/?p=std/interfaces)
+- `for` iterator iteration: [for loops](?p=language/flow-for)
 
 ==============================================================================
 WIKI: `std::result` (std/result)
@@ -48680,7 +50180,7 @@ URL: /silk/wiki/?p=std/result
 `std::result` standardizes the common “success or error” return shape as
 `Result(T, E)` so APIs across `std::` compose cleanly.
 
-Canonical doc: `docs/std/result.md`.
+[Canonical doc](../docs/?p=std/result).
 
 ## Importing
 
@@ -48706,8 +50206,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/result.md`
-- Error model: `docs/language/errors.md`, `docs/language/typed-errors.md`
+- [Canonical doc](../docs/?p=std/result)
+- Error model: [Errors](../docs/?p=language/errors), [Typed Errors (error, panic, and T | ErrorType...)](../docs/?p=language/typed-errors)
 
 ==============================================================================
 WIKI: `std::io` (std/io)
@@ -48717,9 +50217,9 @@ URL: /silk/wiki/?p=std/io
 # `std::io`
 
 `std::io` provides basic stdin/stdout/stderr I/O and a small formatting surface
-(`print`/`println`).
+(`print` / `println`).
 
-Canonical doc: `docs/std/io.md`.
+[Canonical doc](../docs/?p=std/io).
 
 ## Importing
 
@@ -48741,9 +50241,9 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/io.md`
-- Format strings: `docs/std/fmt.md`
-- Runtime backend: `docs/std/runtime.md`
+- [Canonical doc](../docs/?p=std/io)
+- [Format strings](../docs/?p=std/fmt)
+- [Runtime backend](?p=std/runtime)
 
 ==============================================================================
 WIKI: `std::fmt` (std/fmt)
@@ -48756,7 +50256,7 @@ URL: /silk/wiki/?p=std/fmt
 by string-building helpers. It follows a Zig-`std.fmt`-style format-string
 syntax.
 
-Canonical doc: `docs/std/fmt.md`.
+[Canonical doc](../docs/?p=std/fmt).
 
 ## Examples
 
@@ -48772,8 +50272,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/fmt.md`
-- Printing: `docs/std/io.md`
+- [Canonical doc](../docs/?p=std/fmt)
+- Printing: [std::io](../docs/?p=std/io)
 
 ==============================================================================
 WIKI: `std::strings` (std/strings)
@@ -48786,7 +50286,7 @@ URL: /silk/wiki/?p=std/strings
 type (UTF‑8 bytes), including simple comparisons and owned
 string construction.
 
-Canonical doc: `docs/std/strings.md`.
+[Canonical doc](../docs/?p=std/strings).
 
 ## Importing
 
@@ -48823,9 +50323,9 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/strings.md`
-- String literal semantics: `docs/language/literals-string.md`
-- FFI string ABI rules: `docs/language/ext.md`
+- [Canonical doc](../docs/?p=std/strings)
+- String literal semantics: [String Literals](../docs/?p=language/literals-string)
+- FFI string ABI rules: [External Declarations (ext)](../docs/?p=language/ext)
 
 ==============================================================================
 WIKI: `std::arrays` (std/arrays)
@@ -48837,7 +50337,7 @@ URL: /silk/wiki/?p=std/arrays
 `std::arrays` defines borrowed views like `Slice(T)` and helpers for working
 with fixed arrays and slices.
 
-Canonical doc: `docs/std/arrays.md`.
+[Canonical doc](../docs/?p=std/arrays).
 
 ## Importing
 
@@ -48879,8 +50379,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/arrays.md`
-- `for` iteration rules: `docs/language/flow-for.md`
+- [Canonical doc](../docs/?p=std/arrays)
+- `for` iteration rules: [for Loop](../docs/?p=language/flow-for)
 
 ==============================================================================
 WIKI: `std::vector` (std/vector)
@@ -48892,7 +50392,7 @@ URL: /silk/wiki/?p=std/vector
 `std::vector` provides a generic, growable owning container `Vector(T)` used
 widely throughout `std::`.
 
-Canonical doc: `docs/std/vector.md`.
+[Canonical doc](../docs/?p=std/vector).
 
 ## Importing
 
@@ -48923,8 +50423,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/vector.md`
-- Slices and iterators: `docs/std/arrays.md`, `docs/std/interfaces.md`
+- [Canonical doc](../docs/?p=std/vector)
+- Slices and iterators: [std::arrays](../docs/?p=std/arrays), [std::interfaces](../docs/?p=std/interfaces)
 
 ==============================================================================
 WIKI: `std::map` (std/map)
@@ -48938,7 +50438,7 @@ URL: /silk/wiki/?p=std/map
 - `HashMap(K, V)` (unordered, hash table),
 - `TreeMap(K, V)` (ordered, red-black tree).
 
-Canonical doc: `docs/std/map.md`.
+[Canonical doc](../docs/?p=std/map).
 
 ## Importing
 
@@ -48971,8 +50471,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/map.md`
-- Removed builtin `map(K, V)`: `docs/language/types.md`
+- [Canonical doc](../docs/?p=std/map)
+- Removed builtin `map(K, V)`: [Types](../docs/?p=language/types)
 
 ==============================================================================
 WIKI: `std::set` (std/set)
@@ -48986,7 +50486,7 @@ URL: /silk/wiki/?p=std/set
 - `SetMap(T)` (unordered set, open addressing),
 - `TreeSet(T)` (ordered set, red-black tree).
 
-Canonical doc: `docs/std/set.md`.
+[Canonical doc](../docs/?p=std/set).
 
 ## Importing
 
@@ -49023,8 +50523,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/set.md`
-- Iterator protocol: `docs/std/interfaces.md`
+- [Canonical doc](../docs/?p=std/set)
+- Iterator protocol: [std::interfaces](../docs/?p=std/interfaces)
 
 ==============================================================================
 WIKI: `std::buffer` (std/buffer)
@@ -49037,7 +50537,7 @@ In the in-tree stdlib, `std::buffer` provides a packed byte buffer
 (`BufferU8`) plus width-oriented scalar buffer aliases built on
 `std::vector::Vector(T)` (for example `BufferI32`).
 
-Canonical doc: `docs/std/buffer.md`.
+[Canonical doc](../docs/?p=std/buffer).
 
 ## Importing
 
@@ -49067,8 +50567,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/buffer.md`
-- Intrinsic buffer design: `docs/language/buffers.md`
+- [Canonical doc](../docs/?p=std/buffer)
+- Intrinsic buffer design: [Buffers](../docs/?p=language/buffers)
 
 ==============================================================================
 WIKI: `std::bits` (std/bits)
@@ -49079,7 +50579,7 @@ URL: /silk/wiki/?p=std/bits
 
 `std::bits` is the standard bit-manipulation and byte-order helper module.
 
-Canonical doc: `docs/std/bits.md`.
+[Canonical doc](../docs/?p=std/bits).
 
 ##
 Defined in `std/bits.slk`:
@@ -49125,7 +50625,7 @@ URL: /silk/wiki/?p=std/algorithms
 `std::algorithms` provides common algorithms over collections. Today, a small
  exists for scalar types.
 
-Canonical doc: `docs/std/algorithms.md`.
+[Canonical doc](../docs/?p=std/algorithms).
 
 ## Importing
 
@@ -49146,7 +50646,7 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/algorithms.md`
+- [Canonical doc](../docs/?p=std/algorithms)
 
 ==============================================================================
 WIKI: `std::memory` (std/memory)
@@ -49157,7 +50657,7 @@ URL: /silk/wiki/?p=std/memory
 
 `std::memory` provides low-level helpers and the long-term allocator design.
 
-Canonical doc: `docs/std/memory.md`.
+[Canonical doc](../docs/?p=std/memory).
 
 ## Importing
 
@@ -49178,8 +50678,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/memory.md`
-- Regions: `docs/wiki/language/regions.md`
+- [Canonical doc](../docs/?p=std/memory)
+- Regions: [Regions (with)](?p=language/regions)
 
 ==============================================================================
 WIKI: `std::args` (std/args)
@@ -49191,7 +50691,7 @@ URL: /silk/wiki/?p=std/args
 `std::args` provides helpers for working with the hosted
 `main(argc, argv)` entrypoint shape.
 
-Canonical doc: `docs/std/args.md`.
+[Canonical doc](../docs/?p=std/args).
 
 ## Example
 ```silk
@@ -49212,8 +50712,8 @@ fn main (argc: int, argv: u64) -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/args.md`
-- CLI entrypoint rules: `docs/compiler/cli-silk.md`
+- [Canonical doc](../docs/?p=std/args)
+- CLI entrypoint rules: [silk CLI](../docs/?p=compiler/cli-silk)
 
 ==============================================================================
 WIKI: `std::env` (std/env)
@@ -49225,7 +50725,7 @@ URL: /silk/wiki/?p=std/env
 `std::env` provides access to process environment variables and common
 directory helpers.
 
-Canonical doc: `docs/std/env.md`.
+[Canonical doc](../docs/?p=std/env).
 
 ## Example: `get`
 ```silk
@@ -49244,8 +50744,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/env.md`
-- Typed errors: `docs/wiki/language/typed-errors.md`
+- [Canonical doc](../docs/?p=std/env)
+- Typed errors: [Typed errors (error, panic, and T | ErrorType...)](?p=language/typed-errors)
 
 ==============================================================================
 WIKI: `std::process` (std/process)
@@ -49256,7 +50756,7 @@ URL: /silk/wiki/?p=std/process
 
 `std::process` provides process-oriented primitives (hosted baseline).
 
-Canonical doc: `docs/std/process.md`.
+[Canonical doc](../docs/?p=std/process).
 
 ## Importing
 
@@ -49297,9 +50797,9 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/process.md`
-- Environment helpers: `docs/wiki/std/env.md`
-- Runtime/process boundary: `docs/std/runtime.md`
+- [Canonical doc](../docs/?p=std/process)
+- Environment helpers: [std::env](?p=std/env)
+- Runtime/process boundary: [std::runtime](../docs/?p=std/runtime)
 
 ==============================================================================
 WIKI: `std::path` (std/path)
@@ -49310,7 +50810,7 @@ URL: /silk/wiki/?p=std/path
 
 `std::path` provides path manipulation helpers.
 
-Canonical doc: `docs/std/path.md`.
+[Canonical doc](../docs/?p=std/path).
 
 ## Importing
 
@@ -49357,9 +50857,9 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/path.md`
-- Filesystem: `docs/wiki/std/filesystem.md`
-- Strings: `docs/std/strings.md`
+- [Canonical doc](../docs/?p=std/path)
+- Filesystem: [std::fs](?p=std/filesystem)
+- Strings: [std::strings](../docs/?p=std/strings)
 
 ==============================================================================
 WIKI: `std::fs` (std/filesystem)
@@ -49371,7 +50871,7 @@ URL: /silk/wiki/?p=std/filesystem
 `std::fs` provides a small hosted POSIX-oriented filesystem API (
 subset).
 
-Canonical doc: `docs/std/filesystem.md`.
+[Canonical doc](../docs/?p=std/filesystem).
 
 ## Example: existence checks
 ```silk
@@ -49387,8 +50887,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/filesystem.md`
-- Paths: `docs/std/path.md`
+- [Canonical doc](../docs/?p=std/filesystem)
+- Paths: [std::path](../docs/?p=std/path)
 
 ==============================================================================
 WIKI: `std::json` (std/json)
@@ -49397,10 +50897,9 @@ URL: /silk/wiki/?p=std/json
 
 # `std::json`
 
-`std::json` provides JSON parsing and stringifying (initial implementation + expanded
-subset).
+`std::json` provides an implemented JSON parsing and stringifying subset.
 
-Canonical doc: `docs/std/json.md`.
+[Canonical doc](../docs/?p=std/json).
 
 ## Importing
 
@@ -49495,8 +50994,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/json.md`
-- Typed results and errors: `docs/std/result.md`
+- [Canonical doc](../docs/?p=std/json)
+- Typed results and errors: [std::result](../docs/?p=std/result)
 
 ==============================================================================
 WIKI: `std::toml` (std/toml)
@@ -49505,9 +51004,9 @@ URL: /silk/wiki/?p=std/toml
 
 # `std::toml`
 
-`std::toml` provides TOML parsing (initial implementation + expanded subset).
+`std::toml` provides an implemented TOML parsing subset.
 
-Canonical doc: `docs/std/toml.md`.
+[Canonical doc](../docs/?p=std/toml).
 
 ## Importing
 
@@ -49588,8 +51087,8 @@ answer = 42
 
 ## See also
 
-- Canonical doc: `docs/std/toml.md`
-- Result handling: `docs/std/result.md`
+- [Canonical doc](../docs/?p=std/toml)
+- Result handling: [std::result](../docs/?p=std/result)
 
 ==============================================================================
 WIKI: `std::url` (std/url)
@@ -49601,7 +51100,7 @@ URL: /silk/wiki/?p=std/url
 `std::url` provides a WHATWG URL parser/serializer and `URLSearchParams`-style
 behavior.
 
-Canonical doc: `docs/std/url.md`.
+[Canonical doc](../docs/?p=std/url).
 
 ## Importing
 
@@ -49789,8 +51288,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/url.md`
-- Error handling patterns: `docs/language/errors.md`
+- [Canonical doc](../docs/?p=std/url)
+- Error handling patterns: [Errors](../docs/?p=language/errors)
 
 ==============================================================================
 WIKI: `std::semver` (std/semver)
@@ -49804,7 +51303,7 @@ URL: /silk/wiki/?p=std/semver
 - strict parsing of `MAJOR.MINOR.PATCH[-PRERELEASE][+BUILD]`
 - SemVer precedence comparison (build metadata is ignored)
 
-Canonical doc: `docs/std/semver.md`.
+[Canonical doc](../docs/?p=std/semver).
 
 ## Quick example
 
@@ -49841,7 +51340,7 @@ URL: /silk/wiki/?p=std/uuid
 
 `std::uuid` provides UUID primitives (parsing, formatting, and variants).
 
-Canonical doc: `docs/std/uuid.md`.
+[Canonical doc](../docs/?p=std/uuid).
 
 ## Importing
 
@@ -49894,8 +51393,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/uuid.md`
-- String formatting helpers: `docs/std/strings.md`
+- [Canonical doc](../docs/?p=std/uuid)
+- String formatting helpers: [std::strings](../docs/?p=std/strings)
 
 ==============================================================================
 WIKI: `std::net` (std/networking)
@@ -49904,9 +51403,11 @@ URL: /silk/wiki/?p=std/networking
 
 # `std::net`
 
-`std::net` provides networking primitives (hosted POSIX baseline).
+`std::net` provides networking primitives for the hosted POSIX baseline,
+including byte-order helpers, TCP/UDP sockets, DNS resolution helpers, and a
+small async subset.
 
-Canonical doc: `docs/std/networking.md`.
+[Canonical doc](../docs/?p=std/networking).
 
 ## Example: IPv4 helpers
 ```silk
@@ -49919,9 +51420,24 @@ fn main () -> int {
 }
 ```
 
+## Example: async host connect
+```silk
+import std::net;
+
+async fn main () -> int {
+  let conn_r = await std::net::TCPStream.connect_host_async("example.com", 443);
+  return match (conn_r) {
+    Ok(_) => 0,
+    Err(_) => 1,
+  };
+}
+```
+
 ## See also
 
-- Canonical doc: `docs/std/networking.md`
+- [Canonical doc](../docs/?p=std/networking)
+- [I/O surface](?p=std/io)
+- [TLS](?p=std/tls)
 
 ==============================================================================
 WIKI: `std::crypto` (std/crypto)
@@ -49933,7 +51449,7 @@ URL: /silk/wiki/?p=std/crypto
 `std::crypto` provides cryptography primitives (hosted baseline via libsodium
 in the current design).
 
-Canonical doc: `docs/std/crypto.md`.
+[Canonical doc](../docs/?p=std/crypto).
 
 ## Importing
 
@@ -50069,8 +51585,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/crypto.md`
-- Strings and byte helpers: `docs/std/strings.md`
+- [Canonical doc](../docs/?p=std/crypto)
+- Strings and byte helpers: [std::strings](../docs/?p=std/strings)
 
 ==============================================================================
 WIKI: `std::tls` (std/tls)
@@ -50081,7 +51597,7 @@ URL: /silk/wiki/?p=std/tls
 
 `std::tls` provides TLS client/server primitives (hosted baseline via mbedTLS).
 
-Canonical doc: `docs/std/tls.md`.
+[Canonical doc](../docs/?p=std/tls).
 
 ## Importing
 
@@ -50306,8 +51822,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/tls.md`
-- `std::crypto`: `docs/std/crypto.md`
+- [Canonical doc](../docs/?p=std/tls)
+- `std::crypto`: [std::crypto](../docs/?p=std/crypto)
 
 ==============================================================================
 WIKI: `std::runtime` (std/runtime)
@@ -50320,7 +51836,7 @@ URL: /silk/wiki/?p=std/runtime
 primitives (I/O, filesystem, time, threads, allocation) from higher-level
 `std::...` modules.
 
-Canonical doc: `docs/std/runtime.md`.
+[Canonical doc](../docs/?p=std/runtime).
 
 ## Importing
 
@@ -50337,12 +51853,10 @@ import std::runtime::build;
 import std::runtime::mem;
 
 fn main () -> int {
-  // This reports whether the current artifact was built with `--debug` / `-g`.
   if std::runtime::build::is_debug() {
     return 1;
   }
 
-  // `std::runtime::mem` provides low-level allocation and raw load/store.
   let ptr: u64 = std::runtime::mem::alloc(4);
   if ptr == 0 { return 2; }
 
@@ -50361,9 +51875,9 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/runtime.md`
-- Std package structure and swappability: `docs/std/package-structure.md`
-- Event loop surface: `docs/std/runtime-event-loop.md`
+- [Canonical doc](../docs/?p=std/runtime)
+- [Std package structure and swappability](?p=std/package-structure)
+- [Event loop surface](../docs/?p=std/runtime-event-loop)
 
 ==============================================================================
 WIKI: `std::task` (std/task)
@@ -50375,25 +51889,35 @@ URL: /silk/wiki/?p=std/task
 `std::task` provides hosted task/runtime helpers, including sleep/yield
 operations.
 
-Canonical doc: `docs/std/task.md`.
+[Canonical doc](../docs/?p=std/task).
 
 ## Example
 ```silk
 import std::task;
 
 fn main () -> int {
-  let n: int = available_parallelism();
-  yield_now();
-  sleep_ms(0);
+  let n: int = std::task::available_parallelism();
+  std::task::yield_now();
+  std::task::sleep_ms(0);
   if n < 1 { return 1; }
+  return 0;
+}
+```
+
+## Example: awaitable sleep
+```silk
+import std::task;
+
+async fn main () -> int {
+  await std::task::sleep_ms_async(10);
   return 0;
 }
 ```
 
 ## See also
 
-- Canonical doc: `docs/std/task.md`
-- Concurrency model: `docs/language/concurrency.md`
+- [Canonical doc](../docs/?p=std/task)
+- [Concurrency model](?p=language/concurrency)
 
 ==============================================================================
 WIKI: `std::sync` (std/sync)
@@ -50404,7 +51928,7 @@ URL: /silk/wiki/?p=std/sync
 
 `std::sync` provides synchronization primitives (hosted baseline).
 
-Canonical doc: `docs/std/sync.md`.
+[Canonical doc](../docs/?p=std/sync).
 
 ## Importing
 
@@ -50462,9 +51986,9 @@ async fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/sync.md`
-- Concurrency: `docs/language/concurrency.md`
-- `std::task`: `docs/std/task.md`
+- [Canonical doc](../docs/?p=std/sync)
+- Concurrency: [Concurrency](../docs/?p=language/concurrency)
+- `std::task`: [std::task](../docs/?p=std/task)
 
 ==============================================================================
 WIKI: `std::temporal` (std/temporal)
@@ -50476,7 +52000,7 @@ URL: /silk/wiki/?p=std/temporal
 `std::temporal` provides `Instant`/`Duration` helpers and time-related
 utilities.
 
-Canonical doc: `docs/std/temporal.md`.
+[Canonical doc](../docs/?p=std/temporal).
 
 ## Example
 ```silk
@@ -50493,8 +52017,8 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/temporal.md`
-- Time types: `docs/wiki/language/duration-instant.md`
+- [Canonical doc](../docs/?p=std/temporal)
+- Time types: [Duration and Instant](?p=language/duration-instant)
 
 ==============================================================================
 WIKI: `std::formal` (std/formal)
@@ -50503,33 +52027,43 @@ URL: /silk/wiki/?p=std/formal
 
 # `std::formal`
 
-`std::formal` provides reusable Formal Silk theories (“standard lemmas”) used
-by stdlib code and downstream verified code.
+`std::formal` provides reusable Formal Silk theories for common proof shapes:
 
-Canonical doc: `docs/std/formal.md`.
+- non-negative lengths and counters,
+- non-null pointers,
+- bounds checks,
+- slice and vector well-formedness.
+
+[Canonical doc](../docs/?p=std/formal).
 
 ## Importing
-
-Theories are imported via file imports and applied with `#theory`:
 
 ```silk
 import { nonnegative_i64, bounds_i64 } from "std/formal";
 ```
 
-## Examples
+## Example
 
-### Example: applying standard theories
 ```silk
 import { nonnegative_i64, bounds_i64 } from "std/formal";
 
 #theory nonnegative_i64(len);
 #theory bounds_i64(index, len);
-fn get_at (index: i64, len: i64) -> i64 {
+#assure result == index;
+fn checked_index (index: i64, len: i64) -> i64 {
   return index;
 }
 ```
 
+## Current theory set
+
+- `nonnegative_i64`
+- `nonnull_u64`
+- `bounds_i64`
+- `slice_well_formed`
+- `vector_well_formed`
+
 ## See also
 
-- Canonical doc: `docs/std/formal.md`
-- Formal verification: `docs/wiki/language/formal-verification.md`
+- [Canonical doc](../docs/?p=std/formal)
+- Formal verification: [Formal verification (Formal Silk)](?p=language/formal-verification)

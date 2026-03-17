@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-11T11:46:53+00:00",
+  "generatedAt": "2026-03-17T18:47:28+00:00",
   "kind": "wiki",
   "count": 84,
   "items": [
@@ -36,7 +36,7 @@
       "title": "`if` / `else`",
       "section": "language",
       "summary": "Use `if` / `else` for boolean branching.",
-      "text": "if / else Use if / else for boolean branching. In Silk, if is a statement that chooses which block executes. The broader language design includes expression-oriented forms; see the canonical spec for details. Canonical spec. Syntax if condition { // ... } else { // ... } Examples Example: minimal if / else fn main () -> int { if true { return 0; } else { return 1; } } Example: else if chains Currently, else if parses as sugar for a nested if in the else branch. fn main () -> int { let x: int = 1; if x == 0 { return 0; } else if x == 1 { return 1; } else { return 2; } } See also Canonical spec match (expression): match Expression (and Statement)"
+      "text": "if / else Use if / else for boolean branching. In Silk, if works in both roles: as a statement that chooses which block executes, and as an expression for the documented value-producing subset. Canonical spec. Syntax if condition { // ... } else { // ... } Examples Example: minimal if / else fn main () -> int { if true { return 0; } else { return 1; } } Example: else if chains Currently, else if parses as sugar for a nested if in the else branch. fn main () -> int { let x: int = 1; if x == 0 { return 0; } else if x == 1 { return 1; } else { return 2; } } See also Canonical spec match (expression): match Expression (and Statement)"
     },
     {
       "id": "language/flow-match",
@@ -141,7 +141,7 @@
       "title": "Mutability (`mut`)",
       "section": "language",
       "summary": "Silk is safe-by-default: bindings and borrows are immutable unless you opt in to mutation.",
-      "text": "Mutability (mut) Silk is safe-by-default: bindings and borrows are immutable unless you opt in to mutation. Canonical spec. Syntax let mut x: int = 0; x += 1; // Two-part mut borrow contract: // - parameter declared mut, and // - call site uses mut <expr>. // fn bump(mut p: &Pair) -> void { ... } // bump(mut pair); Example: mutable local + mutable borrow struct Pair { a: int, b: int, } fn bumpa (mut p: &Pair) -> void { p.a += 1; } fn main () -> int { let mut p: Pair = Pair{ a: 1, b: 2 }; bumpa(mut p); return p.a; } See also Canonical spec Borrow-checker design notes: Borrow checker (design)"
+      "text": "Mutability (mut) Silk is safe-by-default: bindings and borrows are immutable unless you opt in to mutation. Canonical spec. Syntax let mut x: int = 0; x += 1; // Two-part mut borrow contract: // - parameter declared mut, and // - call site uses mut <expr>. // fn bump(mut p: &Pair) -> void { ... } // bump(mut pair); Example: mutable local + mutable borrow struct Pair { a: int, b: int, } fn bumpa (mut p: &Pair) -> void { p.a += 1; } fn main () -> int { let mut p: Pair = Pair{ a: 1, b: 2 }; bumpa(mut p); return p.a; } See also Canonical spec Borrow-checker notes: Borrow checker"
     },
     {
       "id": "language/operators",
@@ -217,8 +217,8 @@
       "id": "language/struct-requirements",
       "title": "Struct requirements (`#require`)",
       "section": "language",
-      "summary": "Use `#require` on a `struct` to state requirements that must hold for all values constructed for that type.",
-      "text": "Struct requirements (#require) Use #require on a struct to state requirements that must hold for all values constructed for that type. struct Port { value: int, } require value >= 0; require value <= 65535; Use this when an invariant belongs to the type itself, not just to one helper function. See Struct requirements and Formal verification."
+      "summary": "Use `#require` on a `struct` when the invariant belongs to the value itself and must hold at every construction site.",
+      "text": "Struct requirements (#require) Use #require on a struct when the invariant belongs to the value itself and must hold at every construction site. require len >= 0; require cap >= len; struct BufferState { ptr: u64, len: int, cap: int, } This is a good fit for packet headers, range descriptors, and len / cap pairs. Construction sites The verifier checks struct requirements at: Type{ ... } new Type{ ... } This means the allocation strategy may change, but the type-level invariant does not. Example: parser cursor require len >= 0; require pos >= 0; require pos <= len; struct PacketCursor { ptr: u64, len: int, pos: int, } This is the right pattern when the invariant belongs to the data model rather than to one helper function. See: Canonical doc Formal verification"
     },
     {
       "id": "language/interfaces",
@@ -250,10 +250,10 @@
     },
     {
       "id": "language/borrow-checker",
-      "title": "Borrow checker (design)",
+      "title": "Borrow checker",
       "section": "language",
-      "summary": "Silk\u2019s long-term design includes a borrow-checker-style static safety layer over references and mutation. Today, the compiler enforces the explicit `mut` borrow contract plus the current suspension-point restrictions documented in",
-      "text": "Borrow checker (design) Silk\u2019s long-term design includes a borrow-checker-style static safety layer over references and mutation. Today, the compiler enforces the explicit mut borrow contract plus the current suspension-point restrictions documented in the canonical borrow-checker docs. Canonical docs. What to use today Reach for Mutability for the currently enforced &T / mut &T rules. Reach for the canonical Borrow checker page when you need the larger lifetime, aliasing, and await/yield model. Example: explicit mutable borrow struct Counter { value: int, } fn inc (mut c: &Counter) -> void { c.value += 1; } fn main () -> int { let mut c: Counter = Counter{ value: 0 }; inc(mut c); return c.value; } See also Mutability Borrow checker"
+      "summary": "Silk\u2019s current borrow-checking story is a shipped subset plus a larger design. Today the compiler already enforces lexical escape checks for slices and borrowed references, mutable-alias checks at call sites, and conservative",
+      "text": "Borrow checker Silk\u2019s current borrow-checking story is a shipped subset plus a larger design. Today the compiler already enforces lexical escape checks for slices and borrowed references, mutable-alias checks at call sites, and conservative restrictions across task / await boundaries. Canonical docs. Returning a borrow of a local binding is rejected. Returning a borrow of a parameter is allowed. Mutable aliasing in one call is rejected. move is rejected while a live borrow still exists. Crossing task boundaries with non-opaque &T values is rejected. What to use today Reach for Mutability for the currently enforced &T / mut &T rules. Reach for the canonical Borrow checker page when you need the larger lifetime, aliasing, and await/yield model. Example: explicit mutable borrow struct Counter { value: int, } fn inc (mut c: &Counter) -> void { c.value += 1; } fn main () -> int { let mut c: Counter = Counter{ value: 0 }; inc(mut c); return c.value; } See also Mutability Borrow checker Concurrency"
     },
     {
       "id": "language/memory-model",
@@ -288,14 +288,14 @@
       "title": "Function disciplines (`pure`, `async`, `task`)",
       "section": "language",
       "summary": "Function modifiers declare constraints and concurrency behavior:",
-      "text": "Function disciplines (pure, async, task) Function modifiers declare constraints and concurrency behavior: pure fn for side-effect-free functions (checker-enforced subset) async fn for promise-producing functions task fn for task-producing functions const fn for compile-time-evaluable functions (see ?p=language/const-functions) Canonical doc. Examples pure fn add (x: int, y: int) -> int { return x + y; } async fn answer () -> int { return 42; } task fn worker (x: int) -> int { return x + 1; } See also Canonical doc Concurrency"
+      "text": "Function disciplines (pure, async, task) Function modifiers declare constraints and concurrency behavior: pure fn for side-effect-free functions (checker-enforced subset) async fn for promise-producing functions task fn for task-producing functions const fn for compile-time-evaluable functions (see Const functions) Canonical doc. Examples pure fn add (x: int, y: int) -> int { return x + y; } async fn answer () -> int { return 42; } task fn worker (x: int) -> int { return x + 1; } See also Canonical doc Concurrency"
     },
     {
       "id": "language/const-functions",
       "title": "Const Functions (`const fn`)",
       "section": "language",
       "summary": "`const fn` marks a function as eligible for **compile-time evaluation**.",
-      "text": "Const Functions (const fn) const fn marks a function as eligible for compile-time evaluation. This wiki page is an overview. The canonical specification is Const Functions (const fn). Example const fn add (a: int, b: int) -> int { return a + b; } const answer: int = add(20, 22); fn main () -> int { return answer; } Notes Const functions are intended for const initializer evaluation. Const functions are compile-time-only: they are not callable from runtime code and are not emitted as runtime/linkable symbols. The targets scalar-only const evaluation; string/aggregate return values and higher-order const evaluation are planned. In Silk, const fn bodies must not allocate (new) or use regions/with, must not contain panic, and may only call other const fn declarations. See also Canonical spec const bindings: Blocks and Statement Composition Function modifiers (pure/async/task): Function Disciplines (pure, task, async)"
+      "text": "Const Functions (const fn) const fn marks a function as eligible for compile-time evaluation. This wiki page is an overview. The canonical specification is Const Functions (const fn). Example const fn add (a: int, b: int) -> int { return a + b; } const answer: int = add(20, 22); fn main () -> int { return answer; } Notes Const functions are intended for const initializer evaluation. Const functions are compile-time-only: they are not callable from runtime code and are not emitted as runtime/linkable symbols. The supports scalar compile-time values plus compile-time POD structs. string, non-POD aggregate values, and higher-order const evaluation remain future work. In Silk, const fn bodies must not allocate (new) or use regions/with, must not contain panic, and may only call other const fn declarations. See also Canonical spec const bindings: Blocks and Statement Composition Function modifiers (pure/async/task): Function Disciplines (pure, task, async)"
     },
     {
       "id": "language/generics",
@@ -329,22 +329,22 @@
       "id": "language/formal-verification",
       "title": "Formal verification (Formal Silk)",
       "section": "language",
-      "summary": "Silk includes syntax for writing contracts and verification metadata:",
-      "text": "Formal verification (Formal Silk) Silk includes syntax for writing contracts and verification metadata: #require / #assure for pre/postconditions #assert for local assertions #invariant / #variant / #monovariant for loops Canonical doc. Example (Design / verifier-oriented) require x >= 0; assure result == x + 1; fn inc (x: int) -> int { return x + 1; } See also Canonical doc"
+      "summary": "Formal Silk is Silk\u2019s compile-time verification language. It lets you keep proofs close to ordinary code:",
+      "text": "Formal verification (Formal Silk) Formal Silk is Silk\u2019s compile-time verification language. It lets you keep proofs close to ordinary code: #require / #assure for function contracts, #assert for local proof points, #invariant / #variant / #monovariant for loops, theory / #theory for reusable proof bundles. Canonical doc. When it is useful Formal Silk pays off most when the bug is subtle and expensive: parser and packet bounds checks, len / cap invariants, protocol state assumptions, monotonic counters and loop progress. Example: function contract require x >= 0; assure result == x + 1; fn inc (x: int) -> int { return x + 1; } Example: loop invariant fn main () -> int { let limit: int = 4; let mut i: int = 0; #invariant i >= 0; #invariant i <= limit; #variant limit - i; #monovariant i; while i < limit { i += 1; } return 0; } Example: reusable theory export theory boundedwindow (offset: int, size: int, total: int) { #require offset >= 0; #require size >= 0; #assure offset + size <= total; } See also Canonical doc Formal Silk guide std::formal"
     },
     {
       "id": "language/refinement-types",
       "title": "Refinement types (removed)",
       "section": "language",
-      "summary": "The earlier refinement-type design (types annotated with `where` predicates) is removed.",
-      "text": "Refinement types (removed) The earlier refinement-type design (types annotated with where predicates) is removed. Use Formal Silk instead: #require / #assure on functions, #require on struct declarations (struct requirements proved at construction sites). Example: require x >= 0; assure result == x + 1; fn inc (x: int) -> int { return x + 1; } See Formal verification."
+      "summary": "Silk no longer uses a separate refinement-type surface.",
+      "text": "Refinement types (removed) Silk no longer uses a separate refinement-type surface. Use: #require / #assure for function contracts, #require on struct declarations for type-level invariants, #assert for local proof points, const parameters for compile-time shape. Example require len >= 0; require cap >= len; struct BufferState { ptr: u64, len: int, cap: int, } See also Formal verification Struct requirements Dependent types"
     },
     {
       "id": "language/dependent-types",
-      "title": "Dependent types (const parameters) (design)",
+      "title": "Dependent types (const parameters)",
       "section": "language",
-      "summary": "This page covers Silk\u2019s intended support for types that mention compile-time values (especially integers), such as dependent-length collections.",
-      "text": "Dependent types (const parameters) (design) This page covers Silk\u2019s intended support for types that mention compile-time values (especially integers), such as dependent-length collections. Canonical design doc. Example (Design) // Design-only sketch: a vector type with a compile-time length N. struct VectorN(T, N: int) { / ... / } See also Canonical design doc Generics: Generics (monomorphized)"
+      "summary": "Silk already supports a practical dependent-type-like subset through **const parameters** and applied generic types with compile-time integer arguments.",
+      "text": "Dependent types (const parameters) Silk already supports a practical dependent-type-like subset through const parameters and applied generic types with compile-time integer arguments. Canonical doc. Supported behavior const parameters such as N: usize applied types like Wrap(u8, 4) generic functions with the ; split const/type argument inference at call sites when runtime arguments carry the needed shape Example struct Wrap(T, N: usize) { buf: T[N], } fn takewrap (T, N: usize; w: Wrap(T, N)) -> int { return 0; } Use it for fixed-size buffers and digests APIs that preserve array length or capacity compile-time-sized wrappers See also Canonical doc Generics Formal verification"
     },
     {
       "id": "language/conventions",
@@ -588,8 +588,8 @@
       "id": "std/formal",
       "title": "`std::formal`",
       "section": "std",
-      "summary": "`std::formal` provides reusable Formal Silk theories (\u201cstandard lemmas\u201d) used by stdlib code and downstream verified code.",
-      "text": "std::formal std::formal provides reusable Formal Silk theories (\u201cstandard lemmas\u201d) used by stdlib code and downstream verified code. Canonical doc. Importing Theories are imported via file imports and applied with #theory: import { nonnegativei64, boundsi64 } from \"std/formal\"; Examples Example: applying standard theories import { nonnegativei64, boundsi64 } from \"std/formal\"; theory nonnegativei64(len); theory boundsi64(index, len); fn getat (index: i64, len: i64) -> i64 { return index; } See also Canonical doc Formal verification: Formal verification (Formal Silk)"
+      "summary": "`std::formal` provides reusable Formal Silk theories for common proof shapes:",
+      "text": "std::formal std::formal provides reusable Formal Silk theories for common proof shapes: non-negative lengths and counters, non-null pointers, bounds checks, slice and vector well-formedness. Canonical doc. Importing import { nonnegativei64, boundsi64 } from \"std/formal\"; Example import { nonnegativei64, boundsi64 } from \"std/formal\"; theory nonnegativei64(len); theory boundsi64(index, len); assure result == index; fn checkedindex (index: i64, len: i64) -> i64 { return index; } Current theory set nonnegativei64 nonnullu64 boundsi64 slicewellformed vectorwellformed See also Canonical doc Formal verification: Formal verification (Formal Silk)"
     }
   ]
 }

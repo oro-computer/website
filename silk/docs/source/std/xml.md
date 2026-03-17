@@ -1,6 +1,6 @@
 # `std::xml` — XML Parsing (libxml2)
 
-Status: **design + initial implementation**. `std::xml` provides a small,
+Status: **Implemented subset + design**. `std::xml` provides a small,
 DOM-style XML parsing and traversal API backed by libxml2.
 
 ## Vendored Dependencies + Linking

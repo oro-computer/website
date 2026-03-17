@@ -30,6 +30,13 @@ When verification syntax is present, compilation MUST:
 
 When verification syntax is not present, compilation does not require proofs.
 
+Good companion pages:
+
+- [Guide: Formal Silk](?p=guides/formal-silk)
+- [Tutorial: Formal Silk in real code](?p=usage/tutorials/07-formal-silk)
+- [Struct requirements](?p=language/struct-requirements)
+- [`std::formal`](?p=std/formal)
+
 ## Z3 linkage and overrides
 
 On `linux/x86_64`, Silk always links the vendored Z3 static library
@@ -89,6 +96,73 @@ Supported operators in specification expressions (current subset):
 
 Other operators and expression forms are currently rejected in verified code
 (see “Implementation Status” below).
+
+## Accepted value forms and built-in names (current subset)
+
+Formal Silk uses the normal expression grammar, but the verifier currently
+accepts only a scalar/value-oriented subset.
+
+Accepted forms you can rely on today:
+
+- `bool` values and expressions:
+  - `true`, `false`
+  - `!`, `&&`, `||`
+  - equality and comparisons that yield `bool`
+- integer values and expressions:
+  - literals and named integer values
+  - unary `-` / `~`
+  - `+`, `-`, `*`, `/`, `%`
+  - `&`, `|`, `^`, `<<`, `>>`
+  - `<`, `<=`, `>`, `>=`, `==`, `!=`
+- `string` values:
+  - string literals
+  - named string values
+  - `==` / `!=`
+- layout queries:
+  - `sizeof(T)`
+  - `alignof(T)`
+  - `offsetof(T, field)`
+- built-in verifier names:
+  - `result` inside `#assure`
+  - struct field names inside struct requirements
+  - build metadata constants:
+    - `BUILD_KIND`, `BUILD_MODE`, `BUILD_VERSION`
+    - `BUILD_VERSION_MAJOR`, `BUILD_VERSION_MINOR`, `BUILD_VERSION_PATCH`
+
+Practical examples:
+
+```silk
+struct Header {
+  kind: int,
+  len: int,
+}
+
+#require mode == "safe" || mode == "fast";
+#assure result >= 0;
+fn classify (mode: string) -> int {
+  return 0;
+}
+
+fn main () -> int {
+  #assert true;
+  #assert (2 + 2) == 4;
+  #assert (8 >> 1) == 4;
+  #assert sizeof(Header) >= 16;
+  #assert alignof(Header) >= 8;
+  #assert offsetof(Header, kind) < offsetof(Header, len);
+  #assert BUILD_VERSION_MAJOR >= 0;
+  return classify("safe");
+}
+```
+
+Important current exclusions:
+
+- no struct/array construction inside specification expressions,
+- no `new` inside specification expressions,
+- no normal runtime call syntax inside specification expressions,
+- no proof over the full statement language (`match`, nested verified loops,
+  indirect calls, and many richer expression forms are still outside the
+  verified subset).
 
 ## The `ext` boundary
 
@@ -159,9 +233,9 @@ fn main () -> int {
 }
 ```
 
-### Function annotations (initial syntax)
+### Function annotations
 
-For functions, the initial surface syntax is:
+For functions, the current surface syntax is:
 
 ```silk
 #require <Expr>;
@@ -213,9 +287,9 @@ Rules (current subset):
 Loop specifications (`#invariant`, `#variant`, `#monovariant`) follow a similar
 pattern for loops.
 
-### Loop annotations (initial syntax)
+### Loop annotations
 
-For `while` loops, the initial surface syntax is:
+For `while` loops, the current surface syntax is:
 
 ```silk
 #invariant <Expr>;
@@ -301,7 +375,7 @@ Implemented end-to-end (Z3-backed, current subset):
 - Formal Silk declarations via `#const`:
   - may be referenced only by specification expressions,
   - are rejected in runtime expressions (`E2014`).
-- `theory` (reusable assertions, initial subset):
+- `theory` (reusable assertions, current subset):
   - `theory Name(params) { ... }` defines a reusable set of proof obligations
     (exportable/importable at top level),
   - `#theory Name(args);` applies it in a function body as compile-time-only
@@ -338,6 +412,121 @@ Not implemented yet (selected gaps):
 - Verification of the full expression language and full statement language
   (`if`, `match`, nested loops, indirect calls/method calls, and many operators
   are not supported yet in verified code).
+
+## Worked examples
+
+These examples are intentionally close to real systems-code problems.
+
+### Type-level layout invariants
+
+Use `#require` on a `struct` when the invariant belongs to the data type
+itself:
+
+```silk
+#require header_len == 8 || header_len == 12;
+#require payload_len >= 0;
+#require total_len == header_len + payload_len;
+struct FrameLayout {
+  header_len: int,
+  payload_len: int,
+  total_len: int,
+}
+
+fn main () -> int {
+  let layout = FrameLayout{
+    header_len: 8,
+    payload_len: 24,
+    total_len: 32,
+  };
+  return layout.total_len - 32;
+}
+```
+
+This is the right shape for packet headers, record layouts, and `len` / `cap`
+pairs.
+
+### Monotonic progress inside a loop
+
+Use `#variant` and `#monovariant` to prove both termination and “cursor moves
+the right direction”:
+
+```silk
+fn main () -> int {
+  let limit: int = 8;
+  #const original_limit = limit;
+
+  let mut offset: int = 0;
+  #invariant offset >= 0;
+  #invariant offset <= original_limit;
+  #variant original_limit - offset;
+  #monovariant offset;
+  while offset < limit {
+    offset += 1;
+  }
+
+  #assert offset == original_limit;
+  return 0;
+}
+```
+
+Use this for parser offsets, retry budgets, sequence numbers, and bytes-written
+counters.
+
+### Shared proof vocabulary with `std::formal`
+
+When the same proof shape appears repeatedly, prefer a reusable theory import:
+
+```silk
+import { nonnegative_i64, bounds_i64, slice_well_formed } from "std/formal";
+
+#theory slice_well_formed(ptr, len);
+#theory nonnegative_i64(len);
+#theory bounds_i64(index, len);
+#assure result == index;
+fn checked_index (ptr: u64, len: i64, index: i64) -> i64 {
+  return index;
+}
+```
+
+This is the intended downstream pattern for pointer/length APIs, parsers, and
+container boundary checks.
+
+### Opaque contracts for precompiled helpers
+
+Declaration-only functions can still participate in verified code if they have
+contracts:
+
+```silk
+#require bytes >= 0;
+#assure result >= bytes;
+fn align_up_page (bytes: int) -> int;
+
+fn main () -> int {
+  let size = align_up_page(4096);
+  #assert size >= 4096;
+  return 0;
+}
+```
+
+The verifier proves the precondition at the call site, introduces a symbolic
+return value, and then assumes the declared postconditions.
+
+## Diagnostics you will actually see
+
+The high-value Formal Silk diagnostics in the current subset are:
+
+- `E2014` — formal Silk declaration used in runtime expression
+- `E2050` — theory called like a runtime function instead of via `#theory`
+- `E3001` — loop invariant may not hold
+- `E3002` — loop variant may be negative
+- `E3003` — loop variant may not decrease
+- `E3005` — verifier initialization failed or an unsupported construct was hit
+- `E3006` — assertion may not hold
+- `E3007` — call precondition may not hold
+- `E3008` — loop monovariant may not be monotonic
+
+For deeper proof debugging, build with `--debug` and replay the emitted
+SMT-LIB2 query with `z3 -smt2 ...`.
 
 ## Theories (`theory` / `#theory`)
 
@@ -492,7 +681,7 @@ Rules:
   theory access, because theory use sites do not accept qualified names
   (`ns::TheoryName`) yet.
 
-### Semantics (initial subset)
+### Semantics (current subset)
 
 When a theory is applied (`#theory Name(args);`):
 

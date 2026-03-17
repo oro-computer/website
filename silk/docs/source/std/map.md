@@ -5,7 +5,7 @@
 - `HashMap(K, V)` — an unordered map backed by a hash table.
 - `TreeMap(K, V)` — an ordered map backed by a red-black tree.
 
-Status: **initial implementation**. The API is specified here; it
+Status: **Implemented subset + design**. The API is specified here; it
 targets the current compiler/backend subset and will grow as the language gains
 first-class container ergonomics (in particular, more borrow- and move-aware
 iteration and accessors).

@@ -8,7 +8,7 @@ Regions are represented at runtime as a first-class `Region` handle value. A
 
 ## Implementation Status (Current Compiler)
 
-Status: **in progress**.
+Status: **Implemented subset + design**.
 
 Implemented subset:
 
@@ -235,6 +235,54 @@ with a {
   }
 }
 ```
+
+## Practical lifecycle patterns
+
+### Request-scoped scratch region
+
+Use a named region when one request, parse, or render pass needs a reusable
+scratch allocation context:
+
+```silk
+struct Frame { id: int }
+
+fn build_frame (scratch: Region, id: int) -> int {
+  with scratch {
+    let frame: &Frame = new Frame{ id: id };
+    return frame.id;
+  }
+}
+```
+
+This keeps allocation policy explicit without changing the rest of the code.
+
+### Stage work with subregions
+
+Subregions are useful when one phase of work should reuse only a slice of a
+larger scratch region:
+
+```silk
+struct Header { size: int }
+
+fn parse_header () -> int {
+  const region scratch: u8[2048];
+
+  with 256 from scratch[0..256] {
+    let h: &Header = new Header{ size: 64 };
+    return h.size;
+  }
+}
+```
+
+### Downstream rules that keep region code readable
+
+- Treat anonymous `with <bytes> { ... }` allocations as block-scoped scratch
+  storage.
+- Do not return references that were allocated from an anonymous region.
+- Do not share one `Region` across concurrent tasks.
+- Remember that last-release runs `drop` when present, but does **not** reclaim
+  the backing bytes; reclamation happens when you reset or reuse the region
+  cursor.
 
 ## Reclaiming Region Memory (Current Subset)
 

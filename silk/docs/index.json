@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-03-10T03:16:35+00:00",
+  "generatedAt": "2026-03-17T18:15:55+00:00",
   "kind": "docs",
-  "count": 182,
+  "count": 183,
   "sections": [
     {
       "name": "overview",
@@ -705,6 +705,11 @@
           "id": "usage/tutorials/06-async-io-streams-abort",
           "title": "Tutorial 6: Async I/O + Streams + Abort Signals",
           "file": "usage/tutorials/06-async-io-streams-abort.md"
+        },
+        {
+          "id": "usage/tutorials/07-formal-silk",
+          "title": "Tutorial 7: Formal Silk in real code",
+          "file": "usage/tutorials/07-formal-silk.md"
         },
         {
           "id": "usage/cli-examples",

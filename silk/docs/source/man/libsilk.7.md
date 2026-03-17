@@ -303,7 +303,7 @@ bool silk_compiler_set_target(SilkCompiler *compiler,
 
 - Sets the code generation target triple (for example `"x86_64-linux-gnu"`).
 - The triple is copied; errors are recorded in the compiler’s last‑error state.
-- Supported targets (initial implementation):
+- Current supported targets:
   - `linux-x86_64` (default), plus common `x86_64-*-linux-*` triples such as `x86_64-linux-gnu` and `x86_64-unknown-linux-gnu`,
   - `linux-aarch64`,
   - `android-aarch64`,
@@ -532,9 +532,8 @@ Return value:
       `main` contains non‑constant expressions, references to non‑constant
       values, function calls, or unsupported control flow), or if the backend
       cannot produce an executable for the current platform or output path,
-      the call returns `false` and typically records either `"code generation
-      is not implemented yet"` or `"failed to build executable output"` as the
-      last error.
+      the call returns `false` and typically records
+      `"failed to build executable output"` as the last error.
 
 #### Executable entrypoint rule
 

@@ -360,13 +360,12 @@ fn log (fmt: string, ...args: std::fmt::Arg) -> void {
 }
 ```
 
-#### Generic function parameter split (`;`) (Design, parsed but rejected)
+#### Generic function parameter split (`;`) (Current supported surface)
 
 Generic functions use `;` to separate compile-time parameters from value parameters:
 
 ```silk
-// Design (currently rejected with `E2016`).
-fn get_first(T, N: int; xs: &T[N]) -> T {
+fn get_first(T, N: usize; xs: &T[N]) -> T {
   return xs[0];
 }
 ```
@@ -731,8 +730,8 @@ fn main () -> int {
 }
 ```
 
-See `docs/language/generics.md` for current subset limits (notably `E2016` for
-const parameters/arguments and generic functions).
+See `docs/language/generics.md` for the current monomorphized subset and the
+remaining unsupported generic forms that still report `E2016`.
 
 ## 6. Statements (Inside Blocks)
 

@@ -14,10 +14,13 @@ For the authoritative view of what the compiler supports today, prefer:
 - any “Implementation Status” sections inside the relevant concept documents.
 
 In particular, features such as regions (beyond the current `with` + `new`
-subset), concurrency runtime (scheduler/event loop), and
-dependent types are **not** implemented end-to-end yet. Value constraints are
-expressed via Formal Silk (`#require` / `#assure`, including `#require` on
-`struct` declarations), not refinement types.
+subset), the full structured-concurrency design, and **full**
+dependent-type-style reasoning beyond the current const-parameter subset are
+not implemented end-to-end yet. A hosted async executor/event loop already
+exists for the current `async` subset; what remains incomplete is the broader
+runtime and safety model around it. Value constraints are expressed via Formal
+Silk (`#require` / `#assure`, including `#require` on `struct` declarations),
+not refinement types.
 
 In the current compiler subset:
 
@@ -30,8 +33,11 @@ In the current compiler subset:
 - Enum destructuring is supported:
   - variants: `let Ok(v) = expr;`, `let Pair(a, b) = expr;`, `let E::Variant(x) = expr;` (traps on non-matching variants)
 - `const` initializers must be compile-time evaluable (`docs/compiler/diagnostics.md`, `E2041`); in the current subset this is restricted to scalar expressions and calls to `const fn` functions (still no `/` or `%`), plus string literals / `const` string aliases.
-- Monomorphized generics are supported for `struct`/`interface`/`impl` and applied types (`Name(args...)`):
-  - const parameters/arguments and generic functions are still rejected (`E2016`),
+- Monomorphized generics are supported for `struct`/`interface`/`enum`/`impl`,
+  applied types (`Name(args...)`, including const arguments), and generic
+  functions / methods.
+  - inference failures report `E2091`; unsupported generic forms outside the
+    shipped subset still report `E2016`,
 - A small concurrency subset is implemented (`Task(T)` / `Promise(T)` plus `yield`/`await`; see `docs/language/concurrency.md`).
 - The builtin `map(K, V)` type form is removed; use `std::map::{HashMap, TreeMap}` instead (`E2017`).
 - Function expressions are implemented as first-class function values:
@@ -112,7 +118,7 @@ Operator precedence and associativity follow the rules in `docs/language/operato
 
 See `docs/language/flow-*.md` for details.
 
-Executable entrypoint (initial rule):
+Executable entrypoint (current rule):
 
 - A minimal executable module defines exactly one top-level function:
 

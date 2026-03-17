@@ -139,7 +139,7 @@ Compiler requirements:
   - impl methods that satisfy an interface requirement may omit `public`, but
   - they may not be explicitly marked `private`.
 
-Conformance rules (initial implementation):
+Conformance rules (current subset):
 
 - For an `interface I { fn m(p0: T0, ...) -> R; }`, the corresponding impl must
   provide a method `m` whose signature matches after accounting for the

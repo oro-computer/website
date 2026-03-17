@@ -37,7 +37,8 @@ silk build app.slk -o build/app
 - **Source span**: a byte range in the UTF‑8 source buffer (`offset`, `length`).
   - Displayed **line** and **column** numbers are **1-based**.
   - Columns are measured in **UTF‑8 bytes** (matching the lexer’s current `Token.column` behavior).
-- **Primary label**: the main span where the error is reported (single span in the initial implementation).
+- **Primary label**: the main span where the error is reported (single primary
+  span in the current text renderer).
 - **Note / Help**: supplemental lines that explain context or suggest a fix.
 
 ## Text Format (CLI and ABI)
@@ -174,7 +175,7 @@ Common lookup flow:
 - `E2013` — cannot access fields on opaque struct.
 - `E2014` — formal Silk declaration used in runtime expression.
 - `E2015` — `let` requires an initializer.
-- `E2016` — unsupported generic form in the current subset (for example const parameters / const type arguments).
+- `E2016` — unsupported generic form outside the current monomorphized subset.
 - `E2017` — builtin `map(K, V)` type form was removed (use `std::map::{HashMap, TreeMap}` instead).
 - `E2018` — namespace import is not callable.
 - `E2019` — duplicate default export in a module.

@@ -42,4 +42,4 @@ fn main () -> int {
 ## See also
 
 - [Canonical spec](../docs/?p=language/mutability)
-- Borrow-checker design notes: [Borrow checker (design)](?p=language/borrow-checker)
+- Borrow-checker notes: [Borrow checker](?p=language/borrow-checker)

@@ -59,4 +59,5 @@ Start here:
 - Guides: [Hello world](?p=guides/hello-world) · [Language tour](?p=guides/language-tour) · [Modules & packages](?p=guides/modules-and-packages)
 - Guides: [Standard library](?p=guides/standard-library) · [CLI and toolchain](?p=guides/cli)
 - Guides: [Testing](?p=guides/testing) · [Formal Silk](?p=guides/formal-silk)
+- Tutorials: [Concurrency basics](?p=usage/tutorials/05-concurrency) · [Async I/O + Streams + Abort Signals](?p=usage/tutorials/06-async-io-streams-abort) · [Formal Silk in real code](?p=usage/tutorials/07-formal-silk)
 - Spec: [Silk Spec (2026)](/silk/spec/2026/)

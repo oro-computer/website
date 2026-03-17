@@ -16,7 +16,7 @@ Two doc-comment forms are recognized:
 In both forms, doc comments attach to the *next* declaration when they appear
 immediately before it with only whitespace/comments between them.
 
-Initial implementation scope:
+Current attachment scope:
 
 - Doc comments attach to **top-level declarations** (`package`, `module`,
   `import`, `fn`, `theory`, `let`, `struct`, `ext`, `interface`, `impl`).

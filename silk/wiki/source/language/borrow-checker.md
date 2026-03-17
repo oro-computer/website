@@ -1,11 +1,19 @@
-# Borrow checker (design)
+# Borrow checker
 
-Silk’s long-term design includes a borrow-checker-style static safety layer
-over references and mutation. Today, the compiler enforces the explicit `mut`
-borrow contract plus the current suspension-point restrictions documented in
-the canonical borrow-checker docs.
+Silk’s current borrow-checking story is a shipped subset plus a larger design.
+Today the compiler already enforces lexical escape checks for slices and
+borrowed references, mutable-alias checks at call sites, and conservative
+restrictions across `task` / `await` boundaries.
 
 [Canonical docs](../docs/?p=language/borrow-checker).
+
+## Current subset
+
+- Returning a borrow of a local binding is rejected.
+- Returning a borrow of a parameter is allowed.
+- Mutable aliasing in one call is rejected.
+- `move` is rejected while a live borrow still exists.
+- Crossing task boundaries with non-opaque `&T` values is rejected.
 
 ## What to use today
 
@@ -36,3 +44,4 @@ fn main () -> int {
 
 - [Mutability](?p=language/mutability)
 - [Borrow checker](../docs/?p=language/borrow-checker)
+- [Concurrency](?p=language/concurrency)
