@@ -32,7 +32,7 @@ inputs that reference the shim symbols.
 
 Note: libxml2 requires libm at link/runtime (typically `libm.so.6`).
 
-## API Summary (Current)
+## Exported API
 
 - `Document.parse(xml: string) -> Result(Document, XmlFailed)`
 - `Document.parse_with_options(xml: string, options: int) -> Result(Document, XmlFailed)`

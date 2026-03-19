@@ -1,6 +1,6 @@
 # `std::vector`
 
-Status: **Initial implementation + design**. This module provides a generic, growable
+Status: **Implemented subset + active expansion**. This module provides a generic, growable
 vector type `Vector(T)` used broadly across `std::`.
 
 `Vector(T)` is an owning container with:
@@ -24,75 +24,7 @@ Where byte-exact layout matters (I/O buffers, strings), the stdlib uses
 `std::buffer::BufferU8`, a packed byte buffer whose `ptr` points to
 byte-addressed memory and whose `len`/`cap` are in bytes.
 
-See also:
-
-- `docs/std/arrays.md` (`std::arrays::Slice(T)` views)
-- `docs/std/buffer.md` (width-oriented buffer helpers built on vectors)
-- `docs/language/generics.md` (generic syntax and rules)
-
-## Example (Struct Elements)
-
-`Vector(T)` is the stdlib’s default growable container for typed elements. When
-you see code manually managing `{ ptr, len, cap }` for a typed array, it is
-often a sign that a `Vector(T)` (or a small wrapper around it) is the intended
-tool.
-
-This example collects `TabState` values into a `Vector(TabState)`:
-
-```silk
-import std::arrays;
-import std::vector;
-
-struct TabState {
-  path: string,
-  top_off: i64,
-  gutter_on: bool,
-}
-
-type Tabs = std::vector::Vector(TabState);
-
-fn tabs_collect (paths: std::arrays::Slice(string)) -> Tabs? {
-  let cap: i64 = paths.len;
-  let mut tabs: Tabs = Tabs.try_init(cap) ?? Tabs.empty();
-
-  var i: i64 = 0;
-  while i < paths.len {
-    let err = tabs.push(TabState{ path: paths.get(i), top_off: 0, gutter_on: false });
-    if err != None {
-      // `tabs` is dropped on scope exit (drops elements + frees its allocation).
-      return None;
-    }
-    i = i + 1;
-  }
-
-  return Some(tabs);
-}
-```
-
-## Ownership and `Drop`
-
-`Vector(T)` is an owning container:
-
-- `push` moves a value into the vector.
-- `pop` / `swap_remove` move a value out of the vector (the caller owns the
-  returned value).
-- `set` overwrites an element and runs `Drop` for the overwritten element when
-  `T` requires drop.
-- `clear` runs `Drop` for all live elements and then sets `len = 0`.
-- `drop` runs `Drop` for all live elements, frees the backing allocation, and
-  resets the vector to an empty state.
-
-### Copy accessors (`get`, `iter`)
-
-`get`, `at`, and `iter` produce values by value without removing them. In other
-words, they copy element bytes out of the vector.
-
-These accessors are intended for plain value types (primitives, `string` views,
-and small POD structs). For `Drop`-managed element types, copying an element out
-creates duplicate ownership; use move-out operations like `pop` / `swap_remove`
-instead of `get`/`iter`.
-
-## Current API (Implemented)
+## Exported API
 
 ```silk
 module std::vector;
@@ -147,6 +79,31 @@ impl Vector(T) as std::interfaces::Drop {
 }
 ```
 
+## Considerations
+
+### Ownership and `Drop`
+
+`Vector(T)` is an owning container:
+
+- `push` moves a value into the vector.
+- `pop` / `swap_remove` move a value out of the vector (the caller owns the
+  returned value).
+- `set` overwrites an element and runs `Drop` for the overwritten element when
+  `T` requires drop.
+- `clear` runs `Drop` for all live elements and then sets `len = 0`.
+- `drop` runs `Drop` for all live elements, frees the backing allocation, and
+  resets the vector to an empty state.
+
+### Copy accessors (`get`, `iter`)
+
+`get`, `at`, and `iter` produce values by value without removing them. In other
+words, they copy element bytes out of the vector.
+
+These accessors are intended for plain value types (primitives, `string` views,
+and small POD structs). For `Drop`-managed element types, copying an element out
+creates duplicate ownership; use move-out operations like `pop` / `swap_remove`
+instead of `get`/`iter`.
+
 Notes:
 
 - `Vector(T)` is intentionally low-level in the current subset:
@@ -164,3 +121,48 @@ Notes:
   - `at` returns `None` when `index` is out of bounds,
   - `try_set` returns `false` when `index` is out of bounds.
 - `swap_remove` removes an element by swapping in the last element (O(1), order not preserved).
+
+## Examples
+
+`Vector(T)` is the stdlib’s default growable container for typed elements. When
+you see code manually managing `{ ptr, len, cap }` for a typed array, it is
+often a sign that a `Vector(T)` (or a small wrapper around it) is the intended
+tool.
+
+This example collects `TabState` values into a `Vector(TabState)`:
+
+```silk
+import std::arrays;
+import std::vector;
+
+struct TabState {
+  path: string,
+  top_off: i64,
+  gutter_on: bool,
+}
+
+type Tabs = std::vector::Vector(TabState);
+
+fn tabs_collect (paths: std::arrays::Slice(string)) -> Tabs? {
+  let cap: i64 = paths.len;
+  let mut tabs: Tabs = Tabs.try_init(cap) ?? Tabs.empty();
+
+  var i: i64 = 0;
+  while i < paths.len {
+    let err = tabs.push(TabState{ path: paths.get(i), top_off: 0, gutter_on: false });
+    if err != None {
+      // `tabs` is dropped on scope exit (drops elements + frees its allocation).
+      return None;
+    }
+    i = i + 1;
+  }
+
+  return Some(tabs);
+}
+```
+
+## See also
+
+- `docs/std/arrays.md` (`std::arrays::Slice(T)` views)
+- `docs/std/buffer.md` (width-oriented buffer helpers built on vectors)
+- `docs/language/generics.md` (generic syntax and rules)

@@ -25,7 +25,7 @@ grown as `silk bindgen` work lands.
 - **Compact storage**: avoid heavyweight allocation patterns; store
   parsed data in compact slot vectors (`std::vector::Vector(i64)`).
 
-## High-Level API
+## Exported API
 
 - `std::idl::web::parse(source: string) -> Result(Document, ParseError)`
 - `std::idl::web::parse_owned(source: std::strings::String) -> Result(Document, ParseError)`

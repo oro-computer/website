@@ -22,7 +22,7 @@ See also:
 - `docs/language/interfaces.md` (syntax, conformance, dispatch status)
 - `docs/language/structs-impls-layout.md` (method + `export` rules)
 
-## Implemented API
+## Exported API
 
 `std/interfaces.slk` currently defines the following interfaces:
 

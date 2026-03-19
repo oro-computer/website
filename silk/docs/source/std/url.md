@@ -9,7 +9,7 @@ This module focuses on:
 - Host parsing (domain / IPv4 / IPv6 / opaque) and percent-encoding sets.
 - URLSearchParams-style query parsing and mutation.
 
-## Public API
+## Exported API
 
 ### Parsing
 

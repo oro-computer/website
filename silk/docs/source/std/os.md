@@ -15,7 +15,7 @@ See also:
 
 - `docs/language/target-metadata.md` (the built-in target metadata constants).
 
-## API
+## Exported API
 
 ```silk
 module std::os;

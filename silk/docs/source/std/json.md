@@ -1,101 +1,197 @@
 # `std::json`
 
-Status: **Implemented subset + design**. `std::json` provides a robust JSON parser and
-stringifier suitable for Silk programs.
+Status: **Implemented**. `std::json` provides an RFC 8259 parser, an
+index-based DOM, and compact or pretty JSON stringification for Silk programs.
 
-Primary goals:
+## Exported API
 
-- Correct, spec-driven parsing of RFC 8259 JSON (objects, arrays, strings,
-  numbers, booleans, null).
-- A memory model that works well with the current compiler subset:
-  - parse produces an index-based DOM stored inside a `Document`,
-  - arrays/objects use integer “next” links (no `&T` struct fields).
-- High performance by default:
-  - **borrowed parsing** avoids allocating for unescaped strings and numbers by
-    slicing into the input string,
-  - strings are only allocated when they contain escapes that must be decoded.
-- Deterministic output:
-  - compact `stringify` and configurable `stringify_pretty`.
+### Value ids and tags
 
-## Data Model
+- `ValueId = i64` — stable node id used to refer to a parsed JSON value inside
+  a `Document`.
+- `TAG_NULL`
+- `TAG_BOOL`
+- `TAG_NUMBER`
+- `TAG_STRING`
+- `TAG_ARRAY`
+- `TAG_OBJECT`
 
-The DOM is represented by an index table owned by a `Document`:
+Use `doc.tag(id)` when you need to branch on the concrete JSON kind before
+querying a value.
 
-- A `Document` owns:
-  - node tables (`tag`, payload fields, sibling links),
-  - optional owned allocations for decoded strings and owned-number lexemes.
-- JSON values are referred to by `ValueId` (an `i64` node index).
+### Parse errors
 
-In the current compiler subset, struct fields do not support reference types
-(`&T` / `&T?`) and `std::vector::Vector(T)` is scalar-slot-oriented (raw-cast
-storage). `std::json` therefore stores its DOM as scalar tables and uses index
-links for arrays/objects.
+`ParseError` describes parser failures:
 
-### Arrays and Objects
+- `kind: int`
+- `offset: i64` — byte offset into the input
+- `line: i64` — 1-based line
+- `column: i64` — 1-based column
 
-- Arrays store a `first_child` id and each element node stores a `next` id.
-- Objects store a `first_member` id and each member node stores:
-  - a key `string` view,
-  - a value `ValueId`,
-  - a `next` member id.
+Methods:
 
-## Strings
+- `ParseError.ok() -> ParseError`
+- `err.is_ok() -> bool`
 
-- Parsed string values are exposed as decoded UTF-8 `string` views:
-  - when the source contains **no escapes**, the string is borrowed from the
-    input (zero-copy),
-  - when the source contains escapes, the decoded bytes are stored in an owned
-    allocation tracked by the `Document` and the view points to that allocation.
-- Supported escapes:
-  - `\\`, `\"`, `\/`, `\b`, `\f`, `\n`, `\r`, `\t`
-  - `\uXXXX` (including surrogate pairs).
+Exported error constants:
 
-## Numbers
+- `ERR_NONE`
+- `ERR_UNEXPECTED_EOF`
+- `ERR_UNEXPECTED_TOKEN`
+- `ERR_INVALID_STRING`
+- `ERR_INVALID_ESCAPE`
+- `ERR_INVALID_UNICODE_ESCAPE`
+- `ERR_INVALID_NUMBER`
+- `ERR_TRAILING_INPUT`
+- `ERR_DEPTH_LIMIT`
+- `ERR_OUT_OF_MEMORY`
 
-`std::json` preserves the number lexeme (as a `string` view) and also provides
-helpers to interpret it as `i64` and/or `f64` when needed.
+Helpers:
 
-## Parsing
+- `ParseResult = std::result::Result(ValueId, ParseError)`
+- `error_message(kind: int) -> string`
 
-Two parse modes are provided as `Document` methods:
+### `Document`
 
-- **Borrowed**: `doc.parse(s)` borrows unescaped strings and number lexemes from
-  `s`. The caller must ensure `s` outlives any `string` views read from `doc`.
-- **Owned**: `doc.parse_owned(s)` copies all strings and number lexemes into
-  allocations tracked by `doc` (independent of `s`).
+`Document` owns the parsed DOM plus any allocations needed for decoded strings
+or owned-number lexemes. Construct it with `Document{}`. It implements
+`std::interfaces::Drop`.
 
-Both methods:
+Lifecycle methods:
 
-- clear the `Document` first,
-- return `ParseResult` (`Ok(root)` on success, `Err(ParseError)` on error),
-- and record the result on the `Document`:
-  - `doc.is_ok()` reports success,
-  - `doc.root_value()` returns the root `ValueId` on success,
-  - `doc.err` contains the parse error details (`kind`, byte `offset`, and 1-based `line`/`column`).
+- `doc.is_ok() -> bool`
+- `doc.root_value() -> ValueId?`
+- `doc.clear() -> void`
+- `doc.drop() -> void`
+- `doc.parse(input: string) -> ParseResult`
+- `doc.parse_owned(input: string) -> ParseResult`
 
-Allocation failures are also reported as ordinary parse errors:
+`parse` borrows unescaped strings and number lexemes from the input.
+`parse_owned` copies them into storage owned by the document.
 
-- on out-of-memory, parse returns `Err(ParseError{ kind: ERR_OUT_OF_MEMORY, ... })` and sets
-  `doc.err.kind` to `ERR_OUT_OF_MEMORY`.
+### Query and traversal
 
-In the current backend subset, `Document` is typically used as a
-heap reference:
+Primitive accessors:
+
+- `doc.tag(id) -> int?`
+- `doc.is_null(id) -> bool`
+- `doc.as_bool(id) -> bool?`
+- `doc.as_string(id) -> string?`
+- `doc.as_number_lexeme(id) -> string?`
+
+Array traversal:
+
+- `doc.array_len(id) -> i64?`
+- `doc.array_first(id) -> ValueId?`
+- `doc.next_sibling(id) -> ValueId?`
+
+Object traversal:
+
+- `doc.object_len(id) -> i64?`
+- `doc.object_first_member(id) -> ValueId?`
+- `doc.member_key(member) -> string?`
+- `doc.member_value(member) -> ValueId?`
+- `doc.member_next(member) -> ValueId?`
+- `doc.object_get(obj, key: string) -> ValueId?`
+
+### Numeric and formatting helpers
+
+Methods:
+
+- `doc.number_as_i64(id) -> i64?`
+- `doc.number_as_f64(id) -> f64?`
+- `doc.stringify(id) -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
+- `doc.stringify_pretty(id, indent: int) -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
+
+Top-level wrappers:
+
+- `number_as_i64(doc: &Document, id: ValueId) -> i64?`
+- `number_as_f64(doc: &Document, id: ValueId) -> f64?`
+- `stringify(doc: &Document, id: ValueId) -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
+- `stringify_pretty(doc: &Document, id: ValueId, indent: int) -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
+
+## Examples
+
+### Parse and query a document
 
 ```silk
 import std::json;
 
-let mut doc: &Document = new Document();
-let root_r: std::json::ParseResult = (mut doc).parse(`{"a":1}`);
+fn main () -> int {
+  let mut doc: Document = Document{};
+  let root = match doc.parse(`{"name":"oro","ports":[80,443],"tls":true}`) {
+    Ok(v) => v,
+    Err(err) => {
+      let _message: string = std::json::error_message(err.kind);
+      return 1;
+    }
+  };
+
+  let ports = match doc.object_get(root, "ports") {
+    Some(v) => v,
+    None => return 2,
+  };
+  let first = match doc.array_first(ports) {
+    Some(v) => v,
+    None => return 3,
+  };
+  if doc.number_as_i64(first) != Some(80) {
+    return 4;
+  }
+
+  let pretty = match doc.stringify_pretty(root, 2) {
+    Ok(v) => v,
+    Err(_) => return 5,
+  };
+  if pretty.as_string() == "" {
+    return 6;
+  }
+
+  return 0;
+}
 ```
 
-## Stringifying
+### Own parsed strings instead of borrowing from the input
 
-- `stringify(doc, value)` returns `Result(String, OutOfMemory)` containing compact JSON.
-- `stringify_pretty(doc, value, indent)` returns `Result(String, OutOfMemory)` containing
-  pretty-printed JSON with a fixed number of spaces per indent level.
+```silk
+import std::json;
 
-Planned follow-ups:
+fn main () -> int {
+  let mut doc: Document = Document{};
+  let root = match doc.parse_owned(`{"service":"runtime","region":"edge-a"}`) {
+    Ok(v) => v,
+    Err(_) => return 1,
+  };
 
-- streaming tokenization (SAX-style) for very large inputs,
-- a writer interface that can stream output without building a whole string,
-- JSON Pointer helpers (RFC 6901) for querying nested values.
+  let service = match doc.object_get(root, "service") {
+    Some(v) => v,
+    None => return 2,
+  };
+  if doc.as_string(service) != Some("runtime") {
+    return 3;
+  }
+
+  return 0;
+}
+```
+
+## Considerations
+
+- `parse` is the fast path when the input buffer already outlives the document.
+  Use `parse_owned` when you need the parsed strings and number lexemes to stay
+  valid independently of the original input.
+- `ValueId` is meaningful only for the `Document` that produced it. Do not mix
+  ids across documents.
+- `doc.clear()` and `doc.drop()` invalidate all previously returned `ValueId`
+  handles and all borrowed `string` views obtained from the document.
+- Numbers are preserved as source lexemes. Use `number_as_i64` or
+  `number_as_f64` only when you need numeric interpretation.
+- The DOM uses index tables rather than nested reference fields. That is an
+  implementation detail, but it explains why traversal is done with `ValueId`
+  and sibling/member helpers instead of borrowed node references.
+
+## See also
+
+- [`std::result`](?p=std/result)
+- [`std::strings`](?p=std/strings)
+- [`std::url`](?p=std/url)

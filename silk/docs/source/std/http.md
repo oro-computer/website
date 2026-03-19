@@ -25,7 +25,7 @@ Not implemented (yet):
 - Streaming bodies (incremental read/write APIs).
 - Automatic decompression, redirects, cookies, proxies, etc.
 
-## Public API (Current Compiler Subset)
+## Exported API
 
 ```silk
 module std::http;

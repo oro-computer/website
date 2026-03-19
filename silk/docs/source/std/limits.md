@@ -8,7 +8,7 @@ The initial surface is intentionally small and focuses on min/max bounds for
 fixed-width integer primitives (useful for validating conversions and host
 APIs that cap sizes to a particular width, such as `i32`).
 
-## API (Implemented)
+## Exported API
 
 ```silk
 module std::limits;

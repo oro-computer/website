@@ -21,7 +21,9 @@ structures.
 - Keep terminology and operation shapes close to C++ (`std::unordered_set` and
   `std::set`), adapted to Silk’s current method/optional model.
 
-## Important Limitations (Current Compiler Subset)
+## Considerations
+
+### Important Limitations (Current Compiler Subset)
 
 In the current subset:
 
@@ -33,7 +35,9 @@ In the current subset:
 - Avoid storing Drop-managed structs as set elements until the compiler has
   complete Drop integration for values stored inside container memory.
 
-## Hash Set (`SetMap(T)`)
+## Exported API
+
+### Hash Set (`SetMap(T)`)
 
 ### Core API
 
@@ -81,7 +85,7 @@ Complexity expectations:
 - average `O(1)` for `contains`/`insert`/`remove` when the hash distribution is good,
 - worst case `O(n)` in adversarial collision patterns.
 
-## Ordered Set (`TreeSet(T)`)
+### Ordered Set (`TreeSet(T)`)
 
 `TreeSet(T)` is an ordered set. It requires an ordering function.
 
@@ -104,7 +108,7 @@ Complexity expectations:
 
 - `O(log n)` lookup/insert/remove.
 
-## Iteration
+### Iteration
 
 Both sets provide iteration through an iterator interface:
 

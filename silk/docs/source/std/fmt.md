@@ -59,7 +59,7 @@ Within `{ ... }`:
   - optional `.` and optional `precision`:
     - digits (`.3`), or bracketed index (`.[1]`) to take the precision from another argument
 
-## Current API (Implemented)
+## Exported API
 
 Because the language does not yet have generics, the current API uses an
 explicit argument carrier type (`Arg`). With language-level varargs, the

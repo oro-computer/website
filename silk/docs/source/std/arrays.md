@@ -11,7 +11,7 @@ See also:
 - `docs/std/memory.md` (allocators)
 - `docs/std/conventions.md` (allocation and error conventions)
 
-## Current API (Implemented)
+## Exported API
 
 A tiny generic subset is implemented in `std/arrays.slk` to provide a
 non-owning, FFI-friendly slice representation for early bridging:

@@ -9,7 +9,7 @@ implemented on top of the pluggable `std::runtime::env` interface. WASI support
 is partially implemented: `get` works, while `set` remains unsupported (see
 “Platform notes”).
 
-## API
+## Exported API
 
 ```silk
 module std::env;

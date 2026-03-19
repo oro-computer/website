@@ -8,7 +8,7 @@ Canonical doc: `docs/std/runtime.md`.
 
 ## Status
 
-- Design + partial implementation.
+- Implemented core interfaces + active expansion.
 - Details: `docs/std/runtime.md`
 
 ## Importing

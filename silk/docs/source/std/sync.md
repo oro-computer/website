@@ -4,7 +4,7 @@ Status: **Implemented subset**. This module provides a small hosted baseline for
 synchronization primitives used by the current `task` lowering on
 `linux/x86_64`.
 
-This is an intentionally narrow subset intended for early bring-up:
+This is a deliberately narrow current hosted subset:
 
 - It is intentionally small and conservative (a hosted baseline, not a final
   async runtime).
@@ -33,7 +33,7 @@ See also:
   clone it explicitly with `sender.clone()`; the channel auto-closes when the
   last sender is dropped.
 
-## Implemented API
+## Exported API
 
 ```silk
 module std::sync;

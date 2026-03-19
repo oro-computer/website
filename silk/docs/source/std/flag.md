@@ -51,7 +51,7 @@ Given an argv slice `args[start..]` (typically `start = 1` to skip `argv[0]`):
 This matches the common “flags first, then args” convention and avoids
 misclassifying negative numbers once positional mode begins.
 
-## Public API (initial)
+## Exported API
 
 ```silk
 module std::flag;

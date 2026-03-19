@@ -14,7 +14,7 @@ This module is intentionally strict and focused:
 - Avoids hidden allocation: `parse` returns a `Version` that borrows `string`
   slices from the input.
 
-## Public API
+## Exported API
 
 ### Parsing
 

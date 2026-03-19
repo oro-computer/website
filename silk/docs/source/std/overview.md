@@ -18,7 +18,7 @@ on top of the language core (regions, buffers, concurrency, etc.). It is:
 - **Linked by default** for normal builds driven by `silk`.
 - **Swappable**: an alternative `std::` implementation can be selected at build
   time, without changing the language or the C ABI.
-- **POSIX-first** for OS interactions (initial hosted baseline), while still
+- **POSIX-first** for OS interactions (current hosted baseline), while still
   supporting freestanding/embedded builds via a smaller “core” subset.
 
 See also:
@@ -46,7 +46,7 @@ These are the major areas of the shipped and documented `std::` surface:
 - `std::limits` — numeric min/max limits for primitive types (see `docs/std/limits.md`).
 - `std::crypto` — cryptography primitives (hosted baseline via libsodium; see
   `docs/std/crypto.md`).
-- `std::ggml` — ggml tensor library bindings (early bring-up; see `docs/std/ggml.md`).
+- `std::ggml` — ggml tensor library bindings (implemented subset; see `docs/std/ggml.md`).
 - `std::uuid` — UUID primitives (v1/v3/v4/v5/v6/v7/v8) with parsing/formatting
   (see `docs/std/uuid.md`).
 - `std::semver` — Semantic Versioning (SemVer 2.0.0) parsing and precedence

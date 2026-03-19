@@ -12,7 +12,9 @@ Goals:
 - ergonomic helpers (parse, format, version/variant inspection),
 - Formal Silk contracts for buffer and shape preconditions.
 
-## Representation
+## Considerations
+
+### Representation
 
 `UUID` is represented as two `u64` words:
 
@@ -25,7 +27,9 @@ This matches the canonical string form:
 
 where the leftmost hex pairs correspond to lower byte indices.
 
-## Parsing and Formatting
+## Exported API
+
+### Parsing and Formatting
 
 The current API supports:
 
@@ -45,7 +49,9 @@ API notes:
 - `UUID.to_string_lower() -> Result(String, OutOfMemory)` allocates an owned
   string.
 
-## Example: parse + generate + inspect
+## Examples
+
+### Parse, generate, and inspect
 
 ```silk
 import std::uuid;
@@ -77,13 +83,15 @@ fn main () -> int {
 }
 ```
 
-## Version and Variant
+## Considerations
+
+### Version and Variant
 
 - `UUID.version()` returns the 4-bit version field (0..15).
 - `UUID.is_rfc4122()` checks the RFC 4122/RFC 9562 variant (`10xx` in the
   variant field).
 
-## Supported Versions
+### Supported versions
 
 The std surface provides constructors for:
 

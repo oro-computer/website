@@ -15,7 +15,7 @@ See also:
 - `docs/language/operators.md` (bitwise operators and shift semantics)
 - `docs/std/networking.md` (`std::net` byte-order helpers built on the hosted baseline)
 
-## Implemented API
+## Exported API
 
 ```silk
 module std::bits;

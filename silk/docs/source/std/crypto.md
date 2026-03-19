@@ -1,10 +1,10 @@
 # `std::crypto`
 
-Status: **Initial implementation + design**. `std::crypto` provides cryptographic
+Status: **Implemented subset + active expansion**. `std::crypto` provides cryptographic
 primitives backed by the system `libsodium` library on the hosted
 `linux/x86_64` baseline.
 
-The long-term goal is:
+The design goals continue to be:
 
 - a cohesive, ergonomic `std::crypto` API surface that is suitable for Silk
   programs,
@@ -47,9 +47,9 @@ types (instead of exposing raw `(ptr, len)` pairs directly in public APIs).
 The underlying raw allocation and load/store operations are provided by
 `std::runtime::mem`.
 
-## Current API (Initial)
+## Exported API
 
-The initial `std::crypto` module is organized as:
+The current `std::crypto` module is organized as:
 
 - `std::crypto` (core helpers and libsodium init)
 - `std::crypto::random` (CSPRNG)

@@ -21,7 +21,7 @@ backend (see `docs/compiler/backend-wasm.md`).
 - Record a clear path to a full native runtime and JIT in later phases (no
   dependency on external language toolchains).
 
-## High-Level API
+## Exported API
 
 The public Silk surface is centered around:
 

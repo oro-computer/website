@@ -13,7 +13,7 @@ Design goals (modeled after Rust `std::path` and Node.js `path`):
 - **Allocation-aware**: functions that produce new paths return owned
   `std::strings::String` values (callers must drop them).
 
-## API (Implemented Subset)
+## Exported API
 
 ```silk
 module std::path;

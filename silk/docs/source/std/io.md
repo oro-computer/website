@@ -15,7 +15,7 @@ See also:
 - `docs/std/fmt.md` (format string syntax)
 - `docs/std/conventions.md` (error conventions)
 
-## Current API (Implemented)
+## Exported API
 
 The current stdlib provides basic unbuffered stdio primitives
 (stdin reads and stdout/stderr writes), plus a small formatting surface

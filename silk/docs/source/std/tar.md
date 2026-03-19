@@ -34,7 +34,7 @@ Entry kinds:
 
 Unsupported/unknown entry kinds return `TarErrorKind::Unsupported`.
 
-## API (Implemented)
+## Exported API
 
 ```silk
 module std::tar;

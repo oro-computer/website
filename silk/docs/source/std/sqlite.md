@@ -1,11 +1,11 @@
 # `std::sqlite`
 
-Status: **Implemented subset + design**. `std::sqlite` provides SQLite database
+Status: **Implemented subset + active expansion**. `std::sqlite` provides SQLite database
 primitives for the hosted POSIX baseline. On `linux/x86_64`, `silk build`
 auto-links the vendored `libsqlite3.a` so outputs do not depend on a system
 SQLite shared library at runtime.
 
-The initial goals are:
+The design goals are:
 
 - a small but usable database/statement API (`Database`, `Stmt`),
 - a non-leaking, portable error model (`SqliteFailed`) that surfaces stable
@@ -73,9 +73,9 @@ The raw SQLite return codes remain available for debugging/telemetry.
   - `Stmt.column_text_copy` copies into `std::strings::String`.
   - `Stmt.column_blob_copy` copies into `std::buffer::BufferU8`.
 
-## Current API (Initial)
+## Exported API
 
-The current `std::sqlite` surface currently lives in `std/sqlite.slk` and
+The current `std::sqlite` surface lives in `std/sqlite.slk` and
 provides:
 
 - `Database`: `open`, `open_read_only`, `open_in_memory`, `exec`, `prepare`,

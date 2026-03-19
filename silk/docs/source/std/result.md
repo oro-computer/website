@@ -10,7 +10,9 @@ When the standard library is enabled (the default), `Result` is available
 without explicit imports via the std prelude module `std::runtime::globals`.
 Import `std::result` only when you need other exports from the module.
 
-## `Result(T, E)`
+## Exported API
+
+### `Result(T, E)`
 
 `Result(T, E)` models a recoverable “success or error” outcome.
 

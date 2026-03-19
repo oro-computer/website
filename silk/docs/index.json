@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-18T19:58:49+00:00",
+  "generatedAt": "2026-03-19T13:41:45+00:00",
   "kind": "docs",
   "count": 182,
   "sections": [
@@ -628,12 +628,12 @@
         },
         {
           "id": "std/graphics",
-          "title": "`std::graphics` \u2014 Graphics API Bindings",
+          "title": "`std::graphics`",
           "file": "std/graphics.md"
         },
         {
           "id": "std/image",
-          "title": "`std::image` \u2014 Image Codecs + Color",
+          "title": "`std::image`",
           "file": "std/image.md"
         },
         {
@@ -648,7 +648,7 @@
         },
         {
           "id": "std/z3",
-          "title": "`std::runtime::z3` \u2014 Z3 SMT Solver (C API Bindings)",
+          "title": "`std::runtime::z3`",
           "file": "std/z3.md"
         },
         {

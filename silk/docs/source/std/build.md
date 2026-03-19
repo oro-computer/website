@@ -49,7 +49,7 @@ archives used by `std::tls` on `linux/x86_64`), `[[target]].inputs` supports
 `@vendored/<name>.a` entries (see `docs/compiler/package-manifests.md`). Build
 modules may emit these via `Build.target_add_input(...)`.
 
-## API (current)
+## Exported API
 
 Build modules are intended to be normal modules that export a `run` entrypoint.
 

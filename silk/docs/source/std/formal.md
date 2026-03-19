@@ -13,31 +13,7 @@ These theories serve two goals:
 See `docs/language/formal-verification.md` for the Formal Silk execution model
 and theory semantics.
 
-## Importing and using theories
-
-```silk
-import { bounds_i64, string_storage_well_formed } from "std/formal";
-
-struct View {
-  ptr: u64,
-  len: i64,
-  cap: i64,
-}
-
-impl View {
-  #theory string_storage_well_formed(self.ptr, self.len, self.cap);
-  fn as_string (self: &View) -> string {
-    return self.ptr as string(self.len);
-  }
-
-  #theory bounds_i64(index, self.len);
-  fn get_byte (self: &View, index: i64) -> u8 {
-    return std::runtime::mem::load_u8(self.ptr, index);
-  }
-}
-```
-
-## Theory families
+## Exported API
 
 ### Scalar and arithmetic
 
@@ -133,3 +109,27 @@ and ordering proofs that do not depend on prerelease/build precedence rules.
 for compare-result range and core-triplet sign implications, so downstream code
 can combine the reusable `std::formal` theories with the shipped runtime API
 instead of restating those facts manually.
+
+## Examples
+
+```silk
+import { bounds_i64, string_storage_well_formed } from "std/formal";
+
+struct View {
+  ptr: u64,
+  len: i64,
+  cap: i64,
+}
+
+impl View {
+  #theory string_storage_well_formed(self.ptr, self.len, self.cap);
+  fn as_string (self: &View) -> string {
+    return self.ptr as string(self.len);
+  }
+
+  #theory bounds_i64(index, self.len);
+  fn get_byte (self: &View, index: i64) -> u8 {
+    return std::runtime::mem::load_u8(self.ptr, index);
+  }
+}
+```

@@ -12,7 +12,7 @@ Regex literals are part of the language surface:
 - `/pattern/flags` produces a `regexp` value, compiled at compile time (see
   `docs/language/literals-regexp.md`).
 
-## API (Implemented)
+## Exported API
 
 The initial `std::regex` surface is intentionally small and focuses on:
 

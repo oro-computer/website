@@ -20,7 +20,7 @@ Thread-safety:
 - `AbortSignalBorrow` is a non-owning, copyable handle intended for sharing
   across OS threads and `task` boundaries.
 
-## Implemented API
+## Exported API
 
 ```silk
 module std::abort_controller;

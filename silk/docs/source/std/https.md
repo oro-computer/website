@@ -24,7 +24,7 @@ Not implemented (yet):
 - ALPN configuration and HTTP/2 negotiation.
 - Non-blocking integration with an async runtime.
 
-## Public API (Current Compiler Subset)
+## Exported API
 
 ```silk
 module std::https;

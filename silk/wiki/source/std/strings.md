@@ -17,7 +17,7 @@ Canonical doc: `docs/std/strings.md`.
 import std::strings;
 ```
 
-## API (Implemented subset)
+## Exported API
 
 ```silk
 module std::strings;

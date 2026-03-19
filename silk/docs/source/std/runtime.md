@@ -1,6 +1,6 @@
 # `std::runtime`
 
-Status: **Design + partial implementation**.
+Status: **Implemented core interfaces + active expansion**.
 
 `std::runtime` defines a *runtime interface layer* that sits underneath the
 rest of the standard library.
@@ -88,7 +88,7 @@ alternate stdlib root without changing higher-level `std::...` modules.
       `std::runtime::wasi::time`) use `std::runtime::wasi::mem` for allocation
       and `__silk_*` intrinsics.
 
-## Current Scope
+## Exported API
 
 Implemented runtime areas in the shipped stdlib:
 
@@ -176,16 +176,16 @@ Implemented runtime areas in the shipped stdlib:
     default heap allocation unless an embedder installs an allocator via
     `silk_rt_set_allocator`.
 
-Follow-ups are expected to introduce additional runtime areas:
+Runtime areas that continue to expand:
 
 - Async event loop / executor integration (`std::runtime::event_loop`) for hosted `async`/`await`:
-  - the compiler already ships a bundled bring-up executor in `libsilk_rt`
-    (`src/silk_rt_async.c`) and lowers `async`/`await` to it on the hosted
-    `linux/x86_64` target,
+  - the compiler ships a bundled hosted executor in `libsilk_rt`
+    (`src/silk_rt_async.c`) and lowers `async`/`await` to it on hosted
+    targets with that backend,
   - the `std::runtime::event_loop` module now exposes low-level awaitable
     building blocks (timers + fd readiness, including `fd_wait_readable2` and `fd_wait_readable_any`) and an explicit `Handle`/`poll`
     surface for manually driving the hosted executor/event loop. Higher-level
-    async adapters are still follow-up work
+    async adapters continue expanding on top of this
     (see `docs/compiler/async-runtime.md`).
   - the hosted executor is thread-affine: `Handle.poll()` / `Handle.deinit()`
     must be called from the same OS thread that created the handle; cross-thread

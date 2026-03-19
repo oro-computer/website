@@ -36,9 +36,10 @@ See also:
 - `docs/std/https.md` (`std::https` on top of `std::tls` + `std::net`)
 - `docs/std/websocket.md` (`std::websocket` on top of `std::net`)
 
-## Implemented API
+## Exported API
 
-A small, non-socket subset exists in `std/net.slk` for early bring-up:
+`std::net` starts with byte-order helpers and address types, then extends into
+hosted socket APIs:
 
 ```silk
 module std::net;
@@ -83,7 +84,7 @@ Notes:
 - This is currently implemented as a byte-swap for the `linux/x86_64`
   little-endian hosted baseline.
 
-## Hosted TCP API (Implemented)
+### TCP
 
 `std::net` exposes a small TCP API for hosted targets via the
 pluggable runtime interface `std::runtime::net`:
@@ -236,7 +237,7 @@ Notes:
   - `std::net::stream::pipe_stream_to_tcpstream` / `pipe_stream_to_tcpstream_abortable`
   These adapters take ownership of the `TCPStream` and close it before returning.
 
-## Hosted UDP API (Implemented)
+### UDP
 
 `std::net` also exposes a small UDP API for hosted targets. The API is
 datagram-oriented but remains blocking.
@@ -338,14 +339,17 @@ export fn tcp_listen (addr: SocketAddr) -> Result(TCPListener, NetError);
 
 ## Blocking vs Async
 
-The initial hosted baseline may be blocking I/O. Once the language’s async
-model is implemented, `std::net` should provide:
+The shipped hosted subset now includes both:
 
-- non-blocking sockets + integration with an event loop,
-- `async fn` wrappers for common operations,
-- integration with task offloading for blocking adapters (design target:
-  `std::task::run_blocking()`; until that exists, users can explicitly use a
-  `task fn` wrapper around blocking calls).
+- blocking socket operations for the baseline TCP/UDP surface, and
+- async TCP connect/accept wrappers integrated with the hosted event loop.
+
+Remaining expansion areas include:
+
+- broader async coverage for additional socket operations,
+- cancellation of in-flight socket operations,
+- and higher-level blocking-offload helpers if the std/task surface grows a
+  dedicated `run_blocking()`-style API.
 
 ## Future Work
 

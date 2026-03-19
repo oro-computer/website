@@ -10,7 +10,7 @@ on top of the pluggable `std::runtime::process` interface. The cwd APIs are
 also implemented for WASI; child-process support remains POSIX-only (see
 “Platform notes”).
 
-## API
+## Exported API
 
 ```silk
 module std::process;

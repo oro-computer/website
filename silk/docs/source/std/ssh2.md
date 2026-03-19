@@ -1,11 +1,11 @@
 # `std::ssh2`
 
-Status: **Initial implementation + design**. `std::ssh2` provides SSH2 client
+Status: **Implemented subset + active expansion**. `std::ssh2` provides SSH2 client
 primitives for the hosted POSIX baseline. On `linux/x86_64`, `silk build`
 auto-links the vendored `libssh2.a` so outputs do not depend on a system
 `libssh2` shared object at runtime.
 
-The initial goals are:
+The design goals are:
 
 - a small but usable SSH2 client session API (`Session`, `Channel`),
 - an SFTP client API (`Sftp`, `SftpHandle`) suitable for remote filesystem access,
@@ -105,9 +105,9 @@ FFI entrypoints that accept or fill byte buffers use Formal Silk theories such
 as `slice_well_formed(ptr, len)` to document shape invariants (`len >= 0` and
 non-null when non-empty).
 
-## Current API (Initial)
+## Exported API
 
-The current `std::ssh2` surface currently lives in a single module
+The current `std::ssh2` surface lives in a single module
 `std/ssh2.slk` (`module std::ssh2;`) and provides:
 
 - `Session` — init/free, blocking mode, timeouts, handshake, disconnect, and

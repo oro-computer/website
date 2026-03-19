@@ -14,7 +14,7 @@ Scope constraints:
   (for example: **Web IDL → Silk** bindings when targeting WASM and calling out
   to a JavaScript host).
 
-## High-Level API
+## Exported API
 
 The public Silk surface is centered around:
 

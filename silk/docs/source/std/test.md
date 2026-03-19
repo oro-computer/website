@@ -10,7 +10,7 @@ Each helper also carries a Formal Silk contract requiring `BUILD_MODE == "test"`
 via `std::formal.requires_test_mode()` so downstream verification can model
 them as test-only APIs.
 
-## Public API
+## Exported API
 
 ### `expect`
 

@@ -4,7 +4,7 @@ Status: **Implemented subset**. This module provides a small hosted baseline for
 task/runtime utilities on `linux/x86_64`.
 
 This is **not** the full structured-concurrency design, but the hosted
-`linux/x86_64` toolchain now ships a bring-up async executor (fibers) used to
+`linux/x86_64` toolchain now ships a hosted async executor (fibers) used to
 make `await` a true suspension point. In the current subset:
 
 - `task fn` calls default to the global task pool; `attr(task=thread)` opts a
@@ -23,7 +23,7 @@ See also:
 - `docs/std/sync.md` (`Mutex`, `Condvar`, and channels)
 - `docs/std/runtime.md` (pluggable runtime layer under `std::task`)
 
-## Implemented API
+## Exported API
 
 ```silk
 module std::task;
@@ -62,7 +62,7 @@ Notes:
   higher-level concurrency utilities. It is implemented using a hosted libc
   query (`get_nprocs`) and clamps to `>= 1`.
 - `yield_now()` and `sleep_ms()` are blocking thread operations (they are not
-  async-aware.
+  async-aware).
 - `sleep_ms(ms)` is implemented by converting `ms` to microseconds and calling
   `std::runtime::task::sleep_us`; large sleeps may be performed in chunks.
 - `sleep_ms_async(ms)` returns a `Promise(void)` that can be awaited inside

@@ -18,7 +18,9 @@ borrow- and move-aware container ergonomics.
 - Keep the API close in spirit to C++’s `std::unordered_map` and `std::map`
   (operations, complexity expectations, and terminology), adapted to Silk.
 
-## Important Limitations (Current Compiler Subset)
+## Considerations
+
+### Important Limitations (Current Compiler Subset)
 
 In the current subset:
 
@@ -47,7 +49,9 @@ In the current subset:
 These limits are expected to be relaxed as the language gains borrow-aware
 accessors and iterators for container storage.
 
-## HashMap (`HashMap(K, V)`)
+## Exported API
+
+### HashMap (`HashMap(K, V)`)
 
 ### Construction
 
@@ -156,7 +160,7 @@ Complexity expectations:
 - average `O(1)` for `get`/`put`/`remove` when the hash distribution is good,
 - worst case `O(n)` in adversarial collision patterns.
 
-## TreeMap (`TreeMap(K, V)`)
+### TreeMap (`TreeMap(K, V)`)
 
 `TreeMap` is an ordered map. It requires an ordering function.
 
@@ -180,7 +184,7 @@ Complexity expectations:
 
 - `O(log n)` lookup/insert/remove.
 
-## Iteration
+### Iteration
 
 Both maps provide iteration through an iterator interface:
 

@@ -12,7 +12,7 @@ See also:
 - `docs/language/buffers.md` (`Buffer(T)` intrinsic)
 - `docs/std/conventions.md` (allocation conventions)
 
-## Implemented API
+## Exported API
 
 A small subset is implemented in `std/memory.slk` for early compiler bring-up.
 These helpers are pure and operate on scalar types only, plus a shared

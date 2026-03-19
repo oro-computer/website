@@ -20,7 +20,7 @@ Status: **Implemented subset**.
   - and borrowed versus owned parsing is an explicit choice that should remain
     visible at the call site.
 
-## API (Implemented Subset)
+## Exported API
 
 ```silk
 module std::toml;

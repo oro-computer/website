@@ -17,7 +17,7 @@ See also:
 - `docs/compiler/cli-silk.md` (entrypoint selection rules)
 - `docs/language/ext.md` (string ABI `{ ptr, len }` and C-string lowering rules)
 
-## Implemented API
+## Exported API
 
 The following items are implemented in `std/args.slk`:
 

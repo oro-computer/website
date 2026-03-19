@@ -48,6 +48,27 @@ The canonical narrative/spec for each module lives under `docs/std/`. The
 source-level doc comments are the machine-consumable layer used by `silk doc`,
 `silk man`, and editor tooling (hover and completion documentation).
 
+## Module documentation structure
+
+Canonical `docs/std/*.md` pages should use a predictable downstream-facing
+structure unless a module is intentionally design-only:
+
+- module name,
+- short description,
+- `Exported API`,
+  - grouped by exported structs, types, theories, functions, constants, and
+    other exported declarations when that improves readability,
+- `Examples`,
+- `Considerations` when ownership, portability, blocking behavior, or ABI
+  details matter,
+- `See also`,
+- `Design goals` only when the module is intentionally documenting follow-on
+  design work beyond the shipped surface.
+
+Avoid headings like `Current API` for exported stdlib surfaces. They imply a
+parallel replacement API instead of documenting the module that downstream
+users actually import today.
+
 ## Allocation and Ownership
 
 `std::` should be explicit about allocation:

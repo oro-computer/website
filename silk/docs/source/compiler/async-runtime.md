@@ -1,6 +1,6 @@
 # Async Runtime (Hosted)
 
-Status: **Bring-up implementation (linux/x86_64 hosted)**.
+Status: **Implemented hosted subset + architecture notes (`linux/x86_64`)**.
 
 This document now serves two roles:
 
@@ -94,7 +94,7 @@ The runtime also exposes low-level awaitable building blocks:
 - `silk_rt_async_net_connect_ipv6(fd: i64, addr_hi: u64, addr_lo: u64, port: u16, scope_id: i64) -> u64`
 
 These are intended to be wrapped by stable `std::runtime::event_loop` / `std::task` /
-`std::io` surfaces as that layer is brought up. In the current stdlib snapshot,
+`std::io` surfaces as that layer continues to expand. In the current stdlib snapshot,
 timers and fd readiness are exposed via `std::runtime::event_loop`, and sleep
 helpers are wrapped as `std::task::{sleep_ms_async,sleep_async}`. As of the
 current hosted runtime snapshot, `silk_rt_async_io_{read,write}` return
@@ -236,7 +236,8 @@ The compiler is responsible for:
 - computing which locals must be stored in the frame across each suspension point,
 - preserving typed-error and `panic` semantics during the transform.
 
-Note: the current shipped bring-up does **not** yet implement this state-machine transform.
+Note: the current shipped hosted runtime does **not** yet use this explicit
+state-machine transform.
 Instead, `async fn` bodies execute on stackful coroutines provided by the runtime (`ucontext`)
 and suspension points yield back to the executor by swapping contexts. The long-term plan is
 to migrate from stackful coroutines to an explicit compiler transform once the async surface
@@ -255,7 +256,7 @@ The key requirement is that `await` must not block an OS thread in hosted builds
 ### `async fn main`
 
 The CLI already permits `async fn main () -> int` as an executable entrypoint
-(`docs/compiler/cli-silk.md`). With a real executor, the entry stub for executables will:
+(`docs/compiler/cli-silk.md`). In the shipped hosted runtime, the entry stub for executables:
 
 - create a default executor/event loop,
 - create the `Promise(int)` for `main`,
@@ -286,9 +287,10 @@ Current non-goals:
 
 ## Runtime Layering (`std::runtime`)
 
-The async executor and event loop will be exposed under `std::runtime` as a new runtime area.
+The async executor and event loop are exposed under `std::runtime` as the
+`std::runtime::event_loop` runtime area.
 
-### Proposed new runtime area
+### Current runtime area
 
 - `std::runtime::event_loop` — stable interface used by the compiler-generated coroutine
   runtime and by async-aware stdlib code.
@@ -306,7 +308,7 @@ The interface must support:
 - a polling primitive used by the executor’s main loop.
 
 The exact Silk-level signatures are specified in `std/runtime/event_loop.slk` and are expected
-to evolve during bring-up, but the long-term contract should avoid exposing raw platform
+to continue evolving, but the long-term contract should avoid exposing raw platform
 struct layouts directly to user code.
 
 ## Linux Backend: `io_uring`
@@ -369,20 +371,26 @@ CI; prefer structural checks (operation counts, allocations, syscalls) where fea
 
 ## Longer-Term Architecture Evolution (Summary)
 
-1. **Coroutine transform (no I/O)**:
-   - implement state machine lowering for `async fn` with `await` suspension,
-   - implement a minimal single-threaded executor that can drive `async fn main`,
-   - implement async timers (`sleep_ms`, `sleep_until`) on the event loop.
-2. **Portable I/O readiness backend**:
-   - expose async fd readiness in `std::runtime::event_loop`,
-   - add async wrappers in `std::io` / `std::net` (opt-in, minimal initial surface).
-3. **Linux `io_uring` backend**:
-   - implement submission/completion for core ops (read/write/accept/connect/timeout),
-   - wire completions to coroutine wakeups,
-   - add `io_uring`-specific tests and stress fixtures.
-4. **Broader structured cancellation semantics**:
+The major hosted runtime milestones are now shipped:
+
+1. **Hosted coroutine executor**:
+   - stackful coroutine execution for `async fn`,
+   - executor-backed `async fn main`,
+   - runtime timers and fd readiness waits.
+2. **Runtime/std integration**:
+   - `std::runtime::event_loop` handle + poll surface,
+   - async wrappers in `std::task`, `std::io`, and `std::net`,
+   - optional Linux `io_uring` acceleration with readiness fallbacks.
+
+The remaining architecture work is about refinement and expansion:
+
+3. **Compiler-managed coroutine frames**:
+   - migrate from stackful coroutines to an explicit compiler transform once
+     the async surface stabilizes.
+4. **Broader async coverage and cancellation semantics**:
+   - widen completion-backed operations,
    - extend the current live-handle cleanup model to richer explicit
-     cancellation-aware child registries if the language/std surface grows to
-     require them,
-   - ensure any future cancellation behavior stays consistent across the
-     checker, lowering, runtime, and `std::...` APIs.
+     cancellation-aware child registries only when the language/std surface
+     genuinely needs them,
+   - keep cancellation behavior aligned across the checker, lowering, runtime,
+     and `std::...` APIs.

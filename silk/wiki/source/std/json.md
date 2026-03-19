@@ -1,13 +1,13 @@
 # `std::json`
 
-`std::json` provides JSON parsing and stringifying (initial implementation + expanded
-subset).
+`std::json` provides JSON parsing and stringifying (implemented subset + active
+expansion).
 
 Canonical doc: `docs/std/json.md`.
 
 ## Status
 
-- Implemented subset + design: parsing and stringify are implemented; the DOM/query surface is still evolving.
+- Implemented subset + active expansion: parsing and stringify are implemented; the DOM/query surface is still evolving.
 - Details: `docs/std/json.md`
 
 ## Importing
@@ -17,7 +17,7 @@ import std::json;
 import std::strings;
 ```
 
-## API (selected)
+## Exported API (selected)
 
 - `Document.parse(input: string) -> std::json::ParseResult` (borrowed views into `input`)
 - `Document.parse_owned(input: string) -> std::json::ParseResult` (owned copies)

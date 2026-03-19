@@ -21,7 +21,7 @@ See also:
 - `docs/language/duration-instant.md`
 - `docs/std/conventions.md`
 
-## Implemented API
+## Exported API
 
 The following helpers exist today in `std/temporal.slk` and are available to
 import.
@@ -107,7 +107,7 @@ export fn parse_datetime_iso (s: string) -> DateTimeParseResult;
   - Unix epoch conversions (days/seconds/nanoseconds),
   - strict ISO formatting/parsing helpers.
 
-## Clock APIs (Initial Design)
+## Planned expansion
 
 The language examples use `std::now()`; the stdlib should make the clock source
 explicit:

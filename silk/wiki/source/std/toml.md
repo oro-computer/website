@@ -1,12 +1,12 @@
 # `std::toml`
 
-`std::toml` provides TOML parsing (initial implementation + expanded subset).
+`std::toml` provides TOML parsing (implemented subset + active expansion).
 
 Canonical doc: `docs/std/toml.md`.
 
 ## Status
 
-- Implemented subset + design: parsing is implemented; serialization is planned.
+- Implemented subset + active expansion: parsing is implemented; canonical emission remains follow-up work.
 - Details: `docs/std/toml.md`
 
 ## Importing
@@ -15,7 +15,7 @@ Canonical doc: `docs/std/toml.md`.
 import std::toml;
 ```
 
-## API (selected)
+## Exported API (selected)
 
 - `Document.parse(input: string) -> std::toml::ParseResult` (borrowed views into `input`)
 - `Document.parse_owned(input: string) -> std::toml::ParseResult` (owned copies)

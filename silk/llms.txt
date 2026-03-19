@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-03-19T01:32:37+00:00
+Generated: 2026-03-19T13:41:44+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -15095,7 +15095,7 @@ on top of the language core (regions, buffers, concurrency, etc.). It is:
 - **Linked by default** for normal builds driven by `silk`.
 - **Swappable**: an alternative `std::` implementation can be selected at build
   time, without changing the language or the C ABI.
-- **POSIX-first** for OS interactions (initial hosted baseline), while still
+- **POSIX-first** for OS interactions (current hosted baseline), while still
   supporting freestanding/embedded builds via a smaller “core” subset.
 
 See also:
@@ -15123,7 +15123,7 @@ These are the major areas of the shipped and documented `std::` surface:
 - `std::limits` — numeric min/max limits for primitive types (see `docs/std/limits.md`).
 - `std::crypto` — cryptography primitives (hosted baseline via libsodium; see
   `docs/std/crypto.md`).
-- `std::ggml` — ggml tensor library bindings (early bring-up; see `docs/std/ggml.md`).
+- `std::ggml` — ggml tensor library bindings.
 - `std::uuid` — UUID primitives (v1/v3/v4/v5/v6/v7/v8) with parsing/formatting
   (see `docs/std/uuid.md`).
 - `std::semver` — Semantic Versioning (SemVer 2.0.0) parsing and precedence
@@ -15253,6 +15253,27 @@ This is enforced by the test suite so the stdlib can be fully documented via
 The canonical narrative/spec for each module lives under `docs/std/`. The
 source-level doc comments are the machine-consumable layer used by `silk doc`,
 `silk man`, and editor tooling (hover and completion documentation).
+
+## Module documentation structure
+
+Canonical `docs/std/*.md` pages should use a predictable downstream-facing
+structure unless a module is intentionally design-only:
+
+- module name,
+- short description,
+- `Exported API`,
+  - grouped by exported structs, types, theories, functions, constants, and
+    other exported declarations when that improves readability,
+- `Examples`,
+- `Considerations` when ownership, portability, blocking behavior, or ABI
+  details matter,
+- `See also`,
+- `Design goals` only when the module is intentionally documenting follow-on
+  design work beyond the shipped surface.
+
+Avoid headings like `Current API` for exported stdlib surfaces. They imply a
+parallel replacement API instead of documenting the module that downstream
+users actually import today.
 
 ## Allocation and Ownership
 
@@ -15635,7 +15656,7 @@ archives used by `std::tls` on `linux/x86_64`), `[[target]].inputs` supports
 `@vendored/<name>.a` entries (see `docs/compiler/package-manifests.md`). Build
 modules may emit these via `Build.target_add_input(...)`.
 
-## API (current)
+## Exported API
 
 Build modules are intended to be normal modules that export a `run` entrypoint.
 
@@ -15798,7 +15819,7 @@ See also:
 - `docs/language/interfaces.md` (syntax, conformance, dispatch status)
 - `docs/language/structs-impls-layout.md` (method + `export` rules)
 
-## API
+## Exported API
 
 `std/interfaces.slk` currently defines the following interfaces:
 
@@ -16172,7 +16193,9 @@ When the standard library is enabled (the default), `Result` is available
 without explicit imports via the std prelude module `std::runtime::globals`.
 Import `std::result` only when you need other exports from the module.
 
-## `Result(T, E)`
+## Exported API
+
+### `Result(T, E)`
 
 `Result(T, E)` models a recoverable “success or error” outcome.
 
@@ -16356,7 +16379,7 @@ See also:
 - `docs/std/fmt.md` (format string syntax)
 - `docs/std/conventions.md` (error conventions)
 
-## Current API
+## Exported API
 
 The current stdlib provides basic unbuffered stdio primitives
 (stdin reads and stdout/stderr writes), plus a small formatting surface
@@ -16625,7 +16648,7 @@ Within `{ ... }`:
   - optional `.` and optional `precision`:
     - digits (`.3`), or bracketed index (`.[1]`) to take the precision from another argument
 
-## Current API
+## Exported API
 
 Because the language does not yet have generics, the current API uses an
 explicit argument carrier type (`Arg`). With language-level varargs, the
@@ -16760,9 +16783,9 @@ URL: /silk/docs/?p=std/strings
 
 # `std::strings`
 
-A small but growing subset is
-implemented in `std/strings.slk` to support early toolchain bring-up; the rest
-of this document describes the intended long-term API.
+A broad and growing subset
+is implemented in `std/strings.slk`; the rest of this document describes the
+near-term expansion path and long-term API shape.
 
 This module provides string utilities and abstractions built on top of the core
 `string` type (UTF-8 bytes) and the `Buffer(T)` intrinsic.
@@ -16774,7 +16797,7 @@ See also:
 - `docs/language/buffers.md` (Buffer(T) as the low-level backing store)
 - `docs/std/conventions.md` (UTF-8, allocation, and error conventions)
 
-## Current API
+## Exported API
 
 The following functions exist today in `std/strings.slk` and are available to
 import:
@@ -16970,7 +16993,7 @@ Key invariants:
   null-terminated (with the trailing `\0` byte not counted in `.len`), matching
   the external-call contract in `docs/language/ext.md`.
 
-## API Sketch (Illustrative)
+## Planned expansion
 
 These signatures are illustrative and will be refined alongside the language
 features required to implement them (references, generics, enums/results, etc.).
@@ -17038,7 +17061,7 @@ See also:
 - `docs/std/memory.md` (allocators)
 - `docs/std/conventions.md` (allocation and error conventions)
 
-## Current API
+## Exported API
 
 A tiny generic subset is implemented in `std/arrays.slk` to provide a
 non-owning, FFI-friendly slice representation for early bridging:
@@ -17221,75 +17244,7 @@ Where byte-exact layout matters (I/O buffers, strings), the stdlib uses
 `std::buffer::BufferU8`, a packed byte buffer whose `ptr` points to
 byte-addressed memory and whose `len`/`cap` are in bytes.
 
-See also:
-
-- `docs/std/arrays.md` (`std::arrays::Slice(T)` views)
-- `docs/std/buffer.md` (width-oriented buffer helpers built on vectors)
-- `docs/language/generics.md` (generic syntax and rules)
-
-## Example (Struct Elements)
-
-`Vector(T)` is the stdlib’s default growable container for typed elements. When
-you see code manually managing `{ ptr, len, cap }` for a typed array, it is
-often a sign that a `Vector(T)` (or a small wrapper around it) is the intended
-tool.
-
-This example collects `TabState` values into a `Vector(TabState)`:
-
-```silk
-import std::arrays;
-import std::vector;
-
-struct TabState {
-  path: string,
-  top_off: i64,
-  gutter_on: bool,
-}
-
-type Tabs = std::vector::Vector(TabState);
-
-fn tabs_collect (paths: std::arrays::Slice(string)) -> Tabs? {
-  let cap: i64 = paths.len;
-  let mut tabs: Tabs = Tabs.try_init(cap) ?? Tabs.empty();
-
-  var i: i64 = 0;
-  while i < paths.len {
-    let err = tabs.push(TabState{ path: paths.get(i), top_off: 0, gutter_on: false });
-    if err != None {
-      // `tabs` is dropped on scope exit (drops elements + frees its allocation).
-      return None;
-    }
-    i = i + 1;
-  }
-
-  return Some(tabs);
-}
-```
-
-## Ownership and `Drop`
-
-`Vector(T)` is an owning container:
-
-- `push` moves a value into the vector.
-- `pop` / `swap_remove` move a value out of the vector (the caller owns the
-  returned value).
-- `set` overwrites an element and runs `Drop` for the overwritten element when
-  `T` requires drop.
-- `clear` runs `Drop` for all live elements and then sets `len = 0`.
-- `drop` runs `Drop` for all live elements, frees the backing allocation, and
-  resets the vector to an empty state.
-
-### Copy accessors (`get`, `iter`)
-
-`get`, `at`, and `iter` produce values by value without removing them. In other
-words, they copy element bytes out of the vector.
-
-These accessors are intended for plain value types (primitives, `string` views,
-and small POD structs). For `Drop`-managed element types, copying an element out
-creates duplicate ownership; use move-out operations like `pop` / `swap_remove`
-instead of `get`/`iter`.
-
-## Current API
+## Exported API
 
 ```silk
 module std::vector;
@@ -17344,6 +17299,31 @@ impl Vector(T) as std::interfaces::Drop {
 }
 ```
 
+## Considerations
+
+### Ownership and `Drop`
+
+`Vector(T)` is an owning container:
+
+- `push` moves a value into the vector.
+- `pop` / `swap_remove` move a value out of the vector (the caller owns the
+  returned value).
+- `set` overwrites an element and runs `Drop` for the overwritten element when
+  `T` requires drop.
+- `clear` runs `Drop` for all live elements and then sets `len = 0`.
+- `drop` runs `Drop` for all live elements, frees the backing allocation, and
+  resets the vector to an empty state.
+
+### Copy accessors (`get`, `iter`)
+
+`get`, `at`, and `iter` produce values by value without removing them. In other
+words, they copy element bytes out of the vector.
+
+These accessors are intended for plain value types (primitives, `string` views,
+and small POD structs). For `Drop`-managed element types, copying an element out
+creates duplicate ownership; use move-out operations like `pop` / `swap_remove`
+instead of `get`/`iter`.
+
 Notes:
 
 - `Vector(T)` is intentionally low-level in Silk:
@@ -17361,6 +17341,51 @@ Notes:
   - `at` returns `None` when `index` is out of bounds,
   - `try_set` returns `false` when `index` is out of bounds.
 - `swap_remove` removes an element by swapping in the last element (O(1), order not preserved).
+
+## Examples
+
+`Vector(T)` is the stdlib’s default growable container for typed elements. When
+you see code manually managing `{ ptr, len, cap }` for a typed array, it is
+often a sign that a `Vector(T)` (or a small wrapper around it) is the intended
+tool.
+
+This example collects `TabState` values into a `Vector(TabState)`:
+
+```silk
+import std::arrays;
+import std::vector;
+
+struct TabState {
+  path: string,
+  top_off: i64,
+  gutter_on: bool,
+}
+
+type Tabs = std::vector::Vector(TabState);
+
+fn tabs_collect (paths: std::arrays::Slice(string)) -> Tabs? {
+  let cap: i64 = paths.len;
+  let mut tabs: Tabs = Tabs.try_init(cap) ?? Tabs.empty();
+
+  var i: i64 = 0;
+  while i < paths.len {
+    let err = tabs.push(TabState{ path: paths.get(i), top_off: 0, gutter_on: false });
+    if err != None {
+      // `tabs` is dropped on scope exit (drops elements + frees its allocation).
+      return None;
+    }
+    i = i + 1;
+  }
+
+  return Some(tabs);
+}
+```
+
+## See also
+
+- `docs/std/arrays.md` (`std::arrays::Slice(T)` views)
+- `docs/std/buffer.md` (width-oriented buffer helpers built on vectors)
+- `docs/language/generics.md` (generic syntax and rules)
 
 ==============================================================================
 DOCS: `std::map` — Maps and Dictionaries (std/map)
@@ -17387,7 +17412,9 @@ borrow- and move-aware container ergonomics.
 - Keep the API close in spirit to C++’s `std::unordered_map` and `std::map`
   (operations, complexity expectations, and terminology), adapted to Silk.
 
-## Important Limitations
+## Considerations
+
+### Important Limitations
 
 In Silk:
 
@@ -17416,7 +17443,9 @@ In Silk:
 These limits are expected to be relaxed as the language gains borrow-aware
 accessors and iterators for container storage.
 
-## HashMap (`HashMap(K, V)`)
+## Exported API
+
+### HashMap (`HashMap(K, V)`)
 
 ### Construction
 
@@ -17525,7 +17554,7 @@ Complexity expectations:
 - average `O(1)` for `get`/`put`/`remove` when the hash distribution is good,
 - worst case `O(n)` in adversarial collision patterns.
 
-## TreeMap (`TreeMap(K, V)`)
+### TreeMap (`TreeMap(K, V)`)
 
 `TreeMap` is an ordered map. It requires an ordering function.
 
@@ -17549,7 +17578,7 @@ Complexity expectations:
 
 - `O(log n)` lookup/insert/remove.
 
-## Iteration
+### Iteration
 
 Both maps provide iteration through an iterator interface:
 
@@ -17599,7 +17628,9 @@ structures.
 - Keep terminology and operation shapes close to C++ (`std::unordered_set` and
   `std::set`), adapted to Silk’s current method/optional model.
 
-## Important Limitations
+## Considerations
+
+### Important Limitations
 
 In Silk:
 
@@ -17611,7 +17642,9 @@ In Silk:
 - Avoid storing Drop-managed structs as set elements until the compiler has
   complete Drop integration for values stored inside container memory.
 
-## Hash Set (`SetMap(T)`)
+## Exported API
+
+### Hash Set (`SetMap(T)`)
 
 ### Core API
 
@@ -17659,7 +17692,7 @@ Complexity expectations:
 - average `O(1)` for `contains`/`insert`/`remove` when the hash distribution is good,
 - worst case `O(n)` in adversarial collision patterns.
 
-## Ordered Set (`TreeSet(T)`)
+### Ordered Set (`TreeSet(T)`)
 
 `TreeSet(T)` is an ordered set. It requires an ordering function.
 
@@ -17682,7 +17715,7 @@ Complexity expectations:
 
 - `O(log n)` lookup/insert/remove.
 
-## Iteration
+### Iteration
 
 Both sets provide iteration through an iterator interface:
 
@@ -17719,7 +17752,7 @@ See also:
 - `docs/language/buffers.md` (intrinsic `Buffer(T)` design)
 - `docs/std/io.md` and `docs/std/strings.md` (byte-oriented APIs)
 
-## Current API
+## Exported API
 
 `std::buffer` provides:
 
@@ -17856,7 +17889,7 @@ See also:
 - `docs/language/operators.md` (bitwise operators and shift semantics)
 - `docs/std/networking.md` (`std::net` byte-order helpers built on the hosted baseline)
 
-## API
+## Exported API
 
 ```silk
 module std::bits;
@@ -18023,7 +18056,7 @@ See also:
 - `docs/language/buffers.md` (`Buffer(T)` intrinsic)
 - `docs/std/conventions.md` (allocation conventions)
 
-## API
+## Exported API
 
 A small subset is implemented in `std/memory.slk` for early compiler bring-up.
 These helpers are pure and operate on scalar types only, plus a shared
@@ -18183,7 +18216,7 @@ See also:
 Dynamic-dimension operations return `Result(T, MathFailed)` when shapes are
 incompatible (for example adding vectors of different lengths).
 
-## Current API (Initial Subset)
+## Exported API
 
 ```silk
 module std::math;
@@ -18515,7 +18548,7 @@ The initial surface focuses on:
 - stable, strict parsing from `string` to numeric types, and
 - formatting numeric values into owned `std::strings::String` outputs.
 
-## API
+## Exported API
 
 ### Parsing
 
@@ -18608,7 +18641,7 @@ See also:
 - `docs/compiler/cli-silk.md` (entrypoint selection rules)
 - `docs/language/ext.md` (string ABI `{ ptr, len }` and C-string lowering rules)
 
-## API
+## Exported API
 
 The following items are implemented in `std/args.slk`:
 
@@ -18676,7 +18709,7 @@ implemented on top of the pluggable `std::runtime::env` interface. WASI support
 is partially implemented: `get` works, while `set` remains unsupported (see
 “Platform notes”).
 
-## API
+## Exported API
 
 ```silk
 module std::env;
@@ -18843,7 +18876,7 @@ on top of the pluggable `std::runtime::process` interface. The cwd APIs are
 also implemented for WASI; child-process support remains POSIX-only (see
 “Platform notes”).
 
-## API
+## Exported API
 
 ```silk
 module std::process;
@@ -18966,7 +18999,7 @@ See also:
 
 - `docs/language/target-metadata.md` (the built-in target metadata constants).
 
-## API
+## Exported API
 
 ```silk
 module std::os;
@@ -19063,7 +19096,7 @@ Design goals (modeled after Rust `std::path` and Node.js `path`):
 - **Allocation-aware**: functions that produce new paths return owned
   `std::strings::String` values (callers must drop them).
 
-## API
+## Exported API
 
 ```silk
 module std::path;
@@ -19264,7 +19297,7 @@ See also:
     managed by `std::process::chdir` / `std::process::getcwd`,
   - `.` and `..` segments are normalized; `..` cannot escape above the sandbox root.
 
-## API
+## Exported API
 
 A hosted POSIX baseline exists today in `std/fs.slk`. The low-level OS bindings
 are provided via `std::runtime::fs` (which defaults to a POSIX implementation
@@ -19541,105 +19574,201 @@ URL: /silk/docs/?p=std/json
 
 # `std::json`
 
-`std::json` provides a robust JSON parser and
-stringifier suitable for Silk programs.
+`std::json` provides an RFC 8259 parser, an
+index-based DOM, and compact or pretty JSON stringification for Silk programs.
 
-Primary goals:
+## Exported API
 
-- Correct, spec-driven parsing of RFC 8259 JSON (objects, arrays, strings,
-  numbers, booleans, null).
-- A memory model that works well with the compiler:
-  - parse produces an index-based DOM stored inside a `Document`,
-  - arrays/objects use integer “next” links (no `&T` struct fields).
-- High performance by default:
-  - **borrowed parsing** avoids allocating for unescaped strings and numbers by
-    slicing into the input string,
-  - strings are only allocated when they contain escapes that must be decoded.
-- Deterministic output:
-  - compact `stringify` and configurable `stringify_pretty`.
+### Value ids and tags
 
-## Data Model
+- `ValueId = i64` — stable node id used to refer to a parsed JSON value inside
+  a `Document`.
+- `TAG_NULL`
+- `TAG_BOOL`
+- `TAG_NUMBER`
+- `TAG_STRING`
+- `TAG_ARRAY`
+- `TAG_OBJECT`
 
-The DOM is represented by an index table owned by a `Document`:
+Use `doc.tag(id)` when you need to branch on the concrete JSON kind before
+querying a value.
 
-- A `Document` owns:
-  - node tables (`tag`, payload fields, sibling links),
-  - optional owned allocations for decoded strings and owned-number lexemes.
-- JSON values are referred to by `ValueId` (an `i64` node index).
+### Parse errors
 
-In Silk, struct fields do not support reference types
-(`&T` / `&T?`) and `std::vector::Vector(T)` is scalar-slot-oriented (raw-cast
-storage). `std::json` therefore stores its DOM as scalar tables and uses index
-links for arrays/objects.
+`ParseError` describes parser failures:
 
-### Arrays and Objects
+- `kind: int`
+- `offset: i64` — byte offset into the input
+- `line: i64` — 1-based line
+- `column: i64` — 1-based column
 
-- Arrays store a `first_child` id and each element node stores a `next` id.
-- Objects store a `first_member` id and each member node stores:
-  - a key `string` view,
-  - a value `ValueId`,
-  - a `next` member id.
+Methods:
 
-## Strings
+- `ParseError.ok() -> ParseError`
+- `err.is_ok() -> bool`
 
-- Parsed string values are exposed as decoded UTF-8 `string` views:
-  - when the source contains **no escapes**, the string is borrowed from the
-    input (zero-copy),
-  - when the source contains escapes, the decoded bytes are stored in an owned
-    allocation tracked by the `Document` and the view points to that allocation.
-- Supported escapes:
-  - `\\`, `\"`, `\/`, `\b`, `\f`, `\n`, `\r`, `\t`
-  - `\uXXXX` (including surrogate pairs).
+Exported error constants:
 
-## Numbers
+- `ERR_NONE`
+- `ERR_UNEXPECTED_EOF`
+- `ERR_UNEXPECTED_TOKEN`
+- `ERR_INVALID_STRING`
+- `ERR_INVALID_ESCAPE`
+- `ERR_INVALID_UNICODE_ESCAPE`
+- `ERR_INVALID_NUMBER`
+- `ERR_TRAILING_INPUT`
+- `ERR_DEPTH_LIMIT`
+- `ERR_OUT_OF_MEMORY`
 
-`std::json` preserves the number lexeme (as a `string` view) and also provides
-helpers to interpret it as `i64` and/or `f64` when needed.
+Helpers:
 
-## Parsing
+- `ParseResult = std::result::Result(ValueId, ParseError)`
+- `error_message(kind: int) -> string`
 
-Two parse modes are provided as `Document` methods:
+### `Document`
 
-- **Borrowed**: `doc.parse(s)` borrows unescaped strings and number lexemes from
-  `s`. The caller must ensure `s` outlives any `string` views read from `doc`.
-- **Owned**: `doc.parse_owned(s)` copies all strings and number lexemes into
-  allocations tracked by `doc` (independent of `s`).
+`Document` owns the parsed DOM plus any allocations needed for decoded strings
+or owned-number lexemes. Construct it with `Document{}`. It implements
+`std::interfaces::Drop`.
 
-Both methods:
+Lifecycle methods:
 
-- clear the `Document` first,
-- return `ParseResult` (`Ok(root)` on success, `Err(ParseError)` on error),
-- and record the result on the `Document`:
-  - `doc.is_ok()` reports success,
-  - `doc.root_value()` returns the root `ValueId` on success,
-  - `doc.err` contains the parse error details (`kind`, byte `offset`, and 1-based `line`/`column`).
+- `doc.is_ok() -> bool`
+- `doc.root_value() -> ValueId?`
+- `doc.clear() -> void`
+- `doc.drop() -> void`
+- `doc.parse(input: string) -> ParseResult`
+- `doc.parse_owned(input: string) -> ParseResult`
 
-Allocation failures are also reported as ordinary parse errors:
+`parse` borrows unescaped strings and number lexemes from the input.
+`parse_owned` copies them into storage owned by the document.
 
-- on out-of-memory, parse returns `Err(ParseError{ kind: ERR_OUT_OF_MEMORY, ... })` and sets
-  `doc.err.kind` to `ERR_OUT_OF_MEMORY`.
+### Query and traversal
 
-In Silk, `Document` is typically used as a
-heap reference:
+Primitive accessors:
+
+- `doc.tag(id) -> int?`
+- `doc.is_null(id) -> bool`
+- `doc.as_bool(id) -> bool?`
+- `doc.as_string(id) -> string?`
+- `doc.as_number_lexeme(id) -> string?`
+
+Array traversal:
+
+- `doc.array_len(id) -> i64?`
+- `doc.array_first(id) -> ValueId?`
+- `doc.next_sibling(id) -> ValueId?`
+
+Object traversal:
+
+- `doc.object_len(id) -> i64?`
+- `doc.object_first_member(id) -> ValueId?`
+- `doc.member_key(member) -> string?`
+- `doc.member_value(member) -> ValueId?`
+- `doc.member_next(member) -> ValueId?`
+- `doc.object_get(obj, key: string) -> ValueId?`
+
+### Numeric and formatting helpers
+
+Methods:
+
+- `doc.number_as_i64(id) -> i64?`
+- `doc.number_as_f64(id) -> f64?`
+- `doc.stringify(id) -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
+- `doc.stringify_pretty(id, indent: int) -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
+
+Top-level wrappers:
+
+- `number_as_i64(doc: &Document, id: ValueId) -> i64?`
+- `number_as_f64(doc: &Document, id: ValueId) -> f64?`
+- `stringify(doc: &Document, id: ValueId) -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
+- `stringify_pretty(doc: &Document, id: ValueId, indent: int) -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
+
+## Examples
+
+### Parse and query a document
 
 ```silk
 import std::json;
 
-let mut doc: &Document = new Document();
-let root_r: std::json::ParseResult = (mut doc).parse(`{"a":1}`);
+fn main () -> int {
+  let mut doc: Document = Document{};
+  let root = match doc.parse(`{"name":"oro","ports":[80,443],"tls":true}`) {
+    Ok(v) => v,
+    Err(err) => {
+      let _message: string = std::json::error_message(err.kind);
+      return 1;
+    }
+  };
+
+  let ports = match doc.object_get(root, "ports") {
+    Some(v) => v,
+    None => return 2,
+  };
+  let first = match doc.array_first(ports) {
+    Some(v) => v,
+    None => return 3,
+  };
+  if doc.number_as_i64(first) != Some(80) {
+    return 4;
+  }
+
+  let pretty = match doc.stringify_pretty(root, 2) {
+    Ok(v) => v,
+    Err(_) => return 5,
+  };
+  if pretty.as_string() == "" {
+    return 6;
+  }
+
+  return 0;
+}
 ```
 
-## Stringifying
+### Own parsed strings instead of borrowing from the input
 
-- `stringify(doc, value)` returns `Result(String, OutOfMemory)` containing compact JSON.
-- `stringify_pretty(doc, value, indent)` returns `Result(String, OutOfMemory)` containing
-  pretty-printed JSON with a fixed number of spaces per indent level.
+```silk
+import std::json;
 
-Planned follow-ups:
+fn main () -> int {
+  let mut doc: Document = Document{};
+  let root = match doc.parse_owned(`{"service":"runtime","region":"edge-a"}`) {
+    Ok(v) => v,
+    Err(_) => return 1,
+  };
 
-- streaming tokenization (SAX-style) for very large inputs,
-- a writer interface that can stream output without building a whole string,
-- JSON Pointer helpers (RFC 6901) for querying nested values.
+  let service = match doc.object_get(root, "service") {
+    Some(v) => v,
+    None => return 2,
+  };
+  if doc.as_string(service) != Some("runtime") {
+    return 3;
+  }
+
+  return 0;
+}
+```
+
+## Considerations
+
+- `parse` is the fast path when the input buffer already outlives the document.
+  Use `parse_owned` when you need the parsed strings and number lexemes to stay
+  valid independently of the original input.
+- `ValueId` is meaningful only for the `Document` that produced it. Do not mix
+  ids across documents.
+- `doc.clear()` and `doc.drop()` invalidate all previously returned `ValueId`
+  handles and all borrowed `string` views obtained from the document.
+- Numbers are preserved as source lexemes. Use `number_as_i64` or
+  `number_as_f64` only when you need numeric interpretation.
+- The DOM uses index tables rather than nested reference fields. That is an
+  implementation detail, but it explains why traversal is done with `ValueId`
+  and sibling/member helpers instead of borrowed node references.
+
+## See also
+
+- [`std::result`](?p=std/result)
+- [`std::strings`](?p=std/strings)
+- [`std::url`](?p=std/url)
 
 ==============================================================================
 DOCS: `std::toml` (std/toml)
@@ -19667,7 +19796,7 @@ URL: /silk/docs/?p=std/toml
   - and borrowed versus owned parsing is an explicit choice that should remain
     visible at the call site.
 
-## API
+## Exported API
 
 ```silk
 module std::toml;
@@ -19878,7 +20007,7 @@ inputs that reference the shim symbols.
 
 Note: libxml2 requires libm at link/runtime (typically `libm.so.6`).
 
-## API Summary (Current)
+## Exported API
 
 - `Document.parse(xml: string) -> Result(Document, XmlFailed)`
 - `Document.parse_with_options(xml: string, options: int) -> Result(Document, XmlFailed)`
@@ -19916,7 +20045,7 @@ This module focuses on:
 - Host parsing (domain / IPv4 / IPv6 / opaque) and percent-encoding sets.
 - URLSearchParams-style query parsing and mutation.
 
-## Public API
+## Exported API
 
 ### Parsing
 
@@ -20050,7 +20179,7 @@ This module is intentionally strict and focused:
 - Avoids hidden allocation: `parse` returns a `Version` that borrows `string`
   slices from the input.
 
-## Public API
+## Exported API
 
 ### Parsing
 
@@ -20178,7 +20307,9 @@ Goals:
 - ergonomic helpers (parse, format, version/variant inspection),
 - Formal Silk contracts for buffer and shape preconditions.
 
-## Representation
+## Considerations
+
+### Representation
 
 `UUID` is represented as two `u64` words:
 
@@ -20191,7 +20322,9 @@ This matches the canonical string form:
 
 where the leftmost hex pairs correspond to lower byte indices.
 
-## Parsing and Formatting
+## Exported API
+
+### Parsing and Formatting
 
 The current API supports:
 
@@ -20211,7 +20344,9 @@ API notes:
 - `UUID.to_string_lower() -> Result(String, OutOfMemory)` allocates an owned
   string.
 
-## Example: parse + generate + inspect
+## Examples
+
+### Parse, generate, and inspect
 
 ```silk
 import std::uuid;
@@ -20243,13 +20378,15 @@ fn main () -> int {
 }
 ```
 
-## Version and Variant
+## Considerations
+
+### Version and Variant
 
 - `UUID.version()` returns the 4-bit version field (0..15).
 - `UUID.is_rfc4122()` checks the RFC 4122/RFC 9562 variant (`10xx` in the
   variant field).
 
-## Supported Versions
+### Supported versions
 
 The std surface provides constructors for:
 
@@ -20295,7 +20432,7 @@ This module provides practical Unicode helpers focused on:
 
 The core `char` type in Silk is a Unicode scalar value (see `docs/language/types.md`).
 
-## API
+## Exported API
 
 ```silk
 module std::unicode;
@@ -20337,7 +20474,7 @@ Regex literals are part of the language surface:
 - `/pattern/flags` produces a `regexp` value, compiled at compile time (see
   `docs/language/literals-regexp.md`).
 
-## API
+## Exported API
 
 The initial `std::regex` surface is intentionally small and focuses on:
 
@@ -20463,9 +20600,10 @@ See also:
 - `docs/std/https.md` (`std::https` on top of `std::tls` + `std::net`)
 - `docs/std/websocket.md` (`std::websocket` on top of `std::net`)
 
-## API
+## Exported API
 
-A small, non-socket subset exists in `std/net.slk` for early bring-up:
+`std::net` starts with byte-order helpers and address types, then extends into
+hosted socket APIs:
 
 ```silk
 module std::net;
@@ -20510,7 +20648,7 @@ Notes:
 - This is currently implemented as a byte-swap for the `linux/x86_64`
   little-endian hosted baseline.
 
-## Hosted TCP API
+### TCP
 
 `std::net` exposes a small TCP API for hosted targets via the
 pluggable runtime interface `std::runtime::net`:
@@ -20663,7 +20801,7 @@ Notes:
   - `std::net::stream::pipe_stream_to_tcpstream` / `pipe_stream_to_tcpstream_abortable`
   These adapters take ownership of the `TCPStream` and close it before returning.
 
-## Hosted UDP API
+### UDP
 
 `std::net` also exposes a small UDP API for hosted targets. The API is
 datagram-oriented but remains blocking.
@@ -20765,14 +20903,17 @@ export fn tcp_listen (addr: SocketAddr) -> Result(TCPListener, NetError);
 
 ## Blocking vs Async
 
-The initial hosted baseline may be blocking I/O. Once the language’s async
-model is implemented, `std::net` should provide:
+The shipped hosted subset now includes both:
 
-- non-blocking sockets + integration with an event loop,
-- `async fn` wrappers for common operations,
-- integration with task offloading for blocking adapters (design target:
-  `std::task::run_blocking()`; until that exists, users can explicitly use a
-  `task fn` wrapper around blocking calls).
+- blocking socket operations for the baseline TCP/UDP surface, and
+- async TCP connect/accept wrappers integrated with the hosted event loop.
+
+Remaining expansion areas include:
+
+- broader async coverage for additional socket operations,
+- cancellation of in-flight socket operations,
+- and higher-level blocking-offload helpers if the std/task surface grows a
+  dedicated `run_blocking()`-style API.
 
 ## Future Work
 
@@ -20810,7 +20951,7 @@ Not implemented (yet):
 - Streaming bodies (incremental read/write APIs).
 - Automatic decompression, redirects, cookies, proxies, etc.
 
-## Public API
+## Exported API
 
 ```silk
 module std::http;
@@ -20956,7 +21097,7 @@ Not implemented (yet):
 - ALPN configuration and HTTP/2 negotiation.
 - Non-blocking integration with an async runtime.
 
-## Public API
+## Exported API
 
 ```silk
 module std::https;
@@ -21054,7 +21195,7 @@ Non-goals (for now):
 - TLS (`wss://`) integration (use `std::tls` + a future adapter layer).
 - Per-message compression (RSV1 / `permessage-deflate`).
 
-## Public API
+## Exported API
 
 ```silk
 module std::websocket;
@@ -21183,7 +21324,7 @@ See also:
 - `docs/language/concurrency.md` (tasks, `yield`, structured blocks)
 - `docs/std/sync.md` (mutex/condvar/channel; same blocking baseline)
 
-## API
+## Exported API
 
 ```silk
 module std::stream;
@@ -21507,7 +21648,7 @@ URL: /silk/docs/?p=std/crypto
 primitives backed by the system `libsodium` library on the hosted
 `linux/x86_64` baseline.
 
-The long-term goal is:
+The design goals continue to be:
 
 - a cohesive, ergonomic `std::crypto` API surface that is suitable for Silk
   programs,
@@ -21550,9 +21691,9 @@ types (instead of exposing raw `(ptr, len)` pairs directly in public APIs).
 The underlying raw allocation and load/store operations are provided by
 `std::runtime::mem`.
 
-## Current API (Initial)
+## Exported API
 
-The initial `std::crypto` module is organized as:
+The current `std::crypto` module is organized as:
 
 - `std::crypto` (core helpers and libsodium init)
 - `std::crypto::random` (CSPRNG)
@@ -21658,7 +21799,7 @@ URL: /silk/docs/?p=std/tls
 primitives for the hosted POSIX baseline using vendored `mbedTLS` static
 archives.
 
-The initial goals are:
+The design goals are:
 
 - a small but usable `std::tls` session API for clients and servers,
 - a transport-agnostic I/O model so TLS can be layered over `std::net::TCPStream`
@@ -21687,7 +21828,7 @@ cryptographic operations.
 configuring a legacy `f_rng` callback (the historical `mbedtls_ssl_conf_rng(...)`
 API is not present in mbedTLS 4.x).
 
-## API
+## Exported API
 
 ### Error model
 
@@ -21808,7 +21949,7 @@ primitives for the hosted POSIX baseline. On `linux/x86_64`, `silk build`
 auto-links the vendored `libssh2.a` so outputs do not depend on a system
 `libssh2` shared object at runtime.
 
-The initial goals are:
+The design goals are:
 
 - a small but usable SSH2 client session API (`Session`, `Channel`),
 - an SFTP client API (`Sftp`, `SftpHandle`) suitable for remote filesystem access,
@@ -21908,9 +22049,9 @@ FFI entrypoints that accept or fill byte buffers use Formal Silk theories such
 as `slice_well_formed(ptr, len)` to document shape invariants (`len >= 0` and
 non-null when non-empty).
 
-## Current API (Initial)
+## Exported API
 
-The current `std::ssh2` surface currently lives in a single module
+The current `std::ssh2` surface lives in a single module
 `std/ssh2.slk` (`module std::ssh2;`) and provides:
 
 - `Session` — init/free, blocking mode, timeouts, handshake, disconnect, and
@@ -22018,7 +22159,7 @@ alternate stdlib root without changing higher-level `std::...` modules.
       `std::runtime::wasi::time`) use `std::runtime::wasi::mem` for allocation
       and `__silk_*` intrinsics.
 
-## Current Scope
+## Exported API
 
 Runtime areas in the shipped stdlib:
 
@@ -22106,16 +22247,16 @@ Runtime areas in the shipped stdlib:
     default heap allocation unless an embedder installs an allocator via
     `silk_rt_set_allocator`.
 
-Follow-ups are expected to introduce additional runtime areas:
+Runtime areas that continue to expand:
 
 - Async event loop / executor integration (`std::runtime::event_loop`) for hosted `async`/`await`:
-  - the compiler already ships a bundled bring-up executor in `libsilk_rt`
-    (`src/silk_rt_async.c`) and lowers `async`/`await` to it on the hosted
-    `linux/x86_64` target,
+  - the compiler ships a bundled hosted executor in `libsilk_rt`
+    (`src/silk_rt_async.c`) and lowers `async`/`await` to it on hosted
+    targets with that backend,
   - the `std::runtime::event_loop` module now exposes low-level awaitable
     building blocks (timers + fd readiness, including `fd_wait_readable2` and `fd_wait_readable_any`) and an explicit `Handle`/`poll`
     surface for manually driving the hosted executor/event loop. Higher-level
-    async adapters are still follow-up work
+    async adapters continue expanding on top of this
     (see `docs/compiler/async-runtime.md`).
   - the hosted executor is thread-affine: `Handle.poll()` / `Handle.deinit()`
     must be called from the same OS thread that created the handle; cross-thread
@@ -22216,7 +22357,9 @@ pending signals as a readable file descriptor. This integrates naturally with:
 - `std::sync::ChannelBorrow(T).wait_fd()`
 - `std::abort_controller::AbortSignalBorrow.wait_fd()`
 
-## `signalfd(2)` integration
+## Exported API
+
+### `signalfd(2)` integration
 
 The main type is `SignalFD`:
 
@@ -22243,7 +22386,9 @@ In practice:
 Newly-created threads inherit the parent thread’s signal mask, so blocking
 signals early keeps delivery consistent.
 
-## Example: `SIGWINCH` resize notifications
+## Examples
+
+### `SIGWINCH` resize notifications
 
 This pattern avoids polling terminal size in a loop:
 
@@ -22282,7 +22427,9 @@ async fn main () -> int {
 }
 ```
 
-## Portability
+## Considerations
+
+### Portability
 
 Today:
 
@@ -22303,7 +22450,7 @@ This module provides a small hosted baseline for
 task/runtime utilities on `linux/x86_64`.
 
 This is **not** the full structured-concurrency design, but the hosted
-`linux/x86_64` toolchain now ships a bring-up async executor (fibers) used to
+`linux/x86_64` toolchain now ships a hosted async executor (fibers) used to
 make `await` a true suspension point. in Silk:
 
 - `task fn` calls default to the global task pool; `attr(task=thread)` opts a
@@ -22322,7 +22469,7 @@ See also:
 - `docs/std/sync.md` (`Mutex`, `Condvar`, and channels)
 - `docs/std/runtime.md` (pluggable runtime layer under `std::task`)
 
-## API
+## Exported API
 
 ```silk
 module std::task;
@@ -22361,7 +22508,7 @@ Notes:
   higher-level concurrency utilities. It is implemented using a hosted libc
   query (`get_nprocs`) and clamps to `>= 1`.
 - `yield_now()` and `sleep_ms()` are blocking thread operations (they are not
-  async-aware.
+  async-aware).
 - `sleep_ms(ms)` is implemented by converting `ms` to microseconds and calling
   `std::runtime::task::sleep_us`; large sleeps may be performed in chunks.
 - `sleep_ms_async(ms)` returns a `Promise(void)` that can be awaited inside
@@ -22397,7 +22544,7 @@ This module provides a small hosted baseline for
 synchronization primitives used by the current `task` lowering on
 `linux/x86_64`.
 
-This is an intentionally narrow subset intended for early bring-up:
+This is a deliberately narrow current hosted subset:
 
 - It is intentionally small and conservative (a hosted baseline, not a final
   async runtime).
@@ -22426,7 +22573,7 @@ See also:
   clone it explicitly with `sender.clone()`; the channel auto-closes when the
   last sender is dropped.
 
-## API
+## Exported API
 
 ```silk
 module std::sync;
@@ -22661,7 +22808,7 @@ See also:
 - `docs/language/duration-instant.md`
 - `docs/std/conventions.md`
 
-## API
+## Exported API
 
 The following helpers exist today in `std/temporal.slk` and are available to
 import.
@@ -22747,7 +22894,7 @@ export fn parse_datetime_iso (s: string) -> DateTimeParseResult;
   - Unix epoch conversions (days/seconds/nanoseconds),
   - strict ISO formatting/parsing helpers.
 
-## Clock APIs (Initial Design)
+## Planned expansion
 
 The language examples use `std::now()`; the stdlib should make the clock source
 explicit:
@@ -22803,7 +22950,7 @@ Thread-safety:
 - `AbortSignalBorrow` is a non-owning, copyable handle intended for sharing
   across OS threads and `task` boundaries.
 
-## API
+## Exported API
 
 ```silk
 module std::abort_controller;
@@ -22937,7 +23084,7 @@ primitives for the hosted POSIX baseline. On `linux/x86_64`, `silk build`
 auto-links the vendored `libsqlite3.a` so outputs do not depend on a system
 SQLite shared library at runtime.
 
-The initial goals are:
+The design goals are:
 
 - a small but usable database/statement API (`Database`, `Stmt`),
 - a non-leaking, portable error model (`SqliteFailed`) that surfaces stable
@@ -23005,9 +23152,9 @@ The raw SQLite return codes remain available for debugging/telemetry.
   - `Stmt.column_text_copy` copies into `std::strings::String`.
   - `Stmt.column_blob_copy` copies into `std::buffer::BufferU8`.
 
-## Current API (Initial)
+## Exported API
 
-The current `std::sqlite` surface currently lives in `std/sqlite.slk` and
+The current `std::sqlite` surface lives in `std/sqlite.slk` and
 provides:
 
 - `Database`: `open`, `open_read_only`, `open_in_memory`, `exec`, `prepare`,
@@ -23056,7 +23203,7 @@ Entry kinds:
 
 Unsupported/unknown entry kinds return `TarErrorKind::Unsupported`.
 
-## API
+## Exported API
 
 ```silk
 module std::tar;
@@ -23242,7 +23389,7 @@ Each helper also carries a Formal Silk contract requiring `BUILD_MODE == "test"`
 via `std::formal.requires_test_mode()` so downstream verification can model
 them as test-only APIs.
 
-## Public API
+## Exported API
 
 ### `expect`
 
@@ -23340,7 +23487,7 @@ Given an argv slice `args[start..]` (typically `start = 1` to skip `argv[0]`):
 This matches the common “flags first, then args” convention and avoids
 misclassifying negative numbers once positional mode begins.
 
-## Public API (initial)
+## Exported API
 
 ```silk
 module std::flag;
@@ -23521,7 +23668,7 @@ export fn main () -> int {
 }
 ```
 
-## API
+## Exported API
 
 ### Reading
 
@@ -23661,7 +23808,7 @@ Choose the form that matches the C API contract you are binding.
   or not NUL-terminated, behavior is undefined.
 - These helpers do not validate UTF-8. A C string may contain arbitrary bytes.
 
-## API
+## Exported API
 
 - C scalar aliases: `c_int`, `size_t`, `ssize_t`, …
 - `cstr_len(ptr: u64) -> int`
@@ -23742,7 +23889,7 @@ Scope constraints:
   (for example: **Web IDL → Silk** bindings when targeting WASM and calling out
   to a JavaScript host).
 
-## High-Level API
+## Exported API
 
 The public Silk surface is centered around:
 
@@ -23953,7 +24100,7 @@ backend (see `docs/compiler/backend-wasm.md`).
 - Record a clear path to a full native runtime and JIT in later phases (no
   dependency on external language toolchains).
 
-## High-Level API
+## Exported API
 
 The public Silk surface is centered around:
 
@@ -24277,147 +24424,363 @@ DOCS: `std::graphics` — Graphics API Bindings (std/graphics)
 URL: /silk/docs/?p=std/graphics
 ==============================================================================
 
-# `std::graphics` — Graphics API Bindings
+# `std::graphics`
 
-`std::graphics` is a namespace for
-low-level, FFI-oriented bindings to common graphics APIs.
+`std::graphics` is the standard library’s
+low-level namespace for pinned graphics API bindings.
 
-This layer intentionally does **not** include:
+This layer intentionally does not provide window creation, swapchains,
+resource-lifetime wrappers, or renderer abstractions. It exists to give Silk
+programs direct access to the underlying APIs.
 
-- window-system integration (creating a surface/context),
-- swapchain/window management,
-- higher-level rendering abstractions,
-- automatic resource lifetime management.
+## Exported API
 
-Those pieces are platform- and engine-specific and are expected to live above
-`std::graphics` (either as future `std::...` modules or downstream packages).
+### Root module
 
-## Module Layout
+`std::graphics` exports the shared binding conventions:
 
-`std::graphics` is organized as:
+- `Ptr = u64` — raw pointer-shaped values passed through the C ABI
+- `Handle = u64` — raw handle-shaped values used by APIs such as Vulkan and GL
+  sync objects
 
-- `std::graphics` — shared conventions and basic pointer/handle aliases.
-- `std::graphics::opengl` — generated OpenGL bindings (core OpenGL 4.6).
-- `std::graphics::opengles` — generated OpenGL ES bindings (core OpenGL ES 3.2).
-- `std::graphics::vulkan` — generated Vulkan bindings (core Vulkan 1.3).
+### `std::graphics::opengl`
 
-These bindings are generated from the Khronos registries and pinned to specific
-upstream commits so the surface area is stable and reviewable.
+The OpenGL binding module is generated from the Khronos OpenGL registry at core
+OpenGL 4.6. It exports:
+
+- 39 type aliases such as `GLenum`, `GLuint`, `GLsizei`, `GLsync`, and callback
+  pointer aliases like `GLDEBUGPROC`
+- 1367 constants such as `GL_COLOR_BUFFER_BIT`, `GL_NO_ERROR`, and
+  `GL_TEXTURE_2D`
+- 657 `gl*` entry points such as `glClear`, `glClearColor`, `glBindBuffer`,
+  `glCreateShader`, `glDrawElements`, and `glGetString`
+
+### `std::graphics::opengles`
+
+The OpenGL ES binding module is generated from the Khronos OpenGL registry at
+core OpenGL ES 3.2. It exports:
+
+- 39 type aliases such as `GLenum`, `GLuint`, `GLsizei`, `GLsync`, and
+  callback pointer aliases
+- 1001 constants covering the ES 3.2 core surface
+- 358 `gl*` entry points such as `glClear`, `glBindTexture`, `glUseProgram`,
+  and `glDrawArrays`
+
+### `std::graphics::vulkan`
+
+The Vulkan binding module is generated from the Khronos Vulkan registry at core
+Vulkan 1.3. It exports:
+
+- 233 type aliases including handle types like `VkInstance`, `VkDevice`,
+  `VkBuffer`, `VkCommandBuffer`, flag types, enums, and callback pointer types
+- 1102 constants covering core Vulkan enums, bitfields, result codes, and
+  structure tags
+- 215 `vk*` entry points such as `vkCreateInstance`, `vkEnumeratePhysicalDevices`,
+  `vkCreateDevice`, `vkQueueSubmit`, and `vkCmdDraw`
+
+### Registry provenance
 
 Pinned registry inputs:
 
 - OpenGL / OpenGL ES: `gl.xml` from `KhronosGroup/OpenGL-Registry` commit
-  `0b449b97cdf1043eef5e1f0e235cbbab6ec10c86`.
+  `0b449b97cdf1043eef5e1f0e235cbbab6ec10c86`
 - Vulkan: `vk.xml` from `KhronosGroup/Vulkan-Docs` commit
-  `fb8116669f76e26bdab4c7ad0bf1cafdeff484dc`.
+  `fb8116669f76e26bdab4c7ad0bf1cafdeff484dc`
 
-Regeneration:
+Generated outputs:
 
-- Run `python3 docs/tools/gen_graphics_bindings.py`.
-- The generated outputs are:
-  - `std/graphics/opengl.slk`
-  - `std/graphics/opengles.slk`
-  - `std/graphics/vulkan.slk`
+- `std/graphics/opengl.slk`
+- `std/graphics/opengles.slk`
+- `std/graphics/vulkan.slk`
 
-## Linking (Hosted `linux/x86_64` Baseline)
+## Examples
 
-These modules declare external symbols via `ext`. On the hosted baseline, they
-are typically provided by dynamic loader libraries such as:
+### Call OpenGL after a context already exists
 
-- OpenGL: `libGL.so.1`
-- OpenGL ES: `libGLESv2.so.2` (or a platform-specific GL ES loader)
-- Vulkan: `libvulkan.so.1`
+```silk
+import std::graphics::opengl;
 
-Downstream programs must link the appropriate library via the CLI:
+fn main () -> int {
+  let mask: std::graphics::opengl::GLbitfield = std::graphics::opengl::GL_COLOR_BUFFER_BIT;
+  std::graphics::opengl::glClearColor(0.08, 0.08, 0.12, 1.0);
+  std::graphics::opengl::glClear(mask);
+  return 0;
+}
+```
 
-- `silk build ... --needed libGL.so.1`
-- `silk build ... --needed libGLESv2.so.2`
-- `silk build ... --needed libvulkan.so.1`
+This example assumes a valid OpenGL context is already current on the thread.
 
-and may also need to provide search paths via `--runpath` depending on how the
-system libraries are installed.
+## Considerations
 
-## Safety Notes
+- These are raw bindings. Ownership, synchronization, context lifetime, and
+  higher-level safety remain the caller’s responsibility.
+- Most pointer parameters are represented as `std::graphics::Ptr` (`u64`).
+  Ensure any pointed-to storage is correctly laid out and remains valid for the
+  full duration of the call.
+- On the hosted `linux/x86_64` baseline, you still need to link the relevant
+  system loader library, for example:
+  - `silk build ... --needed libGL.so.1`
+  - `silk build ... --needed libGLESv2.so.2`
+  - `silk build ... --needed libvulkan.so.1`
+- Returned driver-managed strings or pointers are borrowed. Do not free them.
+- the compiler does not rely on passing user-defined packed C
+  structs by value. The generated bindings therefore favor pointer-based ABI
+  mapping.
 
-These APIs are inherently low-level:
+## Design goals
 
-- Many functions are unsafe without an active context/device.
-- Most pointer parameters are represented as `std::graphics::Ptr` (`u64`)
-  addresses and must be valid for the duration of the call.
-- Some `const char *` inputs are represented as Silk `string` values for
-  convenience (lowered as C-string pointers by the current `ext` ABI mapping).
-- Returned pointers (for example from `glGetString`) are borrowed views into
-  driver-managed memory and must not be freed.
+- Pin the registry inputs so the public surface is reproducible and reviewable.
+- Provide exhaustive raw symbol coverage for the selected core API versions.
+- Keep the standard library layer mechanical; let higher-level rendering
+  packages build ergonomic abstractions above it.
 
-The `std::graphics` bindings focus on mechanical ABI mapping and leave
-ownership/lifetime management to higher layers.
+## See also
 
-Important current limitation (compiler subset):
-
-- The compiler does not yet implement packed C struct layout. As a result,
-  these bindings use `u64` pointers for C pointer parameters and do not rely on
-  passing user-defined structs by value to C.
+- [`std::ffi::c`](?p=std/ffi-c)
+- [`Package structure`](?p=std/package-structure)
 
 ==============================================================================
 DOCS: `std::image` — Image Codecs + Color (std/image)
 URL: /silk/docs/?p=std/image
 ==============================================================================
 
-# `std::image` — Image Codecs + Color
+# `std::image`
 
-`std::image` provides:
+`std::image` covers shared image types, color-space
+helpers, and hosted PNG/JPEG codecs.
 
-- `std::image::color` — color value types and conversion helpers (pure Silk),
-- `std::image::png` — PNG decode/encode backed by libpng,
-- `std::image::jpeg` — JPEG decode/encode backed by libjpeg-turbo.
+## Exported API
 
-The codec modules focus on simple, ABI-safe entrypoints (currently RGBA8) that
-work with the current `ext` / C ABI subset.
+### Root module: `std::image`
 
-## Module Layout
+`std::image` exports one shared image container:
 
-- `std::image` — shared image types.
-- `std::image::color` — Go-inspired color model helpers and common color value
-  types.
-- `std::image::png` — PNG decode/encode (`RGBA8`) via libpng.
-- `std::image::jpeg` — JPEG decode/encode (`RGBA8`) via libjpeg-turbo.
+- `ImageRGBA8`
+  - fields:
+    - `width: i64`
+    - `height: i64`
+    - `pixels: std::buffer::BufferU8`
+  - methods:
+    - `ImageRGBA8.invalid() -> ImageRGBA8`
+    - `img.is_valid() -> bool`
+    - `img.bytes_per_row() -> i64`
+    - `img.drop() -> void`
 
-## Vendored Dependencies + Linking
+`ImageRGBA8` stores tightly packed RGBA8 pixels in row-major order:
+`width * height * 4` bytes.
 
-On the hosted `linux/x86_64` baseline, the codec modules rely on vendored C
-libraries that are built via the Silk compiler repository’s vendored dependency workflow:
+### `std::image::color`
 
-- libpng `v1.6.54`
-- libjpeg-turbo `3.1.3`
+Value structs:
 
-Run:
+- `RGB`
+- `RGBA32`
+- `CMYK`
+- `YCbCr`
+- `Alpha`
+- `Alpha16`
+- `Gray`
+- `Gray16`
+- `RGBA`
+- `RGBA64`
+- `NRGBA`
+- `NRGBA64`
+- `NYCbCrA`
 
-```sh
-zig build deps
+Union and conversion helpers:
+
+- `Color`
+- `rgba(c: Color) -> RGBA32`
+- `cmyk_to_rgb(c, m, y, k) -> RGB`
+- `rgb_to_cmyk(r, g, b) -> CMYK`
+- `rgb_to_ycbcr(r, g, b) -> YCbCr`
+- `ycbcr_to_rgb(y, cb, cr) -> RGB`
+
+Concrete color methods:
+
+- `Alpha.rgba() -> RGBA32`
+- `Alpha16.rgba() -> RGBA32`
+- `Gray.rgba() -> RGBA32`
+- `Gray16.rgba() -> RGBA32`
+- `RGBA.rgba() -> RGBA32`
+- `RGBA64.rgba() -> RGBA32`
+- `NRGBA.rgba() -> RGBA32`
+- `NRGBA64.rgba() -> RGBA32`
+- `CMYK.rgba() -> RGBA32`
+- `YCbCr.rgba() -> RGBA32`
+- `NYCbCrA.rgba() -> RGBA32`
+
+Model and palette helpers:
+
+- `Model`
+- `model_func(f: fn (u64) -> u64) -> Model`
+- `model_convert(m: &Model, c: Color) -> Color`
+- `Palette`
+  - `Palette.empty() -> Palette`
+  - `Palette.init(ptr: u64, len: i64) -> Palette`
+  - `p.index(c: Color) -> int`
+  - `p.convert(c: Color) -> Color`
+
+### `std::image::png`
+
+Error constants:
+
+- `ERR_INVALID_INPUT`
+- `ERR_DECODE_FAILED`
+- `ERR_ENCODE_FAILED`
+- `ERR_BUFFER_TOO_SMALL`
+- `ERR_OUT_OF_MEMORY`
+
+Types:
+
+- `PngFailed`
+  - `err.kind() -> PngErrorKind`
+- `ImageResult = std::result::Result(std::image::ImageRGBA8, PngFailed)`
+- `BufferResult = std::result::Result(std::buffer::BufferU8, PngFailed)`
+
+Functions:
+
+- `decode_rgba8(bytes: std::arrays::ByteSlice) -> ImageResult`
+- `encode_rgba8(pixels: std::arrays::ByteSlice, width: i64, height: i64) -> BufferResult`
+- `encode_image_rgba8(img: &std::image::ImageRGBA8) -> BufferResult`
+
+### `std::image::jpeg`
+
+Error constants:
+
+- `ERR_INVALID_INPUT`
+- `ERR_INIT_FAILED`
+- `ERR_DECODE_FAILED`
+- `ERR_ENCODE_FAILED`
+- `ERR_BUFFER_TOO_SMALL`
+- `ERR_OUT_OF_MEMORY`
+
+Types:
+
+- `JpegFailed`
+  - `err.kind() -> JpegErrorKind`
+- `ImageResult = std::result::Result(std::image::ImageRGBA8, JpegFailed)`
+- `BufferResult = std::result::Result(std::buffer::BufferU8, JpegFailed)`
+
+Functions:
+
+- `decode_rgba8(bytes: std::arrays::ByteSlice) -> ImageResult`
+- `encode_rgba8(pixels: std::arrays::ByteSlice, width: i64, height: i64, quality: int = 90) -> BufferResult`
+- `encode_image_rgba8(img: &std::image::ImageRGBA8, quality: int = 90) -> BufferResult`
+
+## Examples
+
+### Convert colors and use a palette
+
+```silk
+import std::image::color;
+
+fn invert_rgba64_bits (bits: u64) -> u64 {
+  let r: u64 = bits & 0xffff;
+  let g: u64 = (bits >> 16) & 0xffff;
+  let b: u64 = (bits >> 32) & 0xffff;
+  let a: u64 = (bits >> 48) & 0xffff;
+
+  return
+    ((0xffff - r) & 0xffff) |
+    (((0xffff - g) & 0xffff) << 16) |
+    (((0xffff - b) & 0xffff) << 32) |
+    ((a & 0xffff) << 48);
+}
+
+fn main () -> int {
+  let ycc = std::image::color::rgb_to_ycbcr(255, 0, 0);
+  let red = std::image::color::ycbcr_to_rgb(ycc.y, ycc.cb, ycc.cr);
+  if red.r < 250 {
+    return 1;
+  }
+
+  let values: std::image::color::RGBA64[2] = [
+    std::image::color::RGBA64{ r: 0, g: 0, b: 0, a: 0xffff },
+    std::image::color::RGBA64{ r: 0xffff, g: 0xffff, b: 0xffff, a: 0xffff },
+  ];
+  let palette = std::image::color::Palette.init(values as u64, 2);
+  if palette.index(std::image::color::RGBA{ r: 250, g: 250, b: 250, a: 255 }) != 1 {
+    return 2;
+  }
+
+  let model = std::image::color::model_func(invert_rgba64_bits);
+  let inverted = std::image::color::model_convert(&model, std::image::color::RGBA{ r: 0, g: 0, b: 0, a: 255 });
+  let rgba = std::image::color::rgba(inverted);
+  if rgba.r != 0xffff || rgba.g != 0xffff || rgba.b != 0xffff {
+    return 3;
+  }
+
+  return 0;
+}
 ```
 
-When the vendored archives are present, `silk build` auto-links them when
-`std::image::png` / `std::image::jpeg` are present in the module set, and also
-when linking `.o`/`.a` inputs that reference the shim symbols.
+### Encode and decode a PNG image in memory
 
-Why shims: libpng and libjpeg-turbo expose callback-heavy APIs and/or by-value
-struct arguments. The current Silk ABI subset is intentionally small, so the
-toolchain builds shim archives that provide scalar-ABI-friendly functions.
+```silk
+import std::buffer;
+import std::image;
+import std::image::png;
+import std::runtime::mem;
 
-Notes:
+fn main () -> int {
+  let mut pixels = match std::buffer::BufferU8.init(16) {
+    Ok(v) => v,
+    Err(_) => return 1,
+  };
+  pixels.len = 16;
 
-- The PNG path requires zlib and libm at link/runtime (typically `libz.so.1`
-  and `libm.so.6`).
-- The JPEG path requires libm at link/runtime (typically `libm.so.6`).
+  let src: u8[16] = [
+    255, 0, 0, 255,
+    0, 255, 0, 255,
+    0, 0, 255, 255,
+    255, 255, 255, 255,
+  ];
 
-## Ownership + Safety
+  var i: i64 = 0;
+  while i < 16 {
+    std::runtime::mem::store_u8(pixels.ptr, i, (src as u8[](16))[i]);
+    i = i + 1;
+  }
 
-- Decoders return owned pixel buffers; callers must `drop` them when finished.
-- Inputs are treated as borrowed byte slices; they must remain valid for the
-  duration of a call.
-- These modules do not provide sandboxing: decoding untrusted data can be
-  expensive and should be bounded by caller policy (size limits, timeouts,
-  etc.).
+  let img = std::image::ImageRGBA8{ width: 2, height: 2, pixels: pixels };
+  let encoded = match std::image::png::encode_image_rgba8(&img) {
+    Ok(v) => v,
+    Err(_) => return 2,
+  };
+  let decoded = match std::image::png::decode_rgba8(encoded.as_bytes()) {
+    Ok(v) => v,
+    Err(_) => return 3,
+  };
+
+  if decoded.width != 2 || decoded.height != 2 {
+    return 4;
+  }
+
+  return 0;
+}
+```
+
+## Considerations
+
+- The codec boundary is intentionally `RGBA8`. Use `std::image::color` to
+  convert values before encoding or after decoding.
+- `ImageRGBA8` and the codec output buffers are owning values. Call `drop()`
+  when you release them early; otherwise scope exit handles cleanup.
+- `Palette` is a non-owning view over caller-provided `RGBA64` values. The
+  backing storage must outlive the palette.
+- On the hosted `linux/x86_64` baseline, PNG and JPEG rely on vendored codec
+  libraries built by `zig build deps`. `silk build` auto-links the staged codec
+  archives when the corresponding modules are imported.
+- PNG and JPEG decoding do not sandbox untrusted input. Apply caller-level
+  limits for input size, time, and memory if you ingest attacker-controlled
+  data.
+
+## See also
+
+- [`std::buffer`](?p=std/buffer)
+- [`std::arrays`](?p=std/arrays)
+- [`std::filesystem`](?p=std/filesystem)
 
 ==============================================================================
 DOCS: Web IDL (`std::idl::web`) (std/idl-web)
@@ -24450,7 +24813,7 @@ grown as `silk bindgen` work lands.
 - **Compact storage**: avoid heavyweight allocation patterns; store
   parsed data in compact slot vectors (`std::vector::Vector(i64)`).
 
-## High-Level API
+## Exported API
 
 - `std::idl::web::parse(source: string) -> Result(Document, ParseError)`
 - `std::idl::web::parse_owned(source: std::strings::String) -> Result(Document, ParseError)`
@@ -24530,31 +24893,7 @@ These theories serve two goals:
 See `docs/language/formal-verification.md` for the Formal Silk execution model
 and theory semantics.
 
-## Importing and using theories
-
-```silk
-import { bounds_i64, string_storage_well_formed } from "std/formal";
-
-struct View {
-  ptr: u64,
-  len: i64,
-  cap: i64,
-}
-
-impl View {
-  #theory string_storage_well_formed(self.ptr, self.len, self.cap);
-  fn as_string (self: &View) -> string {
-    return self.ptr as string(self.len);
-  }
-
-  #theory bounds_i64(index, self.len);
-  fn get_byte (self: &View, index: i64) -> u8 {
-    return std::runtime::mem::load_u8(self.ptr, index);
-  }
-}
-```
-
-## Theory families
+## Exported API
 
 ### Scalar and arithmetic
 
@@ -24651,125 +24990,232 @@ for compare-result range and core-triplet sign implications, so downstream code
 can combine the reusable `std::formal` theories with the shipped runtime API
 instead of restating those facts manually.
 
+## Examples
+
+```silk
+import { bounds_i64, string_storage_well_formed } from "std/formal";
+
+struct View {
+  ptr: u64,
+  len: i64,
+  cap: i64,
+}
+
+impl View {
+  #theory string_storage_well_formed(self.ptr, self.len, self.cap);
+  fn as_string (self: &View) -> string {
+    return self.ptr as string(self.len);
+  }
+
+  #theory bounds_i64(index, self.len);
+  fn get_byte (self: &View, index: i64) -> u8 {
+    return std::runtime::mem::load_u8(self.ptr, index);
+  }
+}
+```
+
 ==============================================================================
 DOCS: `std::runtime::z3` — Z3 SMT Solver (C API Bindings) (std/z3)
 URL: /silk/docs/?p=std/z3
 ==============================================================================
 
-# `std::runtime::z3` — Z3 SMT Solver (C API Bindings)
+# `std::runtime::z3`
 
+`std::runtime::z3` exposes the full Z3 C
+API needed for low-level solver integration from Silk.
 
-`std::runtime::z3` provides low-level `ext` bindings for the Z3 C API.
-It is intended for user-space programs that want to call into Z3 directly.
+## Exported API
 
-This module is a direct, unsafe FFI surface:
+### Binding model
 
-- all Z3 opaque handles are represented as `u64` (raw pointers),
-- all Z3 `const char *` strings are represented as `u64`,
-- pointer parameters (including `T*` / `T const*` / `T[]`) are represented as `u64`.
+`std::runtime::z3` is a direct `ext` surface:
 
-The module does **not** provide a safe, ownership-tracked wrapper. Callers are
-responsible for using the Z3 reference-counting APIs correctly.
+- opaque Z3 handles are `u64`
+- `Z3_string` and other C string pointers are `u64`
+- pointer parameters and pointer arrays are passed as `u64`
 
-## Vendored Dependencies + Linking
+The module exports the original `Z3_*` names rather than wrapping them behind a
+Silk-specific adapter layer.
 
-On the hosted `linux/x86_64` baseline, the Silk toolchain vendors:
+### Type families
 
-- Z3 headers under `vendor/include` (e.g. `z3.h`, `z3_api.h`, `z3_fixedpoint.h`, ...),
-- a pinned Z3 static archive: `vendor/lib/x64-linux/libz3.a`.
+The module exports 59 type aliases, including:
 
-When `std::runtime::z3` is present in the module set, `silk build` auto-links
-the vendored `libz3.a` into executable and shared-library outputs. Auto-linking
-also applies when linking `.o`/`.a` inputs that reference Z3 `Z3_*` symbols.
+- opaque handles:
+  - `Z3_config`
+  - `Z3_context`
+  - `Z3_sort`
+  - `Z3_ast`
+  - `Z3_func_decl`
+  - `Z3_model`
+  - `Z3_solver`
+  - `Z3_goal`
+  - `Z3_tactic`
+  - `Z3_probe`
+  - `Z3_optimize`
+  - `Z3_fixedpoint`
+- pointer/string aliases:
+  - `Z3_string`
+  - `Z3_char_ptr`
+  - `Z3_string_ptr`
+- enum-like scalar aliases:
+  - `Z3_lbool`
+  - `Z3_symbol_kind`
+  - `Z3_parameter_kind`
+  - `Z3_sort_kind`
+  - `Z3_ast_kind`
+  - `Z3_decl_kind`
+  - `Z3_param_kind`
+  - `Z3_ast_print_mode`
+  - `Z3_error_code`
+  - `Z3_goal_prec`
+- callback signatures such as:
+  - `Z3_error_handler`
+  - `Z3_solver_callback`
+  - `Z3_model_eh`
+  - fixedpoint callback types
 
-In staged/installed toolchains, the vendored archive is expected under the
-compiler prefix:
+### Constants
 
-- `build/lib/silk/vendor/lib/x64-linux/` (repo build prefix)
-- `<prefix>/lib/silk/vendor/lib/x64-linux/` (installed)
+The module exports 345 constants, including:
 
-To avoid runtime dependencies on `libstdc++.so.6` and `libgcc_s.so.1`, the
-driver prefers to link the Z3 archive together with a small set of **system
-static** runtime archives (GCC toolchain-provided):
+- boolean results: `Z3_L_FALSE`, `Z3_L_UNDEF`, `Z3_L_TRUE`
+- symbol kinds: `Z3_INT_SYMBOL`, `Z3_STRING_SYMBOL`
+- sort kinds such as `Z3_BOOL_SORT`, `Z3_INT_SORT`, `Z3_ARRAY_SORT`,
+  `Z3_BV_SORT`, `Z3_SEQ_SORT`
+- AST kinds such as `Z3_APP_AST`, `Z3_NUMERAL_AST`, `Z3_QUANTIFIER_AST`
+- declaration/operator kinds such as `Z3_OP_EQ`, `Z3_OP_ADD`, `Z3_OP_STORE`,
+  `Z3_OP_SELECT`, `Z3_OP_TRUE`
+- error codes, print modes, goal precision tags, and many other C API enums
 
-- `libstdc++.a`
-- `libsupc++.a`
-- `libgcc.a`
-- `libgcc_eh.a`
-- `libitm.a`
+### Entry-point families
 
-On glibc-based systems, the driver also links:
+The module exports 787 `Z3_*` entry points. The main families are:
 
-- `libc_nonshared.a` (for `atexit` / stack protector helpers that may not be
-  exported from `libc.so.6`)
+- global parameters and configuration:
+  - `Z3_global_param_*`
+  - `Z3_mk_config`
+  - `Z3_del_config`
+  - `Z3_set_param_value`
+- context and reference counting:
+  - `Z3_mk_context`
+  - `Z3_mk_context_rc`
+  - `Z3_del_context`
+  - `Z3_inc_ref`
+  - `Z3_dec_ref`
+- parameters and descriptors:
+  - `Z3_mk_params`
+  - `Z3_params_*`
+  - `Z3_param_descrs_*`
+- symbols, sorts, constructors, and declarations:
+  - `Z3_mk_int_symbol`
+  - `Z3_mk_string_symbol`
+  - `Z3_mk_bool_sort`
+  - `Z3_mk_bv_sort`
+  - `Z3_mk_func_decl`
+  - `Z3_mk_app`
+- AST construction and inspection:
+  - `Z3_mk_true`
+  - `Z3_mk_false`
+  - `Z3_mk_eq`
+  - `Z3_mk_and`
+  - `Z3_mk_or`
+  - `Z3_mk_add`
+  - `Z3_mk_bvadd`
+  - `Z3_get_ast_kind`
+  - `Z3_ast_to_string`
+- solver and model APIs:
+  - `Z3_mk_solver`
+  - `Z3_solver_inc_ref`
+  - `Z3_solver_assert`
+  - `Z3_solver_check`
+  - `Z3_solver_get_model`
+  - `Z3_model_*`
+- tactics, goals, probes, simplify/apply:
+  - `Z3_mk_goal`
+  - `Z3_mk_tactic`
+  - `Z3_mk_probe`
+  - `Z3_tactic_*`
+  - `Z3_probe_*`
+  - `Z3_simplify*`
+  - `Z3_apply_result_*`
+- optimize and fixedpoint:
+  - `Z3_mk_optimize`
+  - `Z3_optimize_*`
+  - `Z3_mk_fixedpoint`
+  - `Z3_fixedpoint_*`
+- statistics, parser, and printing:
+  - `Z3_stats_*`
+  - `Z3_parse_*`
+  - `Z3_benchmark_to_smtlib_string`
+  - `Z3_set_ast_print_mode`
 
-On some toolchains, the system `libstdc++.a` is missing internal symbols
-referenced by the vendored Z3 build (notably `basic_string::_M_replace_cold`).
-When the required static archives are missing or incompatible, `silk build`
-falls back to using the shared C++ runtime by adding:
+## Examples
 
-- `libstdc++.so.6` (DT_NEEDED)
-- `libgcc_s.so.1` (DT_NEEDED)
+### Check a trivial satisfiable formula
 
-### Locating System Static Archives
+```silk
+import z3 from "std/runtime/z3";
 
-When auto-linking `std::runtime::z3`, the driver tries to locate the required
-system static archives using the configured C/C++ toolchain:
+export fn main () -> int {
+  let cfg: z3::Z3_config = z3::Z3_mk_config();
+  if cfg == 0 {
+    return 1;
+  }
 
-- for `libstdc++.a`, `libsupc++.a`, `libgcc.a`, `libgcc_eh.a`, `libitm.a`:
-  - uses `CXX` (or `c++` if unset) and runs `-print-file-name=<archive>`
-- for `libc_nonshared.a`:
-  - uses `SILK_CC`, then `CC` (or `cc` if unset) and runs `-print-file-name=<archive>`
+  let ctx: z3::Z3_context = z3::Z3_mk_context_rc(cfg);
+  z3::Z3_del_config(cfg);
+  if ctx == 0 {
+    return 2;
+  }
 
-If your toolchain is installed in a non-standard location, set `CXX` and/or
-`SILK_CC` (or `CC`) so those commands can resolve the static archive paths.
+  let solver: z3::Z3_solver = z3::Z3_mk_solver(ctx);
+  if solver == 0 {
+    z3::Z3_del_context(ctx);
+    return 3;
+  }
+  z3::Z3_solver_inc_ref(ctx, solver);
 
-If auto-detection fails, you can also pass the `.a` files explicitly as
-`silk build` inputs.
+  let truth: z3::Z3_ast = z3::Z3_mk_true(ctx);
+  z3::Z3_solver_assert(ctx, solver, truth);
 
-If the driver cannot locate a compatible set of static runtime archives, it
-falls back to adding `libstdc++.so.6` and `libgcc_s.so.1` as `DT_NEEDED`
-dependencies (see above).
+  let result: z3::Z3_lbool = z3::Z3_solver_check(ctx, solver);
 
-When producing an executable/shared library, the driver still adds runtime
-dynamic dependencies for common system libraries:
+  z3::Z3_solver_dec_ref(ctx, solver);
+  z3::Z3_del_context(ctx);
 
-- `libpthread.so.0`
-- `libm.so.6`
+  return if result == z3::Z3_L_TRUE { 0 } else { 4 };
+}
+```
 
-## glibc C23 Compatibility Shims
+## Considerations
 
-The shipped `libz3.a` build references some glibc C23 entrypoints (for example
-`__isoc23_sscanf`) that may be missing on older glibc versions.
+- This module is intentionally low-level. It does not track ownership or
+  reference counts for you.
+- Pair every `*_inc_ref` with the matching `*_dec_ref`, and free contexts,
+  solvers, params, or other owning handles using the correct Z3 API.
+- Many Z3 functions return borrowed `const char *` pointers. Convert them with
+  `std::ffi::c::cstr_borrow(ptr)` and treat the resulting Silk `string` as a
+  borrowed view.
+- On the hosted `linux/x86_64` baseline, `silk build` auto-links the vendored
+  `libz3.a` and the required runtime support libraries when this module is in
+  the module set.
+- The current auto-link behavior is hosted-baseline specific. If you embed Z3
+  elsewhere, ensure the archive and runtime dependencies are available to the
+  final link.
 
-To keep the hosted `linux/x86_64` baseline working across libc versions, the
-Silk toolchain provides weak shim implementations (wrapping `vsscanf`/`strtol`)
-and auto-links them when `libz3.a` is pulled in.
+## Design goals
 
-## Static Constructors
+- Preserve the upstream Z3 naming and calling model so porting C examples is
+  straightforward.
+- Expose the complete raw API surface for advanced users and wrapper authors.
+- Keep higher-level ergonomics separate from the low-level FFI layer.
 
-The vendored Z3 static archive contains `.init_array` constructors (C++ static
-initialization).
+## See also
 
-Silk executables do not use libc `crt1`, so the native backend runs linked
-`.init_array` constructors from the executable entry stub before calling user
-code.
-
-## C Strings Returned By Z3
-
-Many Z3 APIs return `Z3_string` (`const char *`). These are borrowed pointers
-managed by Z3. Convert them to a Silk `string` view using:
-
-- `std::ffi::c::cstr_borrow(ptr: u64) -> string` (from `std/ffi/c.slk`)
-
-The returned `string` is a borrowed view; it is valid only while the Z3-owned
-storage remains valid.
-
-## Platform Support
-
-The current toolchain auto-link behavior for `std::runtime::z3` is supported
-only on the hosted `linux/x86_64` backend (matching the shipped vendored Z3
-archive).
+- [`std::z3`](?p=std/z3)
+- [`std::formal`](?p=std/formal)
+- [`std::ffi::c`](?p=std/ffi-c)
 
 ==============================================================================
 DOCS: `std::ggml` (std/ggml)
@@ -24778,86 +25224,214 @@ URL: /silk/docs/?p=std/ggml
 
 # `std::ggml`
 
-
-`std::ggml` exposes the ggml tensor library to Silk programs. The current
-wrapper and vendored-linking flow are shipped; the surface will continue to
-expand as more of ggml is mapped into stable Silk APIs.
+`std::ggml` exposes a focused, usable
+subset of ggml for creating tensors, building graphs, and computing them on the
+hosted baseline.
 
 Upstream:
 
 - Repository: `ggml-org/ggml`
 - Pinned version: `v0.9.5`
 
-## Goals
+## Exported API
 
-- Provide a safe, Silk-native wrapper layer over the ggml C API.
-- Keep raw access available for power users (with explicit unsafe/pointer APIs).
-- Make building/linking predictable by treating ggml as a core vendored
-  dependency (similar to libsodium/mbedTLS/libssh2/sqlite in the hosted
-  baseline).
+### Types and constants
 
-## ABI / FFI Notes
+- `Type = i32`
+- tensor element type constants:
+  - `TYPE_F32`
+  - `TYPE_F16`
+  - `TYPE_I32`
+  - `TYPE_I64`
+  - `TYPE_F64`
+  - `TYPE_BF16`
 
-The current Silk backend subset uses a scalar-slot memory model for structs
-(`docs/language/structs-impls-layout.md`). At ABI boundaries (`export fn` and
-`ext`), passing C structs by value is only ABI-safe when the struct’s flattened
-slots are all `i64`/`u64`/`f64`.
+Status constants:
 
-For FFI with upstream C APIs, note that Silk’s `int` currently maps to `i64` on
-`linux/x86_64`. The `std::ggml` bindings therefore use `i32` for ggml’s C
-`int`/`enum` values (type codes, status values, indices, and thread counts) to
-match the upstream ABI.
+- `STATUS_ALLOC_FAILED`
+- `STATUS_FAILED`
+- `STATUS_SUCCESS`
+- `STATUS_ABORTED`
 
-ggml includes several C entrypoints that accept small structs by value (notably
-`ggml_init(struct ggml_init_params)`), where the C layout includes `bool` and
-`size_t`. This is not ABI-safe to call directly from Silk in Silk.
+Error constants:
 
-Therefore, `std::ggml` uses a tiny C shim layer (built as part of the toolchain)
-to expose ABI-safe wrapper functions for the few by-value-struct APIs.
+- `ERR_INIT_FAILED`
+- `ERR_INVALID_INPUT`
+- `ERR_OUT_OF_MEMORY`
+- `ERR_COMPUTE_FAILED`
+- `ERR_ABORTED`
 
-## Build + Dependency Workflow
+### Errors and result aliases
 
-`zig build deps` is responsible for fetching/building ggml and staging:
+- `GgmlFailed`
+  - `err.kind() -> GgmlErrorKind`
+- `ContextResult = std::result::Result(Context, GgmlFailed)`
+- `TensorResult = std::result::Result(Tensor, GgmlFailed)`
+- `GraphResult = std::result::Result(Graph, GgmlFailed)`
+- `BoolResult = std::result::Result(bool, GgmlFailed)`
+- `F32Result = std::result::Result(f32, GgmlFailed)`
+- `IntResult = std::result::Result(i32, GgmlFailed)`
+- `I64Result = std::result::Result(i64, GgmlFailed)`
+- `U64Result = std::result::Result(u64, GgmlFailed)`
 
-- headers into `vendor/include/` (for shim compilation),
-- static archives into `vendor/lib/x64-linux/` (for linking),
+### `Context`
 
-alongside existing vendored deps. See `docs/compiler/vendored-deps.md`.
+`Context` owns the ggml arena and therefore also owns every tensor and graph
+created from it.
 
-In staged/installed toolchains, the auto-linked archives are expected under the
-compiler prefix:
+Methods:
 
-- `build/lib/silk/vendor/lib/x64-linux/` (repo build prefix)
-- `<prefix>/lib/silk/vendor/lib/x64-linux/` (installed)
+- `Context.invalid() -> Context`
+- `ctx.is_valid() -> bool`
+- `Context.init(mem_size: u64, mem_buffer: u64 = 0, no_alloc: bool = false) -> ContextResult`
+- `ctx.free() -> void`
+- `ctx.drop() -> void`
+- `ctx.used_mem() -> U64Result`
+- `ctx.new_tensor_1d(ty: Type, ne0: i64) -> TensorResult`
+- `ctx.new_tensor_2d(ty: Type, ne0: i64, ne1: i64) -> TensorResult`
+- `ctx.add(a: Tensor, b: Tensor) -> TensorResult`
+- `ctx.sub(a: Tensor, b: Tensor) -> TensorResult`
+- `ctx.mul(a: Tensor, b: Tensor) -> TensorResult`
+- `ctx.mul_mat(a: Tensor, b: Tensor) -> TensorResult`
+- `ctx.new_graph() -> GraphResult`
 
-On `linux/x86_64`, `silk build` automatically links the staged ggml archives
-when `std::ggml` is included in the module set. If the archives are missing,
-the build fails with an actionable error pointing to `zig build deps`.
+### `Tensor`
 
-When linking `.o` / `.a` inputs, `silk build` also auto-links ggml if any input
-references `silk_ggml_init` (for example, when a prebuilt static library was
-produced from Silk code that uses `std::ggml`). This keeps downstream consumers
-from needing to import `std::ggml` purely to satisfy link/runtime dependencies.
+`Tensor` is a lightweight handle into storage owned by a `Context`.
 
-The current auto-linked archives are:
-`libggml.a`, `libggml-base.a`, `libggml-cpu.a`, and `libsilk_ggml_shims.a`.
+Methods:
 
-Because ggml is built as C++ on the hosted baseline, the produced executables
-and shared libraries also depend on the system C++ runtime (`libstdc++`) and
-math library (`libm`); `silk build` adds these as `DT_NEEDED` entries when it
-auto-links ggml.
+- `Tensor.invalid() -> Tensor`
+- `tensor.is_valid() -> bool`
+- `tensor.set_f32(value: f32) -> BoolResult`
+- `tensor.set_f32_1d(i: i32, value: f32) -> BoolResult`
+- `tensor.get_f32_1d(i: i32) -> F32Result`
+- `tensor.nelements() -> I64Result`
+- `tensor.nbytes() -> U64Result`
+- `tensor.n_dims() -> IntResult`
+- `tensor.is_scalar() -> BoolResult`
+- `tensor.is_contiguous() -> BoolResult`
 
-## Intended Surface (Initial)
+### `Graph`
 
-The initial surface is intentionally small:
+`Graph` is a compute graph handle associated with the context that created it.
 
-- create/free a ggml context,
-- create basic tensors,
-- compute a graph,
-- basic tensor inspection helpers.
+Methods:
 
-The module is expected to grow incrementally as we map more of the upstream API
-into a stable Silk wrapper layer.
+- `Graph.invalid() -> Graph`
+- `graph.is_valid() -> bool`
+- `graph.build_forward_expand(t: &Tensor) -> BoolResult`
+- `graph.compute(n_threads: i32) -> BoolResult`
+
+## Examples
+
+### Add two scalar tensors
+
+```silk
+import std::ggml;
+
+export fn main () -> int {
+  let ctx = match std::ggml::Context.init(16 * 1024 * 1024) {
+    Ok(v) => v,
+    Err(_) => return 1,
+  };
+
+  let mut a = match ctx.new_tensor_1d(std::ggml::TYPE_F32, 1) {
+    Ok(v) => v,
+    Err(_) => return 2,
+  };
+  let mut b = match ctx.new_tensor_1d(std::ggml::TYPE_F32, 1) {
+    Ok(v) => v,
+    Err(_) => return 3,
+  };
+
+  if a.set_f32_1d(0 as i32, 3.0).is_err() {
+    return 4;
+  }
+  if b.set_f32_1d(0 as i32, 4.0).is_err() {
+    return 5;
+  }
+
+  let c = match ctx.add(a, b) {
+    Ok(v) => v,
+    Err(_) => return 6,
+  };
+
+  let mut graph = match ctx.new_graph() {
+    Ok(v) => v,
+    Err(_) => return 7,
+  };
+  if graph.build_forward_expand(&c).is_err() {
+    return 8;
+  }
+  if graph.compute(1 as i32).is_err() {
+    return 9;
+  }
+
+  let value = match c.get_f32_1d(0 as i32) {
+    Ok(v) => v,
+    Err(_) => return 10,
+  };
+  if value != 7.0 {
+    return 11;
+  }
+
+  return 0;
+}
+```
+
+### Inspect tensor shape and storage
+
+```silk
+import std::ggml;
+
+fn main () -> int {
+  let ctx = match std::ggml::Context.init(4 * 1024 * 1024) {
+    Ok(v) => v,
+    Err(_) => return 1,
+  };
+  let t = match ctx.new_tensor_2d(std::ggml::TYPE_F32, 4, 8) {
+    Ok(v) => v,
+    Err(_) => return 2,
+  };
+
+  if t.n_dims() != Ok(2 as i32) {
+    return 3;
+  }
+  if t.is_contiguous() != Ok(true) {
+    return 4;
+  }
+
+  return 0;
+}
+```
+
+## Considerations
+
+- `Context` is the owner. Tensors and graphs become invalid when the context is
+  freed or dropped.
+- The wrapper intentionally exposes a focused subset. It is suitable for small
+  hosted computations and embedding scenarios without re-exporting the whole
+  upstream C API.
+- The current FFI boundary uses a small shim layer for by-value ggml structs
+  such as `ggml_init_params`, because the current Silk ABI subset does not call
+  those C entry points directly.
+- On the hosted `linux/x86_64` baseline, `silk build` auto-links ggml after
+  `zig build deps` has staged the vendored archives.
+
+## Design goals
+
+- Keep the public surface small and predictable.
+- Preserve ggml’s core execution model: context-owned tensors plus explicit
+  graph construction.
+- Expose enough tensor inspection and arithmetic to build real inference or
+  numeric pipelines without forcing every caller down to raw FFI.
+
+## See also
+
+- [`std::runtime::mem`](?p=std/runtime)
+- [`Vendored dependencies`](?p=compiler/vendored-deps)
+- [`CLI build reference`](?p=compiler/cli-silk)
 
 ==============================================================================
 DOCS: `std::limits` (std/limits)
@@ -24873,7 +25447,7 @@ The initial surface is intentionally small and focuses on min/max bounds for
 fixed-width integer primitives (useful for validating conversions and host
 APIs that cap sizes to a particular width, such as `i32`).
 
-## API
+## Exported API
 
 ```silk
 module std::limits;
@@ -29334,7 +29908,7 @@ The runtime also exposes low-level awaitable building blocks:
 - `silk_rt_async_net_connect_ipv6(fd: i64, addr_hi: u64, addr_lo: u64, port: u16, scope_id: i64) -> u64`
 
 These are intended to be wrapped by stable `std::runtime::event_loop` / `std::task` /
-`std::io` surfaces as that layer is brought up. In the current stdlib snapshot,
+`std::io` surfaces as that layer continues to expand. In the current stdlib snapshot,
 timers and fd readiness are exposed via `std::runtime::event_loop`, and sleep
 helpers are wrapped as `std::task::{sleep_ms_async,sleep_async}`. As of the
 current hosted runtime snapshot, `silk_rt_async_io_{read,write}` return
@@ -29476,7 +30050,8 @@ The compiler is responsible for:
 - computing which locals must be stored in the frame across each suspension point,
 - preserving typed-error and `panic` semantics during the transform.
 
-Note: the current shipped bring-up does **not** yet implement this state-machine transform.
+Note: the current shipped hosted runtime does **not** yet use this explicit
+state-machine transform.
 Instead, `async fn` bodies execute on stackful coroutines provided by the runtime (`ucontext`)
 and suspension points yield back to the executor by swapping contexts. The long-term plan is
 to migrate from stackful coroutines to an explicit compiler transform once the async surface
@@ -29495,7 +30070,7 @@ The key requirement is that `await` must not block an OS thread in hosted builds
 ### `async fn main`
 
 The CLI already permits `async fn main () -> int` as an executable entrypoint
-(`docs/compiler/cli-silk.md`). With a real executor, the entry stub for executables will:
+(`docs/compiler/cli-silk.md`). In the shipped hosted runtime, the entry stub for executables:
 
 - create a default executor/event loop,
 - create the `Promise(int)` for `main`,
@@ -29526,9 +30101,10 @@ Current non-goals:
 
 ## Runtime Layering (`std::runtime`)
 
-The async executor and event loop will be exposed under `std::runtime` as a new runtime area.
+The async executor and event loop are exposed under `std::runtime` as the
+`std::runtime::event_loop` runtime area.
 
-### Proposed new runtime area
+### Current runtime area
 
 - `std::runtime::event_loop` — stable interface used by the compiler-generated coroutine
   runtime and by async-aware stdlib code.
@@ -29546,7 +30122,7 @@ The interface must support:
 - a polling primitive used by the executor’s main loop.
 
 The exact Silk-level signatures are specified in `std/runtime/event_loop.slk` and are expected
-to evolve during bring-up, but the long-term contract should avoid exposing raw platform
+to continue evolving, but the long-term contract should avoid exposing raw platform
 struct layouts directly to user code.
 
 ## Linux Backend: `io_uring`
@@ -29609,23 +30185,29 @@ CI; prefer structural checks (operation counts, allocations, syscalls) where fea
 
 ## Longer-Term Architecture Evolution (Summary)
 
-1. **Coroutine transform (no I/O)**:
-   - implement state machine lowering for `async fn` with `await` suspension,
-   - implement a minimal single-threaded executor that can drive `async fn main`,
-   - implement async timers (`sleep_ms`, `sleep_until`) on the event loop.
-2. **Portable I/O readiness backend**:
-   - expose async fd readiness in `std::runtime::event_loop`,
-   - add async wrappers in `std::io` / `std::net` (opt-in, minimal initial surface).
-3. **Linux `io_uring` backend**:
-   - implement submission/completion for core ops (read/write/accept/connect/timeout),
-   - wire completions to coroutine wakeups,
-   - add `io_uring`-specific tests and stress fixtures.
-4. **Broader structured cancellation semantics**:
+The major hosted runtime milestones are now shipped:
+
+1. **Hosted coroutine executor**:
+   - stackful coroutine execution for `async fn`,
+   - executor-backed `async fn main`,
+   - runtime timers and fd readiness waits.
+2. **Runtime/std integration**:
+   - `std::runtime::event_loop` handle + poll surface,
+   - async wrappers in `std::task`, `std::io`, and `std::net`,
+   - optional Linux `io_uring` acceleration with readiness fallbacks.
+
+The remaining architecture work is about refinement and expansion:
+
+3. **Compiler-managed coroutine frames**:
+   - migrate from stackful coroutines to an explicit compiler transform once
+     the async surface stabilizes.
+4. **Broader async coverage and cancellation semantics**:
+   - widen completion-backed operations,
    - extend the current live-handle cleanup model to richer explicit
-     cancellation-aware child registries if the language/std surface grows to
-     require them,
-   - ensure any future cancellation behavior stays consistent across the
-     checker, lowering, runtime, and `std::...` APIs.
+     cancellation-aware child registries only when the language/std surface
+     genuinely needs them,
+   - keep cancellation behavior aligned across the checker, lowering, runtime,
+     and `std::...` APIs.
 
 ==============================================================================
 DOCS: Intermediate Representation (IR) – Overview (compiler/ir-overview)
@@ -49500,7 +50082,7 @@ Canonical doc: `docs/std/strings.md`.
 import std::strings;
 ```
 
-## API
+## Exported API
 
 ```silk
 module std::strings;
@@ -50123,8 +50705,8 @@ URL: /silk/wiki/?p=std/json
 
 # `std::json`
 
-`std::json` provides JSON parsing and stringifying (initial implementation + expanded
-subset).
+`std::json` provides JSON parsing and stringifying (implemented subset + active
+expansion).
 
 Canonical doc: `docs/std/json.md`.
 
@@ -50135,7 +50717,7 @@ import std::json;
 import std::strings;
 ```
 
-## API
+## Exported API
 
 - `Document.parse(input: string) -> std::json::ParseResult` (borrowed views into `input`)
 - `Document.parse_owned(input: string) -> std::json::ParseResult` (owned copies)
@@ -50240,7 +50822,7 @@ URL: /silk/wiki/?p=std/toml
 
 # `std::toml`
 
-`std::toml` provides TOML parsing (initial implementation + expanded subset).
+`std::toml` provides TOML parsing.
 
 Canonical doc: `docs/std/toml.md`.
 
@@ -50250,7 +50832,7 @@ Canonical doc: `docs/std/toml.md`.
 import std::toml;
 ```
 
-## API
+## Exported API
 
 - `Document.parse(input: string) -> std::toml::ParseResult` (borrowed views into `input`)
 - `Document.parse_owned(input: string) -> std::toml::ParseResult` (owned copies)
@@ -50344,7 +50926,7 @@ import std::url;
 import std::strings;
 ```
 
-## API
+## Exported API
 
 - `std::url::parse(input: string) -> URLResult`
 - `std::url::parse_with_base(input: string, base: &URL) -> URLResult`

@@ -1,8 +1,8 @@
 # `std::strings`
 
-Status: **Initial implementation (expanded)**. A small but growing subset is
-implemented in `std/strings.slk` to support early toolchain bring-up; the rest
-of this document describes the intended long-term API.
+Status: **Implemented subset + active expansion**. A broad and growing subset
+is implemented in `std/strings.slk`; the rest of this document describes the
+near-term expansion path and long-term API shape.
 
 This module provides string utilities and abstractions built on top of the core
 `string` type (UTF-8 bytes) and the `Buffer(T)` intrinsic.
@@ -14,7 +14,7 @@ See also:
 - `docs/language/buffers.md` (Buffer(T) as the low-level backing store)
 - `docs/std/conventions.md` (UTF-8, allocation, and error conventions)
 
-## Current API (Implemented)
+## Exported API
 
 The following functions exist today in `std/strings.slk` and are available to
 import:
@@ -210,7 +210,7 @@ Key invariants:
   null-terminated (with the trailing `\0` byte not counted in `.len`), matching
   the external-call contract in `docs/language/ext.md`.
 
-## API Sketch (Illustrative)
+## Planned expansion
 
 These signatures are illustrative and will be refined alongside the language
 features required to implement them (references, generics, enums/results, etc.).

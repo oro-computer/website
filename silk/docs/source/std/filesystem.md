@@ -28,7 +28,7 @@ See also:
     managed by `std::process::chdir` / `std::process::getcwd`,
   - `.` and `..` segments are normalized; `..` cannot escape above the sandbox root.
 
-## Implemented API
+## Exported API
 
 A hosted POSIX baseline exists today in `std/fs.slk`. The low-level OS bindings
 are provided via `std::runtime::fs` (which defaults to a POSIX implementation

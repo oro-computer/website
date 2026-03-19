@@ -20,7 +20,7 @@ See also:
 - `docs/language/concurrency.md` (tasks, `yield`, structured blocks)
 - `docs/std/sync.md` (mutex/condvar/channel; same blocking baseline)
 
-## Implemented API
+## Exported API
 
 ```silk
 module std::stream;

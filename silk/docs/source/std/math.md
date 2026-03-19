@@ -34,7 +34,7 @@ See also:
 Dynamic-dimension operations return `Result(T, MathFailed)` when shapes are
 incompatible (for example adding vectors of different lengths).
 
-## Current API (Initial Subset)
+## Exported API
 
 ```silk
 module std::math;

@@ -32,7 +32,7 @@ Non-goals (for now):
 - TLS (`wss://`) integration (use `std::tls` + a future adapter layer).
 - Per-message compression (RSV1 / `permessage-deflate`).
 
-## Public API (Current Compiler Subset)
+## Exported API
 
 ```silk
 module std::websocket;
