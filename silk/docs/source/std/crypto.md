@@ -137,7 +137,7 @@ For each construction:
 
 Associated data is optional: callers may pass `ad = { ptr: 0, len: 0 }`.
 
-Planned expansion:
+## Design goals
 
 - key derivation (`kdf`, `pwhash`),
 - streaming (`secretstream`),

@@ -1,6 +1,6 @@
 # `std::interfaces`
 
-Status: **Partially implemented**. This module defines small,
+Status: **Implemented subset**. This module defines small,
 non-generic standard-library interfaces (“protocols”) that can be used today to
 express common capabilities across `std::` types.
 
@@ -16,11 +16,6 @@ interfaces are used for:
 When the standard library is enabled (the default), all interfaces in
 `std::interfaces` are available without explicit imports via the std prelude
 module `std::runtime::globals`, so you can write `impl T as Drop { ... }`.
-
-See also:
-
-- `docs/language/interfaces.md` (syntax, conformance, dispatch status)
-- `docs/language/structs-impls-layout.md` (method + `export` rules)
 
 ## Exported API
 
@@ -185,44 +180,9 @@ Notes:
     - `module my_pkg::build as Builder;` (preferred; `Builder` is in the std prelude)
     - or `module my_pkg::build as std::interfaces::Builder;` (fully qualified)
 
-## Drop semantics (Implemented subset)
+## Examples
 
-`std::interfaces::Drop` is recognized by the compiler as the standard way for a
-type to release resources it owns (file descriptors, heap allocations, OS
-handles, etc.). A type is considered “droppable” when it provides a method with
-this surface signature:
-
-```silk
-impl T as Drop {
-  public fn drop (mut self: &T) -> void { ... }
-}
-```
-
-Automatic invocation (current compiler):
-
-- **Scope exit:** when a `struct` *value* binding goes out of scope (including
-  via fallthrough, `break`, and `continue`), the compiler calls `drop` before
-  the storage is discarded.
-- **Return:** on `return`, the compiler drops all in-scope droppable bindings
-  except any value moved into the return result (for example `return value;`
-  and `return Some(value);` treat `value` as moved in the current subset).
-- **Overwrite:** when a `struct` *value* binding is overwritten via assignment,
-  the compiler calls `drop` on the old value before copying in the new value.
-- **Heap last-release:** for compiler-managed `new` allocations (`&T` with RC),
-  the compiler calls `drop` before freeing the backing allocation when the
-  refcount reaches zero.
-
-Notes and limitations (current subset):
-
-- `drop` is resolved statically (no dynamic dispatch).
-- `drop` should invalidate the value so calling it multiple times is safe.
-- The language does not yet implement a general move/ownership model; **do not
-  rely on copying `Drop` types** to be safe until move/copy semantics are
-  specified and enforced.
-- See `docs/language/memory-model.md` for the current `new` + RC rules and how
-  cleanup is performed.
-
-## Example (Conformance)
+### Conformance
 
 ```silk
 struct Counter {
@@ -236,7 +196,7 @@ impl Counter as Len {
 }
 ```
 
-## Example (`Serialize(string)` in the stdlib)
+### `Serialize(string)` in the stdlib
 
 ```silk
 import c_owned from "std/ffi/c_owned";
@@ -296,7 +256,7 @@ fn main () -> int {
 }
 ```
 
-## Example (`TrySerialize` for owned text output)
+### `TrySerialize` for owned text output
 
 ```silk
 import std::semver;
@@ -338,7 +298,7 @@ fn main () -> int {
 }
 ```
 
-## Example (`Parse` in the stdlib)
+### `Parse` in the stdlib
 
 ```silk
 import std::path;
@@ -379,3 +339,54 @@ fn main () -> int {
   }
 }
 ```
+
+## Considerations
+
+### Interface model
+
+- Dynamic interface dispatch (trait objects / vtables) remains part of the
+  broader language design; the shipped stdlib surface today is centered on
+  concrete-type conformance and compile-time checking.
+- `std::interfaces::Drop` is the compiler-recognized protocol for deterministic
+  cleanup of owned values.
+
+### Drop semantics
+
+`std::interfaces::Drop` is recognized by the compiler as the standard way for a
+type to release resources it owns (file descriptors, heap allocations, OS
+handles, etc.). A type is considered “droppable” when it provides a method with
+this surface signature:
+
+```silk
+impl T as Drop {
+  public fn drop (mut self: &T) -> void { ... }
+}
+```
+
+Automatic invocation (current compiler):
+
+- **Scope exit:** when a `struct` *value* binding goes out of scope (including
+  via fallthrough, `break`, and `continue`), the compiler calls `drop` before
+  the storage is discarded.
+- **Return:** on `return`, the compiler drops all in-scope droppable bindings
+  except any value moved into the return result (for example `return value;`
+  and `return Some(value);` treat `value` as moved in the current subset).
+- **Overwrite:** when a `struct` *value* binding is overwritten via assignment,
+  the compiler calls `drop` on the old value before copying in the new value.
+- **Heap last-release:** for compiler-managed `new` allocations (`&T` with RC),
+  the compiler calls `drop` before freeing the backing allocation when the
+  refcount reaches zero.
+
+Notes:
+
+- `drop` is resolved statically (no dynamic dispatch).
+- `drop` should invalidate the value so calling it multiple times is safe.
+- The language does not yet implement a general move/ownership model; **do not
+  rely on copying `Drop` types** to be safe until move/copy semantics are
+  specified and enforced.
+
+## See also
+
+- [Interfaces](?p=language/interfaces)
+- [Structs, impls, and layout](?p=language/structs-impls-layout)
+- [Memory model](?p=language/memory-model)

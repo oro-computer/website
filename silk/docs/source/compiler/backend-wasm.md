@@ -1,15 +1,12 @@
 # WebAssembly Back-End (`wasm32` / `wasm64`)
 
-Status: **Implemented subset + design**.
+This document describes the shipped WebAssembly back-end, the target
+conventions it uses today, and the remaining ABI boundaries for wasm targets.
 
-This document records the current implemented subset and remaining design
-constraints for targeting WebAssembly from the Silk compiler back-end.
+## Description
 
-## Current Implementation (Phase 1, IR-backed wasm32)
-
-The Silk compiler repository now includes a `wasm32` back-end capable of
-emitting a final `.wasm` module from the compiler’s IR (CFG-based lowering for
-the current subset), plus a smaller constant-only fallback:
+The Silk compiler includes a `wasm32` back-end that emits final `.wasm`
+modules from the compiler IR, plus a smaller constant-only fallback path:
 
 - Implementations:
   - IR-backed wasm backend (primary path),
@@ -28,20 +25,20 @@ the current subset), plus a smaller constant-only fallback:
 - FFI mapping (WASM):
   - `ext foo = fn (...) -> ...;` becomes an imported function `env.foo`,
   - `ext bar = T;` becomes an imported global `env.bar` (scalar `T`).
-- Current capabilities (prototype quality):
+- Shipped capabilities:
   - supports multi-module builds (packages + file imports),
   - emits static data into the wasm data section (string/byte blobs and other
     lowered constants),
-  - supports structured control flow (if/while/break/continue) for the current
-    IR subset.
-  - does not yet support the concurrency runtime on wasm targets (no `task` /
-    `async` lowering to a wasm-native scheduler); programs using concurrency
-    constructs are currently outside the wasm backend subset and are rejected
-    during code generation.
+  - supports structured control flow (if/while/break/continue) for the shipped
+    IR lowering path.
+  - does not yet support the concurrency runtime on wasm targets (`task` /
+    `async` are not lowered to a wasm-native scheduler); programs using
+    concurrency constructs remain outside the wasm backend surface and are
+    rejected during code generation.
 
 The CLI exposes these targets via `silk build --target ...` and the shorthand
-`silk build --arch wasm32|wasm32-wasi` (see `docs/compiler/cli-silk.md` and
-`docs/man/silk.1.md`).
+`silk build --arch wasm32|wasm32-wasi` (see [CLI reference](?p=compiler/cli-silk)
+and [`silk(1)`](?p=man/silk.1)).
 
 ## Quickstart
 
@@ -72,39 +69,18 @@ export fn add (a: int, b: int) -> int {
 silk build math.slk --target wasm32-unknown-unknown -o build/math.wasm
 ```
 
-In the current subset, the resulting module exports the supported `export fn`
-surface from the root package and can be loaded by a JS or native wasm
-embedder.
-
-## Goals
-
-- Support emitting WebAssembly modules for:
-  - `wasm32` (32-bit linear-memory addressing),
-  - `wasm64` (64-bit linear-memory addressing; future-facing).
-- Support both:
-  - a hosted environment (`wasm32-wasi`), and
-  - an embedder-driven environment (`wasm32-unknown-unknown`, typically JS).
-- Preserve Silk’s “native compiler” principle: this is Silk-owned codegen (no C
-  transpilation).
-
-## Non-Goals (current phase)
-
-- A full WASM toolchain replacement (linker, LTO, debug formats) on day one.
-- A single “portable” stdlib archive usable across all WASM environments
-  (WASI vs JS embedder differ in available imports and conventions).
-- Universal ABI compatibility with arbitrary third-party wasm linkers before we
-  have a stable Silk ↔ WASM ABI specification.
+The resulting module exports the supported `export fn` surface from the root
+package and can be loaded by a JS or native wasm embedder.
 
 ## Output Model
 
 ### Module kinds
 
-The current back-end emits a *final* `.wasm` module (not a relocatable
-object) for the supported subset, analogous to the current `linux/x86_64`
-“emit a final ELF image” approach.
+The shipped back-end emits a *final* `.wasm` module (not a relocatable object),
+analogous to the current `linux/x86_64` “emit a final ELF image” approach.
 
-Future work may add “wasm object” emission, but it requires relocation sections
-and a defined link model.
+Relocatable “wasm object” emission is not part of the documented interface; it
+would require relocation sections and a defined Silk↔WASM link model.
 
 ### Entry points
 
@@ -116,8 +92,8 @@ We need two distinct entrypoint conventions:
     `proc_exit(exit_code)`.
 - `wasm32-unknown-unknown`:
   - export an Silk `main` function for embedder use.
-    - Silk `int` is currently lowered as wasm `i64`, so `main`’s return type is
-      `i64` unless a wrapper is introduced in the future.
+    - Silk `int` lowers as wasm `i64`, so `main`’s return type is `i64` unless
+      a target-specific wrapper is introduced.
 
 The CLI/ABI must document which convention is used for each target.
 
@@ -152,14 +128,14 @@ Notes:
 
 ### Pointers and `string`
 
-Silk’s current back-end assumes 64-bit pointers (`u64`). For WASM, pointer width
-depends on the target:
+Silk’s back-end assumes 64-bit pointers (`u64`) for native targets. For WASM,
+pointer width depends on the target:
 
 - `wasm32`: pointers are `u32` byte offsets into linear memory.
 - `wasm64`: pointers are `u64` byte offsets into linear memory.
 
-`string` is currently represented as `(ptr, len)` and, at the C ABI boundary,
-as `SilkString { ptr, len }`. For WASM:
+`string` is represented as `(ptr, len)` and, at the C ABI boundary, as
+`SilkString { ptr, len }`. For WASM:
 
 - In `wasm32`, the natural representation is `(u32 ptr, i64 len)` (or `(u32,u32)`
   if we later choose a fully-32-bit ABI for wasm-only code).
@@ -178,9 +154,9 @@ The chosen WASM ABI for strings must be documented and kept stable.
 
 ### Internal calls
 
-For the initial subset, internal calls should be direct wasm calls using wasm’s
-native calling convention (stack machine with typed locals), with the compiler
-responsible for lowering Silk IR values into the wasm value stack.
+Internal calls lower to direct wasm calls using wasm’s native calling
+convention (stack machine with typed locals), with the compiler responsible for
+lowering Silk IR values onto the wasm value stack.
 
 ### `ext` declarations
 
@@ -198,11 +174,12 @@ The module/name convention and supported import surface must be documented in
 
 ### WASI integration
 
-For `wasm32-wasi`, stdlib facilities like `std::io` and `std::fs` should
-eventually target WASI syscalls rather than libc symbols. This implies:
+For `wasm32-wasi`, stdlib facilities such as `std::io` and `std::fs` use a
+target-specific hosted surface rather than the POSIX libc-facing runtime used
+on native targets. This implies:
 
-- The “hosted” stdlib for WASI is a separate std distribution from the POSIX
-  `std/` currently used for `linux/x86_64`.
+- The hosted stdlib for WASI is a separate std distribution from the POSIX
+  `std/` used for `linux/x86_64`.
 - The stdlib archive must be target-specific (one archive per target ABI), and
   swapping stdlib roots should remain supported (`--std` / `--nostd` etc.).
 
@@ -215,17 +192,12 @@ eventually target WASI syscalls rather than libc symbols. This implies:
   - assert exit code or exported return value.
 - Keep tests target-scoped and avoid requiring network access.
 
-## Roadmap (Suggested Phases)
+## Design goals
 
-1. **Minimal wasm32 module**: emit a module that exports `main` returning `i32`
-   for `fn main () -> int` (constant subset first). (Implemented for `wasm32-unknown-unknown`.)
-2. **Data and strings**: support string literals and `string` values backed by
-   linear-memory data segments.
-3. **Control flow and helpers**: lower the existing IR CFG into wasm blocks,
-   loops, branches, and calls.
-4. **WASI `_start`**: add the `_start` wrapper and `proc_exit` import for
-   `wasm32-wasi`. (Implemented for the constant-main subset.)
-5. **wasm64 exploration**: validate pointer-width changes and ABI decisions.
-
-Each phase should be reflected in the docs, and any new CLI surface must be
-documented in `docs/compiler/cli-silk.md` and `docs/man/silk.1.md`.
+- Keep final-module emission as the stable default interface for wasm targets.
+- Define and document a stable Silk↔WASM ABI for exports, imports, strings, and
+  static data layout.
+- Extend the target story to `wasm64` only once pointer-width and ABI decisions
+  are validated end-to-end.
+- Add relocatable/object emission only alongside an explicit relocation and
+  link model.

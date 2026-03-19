@@ -10,7 +10,7 @@ The shipped implementation is based on the bundled `linenoise` sources under
 `src/linenoise.{c,h}` and is exposed through the bundled runtime support
 archive (`libsilk_rt`).
 
-## Overview
+## Description
 
 Typical use:
 
@@ -74,7 +74,27 @@ export fn main () -> int {
 - `InvalidInput` — invalid path/prompt lengths or internal overflow guards.
 - `Unknown` — other failures.
 
-## Semantics
+## Examples
+
+```silk
+import std::readline;
+
+fn main () -> int {
+  let _ = std::readline::history_set_max_len(1000);
+  match (std::readline::history_load(".history")) {
+    Ok(_) => {
+      return 0;
+    },
+    Err(_) => {
+      return 1;
+    },
+  }
+}
+```
+
+## Considerations
+
+### Semantics
 
 - TTY vs. non-TTY:
   - when stdin is a TTY, input is edited interactively (arrow keys, history),
@@ -86,7 +106,7 @@ export fn main () -> int {
 - Ownership:
   - `read_line` returns an owned `std::strings::String`. Drop it when finished.
 
-## Keybindings (TTY mode)
+### Keybindings (TTY mode)
 
 Keybindings are implemented by the bundled `linenoise` line editor. Exact
 behavior depends on the terminal, but common bindings include:
@@ -101,7 +121,7 @@ behavior depends on the terminal, but common bindings include:
   modifier sequences).
 - Alt+B / Alt+F — move by word (Meta key sequences: `ESC b` / `ESC f`).
 
-## Implementation Notes
+### Implementation notes
 
 - Internal `linenoise` heap usage is routed through the `silk_rt_malloc_bytes`
   allocator surface so embedders can override allocations via
@@ -110,7 +130,14 @@ behavior depends on the terminal, but common bindings include:
   `std::runtime::mem::free` / `std::strings::String.drop()` (payload pointer
   includes the standard 8-byte header used by the hosted runtime).
 
-## Current Limitations
+## See also
+
+- [`std::flag`](?p=std/flag)
+- [`std::args`](?p=std/args)
+- [`std::io`](?p=std/io)
+- [`std::runtime`](?p=std/runtime)
+
+## Design goals
 
 - `linenoise` completion/hints callbacks are not exposed yet (they require a
   stable callback/FFI story for passing function pointers between Silk and C).

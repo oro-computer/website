@@ -14,7 +14,7 @@ The reference implementation uses deeper Zig/C/Silk validation behind the
 scenes, but the public CLI loop above remains the first smoke test for any
 language or stdlib feature.
 
-## Goals
+## Testing priorities
 
 - Ensure that the Zig implementation and the C99 ABI behave identically for all semantics specified in `docs/`.
 - Provide confidence in language features, FFI, and standard library behavior.

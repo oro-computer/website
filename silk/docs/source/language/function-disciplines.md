@@ -1,25 +1,19 @@
 # Function Disciplines (`pure`, `task`, `async`)
 
-This document specifies Silk’s intended “function discipline” system: how
-functions declare whether they are pure, asynchronous, or safe to run as
-parallel tasks.
+This document describes Silk’s function discipline system: how functions
+declare whether they are pure, asynchronous, or safe to run as parallel tasks.
 
 Const functions (`const fn`) are specified separately in
-`docs/language/const-functions.md`. The `const` modifier is orthogonal to the
-discipline system described here (a `const fn` may also be declared `pure`).
+[Const functions](?p=language/const-functions). The `const` modifier is
+orthogonal to the discipline system described here (a `const fn` may also be
+declared `pure`).
 
-Status: **Implemented subset + ongoing design work**. The current compiler
-subset implements
-`pure fn` parsing and a strict purity checker. Concurrency disciplines (`task` /
-`async`) are parsed and `Task(T)` / `Promise(T)` handles plus `yield` (task
-values) and `await` (promise values) are implemented in the current subset
-(`await Task(T)` is rejected). On the hosted `linux/x86_64` target, the compiler
-now ships a hosted async runtime (single-threaded executor + stackful
-coroutines in `libsilk_rt`) so `await` can suspend and resume without blocking
-the OS thread. A compiler state-machine coroutine transform, structured
-concurrency scope semantics, and task-safety (`Send`/`Sync`)-like rules remain
-future work. See `docs/language/concurrency.md` for the concurrency model and
-implementation status.
+Status: **Implemented subset**. `pure fn` parsing and purity checking ship
+today. Concurrency disciplines (`task` / `async`) also ship on the hosted
+`linux/x86_64` target: calling them produces `Task(T)` / `Promise(T)` handles,
+`yield` consumes task values, and `await` consumes promise values (`await
+Task(T)` remains rejected by design). See [Concurrency](?p=language/concurrency)
+for runtime behavior and boundary rules.
 
 ## Overview
 
@@ -34,37 +28,36 @@ The language design distinguishes:
 - `async task fn` — async function executed as a separate task (self-contained
   worker).
 
-## Intended Call Rules (Design)
+## Call rules
 
-The checker is expected to enforce:
+The discipline model is:
 
 - `pure` code may call only `pure` code (and cannot perform I/O or mutation
   outside local, non-escaping temporaries).
 - `task` code may call `task` and `pure` code, and must satisfy task-safety
   rules for captured/argument data.
 - `async` code may `await` other async operations; it may call `pure` code and
-  may offload blocking work via explicit adapters (planned intrinsics).
+  may offload blocking work via explicit adapters.
 
-Crossing discipline boundaries is intended to be explicit and diagnostic-driven
-(for example suggesting the correct adapter/intrinsic).
+Crossing discipline boundaries is explicit and diagnostic-driven.
 
-## Standard Intrinsics (Planned)
+## Boundary adapters
 
-The standard library is expected to provide typed adapters to cross boundaries
-safely (names and exact signatures are design work):
+The standard library does not yet ship dedicated adapters for every
+discipline-crossing path. The intended adapter families are:
 
 - lifting sync work onto a task pool,
 - presenting a task as an async operation,
 - running blocking work from async without stalling the event loop,
 - structured spawn/join primitives.
 
-These APIs are not yet present in the in-tree `std/` implementation.
+These APIs are not yet part of the documented `std::` surface.
 
-## Implementation Notes (Current Compiler)
+## Implemented behavior
 
-Today:
+In the shipped compiler:
 
-- `pure fn` is parsed and checked (current subset):
+- `pure fn` is parsed and checked:
   - a `pure fn` may call only `pure` functions; `ext` is treated as impure,
   - the checker also supports purity inference (“auto-pure”) for ordinary `fn`
     declarations and `impl` methods:
@@ -72,13 +65,12 @@ Today:
       body satisfies the purity rules, it is treated as `pure` for call
       checking, and may be called from `pure` code,
     - functions/methods with `&T` parameters are not eligible for inference
-      (explicit `pure fn` remains supported for `&T` parameters in the current
-      subset),
-  - `pure` cannot be combined with `task` or `async` in the current subset,
+      (explicit `pure fn` remains supported for `&T` parameters),
+  - `pure` cannot be combined with `task` or `async`,
   - a `pure fn` may not have `mut` parameters,
   - a `pure fn` may not declare mutable locals (`var` or `let mut`) and may not
     perform mutation via assignment,
-  - a `pure fn` may not allocate (`new`) in the current subset,
+  - a `pure fn` may not allocate (`new`),
   - a `pure fn` may not have a typed-error contract (`-> T | Error...`) and may
     not contain `panic` statements.
 - `task fn`, `async fn`, and `async task fn` are parsed and preserved in the AST.
@@ -109,8 +101,8 @@ Today:
   and implements `yield`/`yield *` for task values plus `await` for promises.
   - By default, each `task fn` call is scheduled on the global task pool.
   - `attr(task=thread)` forces a dedicated OS thread per call.
-  - On hosted `linux/x86_64`, the compiler ships a bring-up async runtime
-    (`src/silk_rt_async.c`) so `await` is a true suspension point:
+  - On hosted `linux/x86_64`, the compiler ships a hosted async runtime so
+    `await` is a true suspension point:
     - awaiting a pending `Promise(T)` parks the current fiber and allows other
       runnable fibers to execute (it does not block the OS thread),
     - outside the executor owner thread (including when no executor is active),
@@ -119,8 +111,7 @@ Today:
       runtime path, so waiting for task values from executor-driven async code
       suspends the current coroutine instead of blocking the executor owner
       thread.
-    - the long-term design remains a compiler coroutine transform plus a stable
-      `std::runtime::event_loop` API; see `docs/compiler/async-runtime.md`.
+    - see [Async runtime](?p=compiler/async-runtime) for the runtime structure.
   - `async { ... }` / `task { ... }` blocks remain lexical scopes, but scope
     exit is now runtime-backed for live handle cleanup:
     - live `Promise(T)` bindings are awaited/destroyed,
@@ -133,7 +124,7 @@ Today:
   - `fn (x: int) -> int { return x + 1; }` (block body).
   - `fn (x: int) { ... }` (block body, implicit `void` result).
   - Function expressions may not declare `&Struct` parameters; only single-slot
-    scalar `&T` parameters (for example `&int`) are supported in the current subset.
+    scalar `&T` parameters (for example `&int`) are supported.
   - Function expressions are eligible for purity inference (“auto-pure”):
     - when the body satisfies the `pure` rules, the function value is treated
       as `pure` for call checking (it may be called from `pure` code),
@@ -142,11 +133,16 @@ Today:
   - Capturing closures are supported as a subset:
     - a function expression may reference immutable locals/parameters from an
       enclosing scope,
-    - captures are by-value copies into a heap environment (scalar-only in the
-      current subset),
+    - captures are by-value copies into a heap environment (scalar-only),
     - forming captures inside `pure` code is rejected (capture environments
       allocate),
     - capturing closures are also eligible for purity inference (a closure
       whose body satisfies the `pure` rules is callable from `pure` code).
   - Function values (both non-capturing and capturing) are supported end-to-end:
     they may be passed, returned, stored, and called indirectly.
+
+## See also
+
+- [Concurrency](?p=language/concurrency)
+- [Const functions](?p=language/const-functions)
+- [Formal verification](?p=language/formal-verification)

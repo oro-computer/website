@@ -1,11 +1,10 @@
 # `std::` Conventions
 
-Status: **Design + migration in progress**. This defines the intended
-conventions for the Silk standard library. New and refactored `std::` APIs must
-follow this document; older surfaces may temporarily diverge but
-must be migrated as they are touched.
+This document defines the conventions Silk `std::` modules should follow. New
+and refactored `std::` APIs must follow it, and older surfaces should be
+updated toward it when they are touched.
 
-This document exists to keep `std::` APIs consistent across modules.
+This document keeps `std::` APIs consistent across modules.
 
 ## Public vs Internal API
 

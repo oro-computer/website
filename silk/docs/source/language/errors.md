@@ -1,15 +1,16 @@
 # Errors
 
-This document summarizes the Silk error-handling model at a level suitable for compiler implementation. It is based on the language design captured in `docs/` (optionals, verification, `ext`, ABI).
+This document summarizes the Silk error-handling model: recoverable errors,
+typed errors, assertions, verification, and ABI-facing considerations.
 
 For unrecoverable logic bugs and contract violations, Silk uses **typed
-errors** (`error`, `panic`, and `T | ErrorType...`), specified in
-`docs/language/typed-errors.md`.
+errors** (`error`, `panic`, and `T | ErrorType...`); see
+[`Typed Errors`](?p=language/typed-errors).
 
-## Implementation Status (Current Compiler)
+## Current behavior
 
 - Typed errors are implemented end-to-end for the current front-end and the
-  `linux/x86_64` backends (see `docs/language/typed-errors.md`).
+  `linux/x86_64` backends (see [`Typed Errors`](?p=language/typed-errors)).
 - `assert` is implemented:
   - in release builds, a failed assertion traps immediately,
   - in debug builds on `linux/x86_64` (`silk build --debug` / `-g`), a failed
@@ -17,9 +18,9 @@ errors** (`error`, `panic`, and `T | ErrorType...`), specified in
     before aborting.
 - In `silk test` builds, failed assertions record a test failure and execution
   continues (the test process exits non-zero when failures were recorded). See
-  `docs/language/testing.md`.
+  [`Testing`](?p=language/testing).
 
-## Design Goals
+## Principles
 
 - Error signaling is explicit and typed (no hidden global error state).
 - Error paths are part of normal control flow, not out-of-band exceptions.
@@ -108,7 +109,7 @@ The compiler must:
 It is **not** part of Silk’s typed error model and is not a replacement for
 returning optionals or `Result(...)`.
 
-Syntax (initial):
+Syntax:
 
 - `assert <Expr>;`
 - `assert (<Expr>, <message>?);`
@@ -130,8 +131,6 @@ Runtime behavior (current compiler subset):
 
 Notes:
 
-- Failed assertions are currently isolated by the `silk test` runner (each
-  test runs in its own process). Future work may allow reporting failed
-  assertions without process isolation (for example by lowering `assert` to a
-  typed error in test contexts).
-- See also: `docs/language/testing.md`.
+- Failed assertions are isolated by the `silk test` runner today (each test
+  runs in its own process).
+- See also: [`Testing`](?p=language/testing).

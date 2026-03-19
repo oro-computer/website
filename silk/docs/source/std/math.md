@@ -1,6 +1,6 @@
 # `std::math`
 
-Status: **Implemented subset + expansion path**. This module provides linear
+Status: **Implemented subset**. This module provides linear
 algebra utilities for graphics and general-purpose computation.
 
 The initial focus is:

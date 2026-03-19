@@ -1,15 +1,13 @@
 # Async Runtime (Hosted)
 
-Status: **Implemented hosted subset + architecture notes (`linux/x86_64`)**.
-
 This document now serves two roles:
 
 - Describe the **current shipped hosted async runtime** used by the compiler today.
 - Specify the longer-term architecture (compiler coroutine transform + richer event loop)
   that the current implementation is expected to evolve toward.
 
-The current hosted async runtime is implemented in C in `src/silk_rt_async.c` and wired
-into lowering in `src/lower_ir.zig`. It provides:
+The current hosted async runtime is implemented in the runtime C layer and
+wired into compiler lowering. It provides:
 
 - stackful coroutines (fibers) using `ucontext`,
 - a single-threaded executor/event loop that can drive `async fn main () -> int`,
@@ -181,28 +179,6 @@ implemented:
 Remaining future work in this file is longer-term architecture evolution for
 the hosted runtime, not backlog for the shipped subset. Task-boundary safety
 model expansion is tracked in the language/checker docs rather than here.
-
-## Goals
-
-- Make `await` a **non-blocking suspension point** in hosted builds:
-  - awaiting a pending operation suspends the current async function and returns control to
-    the executor,
-  - the executor resumes it when the awaited operation completes.
-- Provide a high-performance hosted I/O backend:
-  - use **Linux `io_uring`** for completion-based I/O where available,
-  - provide a **portable POSIX fallback** (readiness-based) for non-Linux hosted targets.
-- Keep the runtime **pluggable** via the `std::runtime::...` layering:
-  - higher-level `std::...` modules should rely on stable `std::runtime::...` interfaces,
-  - alternative stdlib roots may provide alternate runtime backends.
-- Preserve **structured concurrency** as the default model:
-  - `async { ... }` / `task { ... }` scopes must ensure spawned work completes (or is cancelled)
-    before the scope exits.
-
-## Non-Goals (Initial Phases)
-
-- Preemptive scheduling of async functions (async is cooperative).
-- A fully general “async everywhere” rewrite of the standard library in one step.
-- Cross-platform parity for advanced kernel features (Linux-first for the initial hosted backend).
 
 ## Terminology
 

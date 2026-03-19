@@ -1,6 +1,6 @@
 # WebAssembly Runtime (`std::wasm`)
 
-Status: **MVP (wasm32 interpreter)**.
+Status: **Implemented subset**.
 
 `std::wasm` is the standard library surface for **executing WebAssembly (WASM)
 modules** from Silk.
@@ -34,7 +34,7 @@ The public Silk surface is centered around:
 - `Val` / `ValType` — a small tagged value representation for wasm values
   (currently used for results).
 
-## Host Imports (MVP)
+## Host Imports
 
 `Module.instantiate_with_imports(imports: Imports)` uses `Imports` to resolve
 wasm imports (functions, globals, memory, table).
@@ -159,12 +159,12 @@ Where:
 `WASMError.kind()` and `WASMError.message()` provide a semantic view over the
 stable integer codes.
 
-## Supported Features (MVP)
+## Supported Features
 
 The implementation is a **pure Silk interpreter** intended to be:
 
 - self-contained (no external dependencies),
-- correct for the WebAssembly 1.0 MVP semantics it supports,
+- correct for the WebAssembly 1.0 core semantics it supports,
 - explicit about unsupported extensions (returns `Unsupported`).
 
 ### Targets
@@ -180,13 +180,13 @@ Supported:
 - core sections: `type`, `import`, `function`, `table`, `memory`, `global`,
   `export`, `start`, `element`, `code`, `data`.
 
-Notes / current constraints (MVP):
+Notes / current interpreter constraints:
 
-- At most one table and one memory are supported (MVP constraint).
+- At most one table and one memory are supported.
 - `start` is executed automatically during `Module.instantiate` after
   instantiation initialization.
   - the start function must have signature `[] -> []` (no parameters, no results).
-- `data_count` and all non-MVP extensions are rejected as `Unsupported`.
+- `data_count` and post-core extensions are rejected as `Unsupported`.
 
 ### Values and Function Calls
 
@@ -206,7 +206,7 @@ code (including `f32`/`f64`):
 - control/parametric/variable: `unreachable`, `nop`, `block`, `loop`, `if`,
   `else`, `end`, `br`, `br_if`, `br_table`, `return`, `call`, `call_indirect`,
   `drop`, `select` (with block results for `i32`/`i64`/`f32`/`f64`)
-- memory: all MVP loads/stores (including sign/zero-ext forms), `memory.size`,
+- memory: all core loads/stores (including sign/zero-ext forms), `memory.size`,
   `memory.grow`
 - numerics: `i32`/`i64`/`f32`/`f64` operators and conversions (including
   float↔int conversions and bit reinterpret ops).
@@ -230,7 +230,7 @@ pointing at the opcode.
 - `Func` is a lightweight view into an `Instance`, and memory is accessed by
   calling `Instance.memory_bytes()` when present.
 
-## Example
+## Examples
 
 ```silk
 import std::wasm;
@@ -333,9 +333,17 @@ fn main () -> int {
 }
 ```
 
+## See also
+
+- [`std::js-ecma`](?p=std/js-ecma)
+- [`std::url`](?p=std/url)
+- [WASM backend](?p=compiler/backend-wasm)
+
 ## Design goals
 
-- A stable, ergonomic host import resolver API (beyond the MVP `Imports` list).
+- A stable, ergonomic host import resolver API beyond the current `Imports`
+  list surface.
 - WASI bindings and host library shims.
-- Post-MVP proposals: bulk memory, reference types, SIMD (`v128`), threads, multi-value.
+- Additional runtime goals: bulk memory, reference types, SIMD (`v128`),
+  threads, multi-value.
 - A native runtime/JIT implementation for performance.

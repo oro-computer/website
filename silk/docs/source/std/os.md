@@ -11,10 +11,6 @@ Status: **Implemented subset**.
 This module is POSIX-first for hosted behavior, but its target-metadata surface
 is available on every target.
 
-See also:
-
-- `docs/language/target-metadata.md` (the built-in target metadata constants).
-
 ## Exported API
 
 ```silk
@@ -46,7 +42,26 @@ export fn cpus () -> CPUsResult;
 export fn cpu_count () -> int;
 ```
 
-## Target metadata
+## Examples
+
+```silk
+import std::os;
+
+fn main () -> int {
+  if std::os::PLATFORM_NAME == "" { return 1; }
+  if std::os::ARCH_NAME == "" { return 2; }
+  if std::os::cpu_count() < 1 { return 3; }
+
+  match (std::os::uptime()) {
+    Ok(_) => { return 0; },
+    Err(_) => { return 4; },
+  }
+}
+```
+
+## Considerations
+
+### Target metadata
 
 The exported constants are compile-time constants derived from the built-in
 target metadata values:
@@ -59,7 +74,7 @@ target metadata values:
 Use these when you prefer explicit namespacing over using `OS_PLATFORM` /
 `OS_ARCH` directly.
 
-## `Architecture` and `Platform`
+### `Architecture` and `Platform`
 
 `std::os::arch()` and `std::os::platform()` map `ARCH_NAME` and `PLATFORM_NAME`
 into enums suitable for `match`.
@@ -67,14 +82,14 @@ into enums suitable for `match`.
 The `Unknown` case is returned when the current compiler target is not covered
 by the current enum set.
 
-## Uptime
+### Uptime
 
 `std::os::uptime()` returns the current monotonic uptime as a `Duration`.
 
 On the default hosted POSIX runtime, this uses `clock_gettime(CLOCK_MONOTONIC)`
 via `std::temporal`.
 
-## CPU information
+### CPU information
 
 ### `cpu_count`
 
@@ -92,3 +107,9 @@ Ownership:
 Current implementation:
 
 - `CPU.model` is set to `ARCH_NAME` for each returned CPU record.
+
+## See also
+
+- [Target metadata](?p=language/target-metadata)
+- [`std::temporal`](?p=std/temporal)
+- [`std::runtime`](?p=std/runtime)

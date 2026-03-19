@@ -6,11 +6,11 @@ be used as an allocation context for `new`.
 Regions are represented at runtime as a first-class `Region` handle value. A
 `Region` value may be passed to functions, stored in structs, and exported.
 
-## Implementation Status (Current Compiler)
+## Implemented behavior
 
-Status: **in progress**.
+Status: **Implemented subset**.
 
-Implemented subset:
+The shipped implementation includes:
 
 - Parsing and type-checking of:
   - `const region <name>: u8[N];`
@@ -30,7 +30,7 @@ Implemented subset:
   `std::runtime::mem::alloc` allocate from the active region (8-byte aligned).
 - Region allocation overflow traps at runtime.
 
-Limitations (current subset):
+Active boundaries:
 
 - The region backing store is currently restricted to `u8[N]` (a fixed-size
   byte array type annotation).
@@ -126,7 +126,7 @@ fn main () -> int {
 }
 ```
 
-Rules (current subset):
+Rules:
 
 - `<bytes>` must be a positive integer literal.
 
@@ -162,11 +162,11 @@ with 1024 from scratch_region[64..1088] {
 }
 ```
 
-Rules (current subset):
+Rules:
 
 - `<bytes>` must be a positive integer literal.
-- `<region>` must name a `Region` value that has a compile-time-known backing size
-  in the current subset (for example a `const region` declaration).
+- `<region>` must name a `Region` value that has a compile-time-known backing
+  size in the shipped subset (for example a `const region` declaration).
 - Slice bounds use **byte offsets** (the region backing store is `u8[N]`).
 - `<start>` / `<end>` must be non-negative integer literals.
 - When an explicit `<end>` is present, it is exclusive (`[start..end]`).
@@ -183,11 +183,11 @@ Within a `with <region> { ... }` block:
 
 - any `new` allocation performed by the compiler’s `new` lowering uses the
   active region as its backing store,
-- allocations are **8-byte aligned** in the current subset,
-- if the region does not have enough remaining space, the program traps.
+- allocations are **8-byte aligned**,
+  - if the region does not have enough remaining space, the program traps.
 
 Outside of a `with` block, `new` uses the current heap model described in
-`docs/language/memory-model.md`.
+[Memory model](?p=language/memory-model).
 
 ### Region-backed raw allocation (`std::runtime::mem::alloc`)
 
@@ -222,13 +222,13 @@ with a {
 }
 ```
 
-## Reclaiming Region Memory (Current Subset)
+## Reclaiming Region Memory
 
 Regions are bump allocators: each allocation advances a cursor within the
 backing byte buffer.
 
-Because region-backed `new` allocations are still RC-managed in the current
-subset and do not free backing bytes on last-release, reclaiming region memory
+Because region-backed `new` allocations are still RC-managed and do not free
+backing bytes on last-release, reclaiming region memory
 requires resetting the region cursor so the backing bytes can be reused.
 
 Current behavior:

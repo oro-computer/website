@@ -173,7 +173,13 @@ export async fn run (package_root: string, action: string) -> int {
 }
 ```
 
-## Future work
+## See also
+
+- [`std::interfaces`](?p=std/interfaces)
+- [`Package manifests`](?p=compiler/package-manifests)
+- [`Build scripts`](?p=compiler/build-scripts)
+
+## Design goals
 
 This module is expected to grow toward a Zig-like build system:
 

@@ -12,7 +12,7 @@ non-POSIX, embedded, sandboxed runtimes) should be able to provide their own
 runtime implementation by supplying an alternate stdlib root with compatible
 `std::runtime::...` modules.
 
-## Motivation
+## Description
 
 - `std::fs`, `std::task`, `std::sync`, and other OS-facing std modules need
   low-level primitives (files, clocks, threads, syscalls).
@@ -20,7 +20,7 @@ runtime implementation by supplying an alternate stdlib root with compatible
 - Keeping these differences confined to `std::runtime::...` avoids scattering
   `ext` and platform `#if` style logic across the entire stdlib.
 
-## Structure
+### Backend structure
 
 The std runtime is organized as:
 
@@ -64,7 +64,7 @@ interface point, while platform backends (such as `std::runtime::posix::<area>`
 and `std::runtime::windows::<area>`) can exist as separate modules in an
 alternate stdlib root without changing higher-level `std::...` modules.
 
-## Interface Design Rules
+### Interface design rules
 
 - The `std::runtime::...` surface is allowed to be low-level and `unsafe`:
   raw pointers, integer error codes, and OS-specific constants are acceptable.
@@ -176,7 +176,26 @@ Implemented runtime areas in the shipped stdlib:
     default heap allocation unless an embedder installs an allocator via
     `silk_rt_set_allocator`.
 
-Runtime areas that continue to expand:
+## Examples
+
+```silk
+import std::runtime::build;
+
+fn main () -> int {
+  let kind = std::runtime::build.kind();
+  let mode = std::runtime::build.mode();
+  let version = std::runtime::build.version();
+
+  if kind == "" { return 1; }
+  if mode == "" { return 2; }
+  if version == "" { return 3; }
+  return 0;
+}
+```
+
+## Considerations
+
+### Runtime areas that continue to expand
 
 - Async event loop / executor integration (`std::runtime::event_loop`) for hosted `async`/`await`:
   - the compiler ships a bundled hosted executor in `libsilk_rt`
@@ -202,7 +221,7 @@ Runtime areas that continue to expand:
     checks.
 - WASI networking (via WASI sockets or similar proposals) when supported by the toolchain targets.
 
-## Providing a Custom Runtime
+### Providing a custom runtime
 
 To provide your own runtime implementation underneath the standard library,
 ship an alternate stdlib root that includes compatible `std::runtime::...`
@@ -268,3 +287,10 @@ Archive member naming requirement (current scheme):
 - for example: `std/runtime/posix/task.slk` → `runtime_posix_task.o`.
 
 The in-repo `make stdlib` target produces archives with this naming scheme.
+
+## See also
+
+- [`std::package-structure`](?p=std/package-structure)
+- [`std::filesystem`](?p=std/filesystem)
+- [`std::io`](?p=std/io)
+- [`std::task`](?p=std/task)

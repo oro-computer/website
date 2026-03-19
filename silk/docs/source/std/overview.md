@@ -2,9 +2,9 @@
 
 Status: **Implemented subset**. The `docs/std/` directory is
 the public reference for the shipped stdlib surface, and the in-tree stdlib
-under `std/` satisfies `import std::...;` for the current compiler subset.
+under `std/` satisfies `import std::...;` for the shipped toolchain.
 
-As of the current compiler/backend subset, the in-tree stdlib includes a
+The in-tree stdlib includes a
 small but functional set of utilities implemented purely in Silk (including
 monomorphized, type-parameter generics for core collection types),
 plus a tiny hosted POSIX baseline for OS-facing modules (`std::fs`, `std::task`,
@@ -59,7 +59,7 @@ These are the major areas of the shipped and documented `std::` surface:
 - `std::xml` — XML parsing and traversal (via libxml2; see `docs/std/xml.md`).
 - `std::idl::web` — Web IDL parsing and query API (see `docs/std/idl-web.md`).
 - `std::js::ecma` — ECMAScript FFI surface for JS/WASM interop (see `docs/std/js-ecma.md`).
-- `std::wasm` — WebAssembly runtime API (MVP wasm32 interpreter; see `docs/std/wasm.md`).
+- `std::wasm` — WebAssembly runtime API (see `docs/std/wasm.md`).
 - `std::memory` — allocation interfaces and low-level memory utilities.
 - `std::arrays` — slice/view types and helpers for fixed arrays.
 - `std::bits` — bit manipulation helpers (byte swaps, rotates, bit counts; see
@@ -80,16 +80,16 @@ These are the major areas of the shipped and documented `std::` surface:
 - `std::signal` — pollable signal waiting for TUI programs (Linux `signalfd(2)`
   backend; see `docs/std/signal.md`).
 - `std::stream` — Web Streams-inspired byte streams and piping (see `docs/std/stream.md`).
-- `std::args` — native `main(argc, argv)` argument helpers (current subset; see `docs/std/args.md`).
+- `std::args` — native `main(argc, argv)` argument helpers (see `docs/std/args.md`).
 - `std::readline` — interactive line editor for CLI programs (TTY mode) built on
   the bundled `linenoise` sources (see `docs/std/readline.md`).
-- `std::flag` — command line flag + positional parsing (current subset; see `docs/std/flag.md`).
-- `std::test` — test helpers for `silk test` (current subset; see `docs/std/test.md`).
+- `std::flag` — command line flag + positional parsing (see `docs/std/flag.md`).
+- `std::test` — test helpers for `silk test` (see `docs/std/test.md`).
 - `std::build` — build module helpers for generating `silk.toml` manifests (see `docs/std/build.md`).
 - `std::env` — environment variable access (hosted baseline; see `docs/std/env.md`).
 - `std::process` — process primitives (hosted baseline; see `docs/std/process.md`).
 - `std::os` — target OS/arch metadata and small OS helpers (see `docs/std/os.md`).
-- `std::path` — path manipulation utilities (current subset; see `docs/std/path.md`).
+- `std::path` — path manipulation utilities (see `docs/std/path.md`).
 - `std::io` — basic I/O (unbuffered fd reads/writes, formatting, stdout/stderr;
   see `docs/std/io.md`). Stream adapters live under `std::io::stream`.
 - `std::fmt` — shared formatting layer used by `std::io` and string builders.

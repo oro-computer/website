@@ -2,12 +2,12 @@
 
 The `if` / `else` construct provides branching based on a boolean condition.
 
-In the current compiler subset, `if` works in both roles:
+`if` works in both roles:
 
 - as a **statement** that selects which block executes, and
 - as an **expression** for the documented value-producing subset.
 
-## Surface Syntax (Current Implemented Subset)
+## Surface Syntax
 
 Minimal form:
 
@@ -79,7 +79,7 @@ Semantics:
   - the `then` block.
   They are not in scope in the `else` block, and they do not escape the `if`.
 
-Parsing note (current subset):
+Parsing note:
 
 - `&&` at the top level is parsed as a clause separator. Use parentheses if a
   clause needs its own `&&` / `||` / `??` expression at the top level.
@@ -101,7 +101,7 @@ fn main () -> int {
 }
 ```
 
-Supported patterns in the current subset (same as `match` expressions; see
+Supported patterns (same as `match` expressions; see
 `docs/language/flow-match.md`):
 
 - optionals: `None`, `Some(name)`, `Some(_)`
@@ -162,8 +162,8 @@ Notes:
   let v: int = if a { 1 } else if b { 2 } else { 3 };
   ```
 
-- Current compiler subset restriction: the `{ ... }` bodies of `if` expressions
-  contain a single expression (not a full statement block).
+- Today, the `{ ... }` bodies of `if` expressions contain a single expression
+  (not a full statement block).
 
 ## Semantics
 
@@ -272,7 +272,7 @@ fn main () -> int {
 }
 ```
 
-## Implementation Status (Current Compiler Subset)
+## Implemented today
 
 Implemented end-to-end:
 

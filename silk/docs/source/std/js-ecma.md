@@ -1,6 +1,6 @@
 # ECMAScript FFI (`std::js::ecma`)
 
-Status: **Implemented subset (interface + initial std wrapper)**.
+Status: **Implemented subset**.
 
 This module defines a small, environment-agnostic interface for interacting
 with an ECMAScript engine from Silk.
@@ -187,6 +187,12 @@ Notes:
   without embedded NUL bytes.
 - The `*_write` function copies **raw UTF‑8 bytes** (no NUL terminator) into the
   destination buffer and returns the number of bytes written.
+
+## See also
+
+- [`std::idl::web`](?p=std/idl-web)
+- [`std::wasm`](?p=std/wasm)
+- [`std::ffi::c`](?p=std/ffi-c)
 
 ## Design goals
 

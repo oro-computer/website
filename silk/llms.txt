@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-03-19T15:22:35+00:00
+Generated: 2026-03-19T19:14:57+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -243,7 +243,7 @@ Silk Wiki
   - language/enums — Enums — /silk/wiki/?p=language/enums
   - language/errors — Errors and assertions — /silk/wiki/?p=language/errors
   - language/typed-errors — Typed errors (`error`, `panic`, and `T | ErrorType...`) — /silk/wiki/?p=language/typed-errors
-  - language/borrow-checker — Borrow checker (design) — /silk/wiki/?p=language/borrow-checker
+  - language/borrow-checker — Borrow checker — /silk/wiki/?p=language/borrow-checker
   - language/memory-model — Memory model — /silk/wiki/?p=language/memory-model
   - language/regions — Regions (`with`) — /silk/wiki/?p=language/regions
   - language/buffers — Buffers (`Buffer(T)`) (design) — /silk/wiki/?p=language/buffers
@@ -3795,7 +3795,7 @@ URL: /silk/docs/?p=language/flow-if-else
 
 The `if` / `else` construct provides branching based on a boolean condition.
 
-In Silk, `if` works in both roles:
+`if` works in both roles:
 
 - as a **statement** that selects which block executes, and
 - as an **expression** for the documented value-producing subset.
@@ -3872,7 +3872,7 @@ Semantics:
   - the `then` block.
   They are not in scope in the `else` block, and they do not escape the `if`.
 
-Parsing note ():
+Parsing note:
 
 - `&&` at the top level is parsed as a clause separator. Use parentheses if a
   clause needs its own `&&` / `||` / `??` expression at the top level.
@@ -3894,7 +3894,7 @@ fn main () -> int {
 }
 ```
 
-Supported patterns in Silk (same as `match` expressions; see
+Supported patterns (same as `match` expressions; see
 `docs/language/flow-match.md`):
 
 - optionals: `None`, `Some(name)`, `Some(_)`
@@ -3955,8 +3955,8 @@ Notes:
   let v: int = if a { 1 } else if b { 2 } else { 3 };
   ```
 
-- Current compiler subset restriction: the `{ ... }` bodies of `if` expressions
-  contain a single expression (not a full statement block).
+- Today, the `{ ... }` bodies of `if` expressions contain a single expression
+  (not a full statement block).
 
 ## Semantics
 
@@ -4064,6 +4064,31 @@ fn main () -> int {
   }
 }
 ```
+
+## Implemented today
+
+Implemented end-to-end:
+
+- `if <expr> { ... }` and `if <expr> { ... } else { ... }` statement forms.
+- `if let <pattern> = <expr> { ... }` statement form:
+  - `else if let` / `else let` chains, and
+  - `&&` let-chains in the `if let` condition.
+- Boolean type-checking for conditions.
+- `if` expressions of the form `if <cond> { <expr> } else { <expr> }`.
+
+Not implemented yet:
+
+- General block expressions (`{ stmt* <expr> }`) outside the specific `if`
+  expression form.
+
+Examples that exercise the implemented subset:
+
+- `tests/silk/pass_if_bool.slk`
+- `tests/silk/pass_if_logical.slk`
+- `tests/silk/pass_bool_local_if.slk`
+- `tests/silk/pass_nested_if_while.slk`
+- `tests/silk/pass_if_expr_basic.slk`
+- `tests/silk/pass_if_let_chain_optional_result_basic.slk`
 
 ==============================================================================
 DOCS: `match` Expression (and Statement) (language/flow-match)
@@ -4670,20 +4695,7 @@ URL: /silk/docs/?p=language/flow-for
 The `for` loop iterates over a range or iterable and executes a block once per
 element.
 
-integer range iteration (`start..end` and
-`start..=end`), array/slice iteration (`for x in xs { ... }` for `T[N]` and
-`T[]`), iterator iteration (`for x in it { ... }` when `it.next() -> T?`), and
-C-style `for (init; condition; step) { ... }` loops.
-
-## Goals
-
-- Provide a readable, structured loop construct for iteration.
-- Avoid “off-by-one” patterns by making range boundaries explicit.
-- Integrate with `break` / `continue`.
-- Integrate with future iteration protocols (interfaces/generics) without
-  introducing hidden allocation.
-
-## Surface Syntax ()
+## Surface Syntax
 
 Supported surface forms:
 
@@ -4701,9 +4713,7 @@ for (<init>; <condition>; <step>) {
 
 Notes:
 
-- `<pattern>` is intended to be a pattern binder. In early implementations it
-  is restricted to a single identifier (and `_`). It will be expanded alongside
-  pattern matching.
+- `<pattern>` is currently restricted to a single identifier (and `_`).
 - `<iterable>` is an expression.
 - `<init>` is a local binding (`let` / `var` / `const`) with an initializer.
 - `<condition>` is a boolean expression.
@@ -4723,12 +4733,10 @@ General rules:
 When the iterable is a range expression (for example `start..end` or
 `start..=end`), the loop iterates over integer values.
 
-Design intent:
-
 - `start..end` iterates `start, start+1, ..., end-1` (end-exclusive).
 - `start..=end` iterates `start, start+1, ..., end` (end-inclusive).
 
-Notes:
+Range iteration notes:
 
 - The range bounds are evaluated once, left-to-right (`start` then `end`).
 - If the start bound is greater than or equal to the end bound (`start >= end`)
@@ -4738,8 +4746,8 @@ Notes:
 - `continue` advances to the next element (it performs the increment step, then
   re-checks the range condition).
 - The loop binder is in scope only inside the loop body block.
-- The binder is immutable in Silk (it behaves like a `let`
-  binding that is updated by the loop machinery; user code cannot assign to it).
+- The binder is immutable (it behaves like a `let` binding that is updated by
+  the loop machinery; user code cannot assign to it).
 
 Type checking:
 
@@ -4767,7 +4775,7 @@ fn main () -> int {
 
 ### Array and slice iteration
 
-In Silk, `for` also supports iterating over builtin
+`for` also supports iterating over builtin
 array and slice types:
 
 - fixed arrays `T[N]`,
@@ -4860,8 +4868,9 @@ Init binding mutability:
 
 ## Guidance
 
-In Silk, `for` supports integer ranges and builtin
-array/slice iteration. To write other loops today, use `while`:
+Today, `for` supports integer ranges, builtin array/slice iteration, iterator
+values with `next() -> T?`, and C-style headers. To write other loops, use
+`while`:
 
 ```silk
 fn main () -> int {
@@ -4873,19 +4882,6 @@ fn main () -> int {
   return 0;
 }
 ```
-
-## Compiler Requirements
-
-- Recognize `for` loop syntax.
-- Resolve iteration targets (ranges, collections) according to the language’s
-  iteration model.
-- Lower `for` into explicit control flow, with correct semantics for `break`
-  and `continue`.
-
-Compiler requirements:
-
-- Recognize `for` loop syntax.
-- Resolve iteration targets (ranges, collections) according to the language’s iteration model.
 
 ==============================================================================
 DOCS: `break` (language/flow-break)
@@ -5205,7 +5201,7 @@ The empty block `{}` is permitted.
 
 ## Statements
 
-the compiler supports these statement forms (see
+Silk supports these statement forms (see
 `docs/language/grammar.md` for exact syntax):
 
 - Local bindings:
@@ -5213,8 +5209,8 @@ the compiler supports these statement forms (see
   - `let` and `let mut` (and `var` as an alias for `let mut`).
 - Specification-only declarations: `#const` (Formal Silk; not usable in runtime expressions).
 - Structured blocks: `async { ... }` / `task { ... }` (see `docs/language/concurrency.md`).
-- Expression statements: limited to calls, assignments, and increment/decrement
-  In Silk (`docs/language/flow-expression-statements.md`).
+- Expression statements currently accept calls, assignments, and
+  increment/decrement (`docs/language/flow-expression-statements.md`).
 - Flow control:
   - `if` / `else` statements (including `if let` pattern destructuring),
   - `while` loops,
@@ -5276,7 +5272,7 @@ let records: Record[] = [{ id: 123, data: "a" }, { id: 456, data: "b" }];
 let [a, b] = records;
 ```
 
-Rules ():
+Rules:
 
 - Only flat patterns are supported (no nested destructuring).
 - The initializer is required.
@@ -5317,7 +5313,7 @@ fn main () -> int {
 }
 ```
 
-Rules ():
+Rules:
 
 - The initializer is required.
 - The initializer must have an enum type `E` (including a monomorphized generic enum).
@@ -5340,7 +5336,7 @@ let <pattern> = <expr> else {
 };
 ```
 
-Semantics ():
+Semantics:
 
 - The initializer expression is evaluated exactly once.
 - If the pattern matches, the pattern binders are introduced into the **current
@@ -5383,10 +5379,9 @@ fn main () -> int {
 - the binding is immutable (there is no `const mut`),
 - a `const` binding is a normal runtime value (unlike `#const`), but its value
   is computed by the compiler at compile time and does not incur runtime
-  computation cost in Silk.
+  computation cost.
 
-In Silk, compile-time evaluation for runtime `const`
-bindings is restricted to:
+Today, compile-time evaluation for runtime `const` bindings is restricted to:
 
 - scalar primitive types (`bool`, integer/float scalars, `char`, `Instant`, `Duration`),
 - compile-time POD `struct` types whose fields are compile-time scalar value types and that do not require `Drop`, and
@@ -5421,7 +5416,7 @@ in runtime expressions (see `docs/language/formal-verification.md` and
 The broader language design includes expression-oriented flow constructs (for
 example `match` expressions today and `if` expressions).
 
-In Silk:
+Today:
 
 - a block is not an expression and does not produce a value; it is purely a
   statement list used as the body of constructs.
@@ -5470,6 +5465,18 @@ fn main () -> int {
   return 0;
 }
 ```
+
+## Implemented today
+
+Implemented end-to-end:
+
+- Block scoping for runtime `let`/`var` bindings and nested blocks.
+- Formal Silk `#const` declarations (parsed, type-checked, and rejected if used at runtime).
+
+Examples that exercise the implemented subset:
+
+- `tests/silk/pass_let_locals.slk`
+- `tests/silk/pass_spec_const_while.slk`
 
 ==============================================================================
 DOCS: Formal Grammar Spec (language/grammar)
@@ -6149,6 +6156,37 @@ Values may be:
 - strings (`"..."` or raw string literals)
 - identifiers (treated as a string value, e.g. `abi=c`)
 
+## Current behavior
+
+The current compiler supports:
+
+- `attr(...)` as a prefix annotation on declarations and statements.
+- `attr(...)` as a compile-time query expression of type `bool`.
+- Comparison operators in `attr(...)` items for numeric toolchain keys:
+  - examples: `attr(silk_major>=0)`, `attr(silk_minor>=2)`, `attr(silk_patch=0)`
+  - and: `attr(silk_abi_major>=0)`, `attr(silk_abi_minor>=2)`, `attr(silk_abi_patch=0)`
+  where `<op>` is one of `=`, `<`, `<=`, `>`, `>=` and `<n>` is an integer literal.
+- Declaration gating:
+  - when an `attr(...)` annotation contains `arch` / `os` / `target` / `feature`,
+    the annotated declaration is included only when the key/value constraints
+    match the current build target.
+- Conditional compilation:
+  - `if <cond> { ... } else { ... }` prunes branches at compile time when
+    `<cond>` is an attribute-query boolean expression (built from `attr(...)`,
+    `!`, `&&`, `||`, and parentheses).
+  - The pruned branch is not type-checked and is not lowered/code-generated.
+- `attr(abi=c) fn (...) -> ...` in type positions is accepted as a synonym for
+  `c_fn (...) -> ...` (C ABI callback pointer types).
+- Task scheduling hints on `task` functions:
+  - `attr(task=pool)` / `attr(task="pool")` schedules the task on the global
+    task pool (see “Task scheduling” below),
+  - `attr(task_pool)` is accepted as a tag-form synonym for `attr(task=pool)`.
+  - `attr(task=thread)` / `attr(task="thread")` forces a dedicated OS thread
+    for each call instead of the default task-pool schedule.
+
+Other ABI selectors (Objective-C, FFM, WASI component model, and similar
+surfaces) are outside the documented `attr(...)` surface today.
+
 ## Syntax
 
 ### Attribute list
@@ -6220,9 +6258,9 @@ if attr(os="linux") && (attr(arch="x86_64") || attr(arch="wasm32")) {
 `attr(...)` queries are compile-time only; they are evaluated by the compiler
 and do not exist as runtime calls.
 
-## Built-in attribute keys ()
+## Built-in attribute keys
 
-the compiler recognizes the following keys in queries and
+The current compiler recognizes the following keys in queries and
 conditional compilation contexts:
 
 - `arch`: `"x86_64"`, `"aarch64"`, or `"wasm32"`
@@ -7533,18 +7571,19 @@ URL: /silk/docs/?p=language/types
 
 # Types
 
-This document specifies the Silk type system used by the compiler front-end and type checker.
+This document specifies the Silk type system used by the compiler front-end and
+type checker.
 
-Implementation status (current compiler subset):
+Current behavior:
 
 - Supported end-to-end: primitives, nominal `struct` types, optionals (`T?`),
   `&Struct` references (in function parameter types and as local values
   produced by `new` / calls that return `&Struct`), and array/slice types
   (`T[N]`, `T[]`) over element types that lower to a fixed scalar-slot sequence
-  In Silk (including array literals, indexing reads, and
+  in the current backend (including array literals, indexing reads, and
   iterable `for` loops). Indexed assignment targets (`xs[i] = v`) are supported
   for these element types; compound index ops require numeric scalar element
-  types in Silk.
+  types today.
   - Parameterized nominal types (monomorphized): generic `struct` and
     `interface` declarations with **type parameters**, plus applied types in
     type positions (`Name(u8)`, `Name(string)`) for those declarations.
@@ -7562,12 +7601,14 @@ Implementation status (current compiler subset):
 - Special-case: the nominal optional form `Option(T)` is accepted and desugared
   to `T?` in type annotations (it is not a general generics feature).
 - Parsed but rejected by the current checker: const parameters and integer
-  literal type arguments (`Foo(N: int)`, `Foo(u8, 1024)`) (`docs/compiler/diagnostics.md`, `E2016`),
+  literal type arguments (`Foo(N: int)`, `Foo(u8, 1024)`)
+  ([Diagnostics](?p=compiler/diagnostics), `E2016`),
   and the removed builtin map type form (`map(K, V)`) (`E2017`; use
   `std::map::{HashMap, TreeMap}` instead).
 - Defined in the native backend subset: 128-bit scalar primitives
   (`i128`, `u128`, `f128`).
-  - In the current scalar-slot model (`docs/language/structs-impls-layout.md`),
+  - In the current scalar-slot model
+    ([Structs, impls, and layout](?p=language/structs-impls-layout)),
     these primitives lower to **two 8-byte slots** (`lo: u64`, `hi: u64`).
   - `f128` uses the IEEE‑754 binary128 bit pattern stored across those slots.
   - In the current backend implementation, `f128` arithmetic and some `as`
@@ -7579,10 +7620,10 @@ Implementation status (current compiler subset):
     - on other targets, the helper calls are currently stubbed and will trap
       if executed.
 - Typed errors (`error`, `panic`, and `T | ErrorType...`) are specified in
-  `docs/language/typed-errors.md`. The current compiler models typed error
+  [Typed errors](?p=language/typed-errors). The current compiler models typed error
   contracts as an effect on function return types and expressions.
   - Separately, type unions (`T1 | T2 | ...`) are supported in type annotations
-    as described in `docs/language/type-unions.md`. In function declaration
+    as described in [Type unions](?p=language/type-unions). In function declaration
     return types, union returns must be parenthesized (`-> (A | B)`) because
     unparenthesized `|` after `->` is reserved for typed-error contracts.
 
@@ -7617,10 +7658,12 @@ The core categories are:
   - Examples: `/hello/i`.
   - Notes: compiled regular expression bytecode; a non-owning `{ ptr, len }`
     view analogous to `string`. Regex literals compile at compile time; runtime
-    compilation and matching helpers live in `std::regex` (see `docs/std/regex.md`).
+    compilation and matching helpers live in `std::regex` (see
+    [std::regex](?p=std/regex)).
 - Region handle: `Region`
   - Examples: `fn f (r: Region) -> int { with r { ... } }`.
-  - Notes: a first-class region allocation context handle; see `docs/language/regions.md`.
+  - Notes: a first-class region allocation context handle; see
+    [Regions](?p=language/regions).
 - Void / Unit: `void`
   - Examples: `fn foo () -> void {}`.
   - Notes: functions that return nothing.
@@ -7636,23 +7679,23 @@ The core categories are:
   - Examples: `None` / `none` (represented as `None` in code samples).
   - Notes: the distinguished empty value; typed as `T?`. The `null` literal is
     a distinct literal that can coerce to `None` when an optional type is
-    expected (see `docs/language/optional.md`).
+    expected (see [Optionals](?p=language/optional)).
 - Reference (borrow): `&T`
   - Examples: `&User`.
-  - Notes: reference type; in Silk, `&Struct` may appear in
+  - Notes: reference type; today, `&Struct` may appear in
     parameter types and as local values when produced by `new` or by calls that
     return `&Struct`. Mutability follows the `mut` borrow contract and per-call
-    aliasing rules described in `docs/language/mutability.md`.
+    aliasing rules described in [Mutability](?p=language/mutability).
 - Arrays / Slices: `T[]`, `T[N]`
   - Examples: `i32[]`, `byte[32]`.
-  - Notes: dynamic slice vs fixed length (compile‑time `N`). In the current
-    compiler/backend subset, arrays/slices are supported only when the element
+  - Notes: dynamic slice vs fixed length (compile‑time `N`). Today,
+    arrays/slices are supported only when the element
     type lowers to a fixed scalar slot sequence in the current scalar-slot
     memory model (for example primitive scalars, `string`, and supported
-    `regexp`, supported non-opaque structs, and enums). See `docs/language/structs-impls-layout.md` for the
-    current scalar-slot memory model. in Silk, fixed array
-    lengths are limited to `N <= 4096`. Indexing `xs[i]` traps when `i` is out
-    of bounds in Silk.
+    `regexp`, supported non-opaque structs, and enums). See
+    [Structs, impls, and layout](?p=language/structs-impls-layout) for the
+    current scalar-slot memory model. Fixed array lengths are limited to
+    `N <= 4096`. Indexing `xs[i]` traps when `i` is out of bounds.
 - Range: `range`
   - Examples: `let r: range = 0..4;`, `let r2: range = (1..) + 2;`.
   - Notes: an `int`-indexed range value used for slicing and other index-based
@@ -7671,14 +7714,14 @@ The core categories are:
 - Function Types: `fn(params) -> R`
   - Examples: `fn(i32) -> i32`.
   - Notes: function types are part of the type grammar and function-typed
-    values are supported as function values (including capturing closures) in
-    the compiler.
+    values are supported as function values (including capturing closures)
+    today.
     Concurrency disciplines (`task` / `async`) are implemented on function
-    *declarations* (see `docs/language/concurrency.md`); function types in type
+    *declarations* (see [Concurrency](?p=language/concurrency)); function types in type
     positions do not currently include discipline modifiers.
 - Capturing Closures:
   - Notes: capturing closures are supported as function values with an
-    environment; see “Function Types and Closures” below for
+    environment; see “Function Types and Closures” below for the current
     restrictions.
 - Structs (nominal):
   - Surface: `struct Name { ... }` then `Name(...)`.
@@ -7690,7 +7733,7 @@ The core categories are:
 - Type unions:
   - Surface: `T1 | T2 | ...` (type annotations).
   - Notes: a tagged “one-of-these-types” type for a small, explicitly defined
-    subset; see `docs/language/type-unions.md`.
+    subset; see [Type unions](?p=language/type-unions).
 
 The compiler must represent these types faithfully in its internal type system and in the C99 ABI mappings, and it must follow the exact surface syntaxes indicated above when parsing and printing types.
 
@@ -7708,7 +7751,7 @@ type pure fn PureIntAdder = fn(int, int) -> int;
 export type struct PublicBar = Foo;
 ```
 
-Semantics (current compiler subset):
+Semantics:
 
 - A type alias introduces a new name for an existing type; it does **not**
   introduce a distinct nominal type.
@@ -7728,11 +7771,12 @@ Kind tags:
 Import/export:
 
 - `type` aliases may be exported (`export type ...;`) and imported as type names
-  via named file imports (see `docs/language/packages-imports-exports.md`).
+  via named file imports (see
+  [Packages, imports, and exports](?p=language/packages-imports-exports)).
 
-## Implicit Call-Argument Coercions ()
+## Implicit Call-Argument Coercions
 
-In Silk, Silk supports a small, **opt-in** implicit
+Today, Silk supports a small, **opt-in** implicit
 coercion mechanism for function call arguments. This exists to keep the
 current standard library ergonomic while generics and richer overload
 systems are still evolving.
@@ -7837,7 +7881,7 @@ This is intentionally a *stack* construction mechanism:
 - and the temporary’s lifetime is the duration of the call (similar to how C++
   binds temporaries to `const&` parameters).
 
-Eligibility requirements ():
+Eligibility requirements:
 
 - The parameter must be `&T` (not `mut &T`).
 - The destination type `T` must provide a visible `constructor` overload with:
@@ -7894,15 +7938,15 @@ let n: int = x as int;
 ```
 
 This operator is intended for explicit, potentially lossy primitive numeric
-conversions. in Silk it also supports explicit conversions via
+conversions. Today it also supports explicit conversions via
 `std::interfaces::Serialize(T)` by lowering `expr as T` to `expr.serialize()`
 when the operand type provides a matching `serialize` method.
 For structured conversions, it also supports `std::interfaces::Deserialize(S)`
 by lowering `expr as T` to `T.deserialize(expr)` when the target type provides
 a matching static `deserialize` method.
 
-The supported conversions and semantics for the compiler are
-specified in `docs/language/operators.md` (“Casts (`as`)”).
+The supported conversions and semantics are
+specified in [Operators](?p=language/operators) (“Casts (`as`)”).
 
 Notes:
 
@@ -7914,21 +7958,19 @@ Notes:
 
 Nominal types are introduced by declarations (e.g. `struct`, `enum`, `interface`) and are equal only to themselves. Parameterized types are constructed by applying a type constructor to type arguments.
 
-The compiler must:
+The compiler must treat nominal types as distinct even if their field layout is
+identical.
 
-- Treat nominal types as distinct even if their field layout is identical.
-- In the full language design, support parameterized types in all contexts
-  where the spec permits them. in Silk, **type-parameter**
-  generics are supported for nominal declarations (`struct` / `interface`) and
-  for applied types in type positions (`Name(u8)`).
-  - Const parameters and integer-literal type arguments (`Name(N: int)`,
-    `Name(u8, 1024)`) remain tracked work and are rejected (`E2016`).
-  - The `Option(T)` optional sugar described above remains supported for
-    the .
+Today, **type-parameter** generics are supported for nominal declarations
+(`struct` / `interface`) and for applied types in type positions (`Name(u8)`).
 
-### Parameterized type syntax (initial surface form)
+- Const parameters and integer-literal type arguments (`Name(N: int)`,
+  `Name(u8, 1024)`) remain rejected (`E2016`).
+- The `Option(T)` optional sugar described above remains supported.
 
-The initial surface syntax for applying type arguments is:
+### Parameterized type syntax
+
+The surface syntax for applying type arguments is:
 
 - `TypeApply ::= TypeName '(' TypeArgListOpt ')'`
 - `TypeName ::= Identifier ('::' Identifier)*`
@@ -7962,7 +8004,7 @@ Key requirements:
 - Distinguish owning vs. non-owning types in the type system.
 - Preserve aliasing and lifetime constraints so that regions, buffers, and FFI safety rules can be enforced.
 
-Current implementation notes:
+Current behavior:
 
 - `&Struct` is supported in function parameter types and as local values when
   produced by heap allocation (`new`) or by calls that return `&Struct`.
@@ -7976,11 +8018,11 @@ Current implementation notes:
   These borrows are checked with conservative lexical lifetime rules (they may
   not escape the scope of the borrowed stack storage).
 - Mutable reference parameters use the two-part `mut` contract and conservative
-  per-call aliasing rules; see `docs/language/mutability.md`.
+  per-call aliasing rules; see [Mutability](?p=language/mutability).
 
-## Function Types and Closures (Implementation Status)
+## Function Types and Closures
 
-the compiler:
+Today:
 
 - Parses function types in type positions (most notably for `ext` declarations).
 - Implements function expressions (lambdas) in expression positions:
@@ -7989,8 +8031,8 @@ the compiler:
   - block body `void` shorthand: `fn (x: int, y: int) { ... }` (implicit `void`)
 - Function expressions may declare `&T` parameters only when `T` is a
   single-slot scalar primitive (for example `&int` / `&bool`).
-- Function expression bodies are checked under the `pure` rules in the current
-  subset. Non-capturing function expressions are inferred as `pure` function
+- Function expression bodies are checked under the `pure` rules. Non-capturing
+  function expressions are inferred as `pure` function
   types and are permitted in `pure` code:
   - they may call only `pure` functions,
   - they may not mutate (`let mut`/`var`, assignment),
@@ -8003,7 +8045,7 @@ the compiler:
   - a function expression body may reference **immutable** locals/parameters
     from an enclosing scope; those values are captured by value into a heap
     environment,
-  - In Silk, only **scalar** captures are supported (`int`, fixed
+  - today, only **scalar** captures are supported (`int`, fixed
     width ints, `bool`, `char`, `f32`, `f64`, `Instant`, `Duration`),
   - forming captures inside `pure` code is rejected (capture environments
     allocate), but closure *values* are still checked under the `pure` rules and
@@ -8013,7 +8055,7 @@ the compiler:
   - they may be passed as arguments, returned from functions, stored in
     structs/arrays, and called indirectly.
   - the runtime representation is a pair `{ func_ptr, env_ptr }` as specified
-    in `docs/language/memory-model.md`.
+    in [Memory model](?p=language/memory-model).
 - Discipline modifiers for function declarations (`pure` / `task` / `async`) are
   implemented. Function types in type positions do not currently include
   discipline modifiers.
@@ -8028,7 +8070,7 @@ Silk distinguishes between:
 `c_fn` is intended for FFI: it is a safe, storable representation for passing
 callbacks to foreign code.
 
-Rules ():
+Rules:
 
 - A `c_fn` value may be formed only from:
   - a top-level function name, or
@@ -9332,6 +9374,38 @@ Numeric literals produce integer (`int`, `u8`, `i128`, …) and floating-point
 In Silk, the sign is an operator: `-1` is a unary `-` expression applied to the
 integer literal token `1`, not a distinct “negative literal” token.
 
+## Current behavior
+
+What works end-to-end today (lexer → parser → checker → lowering → codegen):
+
+- Decimal integer literals: `0`, `42`, `255`.
+- Digit separators (`_`) within numeric literal digits: `1_000_000`,
+  `0b0000_1111_0000`, `0xFFFF_FFFF`, `1_000.25`, `1_000ms`.
+- Integer base prefixes:
+  - binary: `0b1010` / `0B1010`,
+  - octal: `0o17` / `0O17`,
+  - hex: `0xFF` / `0Xff`,
+  - legacy octal: `017` (value 15).
+- Decimal float literals with a fractional part: `0.0`, `1.5`, `10.25`.
+- Unary `-` over numeric literals: `-1`, `-1.5`.
+- Contextual typing:
+  - integer literals default to `int`, but adopt an expected integer type
+    (`u8`, `i128`, …) or time type (`Duration`, `Instant`) when a context
+    provides one,
+  - float literals default to `f64`, but adopt `f32`/`f64`/`f128` from context.
+- Duration literal tokens of the form `<number><unit>` (no whitespace) such as
+  `500ms` and `1.5s` (specified in `docs/language/literals-duration.md`).
+- Lowering note: unannotated local `let` bindings participate only in the
+  integer subset. Prefer explicit type annotations for `bool` and float locals
+  when you intend to build an executable/library.
+
+Not supported today:
+
+- Exponent notation (`1e6`, `1.0e-3`).
+- Numeric type suffixes (`42u8`, `1.5f32`).
+- Numeric suffixes for 128-bit types (`1u128`, `1.0f128`) are not implemented;
+  use annotations or `as` casts.
+
 ## Quick Reference
 
 ```silk
@@ -9349,7 +9423,7 @@ fn main () -> int {
 }
 ```
 
-## Surface Syntax (Current Lexer)
+## Surface Syntax
 
 Numeric literal tokens are recognized as:
 
@@ -9370,9 +9444,9 @@ Notes:
   - invalid: `_1`, `1_`, `1__0`, `0x_FF`.
 - A float literal must have digits on both sides of the `.`:
   - `1.0` is a float literal.
-  - `1.` is not a float literal in the current lexer.
+  - `1.` is not a float literal in today’s lexer.
   - `.5` is not a float literal; write `0.5`.
-- Numeric literals must start with a digit in the current lexer.
+- Numeric literals must start with a digit in today’s lexer.
 - The `-` sign is not part of the literal token:
   - `-1` parses as unary `-` applied to the integer literal `1`.
   - `-1.5` parses as unary `-` applied to the float literal `1.5`.
@@ -9387,7 +9461,7 @@ Notes:
   - `08` is a lexical error in Silk because multi-digit literals starting with
     `0` are legacy octal (use `0o10` for octal 8, or write `8` for decimal).
 
-## Type Rules ()
+## Type Rules
 
 See `docs/language/types.md` for the primitive type names used below.
 
@@ -9416,7 +9490,7 @@ fn main () -> int {
 }
 ```
 
-Example: time types share an `i64`-based representation in Silk
+Example: time types share an `i64`-based representation today
 (`docs/language/duration-instant.md`), so integer literals can be used as
 `Instant`/`Duration` values via context:
 
@@ -9459,7 +9533,7 @@ fn main () -> int {
 
 - **Trying to use suffixes**: `42u8` / `1.5f32` are not supported. Use type
   annotations (`let x: u8 = 42;`) or casts (`42 as u8`).
-- **Using exponent notation**: `1e6` is not supported yet.
+- **Using exponent notation**: `1e6` is not supported today.
 - **Writing incomplete floats**: write `1.0` (not `1.`) and `0.5` (not `.5`).
 - **Mixing integers and floats implicitly**: use `as` casts (`docs/language/operators.md`)
   to convert explicitly when you need to combine integer and float values.
@@ -11278,13 +11352,27 @@ URL: /silk/docs/?p=language/errors
 
 # Errors
 
-This document summarizes the Silk error-handling model at a level suitable for compiler implementation. It is based on the language design captured in `docs/` (optionals, verification, `ext`, ABI).
+This document summarizes the Silk error-handling model: recoverable errors,
+typed errors, assertions, verification, and ABI-facing considerations.
 
 For unrecoverable logic bugs and contract violations, Silk uses **typed
-errors** (`error`, `panic`, and `T | ErrorType...`), specified in
-`docs/language/typed-errors.md`.
+errors** (`error`, `panic`, and `T | ErrorType...`); see
+[`Typed Errors`](?p=language/typed-errors).
 
-## Design Goals
+## Current behavior
+
+- Typed errors are implemented end-to-end for the current front-end and the
+  `linux/x86_64` backends (see [`Typed Errors`](?p=language/typed-errors)).
+- `assert` is implemented:
+  - in release builds, a failed assertion traps immediately,
+  - in debug builds on `linux/x86_64` (`silk build --debug` / `-g`), a failed
+    assertion prints a panic header, an optional message, and a stack trace
+    before aborting.
+- In `silk test` builds, failed assertions record a test failure and execution
+  continues (the test process exits non-zero when failures were recorded). See
+  [`Testing`](?p=language/testing).
+
+## Principles
 
 - Error signaling is explicit and typed (no hidden global error state).
 - Error paths are part of normal control flow, not out-of-band exceptions.
@@ -11373,7 +11461,7 @@ The compiler must:
 It is **not** part of Silk’s typed error model and is not a replacement for
 returning optionals or `Result(...)`.
 
-Syntax (initial):
+Syntax:
 
 - `assert <Expr>;`
 - `assert (<Expr>, <message>?);`
@@ -11395,11 +11483,9 @@ Runtime behavior (current compiler subset):
 
 Notes:
 
-- Failed assertions are currently isolated by the `silk test` runner (each
-  test runs in its own process). Future work may allow reporting failed
-  assertions without process isolation (for example by lowering `assert` to a
-  typed error in test contexts).
-- See also: `docs/language/testing.md`.
+- Failed assertions are isolated by the `silk test` runner today (each test
+  runs in its own process).
+- See also: [`Testing`](?p=language/testing).
 
 ==============================================================================
 DOCS: Typed Errors (`error`, `panic`, and `T | ErrorType...`) (language/typed-errors)
@@ -11708,9 +11794,9 @@ URL: /silk/docs/?p=language/borrow-checker
 
 # Borrow Checking (Static Alias and Lifetime Safety)
 
-This document specifies Silk’s intended borrow-checking model for references.
+This document specifies Silk’s borrow-checking model for references.
 
-the compiler implements:
+The shipped checker implements:
 
 - call-scoped alias checks for mutable borrows (including slice range borrows),
 - lexical lifetime checks for slice and reference borrows (no escaping borrows
@@ -11718,18 +11804,9 @@ the compiler implements:
 - and a small explicit ownership-transfer form (`move`) used by the checker and
   lowering to prevent accidental double-drops in the safe subset.
 
-## Goals
+## Implemented behavior
 
-- Prevent use-after-free and data races in safe code.
-- Make mutation explicit and intentional.
-- Reject invalid borrows at compile time (no runtime borrow errors required for
-  safe code).
-- Keep diagnostics actionable (highlight the borrow origin, conflicting use,
-  and suggest a fix).
-
-## Details
-
-Today, the language subset implemented by the compiler supports only:
+The compiler supports:
 
 - call-scoped borrow alias checks for:
   - borrowed reference parameters (`&T`, `mut p: &T`), and
@@ -11766,7 +11843,7 @@ point into existing storage:
 
 - `&base[start..end]` creates a slice view whose lifetime is tied to `base`.
 - `&base[r]` creates a slice view whose bounds are defined by the `range` value
-  `r` (see `docs/language/types.md`).
+  `r` (see [Types](?p=language/types)).
 - When borrowing a range from an existing slice binding `s: T[]`, the borrow’s
   underlying origin is `s`’s origin (sub-slicing does not extend lifetime).
 
@@ -11847,7 +11924,7 @@ wrapper and control-flow forms:
   `T[]` also participate in the same local mutation, lexical escape, move, and
   `await` checks as direct borrowed bindings.
 - Refutable-pattern binders also preserve borrow identity when the scrutinee
-  already proves a single local borrow origin. in Silk, this
+  already proves a single local borrow origin. In the shipped subset, this
   includes:
   - `if let Some(x) = r { ... }`
   - `let Some(x) = r else { ... };`
@@ -11901,7 +11978,7 @@ Opaque handle references are allowed:
 These are treated as external handles rather than borrow-checked views into
 ordinary Silk storage.
 
-Borrowed parameters are permitted in Silk, but the checker also
+Borrowed parameters are permitted in the shipped subset, but the checker also
 enforces a conservative async call-site rule:
 
 - an ordinary reference or slice that still resolves to function-local stack
@@ -11910,10 +11987,10 @@ enforces a conservative async call-site rule:
 - opaque handle references remain allowed because they are not borrow-checked
   views into ordinary Silk storage.
 
-This is the borrow model for the current async subset. Additional async surface
+This is the borrow model for the shipped async subset. Additional async surface
 area must define equivalent suspension and escape rules before it lands.
 
-### External ABI boundaries
+### `ext` boundaries
 
 At top-level external ABI boundaries, ordinary borrowed views are also
 rejected:
@@ -11995,9 +12072,9 @@ The borrow checker is complete for the currently documented and
 regression-tested Silk language subset, including the wrapper and control-flow
 forms described above. New language features may still require new borrow
 rules, but those are not treated as pre-declared borrow-checker roadmap items.
-Any such extension must be specified in `docs/language/grammar.md` and in this
-document before implementation lands, and must be reflected in diagnostics
-(`docs/compiler/diagnostics.md`) and tests.
+Any such extension must be specified in [Grammar](?p=language/grammar) and in
+this document before implementation lands, and must be reflected in
+[Diagnostics](?p=compiler/diagnostics) and tests.
 
 ==============================================================================
 DOCS: Memory Model (Stack, Heap, and Moves) (language/memory-model)
@@ -12006,8 +12083,8 @@ URL: /silk/docs/?p=language/memory-model
 
 # Memory Model (Stack, Heap, and Moves)
 
-This document specifies Silk’s intended memory model: how values are allocated,
-passed, and how (future) heap-managed values interact with the type system.
+This document specifies Silk’s memory model: how values are allocated, passed,
+and how heap-managed values interact with the type system.
 
 The compiler implements a minimal heap model for `new` on `linux/x86_64` and a
 small lexical move/cleanup model for droppable values:
@@ -12017,17 +12094,9 @@ small lexical move/cleanup model for droppable values:
 - These heap allocations are managed via reference counting (RC) inserted by the
   compiler during lowering.
 
-Regions and a richer move/borrow model remain design-in-progress. See
-`docs/language/regions.md` and `docs/language/borrow-checker.md`.
-
-## Goals
-
-- Make allocation behavior explicit and predictable.
-- Prefer stack allocation for most local data.
-- Prevent unsafe implicit lifetime extension (for example implicitly “moving”
-  stack data into a longer-lived heap allocation).
-- Keep borrow safety a compile-time property (no runtime borrow errors in the
-  safe subset).
+See [Regions](?p=language/regions) and
+[Borrow checking](?p=language/borrow-checker) for the ownership and
+escape/lifetime rules that sit on top of this model.
 
 ## Stack vs Heap
 
@@ -12046,8 +12115,8 @@ not implement a general heap allocation model.
 
 ### Heap allocation (`new`) and boxed values
 
-Rule: values created with `new` live on the
-heap and are represented as an `&Struct` reference in user code.
+Rule: values created with `new` live on the heap and are represented as an
+`&Struct` reference in user code.
 
 - The reference value is passed by value (copying the reference representation).
 - The underlying allocation’s lifetime is managed by compiler-inserted reference
@@ -12056,15 +12125,15 @@ heap and are represented as an `&Struct` reference in user code.
 Important: this is currently an internal Silk-managed heap for Silk code, not an
 FFI pointer model. The compiler does not permit `&Struct` for
 non-opaque structs in `ext` signatures; only `&Opaque` handles may cross the
-FFI boundary (see `docs/language/structs-impls-layout.md` and
-`docs/language/ext.md`).
+FFI boundary (see [Structs, impls, and layout](?p=language/structs-impls-layout)
+and [External declarations (`ext`)](?p=language/ext)).
 
-#### Details
+#### Implemented behavior
 
 - `new` is supported only in function bodies (top-level `let` initializers
-  cannot contain `new` in Silk).
+  cannot contain `new`).
 - `new` is supported only when the checker can determine a concrete reference
-  result type of the form `&Struct`. in Silk, this happens
+  result type of the form `&Struct`. This happens
   in two ways:
   - from an expected type context `&Struct` (for example `let x: &Frame = new
     Frame{ ... };` or as a call argument where the parameter type is `&Struct`)
@@ -12075,7 +12144,7 @@ FFI boundary (see `docs/language/structs-impls-layout.md` and
 - Reference counting is applied only to `&Struct` values that originate from
   `new` (borrowed stack references are not treated as RC-managed values).
 - The `silk build` CLI supports `--noheap` to disable heap allocation for the
-  :
+  shipped subset:
   - heap-backed `new` (outside a `with` region) is rejected with `E2027`,
   - `async`/`task`/`await`/`yield` and capturing closures are rejected with `E2027`,
   - `ext` bindings to libc heap primitives (`malloc`/`calloc`/`realloc`/`free`/etc) are rejected with `E2027` in non-stdlib modules,
@@ -12084,8 +12153,8 @@ FFI boundary (see `docs/language/structs-impls-layout.md` and
 
 #### Region-backed allocation (`with` + `region`)
 
-In Silk, `new` may also allocate from a region when an active
-region context is established with `with` (see `docs/language/regions.md`).
+`new` may also allocate from a region when an active region context is
+established with `with` (see [Regions](?p=language/regions)).
 
 - Inside `with <region> { ... }`, `new` allocates from the region’s backing
   bytes instead of calling the heap allocator.
@@ -12150,7 +12219,7 @@ Automatic invocation (current compiler):
   fallthrough, `break`, and `continue`).
 - **Return:** on `return`, the compiler drops all in-scope droppable bindings
   except any value moved into the return result (for example `return value;`
-  and `return Some(value);` treat `value` as moved in Silk).
+  and `return Some(value);` treat `value` as moved in the shipped subset).
 - **Overwrite:** assigning to an existing value drops the old value before the
   new value is copied in.
 - **Heap last-release:** for `new` allocations managed by compiler-inserted RC,
@@ -12166,19 +12235,19 @@ Notes and limitations:
     binding,
   - using a moved binding is rejected by the checker,
   - explicit ownership transfer may be written as `move <name>` (see
-    `docs/language/borrow-checker.md`).
+    [Borrow checking](?p=language/borrow-checker)).
 
 ## No Implicit Heap Promotion
 
-Planned rule: stack values cannot be implicitly promoted to heap-managed
-storage. Any promotion must be explicit and must perform a copy.
+Stack values are not implicitly promoted to heap-managed storage. Any promotion
+must be explicit and must perform a copy.
 
 This avoids accidental lifetime extension and makes performance characteristics
 obvious.
 
 The precise syntax for “heap-copy this value” is still under design; any
-proposed surface form must be written down in `docs/language/grammar.md` before
-it is implemented.
+proposed surface form must be written down in [Grammar](?p=language/grammar)
+before it is implemented.
 
 ## Closure Captures
 
@@ -12198,7 +12267,7 @@ Calling convention:
 - When `env_ptr != 0`, the backend passes `env_ptr` as a hidden first argument
   to the closure function: `func_ptr(env_ptr, user_args...)`.
 
-Environment allocation and lifetime ():
+Environment allocation and lifetime:
 
 - Captures are by-value copies of **scalar** locals/parameters (`int`, fixed
   width ints, `bool`, `char`, `f32`, `f64`, `Instant`, `Duration`).
@@ -12220,9 +12289,10 @@ Limitations:
 
 - Borrow checking is intended to be a compile-time property in the safe subset:
   invalid borrows should be rejected statically.
-- See `docs/language/mutability.md` for the current implemented borrow rules
-  (call-scoped aliasing checks for `&T` parameters in Silk).
-- See `docs/language/borrow-checker.md` for the broader planned borrow checker.
+- See [Mutability](?p=language/mutability) for the implemented borrow rules
+  (call-scoped aliasing checks for `&T` parameters in the shipped subset).
+- See [Borrow checking](?p=language/borrow-checker) for the broader borrow and
+  lifetime model.
 
 ==============================================================================
 DOCS: Regions (language/regions)
@@ -12236,6 +12306,40 @@ be used as an allocation context for `new`.
 
 Regions are represented at runtime as a first-class `Region` handle value. A
 `Region` value may be passed to functions, stored in structs, and exported.
+
+## Implemented behavior
+
+
+The shipped implementation includes:
+
+- Parsing and type-checking of:
+  - `const region <name>: u8[N];`
+  - `with <name> { ... }`
+  - `with <bytes> { ... }` / `with(<bytes>) { ... }` (anonymous region for the block)
+  - `with <bytes> from <region> { ... }`
+  - `with <bytes> from <region>[<start>..] { ... }`
+  - `with <bytes> from <region>[<start>..<end>] { ... }`
+- `Region` is a primitive handle type:
+  - `const region name: u8[N];` binds `name` as a `Region` value,
+  - `Region` values may be passed and stored (including in struct fields),
+  - `with <name> { ... }` accepts any `Region`-typed binding (including function parameters and locals).
+- Inside a `with <region> { ... }` block, `new` allocations for non-opaque
+  `struct` values allocate from the active region instead of the heap.
+- Within the dynamic extent of a `with <region> { ... }` block (including calls
+  performed while the block is active), raw allocations via
+  `std::runtime::mem::alloc` allocate from the active region (8-byte aligned).
+- Region allocation overflow traps at runtime.
+
+Active boundaries:
+
+- The region backing store is currently restricted to `u8[N]` (a fixed-size
+  byte array type annotation).
+- Only the existing `new` subset is affected (non-opaque `struct` allocations
+  that produce `&Struct`).
+- Region-backed `new` allocations are still reference-counted:
+  - last-release runs `drop` (when defined),
+  - but the backing bytes are not freed (region memory is reclaimed only by
+    reusing the region cursor, as described below).
 
 ## Syntax
 
@@ -12322,7 +12426,7 @@ fn main () -> int {
 }
 ```
 
-Rules ():
+Rules:
 
 - `<bytes>` must be a positive integer literal.
 
@@ -12358,11 +12462,11 @@ with 1024 from scratch_region[64..1088] {
 }
 ```
 
-Rules ():
+Rules:
 
 - `<bytes>` must be a positive integer literal.
-- `<region>` must name a `Region` value that has a compile-time-known backing size
-  In Silk (for example a `const region` declaration).
+- `<region>` must name a `Region` value that has a compile-time-known backing
+  size in the shipped subset (for example a `const region` declaration).
 - Slice bounds use **byte offsets** (the region backing store is `u8[N]`).
 - `<start>` / `<end>` must be non-negative integer literals.
 - When an explicit `<end>` is present, it is exclusive (`[start..end]`).
@@ -12379,11 +12483,11 @@ Within a `with <region> { ... }` block:
 
 - any `new` allocation performed by the compiler’s `new` lowering uses the
   active region as its backing store,
-- allocations are **8-byte aligned** in Silk,
-- if the region does not have enough remaining space, the program traps.
+- allocations are **8-byte aligned**,
+  - if the region does not have enough remaining space, the program traps.
 
 Outside of a `with` block, `new` uses the current heap model described in
-`docs/language/memory-model.md`.
+[Memory model](?p=language/memory-model).
 
 ### Region-backed raw allocation (`std::runtime::mem::alloc`)
 
@@ -12418,13 +12522,13 @@ with a {
 }
 ```
 
-## Reclaiming Region Memory ()
+## Reclaiming Region Memory
 
 Regions are bump allocators: each allocation advances a cursor within the
 backing byte buffer.
 
-Because region-backed `new` allocations are still RC-managed in the current
-subset and do not free backing bytes on last-release, reclaiming region memory
+Because region-backed `new` allocations are still RC-managed and do not free
+backing bytes on last-release, reclaiming region memory
 requires resetting the region cursor so the backing bytes can be reused.
 
 Current behavior:
@@ -12534,33 +12638,193 @@ Concurrency in Silk is built around two orthogonal function modifiers:
 - `async` — marks a function as pausable/awaitable (concurrency),
 - `task` — marks a function as safe to execute on a worker pool (parallelism),
 
-plus structured concurrency blocks (`async { ... }` and `task { ... }`)
-intended to provide **structured concurrency**.
+plus structured concurrency blocks (`async { ... }` and `task { ... }`) that
+give async/task scopes deterministic cleanup.
 
-- The runtime can manage a thread pool to execute tasks.
-- The compiler is intended to enforce task-safety rules when values cross task
-  boundaries (Send/Sync-like constraints).
+- On hosted targets, the runtime manages a task pool and async executor.
+- The compiler enforces conservative task-safety and suspension-safety rules
+  when values cross task or async boundaries.
+
+## Implemented behavior
+
+This document describes the shipped concurrency surface and its current runtime
+boundaries.
+
+### Core behavior
+
+- Parsing of `task fn`, `async fn`, and `async task fn` / `task async fn`.
+- Parsing of `yield <expr>` and `yield * <expr>` (see `yield` below).
+- Parsing of `await * <expr>` as a unary `await` applied to a unary `*`
+  operand (see `await` below).
+- Calling a function with a concurrency discipline produces a handle:
+  - calling a `task fn` produces `Task(T)`,
+  - calling an `async fn` produces `Promise(T)`,
+  - calling an `async task fn` produces `Promise(Task(T))`,
+  where `T` is the function’s declared surface result type.
+- `yield` is implemented with two forms:
+  - **send** (`yield <value>;`) inside a task: writes one task value (convertible
+    to the enclosing task’s `T`) to the task’s receiver and continues execution.
+    This form is only permitted inside a `task fn` / `async task fn` body.
+  - **receive** (`yield <task_handle>`) in value position: waits until the task
+    produces its next value and yields `T`.
+    - under the hosted async executor, this wait suspends the current coroutine
+      instead of blocking the executor owner OS thread,
+    - outside an executor (or on non-owner threads), it blocks the current OS
+      thread until the task produces a value.
+- `yield` on a temporary task handle is eager:
+  - `yield <task_expr>` where `<task_expr>` is not a named handle drains the
+    task (joining dedicated-thread tasks only) and yields its final value `T`
+    (so the temporary handle does not leak).
+- `yield * <task_handle>` in value position drains a task:
+  - `yield * Task(T)` receives **all** remaining values from the task, joins
+    the dedicated worker thread when the task uses `attr(task=thread)`, and
+    yields a collected `T[]` result (with the task’s final return value as the
+    last element). Pooled/default tasks skip the join.
+- `yield * <task_handle>;` as a statement inside a task function forwards values:
+  - drains the right-hand task and forwards all remaining values to the
+    enclosing task’s receiver, then joins/cleans up the drained task.
+- `await <expr>` is implemented as a Promise unwrap operation:
+  - `await Promise(T)` unwraps and yields `T`,
+  - `await Promise(Task(T))` unwraps and yields `Task(T)`,
+  - `await Task(T)` is rejected (use `yield` / `yield *` for task values).
+- `await * <promises>` unwraps a collection of promises:
+  - `await * Promise(T)[]` yields a collected `T[]` by awaiting each promise,
+  - `await * Promise(T)` is rejected (the `*` form requires a collection).
+- `await` and the structured block form are still **async-context-only**:
+  - `await` is only allowed inside functions declared with `async` (including
+    `async task fn`),
+  - `async { ... }` and `task { ... }` are only allowed inside functions declared
+    with `async`.
+  - `async loop { ... }` and `task loop { ... }` are only allowed inside functions
+    declared with `async`.
+- Conservative suspension-safety rules are enforced at `async fn` boundaries:
+  - `async fn` result types must not contain ordinary borrowed views (`&T` or
+    `T[]`), including when nested inside structs, enums, optionals, or
+    function types,
+  - references to opaque structs (`struct Name;`) remain permitted in async
+    results because they are treated as external handles rather than
+    borrow-checked views into Silk storage,
+  - borrowed async parameters are permitted, but an ordinary borrow of
+    function-local stack storage or a local fixed array may not be passed into
+    an async call unless that call is awaited immediately in the same
+    expression.
+- Conservative suspension-safety rules are also enforced at concrete `await`
+  points:
+  - `await` / `await *` reject a live borrowed reference that still points at
+    a local stack value,
+  - `await` / `await *` reject a live slice that still points at a local fixed
+    array,
+  - and the same rule applies when the borrowed view is stored in a local
+    struct field.
+- `async { ... }` / `task { ... }` are accepted as structured concurrency surface
+  forms and establish lexical scopes with deterministic runtime-backed cleanup:
+  - live `Promise(T)` bindings are awaited/destroyed on scope exit,
+  - live `Task(T)` bindings are drained/destroyed on scope exit,
+  - and the same cleanup runs for lowered early-exit paths such as `return`.
+  - these blocks do not create nested executors or inject implicit cancellation
+    tokens.
+- `yield` is **task-context-only**:
+  - `yield` is only allowed inside `task` functions (`task fn` / `async task fn`)
+    and inside `task { ... }` / `task loop { ... }` blocks.
+- Task-safety rules are enforced at the `task fn` boundary:
+  - `task fn` / `async task fn` parameter and result types must not contain
+    non-opaque reference types (`&T`), including within structs and optionals.
+  - references to opaque structs (types declared as `struct Name;`) are permitted
+    (opaque structs are handle types and cannot be dereferenced or field-accessed
+    in Silk).
+  - `Task(T)` and `Promise(T)` handles are permitted at task boundaries, but
+    their inner `T` must itself satisfy the task-safety rule above. This
+    supports patterns like `Task(Promise(T))` (for tasks that produce promises)
+    and `await * yield * t` for `t: Task(Promise(T))`.
+
+### Thread Safety and Sharing
+
+`task` concurrency runs on OS threads. Crossing a task boundary is therefore a
+thread-crossing operation.
+
+In the shipped implementation:
+
+- Passing values into a `task fn` is **by value**. For ownership-tracked values
+  (for example `Drop` types and `Task(T)` / `Promise(T)` handles), this is a
+  move: ownership transfers into the task and there is no implicit sharing.
+- The checker enforces a conservative task-safety rule at `task fn` / `async task fn`
+  boundaries (`E2037`):
+  - non-opaque references (`&T`) are rejected (including nested inside structs and optionals),
+  - references to opaque structs (types declared as `struct Name;`) are permitted
+    (opaque structs cannot be dereferenced or field-accessed in Silk),
+  - task boundary types are otherwise restricted to primitives, optionals, and
+    structs/enums composed of task-safe members.
+- Shared mutable state must be synchronized explicitly (for example via
+  `std::sync` primitives or by communicating through channels).
+- To share a runtime handle across tasks without transferring ownership, prefer
+  stdlib APIs that follow the `T` / `TBorrow` pattern (for example
+  `Channel(T)` + `ChannelBorrow(T)` and `AbortSignal` + `AbortSignalBorrow`).
+
+Note: this includes `&Struct` values produced by `new`. The compiler-inserted
+reference counting (RC) used for `new` is non-atomic and is not safe to share
+across OS threads.
+
+These rules prevent common “accidentally share a borrowed view across threads”
+bugs. They do not prevent data races in programs that explicitly share memory
+through FFI or other low-level mechanisms; such sharing must be synchronized by
+the program.
+
+### Runtime boundaries
+
+- A hosted async runtime ships on the hosted `linux/x86_64` target:
+  - `await` is a true suspension point backed by a single-threaded executor
+    (fibers), so awaiting a pending `Promise(T)` can park and resume without
+    blocking the OS thread.
+  - The hosted async runtime uses stackful coroutines in `libsilk_rt`
+    rather than a compiler state-machine coroutine transform. See
+    [Async runtime](?p=compiler/async-runtime) for the runtime structure.
+  - The shipped executor is **thread-affine**:
+    - only the thread that created the executor may spawn and drive stackful
+      coroutines (stackful coroutines are never migrated across OS threads),
+    - `std::runtime::event_loop::{poll,deinit}` must be called on that same
+      thread,
+    - other OS threads (including `task fn` workers) may still call `async fn`
+      entrypoints, but those calls run synchronously (no coroutine spawn), and
+      `await` on a non-owner thread blocks the OS thread until the promise is
+      resolved.
+  - Awaiting a `Task(T)` is rejected by design; use `yield` / `yield *` for task values.
+- The runtime subset implements `task` execution using OS threads:
+  - By default, calling a `task fn` schedules that task on the global task
+    pool (queue-based + simple work stealing between workers). The pool is
+    created lazily.
+  - `attr(task=thread)` forces a dedicated OS thread per call.
+  - The pool worker count is configurable via `SILK_TASK_POOL_THREADS`.
+  - The queued backlog is configurable via `SILK_TASK_POOL_MAX_QUEUED`.
+- Full Send/Sync-style checking (beyond the conservative boundary restriction
+  described above) is not implemented yet. In particular, the compiler does not
+  attempt to prove absence of data races for shared state; programs must use
+  explicit synchronization for any shared mutation.
+- The hosted toolchain ships `std::task` and `std::sync` for the hosted
+  `linux/x86_64` target. Many of these primitives remain blocking; integrating
+  OS-facing std modules with the async executor/event loop is still pending.
+- For cooperative cancellation across tasks and `async` functions, `std::`
+  provides WHATWG-style abort signals via `std::abort_controller` (see
+  [Abort controller](?p=std/abort-controller)).
 
 ## Core Keywords: `async` and `task`
 
 ### `async`
 
 - Marks a function as **awaitable** (pausable).
-- Primary domain (design): I/O-bound concurrency on an event loop/executor.
+- Primary domain: I/O-bound concurrency on an event loop/executor.
 
 ### `task`
 
 - Marks a function as **task-safe** and eligible to be executed as a parallel
   task on a worker pool.
-- Primary domain (design): CPU-bound parallelism and offloading blocking work.
-- In the intended design, *calling a `task fn` is non-blocking* and produces a
-  task handle.
+- Primary domain: CPU-bound parallelism and offloading blocking work.
+- Calling a `task fn` is non-blocking and produces a task handle.
 
 ### `await`
 
 `await <expr>` is the surface syntax for unwrapping a `Promise(T)` handle.
 
-In Silk:
+In the shipped implementation:
 
 - `await Promise(T)` unwraps the completed promise and yields `T`.
 - `await Promise(Task(T))` yields `Task(T)` (which can then be consumed via `yield` / `yield *`).
@@ -12569,11 +12833,10 @@ In Silk:
   fixed-array storage at the suspension point; end such borrows before
   awaiting.
 
-#### Typed Errors Across Async Calls ()
+#### Typed Errors Across Async Calls
 
-Typed-error handling composes with async calls in Silk, but the
-fallible operation remains the **async call site** rather than the `await`
-itself.
+Typed-error handling composes with async calls, but the fallible operation
+remains the **async call site** rather than the `await` itself.
 
 For an async function like:
 
@@ -12587,14 +12850,14 @@ async fn open_value () -> int | OpenFailed {
 }
 ```
 
-the current checker behavior is:
+the checker behavior is:
 
 - `await open_value()` is rejected with `E2023` because the fallible async call
   has not been handled yet.
 - `let p: Promise(int) = open_value()?;` is accepted inside a matching error
   contract.
 - `let v: int = await open_value()?;` is accepted and is the supported
-  propagation form in Silk.
+  propagation form.
 - Explicit handling with `match` applies to the async call itself, so the
   success arm receives the `Promise(T)` handle:
 
@@ -12610,9 +12873,9 @@ match (open_value()) {
 }
 ```
 
-#### Task/Promise Handle Ownership ()
+#### Task/Promise Handle Ownership
 
-In Silk, `Task(T)` and `Promise(T)` are **single-use
+In the shipped implementation, `Task(T)` and `Promise(T)` are **single-use
 handles**:
 
 - A `Promise(T)` handle may be **awaited at most once**. `await` consumes the handle.
@@ -12625,19 +12888,19 @@ handles**:
   passed through consuming call positions, and moved into collections that
   accept move-only element values.
 - Direct `Task(T)` / `Promise(T)` storage in struct or enum fields is not yet
-  part of the current supported subset.
+  supported.
 - A consumed handle may not be used again (including attempting to `await` it a
   second time, or attempting to `yield *` it a second time).
-- Consuming a handle that was created outside the current loop body is rejected
-  In Silk (a loop may iterate multiple times).
+- The checker rejects consuming a handle that was created outside the current
+  loop body (a loop may iterate multiple times).
 
 These rules are enforced at compile time and exist to prevent double-free and
 use-after-free bugs in the current runtime lowering, where `await` frees the
 underlying handle storage after join/unwrap.
 
-#### Handle Lifetime and Cleanup ()
+#### Handle Lifetime and Cleanup
 
-In Silk, `Task(T)` and `Promise(T)` handles are stored in
+In the shipped implementation, `Task(T)` and `Promise(T)` handles are stored in
 heap-allocated handle memory:
 
 - `await` unwraps a promise and then frees the promise handle storage.
@@ -12650,24 +12913,23 @@ heap-allocated handle memory:
     there is no per-call worker thread to join.
   - `Promise(T)` cleanup frees the handle storage.
 
-Because tasks are implemented using OS threads in Silk, this
-automatic cleanup can block the current OS thread when it joins a task. Promise
-cleanup uses the hosted async runtime’s destroy helper and may suspend the
-current coroutine while waiting for a pending promise to resolve when running
-under an executor.
+Because tasks are implemented using OS threads, this automatic cleanup can
+block the current OS thread when it joins a task. Promise cleanup uses the
+hosted async runtime’s destroy helper and may suspend the current coroutine
+while waiting for a pending promise to resolve when running under an executor.
 
 ### `yield`
 
 `yield` is the task-side counterpart to `await`.
 
-In the intended model for tasks:
+Task-side semantics:
 
 - A `task fn ... -> T` produces a `Task(T)` handle when called.
 - Inside the task body, `yield <expr>;` sends a value (convertible to `T`) to
   the task’s receiver and continues execution.
 - `return <expr>;` sends the final task value (of type `T`) and terminates the
   task.
-- Outside the task, `yield <task_handle>` blocks until the task produces its
+- Outside the task, `yield <task_handle>` waits until the task produces its
   next value and yields it.
 - `yield * <task_handle>` drains all remaining task values and then joins the
   worker thread for cleanup when the task uses `attr(task=thread)`.
@@ -12677,20 +12939,22 @@ In the intended model for tasks:
   right-hand task to the enclosing task’s receiver and then joins/cleans up the
   drained task.
 
-In Silk:
+In the shipped runtime:
 
-- `yield` is a blocking OS-thread operation (like the rest of the current
-  concurrency runtime).
+- `yield <task_handle>` and `yield * <task_handle>` suspend the current
+  coroutine when used under the hosted async executor.
+- Outside the executor owner thread (or when no executor is active), the same
+  waits block the current OS thread.
 - `yield` is permitted only inside `task fn` / `async task fn` bodies and inside
   `task { ... }` / `task loop { ... }` blocks.
 - The statement forms (`yield <value>;` and `yield * <task_handle>;` forwarding)
   require an enclosing task function (`task fn` / `async task fn`), since they
   send values to the task’s receiver.
 
-#### Collected Array Ownership ()
+#### Collected Array Ownership
 
-In Silk, `yield *` and `await *` produce a heap-allocated
-collection of values (`T[]`) for convenience. This is a current behavior:
+`yield *` and `await *` produce a heap-allocated collection of values (`T[]`)
+for convenience. The shipped lowering behaves as follows:
 
 - the compiler inserts deterministic cleanup for these collections when their
   bindings are overwritten or go out of scope,
@@ -12702,8 +12966,8 @@ collection of values (`T[]`) for convenience. This is a current behavior:
 `async { ... }`, `task { ... }`, `async loop { ... }`, and `task loop { ... }`
 introduce surface syntax for structured regions.
 
-In Silk, these forms remain lexical scopes, but they are
-runtime-backed for live-handle cleanup:
+These forms remain lexical scopes, but they are runtime-backed for live-handle
+cleanup:
 
 - live `Promise(T)` bindings are awaited/destroyed on scope exit,
 - live `Task(T)` bindings are drained/destroyed on scope exit,
@@ -12712,14 +12976,13 @@ runtime-backed for live-handle cleanup:
   current coroutine rather than blocking the executor owner thread,
 - and no implicit nested scheduler or abort-controller injection occurs.
 
-## Current Runtime Boundaries
+## Runtime Boundaries
 
-This language document describes the shipped concurrency subset and its current
-boundaries. Longer-term runtime architecture notes are tracked in
-`docs/compiler/async-runtime.md`; the runtime backlog items for the current
-hosted subset are now implemented.
+This language document describes the shipped concurrency surface and its active
+runtime boundaries. Longer-term runtime architecture notes are tracked in
+[Async runtime](?p=compiler/async-runtime).
 
-Current boundaries and non-goals:
+Active boundaries and non-goals:
 
 - `async` is cooperative: there is no preemptive async scheduling.
 - `task fn` calls default to the global task pool; `attr(task=thread)` is the
@@ -12730,7 +12993,7 @@ Current boundaries and non-goals:
 - structured blocks/loops guarantee deterministic live-handle cleanup on scope
   exit and early exit, but they do not inject implicit cancellation tokens or
   nested executors.
-- Task-boundary safety still uses the conservative current rule that rejects
+- Task-boundary safety still uses the conservative rule that rejects
   ordinary non-opaque `&T` across `task fn` / `async task fn` boundaries.
 - `await Task(T)` remains rejected; task values are consumed via `yield` /
   `yield *`.
@@ -12744,26 +13007,20 @@ URL: /silk/docs/?p=language/function-disciplines
 
 # Function Disciplines (`pure`, `task`, `async`)
 
-This document specifies Silk’s intended “function discipline” system: how
-functions declare whether they are pure, asynchronous, or safe to run as
-parallel tasks.
+This document describes Silk’s function discipline system: how functions
+declare whether they are pure, asynchronous, or safe to run as parallel tasks.
 
 Const functions (`const fn`) are specified separately in
-`docs/language/const-functions.md`. The `const` modifier is orthogonal to the
-discipline system described here (a `const fn` may also be declared `pure`).
+[Const functions](?p=language/const-functions). The `const` modifier is
+orthogonal to the discipline system described here (a `const fn` may also be
+declared `pure`).
 
-The current compiler
-subset implements
-`pure fn` parsing and a strict purity checker. Concurrency disciplines (`task` /
-`async`) are parsed and `Task(T)` / `Promise(T)` handles plus `yield` (task
-values) and `await` (promise values) are implemented in Silk
-(`await Task(T)` is rejected). On the hosted `linux/x86_64` target, the compiler
-now ships a hosted async runtime (single-threaded executor + stackful
-coroutines in `libsilk_rt`) so `await` can suspend and resume without blocking
-the OS thread. A compiler state-machine coroutine transform, structured
-concurrency scope semantics, and task-safety (`Send`/`Sync`)-like rules remain
-future work. See `docs/language/concurrency.md` for the concurrency model and
-implementation status.
+`pure fn` parsing and purity checking ship
+today. Concurrency disciplines (`task` / `async`) also ship on the hosted
+`linux/x86_64` target: calling them produces `Task(T)` / `Promise(T)` handles,
+`yield` consumes task values, and `await` consumes promise values (`await
+Task(T)` remains rejected by design). See [Concurrency](?p=language/concurrency)
+for runtime behavior and boundary rules.
 
 ## Overview
 
@@ -12778,37 +13035,36 @@ The language design distinguishes:
 - `async task fn` — async function executed as a separate task (self-contained
   worker).
 
-## Intended Call Rules (Design)
+## Call rules
 
-The checker is expected to enforce:
+The discipline model is:
 
 - `pure` code may call only `pure` code (and cannot perform I/O or mutation
   outside local, non-escaping temporaries).
 - `task` code may call `task` and `pure` code, and must satisfy task-safety
   rules for captured/argument data.
 - `async` code may `await` other async operations; it may call `pure` code and
-  may offload blocking work via explicit adapters (planned intrinsics).
+  may offload blocking work via explicit adapters.
 
-Crossing discipline boundaries is intended to be explicit and diagnostic-driven
-(for example suggesting the correct adapter/intrinsic).
+Crossing discipline boundaries is explicit and diagnostic-driven.
 
-## Standard Intrinsics
+## Boundary adapters
 
-The standard library is expected to provide typed adapters to cross boundaries
-safely (names and exact signatures are design work):
+The standard library does not yet ship dedicated adapters for every
+discipline-crossing path. The intended adapter families are:
 
 - lifting sync work onto a task pool,
 - presenting a task as an async operation,
 - running blocking work from async without stalling the event loop,
 - structured spawn/join primitives.
 
-These APIs are not yet present in the in-tree `std/` implementation.
+These APIs are not yet part of the documented `std::` surface.
 
-## Implementation Notes
+## Implemented behavior
 
-Today:
+In the shipped compiler:
 
-- `pure fn` is parsed and checked ():
+- `pure fn` is parsed and checked:
   - a `pure fn` may call only `pure` functions; `ext` is treated as impure,
   - the checker also supports purity inference (“auto-pure”) for ordinary `fn`
     declarations and `impl` methods:
@@ -12816,13 +13072,12 @@ Today:
       body satisfies the purity rules, it is treated as `pure` for call
       checking, and may be called from `pure` code,
     - functions/methods with `&T` parameters are not eligible for inference
-      (explicit `pure fn` remains supported for `&T` parameters in the current
-      subset),
-  - `pure` cannot be combined with `task` or `async` in Silk,
+      (explicit `pure fn` remains supported for `&T` parameters),
+  - `pure` cannot be combined with `task` or `async`,
   - a `pure fn` may not have `mut` parameters,
   - a `pure fn` may not declare mutable locals (`var` or `let mut`) and may not
     perform mutation via assignment,
-  - a `pure fn` may not allocate (`new`) in Silk,
+  - a `pure fn` may not allocate (`new`),
   - a `pure fn` may not have a typed-error contract (`-> T | Error...`) and may
     not contain `panic` statements.
 - `task fn`, `async fn`, and `async task fn` are parsed and preserved in the AST.
@@ -12853,8 +13108,8 @@ Today:
   and implements `yield`/`yield *` for task values plus `await` for promises.
   - By default, each `task fn` call is scheduled on the global task pool.
   - `attr(task=thread)` forces a dedicated OS thread per call.
-  - On hosted `linux/x86_64`, the compiler ships a bring-up async runtime
-    (`src/silk_rt_async.c`) so `await` is a true suspension point:
+  - On hosted `linux/x86_64`, the compiler ships a hosted async runtime so
+    `await` is a true suspension point:
     - awaiting a pending `Promise(T)` parks the current fiber and allows other
       runnable fibers to execute (it does not block the OS thread),
     - outside the executor owner thread (including when no executor is active),
@@ -12863,8 +13118,7 @@ Today:
       runtime path, so waiting for task values from executor-driven async code
       suspends the current coroutine instead of blocking the executor owner
       thread.
-    - the long-term design remains a compiler coroutine transform plus a stable
-      `std::runtime::event_loop` API; see `docs/compiler/async-runtime.md`.
+    - see [Async runtime](?p=compiler/async-runtime) for the runtime structure.
   - `async { ... }` / `task { ... }` blocks remain lexical scopes, but scope
     exit is now runtime-backed for live handle cleanup:
     - live `Promise(T)` bindings are awaited/destroyed,
@@ -12877,7 +13131,7 @@ Today:
   - `fn (x: int) -> int { return x + 1; }` (block body).
   - `fn (x: int) { ... }` (block body, implicit `void` result).
   - Function expressions may not declare `&Struct` parameters; only single-slot
-    scalar `&T` parameters (for example `&int`) are supported in Silk.
+    scalar `&T` parameters (for example `&int`) are supported.
   - Function expressions are eligible for purity inference (“auto-pure”):
     - when the body satisfies the `pure` rules, the function value is treated
       as `pure` for call checking (it may be called from `pure` code),
@@ -12886,8 +13140,7 @@ Today:
   - Capturing closures are supported as a subset:
     - a function expression may reference immutable locals/parameters from an
       enclosing scope,
-    - captures are by-value copies into a heap environment (scalar-only in the
-      ),
+    - captures are by-value copies into a heap environment (scalar-only),
     - forming captures inside `pure` code is rejected (capture environments
       allocate),
     - capturing closures are also eligible for purity inference (a closure
@@ -12895,12 +13148,25 @@ Today:
   - Function values (both non-capturing and capturing) are supported end-to-end:
     they may be passed, returned, stored, and called indirectly.
 
+## See also
+
+- [Concurrency](?p=language/concurrency)
+- [Const functions](?p=language/const-functions)
+- [Formal verification](?p=language/formal-verification)
+
 ==============================================================================
 DOCS: Const Functions (`const fn`) (language/const-functions)
 URL: /silk/docs/?p=language/const-functions
 ==============================================================================
 
 # Const Functions (`const fn`)
+
+This document defines the surface syntax and semantics for compile-time
+functions.
+
+Today, `const fn` (and `const pure fn`) can be called
+from `const` binding initializers when all arguments and the result are
+compile-time values (scalar values and eligible POD `struct` values).
 
 ## Summary
 
@@ -12933,12 +13199,12 @@ Notes:
   - it is not emitted as a runtime/linkable symbol in executable, object, or
     library outputs.
 
-## Compile-Time Values ()
+## Compile-Time Values
 
 In this document, a “compile-time value” is a value that the compiler can
 produce and manipulate during compile-time evaluation.
 
- (initial implementation target):
+Supported compile-time values today:
 
 - scalar primitives:
   - `bool`
@@ -12958,20 +13224,20 @@ produce and manipulate during compile-time evaluation.
   declaration order. They may be returned from and passed to `const fn`, and
   used in `const` initializers.
 
-Planned (not yet supported for `const fn` in Silk):
+Not supported in `const fn` evaluation today:
 
 - `string` values (string literals are supported directly in `const` bindings),
 - aggregate values beyond compile-time POD structs (enum/optional/slice/array),
 - function values as compile-time values (for higher-order const evaluation).
 
-## Rules ()
+## Rules
 
-The  defines a deliberately small “const-eval VM” surface. A
-`const fn` must fit within this surface.
+Today, `const fn` evaluation uses a deliberately small const-eval surface. A
+`const fn` must fit within it.
 
 ### Signature rules
 
-In Silk, a `const fn`:
+Today, a `const fn`:
 
 - must not be `task` or `async`,
 - must not declare a typed-error contract (`-> T | ErrorType...`),
@@ -12980,14 +13246,14 @@ In Silk, a `const fn`:
 
 ### Body rules
 
-In Silk, a `const fn`:
+Today, a `const fn`:
 
 - must not allocate (`new`) and must not use regions/`with`,
 - must not contain `panic` statements,
 - must not declare `const` local bindings,
 - may call only other `const fn` declarations,
 - is restricted to a small expression subset over scalar values:
-  - literals and local names (parameters and `let` bindings; no global `const` reads in Silk),
+  - literals and local names (parameters and `let` bindings; no global `const` reads today),
   - `as` casts between supported scalar types,
   - unary operators: `-`, `~`, `!`,
   - binary operators:
@@ -13039,7 +13305,7 @@ Const functions do not create new static storage. In particular:
 - compile-time execution may compute scalar values and fold them into constants,
 - compile-time execution must not allocate heap memory,
 - compile-time execution must not synthesize new global read-only data (for
-  example, it cannot build a new string at compile time in Silk).
+  example, it cannot build a new string at compile time today).
 
 String literals are still backed by read-only static storage, but they are
 introduced by the literal syntax itself (see `literals-string.md`), not by the
@@ -15079,9 +15345,9 @@ URL: /silk/docs/?p=std/overview
 
 The `docs/std/` directory is
 the public reference for the shipped stdlib surface, and the in-tree stdlib
-under `std/` satisfies `import std::...;` for the compiler.
+under `std/` satisfies `import std::...;` for the shipped toolchain.
 
-As of the compiler, the in-tree stdlib includes a
+The in-tree stdlib includes a
 small but functional set of utilities implemented purely in Silk (including
 monomorphized, type-parameter generics for core collection types),
 plus a tiny hosted POSIX baseline for OS-facing modules (`std::fs`, `std::task`,
@@ -15136,7 +15402,7 @@ These are the major areas of the shipped and documented `std::` surface:
 - `std::xml` — XML parsing and traversal (via libxml2; see `docs/std/xml.md`).
 - `std::idl::web` — Web IDL parsing and query API (see `docs/std/idl-web.md`).
 - `std::js::ecma` — ECMAScript FFI surface for JS/WASM interop (see `docs/std/js-ecma.md`).
-- `std::wasm` — WebAssembly runtime API (MVP wasm32 interpreter; see `docs/std/wasm.md`).
+- `std::wasm` — WebAssembly runtime API (see `docs/std/wasm.md`).
 - `std::memory` — allocation interfaces and low-level memory utilities.
 - `std::arrays` — slice/view types and helpers for fixed arrays.
 - `std::bits` — bit manipulation helpers (byte swaps, rotates, bit counts; see
@@ -15157,16 +15423,16 @@ These are the major areas of the shipped and documented `std::` surface:
 - `std::signal` — pollable signal waiting for TUI programs (Linux `signalfd(2)`
   backend; see `docs/std/signal.md`).
 - `std::stream` — Web Streams-inspired byte streams and piping (see `docs/std/stream.md`).
-- `std::args` — native `main(argc, argv)` argument helpers (; see `docs/std/args.md`).
+- `std::args` — native `main(argc, argv)` argument helpers (see `docs/std/args.md`).
 - `std::readline` — interactive line editor for CLI programs (TTY mode) built on
   the bundled `linenoise` sources (see `docs/std/readline.md`).
-- `std::flag` — command line flag + positional parsing (; see `docs/std/flag.md`).
-- `std::test` — test helpers for `silk test` (; see `docs/std/test.md`).
+- `std::flag` — command line flag + positional parsing (see `docs/std/flag.md`).
+- `std::test` — test helpers for `silk test` (see `docs/std/test.md`).
 - `std::build` — build module helpers for generating `silk.toml` manifests (see `docs/std/build.md`).
 - `std::env` — environment variable access (hosted baseline; see `docs/std/env.md`).
 - `std::process` — process primitives (hosted baseline; see `docs/std/process.md`).
 - `std::os` — target OS/arch metadata and small OS helpers (see `docs/std/os.md`).
-- `std::path` — path manipulation utilities (; see `docs/std/path.md`).
+- `std::path` — path manipulation utilities (see `docs/std/path.md`).
 - `std::io` — basic I/O (unbuffered fd reads/writes, formatting, stdout/stderr;
   see `docs/std/io.md`). Stream adapters live under `std::io::stream`.
 - `std::fmt` — shared formatting layer used by `std::io` and string builders.
@@ -15206,12 +15472,11 @@ URL: /silk/docs/?p=std/conventions
 
 # `std::` Conventions
 
-This defines the intended
-conventions for the Silk standard library. New and refactored `std::` APIs must
-follow this document; older surfaces may temporarily diverge but
-must be migrated as they are touched.
+This document defines the conventions Silk `std::` modules should follow. New
+and refactored `std::` APIs must follow it, and older surfaces should be
+updated toward it when they are touched.
 
-This document exists to keep `std::` APIs consistent across modules.
+This document keeps `std::` APIs consistent across modules.
 
 ## Public vs Internal API
 
@@ -15786,7 +16051,13 @@ export async fn run (package_root: string, action: string) -> int {
 }
 ```
 
-## Future work
+## See also
+
+- [`std::interfaces`](?p=std/interfaces)
+- [`Package manifests`](?p=compiler/package-manifests)
+- [`Build scripts`](?p=compiler/build-scripts)
+
+## Design goals
 
 This module is expected to grow toward a Zig-like build system:
 
@@ -15819,11 +16090,6 @@ interfaces are used for:
 When the standard library is enabled (the default), all interfaces in
 `std::interfaces` are available without explicit imports via the std prelude
 module `std::runtime::globals`, so you can write `impl T as Drop { ... }`.
-
-See also:
-
-- `docs/language/interfaces.md` (syntax, conformance, dispatch status)
-- `docs/language/structs-impls-layout.md` (method + `export` rules)
 
 ## Exported API
 
@@ -15988,44 +16254,9 @@ Notes:
     - `module my_pkg::build as Builder;` (preferred; `Builder` is in the std prelude)
     - or `module my_pkg::build as std::interfaces::Builder;` (fully qualified)
 
-## Drop semantics
+## Examples
 
-`std::interfaces::Drop` is recognized by the compiler as the standard way for a
-type to release resources it owns (file descriptors, heap allocations, OS
-handles, etc.). A type is considered “droppable” when it provides a method with
-this surface signature:
-
-```silk
-impl T as Drop {
-  public fn drop (mut self: &T) -> void { ... }
-}
-```
-
-Automatic invocation (current compiler):
-
-- **Scope exit:** when a `struct` *value* binding goes out of scope (including
-  via fallthrough, `break`, and `continue`), the compiler calls `drop` before
-  the storage is discarded.
-- **Return:** on `return`, the compiler drops all in-scope droppable bindings
-  except any value moved into the return result (for example `return value;`
-  and `return Some(value);` treat `value` as moved in Silk).
-- **Overwrite:** when a `struct` *value* binding is overwritten via assignment,
-  the compiler calls `drop` on the old value before copying in the new value.
-- **Heap last-release:** for compiler-managed `new` allocations (`&T` with RC),
-  the compiler calls `drop` before freeing the backing allocation when the
-  refcount reaches zero.
-
-Notes and limitations ():
-
-- `drop` is resolved statically (no dynamic dispatch).
-- `drop` should invalidate the value so calling it multiple times is safe.
-- The language does not yet implement a general move/ownership model; **do not
-  rely on copying `Drop` types** to be safe until move/copy semantics are
-  specified and enforced.
-- See `docs/language/memory-model.md` for the current `new` + RC rules and how
-  cleanup is performed.
-
-## Example (Conformance)
+### Conformance
 
 ```silk
 struct Counter {
@@ -16039,7 +16270,7 @@ impl Counter as Len {
 }
 ```
 
-## Example (`Serialize(string)` in the stdlib)
+### `Serialize(string)` in the stdlib
 
 ```silk
 import c_owned from "std/ffi/c_owned";
@@ -16099,7 +16330,7 @@ fn main () -> int {
 }
 ```
 
-## Example (`TrySerialize` for owned text output)
+### `TrySerialize` for owned text output
 
 ```silk
 import std::semver;
@@ -16141,7 +16372,7 @@ fn main () -> int {
 }
 ```
 
-## Example (`Parse` in the stdlib)
+### `Parse` in the stdlib
 
 ```silk
 import std::path;
@@ -16182,6 +16413,57 @@ fn main () -> int {
   }
 }
 ```
+
+## Considerations
+
+### Interface model
+
+- Dynamic interface dispatch (trait objects / vtables) remains part of the
+  broader language design; the shipped stdlib surface today is centered on
+  concrete-type conformance and compile-time checking.
+- `std::interfaces::Drop` is the compiler-recognized protocol for deterministic
+  cleanup of owned values.
+
+### Drop semantics
+
+`std::interfaces::Drop` is recognized by the compiler as the standard way for a
+type to release resources it owns (file descriptors, heap allocations, OS
+handles, etc.). A type is considered “droppable” when it provides a method with
+this surface signature:
+
+```silk
+impl T as Drop {
+  public fn drop (mut self: &T) -> void { ... }
+}
+```
+
+Automatic invocation (current compiler):
+
+- **Scope exit:** when a `struct` *value* binding goes out of scope (including
+  via fallthrough, `break`, and `continue`), the compiler calls `drop` before
+  the storage is discarded.
+- **Return:** on `return`, the compiler drops all in-scope droppable bindings
+  except any value moved into the return result (for example `return value;`
+  and `return Some(value);` treat `value` as moved in Silk).
+- **Overwrite:** when a `struct` *value* binding is overwritten via assignment,
+  the compiler calls `drop` on the old value before copying in the new value.
+- **Heap last-release:** for compiler-managed `new` allocations (`&T` with RC),
+  the compiler calls `drop` before freeing the backing allocation when the
+  refcount reaches zero.
+
+Notes:
+
+- `drop` is resolved statically (no dynamic dispatch).
+- `drop` should invalidate the value so calling it multiple times is safe.
+- The language does not yet implement a general move/ownership model; **do not
+  rely on copying `Drop` types** to be safe until move/copy semantics are
+  specified and enforced.
+
+## See also
+
+- [Interfaces](?p=language/interfaces)
+- [Structs, impls, and layout](?p=language/structs-impls-layout)
+- [Memory model](?p=language/memory-model)
 
 ==============================================================================
 DOCS: `std::result` (std/result)
@@ -18856,7 +19138,7 @@ URL: /silk/docs/?p=std/env
 
 This module targets a hosted POSIX baseline (Linux/glibc) and is
 implemented on top of the pluggable `std::runtime::env` interface. WASI support
-is partially implemented: `get` works, while `set` remains unsupported (see
+is split by capability: `get` works, while `set` remains unsupported (see
 “Platform notes”).
 
 ## Exported API
@@ -19174,10 +19456,6 @@ URL: /silk/docs/?p=std/os
 This module is POSIX-first for hosted behavior, but its target-metadata surface
 is available on every target.
 
-See also:
-
-- `docs/language/target-metadata.md` (the built-in target metadata constants).
-
 ## Exported API
 
 ```silk
@@ -19209,7 +19487,26 @@ export fn cpus () -> CPUsResult;
 export fn cpu_count () -> int;
 ```
 
-## Target metadata
+## Examples
+
+```silk
+import std::os;
+
+fn main () -> int {
+  if std::os::PLATFORM_NAME == "" { return 1; }
+  if std::os::ARCH_NAME == "" { return 2; }
+  if std::os::cpu_count() < 1 { return 3; }
+
+  match (std::os::uptime()) {
+    Ok(_) => { return 0; },
+    Err(_) => { return 4; },
+  }
+}
+```
+
+## Considerations
+
+### Target metadata
 
 The exported constants are compile-time constants derived from the built-in
 target metadata values:
@@ -19222,7 +19519,7 @@ target metadata values:
 Use these when you prefer explicit namespacing over using `OS_PLATFORM` /
 `OS_ARCH` directly.
 
-## `Architecture` and `Platform`
+### `Architecture` and `Platform`
 
 `std::os::arch()` and `std::os::platform()` map `ARCH_NAME` and `PLATFORM_NAME`
 into enums suitable for `match`.
@@ -19230,14 +19527,14 @@ into enums suitable for `match`.
 The `Unknown` case is returned when the current compiler target is not covered
 by the current enum set.
 
-## Uptime
+### Uptime
 
 `std::os::uptime()` returns the current monotonic uptime as a `Duration`.
 
 On the default hosted POSIX runtime, this uses `clock_gettime(CLOCK_MONOTONIC)`
 via `std::temporal`.
 
-## CPU information
+### CPU information
 
 ### `cpu_count`
 
@@ -19255,6 +19552,12 @@ Ownership:
 Current implementation:
 
 - `CPU.model` is set to `ARCH_NAME` for each returned CPU record.
+
+## See also
+
+- [Target metadata](?p=language/target-metadata)
+- [`std::temporal`](?p=std/temporal)
+- [`std::runtime`](?p=std/runtime)
 
 ==============================================================================
 DOCS: `std::path` (std/path)
@@ -21615,20 +21918,12 @@ URL: /silk/docs/?p=std/stream
 
 # `std::stream`
 
-This module provides a Web Streams-inspired API
-for **byte streams** designed to work well with Silk’s `async`/`task` model.
+`std::stream` provides a Web Streams-inspired API for **byte streams** that
+composes with Silk’s `async` / `task` model.
 
-The core goals of the  are:
-
-- **Ergonomic piping** between producers and consumers.
-- **Backpressure** via bounded buffering.
-- **Safe chunk ownership** across tasks using an owned `Bytes` type (no borrowed
-  slice lifetime hazards).
-
-Runtime note ():
-
-- `ReadableStream.read()` / `WritableStream.write()` are **blocking OS-thread**
-  operations implemented with mutex/condvar primitives.
+It uses owned `Bytes` chunks plus bounded in-memory queues so producers,
+transformers, and consumers can be composed without borrowed-slice lifetime
+hazards.
 
 ## Exported API
 
@@ -21891,6 +22186,13 @@ fn run_pipeline (src: std::stream::ReadableStream, dst: std::stream::WritableStr
 
 ## Considerations
 
+### Blocking behavior
+
+- `ReadableStream.read()` and `WritableStream.write()` are blocking OS-thread
+  operations implemented with mutex/condvar primitives.
+- `pipe_to_abortable` observes abort signals between read/write steps; it does
+  not interrupt an already-blocking `read()` call.
+
 ### Backpressure
 
 Each stream has a bounded in-memory queue. The `cap` is expressed in **chunks**
@@ -22094,7 +22396,7 @@ For each construction:
 
 Associated data is optional: callers may pass `ad = { ptr: 0, len: 0 }`.
 
-Planned expansion:
+## Design goals
 
 - key derivation (`kdf`, `pwhash`),
 - streaming (`secretstream`),
@@ -22396,7 +22698,7 @@ non-POSIX, embedded, sandboxed runtimes) should be able to provide their own
 runtime implementation by supplying an alternate stdlib root with compatible
 `std::runtime::...` modules.
 
-## Motivation
+## Description
 
 - `std::fs`, `std::task`, `std::sync`, and other OS-facing std modules need
   low-level primitives (files, clocks, threads, syscalls).
@@ -22404,7 +22706,7 @@ runtime implementation by supplying an alternate stdlib root with compatible
 - Keeping these differences confined to `std::runtime::...` avoids scattering
   `ext` and platform `#if` style logic across the entire stdlib.
 
-## Structure
+### Backend structure
 
 The std runtime is organized as:
 
@@ -22448,7 +22750,7 @@ interface point, while platform backends (such as `std::runtime::posix::<area>`
 and `std::runtime::windows::<area>`) can exist as separate modules in an
 alternate stdlib root without changing higher-level `std::...` modules.
 
-## Interface Design Rules
+### Interface design rules
 
 - The `std::runtime::...` surface is allowed to be low-level and `unsafe`:
   raw pointers, integer error codes, and OS-specific constants are acceptable.
@@ -22560,7 +22862,26 @@ Runtime areas in the shipped stdlib:
     default heap allocation unless an embedder installs an allocator via
     `silk_rt_set_allocator`.
 
-Runtime areas that continue to expand:
+## Examples
+
+```silk
+import std::runtime::build;
+
+fn main () -> int {
+  let kind = std::runtime::build.kind();
+  let mode = std::runtime::build.mode();
+  let version = std::runtime::build.version();
+
+  if kind == "" { return 1; }
+  if mode == "" { return 2; }
+  if version == "" { return 3; }
+  return 0;
+}
+```
+
+## Considerations
+
+### Runtime areas that continue to expand
 
 - Async event loop / executor integration (`std::runtime::event_loop`) for hosted `async`/`await`:
   - the compiler ships a bundled hosted executor in `libsilk_rt`
@@ -22586,7 +22907,7 @@ Runtime areas that continue to expand:
     checks.
 - WASI networking (via WASI sockets or similar proposals) when supported by the toolchain targets.
 
-## Providing a Custom Runtime
+### Providing a custom runtime
 
 To provide your own runtime implementation underneath the standard library,
 ship an alternate stdlib root that includes compatible `std::runtime::...`
@@ -22652,6 +22973,13 @@ Archive member naming requirement (current scheme):
 - for example: `std/runtime/posix/task.slk` → `runtime_posix_task.o`.
 
 The in-repo `make stdlib` target produces archives with this naming scheme.
+
+## See also
+
+- [`std::package-structure`](?p=std/package-structure)
+- [`std::filesystem`](?p=std/filesystem)
+- [`std::io`](?p=std/io)
+- [`std::task`](?p=std/task)
 
 ==============================================================================
 DOCS: `std::signal` (std/signal)
@@ -23995,7 +24323,7 @@ The shipped implementation is based on the bundled `linenoise` sources under
 `src/linenoise.{c,h}` and is exposed through the bundled runtime support
 archive (`libsilk_rt`).
 
-## Overview
+## Description
 
 Typical use:
 
@@ -24059,7 +24387,27 @@ export fn main () -> int {
 - `InvalidInput` — invalid path/prompt lengths or internal overflow guards.
 - `Unknown` — other failures.
 
-## Semantics
+## Examples
+
+```silk
+import std::readline;
+
+fn main () -> int {
+  let _ = std::readline::history_set_max_len(1000);
+  match (std::readline::history_load(".history")) {
+    Ok(_) => {
+      return 0;
+    },
+    Err(_) => {
+      return 1;
+    },
+  }
+}
+```
+
+## Considerations
+
+### Semantics
 
 - TTY vs. non-TTY:
   - when stdin is a TTY, input is edited interactively (arrow keys, history),
@@ -24071,7 +24419,7 @@ export fn main () -> int {
 - Ownership:
   - `read_line` returns an owned `std::strings::String`. Drop it when finished.
 
-## Keybindings (TTY mode)
+### Keybindings (TTY mode)
 
 Keybindings are implemented by the bundled `linenoise` line editor. Exact
 behavior depends on the terminal, but common bindings include:
@@ -24086,7 +24434,7 @@ behavior depends on the terminal, but common bindings include:
   modifier sequences).
 - Alt+B / Alt+F — move by word (Meta key sequences: `ESC b` / `ESC f`).
 
-## Implementation Notes
+### Implementation notes
 
 - Internal `linenoise` heap usage is routed through the `silk_rt_malloc_bytes`
   allocator surface so embedders can override allocations via
@@ -24095,7 +24443,14 @@ behavior depends on the terminal, but common bindings include:
   `std::runtime::mem::free` / `std::strings::String.drop()` (payload pointer
   includes the standard 8-byte header used by the hosted runtime).
 
-## Limitations
+## See also
+
+- [`std::flag`](?p=std/flag)
+- [`std::args`](?p=std/args)
+- [`std::io`](?p=std/io)
+- [`std::runtime`](?p=std/runtime)
+
+## Design goals
 
 - `linenoise` completion/hints callbacks are not exposed yet (they require a
   stable callback/FFI story for passing function pointers between Silk and C).
@@ -24416,6 +24771,12 @@ Notes:
 - The `*_write` function copies **raw UTF‑8 bytes** (no NUL terminator) into the
   destination buffer and returns the number of bytes written.
 
+## See also
+
+- [`std::idl::web`](?p=std/idl-web)
+- [`std::wasm`](?p=std/wasm)
+- [`std::ffi::c`](?p=std/ffi-c)
+
 ## Design goals
 
 Expected follow-ups as `silk bindgen` becomes concrete:
@@ -24466,7 +24827,7 @@ The public Silk surface is centered around:
 - `Val` / `ValType` — a small tagged value representation for wasm values
   (currently used for results).
 
-## Host Imports (MVP)
+## Host Imports
 
 `Module.instantiate_with_imports(imports: Imports)` uses `Imports` to resolve
 wasm imports (functions, globals, memory, table).
@@ -24591,12 +24952,12 @@ Where:
 `WASMError.kind()` and `WASMError.message()` provide a semantic view over the
 stable integer codes.
 
-## Supported Features (MVP)
+## Supported Features
 
 The implementation is a **pure Silk interpreter** intended to be:
 
 - self-contained (no external dependencies),
-- correct for the WebAssembly 1.0 MVP semantics it supports,
+- correct for the WebAssembly 1.0 core semantics it supports,
 - explicit about unsupported extensions (returns `Unsupported`).
 
 ### Targets
@@ -24612,13 +24973,13 @@ Supported:
 - core sections: `type`, `import`, `function`, `table`, `memory`, `global`,
   `export`, `start`, `element`, `code`, `data`.
 
-Notes / current constraints (MVP):
+Notes / current interpreter constraints:
 
-- At most one table and one memory are supported (MVP constraint).
+- At most one table and one memory are supported.
 - `start` is executed automatically during `Module.instantiate` after
   instantiation initialization.
   - the start function must have signature `[] -> []` (no parameters, no results).
-- `data_count` and all non-MVP extensions are rejected as `Unsupported`.
+- `data_count` and post-core extensions are rejected as `Unsupported`.
 
 ### Values and Function Calls
 
@@ -24638,7 +24999,7 @@ code (including `f32`/`f64`):
 - control/parametric/variable: `unreachable`, `nop`, `block`, `loop`, `if`,
   `else`, `end`, `br`, `br_if`, `br_table`, `return`, `call`, `call_indirect`,
   `drop`, `select` (with block results for `i32`/`i64`/`f32`/`f64`)
-- memory: all MVP loads/stores (including sign/zero-ext forms), `memory.size`,
+- memory: all core loads/stores (including sign/zero-ext forms), `memory.size`,
   `memory.grow`
 - numerics: `i32`/`i64`/`f32`/`f64` operators and conversions (including
   float↔int conversions and bit reinterpret ops).
@@ -24662,7 +25023,7 @@ pointing at the opcode.
 - `Func` is a lightweight view into an `Instance`, and memory is accessed by
   calling `Instance.memory_bytes()` when present.
 
-## Example
+## Examples
 
 ```silk
 import std::wasm;
@@ -24765,11 +25126,19 @@ fn main () -> int {
 }
 ```
 
+## See also
+
+- [`std::js-ecma`](?p=std/js-ecma)
+- [`std::url`](?p=std/url)
+- [WASM backend](?p=compiler/backend-wasm)
+
 ## Design goals
 
-- A stable, ergonomic host import resolver API (beyond the MVP `Imports` list).
+- A stable, ergonomic host import resolver API beyond the current `Imports`
+  list surface.
 - WASI bindings and host library shims.
-- Post-MVP proposals: bulk memory, reference types, SIMD (`v128`), threads, multi-value.
+- Additional runtime goals: bulk memory, reference types, SIMD (`v128`),
+  threads, multi-value.
 - A native runtime/JIT implementation for performance.
 
 ==============================================================================
@@ -29175,11 +29544,10 @@ URL: /silk/docs/?p=compiler/package-distribution
 
 # Silk Package Distribution
 
-The manifest, CLI,
-install, inspection/linting, and binary-dependency consumption behavior
-described here are implemented in the current toolchain. This document
-describes the package authoring, publication, and consumption model Silk uses
-today.
+This document describes the package authoring, publication, and consumption
+model Silk uses today. The manifest, CLI, install, inspection/linting, and
+binary-dependency consumption behavior described here are part of the current
+toolchain surface.
 
 ## Summary
 
@@ -29192,41 +29560,6 @@ authors may manage that separately for whatever ecosystems they target.
 
 This keeps `silk.toml` as the single canonical manifest while letting packages
 move through ordinary distribution systems.
-
-## Goals
-
-- Keep `silk.toml` as the canonical package manifest for authoring, packaging,
-  and consumption.
-- Make the package unit portable across:
-  - local source checkouts,
-  - vendored directories in a repo,
-  - unpacked GitHub release/source archives,
-  - filesystem trees populated by third-party package managers,
-  - and system package manager installs.
-- Support four first-class package shapes:
-  - source packages,
-  - interface-only packages,
-  - binary-only packages,
-  - hybrid packages that ship both source and prebuilt artifacts.
-- Keep package identity independent of any external registry or package manager.
-- Preserve ergonomic modularity inspired by successful package ecosystems:
-  - one manifest at package root,
-  - explicit public package metadata,
-  - explicit packaged file set,
-  - clear executable/library exposure,
-  - and predictable install/lookup rules.
-
-## Non-Goals
-
-- A Silk-owned central registry.
-- Requiring the `silk` compiler to fetch packages from the network during an
-  ordinary build.
-- Generating distro-native packaging recipes for every ecosystem in the first
-  iteration.
-- Replacing distro package managers, npm, or GitHub releases with Silk-specific
-  infrastructure.
-- Adding manager-specific manifest sections or resolver rules for each external
-  ecosystem.
 
 ## Design Principles
 
@@ -29962,15 +30295,13 @@ URL: /silk/docs/?p=compiler/backend-wasm
 
 # WebAssembly Back-End (`wasm32` / `wasm64`)
 
+This document describes the shipped WebAssembly back-end, the target
+conventions it uses today, and the remaining ABI boundaries for wasm targets.
 
-This document records the current implemented subset and remaining design
-constraints for targeting WebAssembly from the Silk compiler back-end.
+## Description
 
-## Current Implementation (Phase 1, IR-backed wasm32)
-
-The Silk compiler repository now includes a `wasm32` back-end capable of
-emitting a final `.wasm` module from the compiler’s IR (CFG-based lowering for
-the ), plus a smaller constant-only fallback:
+The Silk compiler includes a `wasm32` back-end that emits final `.wasm`
+modules from the compiler IR, plus a smaller constant-only fallback path:
 
 - Implementations:
   - IR-backed wasm backend (primary path),
@@ -29989,20 +30320,20 @@ the ), plus a smaller constant-only fallback:
 - FFI mapping (WASM):
   - `ext foo = fn (...) -> ...;` becomes an imported function `env.foo`,
   - `ext bar = T;` becomes an imported global `env.bar` (scalar `T`).
-- Current capabilities (prototype quality):
+- Shipped capabilities:
   - supports multi-module builds (packages + file imports),
   - emits static data into the wasm data section (string/byte blobs and other
     lowered constants),
-  - supports structured control flow (if/while/break/continue) for the current
-    IR subset.
-  - does not yet support the concurrency runtime on wasm targets (no `task` /
-    `async` lowering to a wasm-native scheduler); programs using concurrency
-    constructs are currently outside the wasm backend subset and are rejected
-    during code generation.
+  - supports structured control flow (if/while/break/continue) for the shipped
+    IR lowering path.
+  - does not yet support the concurrency runtime on wasm targets (`task` /
+    `async` are not lowered to a wasm-native scheduler); programs using
+    concurrency constructs remain outside the wasm backend surface and are
+    rejected during code generation.
 
 The CLI exposes these targets via `silk build --target ...` and the shorthand
-`silk build --arch wasm32|wasm32-wasi` (see `docs/compiler/cli-silk.md` and
-`docs/man/silk.1.md`).
+`silk build --arch wasm32|wasm32-wasi` (see [CLI reference](?p=compiler/cli-silk)
+and [`silk(1)`](?p=man/silk.1)).
 
 ## Quickstart
 
@@ -30033,39 +30364,18 @@ export fn add (a: int, b: int) -> int {
 silk build math.slk --target wasm32-unknown-unknown -o build/math.wasm
 ```
 
-In Silk, the resulting module exports the supported `export fn`
-surface from the root package and can be loaded by a JS or native wasm
-embedder.
-
-## Goals
-
-- Support emitting WebAssembly modules for:
-  - `wasm32` (32-bit linear-memory addressing),
-  - `wasm64` (64-bit linear-memory addressing; future-facing).
-- Support both:
-  - a hosted environment (`wasm32-wasi`), and
-  - an embedder-driven environment (`wasm32-unknown-unknown`, typically JS).
-- Preserve Silk’s “native compiler” principle: this is Silk-owned codegen (no C
-  transpilation).
-
-## Non-Goals (current phase)
-
-- A full WASM toolchain replacement (linker, LTO, debug formats) on day one.
-- A single “portable” stdlib archive usable across all WASM environments
-  (WASI vs JS embedder differ in available imports and conventions).
-- Universal ABI compatibility with arbitrary third-party wasm linkers before we
-  have a stable Silk ↔ WASM ABI specification.
+The resulting module exports the supported `export fn` surface from the root
+package and can be loaded by a JS or native wasm embedder.
 
 ## Output Model
 
 ### Module kinds
 
-The current back-end emits a *final* `.wasm` module (not a relocatable
-object) for the supported subset, analogous to the current `linux/x86_64`
-“emit a final ELF image” approach.
+The shipped back-end emits a *final* `.wasm` module (not a relocatable object),
+analogous to the current `linux/x86_64` “emit a final ELF image” approach.
 
-Future work may add “wasm object” emission, but it requires relocation sections
-and a defined link model.
+Relocatable “wasm object” emission is not part of the documented interface; it
+would require relocation sections and a defined Silk↔WASM link model.
 
 ### Entry points
 
@@ -30077,8 +30387,8 @@ We need two distinct entrypoint conventions:
     `proc_exit(exit_code)`.
 - `wasm32-unknown-unknown`:
   - export an Silk `main` function for embedder use.
-    - Silk `int` is currently lowered as wasm `i64`, so `main`’s return type is
-      `i64` unless a wrapper is introduced in the future.
+    - Silk `int` lowers as wasm `i64`, so `main`’s return type is `i64` unless
+      a target-specific wrapper is introduced.
 
 The CLI/ABI must document which convention is used for each target.
 
@@ -30113,14 +30423,14 @@ Notes:
 
 ### Pointers and `string`
 
-Silk’s current back-end assumes 64-bit pointers (`u64`). For WASM, pointer width
-depends on the target:
+Silk’s back-end assumes 64-bit pointers (`u64`) for native targets. For WASM,
+pointer width depends on the target:
 
 - `wasm32`: pointers are `u32` byte offsets into linear memory.
 - `wasm64`: pointers are `u64` byte offsets into linear memory.
 
-`string` is currently represented as `(ptr, len)` and, at the C ABI boundary,
-as `SilkString { ptr, len }`. For WASM:
+`string` is represented as `(ptr, len)` and, at the C ABI boundary, as
+`SilkString { ptr, len }`. For WASM:
 
 - In `wasm32`, the natural representation is `(u32 ptr, i64 len)` (or `(u32,u32)`
   if we later choose a fully-32-bit ABI for wasm-only code).
@@ -30139,9 +30449,9 @@ The chosen WASM ABI for strings must be documented and kept stable.
 
 ### Internal calls
 
-For the initial subset, internal calls should be direct wasm calls using wasm’s
-native calling convention (stack machine with typed locals), with the compiler
-responsible for lowering Silk IR values into the wasm value stack.
+Internal calls lower to direct wasm calls using wasm’s native calling
+convention (stack machine with typed locals), with the compiler responsible for
+lowering Silk IR values onto the wasm value stack.
 
 ### `ext` declarations
 
@@ -30159,11 +30469,12 @@ The module/name convention and supported import surface must be documented in
 
 ### WASI integration
 
-For `wasm32-wasi`, stdlib facilities like `std::io` and `std::fs` should
-eventually target WASI syscalls rather than libc symbols. This implies:
+For `wasm32-wasi`, stdlib facilities such as `std::io` and `std::fs` use a
+target-specific hosted surface rather than the POSIX libc-facing runtime used
+on native targets. This implies:
 
-- The “hosted” stdlib for WASI is a separate std distribution from the POSIX
-  `std/` currently used for `linux/x86_64`.
+- The hosted stdlib for WASI is a separate std distribution from the POSIX
+  `std/` used for `linux/x86_64`.
 - The stdlib archive must be target-specific (one archive per target ABI), and
   swapping stdlib roots should remain supported (`--std` / `--nostd` etc.).
 
@@ -30176,20 +30487,15 @@ eventually target WASI syscalls rather than libc symbols. This implies:
   - assert exit code or exported return value.
 - Keep tests target-scoped and avoid requiring network access.
 
-## Roadmap (Suggested Phases)
+## Design goals
 
-1. **Minimal wasm32 module**: emit a module that exports `main` returning `i32`
-   for `fn main () -> int` (constant subset first).
-2. **Data and strings**: support string literals and `string` values backed by
-   linear-memory data segments.
-3. **Control flow and helpers**: lower the existing IR CFG into wasm blocks,
-   loops, branches, and calls.
-4. **WASI `_start`**: add the `_start` wrapper and `proc_exit` import for
-   `wasm32-wasi`.
-5. **wasm64 exploration**: validate pointer-width changes and ABI decisions.
-
-Each phase should be reflected in the docs, and any new CLI surface must be
-documented in `docs/compiler/cli-silk.md` and `docs/man/silk.1.md`.
+- Keep final-module emission as the stable default interface for wasm targets.
+- Define and document a stable Silk↔WASM ABI for exports, imports, strings, and
+  static data layout.
+- Extend the target story to `wasm64` only once pointer-width and ABI decisions
+  are validated end-to-end.
+- Add relocatable/object emission only alongside an explicit relocation and
+  link model.
 
 ==============================================================================
 DOCS: Async Runtime (Hosted) (compiler/async-runtime)
@@ -30198,15 +30504,14 @@ URL: /silk/docs/?p=compiler/async-runtime
 
 # Async Runtime (Hosted)
 
-
 This document now serves two roles:
 
 - Describe the **current shipped hosted async runtime** used by the compiler today.
 - Specify the longer-term architecture (compiler coroutine transform + richer event loop)
   that the current implementation is expected to evolve toward.
 
-The current hosted async runtime is implemented in C in `src/silk_rt_async.c` and wired
-into lowering in `src/lower_ir.zig`. It provides:
+The current hosted async runtime is implemented in the runtime C layer and
+wired into compiler lowering. It provides:
 
 - stackful coroutines (fibers) using `ucontext`,
 - a single-threaded executor/event loop that can drive `async fn main () -> int`,
@@ -30378,28 +30683,6 @@ The runtime-backlog items for the current hosted concurrency subset are now
 Remaining future work in this file is longer-term architecture evolution for
 the hosted runtime, not backlog for the shipped subset. Task-boundary safety
 model expansion is tracked in the language/checker docs rather than here.
-
-## Goals
-
-- Make `await` a **non-blocking suspension point** in hosted builds:
-  - awaiting a pending operation suspends the current async function and returns control to
-    the executor,
-  - the executor resumes it when the awaited operation completes.
-- Provide a high-performance hosted I/O backend:
-  - use **Linux `io_uring`** for completion-based I/O where available,
-  - provide a **portable POSIX fallback** (readiness-based) for non-Linux hosted targets.
-- Keep the runtime **pluggable** via the `std::runtime::...` layering:
-  - higher-level `std::...` modules should rely on stable `std::runtime::...` interfaces,
-  - alternative stdlib roots may provide alternate runtime backends.
-- Preserve **structured concurrency** as the default model:
-  - `async { ... }` / `task { ... }` scopes must ensure spawned work completes (or is cancelled)
-    before the scope exits.
-
-## Non-Goals (Initial Phases)
-
-- Preemptive scheduling of async functions (async is cooperative).
-- A fully general “async everywhere” rewrite of the standard library in one step.
-- Cross-platform parity for advanced kernel features (Linux-first for the initial hosted backend).
 
 ## Terminology
 
@@ -31429,7 +31712,7 @@ The reference implementation uses deeper Zig/C/Silk validation behind the
 scenes, but the public CLI loop above remains the first smoke test for any
 language or stdlib feature.
 
-## Goals
+## Testing priorities
 
 - Ensure that the Zig implementation and the C99 ABI behave identically for all semantics specified in `docs/`.
 - Provide confidence in language features, FFI, and standard library behavior.
@@ -31510,10 +31793,11 @@ URL: /silk/docs/?p=compiler/lsp-silk
 
 # Silk Language Server (LSP)
 
-This document specifies the current Language Server Protocol (LSP)
-implementation for Silk.
+This document specifies the Silk Language Server Protocol (LSP) server.
 
-The goal of the language server is to provide editor and IDE integrations (diagnostics, and eventually features like completion and hover) while remaining a thin, spec-driven wrapper around the existing compiler front-end.
+The goal of the language server is to provide editor and IDE integrations
+(diagnostics, hover, completion, signature help, and definition lookup) while
+remaining a thin wrapper around the existing compiler front-end.
 
 ## Overview
 
@@ -31530,7 +31814,10 @@ The Silk language server:
   those sources are available,
 - does not change the language surface or ABI; it is a tooling layer on top of the existing compiler.
 
-No language features or CLI options are introduced by the LSP itself. Any future extensions that affect language semantics or user-facing flags must still be documented in the appropriate `docs/language/` or `docs/compiler/cli-silk.md` files first.
+No language features or CLI options are introduced by the LSP itself. Any
+later additions that affect language semantics or user-facing flags must still
+be documented in the relevant language docs or the
+[CLI reference](?p=compiler/cli-silk) first.
 
 ## Running the Server
 
@@ -31571,8 +31858,8 @@ Position handling note:
 The server supports the standard LSP initialization sequence:
 
 - `initialize` (request):
-  - Advertised capabilities (initial version):
-    - `positionEncoding`: `"utf-16"` (the server currently operates in UTF-16 positions for maximum client compatibility).
+  - Advertised capabilities:
+    - `positionEncoding`: `"utf-16"` (the server uses UTF-16 positions for broad client compatibility).
     - `textDocumentSync`:
       - `openClose: true`,
       - `change: 1` (Full document sync),
@@ -31587,15 +31874,18 @@ The server supports the standard LSP initialization sequence:
     - `signatureHelpProvider`:
       - trigger characters `(` and `,`,
       - provides function and method signatures for the current call.
-    - No references/rename, semantic tokens, or other advanced features are claimed in the initial implementation.
+    - The server does not advertise references/rename, semantic tokens, or
+      other advanced features.
 - The server uses `rootUri` (or `rootPath`) to help locate a stdlib root when no explicit `--std-root` or `SILK_STD_ROOT` is set.
 - `initialized` (notification):
-  - Accepted but does not currently trigger additional behavior.
+  - Accepted but does not trigger additional behavior.
 - `shutdown` (request) and `exit` (notification) are honored as in the LSP spec.
 - Requests received after `shutdown` (other than `exit`) are treated as invalid and answered with an error response.
-- `$\/cancelRequest` notifications are accepted and ignored; the initial server does not track per-request cancellation state.
+- `$\/cancelRequest` notifications are accepted and ignored; the server does not
+  track per-request cancellation state.
 
-Any future capabilities (completion, hover, goto definition, etc.) must be documented here before being implemented.
+Any additional capabilities must be documented here before being implemented
+and advertised.
 
 ## Hover
 
@@ -31666,7 +31956,7 @@ The server provides `textDocument/definition` for open documents.
   declaration, using the same function-vs-variable matching rule as hover.
 - If symbol resolution fails, the server falls back to a lexical scan of the current file for the first matching `let`/`fn`/`ext`/`struct`/`enum`/`interface`/`error` declaration.
 
-Known limitations in this initial support:
+Current resolution limits:
 
 - local block scopes and shadowing are only modeled for `let`-style bindings (not for match-expression binders),
 - ambiguous names across multiple imports are not disambiguated; the first match wins,
@@ -31701,7 +31991,7 @@ module set.
   - namespace completions after `::` for known packages, package-import aliases, default/namespace imports, and `using`-introduced namespace aliases,
   - member completions for struct fields and methods after `.` when the receiver type is known (including locals with type annotations or struct-literal/cast inference),
   - struct-literal field suggestions in `Type { ... }` expressions when the cursor is in a field-name position (before the `:`).
-- Currently:
+- The server:
   - returns completion items with `label`, `kind`, and `detail` populated when symbol data is available,
   - attaches a plaintext signature preview for functions and methods in completion documentation,
   - filters results by the identifier prefix immediately preceding the cursor position,
@@ -31717,9 +32007,9 @@ As richer front-end support becomes available, completion may be extended to:
 - distinguish between functions, types, variables, and other symbol kinds,
 - surface standard library symbols by consulting the resolver.
 
-## Signature Help (Initial Support)
+## Signature Help
 
-The server provides a minimal implementation of `textDocument/signatureHelp`:
+The server provides `textDocument/signatureHelp`:
 
 - Signature help is computed for the innermost call expression at the cursor.
 - The server supports:
@@ -31736,11 +32026,13 @@ The server provides a minimal implementation of `textDocument/signatureHelp`:
 
 For constructor overload sets, the server returns multiple signatures and selects an active signature using argument-count heuristics. The implicit receiver parameter (`mut self: &Type`) is not shown in the signature parameters for `new Type(...)`.
 
-Signature help is heuristic and will become richer as the front-end’s symbol tables evolve. Some clients may request signature help even before `(` is typed; the server will attempt to resolve the identifier under the cursor as a callee in that case.
+Signature help is heuristic. Some clients request signature help even before
+`(` is typed; the server attempts to resolve the identifier under the cursor as
+a callee in that case.
 
-## Document Symbols (Initial Support)
+## Document Symbols
 
-The server provides a minimal implementation of `textDocument/documentSymbol`:
+The server provides `textDocument/documentSymbol`:
 
 - Document symbols are derived lexically from the source text:
   - top-level `fn` declarations are reported as function symbols,
@@ -31761,7 +32053,7 @@ The server provides a minimal implementation of `textDocument/documentSymbol`:
   - `ext` declarations use `Function` (numeric value `12`),
   - `impl` declarations use `Namespace` (numeric value `3`).
 
-Future extensions may:
+Likely extensions here are:
 
 - organize symbols hierarchically (for example nesting methods under an `impl`),
 - add additional declaration kinds (imports and interface members).
@@ -31820,19 +32112,24 @@ By default, the language server will load standard library packages referenced b
 
 You can disable stdlib integration entirely with `--nostd`, which is useful for sandboxed editor setups or custom stdlib forks.
 
-### Diagnostics Source and Limitations (Initial)
+### Diagnostics Source and Current Limits
 
 Diagnostics are derived from the existing compiler front-end:
 
-- Parsing uses `parser.Parser` and the existing grammar in `docs/language/grammar.md`.
-- Type checking uses `checker.checkModule` and the rules from `docs/language/types.md` and related concept docs.
+- Parsing uses `parser.Parser` and the existing rules from
+  [Grammar](?p=language/grammar).
+- Type checking uses `checker.checkModule` and the rules from
+  [Grammar](?p=language/grammar), [Types](?p=language/types), and related
+  language docs.
 
 For responsiveness while typing:
 
 - `didChange` diagnostics are computed for the changed document by parsing it and type-checking it against the cached module set (imports + std modules). The cache is not rebuilt on every change.
 - A full module-set parse + resolve + type-check (including imports) is performed on `didSave`, and diagnostics are published for all affected modules.
 
-The current front-end exposes errors as simple error codes (e.g. `UnexpectedToken`, `TypeMismatch`) without rich spans. The initial LSP implementation therefore follows these rules:
+The current front-end exposes errors as simple error codes (e.g.
+`UnexpectedToken`, `TypeMismatch`) without rich spans. The LSP therefore
+follows these rules:
 
 - Parse errors:
   - reported at the location of the unexpected token using the token’s line/column and length,
@@ -31841,26 +32138,27 @@ The current front-end exposes errors as simple error codes (e.g. `UnexpectedToke
   - reported at an approximate source location associated with the expression or statement that triggered the error (for example, the initializer expression for a mismatched `let` binding or the `break` / `continue` / `return` keyword),
   - message text distinguishes between known error kinds (e.g. `TypeMismatch`, `InvalidReturn`) and carries the span reported by the type checker when available; if no span is available, diagnostics fall back to a coarse location.
 - Conditional compilation (`if attr(...)`):
-  - the server evaluates `attr(...)` query conditions using the host target (`arch`, `os`, `target`) and the enabled feature set (empty in Silk),
+  - the server evaluates `attr(...)` query conditions using the host target (`arch`, `os`, `target`) and the enabled feature set (currently empty),
   - when an `if` / `else if` condition is an attribute-query boolean expression that resolves to a constant `true`/`false`, the inactive branch body is published as a `Hint` diagnostic tagged `Unnecessary` so editors may render it faded (similar to inactive `#if` blocks in C/C++).
 
-As the compiler evolves to carry richer diagnostic information (spans, notes, labels), this document and the LSP implementation must be updated so that:
+As the compiler evolves to carry richer diagnostic information (spans, notes,
+labels), this document and the LSP implementation must be updated so that:
 
 - diagnostics map directly to the front-end’s structured error data,
 - positions and ranges reflect the exact source spans of the underlying errors.
 
-## Non-Goals (Initial Version)
+## Current scope boundaries
 
-The initial `silk-lsp` implementation explicitly does **not** provide:
+`silk-lsp` does **not** provide:
 
 - full semantic completions with scope-precise filtering and type inference (beyond the current heuristic symbol index),
 - cross-file go-to-definition / references,
 - semantic tokens or inlay hints,
 - code actions or formatting.
 
-These features are intended as future extensions and must be:
+These features must be:
 
-- designed and documented here (and in any relevant `docs/language/` or `docs/std/` docs),
+- designed and documented here (and in any relevant language or std docs),
 - backed by the underlying compiler front-end and/or standard library,
 - covered by tests (Zig and, where appropriate, C) before being advertised as supported capabilities.
 
@@ -31868,15 +32166,9 @@ These features are intended as future extensions and must be:
 
 The language server is part of the broader tooling story described in:
 
-- `docs/compiler/architecture.md` (compiler and tool layout),
-- `docs/compiler/cli-silk.md` (CLI behavior for `silk`),
-- `docs/usage/` (editor integrations, including Vim and LSP-based workflows).
-
-The `tmp/zls/` directory in the Silk compiler repository contains a vendored copy of the Zig Language Server (ZLS) for inspiration and experimentation only:
-
-- it is **not** part of the supported Silk toolchain,
-- it must not be treated as authoritative for Silk semantics,
-- ideas from it may inform the design and implementation of `silk-lsp`, but Silk remains spec-driven from the `docs/` tree.
+- [Compiler architecture](?p=compiler/architecture),
+- [CLI reference](?p=compiler/cli-silk),
+- [Usage guides](?p=usage/getting-started).
 
 ==============================================================================
 DOCS: C99 ABI and `libsilk.a` (compiler/abi-libsilk)
@@ -31885,13 +32177,12 @@ URL: /silk/docs/?p=compiler/abi-libsilk
 
 # C99 ABI and `libsilk.a`
 
-This document defines the C99 ABI and the interface of the `libsilk.a` static library.
+This document defines the C99 ABI and the interface of the `libsilk.a` static
+library.
 
-## Goals
-
-- Provide a stable C ABI for embedders.
-- Mirror the external-declaration semantics described in `docs/language/ext.md`.
-- Keep the ABI small, explicit, and well-documented.
+It is the downstream embedder reference for the Silk compiler’s C surface:
+types, handles, configuration entrypoints, build entrypoints, diagnostics, and
+linking requirements.
 
 ## Library & Headers
 
@@ -48201,11 +48492,14 @@ URL: /silk/wiki/?p=language/flow-if-else
 
 Use `if` / `else` for boolean branching.
 
-In Silk, `if` is available as both a statement form and
-the documented value-producing expression form; see the canonical spec for the
-exact rules.
+`if` is available as both a statement form and the documented value-producing
+expression form; see the canonical spec for the exact rules.
 
 Canonical spec: `docs/language/flow-if-else.md`.
+
+## Reference
+
+- Canonical spec and current behavior: `docs/language/flow-if-else.md`
 
 ## Syntax
 
@@ -48431,6 +48725,10 @@ URL: /silk/wiki/?p=language/flow-for
 
 Canonical spec: `docs/language/flow-for.md`.
 
+## Reference
+
+- Canonical spec and current behavior: `docs/language/flow-for.md`
+
 ## Syntax
 ```silk
 for x in xs {
@@ -48470,7 +48768,7 @@ fn main () -> int {
 ## See also
 
 - Canonical spec: `docs/language/flow-for.md`
-- Iterator protocol (): `docs/std/interfaces.md`
+- Iterator protocol: `docs/std/interfaces.md`
 
 ==============================================================================
 WIKI: `break` (language/flow-break)
@@ -48616,6 +48914,10 @@ URL: /silk/wiki/?p=language/flow-blocks-statements
 Blocks (`{ ... }`) group statements and introduce a new scope.
 
 Canonical spec: `docs/language/flow-blocks-statements.md`.
+
+## Reference
+
+- Canonical spec and current behavior: `docs/language/flow-blocks-statements.md`
 
 ## Example: scope boundaries
 ```silk
@@ -48790,7 +49092,7 @@ Silk is a statically typed language with a small set of built-in primitive
 types and first-class user-defined types (`struct`, `enum`, `interface`).
 
 This wiki page is a learning-oriented companion to the canonical spec:
-`docs/language/types.md`.
+[`/silk/docs/?p=language/types`](/silk/docs/?p=language/types).
 
 ## Common Type Forms
 
@@ -48806,7 +49108,7 @@ let s: string = "hello";
 let maybe: int? = None;
 
 // References (borrows)
-// (Receiver/borrow rules are in `docs/language/mutability.md`.)
+// (Receiver/borrow rules are in `/silk/docs/?p=language/mutability`.)
 // let r: &MyStruct = ...;
 
 // Arrays and slices
@@ -48843,9 +49145,9 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/types.md`
-- Type modifiers and borrow rules: `docs/language/mutability.md`
-- Generics (monomorphized): `docs/language/generics.md`
+- Canonical doc: [`/silk/docs/?p=language/types`](/silk/docs/?p=language/types)
+- Type modifiers and borrow rules: [`/silk/docs/?p=language/mutability`](/silk/docs/?p=language/mutability)
+- Generics (monomorphized): [`/silk/docs/?p=language/generics`](/silk/docs/?p=language/generics)
 
 ==============================================================================
 WIKI: Optionals (`T?`) (language/optional)
@@ -49564,17 +49866,16 @@ fn main () -> int {
 - Fixtures: `tests/silk/pass_typed_errors_*.slk`
 
 ==============================================================================
-WIKI: Borrow checker (design) (language/borrow-checker)
+WIKI: Borrow checker (language/borrow-checker)
 URL: /silk/wiki/?p=language/borrow-checker
 ==============================================================================
 
-# Borrow checker (design)
+# Borrow checker
 
-Silk’s long-term design includes a borrow-checker-style static safety layer
-over references and mutation. the compiler enforces a simpler,
-explicit `mut` borrow contract (see mutability).
+Silk ships a borrow-checker-style static safety layer over references,
+borrows, and lexical escape rules.
 
-Canonical design doc: `docs/language/borrow-checker.md`.
+Canonical doc: [`/silk/docs/?p=language/borrow-checker`](/silk/docs/?p=language/borrow-checker).
 
 ## Example: explicit mutable borrow
 ```silk
@@ -49595,8 +49896,8 @@ fn main () -> int {
 
 ## See also
 
-- Mutability rules: `docs/wiki/language/mutability.md`
-- Canonical design doc: `docs/language/borrow-checker.md`
+- Mutability rules: [`/silk/wiki/?p=language/mutability`](/silk/wiki/?p=language/mutability)
+- Canonical doc: [`/silk/docs/?p=language/borrow-checker`](/silk/docs/?p=language/borrow-checker)
 
 ==============================================================================
 WIKI: Memory model (language/memory-model)
@@ -49606,7 +49907,7 @@ URL: /silk/wiki/?p=language/memory-model
 # Memory model
 
 This page is a learning-oriented companion to the canonical memory model:
-`docs/language/memory-model.md`.
+[`/silk/docs/?p=language/memory-model`](/silk/docs/?p=language/memory-model).
 
 At a high level:
 
@@ -49630,8 +49931,8 @@ fn main () -> int {
 
 ## See also
 
-- Regions (`with`): `docs/wiki/language/regions.md`
-- `Drop` and cleanup hooks: `docs/std/interfaces.md`
+- Regions (`with`): [`/silk/wiki/?p=language/regions`](/silk/wiki/?p=language/regions)
+- `Drop` and cleanup hooks: [`/silk/docs/?p=std/interfaces`](/silk/docs/?p=std/interfaces)
 
 ==============================================================================
 WIKI: Regions (`with`) (language/regions)
@@ -49643,7 +49944,7 @@ URL: /silk/wiki/?p=language/regions
 Regions provide a fixed-size, statically allocated backing store that can be
 used as an allocation context for `new`.
 
-Canonical spec: `docs/language/regions.md`.
+Canonical doc: [`/silk/docs/?p=language/regions`](/silk/docs/?p=language/regions).
 
 ## Syntax
 ```silk
@@ -49672,9 +49973,9 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/regions.md`
-- Memory model and `new`: `docs/wiki/language/memory-model.md`
-- `--noheap` and `std::runtime::mem`: `docs/std/runtime.md`
+- Canonical doc: [`/silk/docs/?p=language/regions`](/silk/docs/?p=language/regions)
+- Memory model and `new`: [`/silk/wiki/?p=language/memory-model`](/silk/wiki/?p=language/memory-model)
+- `--noheap` and `std::runtime::mem`: [`/silk/docs/?p=std/runtime`](/silk/docs/?p=std/runtime)
 
 ==============================================================================
 WIKI: Buffers (`Buffer(T)`) (design) (language/buffers)
@@ -49733,7 +50034,7 @@ Silk concurrency is built around:
 - `await` for promises,
 - `yield`/`yield *` for task values.
 
-Canonical spec + implemented subset notes: `docs/language/concurrency.md`.
+Canonical doc: [`/silk/docs/?p=language/concurrency`](/silk/docs/?p=language/concurrency).
 
 ## Examples
 ### `task` inside `async fn` + `yield *`
@@ -49779,8 +50080,9 @@ async fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/concurrency.md`
-- `std::task` and `std::sync`: `docs/std/task.md`, `docs/std/sync.md`
+- Canonical doc: [`/silk/docs/?p=language/concurrency`](/silk/docs/?p=language/concurrency)
+- `std::task`: [`/silk/docs/?p=std/task`](/silk/docs/?p=std/task)
+- `std::sync`: [`/silk/docs/?p=std/sync`](/silk/docs/?p=std/sync)
 
 ==============================================================================
 WIKI: Function disciplines (`pure`, `async`, `task`) (language/function-disciplines)
@@ -49794,9 +50096,9 @@ Function modifiers declare constraints and concurrency behavior:
 - `pure fn` for side-effect-free functions (checker-enforced subset)
 - `async fn` for promise-producing functions
 - `task fn` for task-producing functions
-- `const fn` for compile-time-evaluable functions (see `docs/wiki/language/const-functions.md`)
+- `const fn` for compile-time-evaluable functions (see [`/silk/docs/?p=language/const-functions`](/silk/docs/?p=language/const-functions))
 
-Canonical doc: `docs/language/function-disciplines.md`.
+Canonical doc: [`/silk/docs/?p=language/function-disciplines`](/silk/docs/?p=language/function-disciplines).
 
 ## Examples
 ```silk
@@ -49811,8 +50113,8 @@ task fn worker (x: int) -> int {
 
 ## See also
 
-- Canonical doc: `docs/language/function-disciplines.md`
-- Concurrency: `docs/wiki/language/concurrency.md`
+- Canonical doc: [`/silk/docs/?p=language/function-disciplines`](/silk/docs/?p=language/function-disciplines)
+- Concurrency: [`/silk/wiki/?p=language/concurrency`](/silk/wiki/?p=language/concurrency)
 
 ==============================================================================
 WIKI: Const Functions (`const fn`) (language/const-functions)
@@ -49840,16 +50142,14 @@ fn main () -> int {
 }
 ```
 
-## Notes ()
+## Notes
 
 - Const functions are intended for `const` initializer evaluation.
 - Const functions are compile-time-only: they are not callable from runtime
   code and are not emitted as runtime/linkable symbols.
-- The  targets scalar-only const evaluation; `string`/aggregate
-  return values and higher-order const evaluation are planned.
-- In Silk, `const fn` bodies must not allocate (`new`) or use
-  regions/`with`, must not contain `panic`, and may only call other `const fn`
-  declarations.
+- Today, const evaluation targets scalar values plus eligible POD structs.
+- `const fn` bodies must not allocate (`new`) or use regions/`with`, must not
+  contain `panic`, and may only call other `const fn` declarations.
 
 ## See also
 

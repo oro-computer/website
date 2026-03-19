@@ -2,15 +2,14 @@
 
 Use `if` / `else` for boolean branching.
 
-In the current compiler subset, `if` is available as both a statement form and
-the documented value-producing expression form; see the canonical spec for the
-exact rules.
+`if` is available as both a statement form and the documented value-producing
+expression form; see the canonical spec for the exact rules.
 
 Canonical spec: `docs/language/flow-if-else.md`.
 
-## Status
+## Reference
 
-- Implemented subset + tests: `docs/language/flow-if-else.md`
+- Canonical spec and current behavior: `docs/language/flow-if-else.md`
 
 ## Syntax
 

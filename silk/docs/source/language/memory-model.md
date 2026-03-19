@@ -1,7 +1,7 @@
 # Memory Model (Stack, Heap, and Moves)
 
-This document specifies Silk’s intended memory model: how values are allocated,
-passed, and how (future) heap-managed values interact with the type system.
+This document specifies Silk’s memory model: how values are allocated, passed,
+and how heap-managed values interact with the type system.
 
 The compiler implements a minimal heap model for `new` on `linux/x86_64` and a
 small lexical move/cleanup model for droppable values:
@@ -11,19 +11,11 @@ small lexical move/cleanup model for droppable values:
 - These heap allocations are managed via reference counting (RC) inserted by the
   compiler during lowering.
 
-Regions and a richer move/borrow model remain design-in-progress. See
-`docs/language/regions.md` and `docs/language/borrow-checker.md`.
+See [Regions](?p=language/regions) and
+[Borrow checking](?p=language/borrow-checker) for the ownership and
+escape/lifetime rules that sit on top of this model.
 
-## Goals
-
-- Make allocation behavior explicit and predictable.
-- Prefer stack allocation for most local data.
-- Prevent unsafe implicit lifetime extension (for example implicitly “moving”
-  stack data into a longer-lived heap allocation).
-- Keep borrow safety a compile-time property (no runtime borrow errors in the
-  safe subset).
-
-## Stack vs Heap (Current Subset + Planned Model)
+## Stack vs Heap
 
 ### Stack allocation (default)
 
@@ -40,8 +32,8 @@ not implement a general heap allocation model.
 
 ### Heap allocation (`new`) and boxed values
 
-Rule (implemented, current subset): values created with `new` live on the
-heap and are represented as an `&Struct` reference in user code.
+Rule: values created with `new` live on the heap and are represented as an
+`&Struct` reference in user code.
 
 - The reference value is passed by value (copying the reference representation).
 - The underlying allocation’s lifetime is managed by compiler-inserted reference
@@ -50,15 +42,15 @@ heap and are represented as an `&Struct` reference in user code.
 Important: this is currently an internal Silk-managed heap for Silk code, not an
 FFI pointer model. The compiler does not permit `&Struct` for
 non-opaque structs in `ext` signatures; only `&Opaque` handles may cross the
-FFI boundary (see `docs/language/structs-impls-layout.md` and
-`docs/language/ext.md`).
+FFI boundary (see [Structs, impls, and layout](?p=language/structs-impls-layout)
+and [External declarations (`ext`)](?p=language/ext)).
 
-#### Implemented subset (current compiler)
+#### Implemented behavior
 
 - `new` is supported only in function bodies (top-level `let` initializers
-  cannot contain `new` in the current subset).
+  cannot contain `new`).
 - `new` is supported only when the checker can determine a concrete reference
-  result type of the form `&Struct`. In the current subset, this happens
+  result type of the form `&Struct`. This happens
   in two ways:
   - from an expected type context `&Struct` (for example `let x: &Frame = new
     Frame{ ... };` or as a call argument where the parameter type is `&Struct`)
@@ -69,17 +61,17 @@ FFI boundary (see `docs/language/structs-impls-layout.md` and
 - Reference counting is applied only to `&Struct` values that originate from
   `new` (borrowed stack references are not treated as RC-managed values).
 - The `silk build` CLI supports `--noheap` to disable heap allocation for the
-  current subset:
+  shipped subset:
   - heap-backed `new` (outside a `with` region) is rejected with `E2027`,
   - `async`/`task`/`await`/`yield` and capturing closures are rejected with `E2027`,
   - `ext` bindings to libc heap primitives (`malloc`/`calloc`/`realloc`/`free`/etc) are rejected with `E2027` in non-stdlib modules,
   - `std::runtime::mem::{alloc,realloc,free}` traps when called without an active `with` region (no implicit heap fallback),
   - region-backed `new` inside `with` is still permitted.
 
-#### Region-backed allocation (`with` + `region`) (Implemented subset)
+#### Region-backed allocation (`with` + `region`)
 
-In the current subset, `new` may also allocate from a region when an active
-region context is established with `with` (see `docs/language/regions.md`).
+`new` may also allocate from a region when an active region context is
+established with `with` (see [Regions](?p=language/regions)).
 
 - Inside `with <region> { ... }`, `new` allocates from the region’s backing
   bytes instead of calling the heap allocator.
@@ -90,7 +82,7 @@ region context is established with `with` (see `docs/language/regions.md`).
   not fully rejected yet, so treat them as block-scoped even if the checker
   accepts an escape.
 
-#### Reference counting rules (current compiler)
+#### Reference counting rules
 
 - `new` initializes the allocation’s RC cell to `1`.
 - Copying an RC-managed `&Struct` binding (for example `let q: &T = p;`) emits an
@@ -122,7 +114,7 @@ fn main () -> int {
 }
 ```
 
-## Destructors (`Drop`) (Implemented subset)
+## Destructors (`Drop`)
 
 In the current compiler subset, Silk supports deterministic cleanup for
 resource-owning `struct` values via `std::interfaces::Drop`.
@@ -144,7 +136,7 @@ Automatic invocation (current compiler):
   fallthrough, `break`, and `continue`).
 - **Return:** on `return`, the compiler drops all in-scope droppable bindings
   except any value moved into the return result (for example `return value;`
-  and `return Some(value);` treat `value` as moved in the current subset).
+  and `return Some(value);` treat `value` as moved in the shipped subset).
 - **Overwrite:** assigning to an existing value drops the old value before the
   new value is copied in.
 - **Heap last-release:** for `new` allocations managed by compiler-inserted RC,
@@ -160,19 +152,19 @@ Notes and limitations:
     binding,
   - using a moved binding is rejected by the checker,
   - explicit ownership transfer may be written as `move <name>` (see
-    `docs/language/borrow-checker.md`).
+    [Borrow checking](?p=language/borrow-checker)).
 
-## No Implicit Heap Promotion (Planned)
+## No Implicit Heap Promotion
 
-Planned rule: stack values cannot be implicitly promoted to heap-managed
-storage. Any promotion must be explicit and must perform a copy.
+Stack values are not implicitly promoted to heap-managed storage. Any promotion
+must be explicit and must perform a copy.
 
 This avoids accidental lifetime extension and makes performance characteristics
 obvious.
 
 The precise syntax for “heap-copy this value” is still under design; any
-proposed surface form must be written down in `docs/language/grammar.md` before
-it is implemented.
+proposed surface form must be written down in [Grammar](?p=language/grammar)
+before it is implemented.
 
 ## Closure Captures (Implemented Subset)
 
@@ -192,7 +184,7 @@ Calling convention:
 - When `env_ptr != 0`, the backend passes `env_ptr` as a hidden first argument
   to the closure function: `func_ptr(env_ptr, user_args...)`.
 
-Environment allocation and lifetime (current subset):
+Environment allocation and lifetime:
 
 - Captures are by-value copies of **scalar** locals/parameters (`int`, fixed
   width ints, `bool`, `char`, `f32`, `f64`, `Instant`, `Duration`).
@@ -214,6 +206,7 @@ Limitations:
 
 - Borrow checking is intended to be a compile-time property in the safe subset:
   invalid borrows should be rejected statically.
-- See `docs/language/mutability.md` for the current implemented borrow rules
-  (call-scoped aliasing checks for `&T` parameters in the current subset).
-- See `docs/language/borrow-checker.md` for the broader planned borrow checker.
+- See [Mutability](?p=language/mutability) for the implemented borrow rules
+  (call-scoped aliasing checks for `&T` parameters in the shipped subset).
+- See [Borrow checking](?p=language/borrow-checker) for the broader borrow and
+  lifetime model.

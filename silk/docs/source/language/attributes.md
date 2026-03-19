@@ -15,11 +15,9 @@ Values may be:
 - strings (`"..."` or raw string literals)
 - identifiers (treated as a string value, e.g. `abi=c`)
 
-## Implementation status
+## Current behavior
 
-Status: **in progress**.
-
-Implemented in the current compiler subset:
+The current compiler supports:
 
 - `attr(...)` as a prefix annotation on declarations and statements.
 - `attr(...)` as a compile-time query expression of type `bool`.
@@ -45,10 +43,8 @@ Implemented in the current compiler subset:
   - `attr(task=thread)` / `attr(task="thread")` forces a dedicated OS thread
     for each call instead of the default task-pool schedule.
 
-Not yet fully implemented:
-
-- Objective-C / FFM / WASI-component / other ABI selectors beyond the initial
-  `abi=c` support.
+Other ABI selectors (Objective-C, FFM, WASI component model, and similar
+surfaces) are outside the documented `attr(...)` surface today.
 
 ## Syntax
 
@@ -121,9 +117,9 @@ if attr(os="linux") && (attr(arch="x86_64") || attr(arch="wasm32")) {
 `attr(...)` queries are compile-time only; they are evaluated by the compiler
 and do not exist as runtime calls.
 
-## Built-in attribute keys (current subset)
+## Built-in attribute keys
 
-The current compiler subset recognizes the following keys in queries and
+The current compiler recognizes the following keys in queries and
 conditional compilation contexts:
 
 - `arch`: `"x86_64"`, `"aarch64"`, or `"wasm32"`

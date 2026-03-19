@@ -25,18 +25,26 @@ BANNED_HEADINGS = (
     "Implemented API",
     "Public API",
     "Future Work",
+    "Future work",
     "Follow-ups",
+    "Current Limitations",
+    "Notes and Limitations",
 )
 
 BANNED_HEADING_PATTERNS = (
     re.compile(r"\bInitial Design\b", flags=re.I),
     re.compile(r"\bCurrent Scope\b", flags=re.I),
     re.compile(r"\bScope \(Current\)\b", flags=re.I),
+    re.compile(r"\bMVP\b", flags=re.I),
 )
 
 BANNED_STATUS_PATTERNS = (
     re.compile(r"active expansion", flags=re.I),
     re.compile(r"current snapshot", flags=re.I),
+    re.compile(r"Partially implemented", flags=re.I),
+    re.compile(r"initial std wrapper", flags=re.I),
+    re.compile(r"expansion path", flags=re.I),
+    re.compile(r"\bMVP\b", flags=re.I),
 )
 
 

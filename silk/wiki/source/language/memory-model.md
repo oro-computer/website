@@ -1,7 +1,7 @@
 # Memory model
 
 This page is a learning-oriented companion to the canonical memory model:
-`docs/language/memory-model.md`.
+[`/silk/docs/?p=language/memory-model`](/silk/docs/?p=language/memory-model).
 
 At a high level:
 
@@ -12,7 +12,8 @@ At a high level:
 
 ## Status
 
-- Canonical spec + implementation notes: `docs/language/memory-model.md`
+- Canonical doc + implementation notes:
+  [`/silk/docs/?p=language/memory-model`](/silk/docs/?p=language/memory-model)
 
 ## Example: `new` + reference field access
 ```silk
@@ -29,5 +30,5 @@ fn main () -> int {
 
 ## See also
 
-- Regions (`with`): `docs/wiki/language/regions.md`
-- `Drop` and cleanup hooks: `docs/std/interfaces.md`
+- Regions (`with`): [`/silk/wiki/?p=language/regions`](/silk/wiki/?p=language/regions)
+- `Drop` and cleanup hooks: [`/silk/docs/?p=std/interfaces`](/silk/docs/?p=std/interfaces)

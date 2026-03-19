@@ -6,7 +6,7 @@ Status: **Implemented subset**.
 
 This module targets a hosted POSIX baseline (Linux/glibc) and is
 implemented on top of the pluggable `std::runtime::env` interface. WASI support
-is partially implemented: `get` works, while `set` remains unsupported (see
+is split by capability: `get` works, while `set` remains unsupported (see
 “Platform notes”).
 
 ## Exported API

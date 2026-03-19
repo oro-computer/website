@@ -1,8 +1,8 @@
 # Borrow Checking (Static Alias and Lifetime Safety)
 
-This document specifies Silk’s intended borrow-checking model for references.
+This document specifies Silk’s borrow-checking model for references.
 
-Status: **partially implemented**. The current compiler subset implements:
+Status: **Implemented subset**. The shipped checker implements:
 
 - call-scoped alias checks for mutable borrows (including slice range borrows),
 - lexical lifetime checks for slice and reference borrows (no escaping borrows
@@ -10,18 +10,9 @@ Status: **partially implemented**. The current compiler subset implements:
 - and a small explicit ownership-transfer form (`move`) used by the checker and
   lowering to prevent accidental double-drops in the safe subset.
 
-## Goals
+## Implemented behavior
 
-- Prevent use-after-free and data races in safe code.
-- Make mutation explicit and intentional.
-- Reject invalid borrows at compile time (no runtime borrow errors required for
-  safe code).
-- Keep diagnostics actionable (highlight the borrow origin, conflicting use,
-  and suggest a fix).
-
-## Current Implemented Subset
-
-Today, the language subset implemented by the compiler supports only:
+The compiler supports:
 
 - call-scoped borrow alias checks for:
   - borrowed reference parameters (`&T`, `mut p: &T`), and
@@ -58,7 +49,7 @@ point into existing storage:
 
 - `&base[start..end]` creates a slice view whose lifetime is tied to `base`.
 - `&base[r]` creates a slice view whose bounds are defined by the `range` value
-  `r` (see `docs/language/types.md`).
+  `r` (see [Types](?p=language/types)).
 - When borrowing a range from an existing slice binding `s: T[]`, the borrow’s
   underlying origin is `s`’s origin (sub-slicing does not extend lifetime).
 
@@ -139,7 +130,7 @@ wrapper and control-flow forms:
   `T[]` also participate in the same local mutation, lexical escape, move, and
   `await` checks as direct borrowed bindings.
 - Refutable-pattern binders also preserve borrow identity when the scrutinee
-  already proves a single local borrow origin. In the current subset, this
+  already proves a single local borrow origin. In the shipped subset, this
   includes:
   - `if let Some(x) = r { ... }`
   - `let Some(x) = r else { ... };`
@@ -193,7 +184,7 @@ Opaque handle references are allowed:
 These are treated as external handles rather than borrow-checked views into
 ordinary Silk storage.
 
-Borrowed parameters are permitted in the current subset, but the checker also
+Borrowed parameters are permitted in the shipped subset, but the checker also
 enforces a conservative async call-site rule:
 
 - an ordinary reference or slice that still resolves to function-local stack
@@ -202,10 +193,10 @@ enforces a conservative async call-site rule:
 - opaque handle references remain allowed because they are not borrow-checked
   views into ordinary Silk storage.
 
-This is the borrow model for the current async subset. Additional async surface
+This is the borrow model for the shipped async subset. Additional async surface
 area must define equivalent suspension and escape rules before it lands.
 
-### External ABI boundaries
+### `ext` boundaries
 
 At top-level external ABI boundaries, ordinary borrowed views are also
 rejected:
@@ -287,6 +278,6 @@ The borrow checker is complete for the currently documented and
 regression-tested Silk language subset, including the wrapper and control-flow
 forms described above. New language features may still require new borrow
 rules, but those are not treated as pre-declared borrow-checker roadmap items.
-Any such extension must be specified in `docs/language/grammar.md` and in this
-document before implementation lands, and must be reflected in diagnostics
-(`docs/compiler/diagnostics.md`) and tests.
+Any such extension must be specified in [Grammar](?p=language/grammar) and in
+this document before implementation lands, and must be reflected in
+[Diagnostics](?p=compiler/diagnostics) and tests.

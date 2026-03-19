@@ -1,19 +1,11 @@
 # `std::stream`
 
-Status: **Implemented subset**. This module provides a Web Streams-inspired API
-for **byte streams** designed to work well with Silk’s `async`/`task` model.
+`std::stream` provides a Web Streams-inspired API for **byte streams** that
+composes with Silk’s `async` / `task` model.
 
-The core goals of the current subset are:
-
-- **Ergonomic piping** between producers and consumers.
-- **Backpressure** via bounded buffering.
-- **Safe chunk ownership** across tasks using an owned `Bytes` type (no borrowed
-  slice lifetime hazards).
-
-Runtime note (current subset):
-
-- `ReadableStream.read()` / `WritableStream.write()` are **blocking OS-thread**
-  operations implemented with mutex/condvar primitives.
+It uses owned `Bytes` chunks plus bounded in-memory queues so producers,
+transformers, and consumers can be composed without borrowed-slice lifetime
+hazards.
 
 ## Exported API
 
@@ -275,6 +267,13 @@ fn run_pipeline (src: std::stream::ReadableStream, dst: std::stream::WritableStr
 ```
 
 ## Considerations
+
+### Blocking behavior
+
+- `ReadableStream.read()` and `WritableStream.write()` are blocking OS-thread
+  operations implemented with mutex/condvar primitives.
+- `pipe_to_abortable` observes abort signals between read/write steps; it does
+  not interrupt an already-blocking `read()` call.
 
 ### Backpressure
 

@@ -1,12 +1,11 @@
 # C99 ABI and `libsilk.a`
 
-This document defines the C99 ABI and the interface of the `libsilk.a` static library.
+This document defines the C99 ABI and the interface of the `libsilk.a` static
+library.
 
-## Goals
-
-- Provide a stable C ABI for embedders.
-- Mirror the external-declaration semantics described in `docs/language/ext.md`.
-- Keep the ABI small, explicit, and well-documented.
+It is the downstream embedder reference for the Silk compiler’s C surface:
+types, handles, configuration entrypoints, build entrypoints, diagnostics, and
+linking requirements.
 
 ## Library & Headers
 
