@@ -185,7 +185,12 @@ When a build module emits a manifest target with native `.c`/`.h` inputs, the
 `linux/x86_64`. This keeps build modules portable across:
 
 - a repo checkout (vendored headers under `vendor/include/`), and
-- an installed prefix (vendored headers under `<prefix>/lib/silk/vendor/include/`).
+- an installed prefix (canonical vendored headers under `<prefix>/include/silk/`).
+
+Headers keep their upstream relative paths under the canonical include root, so
+an embedded C source that writes `#include <mbedtls/error.h>` is expected to
+find that file via `-I<prefix>/include/silk`, not via a nested `silk/vendor/`
+directory.
 
 For linking against vendored static archives from a build module (for example
 when your project has its own `ext` bindings to mbedTLS), prefer manifest input

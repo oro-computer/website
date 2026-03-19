@@ -1,6 +1,6 @@
 # `std::flag`
 
-Status: **Implemented subset + design**. `std::flag` provides a small, robust command
+Status: **Implemented subset**. `std::flag` provides a small, robust command
 line argument parser modeled after Go’s `flag` package, but shaped to match
 `std::` conventions (explicit `Result(...)` errors, no leaky out-params, and a
 clear separation between flags, positionals, and `--` rest arguments).
@@ -136,41 +136,56 @@ fn main (argc: int, argv: u64) -> int {
   let a = std::args::Args.init(argc, argv);
   let mut fs = std::flag::FlagSet.init();
 
-  let verbose = match fs.bool({ name: "verbose", alias: "v", default_value: false, usage: "enable verbose logging" }) {
-    Ok(v) => v,
-    Err(_) => { fs.drop(); return 2; },
-  };
-  let out = match fs.string({ name: "out", alias: "", default_value: "out.txt", usage: "output path" }) {
-    Ok(v) => v,
-    Err(_) => { fs.drop(); return 2; },
-  };
-  let input = match fs.positional_string("input", "input file") {
-    Ok(v) => v,
-    Err(_) => { fs.drop(); return 2; },
-  };
+  let verbose_r = fs.bool({ name: "verbose", alias: "v", default_value: false, usage: "enable verbose logging" });
+  let out_r = fs.string({ name: "out", alias: "", default_value: "out.txt", usage: "output path" });
+  let input_r = fs.positional_string("input", "input file");
 
-  let parsed_r = fs.parse_args(a, 1);
-  match (parsed_r) {
-    Err(e) => {
-      println("flag parse error: kind={} at argv[{}]: {}", e.kind(), e.arg_index, e.arg(a));
+  match (verbose_r) {
+    Ok(verbose) => {
+      match (out_r) {
+        Ok(out) => {
+          match (input_r) {
+            Ok(input) => {
+              let parsed_r = fs.parse_args(a, 1);
+              match (parsed_r) {
+                Err(e) => {
+                  println("flag parse error: kind={} at argv[{}]: {}", e.kind(), e.arg_index, e.arg(a));
+                  fs.drop();
+                  return 2;
+                },
+                Ok(p) => {
+                  if fs.get_bool(verbose) {
+                    println("out={}", fs.get_string(out));
+                  }
+                  println("input={}", fs.get_pos_string(input));
+
+                  // `--` rest args (for forwarding).
+                  var i: int = 0;
+                  while i < p.rest_count() {
+                    println("rest[{}]={}", i, p.rest(a, i));
+                    i += 1;
+                  }
+                  fs.drop();
+                  return 0;
+                }
+              }
+            },
+            Err(_) => {
+              fs.drop();
+              return 2;
+            },
+          }
+        },
+        Err(_) => {
+          fs.drop();
+          return 2;
+        },
+      }
+    },
+    Err(_) => {
       fs.drop();
       return 2;
     },
-    Ok(p) => {
-      if fs.get_bool(verbose) {
-        println("out={}", fs.get_string(out));
-      }
-      println("input={}", fs.get_pos_string(input));
-
-      // `--` rest args (for forwarding).
-      var i: int = 0;
-      while i < p.rest_count() {
-        println("rest[{}]={}", i, p.rest(a, i));
-        i += 1;
-      }
-      fs.drop();
-      return 0;
-    }
   }
 }
 ```

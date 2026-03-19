@@ -97,18 +97,22 @@ import std::wasm;
 type ImportMap = std::map::HashMap(std::wasm::ImportFuncName, std::wasm::HostCall);
 
 fn main () -> int {
-  let mut m = match ImportMap.init(8, std::wasm::hash_import_func_name, std::wasm::eq_import_func_name) {
-    Ok(v) => v,
-    Err(_) => return 1,
-  };
+  match (ImportMap.init(8, std::wasm::hash_import_func_name, std::wasm::eq_import_func_name)) {
+    Ok(map) => {
+      let mut m: ImportMap = map;
 
-  // Link the wasm import `(import "env" "add1" ...)` to a host callback.
-  let _ = m.put(std::wasm::ImportFuncName{ module_name: "env", name: "add1" }, host_call);
+      // Link the wasm import `(import "env" "add1" ...)` to a host callback.
+      let _ = m.put(std::wasm::ImportFuncName{ module_name: "env", name: "add1" }, host_call);
 
-  let inst_r = module.instantiate_with_named_func_imports(imports, &m);
-  m.drop();
-  // ...
-  return 0;
+      let inst_r = module.instantiate_with_named_func_imports(imports, &m);
+      m.drop();
+      // ...
+      return 0;
+    },
+    Err(_) => {
+      return 1;
+    },
+  }
 }
 ```
 
@@ -247,10 +251,6 @@ using BufferU8 = std::buffer::BufferU8;
 using U64Slice = std::arrays::Slice(u64);
 
 fn main () -> int {
-  let engine = match Engine.init_default() {
-    Ok(v) => v,
-    Err(_) => return 1,
-  };
 
   // Minimal wasm module:
   // (module
@@ -266,49 +266,70 @@ fn main () -> int {
     10, 6, 1, 4, 0, 65, 7, 11
   ];
 
-  let mut buf = match BufferU8.init(39) {
-    Ok(v) => v,
-    Err(_) => return 2,
-  };
-  var i: i64 = 0;
-  while i < 39 {
-    let push_err = buf.push(wasm_bytes[i]);
-    if push_err != None {
-      buf.drop();
-      return 2;
-    }
-    i = i + 1;
-  }
-  let bytes: ByteSlice = buf.as_bytes();
+  match (Engine.init_default()) {
+    Ok(engine) => {
+      match (BufferU8.init(39)) {
+        Ok(buffer) => {
+          let mut buf: BufferU8 = buffer;
+          var i: i64 = 0;
+          while i < 39 {
+            let push_err = buf.push(wasm_bytes[i]);
+            if push_err != None {
+              buf.drop();
+              return 2;
+            }
+            i = i + 1;
+          }
+          let bytes: ByteSlice = buf.as_bytes();
 
-  let mut m = match engine.compile(bytes) {
-    Ok(v) => v,
-    Err(_) => {
-      buf.drop();
-      return 2;
+          match (engine.compile(bytes)) {
+            Ok(module) => {
+              let mut m: Module = module;
+              buf.drop();
+              match (m.instantiate()) {
+                Ok(instance) => {
+                  let mut inst: Instance = instance;
+                  let f_opt: Func? = inst.export_func("answer");
+                  if f_opt == None { return 4; }
+                  let f: Func = f_opt ?? Func{ index: 0 };
+
+                  let args: U64Slice = { ptr: 0, len: 0 };
+                  match (inst.call(f, args)) {
+                    Ok(out_opt) => {
+                      if out_opt == None { return 6; }
+                      let out: Val = out_opt ?? Val.i32(0);
+
+                      let got_opt: i32? = out.as_i32();
+                      if got_opt == None { return 7; }
+                      if (got_opt ?? 0) != 7 { return 8; }
+
+                      return 0;
+                    },
+                    Err(_) => {
+                      return 5;
+                    },
+                  }
+                },
+                Err(_) => {
+                  return 3;
+                },
+              }
+            },
+            Err(_) => {
+              buf.drop();
+              return 2;
+            },
+          }
+        },
+        Err(_) => {
+          return 2;
+        },
+      }
     },
-  };
-  buf.drop();
-
-  let mut inst = match m.instantiate() {
-    Ok(v) => v,
-    Err(_) => return 3,
-  };
-
-  let Some(f) = inst.export_func("answer") else { return 4; };
-
-  let args: U64Slice = { ptr: 0, len: 0 };
-  let out_opt = match inst.call(f, args) {
-    Ok(v) => v,
-    Err(_) => return 5,
-  };
-  let Some(out) = out_opt else { return 6; };
-
-  let got_opt: i32? = out.as_i32();
-  if got_opt == None { return 7; }
-  if (got_opt ?? 0) != 7 { return 8; }
-
-  return 0;
+    Err(_) => {
+      return 1;
+    },
+  }
 }
 ```
 

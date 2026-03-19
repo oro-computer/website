@@ -3,7 +3,7 @@
 Duration literals represent time spans with unit suffixes (`ms`, `s`, `min`,
 etc) and produce a `Duration` value.
 
-[Canonical doc](../docs/?p=language/literals-duration).
+Canonical doc: `docs/language/literals-duration.md`.
 
 ## Example
 ```silk
@@ -18,5 +18,5 @@ fn main () -> int {
 
 ## See also
 
-- [Canonical doc](../docs/?p=language/literals-duration)
-- `Duration` and `Instant`: [Duration and Instant](?p=language/duration-instant)
+- Canonical doc: `docs/language/literals-duration.md`
+- `Duration` and `Instant`: `docs/wiki/language/duration-instant.md`

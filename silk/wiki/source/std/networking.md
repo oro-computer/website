@@ -1,18 +1,8 @@
 # `std::net`
 
-`std::net` provides networking primitives for the hosted POSIX baseline,
-including byte-order helpers, TCP/UDP sockets, DNS resolution helpers, and a
-small async subset.
+`std::net` provides networking primitives (hosted POSIX baseline).
 
-[Canonical doc](../docs/?p=std/networking).
-
-## Status
-
-- IPv4/IPv6 TCP and UDP APIs are available today, along with hostname
-  resolution helpers such as `resolve_host(...)` and
-  `TCPStream.connect_host(...)`.
-- Async `connect` / `accept` are already exposed; deeper async socket read/write
-  coverage and richer cancellation semantics are still incomplete.
+Canonical doc: `docs/std/networking.md`.
 
 ## Example: IPv4 helpers
 ```silk
@@ -25,21 +15,6 @@ fn main () -> int {
 }
 ```
 
-## Example: async host connect
-```silk
-import std::net;
-
-async fn main () -> int {
-  let conn_r = await std::net::TCPStream.connect_host_async("example.com", 443);
-  return match (conn_r) {
-    Ok(_) => 0,
-    Err(_) => 1,
-  };
-}
-```
-
 ## See also
 
-- [Canonical doc](../docs/?p=std/networking)
-- [I/O surface](?p=std/io)
-- [TLS](?p=std/tls)
+- Canonical doc: `docs/std/networking.md`

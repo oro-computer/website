@@ -5,21 +5,32 @@
 Currently:
 
 - `match <optional> { None => expr, Some(x) => expr }` is supported (expression form),
-- `match <enum> { E::V => expr, ... }` is supported in a restricted exhaustive subset,
-- typed-error handling uses a separate `match (expr) { ... }` statement form (see typed errors).
+- primitive-integer, enum, type-union, and `Result`-style expression matches are supported in the documented subset,
+- ordinary value matching and typed-error handling use a separate statement form `match (expr) { ... }`,
+- guarded arms (`pattern if cond => ...`) are still unsupported in both expression and statement form,
+- enum wildcard `_` remains a split case:
+  - expression-form enum matches do not accept `_`,
+  - statement-form ordinary enum matches reserve `_`, but the backend still requires explicit variant coverage end to end.
 
-[Canonical spec](../docs/?p=language/flow-match).
+Canonical spec: `docs/language/flow-match.md`.
 
 ## Status
 
-- Implemented subset + tests: [match Expression (and Statement)](../docs/?p=language/flow-match)
+- Implemented subset + tests: `docs/language/flow-match.md`
 
-## Syntax (Current match-expression subset)
+## Syntax (Current subset)
 
 ```silk
 match value {
   Pattern => expr,
   Pattern => expr,
+}
+```
+
+```silk
+match (value) {
+  Pattern => { ... },
+  Pattern => { ... },
 }
 ```
 
@@ -53,8 +64,21 @@ fn main () -> int {
 }
 ```
 
+### Example: matching a result
+```silk
+import std::result;
+
+fn main () -> int {
+  let r: std::result::Result(int, int) = std::result::Result(int, int).ok(7);
+  return match r {
+    Ok(v) => v,
+    Err(_) => 0,
+  };
+}
+```
+
 ## See also
 
-- [Canonical spec](../docs/?p=language/flow-match)
-- Enums: [enum Types](../docs/?p=language/enums)
-- Typed errors (match statement): [Typed Errors (error, panic, and T | ErrorType...)](../docs/?p=language/typed-errors)
+- Canonical spec: `docs/language/flow-match.md`
+- Enums: `docs/language/enums.md`
+- Typed errors (match statement): `docs/language/typed-errors.md`

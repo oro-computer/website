@@ -26,8 +26,7 @@ See also:
   implement `Drop` and are **move-only** in safe code (ownership transfers by
   value; they are not copyable).
 - To share a handle across tasks without transferring ownership, prefer the
-  documented `*Borrow` view types (for example `ChannelBorrow(T)` and
-  `CancellationTokenBorrow`).
+  `*Borrow` view types (for example `ChannelBorrow(T)`, `MutexBorrow`).
   `*Borrow` values are non-owning, copyable views; the owner must keep the
   backing handle alive for the duration of all borrows.
 - For multi-producer patterns, pass `ChannelSender(T)` to worker tasks and
@@ -206,90 +205,6 @@ Notes:
     is used as an internal wake mechanism; consuming bytes from it can
     desynchronize the readiness signal.
 
-## Example: channel borrow across a task boundary
-
-```silk
-import sync from "std/sync";
-
-type ChanU64 = sync::Channel(u64);
-
-task fn producer (c: sync::ChannelBorrow(u64)) -> int {
-  if c.send(42) != None { return 10; }
-  return 0;
-}
-
-async fn main () -> int {
-  task {
-    let mut c = match ChanU64.init(1) {
-      Ok(v) => v,
-      Err(_) => return 100,
-    };
-
-    let h = producer(c.borrow());
-
-    let v1: u64 = (c.recv() ?? 0);
-    c.close();
-    let v2: u64 = (c.recv() ?? 99);
-
-    let rc_values: int[] = yield * h;
-    let rc: int = rc_values[0];
-    c.destroy();
-
-    if rc != 0 { return 11; }
-    if v1 != 42 { return 1; }
-    if v2 != 99 { return 2; }
-    return 0;
-  }
-}
-```
-
-## Example: `ChannelSender(T)` for multi-producer shutdown
-
-```silk
-import sync from "std/sync";
-
-type ChanU64 = sync::Channel(u64);
-
-task fn producer (tx: sync::ChannelSender(u64), value: u64) -> int {
-  if tx.send(value) != None { return 1; }
-  return 0;
-}
-
-async fn main () -> int {
-  task {
-    let mut c = match ChanU64.init(2) {
-      Ok(v) => v,
-      Err(_) => return 10,
-    };
-
-    let tx0 = match c.sender() {
-      Ok(v) => v,
-      Err(_) => { c.destroy(); return 11; },
-    };
-    let tx1 = match tx0.clone() {
-      Ok(v) => v,
-      Err(_) => { c.destroy(); return 12; },
-    };
-
-    let h0 = producer(tx0, 1);
-    let h1 = producer(tx1, 2);
-
-    let a = c.recv();
-    let b = c.recv();
-    let done = c.recv(); // None after the last sender drops
-
-    let rc0: int = yield h0;
-    let rc1: int = yield h1;
-    c.destroy();
-
-    if rc0 != 0 || rc1 != 0 { return 13; }
-    if a == None || b == None { return 14; }
-    if done != None { return 15; }
-    return 0;
-  }
-}
-```
-
 Example (wait on `/dev/tty` *or* a channel):
 
 ```silk
@@ -298,17 +213,17 @@ import event_loop from "std/runtime/event_loop";
 import sync from "std/sync";
 
 export async fn main () -> int {
-  let tty_fd = match (io::tty_open()) {
+  let tty_fd: int = match (io::tty_open()) {
     Ok(fd) => fd,
     Err(_) => return 2,
   };
 
-  let ch = match (sync::Channel(u64).init(1)) {
+  let ch: sync::Channel(u64) = match (sync::Channel(u64).init(1)) {
     Ok(c) => c,
     Err(_) => return 3,
   };
 
-  let r = ch.borrow();
+  let r: sync::ChannelBorrow(u64) = ch.borrow();
   if let Some(wfd) = r.wait_fd() {
     // `which` is 0 when `tty_fd` is readable, 1 when the channel is readable.
     let which: i64 = await event_loop::fd_wait_readable2(tty_fd, wfd);

@@ -1,5 +1,6 @@
 # `silk_bytes` (3) — Manage Owned Build Output Buffers
 
+> NOTE: This is the Markdown source for the eventual man 3 page for `SilkBytes` output buffers. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -8,7 +9,7 @@
 ## Synopsis
 
 ```c
-#include "silk.h"
+#include <silk/silk.h>
 
 typedef struct SilkBytes {
   uint8_t *ptr;
@@ -36,25 +37,8 @@ The buffer memory is owned by `libsilk.a` and must be released with `silk_bytes_
 - It is safe to call this with a `SilkBytes` whose `ptr` is `NULL`.
 - After freeing, the buffer contents must not be accessed.
 
-## Example
-
-After configuring the compiler and adding sources:
-
-```c
-SilkBytes bytes = {0};
-
-if (!silk_compiler_build_to_bytes(compiler, SILK_OUTPUT_EXECUTABLE, &bytes)) {
-  return 1;
-}
-
-fwrite(bytes.ptr, 1, (size_t)bytes.len, stdout);
-silk_bytes_free(&bytes);
-```
-
-Use `silk_bytes_free` exactly once for each successful `build_to_bytes` call.
-
 ## See Also
 
-- [`silk_compiler` (3)](?p=man/silk_compiler.3)
-- [`libsilk` (7)](?p=man/libsilk.7)
-- [C ABI (`libsilk`)](?p=compiler/abi-libsilk)
+- `silk_compiler` (3)
+- `libsilk` (7)
+- `?p=compiler/abi-libsilk`

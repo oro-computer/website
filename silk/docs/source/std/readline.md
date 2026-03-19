@@ -105,7 +105,7 @@ behavior depends on the terminal, but common bindings include:
 
 - Internal `linenoise` heap usage is routed through the `silk_rt_malloc_bytes`
   allocator surface so embedders can override allocations via
-  `silk_rt_set_allocator` (`include/silk_rt.h`).
+  `silk_rt_set_allocator` (`include/silk/rt.h`).
 - The returned line is copied into an owned allocation compatible with
   `std::runtime::mem::free` / `std::strings::String.drop()` (payload pointer
   includes the standard 8-byte header used by the hosted runtime).

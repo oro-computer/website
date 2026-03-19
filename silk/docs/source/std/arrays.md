@@ -1,8 +1,7 @@
 # `std::arrays`
 
-Status: **Implemented subset + design**. A generic `Slice(T)` view type is provided
-for early FFI-friendly bridging; higher-level owning containers live in
-`std::vector`.
+Status: **Implemented subset**. A generic `Slice(T)` view type is provided for
+FFI-friendly bridging; higher-level owning containers live in `std::vector`.
 
 `std::arrays` provides array and vector-like types built on top of the `Buffer(T)`
 intrinsic (`docs/language/buffers.md`).

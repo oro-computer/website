@@ -4,7 +4,7 @@
 point-in-time on a monotonic timeline. The current backend subset treats both
 as distinct Silk types that lower to `i64` nanoseconds.
 
-[Canonical doc](../docs/?p=language/duration-instant).
+Canonical doc: `docs/language/duration-instant.md`.
 
 ## Example: `Duration` arithmetic
 ```silk
@@ -21,6 +21,6 @@ fn main () -> int {
 
 ## See also
 
-- [Canonical doc](../docs/?p=language/duration-instant)
-- Duration literals: [Duration literals](?p=language/literals-duration)
-- Temporal stdlib: [std::temporal](../docs/?p=std/temporal)
+- Canonical doc: `docs/language/duration-instant.md`
+- Duration literals: `docs/wiki/language/literals-duration.md`
+- Temporal stdlib: `docs/std/temporal.md`

@@ -113,16 +113,11 @@ The current compiler subset implements:
     (currently implemented for `&Struct`; for example `let r: &Pair = pair;`).
   These borrows are checked with conservative **lexical lifetime** rules (they
   may not escape the scope of the borrowed stack storage).
-- Local bindings of `&Struct` values that originate from heap allocation
-  (`new`) are refcounted in the current subset:
-  - copying such a binding (e.g. `let g: &File = f;`) creates an alias to the
-    same underlying heap allocation and increments the refcount.
-- Calls that return `&Struct` may return either:
-  - an owning heap reference (for example a value that ultimately originated
-    from `new`), or
-  - a borrowed reference tied to an input parameter.
-  Treat the lifetime as part of the API contract; a returned `&Struct` is not
-  implicitly “owned heap data” just because it came from a call.
+- Local bindings of `&Struct` values that originate from heap allocation (`new`)
+  or from calls that return `&Struct`:
+  - these `&Struct` values are refcounted in the current subset,
+  - copying a `&Struct` binding (e.g. `let g: &File = f;`) creates an alias to
+    the same underlying heap allocation and increments the refcount.
 
 ## Borrow Safety Rules (Current Subset)
 
@@ -225,8 +220,14 @@ fn main () -> int {
 }
 ```
 
-## ABI Notes (Exported/C Boundaries)
+## ABI Notes (External Boundaries)
 
-At C ABI boundaries (`export fn`), reference types are supported only for
-opaque handle types (`&Opaque` / `mut &Opaque`). Non-opaque `&Struct` borrows
-are not ABI-stable; see the ABI and struct layout docs for the current rules.
+At external declaration boundaries (`ext`), borrowed-view types are restricted:
+
+- opaque handle references (`&Opaque` / `mut &Opaque`) are allowed,
+- ordinary references (`&T`) are rejected,
+- and slices (`T[]`) are rejected.
+
+This keeps exported signatures ABI-stable and prevents Silk borrows from
+escaping into foreign code. See the ABI and struct layout docs for the current
+rules.

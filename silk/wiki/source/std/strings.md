@@ -4,15 +4,12 @@
 type (UTF‑8 bytes), including simple comparisons and owned
 string construction.
 
-[Canonical doc](../docs/?p=std/strings).
+Canonical doc: `docs/std/strings.md`.
 
 ## Status
 
-- Implemented subset is available today.
-- The current surface focuses on equality checks, emptiness helpers, and
-  optional-to-string convenience helpers; richer Unicode/text-processing APIs
-  live in the canonical docs as future expansion.
-- [Details](../docs/?p=std/strings)
+- Implemented subset is available; long-term API is still evolving.
+- Details: `docs/std/strings.md`
 
 ## Importing
 
@@ -49,6 +46,6 @@ fn main () -> int {
 
 ## See also
 
-- [Canonical doc](../docs/?p=std/strings)
-- String literal semantics: [String Literals](../docs/?p=language/literals-string)
-- FFI string ABI rules: [External Declarations (ext)](../docs/?p=language/ext)
+- Canonical doc: `docs/std/strings.md`
+- String literal semantics: `docs/language/literals-string.md`
+- FFI string ABI rules: `docs/language/ext.md`

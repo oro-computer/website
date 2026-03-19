@@ -1,5 +1,6 @@
 # `silk-lsp` (1) — Language Server Protocol (LSP) Server
 
+> NOTE: This is the Markdown source for the eventual man 1 page for `silk-lsp`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -13,7 +14,11 @@
 
 `silk-lsp` speaks the Language Server Protocol over stdin/stdout for editor integrations.
 
-The LSP behavior and supported requests are documented at [LSP and editor integration](?p=compiler/lsp-silk).
+The server indexes open documents together with the nearest-package
+`silk.toml` graph, manifest definition files, stdlib modules (when enabled),
+and manifest-owned native C sources/headers used by `ext` declarations.
+
+The LSP behavior and supported requests are documented at `?p=compiler/lsp-silk`.
 
 ## Options
 
@@ -24,30 +29,7 @@ The LSP behavior and supported requests are documented at [LSP and editor integr
 
 - `SILK_STD_ROOT` — default stdlib root (used when `--std-root` is not provided).
 
-## Examples
-
-Start the server with the default stdlib root:
-
-```sh
-silk-lsp
-```
-
-Start the server with an explicit stdlib root:
-
-```sh
-silk-lsp --std-root /opt/oro/silk/std
-```
-
-Minimal editor command configuration:
-
-```json
-{
-  "command": ["silk-lsp"],
-  "filetypes": ["silk"]
-}
-```
-
 ## See Also
 
-- [`silk` (1)](?p=man/silk.1)
-- [LSP and editor integration](?p=compiler/lsp-silk)
+- `silk` (1)
+- `?p=compiler/lsp-silk`

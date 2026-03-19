@@ -6,12 +6,6 @@ For unrecoverable logic bugs and contract violations, Silk uses **typed
 errors** (`error`, `panic`, and `T | ErrorType...`), specified in
 `docs/language/typed-errors.md`.
 
-Practical rule:
-
-- use `Result(T, E)` / `T?` for input, parse, I/O, and environment failures,
-- use typed errors only for contract violations and logic bugs that should not
-  be silently recovered from.
-
 ## Implementation Status (Current Compiler)
 
 - Typed errors are implemented end-to-end for the current front-end and the
@@ -49,58 +43,10 @@ Silk distinguishes between:
 tagged result (`std::url::URLResult`), so callers can report an error and keep
 going without aborting.
 
-```silk
-import std::io::println;
-import std::url;
+A runnable example that wraps `URLResult` into `std::result::Result` and parses
+all command-line arguments is in:
 
-fn main () -> int {
-  let value = match std::url::parse("https://oro.computer/silk/docs/") {
-    Ok(v) => v,
-    Err(err) => {
-      println("invalid url: {s}", std::url::error_message(err.kind));
-      return 1;
-    },
-  };
-
-  let href = match value.href() {
-    Ok(v) => v,
-    Err(_) => return 2,
-  };
-  println("{s}", href.as_string());
-  return 0;
-}
-```
-
-This is the preferred shape for routine failures: the caller decides whether to
-retry, log, substitute a default, or stop the current operation.
-
-### Example: Typed error for a contract violation
-
-```silk
-error NegativeInput {
-  value: int,
-}
-
-fn require_non_negative (value: int) -> int | NegativeInput {
-  if value < 0 {
-    panic NegativeInput{ value: value };
-  }
-  return value;
-}
-
-fn main () -> int {
-  match (require_non_negative(-7)) {
-    value => return value,
-    err: NegativeInput => {
-      std::io::eprintln("bug: unexpected negative value {d}", err.value);
-      return 2;
-    },
-  }
-}
-```
-
-Here the failure is part of the function contract rather than an ordinary input
-validation result.
+- `examples/feature_errors_recoverable_url_parse.slk`
 
 ## Error Representation
 
@@ -184,8 +130,8 @@ Runtime behavior (current compiler subset):
 
 Notes:
 
-- Failed assertions are already isolated by the `silk test` runner (each test
-  runs in its own process), so one crashing test does not abort the whole test
-  suite. Outside `silk test`, failed assertions still abort the current
-  program/process.
+- Failed assertions are currently isolated by the `silk test` runner (each
+  test runs in its own process). Future work may allow reporting failed
+  assertions without process isolation (for example by lowering `assert` to a
+  typed error in test contexts).
 - See also: `docs/language/testing.md`.

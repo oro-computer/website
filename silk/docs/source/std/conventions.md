@@ -7,23 +7,6 @@ must be migrated as they are touched.
 
 This document exists to keep `std::` APIs consistent across modules.
 
-## Quick Reference
-
-Use these patterns unless a module has a stronger, domain-specific reason not
-to:
-
-```silk
-// Prefer Result(...) when callers need error detail.
-public fn parse (s: string) -> std::result::Result(Value, ParseFailed);
-
-// Prefer T? when absence is the only failure mode.
-public fn pop (mut self: &Stack(T)) -> T?;
-
-// Prefer an owning handle + borrow view for cross-task use.
-public fn sender (self: &Channel(T)) -> std::result::Result(ChannelSender(T), SyncFailed);
-public fn borrow (self: &Channel(T)) -> ChannelBorrow(T);
-```
-
 ## Public vs Internal API
 
 - Only `export` declarations are considered part of the stable public surface.
@@ -103,22 +86,6 @@ needing to know internal sentinel values or manually fill out large structs.
     or an optional error return) when allocation fails,
   - `empty()` exists for infallible construction.
 
-Example:
-
-```silk
-struct ReserveFailed { code: int }
-
-fn reserve_bytes () -> ReserveFailed? {
-  let mut buf = std::buffer::BufferU8.empty();
-  match (std::buffer::BufferU8.init(4096)) {
-    Ok(v) => { buf = v; },
-    Err(_) => return ReserveFailed{ code: 1 },
-  }
-  buf.drop();
-  return None;
-}
-```
-
 ## Errors
 
 Silk supports both typed errors (`docs/language/typed-errors.md`) and
@@ -151,18 +118,6 @@ APIs should follow these rules:
   invariant violations, and resource exhaustion must be surfaced as recoverable
   errors.
 
-Example:
-
-```silk
-struct ParseBoolFailed { code: int }
-
-public fn parse_bool_flag (s: string) -> std::result::Result(bool, ParseBoolFailed) {
-  if s == "true" { return Ok(true); }
-  if s == "false" { return Ok(false); }
-  return Err(ParseBoolFailed{ code: 1 });
-}
-```
-
 ## Concurrency and Thread Safety
 
 Silk’s hosted `task` concurrency runs on OS threads. `std::` APIs must make it
@@ -183,36 +138,6 @@ Conventions:
     (often as an optional parameter),
   - callers should create and own an `AbortController` and call `abort()` to
     request cancellation.
-
-Example:
-
-```silk
-task fn producer (tx: std::sync::ChannelSender(u64)) -> int {
-  if tx.send(42) != None { return 1; }
-  return 0;
-}
-
-async fn main () -> int {
-  task {
-    let mut ch = match std::sync::Channel(u64).init(1) {
-      Ok(v) => v,
-      Err(_) => return 1,
-    };
-    let tx = match ch.sender() {
-      Ok(v) => v,
-      Err(_) => { ch.destroy(); return 2; },
-    };
-
-    let h = producer(tx);
-    let value = ch.recv();
-    let rc: int = yield h;
-    ch.destroy();
-
-    if rc != 0 { return 3; }
-    return if value == Some(42) { 0 } else { 4 };
-  }
-}
-```
 
 ## Formal Silk Contracts
 

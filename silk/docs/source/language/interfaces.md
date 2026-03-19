@@ -35,6 +35,8 @@ Rules:
 - Interface methods have **no body** and end with `;`.
 - Parameter types in interface methods should be explicitly annotated (the
   compiler should not rely on type inference for interface contracts).
+- Interface method parameter lists use the same trailing-varargs marker as
+  ordinary functions, so a required method may end with `...args: T`.
 - Interface methods are part of a **public contract**:
   - interfaces do not have private members, and
   - interface method declarations do not accept visibility modifiers.
@@ -139,20 +141,33 @@ Compiler requirements:
   - impl methods that satisfy an interface requirement may omit `public`, but
   - they may not be explicitly marked `private`.
 
-Conformance rules (current subset):
+Conformance rules (initial implementation):
 
 - For an `interface I { fn m(p0: T0, ...) -> R; }`, the corresponding impl must
   provide a method `m` whose signature matches after accounting for the
   receiver:
   - the impl method’s first parameter is the receiver `self: &Type` (or
     `mut self: &Type`), and
-    - the remaining parameters and result type must match the interface method.
+    - the remaining parameters, including whether the final parameter is
+      varargs, and the result type must match the interface method.
 - Exception (static protocol, implemented subset):
-  - `std::interfaces::Deserialize(S)` is a static conversion protocol used by
-    `as` casts. Its conformance does **not** use a receiver parameter:
+  - `std::interfaces::Deserialize(S)` and `std::interfaces::Parse(E, S)` are
+    receiverless static protocols. Their conformance does **not** use a
+    receiver parameter:
     - `impl T as std::interfaces::Deserialize(S)` provides
       `fn deserialize(value: S) -> Self` (no `self` parameter),
+    - `impl T as std::interfaces::Parse(E, S)` provides
+      `fn parse(value: S) -> std::result::Result(Self, E)` (no `self`
+      parameter),
     - calls use `T.deserialize(value)`.
+    - and `Parse` calls use `T.parse(value)`.
+  - Only `Deserialize` participates in `as` casts today. `Parse` remains an
+    explicit method call so fallible construction stays visible in source.
+  - The implemented conformance check substitutes `Self` recursively through
+    nested generic result shapes, so interfaces such as
+    `Parse(E) { fn parse(value: string) -> Result(Self, E); }` can be
+    satisfied by impl methods whose concrete result type is a monomorphized
+    specialization of that generic result.
 
 Generic interface conformance rule:
 
@@ -197,7 +212,8 @@ Conformance rules:
 - For an `interface I { fn m(p0: T0, ...) -> R; }`, the corresponding module must
   provide a function `m` whose signature matches exactly:
   - there is no receiver parameter for module conformance, and
-  - the parameter and result types must match the interface method.
+  - the parameter list, including whether the final parameter is varargs, and
+    the result type must match the interface method.
 - Conformance compares the **call result type** of the exported function:
   - `export async fn m (...) -> R` is treated as `m(...) -> Promise(R)`,
   - `export task fn m (...) -> R` is treated as `m(...) -> Task(R)`,

@@ -1,6 +1,6 @@
 # Grammar
 
-[Formal Grammar Spec](../docs/?p=language/grammar) is the canonical “what the parser accepts” reference
+`docs/language/grammar.md` is the canonical “what the parser accepts” reference
 for Silk surface syntax.
 
 This wiki page is a reading guide, not a replacement for the grammar itself.
@@ -8,8 +8,8 @@ This wiki page is a reading guide, not a replacement for the grammar itself.
 ## How to use the grammar
 
 - Use the grammar when you need the exact token-level surface form.
-- Use the concept docs linked throughout the wiki for semantics and type rules.
-- Use the syntax tour and concept pages for runnable examples.
+- Use the concept docs (`docs/language/*.md`) for semantics and type rules.
+- Use `tests/silk/pass_*.slk` for runnable examples.
 
 ## Example
 ```silk
@@ -23,5 +23,5 @@ fn main () -> int {
 
 ## See also
 
-- [Canonical grammar](../docs/?p=language/grammar)
-- Syntax tour: `?p=language/syntax-tour`
+- Canonical grammar: `docs/language/grammar.md`
+- Syntax tour: `docs/wiki/language/syntax-tour.md`

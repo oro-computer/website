@@ -1,101 +1,193 @@
 # `std::toml`
 
-Status: **Initial implementation + design**. `std::toml` provides a TOML v1.0 parser that
-builds an index-based DOM suitable for the current compiler/backend subset.
+Status: **Implemented subset**.
 
-Primary goals:
+`std::toml` provides a TOML v1.0-style parser over an index-based DOM.
 
-- Correct, spec-driven parsing of TOML v1.0 documents:
-  - key/value pairs,
-  - dotted keys,
-  - tables (`[table]`) and array-of-tables (`[[table]]`),
-  - strings, integers, floats, booleans, datetimes, arrays, inline tables.
-- A memory model that works well with the current subset:
-  - parse produces an index-based DOM stored inside a `Document`,
-  - arrays/tables are represented via integer “next” links (no `&T` struct
-    fields).
-- High performance by default:
-  - **borrowed parsing** avoids allocating for simple strings/numbers by slicing
-    into the input string,
-  - allocations are only performed for escaped strings and for owned parsing.
+## Design rules
 
-## Data Model
+- `Document` is the owning TOML DOM container.
+- `ValueId` is the stable handle for values inside a `Document`.
+- Parsing is explicit about ownership:
+  - `doc.parse(s)` borrows simple strings and numeric/datetime lexemes from `s`,
+  - `doc.parse_owned(s)` copies strings and lexemes into `doc`.
+- TOML emission is not implemented yet. The module currently exposes a parser
+  and query helpers only.
+- `Document` intentionally does not implement `Serialize(string)` or
+  `Parse(E, string)`:
+  - TOML text is a structured format, not the plain textual identity of the
+    DOM,
+  - and borrowed versus owned parsing is an explicit choice that should remain
+    visible at the call site.
 
-The DOM is represented by an index table owned by a `Document`:
+## API (Implemented Subset)
 
-- A `Document` owns:
-  - node tables (`tag`, payload fields, sibling links),
-  - optional owned allocations for decoded strings and owned lexemes.
-- TOML values are referred to by `ValueId` (an `i64` node index).
+```silk
+module std::toml;
 
-Tables store a linked list of `member` nodes (key/value pairs). Arrays store a
-linked list of element nodes.
+export type ValueId = i64;
+export type ParseResult = std::result::Result(ValueId, ParseError);
 
-## Strings
+error ParseError {
+  kind: int,
+  offset: i64,
+  line: i64,
+  column: i64,
+}
 
-- Basic strings (`"..."`) support TOML escapes including Unicode `\\uXXXX` /
-  `\\UXXXXXXXX`.
-- Literal strings (`'...'`) do not interpret escapes.
-- Multiline basic/literal strings (`\"\"\"...\"\"\"` and `'''...'''`) are parsed,
-  including TOML’s line-ending normalization rules.
+struct Document {
+  root: ValueId,
+  err: ParseError,
+}
 
-Parsed string values are exposed as UTF-8 `string` views:
+impl Document {
+  public fn is_ok (self: &Document) -> bool;
+  public fn root_value (self: &Document) -> ValueId?;
 
-- when the source contains no escapes and borrowed parsing is used, the string
-  view points into the input (zero-copy),
-- otherwise, decoded bytes are stored in an owned allocation tracked by the
-  `Document`.
+  public fn parse (mut self: &Document, s: string) -> ParseResult;
+  public fn parse_owned (mut self: &Document, s: string) -> ParseResult;
 
-## Numbers
+  public fn tag (self: &Document, id: ValueId) -> int?;
+  public fn as_bool (self: &Document, id: ValueId) -> bool?;
+  public fn as_string (self: &Document, id: ValueId) -> string?;
+  public fn as_int_lexeme (self: &Document, id: ValueId) -> string?;
+  public fn as_float_lexeme (self: &Document, id: ValueId) -> string?;
+  public fn as_datetime_lexeme (self: &Document, id: ValueId) -> string?;
+  public fn int_as_i64 (self: &Document, id: ValueId) -> i64?;
+  public fn float_as_f64 (self: &Document, id: ValueId) -> f64?;
 
-`std::toml` preserves numeric lexemes as `string` views and provides helpers to
-interpret them as `i64` and/or `f64` when needed:
+  public fn array_len (self: &Document, id: ValueId) -> i64?;
+  public fn array_first (self: &Document, id: ValueId) -> ValueId?;
+  public fn next_sibling (self: &Document, id: ValueId) -> ValueId?;
 
-- integers support `_` separators and `0x`/`0o`/`0b` bases,
-- floats support `_` separators, fractional/exponent forms, and special values.
+  public fn table_len (self: &Document, id: ValueId) -> i64?;
+  public fn table_first_member (self: &Document, id: ValueId) -> ValueId?;
+  public fn member_key (self: &Document, member: ValueId) -> string?;
+  public fn member_value (self: &Document, member: ValueId) -> ValueId?;
+  public fn member_next (self: &Document, member: ValueId) -> ValueId?;
+  public fn table_get (self: &Document, table: ValueId, key: string) -> ValueId?;
+}
 
-## Datetimes
+export fn int_as_i64 (doc: &Document, id: ValueId) -> i64?;
+export fn float_as_f64 (doc: &Document, id: ValueId) -> f64?;
+export fn error_message (kind: int) -> string;
+```
 
-TOML datetime values are preserved as lexeme `string` views. A future version
-of `std::toml` will integrate with `std::temporal` once the necessary
-infrastructure is stable.
+Notes:
 
-## Parsing
+- The exported free functions are thin compatibility wrappers around the
+  corresponding `Document` methods.
+- Tables and arrays are stored as linked lists over `ValueId` indices to match
+  the current compiler subset.
+- The internal DOM storage now uses the shared
+  `std::formal::index_dom_storage_well_formed` contract, and the public
+  document accessors attach that theory directly.
 
-Two parse modes are provided as `Document` methods:
+## String, numeric, and datetime values
 
-- **Borrowed**: `doc.parse(s)` borrows unescaped strings and numeric/datetime
-  lexemes from `s`. The caller must ensure `s` outlives any `string` views read
-  from `doc`.
-- **Owned**: `doc.parse_owned(s)` copies all strings and lexemes into allocations
-  tracked by `doc` (independent of `s`).
+Supported string forms:
+
+- basic strings (`"..."`) with TOML escapes,
+- literal strings (`'...'`) without escape processing,
+- multiline basic and multiline literal strings.
+
+Value access follows the parsed TOML shape:
+
+- `doc.as_string(id)` returns the decoded string value,
+- `doc.as_int_lexeme(id)` / `doc.as_float_lexeme(id)` preserve the original
+  numeric spelling,
+- `doc.int_as_i64(id)` and `doc.float_as_f64(id)` interpret the stored lexeme,
+- `doc.as_datetime_lexeme(id)` returns the original datetime token spelling.
+
+The returned `string` values are borrowed views into either the original input
+buffer or storage owned by `doc`.
+
+## Borrowed vs owned parse
+
+`doc.parse(s)` is the fast path:
+
+- simple strings may point into `s`,
+- numeric and datetime lexemes may point into `s`,
+- escaped strings are decoded into allocations tracked by `doc`.
+
+`doc.parse_owned(s)` copies strings and lexemes into `doc`, so the parsed
+document remains valid even after `s` is no longer needed.
 
 Both methods:
 
-- clear the `Document` first,
-- return `ParseResult` (`Ok(root)` on success, `Err(ParseError)` on error),
-- and record the result on the `Document`:
-  - `doc.is_ok()` reports success,
-  - `doc.root_value()` returns the root `ValueId` on success,
-  - `doc.err` contains the parse error details (`kind`, byte `offset`, and 1-based `line`/`column`).
+- clear the document before parsing,
+- return `Ok(root)` on success and `Err(ParseError)` on failure,
+- update `doc.root` / `doc.err`,
+- and report out-of-memory as `ERR_OUT_OF_MEMORY`.
 
-Allocation failures are also reported as ordinary parse errors:
-
-- on out-of-memory, parse returns `Err(ParseError{ kind: ERR_OUT_OF_MEMORY, ... })` and sets
-  `doc.err.kind` to `ERR_OUT_OF_MEMORY`.
-
-In the current executable backend subset, `Document` is typically
-used as a heap reference:
+## Example
 
 ```silk
 import std::toml;
 
-let mut doc: &Document = new Document();
-let root_r: std::toml::ParseResult = doc.parse(`a = 1`);
+fn main () -> int {
+  let mut doc: Document = Document{};
+
+  let root_r = doc.parse(`
+title = "silk"
+ports = [8000, 8001]
+pi = 3.14
+`);
+  if root_r.is_err() {
+    return 1;
+  }
+
+  let root: i64 = match (root_r) {
+    Ok(v) => v,
+    Err(_) => 0 as i64,
+  };
+
+  let title_id_opt = doc.table_get(root, "title");
+  if title_id_opt == None {
+    return 2;
+  }
+  let title_id: i64 = title_id_opt ?? 0 as i64;
+  if (doc.as_string(title_id) ?? "") != "silk" {
+    return 3;
+  }
+
+  let ports_id_opt = doc.table_get(root, "ports");
+  if ports_id_opt == None {
+    return 4;
+  }
+  let ports_id: i64 = ports_id_opt ?? 0 as i64;
+  let first_opt = doc.array_first(ports_id);
+  if first_opt == None {
+    return 5;
+  }
+  let first: i64 = first_opt ?? 0 as i64;
+  if (doc.int_as_i64(first) ?? 0 as i64) != 8000 {
+    return 6;
+  }
+
+  let pi_id_opt = doc.table_get(root, "pi");
+  if pi_id_opt == None {
+    return 7;
+  }
+  let pi_id: i64 = pi_id_opt ?? 0 as i64;
+  let pi_opt = doc.float_as_f64(pi_id);
+  if pi_opt == None {
+    return 8;
+  }
+  let pi: f64 = pi_opt ?? 0.0;
+  if pi <= 3.0 {
+    return 9;
+  }
+  if pi >= 4.0 {
+    return 10;
+  }
+
+  return 0;
+}
 ```
 
-## Planned Follow-ups
+## Follow-ups
 
-- Streaming tokenization (SAX-style) for very large inputs.
-- Canonical TOML emission/serialization once the DOM/query surface stabilizes.
+- Streaming tokenization for very large inputs.
+- Canonical TOML emission once the DOM/query surface is considered stable.
 - Rich datetime parsing and integration with `std::temporal`.

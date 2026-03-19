@@ -34,8 +34,14 @@ What works end-to-end today (parser → checker → lowering → codegen):
 - **`match` expression over enums**:
   - patterns are restricted to enum variants (`E::A`, `E::Data(x)`) and may use shorthand (`A`, `Data(x)`) when the scrutinee type is the enum,
   - binders may be names or `_`,
-  - no guards (`if ...`) yet,
-  - and matches must be *exhaustive* in the current subset.
+  - no guarded arms (`if ...`) yet in either expression or statement form,
+  - and expression-form matches must be *exhaustive* by explicit variant
+    coverage in the current subset.
+- **`match` statement over ordinary enum values**:
+  - enum variant arms must use the qualified form `E::Variant(...)`,
+  - bare identifiers remain reserved for binder-style arms,
+  - and the checker already reserves `_` as a catch-all arm, but the current
+    lowering/backend subset does not support that form end to end yet.
 - **Generic enums (monomorphized)**:
   - `enum Name(T, ...) { ... }` declarations are supported in module-set builds
     that run monomorphization,
@@ -56,7 +62,7 @@ What works end-to-end today (parser → checker → lowering → codegen):
 Not implemented yet (or not yet stable/documented):
 
 - Guards in enum match arms (`E::A if cond => ...`).
-- Wildcard/catch-all enum match arms (`_ => ...`).
+- Wildcard/catch-all enum match arms (`_ => ...`) in expression form.
 - A stable ABI story for passing/returning enums across the C99 boundary (do
   not assume an enum layout until it is specified in `docs/compiler/abi-libsilk.md`).
 
@@ -204,14 +210,22 @@ Binders:
 
 ### Exhaustiveness (current subset)
 
-In the current subset, enum matches must be exhaustive:
+In the current subset, enum exhaustiveness is split by `match` form:
 
-- There must be exactly one arm per enum variant.
-- Each variant must appear exactly once.
-- Wildcard arms (`_ => ...`) are not supported for enum matches yet.
+- Expression form:
+  - there must be exactly one arm per enum variant,
+  - each variant must appear exactly once,
+  - and wildcard arms (`_ => ...`) are not supported.
+- Statement form over ordinary enum values:
+  - end-to-end today, there must be exactly one qualified arm per variant,
+  - and although the checker recognizes `_` as a catch-all arm, lowering still
+    rejects that form in the current backend subset.
 
-If a match is not exhaustive, the compiler currently reports `E2002` rather than
-a dedicated “missing match arm” diagnostic.
+If a match is not exhaustive:
+
+- expression form currently reports `E2002`, and
+- statement form without full coverage uses the checker’s missing-arm path when
+  it reaches that analysis.
 
 ### Example: unit enum match
 

@@ -4,14 +4,12 @@
 primitives (I/O, filesystem, time, threads, allocation) from higher-level
 `std::...` modules.
 
-[Canonical doc](../docs/?p=std/runtime).
+Canonical doc: `docs/std/runtime.md`.
 
 ## Status
 
-- Hosted runtime boundary modules are implemented for the current compiler
-  subset.
-- `std::runtime::event_loop` is the current async wait surface used by hosted
-  `async` code and async-aware stdlib helpers.
+- Design + partial implementation.
+- Details: `docs/std/runtime.md`
 
 ## Importing
 
@@ -28,10 +26,12 @@ import std::runtime::build;
 import std::runtime::mem;
 
 fn main () -> int {
+  // This reports whether the current artifact was built with `--debug` / `-g`.
   if std::runtime::build::is_debug() {
     return 1;
   }
 
+  // `std::runtime::mem` provides low-level allocation and raw load/store.
   let ptr: u64 = std::runtime::mem::alloc(4);
   if ptr == 0 { return 2; }
 
@@ -50,6 +50,6 @@ fn main () -> int {
 
 ## See also
 
-- [Canonical doc](../docs/?p=std/runtime)
-- [Std package structure and swappability](?p=std/package-structure)
-- [Event loop surface](../docs/?p=std/runtime-event-loop)
+- Canonical doc: `docs/std/runtime.md`
+- Std package structure and swappability: `docs/std/package-structure.md`
+- End-to-end fixture (build metadata): `tests/silk/pass_std_runtime_build_is_debug.slk`

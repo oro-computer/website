@@ -106,7 +106,14 @@ Currently supported:
   scalar such as `int`, fixed-width ints, `bool`, `char`, or `f32`/`f64`) as
   readable values in Silk,
 - `string` parameters in `ext` function calls are lowered as C-string pointers (`const char *`) in the current backend subset; the compiler-emitted backing bytes include a trailing NUL terminator, while the Silk `string` length excludes it.
-- opaque handle types declared via `struct Name;` used behind a reference (`&Name`) in `ext` function parameters and results.
+- borrowed-view types are restricted at the external boundary:
+  - opaque handle types declared via `struct Name;` may be used behind a
+    reference (`&Name`) in `ext` function parameters and results,
+  - ordinary references (`&T`) and slices (`T[]`) are rejected at `ext`
+    boundaries,
+  - and the same ordinary-borrow restriction also applies to global-package
+    `export fn` signatures because they participate in the same external ABI
+    surface.
 - lowering calls to `ext` functions when building:
   - `silk build --kind object`, and
   - `silk build --kind static`,
@@ -229,7 +236,7 @@ The language defines two closely related views of the ABI:
 - A “fat pointer” internal representation for `string` and `regexp`:
   - conceptually: `struct string { ptr: ptr, len: i64 }` where `ptr` is a UTF‑8 pointer.
   - conceptually: `struct regexp { ptr: ptr, len: i64 }` where `ptr` is an engine-owned bytecode pointer.
-- A C ABI contract (e.g. via `silk.h`) using an explicit struct:
+- A C ABI contract (e.g. via `silk/silk.h`) using an explicit struct:
 
   ```c
   typedef struct {

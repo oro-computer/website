@@ -32,8 +32,12 @@ Implemented end-to-end in the current compiler:
   `docs/language/flow-continue.md`)
 - `return` statements, including “all paths must return” checking for non-`void`
   functions (`docs/language/flow-return.md`)
-- `match` as an expression for optionals and enums (`docs/language/flow-match.md`)
-- `match` as a statement for typed errors (`docs/language/typed-errors.md`)
+- `match` as an expression for optionals, primitive integers, enums, type
+  unions, and recoverable `Result`-style values
+  (`docs/language/flow-match.md`)
+- `match` as a statement for ordinary values in the supported subset and for
+  typed errors (`docs/language/flow-match.md`,
+  `docs/language/typed-errors.md`)
 - Expression statements for calls and assignments only
   (`docs/language/flow-expression-statements.md`)
 

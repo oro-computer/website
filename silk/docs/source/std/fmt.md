@@ -1,7 +1,7 @@
 # `std::fmt`
 
-Status: **Implemented subset + design**. The formatting engine is implemented
-in `std/fmt.slk` and is intentionally scoped to the current compiler/backend
+Status: **Implemented subset**. The formatting engine is implemented in
+`std/fmt.slk` and is intentionally scoped to the current compiler/backend
 subset (no generics, no runtime interface dispatch).
 
 `std::fmt` provides a shared, Zig-`std.fmt`-style format-string syntax and a
@@ -137,26 +137,38 @@ so output precision is limited to `f64` precision in the current subset.
 ```silk
 import { println } from "std/io";
 import format from "std/fmt";
+import std::fmt;
+import std::strings;
+import std::result;
+
+type StringAllocResult = std::result::Result(std::strings::String, std::fmt::Error);
 
 fn main () -> int {
-  let mut hello = match format("hello {}", "world") {
-    Ok(v) => v,
-    Err(_) => return 1,
-  };
+  const a = 1;
+  const b = 2;
 
-  let mut sum = match format("a + b = {}", 1 + 2) {
-    Ok(v) => v,
-    Err(_) => {
-      hello.drop();
-      return 2;
+  match (format("hello {}", "world")) {
+    StringAllocResult::Ok(hello_value) => {
+      let mut hello: std::strings::String = hello_value;
+      match (format("a + b = {}", a + b)) {
+        StringAllocResult::Ok(sum_value) => {
+          let mut sum: std::strings::String = sum_value;
+          println("{}", hello.as_string());
+          println("sum of {}", sum.as_string());
+          sum.drop();
+          hello.drop();
+          return 0;
+        },
+        StringAllocResult::Err(_) => {
+          hello.drop();
+          return 2;
+        },
+      }
     },
-  };
-
-  println("{}", hello.as_string());
-  println("{}", sum.as_string());
-  sum.drop();
-  hello.drop();
-  return 0;
+    StringAllocResult::Err(_) => {
+      return 1;
+    },
+  }
 }
 ```
 

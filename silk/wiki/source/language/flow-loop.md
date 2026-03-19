@@ -2,11 +2,11 @@
 
 `loop { ... }` is an infinite loop that exits via `break` or `return`.
 
-[Canonical spec](../docs/?p=language/flow-loop).
+Canonical spec: `docs/language/flow-loop.md`.
 
 ## Status
 
-- Implemented subset + tests: [loop Loop](../docs/?p=language/flow-loop)
+- Implemented subset + tests: `docs/language/flow-loop.md`
 
 ## Syntax
 
@@ -32,5 +32,5 @@ fn main () -> int {
 
 ## See also
 
-- [Canonical spec](../docs/?p=language/flow-loop)
-- `break`: [break](?p=language/flow-break)
+- Canonical spec: `docs/language/flow-loop.md`
+- `break`: `docs/wiki/language/flow-break.md`

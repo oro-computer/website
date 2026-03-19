@@ -3,10 +3,7 @@
 This document specifies the current Language Server Protocol (LSP)
 implementation for Silk.
 
-The goal of the language server is to provide editor and IDE integrations
-(diagnostics, hover, go-to-definition, completion, signature help, and
-document symbols) while remaining a thin, spec-driven wrapper around the
-existing compiler front-end.
+The goal of the language server is to provide editor and IDE integrations (diagnostics, and eventually features like completion and hover) while remaining a thin, spec-driven wrapper around the existing compiler front-end.
 
 ## Overview
 
@@ -15,6 +12,12 @@ The Silk language server:
 - is implemented in Zig and shipped as a separate executable (`silk-lsp`),
 - speaks the Language Server Protocol over stdin/stdout using JSON-RPC 2.0 and `Content-Length` framing,
 - reuses the existing lexer, parser, and type checker for semantics,
+- builds a workspace cache from open documents, nearest-package
+  `silk.toml` roots, dependency package graphs, manifest definition files, and
+  standard library modules when enabled,
+- maintains a lightweight native C symbol index for manifest-owned `.c` / `.h`
+  sources so `ext` declarations can resolve to local native definitions when
+  those sources are available,
 - does not change the language surface or ABI; it is a tooling layer on top of the existing compiler.
 
 No language features or CLI options are introduced by the LSP itself. Any future extensions that affect language semantics or user-facing flags must still be documented in the appropriate `docs/language/` or `docs/compiler/cli-silk.md` files first.
@@ -30,46 +33,11 @@ The `silk-lsp` binary is built and installed alongside the `silk` CLI:
   - `--std-root <path>` overrides the stdlib root used for resolving `import std::...;`.
   - `--nostd` disables stdlib auto-loading entirely.
 
-Minimal local smoke test:
-
-```sh
-silk-lsp --std-root ./std
-```
-
-Then send standard LSP framing on stdin:
-
-```text
-Content-Length: 65
-
-{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}
-```
-
-The server replies with an `initialize` result advertising the capabilities
-documented below. This is often the quickest way to confirm that an editor issue
-is in the client wiring rather than in the server binary itself.
-
 Typical client configurations (e.g., Vim/Neovim LSP, VS Code, or other LSP frontends) should:
 
 - set the command to `["silk-lsp"]`,
 - enable standard LSP text document synchronization,
-- refrain from sending requests beyond the capabilities advertised in
-  `initialize`.
-
-Minimal launch examples:
-
-```json
-{
-  "command": ["silk-lsp"],
-  "filetypes": ["silk"]
-}
-```
-
-```json
-{
-  "command": ["silk-lsp", "--std-root", "/opt/oro/silk/std"],
-  "filetypes": ["silk"]
-}
-```
+- refrain from sending requests beyond the capabilities advertised in `initialize` (hover, diagnostics, shutdown/exit).
 
 ## Transport and Protocol
 
@@ -80,14 +48,6 @@ The language server:
 - implements JSON-RPC 2.0 semantics (`jsonrpc: "2.0"`, `id`, `method`, `params`, `result` / `error`).
 
 The server does not depend on any external networking libraries; it uses Zig standard library I/O and JSON support.
-
-Minimal wire example:
-
-```text
-Content-Length: 92
-
-{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{},"rootUri":null}}
-```
 
 Position handling note:
 
@@ -101,7 +61,7 @@ Position handling note:
 The server supports the standard LSP initialization sequence:
 
 - `initialize` (request):
-  - Advertised capabilities (current version):
+  - Advertised capabilities (initial version):
     - `positionEncoding`: `"utf-16"` (the server currently operates in UTF-16 positions for maximum client compatibility).
     - `textDocumentSync`:
       - `openClose: true`,
@@ -117,21 +77,20 @@ The server supports the standard LSP initialization sequence:
     - `signatureHelpProvider`:
       - trigger characters `(` and `,`,
       - provides function and method signatures for the current call.
-    - No references/rename, semantic tokens, or other advanced features are
-      claimed in the current implementation.
+    - No references/rename, semantic tokens, or other advanced features are claimed in the initial implementation.
 - The server uses `rootUri` (or `rootPath`) to help locate a stdlib root when no explicit `--std-root` or `SILK_STD_ROOT` is set.
 - `initialized` (notification):
   - Accepted but does not currently trigger additional behavior.
 - `shutdown` (request) and `exit` (notification) are honored as in the LSP spec.
 - Requests received after `shutdown` (other than `exit`) are treated as invalid and answered with an error response.
-- `$\/cancelRequest` notifications are accepted and ignored; the current server
-  does not track per-request cancellation state.
+- `$\/cancelRequest` notifications are accepted and ignored; the initial server does not track per-request cancellation state.
 
-Any newly added capability must be documented here before being advertised.
+Any future capabilities (completion, hover, goto definition, etc.) must be documented here before being implemented.
 
-## Hover (Current Support)
+## Hover
 
-The server provides a minimal implementation of `textDocument/hover`:
+The server provides `textDocument/hover` for open documents using the cached
+workspace module set.
 
 - Hover requests are handled for the current contents of an open document (as tracked in the server’s in-memory document table).
 - The server computes hover information lexically, based on the token at the given position:
@@ -146,23 +105,42 @@ The server provides a minimal implementation of `textDocument/hover`:
   - struct / enum / interface / error identifiers report `struct Name` / `enum Name` / `interface Name` / `error Name`,
   - `ext` declarations report `ext name: <type>` when available,
   - field and method accesses (`value.field`, `value.method`) report the field type or method signature when the receiver is a known struct,
-  - imported names are resolved across the module set (package imports and `from "..."` imports, including named imports and namespace/default imports).
+  - imported names are resolved across the module set:
+    - package imports (`import ns::pkg;`, `import ns::pkg as alias;`),
+    - qualified symbol imports (`import ns::pkg::name;`, `import ns::pkg::name as alias;`, `import ::malloc;`),
+    - JS-style imports (`import { name } from "ns/pkg";`, `import { name as alias } from "ns/pkg";`, `import alias from "ns/pkg";`),
+    - and module-scope `using` aliases for imported or local names,
+  - when an `ext` declaration resolves to a locally indexed native C symbol, hover includes the native C declaration/prototype in an additional `c` code block,
+  - native C lookup is filtered by the `ext` shape (`fn` / `c_fn` externs prefer C functions; non-function externs prefer C variables), so common C tag/function collisions like `struct stat` vs `stat(...)` do not override the callable symbol.
 - When the resolved declaration has a doc comment, hover renders it as Markdown:
   - the first block is a `silk` code block containing the signature/header,
   - followed by the rendered doc comment body.
 - The hover `range` returned to the client corresponds to the token span (same token line/column/length used for diagnostics); when no suitable token is found at the requested position, the server returns `null` as the hover result.
 
-As the front-end grows richer (e.g. with symbol tables and more detailed type information), hover semantics may be extended to include resolved types and declaration summaries; such changes must be reflected here before being implemented.
+The native C index is intentionally lexical and top-level only; it is not a
+full C parser. It is used to surface nearby declarations/definitions in
+manifest-owned C sources, not to typecheck arbitrary C. It tolerates leading
+indentation before preprocessor directives so common headers with indented
+`#include` / `#define` lines still index the following declarations correctly.
 
-## Go to Definition (Current Support)
+## Go To Definition
 
-The server provides the current implementation of `textDocument/definition`:
+The server provides `textDocument/definition` for open documents.
 
 - Definition requests are handled for the current contents of an open document.
-- The server first consults the module-set symbol index (open docs + resolved imports + std modules) to resolve:
+- The server first consults the module-set symbol index (open docs + manifest
+  package graphs + definition files + std modules when enabled) to resolve:
   - exported or package-local `fn`, `let`, `ext`, `struct`, `enum`, `interface`, and `error` declarations,
   - methods declared in `impl` blocks when invoked as `value.method(...)`,
-  - qualified names such as `std::pkg::name` and namespace-qualified names like `alias::name` when `alias` is a namespace import.
+  - qualified names such as `std::pkg::name` and namespace-qualified names like `alias::name` when `alias` is introduced by:
+    - a package import,
+    - a default/namespace import,
+    - or a module-scope `using` alias.
+- Package and import resolution covers:
+  - package imports (`import ns::pkg;`, `import ns::pkg as alias;`),
+  - qualified symbol imports (`import ns::pkg::name;`, `import ns::pkg::name as alias;`, `import ::name;`),
+  - JS-style imports from package specifiers and file specifiers,
+  - and `using` aliases for both value names and namespace aliases.
 - Local scopes are then consulted to resolve:
   - function parameters,
   - block-scoped `let` bindings,
@@ -172,27 +150,45 @@ The server provides the current implementation of `textDocument/definition`:
   - when a struct field is found, the definition points at that field declaration,
   - otherwise the definition falls back to the receiver struct declaration.
 - Constructor calls (`new Type(...)`) resolve to the `fn constructor` declaration when the constructor overload set is unambiguous; otherwise the server falls back to the `struct Type` declaration.
+- When a resolved `ext` declaration has a matching native C symbol in a
+  manifest-owned source/header file, go-to-definition prefers the C definition
+  (or declaration if no definition is present locally) over the Silk `ext`
+  declaration, using the same function-vs-variable matching rule as hover.
 - If symbol resolution fails, the server falls back to a lexical scan of the current file for the first matching `let`/`fn`/`ext`/`struct`/`enum`/`interface`/`error` declaration.
 
-Known limitations in the current support:
+Known limitations in this initial support:
 
 - local block scopes and shadowing are only modeled for `let`-style bindings (not for match-expression binders),
 - ambiguous names across multiple imports are not disambiguated; the first match wins,
-- cross-file results are limited to declarations present in the current module set.
+- cross-file results are limited to declarations present in the current module
+  set (open docs, manifest-discovered package files, and std modules when
+  enabled).
 
-## Completion (Initial Support)
+Manifest-aware cache rebuild note:
 
-The server provides a minimal implementation of `textDocument/completion`:
+- When a nearest-package graph cannot be loaded (for example because a
+  dependency is missing or a manifest hash/version check fails), `silk-lsp`
+  emits a concise stderr warning describing the failed package root and the
+  manifest diagnostic it received, rather than silently dropping package
+  indexing.
+
+## Completion
+
+The server provides `textDocument/completion` using the same cached workspace
+module set.
 
 - Completion items are offered for:
-  - all Silk language keywords,
+  - all language keywords defined in `src/token.zig` (via `keywordTable()`),
   - all distinct identifiers lexed from the current document (names that are not recognized as keywords),
   - symbol-aware suggestions from the current package and imported packages (functions, lets, ext, structs, enums, interfaces, errors),
-  - imported names from module-specifier imports (`import { ... } from "...";` and `import alias from "...";`) when resolvable,
+  - imported names from:
+    - package imports and qualified symbol imports,
+    - JS-style named/default imports from file or package specifiers,
+    - and module-scope `using` aliases,
   - import specifier path completion inside `from "..."` strings:
     - file specifiers (`"./..."`, `"../..."`, and absolute paths) suggest `.slk` files and subdirectories,
     - std-root file specifiers (`"std/..."`) suggest stdlib paths (omitting the `.slk` extension),
-  - namespace completions after `::` for known packages and namespace imports,
+  - namespace completions after `::` for known packages, package-import aliases, default/namespace imports, and `using`-introduced namespace aliases,
   - member completions for struct fields and methods after `.` when the receiver type is known (including locals with type annotations or struct-literal/cast inference),
   - struct-literal field suggestions in `Type { ... }` expressions when the cursor is in a field-name position (before the `:`).
 - Currently:
@@ -203,7 +199,7 @@ The server provides a minimal implementation of `textDocument/completion`:
 - Scope precision is still limited:
   - receiver type inference is heuristic (it is not a full typechecker),
   - local scopes are only partially modeled for completion (not all binder forms and control-flow refinements are represented),
-  - cross-file results are limited to declarations present in the current module set (open docs + the import closure).
+  - cross-file results are limited to declarations present in the current module set (open docs + manifest/package import closure + std modules when enabled).
 
 As richer front-end support becomes available, completion may be extended to:
 
@@ -284,6 +280,23 @@ The server maintains an in-memory table of open documents, keyed by URI:
 
 For responsiveness, the server caches parsed modules (AST + lightweight module info) per open document revision and reuses them across hover/definition/completion/signatureHelp requests until the document changes.
 
+### Workspace Cache and Package Discovery
+
+The workspace cache is manifest-aware:
+
+- for each open document with a filesystem path, the server walks upward to the
+  nearest owning `silk.toml`,
+- it loads the full package graph rooted there, including dependency packages,
+- it adds manifest-declared definition files to the indexed module set,
+- it applies the manifest package name as the default package for source or
+  definition files that omit an explicit `package ...;` / `module ...;`
+  declaration,
+- and it collects manifest-owned `.c` / `.h` sources from target inputs and
+  shipped C headers for the native symbol index.
+
+This keeps position-time queries on precomputed module/package/native symbol
+data rather than rescanning manifests or package graphs for each request.
+
 ### Standard Library Integration
 
 By default, the language server will load standard library packages referenced by `import std::...` when a stdlib root is available. The stdlib root is selected using the same rules as the compiler, with an additional workspace-root fallback:
@@ -309,9 +322,7 @@ For responsiveness while typing:
 - `didChange` diagnostics are computed for the changed document by parsing it and type-checking it against the cached module set (imports + std modules). The cache is not rebuilt on every change.
 - A full module-set parse + resolve + type-check (including imports) is performed on `didSave`, and diagnostics are published for all affected modules.
 
-The current front-end already exposes stable error codes plus primary spans for
-many parse/type errors, but richer secondary labels and notes are still
-incomplete. The current LSP implementation therefore follows these rules:
+The current front-end exposes errors as simple error codes (e.g. `UnexpectedToken`, `TypeMismatch`) without rich spans. The initial LSP implementation therefore follows these rules:
 
 - Parse errors:
   - reported at the location of the unexpected token using the token’s line/column and length,
@@ -332,11 +343,8 @@ As the compiler evolves to carry richer diagnostic information (spans, notes, la
 
 The initial `silk-lsp` implementation explicitly does **not** provide:
 
-- full semantic completions with scope-precise filtering and type inference
-  (beyond the current heuristic symbol index),
-- cross-file references (go-to-definition already works across the current
-  module set, resolved imports, and loaded std modules, but not arbitrary
-  unopened workspace files),
+- full semantic completions with scope-precise filtering and type inference (beyond the current heuristic symbol index),
+- cross-file go-to-definition / references,
 - semantic tokens or inlay hints,
 - code actions or formatting.
 

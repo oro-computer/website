@@ -115,12 +115,17 @@ impl AbortSignalBorrow {
 without transferring ownership, pass a borrow view:
 
 ```silk
-let controller = match std::abort_controller::AbortController.init() {
-  Ok(v) => v,
-  Err(_) => return 1, // Handle OutOfMemory.
-};
-let sig = controller.signal();
-// Pass `sig` into tasks/operations while `controller` remains alive.
+match (std::abort_controller::AbortController.init()) {
+  Ok(controller) => {
+    let mut ctl: std::abort_controller::AbortController = controller;
+    let sig: std::abort_controller::AbortSignalBorrow = ctl.signal();
+    // Pass `sig` into tasks/operations while `ctl` stays alive.
+    ctl.destroy();
+  },
+  Err(_) => {
+    // Handle OutOfMemory.
+  },
+}
 
 task fn worker (sig: std::abort_controller::AbortSignalBorrow) -> int {
   if sig.is_aborted() { return 0; }
@@ -130,5 +135,9 @@ task fn worker (sig: std::abort_controller::AbortSignalBorrow) -> int {
 ```
 
 This pattern keeps ownership with the creator while allowing other threads to
-observe and wait on the abort signal. A borrowed signal must not outlive the
-owning controller.
+observe and wait on the abort signal.
+
+If a borrow must remain in use after the initialization branch, keep the owning
+`AbortController` alive in an outer binding as well. Do not store only the
+`AbortSignalBorrow`, because the borrow becomes invalid once the owner is
+dropped.

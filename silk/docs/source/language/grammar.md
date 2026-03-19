@@ -444,11 +444,16 @@ At a high level, the language can be structured as:
   `match` is implemented in two separate forms:
 
   - `match` as an expression (arms are expressions; see `MatchExpr` below),
-  - `match` as a statement (arms are blocks), used for typed errors as
-    specified in `docs/language/typed-errors.md`.
+  - `match` as a statement (arms are blocks), used for both ordinary value
+    matching and typed errors as specified in `docs/language/flow-match.md`
+    and `docs/language/typed-errors.md`.
 
-  In the implemented subset, the `match` statement form is restricted to a
-  call-expression scrutinee and the patterns listed above.
+  In the implemented subset, the statement form accepts:
+
+  - the same ordinary-value scrutinee + pattern subsets documented in
+    `docs/language/flow-match.md`, and
+  - typed-error statement matches documented in
+    `docs/language/typed-errors.md`.
 
 - Expressions (implemented subset):
 

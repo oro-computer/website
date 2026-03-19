@@ -1,7 +1,7 @@
 # `std::math`
 
-Status: **Implemented subset + design**. This module provides linear
-algebra utilities intended for graphics and general-purpose computation.
+Status: **Implemented subset + expansion path**. This module provides linear
+algebra utilities for graphics and general-purpose computation.
 
 The initial focus is:
 

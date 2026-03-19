@@ -57,7 +57,7 @@ The semantic version string of the embedding ABI exposed by `libsilk.a`.
 
 This must match:
 
-- the `SILK_ABI_VERSION_*` macros in `include/silk.h`, and
+- the `SILK_ABI_VERSION_*` macros in `include/silk/silk.h`, and
 - the values reported by `silk_abi_get_version(...)`.
 
 ### `SILK_ABI_VERSION_MAJOR` / `SILK_ABI_VERSION_MINOR` / `SILK_ABI_VERSION_PATCH`

@@ -1,5 +1,6 @@
 # `slcc` (1) — Alias of `silk cc`
 
+> NOTE: This is the Markdown source for the eventual man 1 page for `slcc`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -21,4 +22,4 @@ See `silk-cc` (1) for details, including the default `-I`/`-L`/`-lsilk` flags.
 
 ## See Also
 
-- [`silk` (1)](?p=man/silk.1), [`silk-cc` (1)](?p=man/silk-cc.1)
+- `silk` (1), `silk-cc` (1)

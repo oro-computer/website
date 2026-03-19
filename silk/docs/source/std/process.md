@@ -1,13 +1,14 @@
 # `std::process`
 
-Status: **Implemented subset + design** (hosted POSIX baseline).
+Status: **Implemented subset** (hosted baseline).
 
 `std::process` provides access to process-level operations that are not tied to
 environment variables, such as the current working directory.
 
-This module targets a hosted POSIX baseline (Linux/glibc) and is
-implemented on top of the pluggable `std::runtime::process` interface. WASI
-support is partially implemented (see “Platform notes”).
+This module targets a hosted POSIX baseline (Linux/glibc) and is implemented
+on top of the pluggable `std::runtime::process` interface. The cwd APIs are
+also implemented for WASI; child-process support remains POSIX-only (see
+“Platform notes”).
 
 ## API
 

@@ -3,7 +3,7 @@
 The long-term design includes an intrinsic `Buffer(T)` type for low-level,
 unsafe contiguous memory access, intended to sit underneath safe collections.
 
-[Canonical design doc](../docs/?p=language/buffers).
+Canonical design doc: `docs/language/buffers.md`.
 
 In the current toolchain, buffer-like functionality is provided via `std::`:
 
@@ -16,18 +16,22 @@ In the current toolchain, buffer-like functionality is provided via `std::`:
 import std::buffer;
 
 fn main () -> int {
-  let mut b = match BufferU8.init(4) {
-    Ok(v) => v,
-    Err(_) => return 1,
-  };
-  b.push(1 as u8);
-  b.drop();
-  return 0;
+  match (BufferU8.init(4)) {
+    Ok(buffer) => {
+      let mut b: BufferU8 = buffer;
+      b.push(1 as u8);
+      b.drop();
+      return 0;
+    },
+    Err(_) => {
+      return 1;
+    },
+  }
 }
 ```
 
 ## See also
 
-- [Canonical design doc](../docs/?p=language/buffers)
-- `std::buffer`: [std::buffer](?p=std/buffer)
-- `std::vector`: [std::vector](?p=std/vector)
+- Canonical design doc: `docs/language/buffers.md`
+- `std::buffer`: `docs/wiki/std/buffer.md`
+- `std::vector`: `docs/wiki/std/vector.md`

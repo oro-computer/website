@@ -189,7 +189,7 @@ For `if` expressions:
 - The expression’s result type is the shared branch type (or the expected type
   when the expression is type-directed).
 
-## `else if` Chains (Planned vs Current Subset)
+## `else if` Chains
 
 The language supports chained conditions (“else-if chains”). The compiler
 parses `else if` as sugar for nesting an `if` inside the `else` block:
@@ -288,5 +288,11 @@ Not implemented yet:
 - General block expressions (`{ stmt* <expr> }`) outside the specific `if`
   expression form.
 
-The examples on this page cover the implemented subset for boolean `if`,
-logical conditions, nested control flow, and current `if`-expression forms.
+Examples that exercise the implemented subset:
+
+- `tests/silk/pass_if_bool.slk`
+- `tests/silk/pass_if_logical.slk`
+- `tests/silk/pass_bool_local_if.slk`
+- `tests/silk/pass_nested_if_while.slk`
+- `tests/silk/pass_if_expr_basic.slk`
+- `tests/silk/pass_if_let_chain_optional_result_basic.slk`

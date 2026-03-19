@@ -186,6 +186,11 @@ Implemented end-to-end:
 - `#invariant` (type-checked as `bool`), `#variant` (type-checked as an
   integer), and `#monovariant` (type-checked as an integer) attached to `while`.
 
-The examples on this page cover the implemented subset for boolean `while`,
-loop specs (`#invariant`, `#variant`, `#monovariant`), and current optional
-binding forms.
+Examples that exercise the implemented subset:
+
+- `tests/silk/pass_while_bool.slk`
+- `tests/silk/pass_invariant_while.slk`
+- `tests/silk/pass_spec_const_while.slk`
+- `tests/silk/pass_nested_if_while.slk`
+- `tests/silk/pass_while_let_optional_countdown.slk`
+- `tests/silk/pass_while_let_chain_optional_basic.slk`

@@ -5,10 +5,9 @@
 - `HashMap(K, V)` — an unordered map backed by a hash table.
 - `TreeMap(K, V)` — an ordered map backed by a red-black tree.
 
-Status: **Implemented subset + design**. The API is specified here; it
-targets the current compiler/backend subset and will grow as the language gains
-first-class container ergonomics (in particular, more borrow- and move-aware
-iteration and accessors).
+Status: **Implemented subset + active expansion**. The API is usable in the
+current compiler/backend subset and will grow as the language gains more
+borrow- and move-aware container ergonomics.
 
 ## Design Goals
 
@@ -80,16 +79,20 @@ type Map = std::map::HashMap(u64, int);
 type InitResult = std::result::Result(Map, std::memory::AllocFailed);
 
 fn main () -> int {
-  let mut m = match Map.init(16) {
-    Ok(v) => v,
-    Err(_) => return 1,
-  };
-  let put_r = m.put(1, 10);
-  if put_r.is_err() { m.drop(); return 2; }
+  match (Map.init(16)) {
+    InitResult::Ok(map) => {
+      let mut m: Map = map;
+      let put_r = m.put(1, 10);
+      if put_r.is_err() { m.drop(); return 2; }
 
-  let v: int = m.get(1) ?? 0;
-  m.drop();
-  return v;
+      let v: int = m.get(1) ?? 0;
+      m.drop();
+      return v;
+    },
+    InitResult::Err(_) => {
+      return 1;
+    },
+  }
 }
 ```
 
@@ -107,12 +110,16 @@ fn hash_u64 (k: u64) -> u64 { return k; }
 fn eq_u64 (a: u64, b: u64) -> bool { return a == b; }
 
 fn main () -> int {
-  let mut m = match Map.init_with(16, hash_u64, eq_u64) {
-    Ok(v) => v,
-    Err(_) => return 1,
-  };
-  m.drop();
-  return 0;
+  match (Map.init_with(16, hash_u64, eq_u64)) {
+    InitResult::Ok(map) => {
+      let mut m: Map = map;
+      m.drop();
+      return 0;
+    },
+    InitResult::Err(_) => {
+      return 1;
+    },
+  }
 }
 ```
 

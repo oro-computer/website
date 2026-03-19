@@ -22,6 +22,9 @@ Rules:
 - Varargs parameters are **not** permitted to be `mut` in the current subset.
 - Varargs parameters may not have a default expression (`= ...`) in the current
   subset.
+- The same trailing-varargs form may be used in interface method signatures,
+  and `impl ... as ...` / `module ... as ...` conformance compares the varargs
+  marker as part of the required signature.
 
 ## Call Semantics
 

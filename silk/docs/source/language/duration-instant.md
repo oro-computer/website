@@ -11,20 +11,6 @@ Key ideas:
   integral ticks.
 - Operators cover arithmetic, comparisons, and construction from scalars.
 
-## Example
-
-```silk
-fn main () -> int {
-  let start: Instant = 0;
-  let step: Duration = 250ms;
-  let finish: Instant = start + step + 1s;
-  let elapsed: Duration = finish - start;
-
-  if elapsed == 1250ms { return 0; }
-  return 1;
-}
-```
-
 ## Representation (Implemented)
 
 In the current compiler/backend subset:

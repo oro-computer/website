@@ -49,7 +49,7 @@ Notes:
 In this document, a “compile-time value” is a value that the compiler can
 produce and manipulate during compile-time evaluation.
 
-Current subset:
+Current subset (initial implementation target):
 
 - scalar primitives:
   - `bool`

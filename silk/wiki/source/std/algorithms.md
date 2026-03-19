@@ -3,7 +3,7 @@
 `std::algorithms` provides common algorithms over collections. Today, a small
 current subset exists for scalar types.
 
-[Canonical doc](../docs/?p=std/algorithms).
+Canonical doc: `docs/std/algorithms.md`.
 
 ## Importing
 
@@ -24,4 +24,4 @@ fn main () -> int {
 
 ## See also
 
-- [Canonical doc](../docs/?p=std/algorithms)
+- Canonical doc: `docs/std/algorithms.md`

@@ -1,5 +1,6 @@
 # `silk-check` (1) — Parse and Type-Check
 
+> NOTE: This is the Markdown source for the eventual man 1 page for `silk check`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -34,7 +35,7 @@ When explicit input files are used (no `--package`), the `silk` CLI may load add
 - `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`; valid only with `--verify`).
 - `--debug`, `-g` — emit Z3 debug output and write `.smt2` dumps for failing Formal Silk obligations (valid only with `--verify`).
 - `--feature <spec>`, `-F<spec>` — enable a build feature for `attr(feature="...")` queries and declaration gating. Repeatable.
-  - Spec forms: `NAME` or `NAME=VALUE` (see [Attributes](?p=language/attributes)).
+  - Spec forms: `NAME` or `NAME=VALUE` (see `?p=language/attributes`).
   - For package builds, you may target a specific package with `PKG/NAME` or
     `PKG/NAME=VALUE` (for example `ui/tui` or `ui/tui=false`).
 - `--package <dir|manifest>`, `--pkg <dir|manifest>` — load the module set from a `silk.toml` manifest instead of explicit input files.
@@ -70,6 +71,6 @@ silk check --package .
 
 ## See Also
 
-- [`silk` (1)](?p=man/silk.1), [`silk-build` (1)](?p=man/silk-build.1)
-- [`silk` CLI](?p=compiler/cli-silk)
-- [Diagnostics](?p=compiler/diagnostics)
+- `silk` (1), `silk-build` (1)
+- `?p=compiler/cli-silk`
+- `?p=compiler/diagnostics`

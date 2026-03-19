@@ -3,11 +3,11 @@
 Silk is safe-by-default: bindings and borrows are immutable unless you opt in
 to mutation.
 
-[Canonical spec](../docs/?p=language/mutability).
+Canonical spec: `docs/language/mutability.md`.
 
 ## Status
 
-- Implemented subset + borrow rules: [Mutability](../docs/?p=language/mutability)
+- Implemented subset + borrow rules: `docs/language/mutability.md`
 
 ## Syntax
 ```silk
@@ -41,5 +41,5 @@ fn main () -> int {
 
 ## See also
 
-- [Canonical spec](../docs/?p=language/mutability)
-- Borrow-checker notes: [Borrow checker](?p=language/borrow-checker)
+- Canonical spec: `docs/language/mutability.md`
+- Borrow-checker design notes: `docs/wiki/language/borrow-checker.md`

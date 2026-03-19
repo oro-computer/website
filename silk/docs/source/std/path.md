@@ -40,6 +40,22 @@ impl PathBuf {
   public fn truncate_len (mut self: &PathBuf, new_len: i64) -> bool;
 }
 
+impl PathBuf as std::interfaces::ReserveAdditional {
+  public fn reserve_additional (mut self: &PathBuf, additional: i64) -> std::memory::OutOfMemory?;
+}
+
+impl PathBuf as std::interfaces::Serialize(string) {
+  public fn serialize (self: &PathBuf) -> string;
+}
+
+impl PathBuf as std::interfaces::TrySerialize(std::memory::OutOfMemory) {
+  public fn try_serialize (self: &PathBuf) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+}
+
+impl PathBuf as std::interfaces::Parse(std::memory::OutOfMemory) {
+  public fn parse (value: string) -> std::result::Result(PathBuf, std::memory::OutOfMemory);
+}
+
 // Inspection.
 export fn is_absolute (path: string) -> bool;
 
@@ -57,8 +73,17 @@ export fn stem (path: string) -> string;
 Notes:
 
 - On POSIX, the root path `"/"` has no basename, so `basename("/") == ""`.
-- `PathBuf` implements `std::interfaces::{Len,Capacity,IsEmpty}` for ergonomic use
-  in generic code (`pb.len()`, `pb.capacity()`, and `pb.is_empty()`).
+- `PathBuf` uses the same zero-capacity-empty / trailing-NUL invariant as
+  `std::strings::String`, captured by
+  `std::formal::string_storage_well_formed`.
+- `PathBuf` implements `std::interfaces::{Len,Capacity,IsEmpty,ReserveAdditional,Serialize(string),Drop}` for ergonomic use in generic code.
+- `PathBuf` implements `std::interfaces::{Len,Capacity,IsEmpty,ReserveAdditional,Serialize(string),TrySerialize(std::memory::OutOfMemory),Drop}` for ergonomic use in generic code.
+- `PathBuf.parse(s)` is the standardized receiverless parse surface and
+  forwards to `PathBuf.from_string(s)`.
+- `let s: string = pb as string;` is the allocation-free way to borrow the
+  current path contents.
+- `pb.try_serialize()` is the canonical fallible owned-string rendering path
+  when the caller needs an independent `std::strings::String` copy.
 
 ## Separator and delimiter
 
@@ -85,6 +110,44 @@ fn main () -> int {
     },
     err: std::memory::OutOfMemory => { return 1; }
   }
+}
+```
+
+Borrowing a `PathBuf` as `string` is allocation-free:
+
+```silk
+import std::path;
+
+fn main () -> int {
+  let pb_r = std::path::PathBuf.from_string("/tmp/demo");
+  let mut pb = match (pb_r) {
+    Ok(v) => v,
+    Err(_) => std::path::PathBuf{ ptr: 0, cap: 0, len: 0 },
+  };
+
+  let view: string = pb as string;
+  if view != "/tmp/demo" {
+    pb.drop();
+    return 1;
+  }
+
+  match (std::path::PathBuf.parse("/var/log")) {
+    Ok(mut parsed) => {
+      if (parsed as string) != "/var/log" {
+        parsed.drop();
+        pb.drop();
+        return 2;
+      }
+      parsed.drop();
+    },
+    Err(_) => {
+      pb.drop();
+      return 3;
+    },
+  }
+
+  pb.drop();
+  return 0;
 }
 ```
 

@@ -49,10 +49,11 @@ import std::runtime::mem;
 import std::signal;
 
 async fn main () -> int {
-  let sfd = match std::signal::SignalFD.open(std::signal::SIGWINCH) {
-    Ok(v) => v,
-    Err(_) => return 1,
-  };
+  let sfd_r: std::signal::SignalFDResult = std::signal::SignalFD.open(std::signal::SIGWINCH);
+  if sfd_r.is_err() {
+    return 1;
+  }
+  let sfd: std::signal::SignalFD = std::signal::SignalFDResult.ok_value(sfd_r) ?? std::signal::SignalFD{};
 
   // Wait until a resize signal is pending.
   let fds_mem: u64 = std::runtime::mem::alloc(8);
@@ -63,11 +64,13 @@ async fn main () -> int {
   std::runtime::mem::free(fds_mem);
   if which != 0 { return 3; }
 
+  let signo_r: std::signal::SignalReadResult = sfd.read_signo();
+  if signo_r.is_err() {
+    return 4;
+  }
+
   // Now re-query terminal size and redraw.
-  let _signo = match sfd.read_signo() {
-    Ok(v) => v,
-    Err(_) => return 4,
-  };
+  let _signo: int = std::signal::SignalReadResult.ok_value(signo_r) ?? 0;
   let _size: std::io::TTYSize? = std::io::tty_size(std::runtime::io::STDIN_FD);
   return 0;
 }

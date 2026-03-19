@@ -3,7 +3,7 @@
 `std::fs` provides a small hosted POSIX-oriented filesystem API (current subset
 subset).
 
-[Canonical doc](../docs/?p=std/filesystem).
+Canonical doc: `docs/std/filesystem.md`.
 
 ## Example: existence checks
 ```silk
@@ -19,5 +19,5 @@ fn main () -> int {
 
 ## See also
 
-- [Canonical doc](../docs/?p=std/filesystem)
-- Paths: [std::path](../docs/?p=std/path)
+- Canonical doc: `docs/std/filesystem.md`
+- Paths: `docs/std/path.md`

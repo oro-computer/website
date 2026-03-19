@@ -51,8 +51,13 @@ Implemented:
   end-to-end.
 - `break;` outside of a loop is rejected (`E2007`).
 
-Examples on this page cover the implemented subset, including ordinary loop
-exit, `break` inside `while` / `for`, and rejection outside loop bodies.
+Examples that exercise the implemented subset:
+
+- `tests/silk/pass_loop_basic.slk`
+- `tests/silk/pass_while_bool.slk`
+- `tests/silk/pass_for_continue_break.slk`
+- `tests/silk/fail_break_outside.slk`
+- `tests/silk/pass_invariant_while.slk` (shows `break` in a loop with specs)
 
 ## Common Pitfalls
 

@@ -3,11 +3,11 @@
 `continue;` skips the remainder of the current loop body and advances to the
 next iteration.
 
-[Canonical spec](../docs/?p=language/flow-continue).
+Canonical spec: `docs/language/flow-continue.md`.
 
 ## Status
 
-- Implemented subset + diagnostics: [continue](../docs/?p=language/flow-continue)
+- Implemented subset + diagnostics: `docs/language/flow-continue.md`
 
 ## Syntax
 
@@ -31,5 +31,5 @@ fn main () -> int {
 
 ## See also
 
-- [Canonical spec](../docs/?p=language/flow-continue)
-- `break`: [break](?p=language/flow-break)
+- Canonical spec: `docs/language/flow-continue.md`
+- `break`: `docs/wiki/language/flow-break.md`

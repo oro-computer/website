@@ -1,5 +1,6 @@
 # `silk-env` (1) — Print `silk` CLI Environment
 
+> NOTE: This is the Markdown source for the eventual man 1 page for `silk env`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -49,6 +50,6 @@ silk env
 
 ## See Also
 
-- [`silk` (1)](?p=man/silk.1)
-- [`silk-cc` (1)](?p=man/silk-cc.1)
-- [`silk-build` (1)](?p=man/silk-build.1)
+- `silk` (1)
+- `silk-cc` (1)
+- `silk-build` (1)

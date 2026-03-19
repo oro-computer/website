@@ -2,11 +2,11 @@
 
 `break;` exits the nearest enclosing loop.
 
-[Canonical spec](../docs/?p=language/flow-break).
+Canonical spec: `docs/language/flow-break.md`.
 
 ## Status
 
-- Implemented subset + diagnostics: [break](../docs/?p=language/flow-break)
+- Implemented subset + diagnostics: `docs/language/flow-break.md`
 
 ## Syntax
 
@@ -30,5 +30,5 @@ fn main () -> int {
 
 ## See also
 
-- [Canonical spec](../docs/?p=language/flow-break)
-- `continue`: [continue](?p=language/flow-continue)
+- Canonical spec: `docs/language/flow-break.md`
+- `continue`: `docs/wiki/language/flow-continue.md`

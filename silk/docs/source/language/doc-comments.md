@@ -16,7 +16,7 @@ Two doc-comment forms are recognized:
 In both forms, doc comments attach to the *next* declaration when they appear
 immediately before it with only whitespace/comments between them.
 
-Current attachment scope:
+Initial implementation scope:
 
 - Doc comments attach to **top-level declarations** (`package`, `module`,
   `import`, `fn`, `theory`, `let`, `struct`, `ext`, `interface`, `impl`).
@@ -107,9 +107,9 @@ Syntax:
 @throws <description...>
 ```
 
-Note: Silk now has typed errors and `Result(T, E)` conventions. `@throws`
-remains documentation-only because doc comments are not yet checked against
-function signatures.
+Note: the language does not yet have a stable error type; `@throws` is
+documentation-only until `Result(T, E)` and error conventions are fully
+implemented.
 
 ### `@external`
 

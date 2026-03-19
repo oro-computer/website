@@ -1,5 +1,6 @@
 # `silk-man` (1) — View Manpages Derived from Source Docs
 
+> NOTE: This is the Markdown source for the eventual man 1 page for `silk man`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -17,7 +18,7 @@
 
 ## Description
 
-`silk man` is an interactive documentation viewer. It parses Silk source files and renders a temporary manpage derived from doc comments, then displays it using the user’s pager.
+`silk man` is an interactive documentation viewer. It resolves shipped toolchain pages, package-authored docs/man pages, and source-derived API docs, then displays the selected page through the user’s pager.
 
 `silk man` recognizes:
 
@@ -25,17 +26,25 @@
 - CLI pages defined by doc blocks tagged with `@cli` (intended for man section 1),
 - API pages derived from declaration docs (intended for man section 3).
 
-The doc-comment tag semantics are specified in [Doc comments](?p=language/doc-comments).
+The doc-comment tag semantics are specified in `?p=language/doc-comments`.
 
 Notes:
 
 - You may also spell section selection as `name.<section>` (for example `silk.7`).
 - `name(<section>)` is accepted but must be quoted in most shells.
 - API symbol pages are derived from **exported/public** declarations; non-exported declarations are intentionally omitted so docs match the public surface.
+- when a package root is selected or discovered from `silk.toml`, `silk man`
+  also discovers package-authored docs/man pages:
+  - local `package.readme` paths act as the package overview page,
+  - local `package.documentation` paths act as the package docs landing page,
+  - package man roots are discovered recursively under `docs/man/`, `man/`,
+    `share/man/`, and installed sectioned roots such as `share/man/man1/`.
 - Shorthands:
   - `silk man build` opens `silk-build(1)` (same for `check`, `test`, `doc`, `man`, `cc`, `env`, `format` / `fmt`).
   - when no package is selected/resolvable, `silk man fs` is treated as `silk man std::fs` (and similarly for other top-level std modules).
   - when no package is selected/resolvable, `silk man io println` is treated as `silk man std::io::println`.
+  - when a package root is selected/resolved, `silk man readme`, `silk man overview`, `silk man <package-name>`, and qualified aliases such as `silk man <package-name> readme` prefer the package overview page when a local `package.readme` exists.
+  - when a package root is selected/resolved, `silk man docs`, `silk man documentation`, and qualified aliases such as `silk man <package-name> documentation` open the local `package.documentation` page when present.
 
 ## System manpages
 
@@ -49,12 +58,13 @@ Note: `man` subpage resolution only joins **one** level (like `man git log` → 
 ## Options
 
 - `--help`, `-h` — show command help and exit.
-- `--list` — list shipped pages and common stdlib entrypoints, then exit.
-- `--search <pattern>` — search shipped pages and stdlib module names, then exit.
+- `--list` — list shipped pages, common stdlib entrypoints, and package-local pages when a package root is in scope, then exit.
+- `--search <pattern>` — search shipped pages, stdlib module names, and package-local pages when a package root is in scope, then exit.
 - `--section <n>`, `-s <n>` — select the manpage section (`1`, `3`, or `7`).
-- `--package <dir|manifest>`, `--pkg <dir|manifest>` — load a module set from a package manifest (`silk.toml`) rooted at the provided directory (or from the provided manifest path).
+- `--package <dir|manifest|module>`, `--pkg <dir|manifest|module>` — load a module set from a package manifest (`silk.toml`) rooted at the provided directory or manifest path; when a `.slk` / `.silk` module path is provided, `silk man` walks upward to the nearest owning `silk.toml`.
   - when omitted, and the query is not `std::...`, `silk man` searches the current working directory and its parent directories for `silk.toml` and uses the nearest match.
   - when no manifest is discoverable, `silk man` may also resolve the query from the package search path (`SILK_PACKAGE_PATH`).
+  - when a package root is in scope, local `package.readme`, local `package.documentation`, and pages under `docs/man/`, `man/`, `share/man/`, or `share/man/man{1,3,7}` become part of the discoverable query surface.
 - `--std-root <path>` — override the stdlib root directory used for resolving `std::...` queries.
 
 ## Environment
@@ -66,7 +76,8 @@ Note: `man` subpage resolution only joins **one** level (like `man git log` → 
 ## Examples
 
 ```sh
-# Show a quick-start and list entrypoints.
+# Open the nearest package overview when `silk.toml` is in scope;
+# otherwise show a quick-start and list entrypoints.
 silk man
 
 # List shipped pages and common stdlib entrypoints.
@@ -86,6 +97,11 @@ silk man fs
 
 # View docs for a stdlib symbol.
 silk man std::sqlite::Database
+
+# View a package overview/docs page discovered from silk.toml metadata.
+silk man readme
+silk man docs
+silk man my_pkg readme
 
 # Module + symbol split (when no package is selected).
 silk man io println
@@ -109,5 +125,5 @@ silk man std::result::design
 
 ## See Also
 
-- [`silk` (1)](?p=man/silk.1), [`silk-doc` (1)](?p=man/silk-doc.1)
-- [Doc comments](?p=language/doc-comments)
+- `silk` (1), `silk-doc` (1)
+- `?p=language/doc-comments`

@@ -11,7 +11,7 @@ This document describes the command-line interface of the `silk` compiler from t
 
 ## Core Responsibilities
 
-`silk` is the downstream entrypoint for the Silk toolchain. Today it is used to:
+The current `silk` CLI:
 
 - Compile Silk source files into:
   - executables,
@@ -23,9 +23,10 @@ This document describes the command-line interface of the `silk` compiler from t
   - control linkage to the default `std::` implementation or an alternative,
   - enable/disable or tune Formal Silk verification checks,
   - configure external and ABI-related behaviors where appropriate (e.g. visibility of `libsilk.a` symbols, header emission).
-- Emit clear diagnostics with stable error codes and machine‑readable output when requested.
+- Emits clear diagnostics with stable error codes and machine‑readable output
+  when requested.
 
-The current command surface includes:
+The current shipped command surface includes:
 
 - global options:
   - `--help` / `-h` — print global usage and exit,
@@ -46,16 +47,33 @@ The current command surface includes:
       executed once and are not replayed,
   - supports:
     - `.help` — show help,
+    - `.man <query>` — render inline documentation for current-session symbols,
+      imported symbols, and `std::...` modules/symbols, with highlighted Silk
+      synopsis/examples,
     - `.clear` — reset session state,
     - `.cls` — clear the screen,
     - `.undo` — undo the last committed line,
     - `.exit` — exit the REPL,
   - supports multi-line input: when delimiters are unbalanced (for example `{` without `}`),
     the REPL prompts with `... ` and keeps reading until the statement is complete,
+  - continuation lines are pre-indented from the current unmatched delimiter
+    depth so nested `{}`, `()`, and `[]` constructs carry indentation
+    forward,
+  - when a complete pasted chunk contains multiple top-level entries, the REPL
+    splits and executes them in order while keeping multiline blocks/declarations
+    together,
+  - multiline expressions still use the normal expression/auto-print path when
+    they are not declaration or statement forms, including multiline raw
+    backtick strings,
   - Ctrl-C cancels a pending multi-line statement,
   - symbol queries: when a line is a bare identifier or qualified name (for example `User`,
     `User.method`, or `std::io::println`), the REPL prints the matching declaration from the
     current session or imported modules instead of executing it,
+  - `.man` is intentionally narrower than `silk man`:
+    - it is for inline REPL browsing of module/symbol docs,
+    - use `silk man ...` outside the REPL for sectioned/shipped pages,
+      search, and list modes (for example `silk man 7 silk` or
+      `silk man --search io`),
   - history is loaded/saved to:
     - `$SILK_REPL_HISTORY` when set, otherwise
     - `$SILK_WORK_DIR/repl_history` (default: `.silk/repl_history` under the
@@ -81,6 +99,11 @@ The current command surface includes:
 - when `--package` is provided:
   - input files must be omitted (the compiler loads the package module set from the manifest),
   - the manifest file is `silk.toml` (when a directory is provided, it is discovered in that directory),
+  - manifest-native link metadata for the test harness (`[[target]].inputs`, `needed`, and `runpath`) is taken from:
+    - `[build].default_target` when it names a code target,
+    - otherwise the first declared code target,
+    - while `kind = "man"` targets are ignored for this purpose,
+    - and when no code target exists, tests run without manifest link metadata,
   - see `docs/compiler/package-manifests.md` for the manifest format and source discovery rules.
 - `silk doc` — generate documentation from Silkdoc comments (`/** ... */` and `/// ...`) attached to declarations:
   - Markdown mode: `silk doc [--all] <file> [<file> ...] [-o <output.md>]`
@@ -93,21 +116,32 @@ The current command surface includes:
     - renders a single roff `man(7)` page to stdout (or to `-o` / `--out` when provided),
     - the page kind is derived from the documentation tags (`@cli` → section 1, `@misc` → section 7, otherwise section 3 for API pages),
     - when `<query>` is not `std::...`, the module set is loaded from `--package` when provided; otherwise the compiler searches the current working directory and its parents for `silk.toml` and uses the nearest match,
+    - package-scoped source-doc queries are evaluated against the root package’s own source modules, not dependency docs in the same manifest graph,
     - intended as a non-interactive complement to `silk man <query>`.
 - `silk man <query>` — render and view a temporary manpage for a symbol/module/concept derived from source documentation:
   - `std::...` queries are resolved from the configured stdlib root (see “standard library import resolution” below),
-  - other queries are resolved from `--package` when provided; otherwise the compiler searches the current working directory and its parents for `silk.toml` and uses the nearest match,
+  - other queries are resolved from `--package <dir|manifest|module>` when provided; otherwise the compiler searches the current working directory and its parents for `silk.toml` and uses the nearest match,
+  - when a package root is in scope, `silk man` also discovers package-authored docs/man pages from that root:
+    - local `package.readme` paths act as the package overview page,
+    - local `package.documentation` paths act as a package docs landing page,
+    - local metadata doc paths must stay inside the package root; absolute
+      paths and `..` escapes are rejected,
+    - and package man roots are discovered under `docs/man/`, `man/`,
+      `share/man/`, and installed sectioned roots such as `share/man/man1/`,
+  - package-scoped source-doc queries are evaluated against the root package’s own source modules, not dependency docs in the same manifest graph,
   - API symbol pages are derived from exported/public declarations; non-exported declarations are intentionally omitted so docs match the public surface,
   - when no manifest is found, the compiler may also resolve the query from the package search path (`SILK_PACKAGE_PATH`).
   - to select a shipped toolchain page by section, prefer `silk man 7 silk` or `silk man silk.7` (most shells require quoting `silk(7)`).
   - discovery helpers:
-    - `silk man` (no arguments) prints a quick-start plus a list of entrypoints,
-    - `silk man --list` lists shipped pages plus common stdlib entrypoints,
-    - `silk man --search <pattern>` searches shipped pages and stdlib module names.
+    - `silk man` (no arguments) opens the nearest package overview when one is in scope; otherwise it prints a quick-start plus a list of entrypoints,
+    - `silk man --list` lists shipped pages, common stdlib entrypoints, and package-local pages when a package root is in scope,
+    - `silk man --search <pattern>` searches shipped pages, stdlib module names, and package-local pages when a package root is in scope.
   - shorthands:
     - `silk man build` opens `silk-build(1)` (same for `package`, `check`, `test`, `doc`, `man`, `cc`, `env`, `format`),
     - when no package is selected/resolvable, `silk man fs` is treated as `silk man std::fs` (and similarly for other top-level std modules).
     - when no package is selected/resolvable, `silk man io println` (or `silk man 3 io println`) is treated as `silk man std::io::println`.
+    - when a package root is selected/resolved, `silk man readme`, `silk man overview`, `silk man <package-name>`, and qualified aliases such as `silk man <package-name> readme` prefer the package overview page when a local `package.readme` exists.
+    - when a package root is selected/resolved, `silk man docs`, `silk man documentation`, and qualified aliases such as `silk man <package-name> documentation` open the local `package.documentation` page when present.
   - when a query cannot be resolved, `silk man` prints actionable next steps (try `--search`, `--list`, or qualify with `std::...` / `pkg::...`).
 - `silk package inspect|lint [--package <dir|manifest>]`:
   - `inspect` prints package metadata, public definitions, dependency
@@ -118,6 +152,19 @@ The current command surface includes:
     directory is used.
 - `silk env` — print key environment variables consulted by the `silk` CLI (stdlib resolution, Formal Silk verification, paging, build scratch dirs, C compiler selection).
 - `silk format [--check] <path> [<path> ...]` (alias: `silk fmt`) — format Silk source files (`.slk` / `.silk`) using project configuration from `.silk/format.toml` (discovered by walking upward from each formatted file’s directory).
+  - the formatter is intentionally readability-oriented rather than indentation-only:
+    - same-line statement runs are split so each statement or block body starts on its own line,
+    - standalone block-closing `}` boundaries are given breathing room (for example an `if { ... }` followed by another statement becomes `}\n\nnext;` while `} else {` stays on one line),
+    - formatter-emitted layout preserves the file’s detected newline style (`\n` vs `\r\n`) instead of introducing mixed line endings,
+    - named import lists with more than three imported symbols are rewritten to one symbol per line,
+    - and comment-free leading import headers are canonicalized into sections:
+      - `std::...` / std-root imports first,
+      - then non-relative package/module imports,
+      - then relative file imports,
+      with alphabetical sorting inside each section.
+  - the header reordering pass is conservative:
+    - when the leading package/module/import region contains ordinary comments or other non-whitespace trivia, the formatter preserves that header region instead of reordering it,
+    - but it still normalizes the blank-line boundary between that preserved header region and the first non-header declaration.
 - diagnostics (initial):
   - emits a single primary error diagnostic on error,
   - includes a stable error code for known error kinds,
@@ -222,6 +269,8 @@ The current command surface includes:
         (see `docs/compiler/package-manifests.md`),
     - `--package-target <name>` selects one or more manifest `[[target]]` entries by name (repeatable; `--pkg-target` is accepted as an alias),
       - when omitted, the compiler builds every manifest `[[target]]` entry by default,
+      - this includes manifest `kind = "man"` targets, which emit package-owned manpages from either static sources or source-doc queries,
+      - source-doc man queries are evaluated against the root package’s own source modules, not dependency docs in the same manifest graph,
     - when building multiple targets (the default when `--package-target` is omitted, or when it is repeated), per-output flags are rejected:
       `-o/--out`, `--kind`, `--emit`, `--arch`, `--target`, `--c-header`, `--cflag`, `--ldflag`, `--needed`, `--runpath`, `--soname`, `--elf-interp`,
     - `-o/--out` is optional only when building a single target (defaults to the target’s `output` or a computed default under `build/`),
@@ -239,6 +288,9 @@ The current command surface includes:
       - package-owned artifacts under `<prefix>/lib/silk/<package>/...`
         (for example `lib/<target>/...` or `bin/<target>/...` inside the
         package root),
+      - package-owned manpages under
+        `<prefix>/lib/silk/<package>/share/man/man{1,3,7}/...` and mirrored to
+        `<prefix>/share/man/man{1,3,7}/...`,
       - emitted C headers inside the package root and mirrored to
         `<prefix>/include/silk/<package>/` for compatibility,
       - executables inside the package root and mirrored to `<prefix>/bin` for
@@ -247,9 +299,17 @@ The current command surface includes:
         files plus an installed `silk.toml` under
         `<prefix>/lib/silk/<package>/` so the package is importable from the
         system package search root (`PREFIX/lib/silk`).
+      - when local `[package].readme` / `[package].documentation` landing pages
+        are present, the install copies them into
+        `<prefix>/lib/silk/<package>/share/silk/docs/readme/...` or
+        `<prefix>/lib/silk/<package>/share/silk/docs/documentation/...` and
+        rewrites the installed `silk.toml` to those packaged paths,
+      - when `[package].documentation` points at a static man target source,
+        the installed `silk.toml` rewrites it to the installed `share/man/...`
+        path so package docs aliases continue to resolve after install, without
+        also installing a redundant `share/silk/docs/documentation/...` copy.
       - note: installing library targets requires `[package].definitions` to be
-        set and non-empty; `silk build install` uses these files as the
-        installed package’s importable surface.
+        set and non-empty; executable-only and manpage-only packages do not.
     - writes an uninstall receipt at
       `<prefix>/lib/silk/<package>/.silk_install_receipt`.
   - `silk build uninstall` removes files listed in the uninstall receipt (same prefix selection rules as install).
@@ -333,7 +393,7 @@ The current command surface includes:
         - the caller maintains 16-byte stack alignment before `call` (padding by one 8-byte slot when needed), and
         - results return in registers for 0–2 scalar results (integer-like in `rax`/`rdx`, floats in `xmm0`/`xmm1`), and 3+ scalar results return indirectly via a hidden sret pointer passed in `rdi` (caller-allocated return buffer),
     - on `linux/x86_64`, the same backend also supports a limited `string` subset:
-      - within function bodies, the compiler supports a small `string` expression subset: string literals, `let` bindings of `string`, `return` of a `string` value, `if` expressions that produce `string` values, direct calls to `string`-returning helpers, and `==`/`!=`/`<`/`<=`/`>`/`>=` comparisons over `string` values (producing `bool`); other string operations (concatenation, indexing, etc.) remain outside the current backend subset,
+      - within function bodies, the compiler supports a small `string` expression subset: string literals, `let` bindings of `string`, `return` of a `string` value, `if` expressions that produce `string` values, direct calls to `string`-returning helpers, and `==`/`!=`/`<`/`<=`/`>`/`>=` comparisons over `string` values (producing `bool`); other string operations (concatenation, indexing, etc.) are not implemented yet,
       - string literals are embedded as rodata byte blobs and `.text`→rodata fixups are emitted/handled appropriately for each output kind (ELF relocations for object/static outputs; direct RIP-relative displacement patching for shared libraries and executables once the final `.text`/rodata layout is known),
     - for non-executable outputs, exported `string` constants (`export let`/`export const` with a string literal initializer; `: string` is optional) are emitted as `SilkString` data symbols for downstream C consumers, and exported functions of this subset may accept and return `string` values using the same `{ ptr: u64, len: i64 }` ABI.
     - on `linux/x86_64`, the current backend also supports a limited `struct` subset:
@@ -358,7 +418,7 @@ The current command surface includes:
       - matching on optionals via `match <scrutinee> { None => <expr>, Some(<name|_>) => <expr>, }` (exactly one `None` arm and one `Some(...)` arm; arm bodies are expressions),
       - unwrapping optionals via `??` with short-circuit evaluation of the fallback expression (including unwrapping `T??` to `T?`),
       - and passing/returning optionals between helpers at ABI boundaries as `(bool tag, payload0, payload1, ...)`, where the payload slots follow the lowering of the underlying non-optional type (for example `string?` is `(bool, u64 ptr, i64 len)`).
-      - for non-executable outputs, exported functions may accept and return these optionals; see [C ABI (`libsilk`)](?p=compiler/abi-libsilk) for the exact C ABI mapping.
+      - for non-executable outputs, exported functions may accept and return these optionals; see `docs/compiler/abi-libsilk.md` for the exact C ABI mapping.
     - on `linux/x86_64`, the current backend also supports a limited external call subset:
       - top-level `ext` declarations of external functions (`ext name = fn (T, ...) -> R;`) may be called like normal functions from Silk code,
       - these calls are supported for all output kinds:
@@ -445,10 +505,9 @@ The current command surface includes:
         }
         ```
 
-      - value-producing `if` expressions whose branch bodies are single expressions
-        (current subset restriction), including forms such as:
-        - `let v: int = if cond { 123 } else { 456 };`
-        - `let m: i64? = if flag { f() } else { g() };`
+      - value-producing `if` expressions whose branch bodies are single expressions (current subset restriction), including optionals:
+        - `tests/silk/pass_if_expr_basic.slk` (`let v: int = if cond { 123 } else { 456 };`)
+        - `tests/silk/pass_if_expr_optional_call.slk` (`let m: i64? = if flag { f() } else { g() };`)
 
       - and small helper programs with boolean locals and `if` / `else`, such as:
 
@@ -468,9 +527,9 @@ The current command surface includes:
         ```
   - for programs that type‑check but fall outside both the constant subset and the current IR‑based backend subset, `silk build` exits non‑zero with `E4001` diagnostics that point at the rejected construct (or `E4002` when the backend fails unexpectedly).
 
-## High-Level Command Model (Current Toolchain)
+## High-Level Command Model (Initial Implementation)
 
-The CLI supports the following user-facing commands today.
+The initial CLI implementation supports a small, well-defined subset of the eventual UX.
 
 Top-level commands:
 
@@ -534,6 +593,8 @@ Top-level commands:
         (see `docs/compiler/package-manifests.md`),
     - `--package-target <name>` selects one or more manifest `[[target]]` entries by name (repeatable; `--pkg-target` is accepted as an alias),
       - when omitted, the compiler builds every manifest `[[target]]` entry by default,
+      - source-doc `kind = "man"` targets query only the root package’s own
+        source modules,
     - when building multiple targets (the default when `--package-target` is omitted, or when it is repeated), per-output flags are rejected:
       `-o/--out`, `--kind`, `--emit`, `--arch`, `--target`, `--c-header`, `--cflag`, `--ldflag`, `--needed`, `--runpath`, `--soname`, `--elf-interp`,
     - when building a single target, `-o/--out` is optional (defaults to that target’s `output` or a computed default under `build/`).
@@ -590,8 +651,9 @@ Top-level commands:
     - `--c-header <path>` writes a generated C header at `<path>` that declares the root package’s exported symbols (`export fn` prototypes and `export let` extern declarations) for consumption from C/C++,
     - this option is only meaningful for non-executable outputs (`--kind object|static|shared`) and is rejected for `--kind executable`,
     - to keep the C ABI surface obvious and stable, `--c-header` requires the *root package* (the package of the first input module) to be the **global package** (i.e. omit `package ...;` in the exported library’s sources),
-    - the generated header encodes the current ABI rules described in [C ABI (`libsilk`)](?p=compiler/abi-libsilk), including:
-      - `string` values use `SilkString { ptr, len }` (from `silk.h`),
+    - unnamed/global-package `export fn` signatures may not use ordinary borrowed references or slices; the checker rejects those with `E2119` before object/header emission,
+    - the generated header encodes the current ABI rules described in `docs/compiler/abi-libsilk.md`, including:
+      - `string` values use `SilkString { ptr, len }` (from `silk/silk.h`),
       - optionals and 3+ slot structs are lowered at call boundaries as multiple scalar parameters (so C prototypes for such parameters use flattened arguments rather than by-value C struct parameters).
   - For programs outside the supported subset that nonetheless type-check, exits non-zero with a clear `E4001` / `E4002` diagnostic (instead of a generic “code generation is not implemented yet” message).
 - Formal Silk verification:
@@ -612,10 +674,14 @@ Top-level commands:
 - `silk cc <cc args...>`:
   - Runs a host C compiler to build C99 (or C++) programs that embed or link against `libsilk.a`.
   - Selects the compiler executable via `SILK_CC` (when set), otherwise falls back to `CC`, then `cc`.
-  - Automatically adds the include and library search paths adjacent to the installed `silk` binary (for example `../include` and `../lib`), plus `-lsilk`.
+  - Automatically adds the include and library search paths adjacent to the installed `silk` binary (for example `../include`, `../include/silk`, and `../lib`), plus `-lsilk`.
   - On `linux/x86_64`, also adds `-lstdc++ -lpthread -lm` (vendored Z3 is built as C++).
   - Passes through additional arguments verbatim to the underlying compiler (files, flags, `-o`, `-I`, `-L`, etc.).
   - Wrapper usage can be displayed via `silk help cc` (since `silk cc --help` is passed through to the underlying compiler; `slcc --help` prints wrapper usage).
+
+Future commands (not yet implemented, but documented for roadmap clarity):
+
+- `silk abi header` — emit `silk/silk.h` and ABI descriptions for embedders.
 
 ## Documentation & Manpages
 

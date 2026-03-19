@@ -1,8 +1,8 @@
 # `std::strings`
 
-Status: **Implemented subset + design**. A focused subset is implemented in
-`std/strings.slk` today, and the rest of this document records the broader API
-shape planned around that shipped surface.
+Status: **Initial implementation (expanded)**. A small but growing subset is
+implemented in `std/strings.slk` to support early toolchain bring-up; the rest
+of this document describes the intended long-term API.
 
 This module provides string utilities and abstractions built on top of the core
 `string` type (UTF-8 bytes) and the `Buffer(T)` intrinsic.
@@ -120,11 +120,61 @@ impl String {
 
 Notes:
 
-- The current `String` maintains a trailing NUL terminator so the
-  `string` view it yields is safe to pass to C APIs that expect `const char *`.
+- `String` uses the zero-capacity empty state `{ ptr: 0, cap: 0, len: 0 }`
+  when no allocation is needed. Allocated states maintain a trailing NUL
+  terminator and satisfy `std::formal::string_storage_well_formed`, so the
+  borrowed `string` view from `as_string()` remains safe for C APIs that expect
+  `const char *`.
 - The current `String` implementation does **not** validate UTF‑8.
 - `String.as_string()` yields a non-owning view into the `String` allocation;
   callers must not use the returned `string` after the `String` is dropped.
+- `String` also implements `std::interfaces::{Len,Capacity,IsEmpty,Clear,ReserveAdditional,WriteU8,Serialize(string),Parse(std::memory::OutOfMemory),Drop}`.
+- `String` also implements `std::interfaces::{Len,Capacity,IsEmpty,Clear,ReserveAdditional,WriteU8,Serialize(string),TrySerialize(std::memory::OutOfMemory),Parse(std::memory::OutOfMemory),Drop}`.
+  In practice this means `let s: string = owned as string;` is the standard,
+  allocation-free way to borrow an owned `String` as a plain `string`.
+- `owned.try_serialize()` is the canonical fallible owned-string rendering
+  path; it clones the current contents into a new `std::strings::String`.
+- `String.parse(s)` is a standardized alias for `String.from_string(s)`,
+  which makes generic fallible string-construction code read consistently
+  across the stdlib.
+
+Example:
+
+```silk
+import std::strings;
+
+fn main () -> int {
+  let owned_r = std::strings::String.from_string("hello");
+  let mut owned = match (owned_r) {
+    Ok(v) => v,
+    Err(_) => std::strings::String.empty(),
+  };
+
+  let view: string = owned as string;
+  if view != "hello" {
+    owned.drop();
+    return 1;
+  }
+
+  match (std::strings::String.parse("world")) {
+    Ok(mut parsed) => {
+      if (parsed as string) != "world" {
+        parsed.drop();
+        owned.drop();
+        return 2;
+      }
+      parsed.drop();
+    },
+    Err(_) => {
+      owned.drop();
+      return 3;
+    },
+  }
+
+  owned.drop();
+  return 0;
+}
+```
 
 ## Scope
 

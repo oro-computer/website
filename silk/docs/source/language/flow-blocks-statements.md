@@ -1,8 +1,8 @@
 # Blocks and Statement Composition
 
 Blocks group statements, establish lexical scopes, and provide the “body” form
-for structured control-flow constructs like `if`, `while`, and the `match`
-statement used for typed errors.
+for structured control-flow constructs like `if`, `while`, and the block-armed
+`match` statement.
 
 ## Surface Syntax
 
@@ -37,7 +37,8 @@ The current compiler subset supports these statement forms (see
   - `return`,
   - `assert`,
   - `panic` (typed errors),
-  - `match` statement (typed errors; see `docs/language/typed-errors.md`).
+  - `match` statement (ordinary values and typed errors; see
+    `docs/language/flow-match.md` and `docs/language/typed-errors.md`).
 
 ## Semantics
 
@@ -292,5 +293,7 @@ Implemented end-to-end:
 - Block scoping for runtime `let`/`var` bindings and nested blocks.
 - Formal Silk `#const` declarations (parsed, type-checked, and rejected if used at runtime).
 
-The examples on this page cover local `let` / `var` bindings, nested block
-scopes, and Formal Silk `#const` declarations in statement position.
+Examples that exercise the implemented subset:
+
+- `tests/silk/pass_let_locals.slk`
+- `tests/silk/pass_spec_const_while.slk`

@@ -3,7 +3,7 @@
 Silk supports top-level `test` declarations that are discovered and executed by
 `silk test`.
 
-[Canonical doc](../docs/?p=language/testing).
+Canonical doc: `docs/language/testing.md`.
 
 ## Syntax
 
@@ -17,5 +17,5 @@ test "addition works" {
 
 ## See also
 
-- [Canonical doc](../docs/?p=language/testing)
-- CLI runner: [silk CLI](../docs/?p=compiler/cli-silk)
+- Canonical doc: `docs/language/testing.md`
+- CLI runner: `docs/compiler/cli-silk.md`

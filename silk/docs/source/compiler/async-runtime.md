@@ -1,6 +1,6 @@
 # Async Runtime (Hosted)
 
-Status: **Implemented subset + design (linux/x86_64 hosted)**.
+Status: **Bring-up implementation (linux/x86_64 hosted)**.
 
 This document now serves two roles:
 
@@ -8,17 +8,21 @@ This document now serves two roles:
 - Specify the longer-term architecture (compiler coroutine transform + richer event loop)
   that the current implementation is expected to evolve toward.
 
-The current hosted async runtime is implemented in the bundled hosted runtime
-and wired into compiler lowering. It provides:
+The current hosted async runtime is implemented in C in `src/silk_rt_async.c` and wired
+into lowering in `src/lower_ir.zig`. It provides:
 
 - stackful coroutines (fibers) using `ucontext`,
 - a single-threaded executor/event loop that can drive `async fn main () -> int`,
 - `await` as a true suspension point (parks the current fiber instead of blocking the OS thread),
 - basic async timers, fd readiness wait, and async `read`/`write`,
+- task-pipe waits used by `yield` / `yield *` and task-handle cleanup routed
+  through async fd readiness when running under the executor,
 - opportunistic Linux `io_uring` usage for timeouts, fd polling, and completion-based I/O when available.
 
-Structured concurrency blocks (`async { ... }` / `task { ... }`) are still lexical-only today;
-they do not yet have cancellation/join semantics enforced by a runtime-backed scope.
+Structured concurrency blocks (`async { ... }` / `task { ... }`) now establish
+lexical scopes with runtime-backed cleanup for live `Task(T)` / `Promise(T)`
+bindings on normal exit and early exit. They do not yet inject implicit
+cancellation tokens or nested executors.
 
 See also:
 
@@ -26,23 +30,6 @@ See also:
 - function disciplines: `docs/language/function-disciplines.md`
 - runtime layering: `docs/std/runtime.md`
 - current blocking hosted utilities: `docs/std/task.md`, `docs/std/io.md`, `docs/std/networking.md`
-
-## Example: async executable entrypoint
-
-The current hosted runtime already drives `async fn main () -> int` for normal
-executables:
-
-```silk
-import std::task;
-
-async fn main () -> int {
-  await std::task::sleep_ms_async(10);
-  return 0;
-}
-```
-
-When built as an executable, the entry stub creates the hosted executor/event
-loop, spawns the `Promise(int)` for `main`, and drives it to completion.
 
 ## Current Implementation (Shipped)
 
@@ -106,11 +93,11 @@ The runtime also exposes low-level awaitable building blocks:
 - `silk_rt_async_net_connect_ipv4(fd: i64, a: i64, b: i64, c: i64, d: i64, port: u16) -> u64`
 - `silk_rt_async_net_connect_ipv6(fd: i64, addr_hi: u64, addr_lo: u64, port: u16, scope_id: i64) -> u64`
 
-These are already wrapped today by stable downstream-facing surfaces:
-`std::runtime::event_loop` exposes timers and fd readiness waits,
-`std::task` exposes awaitable sleep helpers, and `std::io::async` exposes
-minimal async `read` / `write` wrappers. As of the current hosted runtime
-snapshot, `silk_rt_async_io_{read,write}` return
+These are intended to be wrapped by stable `std::runtime::event_loop` / `std::task` /
+`std::io` surfaces as that layer is brought up. In the current stdlib snapshot,
+timers and fd readiness are exposed via `std::runtime::event_loop`, and sleep
+helpers are wrapped as `std::task::{sleep_ms_async,sleep_async}`. As of the
+current hosted runtime snapshot, `silk_rt_async_io_{read,write}` return
 `Promise(i64)` handles (lowered as a `u64` promise handle) whose payload is the operation result:
 - `>= 0` is the byte count,
 - `< 0` is `-errno` (for example `-EINTR`).
@@ -169,13 +156,31 @@ Limitations (current):
   - only one global executor/event loop instance may be active at a time,
   - `std::runtime::event_loop::init()` fails when an executor is already active
     (for example inside `async fn main`).
-- No structured-concurrency scope semantics yet (cancellation/joining on early exit).
+- Structured blocks do not yet inject implicit cancellation into arbitrary
+  child operations; current scope semantics are deterministic live-handle
+  cleanup, not a general child-registry cancellation system.
 - Completion-based I/O is implemented for `read`/`write`/`accept`/`connect` when `io_uring` is available.
-  - Cancellation is currently stronger for timers/readiness waits than for
-    in-flight socket/file operations:
-    - `std::runtime::event_loop` abortable helpers can cancel waits,
-    - higher-level `std::io::async` / `std::net` wrappers still observe aborts
-      conservatively around each operation attempt.
+  - Explicit completion cancellation is not yet exposed as part of the shipped
+    std/runtime surface.
+
+## Current Hosted Runtime Status
+
+The runtime-backlog items for the current hosted concurrency subset are now
+implemented:
+
+- plain `task fn` / `async task fn` calls now default to the global task pool,
+  with `attr(task=thread)` as the explicit dedicated-thread opt-out,
+- the global task pool now supports explicit queued-work backpressure via
+  `SILK_TASK_POOL_MAX_QUEUED` in addition to `SILK_TASK_POOL_THREADS`,
+- task reads/drains used by `yield` / `yield *` and task-handle cleanup now
+  route through async fd waits when an executor is active, so these waits
+  suspend the current coroutine instead of blocking the executor owner thread,
+- and structured blocks/loops now provide deterministic runtime-backed cleanup
+  of live `Task(T)` / `Promise(T)` bindings on normal exit and early exit.
+
+Remaining future work in this file is longer-term architecture evolution for
+the hosted runtime, not backlog for the shipped subset. Task-boundary safety
+model expansion is tracked in the language/checker docs rather than here.
 
 ## Goals
 
@@ -231,7 +236,7 @@ The compiler is responsible for:
 - computing which locals must be stored in the frame across each suspension point,
 - preserving typed-error and `panic` semantics during the transform.
 
-Note: the current shipped hosted runtime does **not** yet implement this state-machine transform.
+Note: the current shipped bring-up does **not** yet implement this state-machine transform.
 Instead, `async fn` bodies execute on stackful coroutines provided by the runtime (`ucontext`)
 and suspension points yield back to the executor by swapping contexts. The long-term plan is
 to migrate from stackful coroutines to an explicit compiler transform once the async surface
@@ -259,26 +264,31 @@ The CLI already permits `async fn main () -> int` as an executable entrypoint
 
 ## Structured Concurrency and Cancellation
 
-Structured concurrency forms (`async { ... }`, `task { ... }`, and their `loop` variants)
-become **runtime-backed scopes** rather than lexical-only blocks.
+Structured concurrency forms (`async { ... }`, `task { ... }`, and their `loop`
+variants) are now **runtime-backed lexical scopes** for live-handle cleanup.
 
-Initial requirements:
+Current shipped guarantees:
 
-- A structured scope tracks spawned child operations (async children and task children).
-- Exiting the scope normally requires joining/draining all children.
-- Exiting early (typed error propagation, `panic`, `break`, `return`) triggers cancellation
-  of children, followed by joining/draining them before control leaves the scope.
+- live `Promise(T)` bindings are awaited/destroyed on scope exit,
+- live `Task(T)` bindings are drained/destroyed on scope exit (joining
+  dedicated-thread tasks; pooled/default tasks skip the join),
+- the same cleanup runs on overwrite and on early control-flow exits after
+  lowering rewrites the scope exit path,
+- and when that cleanup waits on task output under the hosted executor, the
+  current coroutine is suspended instead of blocking the executor owner thread.
 
-Cancellation semantics must be explicit in the runtime and observable in
-`std::...` APIs. Today this is strongest for timers and readiness waits; richer
-in-flight socket and file-operation cancellation remains incomplete.
+Current non-goals:
+
+- no implicit nested executor creation,
+- no automatic `std::abort_controller` injection,
+- and no general cancellation registry for arbitrary child operations beyond
+  the explicit handles that are currently live in scope.
 
 ## Runtime Layering (`std::runtime`)
 
-The async executor and event loop are exposed today under `std::runtime` as
-`std::runtime::event_loop`.
+The async executor and event loop will be exposed under `std::runtime` as a new runtime area.
 
-### Current runtime area
+### Proposed new runtime area
 
 - `std::runtime::event_loop` — stable interface used by the compiler-generated coroutine
   runtime and by async-aware stdlib code.
@@ -295,10 +305,9 @@ The interface must support:
 - a way to wake the executor from other threads (task pool → event loop),
 - a polling primitive used by the executor’s main loop.
 
-The current downstream-facing surface is documented in
-[`std::runtime::event_loop`](?p=std/runtime-event-loop). The exact signatures
-may continue to evolve while the hosted runtime surface stabilizes, but the long-term contract should avoid
-exposing raw platform struct layouts directly to user code.
+The exact Silk-level signatures are specified in `std/runtime/event_loop.slk` and are expected
+to evolve during bring-up, but the long-term contract should avoid exposing raw platform
+struct layouts directly to user code.
 
 ## Linux Backend: `io_uring`
 
@@ -358,7 +367,7 @@ Bringing up the async runtime requires:
 Performance tests must be designed so that they do not rely on unstable wall-clock timing in
 CI; prefer structural checks (operation counts, allocations, syscalls) where feasible.
 
-## Phased Bring-Up Plan (Summary)
+## Longer-Term Architecture Evolution (Summary)
 
 1. **Coroutine transform (no I/O)**:
    - implement state machine lowering for `async fn` with `await` suspension,
@@ -371,6 +380,9 @@ CI; prefer structural checks (operation counts, allocations, syscalls) where fea
    - implement submission/completion for core ops (read/write/accept/connect/timeout),
    - wire completions to coroutine wakeups,
    - add `io_uring`-specific tests and stress fixtures.
-4. **Structured concurrency semantics**:
-   - implement `async { ... }` / `task { ... }` as real scopes with cancellation/joining,
-   - ensure scope behavior is enforced consistently in the checker + runtime.
+4. **Broader structured cancellation semantics**:
+   - extend the current live-handle cleanup model to richer explicit
+     cancellation-aware child registries if the language/std surface grows to
+     require them,
+   - ensure any future cancellation behavior stays consistent across the
+     checker, lowering, runtime, and `std::...` APIs.

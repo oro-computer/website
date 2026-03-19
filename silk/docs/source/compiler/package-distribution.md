@@ -140,7 +140,8 @@ Typical use:
 
 ### Binary-only package
 
-Contains native artifacts plus definition/prototype files.
+Contains native artifacts, optional package-owned manual pages, plus
+definition/prototype files when the package exposes a Silk import surface.
 
 Typical use:
 
@@ -193,6 +194,25 @@ Notes:
   inside the package root.
 - `share/man/` mirrors ordinary system packaging practice for optional manual
   pages.
+  - `[[target]] kind = "man"` installs built package manpages there under
+    `share/man/man{1,3,7}/...` and mirrors them to the prefix-level
+    `<prefix>/share/man/...` tree.
+  - source checkouts may also keep Markdown man sources under `docs/man/` or
+    `man/`; `silk man` discovers those roots alongside `share/man/` once the
+    package root is known from `silk.toml`.
+- `[package].readme` and `[package].documentation` identify the package’s
+  overview/docs landing pages for `silk man` when they name local files or
+  local directories (URLs remain valid metadata and are surfaced as references).
+  Absolute paths and relative paths that escape the package root are invalid
+  for these local landing pages.
+  - `silk build install` copies local landing pages into
+    `share/silk/docs/readme/...` or `share/silk/docs/documentation/...` inside
+    the installed package root and rewrites the installed manifest to those
+    packaged paths.
+  - when `[package].documentation` points at a static `[[target]] kind = "man"`
+    source that is also installed, the installed manifest instead rewrites it
+    to `share/man/man{1,3,7}/...`, and the install skips any redundant
+    `share/silk/docs/documentation/...` copy for the same page.
 
 The manifest should continue to describe actual paths; the layout above is a
 convention, not a hardcoded requirement.
@@ -258,8 +278,8 @@ This solves a different problem from `[sources]`:
 
 ### Artifact metadata should be explicit
 
-`[[target]]` remains the build recipe surface. Published binaries are described
-by `[[artifact]]`.
+`[[target]]` remains the build recipe surface. Published binaries and shipped
+manual pages are described by `[[artifact]]`.
 
 The `[[artifact]]` table describes shipped outputs, for example:
 
@@ -332,6 +352,7 @@ The initial supported forms should be:
 - exact versions: `1.2.3`
 - caret ranges: `^1.2.3`
 - tilde ranges: `~1.2.3`
+- wildcard ranges: `1.2.*`
 - comparator sets: `>=1.2.0, <2.0.0`
 
 This keeps version selection expressive without tying Silk to any one package

@@ -7,11 +7,11 @@
 - iterator values (`for x in it { ... }` when `it.next() -> T?`),
 - and C-style headers (`for (init; cond; step) { ... }`).
 
-[Canonical spec](../docs/?p=language/flow-for).
+Canonical spec: `docs/language/flow-for.md`.
 
 ## Status
 
-- Implemented subset + current limitations: [for Loop](../docs/?p=language/flow-for)
+- Implemented subset + current limitations: `docs/language/flow-for.md`
 
 ## Syntax
 ```silk
@@ -51,5 +51,5 @@ fn main () -> int {
 
 ## See also
 
-- [Canonical spec](../docs/?p=language/flow-for)
-- Iterator protocol (current subset): [std::interfaces](../docs/?p=std/interfaces)
+- Canonical spec: `docs/language/flow-for.md`
+- Iterator protocol (current subset): `docs/std/interfaces.md`

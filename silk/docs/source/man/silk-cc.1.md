@@ -1,5 +1,6 @@
 # `silk-cc` (1) — C Compiler Wrapper for `libsilk`
 
+> NOTE: This is the Markdown source for the eventual man 1 page for `silk cc`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -16,6 +17,7 @@
 It selects the underlying compiler via `SILK_CC` (fallback: `CC`, default: `cc`) and:
 
 - adds `-I <install>/include` automatically,
+- adds `-I <install>/include/silk` automatically so vendored headers such as `mbedtls/error.h` resolve from the staged toolchain prefix,
 - unless you pass `-c`/`-E`/`-S`/`-M`/`-MM`, also adds `-L <install>/lib -lsilk`,
 - on `linux/x86_64`, also adds `-lstdc++ -lpthread -lm` (vendored Z3 is built as C++).
 
@@ -37,6 +39,6 @@ silk cc -std=c99 -Wall -Wextra your_app.c -o your_app
 
 ## See Also
 
-- [`silk` (1)](?p=man/silk.1)
-- [`libsilk` (7)](?p=man/libsilk.7)
-- `include/silk.h`
+- `silk` (1)
+- `libsilk` (7)
+- `include/silk/silk.h`

@@ -272,7 +272,7 @@ behavior consistent with C for the supported cases.
 memory layout.
 
 The intent is to provide “high-level” APIs without baking behavior into `struct`
-layout. In the current compiler subset, `impl` blocks are *syntax and
+layout. In the initial implementation, `impl` blocks are *syntax and
 type-checking structure*; code generation treats methods as ordinary functions
 that follow the same calling conventions as other Silk functions.
 

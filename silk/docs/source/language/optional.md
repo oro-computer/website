@@ -154,6 +154,15 @@ Example:
 
 - `let email_address: string = user2.profile?.email ?? "no-email-provided@domain.com";`
 
+Scope note:
+
+- `??` is primarily the optional-coalescing operator.
+- The same token is also used for recoverable `Result`-like values:
+  `result ?? fallback` yields the `Ok(...)` payload or the fallback for
+  `Err(...)`.
+- The optional and recoverable-result forms are distinguished by the left-hand
+  operand type; expression `match` remains the more general payload-aware tool.
+
 ## Using Optional Values
 
 The spec provides several mechanisms for working with optionals:

@@ -1,9 +1,10 @@
 # `silk-build` (1) — Build Silk Artifacts
 
+> NOTE: This is the Markdown source for the eventual man 1 page for `silk build`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
-`silk-build` — build an executable, object, static library, or shared library from Silk sources and link inputs (or a `silk.toml` package).
+`silk-build` — build an executable, object, static library, shared library, or package-owned manpage from Silk sources and link inputs (or a `silk.toml` package).
 
 ## Synopsis
 
@@ -20,7 +21,11 @@
 - explicit inputs (`<input> ...`), or
 - a package module set from a manifest (`silk.toml`) using `--package` / `--pkg`.
 
-For package builds, outputs are selected by the manifest `[[target]]` entries. See [Package manifests](?p=compiler/package-manifests).
+For package builds, outputs are selected by the manifest `[[target]]` entries. See `?p=compiler/package-manifests`.
+Manifest `kind = "man"` targets build package-owned manpages from either static
+man sources or source-doc queries. Source-doc queries are evaluated against the
+root package’s own source modules, not dependency docs in the same manifest
+graph.
 
 When explicit input files are used (no `--package`), the `silk` CLI may load additional packages into the module set by resolving bare-specifier package imports (for example `import util from "util";`) from the package search path (`SILK_PACKAGE_PATH`).
 
@@ -39,12 +44,25 @@ Package installation:
 - `silk build install` builds the selected package target(s) and installs:
   - package-owned artifacts under the canonical package root
     `<prefix>/lib/silk/<package>/...`,
+  - package-owned manpages under
+    `<prefix>/lib/silk/<package>/share/man/man{1,3,7}/...` and mirrored to
+    `<prefix>/share/man/man{1,3,7}/...`,
   - emitted C headers inside that package root and mirrored to
     `<prefix>/include/silk/<package>/`,
   - executables inside that package root and mirrored to `<prefix>/bin`,
   - and, when `[package].definitions` is set, installs those definition files
     plus an installed `silk.toml` under `<prefix>/lib/silk/<package>/` so the
     package is importable via the system package search root (`PREFIX/lib/silk`).
+  - when local `[package].readme` / `[package].documentation` landing pages are
+    present, the install copies them into
+    `<prefix>/lib/silk/<package>/share/silk/docs/readme/...` or
+    `<prefix>/lib/silk/<package>/share/silk/docs/documentation/...` and
+    rewrites the installed manifest to those packaged paths,
+  - when `[package].documentation` points at a static man target source, the
+    installed manifest rewrites it to the installed `share/man/...` path so
+    `silk man docs` continues to resolve.
+  Library targets require `[package].definitions`; executable-only and
+  manpage-only packages do not.
   It writes an uninstall receipt at
   `<prefix>/lib/silk/<package>/.silk_install_receipt`.
 - `--destdir <path>` stages install/uninstall paths under `<destdir><prefix>/...`
@@ -58,9 +76,9 @@ Notes:
 - `.so` inputs only affect executable/shared outputs (static archives cannot record dynamic dependencies).
 - script-style entrypoints: when building an executable, if the **first** `.slk` input contains top-level statements (after the normal `package`/`module` header and `import` block) and does not define an explicit `main`, `silk build` synthesizes an implicit `fn main() -> int` that executes those statements and then returns `0`.
 - for `--kind executable`, `--std-lib` / `--std <path>.a` is currently rejected when linking additional `.c`/`.o`/`.a` inputs (std sources are compiled into the build instead).
-- on `linux-x86_64`, when `std::ggml` is present in the module set (or when linked `.o`/`.a` inputs reference `silk_ggml_init`), `silk build` automatically links the vendored ggml archives produced by `zig build deps` (see [`std::ggml`](?p=std/ggml)).
-- on `linux-x86_64`, when `std::image::png` / `std::image::jpeg` are present in the module set (or when linked `.o`/`.a` inputs reference the shim symbols), `silk build` automatically links the vendored image archives produced by `zig build deps` (see [`std::image`](?p=std/image)).
-- on `linux-x86_64`, when `std::xml` is present in the module set (or when linked `.o`/`.a` inputs reference `silk_xml_node_name_ptr`), `silk build` automatically links the vendored libxml2 archives produced by `zig build deps` (see [`std::xml`](?p=std/xml)).
+- on `linux-x86_64`, when `std::ggml` is present in the module set (or when linked `.o`/`.a` inputs reference `silk_ggml_init`), `silk build` automatically links the vendored ggml archives produced by `zig build deps` (see `?p=std/ggml`).
+- on `linux-x86_64`, when `std::image::png` / `std::image::jpeg` are present in the module set (or when linked `.o`/`.a` inputs reference the shim symbols), `silk build` automatically links the vendored image archives produced by `zig build deps` (see `?p=std/image`).
+- on `linux-x86_64`, when `std::xml` is present in the module set (or when linked `.o`/`.a` inputs reference `silk_xml_node_name_ptr`), `silk build` automatically links the vendored libxml2 archives produced by `zig build deps` (see `?p=std/xml`).
 
 ## Options
 
@@ -73,11 +91,11 @@ Notes:
 - `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`).
 - `--debug`, `-g` — enable debug build mode (also enables extra Formal Silk debug output when verification fails).
 - `--feature <spec>`, `-F<spec>` — enable a build feature for `attr(feature="...")` queries and declaration gating. Repeatable.
-  - Spec forms: `NAME` or `NAME=VALUE` (see [Attributes](?p=language/attributes)).
+  - Spec forms: `NAME` or `NAME=VALUE` (see `?p=language/attributes`).
   - For package builds, you may target a specific package with `PKG/NAME` or
     `PKG/NAME=VALUE` (for example `ui/tui` or `ui/tui=false`).
 - `-O <0-3>` — set optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`). `-O1`+ prunes unused extern symbols before code generation and prunes unreachable functions in executable builds (typically reducing output size).
-- `--noheap` — reject heap allocation in the supported subset (see [Memory model](?p=language/memory-model) and [`silk` CLI](?p=compiler/cli-silk)).
+- `--noheap` — reject heap allocation in the supported subset (see `?p=language/memory-model` and `?p=compiler/cli-silk`).
 - `-p <path>`, `--prefix <path>` — install/uninstall prefix (default: `$PREFIX` when set, otherwise `/usr/local`).
 - `--destdir <path>` — stage install/uninstall paths under `<destdir><prefix>/...`.
 
@@ -120,7 +138,7 @@ Native compilation:
 
 Linker metadata (executable/shared only):
 
-- `--ldflag <arg>` — add a link-related argument (repeatable). In the current toolchain these are translated into `--needed`/`--runpath`/`--soname`/`--elf-interp` effects (see [Package manifests](?p=compiler/package-manifests)).
+- `--ldflag <arg>` — add a link-related argument (repeatable). In the current toolchain these are translated into `--needed`/`--runpath`/`--soname`/`--elf-interp` effects (see `?p=compiler/package-manifests`).
 - `--needed <soname>` — add a `DT_NEEDED` entry (repeatable).
 - `--runpath <path>` — add a `DT_RUNPATH` entry (repeatable).
 - `--rpath <path>` — alias of `--runpath`.
@@ -198,6 +216,6 @@ silk build uninstall -p /tmp/silk-prefix
 
 ## See Also
 
-- [`silk` (1)](?p=man/silk.1), [`silk-check` (1)](?p=man/silk-check.1), [`silk-test` (1)](?p=man/silk-test.1)
-- [`silk` CLI](?p=compiler/cli-silk)
-- [Package manifests](?p=compiler/package-manifests)
+- `silk` (1), `silk-check` (1), `silk-test` (1)
+- `?p=compiler/cli-silk`
+- `?p=compiler/package-manifests`

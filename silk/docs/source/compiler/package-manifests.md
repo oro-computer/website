@@ -5,11 +5,11 @@ compiler consumes it.
 
 Manifests are a *build/package* concept (they are not part of the core language
 syntax). The language-level `package` / `import` / `export` semantics remain
-defined in [Packages, Imports, and Exports](?p=language/packages-imports-exports).
+defined in `docs/language/packages-imports-exports.md`.
 
 For the broader package authoring/publication/consumption model, including
 third-party distribution channels, binary-only packages, and the rationale for
-the current manifest shape, see [Package distribution](?p=compiler/package-distribution). This
+the current manifest shape, see `docs/compiler/package-distribution.md`. This
 document describes the current implemented manifest format and current CLI
 behavior.
 
@@ -45,7 +45,7 @@ the compiler compiles and runs the
 module and parses the manifest it emits in this format (used in place of
 reading `silk.toml` for the root package).
 
-See [Build modules](?p=compiler/build-scripts).
+See `docs/compiler/build-scripts.md`.
 
 ## Package Metadata (`[package]`)
 
@@ -101,6 +101,58 @@ Additional channel-agnostic metadata fields are supported under `[package]`:
 These fields are surfaced by `silk package inspect` and preserved in installed
 package manifests.
 
+`package.readme` and `package.documentation` may be either:
+
+- ordinary package metadata strings (for example a hosted documentation URL), or
+- local package-root-relative file or directory paths.
+
+Local metadata doc paths must stay inside the package root. Absolute paths and
+relative paths that escape the package root are rejected.
+
+When a local path is used, `silk man` treats it as part of the package’s
+discoverable documentation surface when that package root is selected via
+`--package`, nearest-manifest discovery, or package-search-path resolution.
+
+When `silk build install` packages a local `package.readme` or local
+`package.documentation` landing page, the installed manifest rewrites that field
+to a packaged copy under `share/silk/docs/readme/...` or
+`share/silk/docs/documentation/...` inside the installed package root so the
+overview/docs aliases remain self-contained after install.
+
+When `package.documentation` points at a static `[[target]] kind = "man"`
+source, installed manifests rewrite that field to the installed
+`share/man/man<section>/...` path so `silk man docs` / `silk man documentation`
+continue to work after `silk build install`.
+
+## Package Documentation Discovery for `silk man`
+
+When `silk man` resolves a package root from `silk.toml`, it may discover
+package-authored documentation from that root in addition to source doc
+comments. Source-doc queries from `silk man` and `silk doc --man` only consider
+the root package’s own modules, not dependency docs in the same manifest graph:
+
+- local `package.readme` paths provide the package overview page,
+- local `package.documentation` paths provide a package documentation landing
+  page,
+- and package man sources are discovered recursively under
+  `<root>/docs/man/`, `<root>/man/`, `<root>/share/man/`, and installed
+  sectioned roots such as `<root>/share/man/man1/`.
+
+Current conventions:
+
+- Markdown man sources SHOULD be named `<name>.1.md`, `<name>.3.md`, or
+  `<name>.7.md`.
+- Markdown pages under `docs/man/` or `man/` that omit an explicit section
+  suffix default to section 7, which makes package-authored overview/concept
+  topics easy to ship without man-specific filenames.
+- When `package.documentation` points at a directory, `silk man` looks for a
+  landing page such as `README.md`, `readme.md`, `index.md`, or
+  `<package>.md`.
+- `silk man --list` and `silk man --search` include these package-local pages
+  whenever a package root is already in scope.
+- Remote `package.readme` / `package.documentation` URLs remain valid metadata;
+  `silk man` prints them as references rather than fetching them.
+
 ### `package.definitions` (optional)
 
 Optional list of *definition files* (header-style prototype modules) for this
@@ -120,8 +172,7 @@ Rules:
   - exported type declarations, and
   - declaration-only exported function prototypes (`export fn name(...) -> T;`)
     that describe the public API surface.
-  See [Packages, Imports, and Exports](?p=language/packages-imports-exports)
-  for prototype exports.
+  See `docs/language/packages-imports-exports.md` (“Prototype exports”).
 - The compiler does not treat definition files specially during ordinary
   builds; this field exists so tooling can locate an explicit “API surface”
   without scanning arbitrary source files.
@@ -129,6 +180,9 @@ Rules:
   `PREFIX/lib/silk/<package>/...` so that the installed package remains
   importable (for
   example `import my_lib from "my_lib";`) via the system package search root.
+- Executable-only and manpage-only packages do not need
+  `[package].definitions`; this field matters only when an installed package
+  must expose a Silk import surface for library-style targets.
 
 ## Distribution Payload (`[dist]`)
 
@@ -217,7 +271,7 @@ Fields:
       - otherwise it is equivalent to `NAME=VALUE`.
   - These features populate the enabled feature set queried by
     `attr(feature="...")` within the dependency package’s modules (see
-    [Attributes](?p=language/attributes)).
+    `docs/language/attributes.md`).
   - When building a package graph (via `--package`), dependency feature specs
     are merged from every manifest in the graph.
     - If multiple manifests assign different values to the same feature name
@@ -296,13 +350,21 @@ c_header = "include/my_lib.h"
 Fields:
 
 - `name` (required): artifact identifier unique within the manifest.
-- `kind` (required): one of `executable`, `object`, `static`, or `shared`.
+- `kind` (required): one of `executable`, `object`, `static`, `shared`, or
+  `man`.
 - `path` (required): relative path inside the package root.
 - `target` (optional): target triple for the artifact payload.
 - `libc` / `libc_min` (optional): structured compatibility metadata for native
   libraries.
 - `definitions` (optional): definition files associated with this artifact.
 - `c_header` (optional): C header shipped with this artifact.
+
+Additional rules for `kind = "man"`:
+
+- `path` should typically live under `share/man/man1/`, `share/man/man3/`, or
+  `share/man/man7/`.
+- `target`, `libc`, `libc_min`, `definitions`, and `c_header` are invalid for
+  manpage artifacts.
 
 Current uses:
 
@@ -325,8 +387,8 @@ my_api = { sha256 = "sha256:0123456789abcdef..." }
 ## Build Targets (`[[target]]`)
 
 A package may declare one or more build targets. Each target produces one
-artifact (an executable, an object, a static library, a shared library, or a
-wasm module).
+artifact (an executable, an object, a static library, a shared library, a wasm
+module, or a manpage).
 
 Example:
 
@@ -343,14 +405,40 @@ kind = "static"
 entry = "src/lib.slk"
 output = "build/libmy_lib.a"
 c_header = "build/my_lib.h"
+
+[[target]]
+kind = "man"
+source = "man/my_app.1"
 ```
 
 Fields:
 
-- `name` (required): unique target name within the package.
-- `kind` (required): one of `executable`, `object`, `static`, `shared`.
-- `entry` (required): path to the entry module, relative to the manifest
-  directory.
+- `name` (required for `executable|object|static|shared`; optional for `man`):
+  unique target name within the package.
+  - When omitted for `kind = "man"`, the compiler synthesizes a stable target
+    name during manifest loading:
+    - static man sources default to `<page>.<section>` derived from `source`
+      (for example `man/my_app.1` -> `my_app.1`,
+      `docs/man/my-app.7.md` -> `my-app.7`),
+    - source-derived man targets default to the trimmed `query` string.
+  - These synthesized names are the names used by `build.default_target`,
+    `silk build --package-target <name>`, and installed manifest metadata.
+- `kind` (required): one of `executable`, `object`, `static`, `shared`, or
+  `man`.
+- `entry` (required for `executable|object|static|shared`): path to the entry
+  module, relative to the manifest directory.
+- `source` (required for static `man` targets): path to a checked-in manpage
+  source file, relative to the manifest directory.
+  Supported static forms are:
+  - roff pages named `name.1`, `name.3`, or `name.7`,
+  - Markdown man sources named `name.1.md`, `name.3.md`, or `name.7.md`.
+- `query` (required for source-derived `man` targets): documentation query
+  rendered through the same source-doc pipeline as `silk doc --man`
+  (for example a `@cli` page name or an `@misc` topic).
+  - Source-derived package man targets query only the root package’s own
+    source modules; dependency sources in the same manifest graph are not part
+    of the query corpus.
+  Exactly one of `source` or `query` must be set for `kind = "man"`.
 - `inputs` (optional): additional non-`.slk` build inputs for this target:
   - entries are paths (relative to the manifest directory when not absolute),
   - entries may also use a toolchain-relative vendored archive reference:
@@ -402,6 +490,9 @@ Fields:
   - `object`: `build/<name>.o`,
   - `static`: `build/lib<name>.a`,
   - `shared`: `build/lib<name>.so` (current hosted baseline is `linux/x86_64`).
+  - `man`: `build/share/man/man<section>/<page>.<section>` where `<page>` and
+    `<section>` come from the static source filename or the rendered `query`
+    result.
 - `arch` / `target` (optional): default codegen target for this artifact.
   - `arch` is one of `x86_64`, `wasm32`, `wasm32-wasi` (same as `silk build --arch`).
   - `target` is a target triple string accepted by `silk build --target`
@@ -417,6 +508,27 @@ Fields:
     - This field is rejected for non-`linux/x86_64` targets.
   - Note: `needed` entries starting with `libsilk_rt` are rejected; bundled runtime helpers are linked statically by `silk build` when referenced.
 
+Additional rules for `kind = "man"`:
+
+- `name` may be omitted; when omitted, the compiler derives the internal target
+  name from `source` or `query` using the rules above.
+- `entry`, `inputs`, `cflags`, `ldflags`, `arch`, `target`, `c_header`,
+  `needed`, `runpath`, `soname`, and `elf_interp` are invalid.
+- Static Markdown sources are rendered to roff at build time.
+- Static roff sources are copied into the target output and normalized to the
+  filename-derived page name and section.
+- `silk build install` installs built man targets into the package root under
+  `share/man/man<section>/...` and mirrors them to
+  `<prefix>/share/man/man<section>/...`.
+- `silk build install` also packages local `package.readme` /
+  `package.documentation` landing pages under `share/silk/docs/...` inside the
+  package root and rewrites the installed manifest to those packaged paths,
+  unless `package.documentation` is rewritten to an installed man target under
+  `share/man/...`; in that case no redundant
+  `share/silk/docs/documentation/...` copy is installed.
+- Ad hoc metadata tables such as `[docs]` remain inert; only `[[target]]`
+  entries participate in `silk build` / `silk build install`.
+
 Example:
 
 ```toml
@@ -431,8 +543,8 @@ runpath = ["$ORIGIN"]
 
 ## Build Defaults (`[build]`)
 
-When a package defines multiple `[[target]]` entries, `silk build --package`
-needs to know which one to build.
+`[build]` records package-wide defaults used by single-target contexts and
+build-module execution.
 
 ```toml
 [build]
@@ -447,10 +559,20 @@ features = ["tui", "MY_FEATURE=123", "enable_this_feature=true"] # optional
 Rules:
 
 - If `build.default_target` is set, it MUST name an existing `[[target]]`.
-- If `build.default_target` is not set:
-  - if exactly one `[[target]]` exists, it is the default,
-  - otherwise, `silk build --package` requires an explicit target selection
-    flag (see [`silk` CLI](?p=compiler/cli-silk)).
+- `silk build --package` builds every manifest `[[target]]` by default when
+  `--package-target` is omitted.
+- `build.default_target` is still used by contexts that need one code-bearing
+  target:
+  - package-graph entry ordering prefers that target’s `entry`,
+  - `silk test --package` uses that target’s `inputs`, `needed`, and `runpath`
+    as the manifest link metadata for the test harness.
+- For `silk test --package`:
+  - `build.default_target` must name a code target (one with `entry = "..."`);
+    pointing it at `kind = "man"` is an error,
+  - when `build.default_target` is unset, the first declared code target is
+    used,
+  - when no code targets exist, tests still run from the package source set but
+    no manifest link metadata is applied.
 - `build.build_module` (optional; default `false`) enables build module
   execution for package builds:
   - when `true`, the build module runs for `silk build --package` (and
@@ -465,7 +587,7 @@ Rules:
     itself; use `build_module = true` or the CLI.
 - When a build module is executed:
   - the manifest it emits replaces the root manifest for the remainder of the
-    build (see [Build modules](?p=compiler/build-scripts)),
+    build (see `docs/compiler/build-scripts.md`),
   - the emitted manifest’s `[build].build_module` / `[build].build_module_path`
     values are ignored for the current invocation to prevent recursive build
     module execution,
@@ -480,7 +602,7 @@ Rules:
       - `NAME = true` is equivalent to `NAME`.
       - otherwise it is equivalent to `NAME=VALUE`.
   - These features populate the enabled feature set queried by `attr(feature="...")`
-    (see [Attributes](?p=language/attributes)).
+    (see `docs/language/attributes.md`).
   - CLI `--feature` / `-F` entries override manifest features of the same name.
 
 ## Interaction With `package` Declarations

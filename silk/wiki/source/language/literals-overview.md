@@ -5,11 +5,11 @@ numbers, booleans, chars, strings, durations, and aggregates like arrays
 struct literals.
 
 This wiki page is a learning-oriented companion to the canonical spec:
-[Literals Overview](../docs/?p=language/literals-overview).
+`docs/language/literals-overview.md`.
 
 ## Status
 
-- Detailed rules and edge cases live in the per-literal docs linked below.
+- Detailed rules and edge cases: `docs/language/literals-*.md`
 
 ## Syntax
 ```silk
@@ -49,7 +49,7 @@ fn main () -> int {
 
 ## See also
 
-- [Canonical spec](../docs/?p=language/literals-overview)
-- Numeric: [Numeric Literals](../docs/?p=language/literals-numeric)
-- Strings/chars: [String Literals](../docs/?p=language/literals-string), [Character Literals](../docs/?p=language/literals-character)
-- Aggregates: [Aggregate Literals](../docs/?p=language/literals-aggregate)
+- Canonical spec: `docs/language/literals-overview.md`
+- Numeric: `docs/language/literals-numeric.md`
+- Strings/chars: `docs/language/literals-string.md`, `docs/language/literals-character.md`
+- Aggregates: `docs/language/literals-aggregate.md`

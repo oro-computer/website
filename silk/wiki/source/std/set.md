@@ -5,12 +5,12 @@
 - `SetMap(T)` (unordered set, open addressing),
 - `TreeSet(T)` (ordered set, red-black tree).
 
-[Canonical doc](../docs/?p=std/set).
+Canonical doc: `docs/std/set.md`.
 
 ## Status
 
 - Implemented subset: usable in the current compiler subset with documented limits.
-- [Details](../docs/?p=std/set)
+- Details: `docs/std/set.md`
 
 ## Importing
 
@@ -31,21 +31,25 @@ type InitResult = std::result::Result(Set, std::memory::AllocFailed);
 type InsertResult = std::result::Result(bool, std::memory::OutOfMemory);
 
 fn main () -> int {
-  let mut s = match Set.init(4) {
-    InitResult::Ok(v) => v,
-    InitResult::Err(_) => return 1,
-  };
+  match (Set.init(4)) {
+    InitResult::Ok(set) => {
+      let mut s: Set = set;
 
-  let insert_r: InsertResult = s.insert(1);
-  if insert_r.is_err() { s.drop(); return 2; }
-  let ok: bool = s.contains(1);
-  s.drop();
-  if ok { return 0; }
-  return 1;
+      let insert_r: InsertResult = s.insert(1);
+      if insert_r.is_err() { s.drop(); return 2; }
+      let ok: bool = s.contains(1);
+      s.drop();
+      if ok { return 0; }
+      return 1;
+    },
+    InitResult::Err(_) => {
+      return 1;
+    },
+  }
 }
 ```
 
 ## See also
 
-- [Canonical doc](../docs/?p=std/set)
-- Iterator protocol: [std::interfaces](../docs/?p=std/interfaces)
+- Canonical doc: `docs/std/set.md`
+- Iterator protocol: `docs/std/interfaces.md`

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-17T18:47:28+00:00",
+  "generatedAt": "2026-03-18T19:46:15+00:00",
   "kind": "wiki",
   "count": 84,
   "sections": [
@@ -188,7 +188,7 @@
         },
         {
           "id": "language/borrow-checker",
-          "title": "Borrow checker",
+          "title": "Borrow checker (design)",
           "file": "language/borrow-checker.md"
         },
         {
@@ -253,7 +253,7 @@
         },
         {
           "id": "language/dependent-types",
-          "title": "Dependent types (const parameters)",
+          "title": "Dependent types (const parameters) (design)",
           "file": "language/dependent-types.md"
         },
         {

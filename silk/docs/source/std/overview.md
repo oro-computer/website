@@ -1,9 +1,8 @@
 # Standard Library Overview (`std::`)
 
-Status: **Implemented subset + design**. The `docs/std/` directory specifies
-the intended API and structure, and the in-tree stdlib source tree under
-`std/` already provides the shipped subset used by the toolchain to satisfy
-`import std::...;`.
+Status: **Implemented subset + active expansion**. The `docs/std/` directory is
+the public reference for the shipped stdlib surface, and the in-tree stdlib
+under `std/` satisfies `import std::...;` for the current compiler subset.
 
 As of the current compiler/backend subset, the in-tree stdlib includes a
 small but functional set of utilities implemented purely in Silk (including
@@ -14,8 +13,7 @@ plus a tiny hosted POSIX baseline for OS-facing modules (`std::fs`, `std::task`,
 libc for executable outputs).
 
 The Silk standard library, `std::`, provides foundational functionality built
-on top of the language core (regions, buffers, concurrency, etc.). It is intended
-to be:
+on top of the language core (regions, buffers, concurrency, etc.). It is:
 
 - **Linked by default** for normal builds driven by `silk`.
 - **Swappable**: an alternative `std::` implementation can be selected at build
@@ -23,49 +21,15 @@ to be:
 - **POSIX-first** for OS interactions (initial hosted baseline), while still
   supporting freestanding/embedded builds via a smaller “core” subset.
 
-## A small `std::` program
-
-```silk
-import std::io::println;
-import std::url;
-import std::uuid;
-
-fn main () -> int {
-  let id = match std::uuid::random::v7_now() {
-    Ok(v) => v,
-    Err(_) => return 1,
-  };
-
-  let page = match std::url::parse("https://oro.computer/silk/docs/") {
-    Ok(v) => v,
-    Err(_) => return 2,
-  };
-
-  let id_text = match id.to_string_lower() {
-    Ok(v) => v,
-    Err(_) => return 3,
-  };
-  let href = match page.href() {
-    Ok(v) => v,
-    Err(_) => return 4,
-  };
-
-  println(id_text.as_string());
-  println(href.as_string());
-  return 0;
-}
-```
-
 See also:
 
 - `docs/std/package-structure.md` (namespace + linkage + swappability)
 - `docs/std/conventions.md` (API conventions: errors, allocation, ownership)
 - `docs/std/result.md` (the standard `Result(T, E)` error return type)
 
-## Core Areas (Initial)
+## Core Areas
 
-These are the minimum required areas for the initial standard library
-distribution:
+These are the major areas of the shipped and documented `std::` surface:
 
 - `std::buffer` — typed, width-oriented buffer utilities built on top of
   `std::vector` for common scalar element types (see `docs/std/buffer.md`).

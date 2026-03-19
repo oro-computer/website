@@ -41,53 +41,15 @@ borrows and borrowed `&T` values so obvious use-after-scope cases are rejected
 (for example returning a slice borrowed from a local fixed array, or returning
 `&T` borrowed from a local struct binding).
 
-## Examples
+The currently shipped subset therefore already includes borrowed views in the
+positions that matter most for day-to-day code:
 
-### Returning a borrow of a parameter is allowed
-
-```silk
-fn tail (xs: int[]) -> int[] {
-  return &xs[1..];
-}
-```
-
-The returned slice is still borrowed from the caller-owned `xs` storage, so the
-borrow does not outlive its origin.
-
-### Returning a borrow of a local is rejected
-
-```silk
-struct Pair {
-  a: int,
-  b: int,
-}
-
-fn bad_ref () -> &Pair {
-  let p: Pair = Pair{ a: 1, b: 2 };
-  return &p; // rejected: `p` is stack storage owned by this function
-}
-```
-
-### Per-call mutable aliasing is rejected
-
-```silk
-struct Pair {
-  a: int,
-  b: int,
-}
-
-fn swap(mut a: &Pair, mut b: &Pair) -> void {
-  let t = a.a;
-  a.a = b.a;
-  b.a = t;
-}
-
-fn main () -> int {
-  let mut p: Pair = Pair{ a: 1, b: 2 };
-  swap(mut p, mut p); // rejected: two mutable borrows of the same base in one call
-  return 0;
-}
-```
+- local `&T` and `T[]` bindings,
+- local `T?` bindings whose payload is a borrowed `&T` or `T[]`,
+- struct fields and enum payloads that carry borrowed views,
+- assignments through fields and mutable reference parameters,
+- and whole-value returns / assignments that are checked against lexical escape
+  rules even when the borrowed view is carried through an aggregate.
 
 ## Lexical Lifetimes (Implemented Subset)
 
@@ -107,12 +69,17 @@ Lexical lifetime rules enforced by the current compiler subset:
   - Returning such a slice from a function is rejected.
   - Assigning such a slice into outer-scope storage is rejected (including via
     field assignment and via mutable reference parameters).
+- The same rule also applies when that borrowed slice is wrapped in `T?`
+  (`Some(&xs[...])` does not allow the local borrow to escape).
+- The same rule also applies when that borrowed slice is carried inside a
+  struct field or enum payload; returning or assigning the aggregate does not
+  allow the local borrow to escape.
 - Returning a slice is permitted when the returned slice ultimately borrows
   from a **function parameter** (for example returning a sub-slice of a `T[]`
   parameter).
 
-These rules are intentionally conservative and are expected to be generalized
-to a richer lifetime model as more borrow forms become first-class.
+These rules are intentionally conservative, but they are the complete lexical
+lifetime model for the currently supported language subset.
 
 ## Lexical Reference Lifetimes (Implemented Subset)
 
@@ -121,95 +88,170 @@ that storage’s lexical scope. This includes:
 
 - returning a borrowed `&T` that points to a local stack binding (struct or
   single-slot scalar),
+- returning such a borrow wrapped in `T?`,
+- returning such a borrow carried inside a struct field or enum payload,
 - and assigning such a borrowed reference into outer-scope storage.
 
 Returning a reference is permitted when the returned `&T` ultimately refers to
 an input reference parameter (that is, storage owned by the caller), and not to
 stack locals.
 
-## Borrowing Across Tasks and Suspension Points
+When multiple input references or slices are in scope, no explicit lifetime
+label syntax is required in the current language. A returned borrowed view may
+refer to any caller-owned input borrow that reaches the return expression
+through the supported control-flow forms. If any path introduces a local stack
+or fixed-array origin, the lexical escape check still rejects the return.
 
-Current downstream guidance:
+## Local Mutation While Borrowed (Implemented Subset)
 
-- Keep ordinary borrows (`&T`, `T[]`, sub-slices) inside a single lexical,
-  synchronous region whenever possible.
-- Do not try to pass non-opaque references across `task fn` boundaries; the
-  checker rejects them today (see `docs/language/concurrency.md`).
-- When data must cross a task boundary or outlive the current lexical region,
-  prefer an owned value or a dedicated handle/view pair such as
-  `Channel(T)` + `ChannelBorrow(T)` or `AbortSignal` + `AbortSignalBorrow`.
-- Restrictions around borrows that remain live across `await` points are still
-  conservative and part of the ongoing design; prefer owned values around
-  suspension points until the full model is stabilized.
+The current compiler subset also rejects direct mutation of ordinary local
+storage while a borrow of that same storage remains live.
 
-Example pattern:
+This applies to:
 
-```silk
-struct Pair { x: int, y: int }
+- whole-binding assignment (`x = ...`) when `x` is a local stack value or local
+  fixed array,
+- field assignment (`x.f = ...`) into a local aggregate that is still borrowed,
+- and index assignment (`xs[i] = ...`) into a local fixed array that still has
+  a live borrowed slice.
 
-async fn read_after_wait (p: &Pair) -> int {
-  let x = p.x;
-  await std::task::sleep_ms_async(1);
-  return x;
-}
-```
+In other words, an ordinary local borrow freezes the borrowed local storage
+against direct mutation until that borrow ends.
 
-Copy or move the data you need before `await`; do not rely on a borrow staying
-usable across a suspension point unless that specific API contract is
-documented.
+Writes performed through the unique mutable borrow itself remain allowed. For
+example, mutation through `mut r: &T` is permitted when it is not competing
+with a separate live borrow of the same local storage.
 
-## Practical lifecycle patterns
+This rule is intentionally local-storage-specific. Borrowed access to
+caller-owned or external-handle storage is governed by the existing boundary
+rules instead.
 
-### Return a borrow of caller-owned data
+## Borrow-Carrying Wrappers and Conservative Control Flow (Implemented Subset)
 
-This is the simplest good pattern: the caller owns the storage, and the callee
-returns a subview of it.
+The current checker also preserves borrow identity through a small set of
+wrapper and control-flow forms:
 
-```silk
-fn payload (frame: u8[]) -> u8[] {
-  return &frame[14..];
-}
-```
+- `Some(<borrow>)` preserves the underlying borrow identity.
+- Local `T?` bindings whose payload type is `&T` or `T[]` participate in the
+  same local mutation, lexical escape, move, and `await` checks as direct
+  borrowed bindings.
+- Local named struct / enum bindings whose fields or payloads carry `&T` or
+  `T[]` also participate in the same local mutation, lexical escape, move, and
+  `await` checks as direct borrowed bindings.
+- Refutable-pattern binders also preserve borrow identity when the scrutinee
+  already proves a single local borrow origin. In the current subset, this
+  includes:
+  - `if let Some(x) = r { ... }`
+  - `let Some(x) = r else { ... };`
+  - `while let Some(x) = r { ... }`
+  - statement `match (r) { Some(x) => ..., None => ... }`
+  where `r: T?` and `T` is a borrowed `&U` or `U[]`.
+  - `if let Ok(x) = r { ... }` / `if let Err(x) = r { ... }`
+  - `let Ok(x) = r else { ... };` / `let Err(x) = r else { ... };`
+  - `while let Ok(x) = r { ... }` / `while let Err(x) = r { ... }`
+  - statement `match (r) { Ok(x) => ..., Err(y) => ... }`
+  for supported result-shaped enums whose payload type carries a borrow,
+  including monomorphized `std::result::Result(T, E)` instantiations, and the
+  equivalent qualified enum-variant forms such as `State::Ready(x)`.
+- `if` expressions preserve borrow identity when:
+  - every borrowing branch resolves to the same local origin,
+  - or one branch is non-borrowing (`None`, for example) and the other carries
+    the borrow,
+  - or all borrowing branches are caller-owned inputs.
+- `match` expressions preserve borrow identity under the same conservative
+  rule:
+  - every borrowing arm must resolve to the same local origin,
+  - or one or more arms are non-borrowing while the remaining borrowing arms
+    resolve to that same origin,
+  - or all borrowing arms are caller-owned inputs.
 
-### Keep ordinary borrows inside one synchronous region
+When a borrowed control-flow expression could refer to multiple distinct local
+origins, the current subset rejects it with `E2122` instead of guessing.
 
-Use borrows for local structure and readability, then finish the work before
-you cross an `await` or task boundary.
+## Boundary Safety (Implemented Subset)
 
-```silk
-fn sum_head (xs: int[]) -> int {
-  let head: int[] = &xs[0..2];
-  return head[0] + head[1];
-}
-```
+The current compiler also enforces conservative rules at boundaries where a
+borrowed view could outlive the storage it refers to.
 
-### Move owned data across task boundaries
+### `async fn` boundaries
 
-When work crosses a task boundary, prefer an owned value rather than a borrow.
+At an `async fn` boundary, the result type may not contain ordinary
+borrowed-view types:
 
-```silk
-struct Job {
-  id: int,
-  retries: int,
-}
+- non-opaque references (`&T`),
+- and slices (`T[]`).
 
-task fn process (job: Job) -> int {
-  return job.id + job.retries;
-}
+This includes such types nested inside structs, enums, optionals, and function
+types. The reason is suspension: an `async fn` call returns a `Promise(T)`, so
+the eventual result may outlive the stack frame that originally produced the
+borrowed view.
 
-async fn main () -> int {
-  task {
-    let values: int[] = yield * process(Job{ id: 41, retries: 1 });
-    return values[0] - 42;
-  }
-}
-```
+Opaque handle references are allowed:
 
-This is the current downstream rule of thumb:
+- `&Handle` is permitted when `Handle` is declared as an opaque `struct Name;`.
 
-- ordinary borrows stay local,
-- owned values cross task boundaries,
-- borrow-handle APIs such as `AbortSignalBorrow` are the explicit exception.
+These are treated as external handles rather than borrow-checked views into
+ordinary Silk storage.
+
+Borrowed parameters are permitted in the current subset, but the checker also
+enforces a conservative async call-site rule:
+
+- an ordinary reference or slice that still resolves to function-local stack
+  storage or a local fixed array may not be passed into an `async` call unless
+  that call is awaited immediately in the same expression,
+- opaque handle references remain allowed because they are not borrow-checked
+  views into ordinary Silk storage.
+
+This is the borrow model for the current async subset. Additional async surface
+area must define equivalent suspension and escape rules before it lands.
+
+### External ABI boundaries
+
+At top-level external ABI boundaries, ordinary borrowed views are also
+rejected:
+
+- `ext` declarations may not use ordinary references or slices in parameters
+  or results,
+- unnamed/global-package top-level `export fn` declarations are subject to the same
+  rule because they define the compiler’s C-facing symbol surface,
+- only opaque handle references (`&Handle` where `Handle` is `struct Name;`)
+  may cross that boundary.
+
+This rule does not apply to ordinary impl/public methods inside Silk modules;
+those remain normal intra-Silk calls.
+
+### `await` suspension points
+
+At a concrete `await` / `await *` suspension point inside an `async` function,
+the checker also rejects live borrowed views that still resolve to ordinary
+function-local storage:
+
+- a borrowed reference (`&T`) that still points at a local stack value,
+- a slice (`T[]`) that still points at a local fixed array,
+- and either of the above when the borrowed view is stored in a local struct
+  field instead of a standalone local binding.
+
+This rule is intentionally conservative. It applies only to borrows rooted in
+ordinary local Silk storage. The following remain allowed:
+
+- borrowed views rooted in caller-owned storage that have already passed the
+  boundary rules,
+- and opaque handle references (`&Handle` where `Handle` is an opaque
+  `struct Name;`).
+
+The practical rule is: if an `await` may suspend, end any live borrow of local
+stack / fixed-array storage before the suspension point.
+
+### External ABI boundaries
+
+At `ext` boundaries, the same borrowed-view restriction applies:
+
+- ordinary references and slices may not cross the boundary,
+- and only opaque handle references (`&Handle` where `Handle` is opaque) are
+  permitted by reference.
+
+This keeps Silk’s borrow rules out of the C ABI and avoids exposing non-stable
+borrowed layouts to foreign code.
 
 ## Ownership Transfer (`move`) (Implemented Subset)
 
@@ -239,20 +281,12 @@ In the current subset, ownership transfer is intentionally conservative:
   - `let y = x;` consumes `x`,
   - `y = x;` consumes `x`.
 
-## Remaining gaps and planned expansion
+## Completeness
 
-As the language grows, borrow checking is expected to expand to cover:
-
-- borrowed references in richer positions and aggregates (especially fields and
-  more complex return-position flows),
-- richer first-class reference support beyond the current `&Struct` /
-  single-slot-scalar subset,
-- lifetime/region inference across control flow,
-- explicit disambiguation when multiple input references exist (for example a
-  label syntax like `as A` to tie a return reference to a specific input),
-- restrictions around suspension points in `async`/`await`,
-- and well-defined rules for passing references across FFI boundaries.
-
-Any expansion must be specified in `docs/language/grammar.md` and in this
+The borrow checker is complete for the currently documented and
+regression-tested Silk language subset, including the wrapper and control-flow
+forms described above. New language features may still require new borrow
+rules, but those are not treated as pre-declared borrow-checker roadmap items.
+Any such extension must be specified in `docs/language/grammar.md` and in this
 document before implementation lands, and must be reflected in diagnostics
 (`docs/compiler/diagnostics.md`) and tests.

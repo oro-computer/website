@@ -3,11 +3,11 @@
 Many expressions can appear as standalone statements when followed by `;`
 (assignment, calls, `++`/`--`, and other “statement-like” expressions).
 
-[Canonical spec](../docs/?p=language/flow-expression-statements).
+Canonical spec: `docs/language/flow-expression-statements.md`.
 
 ## Status
 
-- Implemented subset + restrictions: [Expression Statements](../docs/?p=language/flow-expression-statements)
+- Implemented subset + restrictions: `docs/language/flow-expression-statements.md`
 
 ## Example: assignment + increment
 ```silk
@@ -21,5 +21,5 @@ fn main () -> int {
 
 ## See also
 
-- [Canonical spec](../docs/?p=language/flow-expression-statements)
-- Operators: [Operators](?p=language/operators)
+- Canonical spec: `docs/language/flow-expression-statements.md`
+- Operators: `docs/wiki/language/operators.md`

@@ -104,28 +104,31 @@ import std::net;
 export fn main () -> int {
   // Plain HTTP to a loopback server (no DNS in the current stdlib).
   let addr = net::SocketAddrV4.loopback(8080);
-  let stream = match net::TCPStream.connect(addr) {
-    Ok(v) => v,
-    Err(_) => return 1,
-  };
+  match (net::TCPStream.connect(addr)) {
+    net::TCPStreamResult::Ok(stream) => {
+      let mut conn = http::Connection.from_stream(stream);
+      let w_err: http::Error? = conn.write_request("GET", "/", "localhost", "");
+      if w_err != None {
+        conn.close();
+        return 2;
+      }
 
-  let mut conn = http::Connection.from_stream(stream);
-  let w_err: http::Error? = conn.write_request("GET", "/", "localhost", "");
-  if w_err != None {
-    conn.close();
-    return 2;
-  }
-
-  let resp = match conn.read_response() {
-    Ok(v) => v,
-    Err(_) => {
-      conn.close();
-      return 3;
+      match (conn.read_response()) {
+        http::ResponseResult::Ok(resp) => {
+          let _ = resp.status_code();
+          conn.close();
+          return 0;
+        },
+        http::ResponseResult::Err(_) => {
+          conn.close();
+          return 3;
+        },
+      }
     },
-  };
-  let _ = resp.status_code();
-  conn.close();
-  return 0;
+    net::TCPStreamResult::Err(_) => {
+      return 1;
+    },
+  }
 }
 ```
 

@@ -3,7 +3,7 @@
 `string` is Silk’s built-in UTF‑8 byte sequence type. String literals write a
 `string` value directly in source code.
 
-[Canonical doc](../docs/?p=language/literals-string).
+Canonical doc: `docs/language/literals-string.md`.
 
 ## Example: escapes
 ```silk
@@ -18,5 +18,5 @@ fn main () -> int {
 
 ## See also
 
-- [Canonical doc](../docs/?p=language/literals-string)
-- `std::strings`: [std::strings](?p=std/strings)
+- Canonical doc: `docs/language/literals-string.md`
+- `std::strings`: `docs/wiki/std/strings.md`

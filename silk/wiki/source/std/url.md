@@ -3,12 +3,12 @@
 `std::url` provides a WHATWG URL parser/serializer and `URLSearchParams`-style
 behavior.
 
-[Canonical doc](../docs/?p=std/url).
+Canonical doc: `docs/std/url.md`.
 
 ## Status
 
 - Implemented (core parsing + serialization + `URLSearchParams`).
-- [Details](../docs/?p=std/url)
+- Details: `docs/std/url.md`
 
 ## Importing
 
@@ -196,5 +196,5 @@ fn main () -> int {
 
 ## See also
 
-- [Canonical doc](../docs/?p=std/url)
-- Error handling patterns: [Errors](../docs/?p=language/errors)
+- Canonical doc: `docs/std/url.md`
+- End-to-end fixture: `tests/silk/pass_std_url_basic.slk`

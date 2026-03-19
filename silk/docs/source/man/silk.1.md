@@ -1,5 +1,7 @@
 # `silk` (1) — Silk Language Compiler
 
+> NOTE: This is the Markdown source for the eventual man 1 page for `silk`. The roff-formatted manpage should be generated from this content.
+
 ## Name
 
 `silk` — compile Silk source code and packages.
@@ -19,20 +21,18 @@
 - `silk package lint [--package <dir|manifest>]`
 - `silk doc [--all] <file> [<file> ...] [-o <path>]`
 - `silk doc --man [--package <dir|manifest>] [--std-root <path>] <query> [-o <path>]`
-- `silk man [--list] [--search <pattern>] [--section <n>|-s <n>] [--package <dir|manifest>] [--std-root <path>] [<query>]`
+- `silk man [--list] [--search <pattern>] [--section <n>|-s <n>] [--package <dir|manifest|module>] [--std-root <path>] [<query>]`
 - `silk cc <cc args...>`
 - `silk env`
 - `silk format [--check] <path> [<path> ...]`
 
 ## Description
 
-`silk` is the command-line driver for the Silk toolchain. It parses, checks,
-optionally verifies, documents, and builds Silk source files and packages. The
-current toolchain supports REPL usage, package inspection/linting, doc/man
-generation, and artifact builds for executables, object files, static
-libraries, and shared libraries on the supported hosted targets.
+`silk` is the command-line compiler for the Silk language. It reads Silk source files, performs parsing and type checking, and builds artifacts for the current documented compiler subset, including executables, objects, static libraries, shared libraries, package builds, documentation, and manpages.
 
 For command-specific help, run `silk help <command>` or see the corresponding manpages (`silk-build` (1), `silk-package` (1), `silk-check` (1), `silk-test` (1), `silk-doc` (1), `silk-man` (1), `silk-cc` (1), `silk-env` (1), `silk-format` (1)). For a toolchain overview, see `silk` (7).
+
+`silk format` is the canonical source formatter for Silk code; it now enforces statement splitting, block-spacing readability rules, and canonical import grouping in addition to indentation cleanup.
 
 Convenience entrypoints:
 
@@ -50,7 +50,7 @@ When stderr is a TTY, `silk` may decorate diagnostics with ANSI colors. Set `NO_
 
 ## Options
 
-Current command surface:
+The current CLI supports:
 
 - **Global options:**
   - `--help` / `-h` — show global usage and exit.
@@ -71,16 +71,31 @@ Current command surface:
       executed once and are not replayed.
   - Built-in commands:
     - `.help` — show help
+    - `.man <query>` — render inline documentation for current-session symbols,
+      imported symbols, and `std::...` modules/symbols, with highlighted Silk
+      synopsis/examples
     - `.clear` — reset session state
     - `.cls` — clear the screen
     - `.undo` — undo the last committed line
     - `.exit` — exit the REPL
   - Multi-line input: when delimiters are unbalanced (for example `{` without `}`), the REPL
     prompts with `... ` and keeps reading until the statement is complete.
+  - Continuation lines are pre-indented from the current unmatched delimiter
+    depth so nested `{}`, `()`, and `[]` constructs carry indentation
+    forward.
+  - When a complete pasted chunk contains multiple top-level entries, the REPL
+    splits and executes them in order while keeping multiline blocks together.
+  - Multiline expressions still use the normal expression/auto-print path when
+    they are not declaration or statement forms, including multiline raw
+    backtick strings.
   - Ctrl-C cancels a pending multi-line statement.
   - Symbol queries: when a line is a bare identifier or qualified name (for example `User`,
     `User.method`, or `std::io::println`), the REPL prints the matching declaration from the
     current session or imported modules instead of executing it.
+  - `.man` is intentionally narrower than `silk man`:
+    - it is for inline REPL browsing of module/symbol docs,
+    - use `silk man ...` outside the REPL for section/search/list queries such
+      as `silk man 7 silk` or `silk man --search io`.
   - History is loaded/saved to:
     - `$SILK_REPL_HISTORY` when set, otherwise
     - `$SILK_WORK_DIR/repl_history` (default: `.silk/repl_history`).
@@ -113,6 +128,7 @@ Current command surface:
     - `--package <dir|manifest>` (or `--pkg`) — load the module set from a package manifest (`silk.toml`) instead of explicit input files. When `--package` is provided:
       - `<file> ...` inputs must be omitted.
       - When `<file> ...` inputs are omitted and `--package` / `--pkg` is also omitted, but `./silk.toml` exists, `silk test` behaves as if `--package .` was provided.
+      - manifest-native link metadata for the test harness (`[[target]].inputs`, `needed`, and `runpath`) comes from `[build].default_target` when it names a code target, otherwise the first declared code target; `kind = "man"` targets are ignored for this purpose.
     - `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`).
     - `--` — end of options; treat remaining args as file paths (even if they begin with `-`).
 
@@ -136,7 +152,7 @@ Current command surface:
       - when building multiple targets, per-output flags are rejected (`-o/--out`, `--kind`, `--emit`, `--arch`, `--target`, `--c-header`, `--cflag`, `--ldflag`, `--needed`, `--runpath`, `--soname`, `--elf-interp`).
     - `-p <path>`, `--prefix <path>` — install/uninstall prefix (default: `$PREFIX` when set, otherwise `/usr/local`).
     - `--destdir <path>` — stage install/uninstall paths under `<destdir><prefix>/...`.
-    - `silk build install` installs package artifacts and writes an uninstall receipt (see `silk-build` (1)).
+    - `silk build install` installs package artifacts, package-owned manpages, and writes an uninstall receipt (see `silk-build` (1)).
     - `silk build uninstall` removes files listed in the uninstall receipt (see `silk-build` (1)).
     - `silk package inspect|lint [--package <dir|manifest>]`:
       - `inspect` prints package metadata, public definitions, dependency constraints, declared artifacts, and the current package hash.
@@ -174,7 +190,7 @@ Current command surface:
       - `wasm32` → `wasm32-unknown-unknown`,
       - `wasm32-wasi` → `wasm32-wasi`,
       - for convenience, `--arch` also accepts full target triples recognized by `--target`.
-    - `--target <triple>` — select the compilation target (current supported set):
+    - `--target <triple>` — select the compilation target (current implementation):
       - `linux-x86_64` (default; emits ELF64 binaries as described below),
       - common `x86_64-*-linux-*` triples such as `x86_64-linux-gnu` are accepted as aliases for `linux-x86_64`,
       - const-main-only native executable output (no IR backend yet; requires a constant-expression `main` that reduces to a constant integer; supports `fn main () -> int` and `fn main(argc: int, argv: u64) -> int` when arguments are unused):
@@ -317,11 +333,25 @@ Current command surface:
   - Manpage mode: `silk doc --man [--package <dir|manifest>] [--std-root <path>] <query> [-o <path>]`:
     - Renders a single roff `man(7)` page to stdout (or to `-o` / `--out` when provided).
     - The manpage kind is derived from documentation tags (`@cli` → section 1, `@misc` → section 7, otherwise section 3 for API pages).
+    - Package-scoped source-doc queries are evaluated against the root package’s own source modules, not dependency docs in the same manifest graph.
+- **Man command:**
+  - `silk man [--list] [--search <pattern>] [--section <n>|-s <n>] [--package <dir|manifest|module>] [--std-root <path>] [<query>]`:
+    - Resolves shipped toolchain pages, stdlib module/symbol docs, and source-derived package API docs.
+    - When a package root is in scope via `--package`, nearest-manifest discovery, or package-search-path resolution, `silk man` also discovers package-authored docs/man pages from that root:
+      - local `package.readme` paths act as the package overview page,
+      - local `package.documentation` paths act as the package docs landing page,
+      - local metadata doc paths must stay inside the package root; absolute paths and `..` escapes are rejected,
+      - package man roots are discovered under `docs/man/`, `man/`, `share/man/`, and installed sectioned roots such as `share/man/man1/`.
+    - Package-scoped source-doc queries are evaluated against the root package’s own source modules, not dependency docs in the same manifest graph.
+    - With no explicit query, `silk man` opens the nearest package overview when one is available; otherwise it falls back to the quick-start/list view.
+    - `--list` and `--search` include these package-local pages whenever a package root is already in scope.
+    - When a local `package.readme` exists, `silk man readme`, `silk man overview`, `silk man <package-name>`, and qualified aliases such as `silk man <package-name> readme` prefer the package overview page.
+    - When a local `package.documentation` page exists, `silk man docs`, `silk man documentation`, and qualified aliases such as `silk man <package-name> documentation` open it directly.
 - **C compiler wrapper:**
   - `silk cc <cc args...>`:
     - runs a host C compiler to build programs that embed or link against `libsilk.a`,
     - selects the compiler executable via `SILK_CC` (when set), otherwise falls back to `cc`,
-    - automatically adds include and library search paths adjacent to the installed `silk` binary (for example `../include` and `../lib`), plus `-lsilk`,
+    - automatically adds include and library search paths adjacent to the installed `silk` binary (for example `../include`, `../include/silk`, and `../lib`), plus `-lsilk`,
     - on `linux/x86_64`, also adds `-lstdc++ -lpthread -lm` (vendored Z3 is built as C++),
     - passes through additional arguments verbatim to the underlying compiler (files, flags, `-o`, `-I`, `-L`, etc.); use `silk help cc` for wrapper usage.
 
@@ -364,7 +394,7 @@ See also: `silk-env` (1) for a complete list of environment variables printed by
 
 ## See Also
 
-- [`silk-build` (1)](?p=man/silk-build.1), [`silk-package` (1)](?p=man/silk-package.1), [`silk-check` (1)](?p=man/silk-check.1), [`silk-test` (1)](?p=man/silk-test.1), [`silk-doc` (1)](?p=man/silk-doc.1), [`silk-man` (1)](?p=man/silk-man.1), [`silk-cc` (1)](?p=man/silk-cc.1), [`silk-lsp` (1)](?p=man/silk-lsp.1)
-- [`silk` (7)](?p=man/silk.7)
-- [`libsilk` (7)](?p=man/libsilk.7)
-- [https://oro.computer/silk](https://oro.computer/silk)
+- `silk-build` (1), `silk-package` (1), `silk-check` (1), `silk-test` (1), `silk-doc` (1), `silk-man` (1), `silk-cc` (1), `silk-lsp` (1)
+- `silk` (7)
+- `libsilk` (7)
+- `https://oro.computer/silk`

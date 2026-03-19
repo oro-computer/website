@@ -2,23 +2,25 @@
 
 This document defines the C99 ABI and the interface of the `libsilk.a` static library.
 
-If you want the shortest path to a working embedder, start with [`libsilk` quickstart](?p=compiler/libsilk-quickstart).
-
 ## Goals
 
 - Provide a stable C ABI for embedders.
-- Mirror the external-declaration semantics described in [External declarations (`ext`)](?p=language/ext).
+- Mirror the external-declaration semantics described in `docs/language/ext.md`.
 - Keep the ABI small, explicit, and well-documented.
 
 ## Library & Headers
 
 - Static library: `libsilk.a`.
-- Primary header: `include/silk.h`.
+- Primary header: `include/silk/silk.h`.
+- Legacy compatibility shim: `include/silk.h`.
+
+Embedders should prefer `#include <silk/silk.h>`. The flat `include/silk.h`
+wrapper remains available for compatibility during the transition.
 
 ### Linking on `linux/x86_64` (vendored Z3)
 
-On `linux/x86_64`, `libsilk.a` bundles Z3 to support Formal Silk verification.
-That vendored Z3 static library is built as
+On `linux/x86_64`, `libsilk.a` vendors Z3 (via `vendor/lib/x64-linux/libz3.a`) to
+support Formal Silk verification. The vendored Z3 static library is built as
 **C++**, so downstream embedders linking against `libsilk.a` MUST also link the
 system C++ runtime and any required system libraries:
 
@@ -43,7 +45,7 @@ The header must define:
   - compiling Silk source to executables, libraries, or object files,
   - interacting with diagnostics and error reporting.
 
-### Initial C Header Shape (`include/silk.h`)
+### Initial C Header Shape (`include/silk/silk.h`)
 
 The initial C header provided in the Silk compiler repository defines:
 
@@ -193,8 +195,8 @@ The initial C header provided in the Silk compiler repository defines:
   auto-loaded `import std::...;` modules.
 
   `silk_compiler_set_target` selects the code generation target. The
-  `target_triple` string is copied. The current supported set matches the CLI
-  (`silk build --list-targets`), including:
+  `target_triple` string is copied. The current implementation recognizes the
+  same targets as the CLI (`silk build --list-targets`), including:
 
   - `linux-x86_64` (default), and common `x86_64-*-linux-*` triples such as
     `x86_64-linux-gnu` and `x86_64-unknown-linux-gnu`,
@@ -209,9 +211,9 @@ The initial C header provided in the Silk compiler repository defines:
   - `wasm32-wasi` (and other `wasm32` triples containing `wasi`).
 
   For `wasm32` targets, only `SILK_OUTPUT_EXECUTABLE` is supported. The output
-  bytes are a final WebAssembly module (`.wasm`) produced by the current
-  WebAssembly backend, with a smaller constant-only fallback for programs that
-  fit the constant subset.
+  bytes are a final WebAssembly module (`.wasm`) produced by the IR-backed wasm
+  backend (`src/backend_wasm_ir.zig`), with a smaller constant-only fallback for
+  programs that fit the constant subset.
 
   The wasm backend is still early-stage, but it is no longer limited
   to single-module constant programs:
@@ -423,7 +425,7 @@ The initial C header provided in the Silk compiler repository defines:
         - within function bodies, the compiler supports a small `string`/`regexp` expression subset:
           - `string`: string literals, `let` bindings of `string`, `return` of a `string` value, direct calls to `string`-returning helpers, and `==`/`!=`/`<`/`<=`/`>`/`>=` comparisons over `string` values (producing `bool`),
           - `regexp`: regex literals (`/pattern/flags`), `let` bindings of `regexp`, `return` of a `regexp` value, and direct calls between helpers that accept/return `regexp`,
-          - other string operations (concatenation, indexing, etc.) remain outside the current backend subset; higher-level regex matching lives in `std::regex` and is routed through `ext` calls.
+          - other string operations (concatenation, indexing, etc.) are not implemented yet; higher-level regex matching lives in `std::regex` and is routed through `ext` calls.
       - within the current `linux/x86_64` IR subset, `i128`/`u128`/`f128` values are supported at ABI boundaries using the stable C99 `{ lo, hi }` struct shapes:
         - parameters lower to two integer-like scalars (`u64 lo`, then `u64`/`i64 hi`) and consume integer argument locations,
         - results return as two integer-like scalars in `rax`/`rdx`,
@@ -431,6 +433,7 @@ The initial C header provided in the Silk compiler repository defines:
       - within the current `linux/x86_64` IR subset, a limited `struct` subset is supported at ABI boundaries:
         - within function bodies and internal helper calls, `struct` declarations with 0+ fields of supported value types are supported (scalar primitives, `string`, nested structs, and supported optionals),
         - at ABI boundaries for exported/FFI functions, only ABI-safe structs are currently supported: after slot-flattening, all scalar slots must be `i64`/`u64`/`f64` (until packed ABI mapping for smaller fields is implemented),
+        - ordinary borrowed references/slices are rejected up front on `ext` declarations and unnamed/global-package `export fn` signatures; only opaque handle references (`&Handle` where `Handle` is `struct Name;`) may cross the external ABI boundary,
         - at the C ABI surface, exported function *parameters* support 1+ slot ABI-safe structs by lowering the struct to its scalar slots in order; downstream C callers should declare separate parameters for 3+ slot structs (by-value C struct parameters are ABI-compatible only for the 1–2 slot cases), while exported function *returns* support 1+ slot ABI-safe structs (3+ slot returns use the native backend’s sret return path and are ABI-compatible with returning an equivalent C struct by value),
         - in all cases, the compiler lowers a struct value into N scalar slots in field order and assigns argument/result locations according to System V AMD64 integer/SSE classification for those slots.
       - within the current `linux/x86_64` IR subset, optionals (`T?`) are supported at ABI boundaries for the supported payload subset (scalar payloads, `string?`, and optionals of ABI-safe structs):
@@ -547,8 +550,8 @@ The initial C header provided in the Silk compiler repository defines:
               scalar calling convention on `linux/x86_64` (integer-like
               scalars in `rdi`..`r9`, `f32`/`f64` in `xmm0`..`xmm7`, with
               additional arguments spilled to the stack); helpers may have
-              more than six integer parameters, and this path is covered by the
-              reference implementation’s ABI regression suite, or
+              more than six integer parameters, and this path is exercised
+              in both Zig tests and C tests (see `c-tests/build_exec_helper_params*.c`), or
           - a final `if` statement whose condition is a boolean expression:
             - for the purely constant subset, the condition is a
               **compile‑time boolean literal** (`true` or `false`) and each
@@ -673,7 +676,7 @@ The initial C header provided in the Silk compiler repository defines:
   ```
 
   - `silk_error_format` returns a human-readable diagnostic message. When the compiler can associate the error with a source span, the formatted message includes the module name/path plus line/column and a caret snippet.
-  - The text format and initial stable error code set are specified in [Diagnostics](?p=compiler/diagnostics). Embedders should treat the formatted message as user-facing text (not a stable machine-readable protocol).
+  - The text format and initial stable error code set are specified in `docs/compiler/diagnostics.md`. Embedders should treat the formatted message as user-facing text (not a stable machine-readable protocol).
 
 Ownership, lifetime, and thread-safety guarantees for these APIs must be clearly documented and kept in sync with the implementation.
 
@@ -688,290 +691,9 @@ In addition, the embedding ABI must clearly distinguish:
 - functions that consume Silk‑owned values (e.g. `SilkString` whose storage is owned by the runtime) versus
 - functions that take ownership of data supplied by the embedder (and are responsible for freeing it via documented APIs).
 
-Any deviation from the mappings documented in [External declarations](?p=language/ext) must be justified here and reflected in tests.
-
-## Embedder checklist
-
-For downstream embedders, the most important rules are:
-
-- Treat every `SilkString` passed into the ABI as **borrowed input**:
-  - `libsilk` copies configuration strings and source buffers,
-  - callers retain ownership of the original C storage.
-- Treat every `SilkModule *` and `SilkError *` returned by the ABI as
-  **compiler-owned**:
-  - never free them directly,
-  - never cache them across later compiler operations unless the docs
-    explicitly guarantee that lifetime.
-- Treat every `SilkBytes` returned by `silk_compiler_build_to_bytes` as
-  **library-owned output**:
-  - free it only with `silk_bytes_free`,
-  - do not pass `bytes.ptr` to `free()`.
-- Create output directories yourself before calling `silk_compiler_build`;
-  unlike the CLI, the C ABI does not create parent directories.
-- Use one `SilkCompiler` per logical build job. A compiler instance is not
-  specified as thread-safe.
-- Expect the last-error object to be overwritten by later operations. Format or
-  copy diagnostics promptly when a call fails.
-
-## End-to-end examples
-
-These examples are intentionally small and downstream-focused. They show the
-normal embedder patterns rather than internal compiler tests.
-
-### Example: build a tiny executable on disk
-
-```c
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "silk.h"
-
-static SilkString silk_cstr(const char *s) {
-  SilkString out;
-  out.ptr = (char *)s;
-  out.len = (int64_t)strlen(s);
-  return out;
-}
-
-static void print_last_error(SilkCompiler *compiler) {
-  SilkError *err = silk_compiler_last_error(compiler);
-  if (!err) {
-    fputs("libsilk: unknown error\n", stderr);
-    return;
-  }
-
-  size_t need = silk_error_format(err, NULL, 0);
-  char *buf = (char *)malloc(need + 1);
-  if (!buf) {
-    fputs("libsilk: failed to allocate error buffer\n", stderr);
-    return;
-  }
-
-  silk_error_format(err, buf, need + 1);
-  fprintf(stderr, "%s\n", buf);
-  free(buf);
-}
-
-int main(void) {
-  SilkCompiler *compiler = silk_compiler_create();
-  if (!compiler) {
-    return 1;
-  }
-
-  if (!silk_compiler_set_stdlib(compiler, silk_cstr("std"))) {
-    print_last_error(compiler);
-    silk_compiler_destroy(compiler);
-    return 1;
-  }
-
-  if (!silk_compiler_add_source_buffer(
-        compiler,
-        silk_cstr("main.slk"),
-        silk_cstr("fn main() -> int { return 0; }\n"))) {
-    print_last_error(compiler);
-    silk_compiler_destroy(compiler);
-    return 1;
-  }
-
-  if (!silk_compiler_build(
-        compiler,
-        SILK_OUTPUT_EXECUTABLE,
-        silk_cstr("build/libsilk-demo"))) {
-    print_last_error(compiler);
-    silk_compiler_destroy(compiler);
-    return 1;
-  }
-
-  silk_compiler_destroy(compiler);
-  return 0;
-}
-```
-
-Notes:
-
-- `build/` must already exist.
-- This example stays within the currently implemented executable subset by using
-  a constant `main`.
-
-### Example: build a wasm module to memory
-
-```c
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-
-#include "silk.h"
-
-static SilkString silk_cstr(const char *s) {
-  SilkString out;
-  out.ptr = (char *)s;
-  out.len = (int64_t)strlen(s);
-  return out;
-}
-
-int main(void) {
-  SilkCompiler *compiler = silk_compiler_create();
-  SilkBytes bytes = {0};
-  int rc = 1;
-
-  if (!compiler) {
-    return 1;
-  }
-
-  if (!silk_compiler_set_target(compiler, silk_cstr("wasm32-unknown-unknown"))) {
-    goto fail;
-  }
-
-  if (!silk_compiler_add_source_buffer(
-        compiler,
-        silk_cstr("main.slk"),
-        silk_cstr("fn main() -> int { return 7; }\n"))) {
-    goto fail;
-  }
-
-  if (!silk_compiler_build_to_bytes(
-        compiler,
-        SILK_OUTPUT_EXECUTABLE,
-        &bytes)) {
-    goto fail;
-  }
-
-  if (bytes.len < 4 || memcmp(bytes.ptr, "\0asm", 4) != 0) {
-    goto fail;
-  }
-
-  rc = 0;
-
-fail:
-  silk_bytes_free(&bytes);
-  silk_compiler_destroy(compiler);
-  return rc;
-}
-```
-
-This is the normal pattern for sandboxed embedders:
-
-- configure the target,
-- compile into `SilkBytes`,
-- validate or store the bytes,
-- release them with `silk_bytes_free`.
-
-### Example: emit an object file and generated C header
-
-```c
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-
-#include "silk.h"
-
-static SilkString silk_cstr(const char *s) {
-  SilkString out;
-  out.ptr = (char *)s;
-  out.len = (int64_t)strlen(s);
-  return out;
-}
-
-int main(void) {
-  SilkCompiler *compiler = silk_compiler_create();
-  if (!compiler) {
-    return 1;
-  }
-
-  if (!silk_compiler_set_c_header(compiler, silk_cstr("build/demo.h"))) {
-    silk_compiler_destroy(compiler);
-    return 1;
-  }
-
-  if (!silk_compiler_add_source_buffer(
-        compiler,
-        silk_cstr("lib.slk"),
-        silk_cstr(
-          "export fn add(a: int, b: int) -> int { return a + b; }\n"))) {
-    silk_compiler_destroy(compiler);
-    return 1;
-  }
-
-  if (!silk_compiler_build(
-        compiler,
-        SILK_OUTPUT_OBJECT,
-        silk_cstr("build/demo.o"))) {
-    silk_compiler_destroy(compiler);
-    return 1;
-  }
-
-  silk_compiler_destroy(compiler);
-  return 0;
-}
-```
-
-This is the usual path when a C or C++ host wants:
-
-- a compiled Silk object/library,
-- plus a generated C header matching the exported ABI surface.
-
-### Example: two-pass diagnostic formatting
-
-```c
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "silk.h"
-
-static SilkString silk_cstr(const char *s) {
-  SilkString out;
-  out.ptr = (char *)s;
-  out.len = (int64_t)strlen(s);
-  return out;
-}
-
-int main(void) {
-  SilkCompiler *compiler = silk_compiler_create();
-  if (!compiler) {
-    return 1;
-  }
-
-  (void)silk_compiler_add_source_buffer(
-    compiler,
-    silk_cstr("broken.slk"),
-    silk_cstr("fn main() -> int { return ; }\n"));
-
-  if (!silk_compiler_build(
-        compiler,
-        SILK_OUTPUT_EXECUTABLE,
-        silk_cstr("build/should-not-exist"))) {
-    SilkError *err = silk_compiler_last_error(compiler);
-    size_t need = silk_error_format(err, NULL, 0);
-    char *buf = (char *)malloc(need + 1);
-    if (buf) {
-      silk_error_format(err, buf, need + 1);
-      fprintf(stderr, "%s\n", buf);
-      free(buf);
-    }
-  }
-
-  silk_compiler_destroy(compiler);
-  return 0;
-}
-```
-
-The important rule here is that `SilkError *` is still owned by the compiler.
-Copy the formatted text if you need it after the next compiler operation.
+Any deviation from the mappings documented in `docs/language/ext.md` must be justified here and reflected in tests.
 
 ## See Also
 
-- [`libsilk` (7)](?p=man/libsilk.7) — C99 ABI manpage for embedders.
-- [`silk_compiler` (3)](?p=man/silk_compiler.3)
-- [`silk_error` (3)](?p=man/silk_error.3)
-- [`silk_bytes` (3)](?p=man/silk_bytes.3)
-- [`silk_abi_get_version` (3)](?p=man/silk_abi_get_version.3)
-- [Zig embedding API](?p=compiler/zig-api)
-- `silk.h` — public C header shipped with the library.
+- `libsilk` (7) — C99 ABI manpage for embedders.
+- `silk/silk.h` — canonical public C header shipped with the library.

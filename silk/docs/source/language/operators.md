@@ -91,12 +91,16 @@ The language includes the following operators and delimiters:
   - `..` and `..=` form range literals of type `range` (see `docs/language/types.md`).
   - `...` is the varargs/rest marker (see `docs/language/varargs.md`).
 - Other punctuation: `?`, `??`, `->`, `=>`, `,`, `;`, `(`, `)`, `{`, `}`, `[`, `]`, `_`, `:`.
-  - Currently, `??` is supported for optionals in the
-    current backend subset (including scalar, `string`, and the current
-    `struct` subset, plus nested optionals in the supported payload subset;
-    see `docs/language/optional.md`). The `?` token is used both in type
-    annotations (`T?`) and as the postfix typed error propagation operator for
-    error-producing calls (`call()?`; see `docs/language/typed-errors.md`).
+  - Currently, `??` is supported for:
+    - optionals in the current backend subset (including scalar, `string`, and
+      the current `struct` subset, plus nested optionals in the supported
+      payload subset; see `docs/language/optional.md`), and
+    - recoverable `Result`-like values, where `result ?? fallback` yields the
+      `Ok(...)` payload and evaluates `fallback` only for `Err(...)`
+      (`docs/std/result.md`).
+    The `?` token is used both in type annotations (`T?`) and as the postfix
+    typed error propagation operator for error-producing calls (`call()?`; see
+    `docs/language/typed-errors.md`).
 
 The lexer and parser must recognize these tokens exactly as specified, and precedence/associativity must match the formal grammar.
 

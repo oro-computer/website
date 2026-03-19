@@ -13,32 +13,12 @@ The goal is to provide diagnostics that are:
 - consumable by humans (caret snippets, notes/help where appropriate),
 - easy to test (deterministic formatting; the canonical text contains no ANSI escapes).
 
-## Quick Workflow
-
-When a Silk command fails, work in this order:
-
-```sh
-silk check app.slk
-silk check --debug app.slk
-silk build app.slk -o build/app
-```
-
-1. Read the error code (`E...`) first.
-2. Use the caret span to find the exact token or expression being rejected.
-3. Follow any `= note:` / `= help:` guidance.
-4. Jump from the code family to the relevant reference page:
-   - imports / packages → package and module docs,
-   - borrow / move / task rules → language reference,
-   - verification failures → Formal Silk pages,
-   - backend errors → target and build docs.
-
 ## Terminology
 
 - **Source span**: a byte range in the UTF‑8 source buffer (`offset`, `length`).
   - Displayed **line** and **column** numbers are **1-based**.
   - Columns are measured in **UTF‑8 bytes** (matching the lexer’s current `Token.column` behavior).
-- **Primary label**: the main span where the error is reported (single primary
-  span in the current text renderer).
+- **Primary label**: the main span where the error is reported (single span in the initial implementation).
 - **Note / Help**: supplemental lines that explain context or suggest a fix.
 
 ## Text Format (CLI and ABI)
@@ -64,17 +44,6 @@ Rules:
   - for a zero-length span, print a single `^`,
   - otherwise print `^` repeated for the span length, clipped to the line end if needed.
 - The canonical text format contains no ANSI color escapes.
-
-Example:
-
-```text
-error[E2037]: task fn uses a non-task-safe type at a task boundary
- --> worker.slk:4:18
-  |
-4 | task fn run (p: &Pair) -> int {
-  |                  ^^^^^ non-opaque references may not cross task boundaries
-  = help: pass an owned value or a task-safe borrow/view type instead
-```
 
 ## Manifest and Config Errors
 
@@ -122,28 +91,9 @@ Examples of help/suggestion content the compiler may emit:
 - guidance to include additional modules in the build/module set when an import
   refers to a package or file that is not present.
 
-Example:
-
-```text
-error[E1001]: unknown imported package
- --> app.slk:1:8
-  |
-1 | import ui from "ui";
-  |        ^^ unknown package `ui`
-  = help: add the dependency to silk.toml or extend SILK_PACKAGE_PATH
-```
-
 ## Error Codes (Initial Set)
 
 The compiler assigns a stable code to each currently supported error kind.
-
-Common lookup flow:
-
-- `E0...` → parser rejected the surface syntax.
-- `E1...` → import, file, or package resolution failed.
-- `E2...` → checker rejected the program’s types, control flow, or language rules.
-- `E3...` → Formal Silk could not prove the requested obligation.
-- `E4...` → the program checked successfully, but the selected backend cannot lower it yet.
 
 ### Parsing
 
@@ -161,7 +111,10 @@ Common lookup flow:
 ### Type Checking
 
 - `E2001` — type mismatch.
-- `E2002` — unsupported construct in the current subset (the diagnostic detail may identify the rejected statement/expression form).
+- `E2002` — unsupported construct in the current subset (the diagnostic detail
+  may identify the rejected statement/expression form, and notes may clarify
+  construct-specific rules such as statement-form `match` treating bare
+  identifier arms as binders).
 - `E2003` — unknown imported name.
 - `E2004` — duplicate imported name.
 - `E2005` — invalid assignment.
@@ -175,14 +128,14 @@ Common lookup flow:
 - `E2013` — cannot access fields on opaque struct.
 - `E2014` — formal Silk declaration used in runtime expression.
 - `E2015` — `let` requires an initializer.
-- `E2016` — unsupported generic form outside the current monomorphized subset.
+- `E2016` — unsupported generic form in the current subset (for example const parameters / const type arguments).
 - `E2017` — builtin `map(K, V)` type form was removed (use `std::map::{HashMap, TreeMap}` instead).
 - `E2018` — namespace import is not callable.
 - `E2019` — duplicate default export in a module.
 - `E2020` — invalid `panic` statement.
 - `E2021` — unknown error type.
 - `E2022` — error not declared in function signature.
-- `E2023` — error-producing call must be handled with `match`.
+- `E2023` — error-producing call must be handled with `match` or `?`.
 - `E2024` — match scrutinee is not an error-producing call.
 - `E2025` — match is missing an arm.
 - `E2026` — typed error-handling match arm must end with a terminal statement.
@@ -277,6 +230,12 @@ Common lookup flow:
 - `E2115` — reserved (previously: `f128` not supported in the subset).
 - `E2116` — invalid inline assembly (inline asm failed to assemble, or uses unsupported features in the current implementation).
 - `E2117` — `let ... else { ... };` requires the `else` block to end with a terminal statement.
+- `E2118` — borrowed-view type may not appear in an `async fn` result.
+- `E2119` — borrowed-view type may not cross an `ext` / unnamed/global-package `export fn` boundary.
+- `E2120` — local borrow may not remain live across `await`.
+- `E2121` — cannot mutate local storage while it is borrowed.
+- `E2122` — borrowed control-flow expression is ambiguous in the current subset.
+- `E2123` — local borrow may not escape through an async call.
 
 ### Formal Silk Verification
 

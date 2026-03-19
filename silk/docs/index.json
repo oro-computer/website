@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-03-17T18:15:55+00:00",
+  "generatedAt": "2026-03-18T19:58:49+00:00",
   "kind": "docs",
-  "count": 183,
+  "count": 182,
   "sections": [
     {
       "name": "overview",
@@ -560,11 +560,6 @@
           "id": "std/runtime",
           "title": "`std::runtime`",
           "file": "std/runtime.md"
-        },
-        {
-          "id": "std/runtime-event-loop",
-          "title": "`std::runtime::event_loop`",
-          "file": "std/runtime-event-loop.md"
         },
         {
           "id": "std/signal",

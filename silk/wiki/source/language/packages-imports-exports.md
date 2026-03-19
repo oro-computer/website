@@ -11,11 +11,11 @@ Silk supports both:
 - package imports (`import std::io;`, `import ui;`),
 - file imports (`import { Name } from "./module.slk";`).
 
-[Canonical spec](../docs/?p=language/packages-imports-exports).
+Canonical spec: `docs/language/packages-imports-exports.md`.
 
 ## Status
 
-- Full rules and many examples: [Packages, Imports, and Exports](../docs/?p=language/packages-imports-exports)
+- Full rules and many examples: `docs/language/packages-imports-exports.md`
 
 ## Syntax
 ```silk
@@ -72,5 +72,5 @@ fn main () -> int {
 
 ## See also
 
-- [Canonical spec](../docs/?p=language/packages-imports-exports)
-- Std module structure rules: [std:: Module Structure](../docs/?p=std/package-structure)
+- Canonical spec: `docs/language/packages-imports-exports.md`
+- Std module structure rules: `docs/std/package-structure.md`

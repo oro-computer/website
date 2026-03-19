@@ -236,18 +236,17 @@ match (inspect_issues()) {
 The `match` **statement** form can also be used to destructure common
 recoverable result shapes such as `std::result::Result(T, E)`.
 
-When the scrutinee expression is a **call expression** whose result type is
-either:
+When the scrutinee expression has a recoverable result type such as:
 
 - `std::result::Result(T, E)` (an `enum` with `Ok(T)` and `Err(E)` variants), or
 - a “Result-like” struct with fields:
   - `value: T?`
   - `err: E?` where `E` is an `error` type,
 
-then the checker accepts binder patterns of the form:
+then the checker accepts result-style patterns of the form:
 
-- `name => { ... }` / `_ => { ... }` for the success payload (binds `name` as `T`),
-- `err: E => { ... }` for the error payload (binds `err` as `E`).
+- `Ok(name) => { ... }` / `Ok(_) => { ... }` for the success payload,
+- `Err(err) => { ... }` / `Err(_) => { ... }` for the error payload.
 
 The Terminal Arm Rule does **not** apply in this form because the scrutinee is
 not a `T | ErrorType...` typed-error expression; the error is a normal returned
@@ -258,11 +257,14 @@ Runtime invariant (struct form, current backend): exactly one of `value` and
 
 Implementation notes:
 
-- The current compiler supports a match subset for optionals as an
-  *expression* (`match x { None => expr, Some(v) => expr }`).
-- The `match` expression also supports `Ok(...)` / `Err(...)` patterns for
-  `Result` values (see `docs/language/flow-match.md`).
-- Typed error handling uses the *statement* form of `match` with block arms.
+- Recoverable result matching is part of the ordinary-value statement subset
+  documented in `docs/language/flow-match.md`.
+- One-arm statement matches are allowed for optionals and recoverable results,
+  so these forms are valid:
+  - `match (res) { Ok(v) => { ... } }`
+  - `match (res) { Err(err) => { ... } }`
+- Typed error handling remains the separate `T | ErrorType...` statement form
+  described in this page.
 
 ## Restrictions
 

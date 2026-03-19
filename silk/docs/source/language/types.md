@@ -6,7 +6,7 @@ Implementation status (current compiler subset):
 
 - Supported end-to-end: primitives, nominal `struct` types, optionals (`T?`),
   `&Struct` references (in function parameter types and as local values
-  produced by `new` or returned from calls), and array/slice types
+  produced by `new` / calls that return `&Struct`), and array/slice types
   (`T[N]`, `T[]`) over element types that lower to a fixed scalar-slot sequence
   in the current backend subset (including array literals, indexing reads, and
   iterable `for` loops). Indexed assignment targets (`xs[i] = v`) are supported
@@ -28,13 +28,9 @@ Implementation status (current compiler subset):
   are not a stable user API.
 - Special-case: the nominal optional form `Option(T)` is accepted and desugared
   to `T?` in type annotations (it is not a general generics feature).
-- Implemented current generic surface: parameterized nominal declarations with
-  type and const parameters (for example `Wrap(T, N: usize)`), applied types
-  in type positions (`Wrap(u8, 4)`), and the generic-function surface described
-  in `docs/language/generics.md`.
-  - `E2016` remains reserved for unsupported generic forms outside the shipped
-    monomorphized subset.
-- The removed builtin map type form (`map(K, V)`) still reports `E2017`; use
+- Parsed but rejected by the current checker: const parameters and integer
+  literal type arguments (`Foo(N: int)`, `Foo(u8, 1024)`) (`docs/compiler/diagnostics.md`, `E2016`),
+  and the removed builtin map type form (`map(K, V)`) (`E2017`; use
   `std::map::{HashMap, TreeMap}` instead).
 - Implemented in the native backend subset: 128-bit scalar primitives
   (`i128`, `u128`, `f128`).
@@ -389,12 +385,13 @@ The compiler must:
 
 - Treat nominal types as distinct even if their field layout is identical.
 - In the full language design, support parameterized types in all contexts
-  where the spec permits them. In the current compiler subset, monomorphized
-  generics support both type parameters and const parameters on nominal
-  declarations, plus applied types in type positions (`Name(u8)`,
-  `Wrap(u8, 4)`).
-  - The `Option(T)` optional sugar described above remains supported for the
-    current subset.
+  where the spec permits them. In the current compiler subset, **type-parameter**
+  generics are supported for nominal declarations (`struct` / `interface`) and
+  for applied types in type positions (`Name(u8)`).
+  - Const parameters and integer-literal type arguments (`Name(N: int)`,
+    `Name(u8, 1024)`) remain tracked work and are rejected (`E2016`).
+  - The `Option(T)` optional sugar described above remains supported for
+    the current subset.
 
 ### Parameterized type syntax (initial surface form)
 
@@ -434,11 +431,8 @@ Key requirements:
 
 Current implementation notes:
 
-- `&Struct` is supported in function parameter types and as local values:
-  - heap-backed `&Struct` values from `new` are refcounted in the current
-    subset,
-  - calls may also return borrowed `&Struct` values tied to input lifetimes
-    (for example identity-style helpers that return an input reference).
+- `&Struct` is supported in function parameter types and as local values when
+  produced by heap allocation (`new`) or by calls that return `&Struct`.
 - `&T` where `T` is a **single-slot scalar primitive** (for example `&bool`,
   `&int`, `&u64`, `&f64`) is supported in function parameter types and as local
   values when produced by the borrow operator `&expr`.

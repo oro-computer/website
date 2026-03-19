@@ -4,10 +4,14 @@ Status: **Implemented subset**. This module provides a small hosted baseline for
 task/runtime utilities on `linux/x86_64`.
 
 This is **not** the full structured-concurrency design, but the hosted
-`linux/x86_64` toolchain now ships a hosted async executor (fibers) used to
+`linux/x86_64` toolchain now ships a bring-up async executor (fibers) used to
 make `await` a true suspension point. In the current subset:
 
-- `yield` / `yield *` are still blocking OS-thread operations (task runtime is thread-based).
+- `task fn` calls default to the global task pool; `attr(task=thread)` opts a
+  task back into a dedicated OS thread per call.
+- `yield` / `yield *` remain language operators rather than stdlib functions,
+  but waiting on task output from executor-driven async code now suspends the
+  current coroutine instead of blocking the executor owner OS thread.
 - Sleep helpers are split into:
   - blocking thread sleeps (`sleep_ms`, `sleep`, `sleep_until`), and
   - awaitable sleep promises (`sleep_ms_async`, `sleep_async`, `sleep_until_async`) that can
@@ -18,33 +22,6 @@ See also:
 - `docs/language/concurrency.md` (language-level `async`/`task`/`yield`/`await` and structured blocks)
 - `docs/std/sync.md` (`Mutex`, `Condvar`, and channels)
 - `docs/std/runtime.md` (pluggable runtime layer under `std::task`)
-
-## Examples
-
-### Blocking sleep on the current OS thread
-
-```silk
-import std::task;
-
-fn main () -> int {
-  let n = std::task::available_parallelism();
-  std::task::yield_now();
-  std::task::sleep_ms(1);
-  if n < 1 { return 1; }
-  return 0;
-}
-```
-
-### Awaitable sleep under the hosted executor
-
-```silk
-import std::task;
-
-async fn main () -> int {
-  await std::task::sleep_ms_async(10);
-  return 0;
-}
-```
 
 ## Implemented API
 
@@ -85,7 +62,7 @@ Notes:
   higher-level concurrency utilities. It is implemented using a hosted libc
   query (`get_nprocs`) and clamps to `>= 1`.
 - `yield_now()` and `sleep_ms()` are blocking thread operations (they are not
-  async-aware).
+  async-aware.
 - `sleep_ms(ms)` is implemented by converting `ms` to microseconds and calling
   `std::runtime::task::sleep_us`; large sleeps may be performed in chunks.
 - `sleep_ms_async(ms)` returns a `Promise(void)` that can be awaited inside

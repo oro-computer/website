@@ -4,13 +4,12 @@ Interfaces declare method signatures that types (or modules) can conform to via
 `impl ... as ...` (or `module ... as ...`). This is the basis for protocol-like
 surfaces such as iterators and Drop.
 
-[Canonical spec](../docs/?p=language/interfaces).
+Canonical spec: `docs/language/interfaces.md`.
 
 ## Status
 
-- Interface declarations plus `impl ... as ...` conformance checking are part of
-  the current compiler subset.
-- Interface values / trait objects / vtables are still not implemented.
+- Syntax + conformance checking: `docs/language/interfaces.md`
+- Dynamic dispatch (trait objects/vtables): not implemented yet
 
 ## Syntax
 ```silk
@@ -51,5 +50,5 @@ fn main () -> int {
 
 ## See also
 
-- [Canonical doc](../docs/?p=language/interfaces)
-- [Std protocols](?p=std/interfaces)
+- Canonical spec: `docs/language/interfaces.md`
+- Std protocols: `docs/std/interfaces.md`

@@ -5,7 +5,9 @@ The `match` expression provides structured pattern matching.
 Key ideas:
 
 - A `match` selects one of several branches based on a scrutinee expression.
-- Patterns and guards are defined as per the language specification in `docs/language/`.
+- The full language design includes richer patterns and arm guards, but the
+  current shipped subset documented here does not implement `if` guards in any
+  `match` form yet.
 - `match` is an expression; all arms must be compatible in type.
 
 The compiler must:
@@ -33,10 +35,18 @@ Notes:
 
 - Arms are separated by commas; a trailing comma is permitted.
 - In the initial subset, arm bodies are expressions (not blocks).
+- In the current compiler, expression-form `match` is implemented for:
+  - optionals,
+  - primitive integers,
+  - enums,
+  - type unions,
+  - and recoverable `Result`-style values.
+- Guard clauses of the form `pattern if cond => ...` are currently unsupported
+  across all of those subsets.
 
 ### Optional Matching (`T?`)
 
-The currently implemented pattern subset is limited to optionals:
+For optionals, the implemented subset is:
 
 - The scrutinee expression must have optional type `T?` (`Option(T)`), where `T`
   is a payload type supported by the current backend subset.
@@ -82,8 +92,8 @@ Example:
 
 ```silk
 fn main () -> int {
-  let x = 0;
-  let y = match (x) {
+  let x: int = 0;
+  let y: int = match (x) {
     0 => 1,
     _ => 2,
   };
@@ -108,11 +118,10 @@ Implemented initial subset:
   `R::Ok(v)` / `R::Err(e)`), or patterns may omit the qualifier and use the
   variant name directly.
 - No guards (`if ...`) are implemented yet.
-- Matches must be exhaustive for the enum scrutinee in the initial subset:
-  - either there is exactly one arm for each enum variant (order is not
-    significant), or
-  - there is exactly one wildcard `_` arm that acts as a catch-all for any
-    remaining variants.
+- In expression form, enum matches must be exhaustive by explicit variant
+  coverage:
+  - there must be exactly one arm for each enum variant, and
+  - wildcard `_` arms are not part of the expression-form enum subset.
 
 ### Type Union Matching (`T1 | T2 | ...`) (Implemented Subset)
 
@@ -185,16 +194,43 @@ subsets as the `match` expression form in this document:
 - type unions (`T1 | ... | Tn`): typed binders `name: Ti` / `_: Ti`
 - recoverable results: `Ok(name)` / `Ok(_)` and `Err(name)` / `Err(_)`
 
-Exhaustiveness rules are the same as the expression form: the match must cover
-the full scrutinee domain in the supported subset.
+Exhaustiveness rules:
+
+- Expression `match` remains exhaustive.
+- Statement `match` is also exhaustive by default.
+- For `Option(T)` and recoverable `Result`-like values only, the statement form
+  may omit one side of the split:
+  - `match (opt) { Some(v) => { ... } }`
+  - `match (opt) { None => { ... } }`
+  - `match (res) { Ok(v) => { ... } }`
+  - `match (res) { Err(e) => { ... } }`
+- In that one-arm statement form, the unhandled case is an implicit no-op.
+- This partial form does not apply to expression `match`, integer matches,
+  general enums, type unions, or typed-error matches.
+
+Notes:
+
+- The preferred single-branch control-flow forms remain `if let`, `let ... else`,
+  and `while let` when they fit naturally.
+- For enums, wildcard support is not end-to-end yet:
+  - expression-form enum matches require explicit arms for every variant,
+  - statement-form ordinary enum matches also still require explicit variant
+    coverage in the current backend subset,
+  - and although the checker already reserves `_` as a catch-all pattern for
+    ordinary enum statements, lowering still rejects that form today.
 
 Enum variant pattern note (statement form):
 
 - In the statement form, a bare identifier pattern `name` is reserved for a
   catch-all binder arm (used by typed error matches), so enum variant patterns
-  must be written in qualified form: `E::Variant(...)` (including `::pkg::E::Variant(...)`).
-- The wildcard pattern `_` is permitted as a catch-all arm for enums, and
-  satisfies exhaustiveness without requiring one arm per variant.
+  must be written in qualified form: `E::Variant(...)` (including
+  `::pkg::E::Variant(...)`).
+- `match (stream) { Error => { ... } }` therefore treats `Error` as a binder
+  arm, while `match (stream) { IOStream::Error => { ... } }` matches the unit
+  enum variant.
+- The checker reserves `_` as a catch-all arm for ordinary enum statements, but
+  the current backend subset still rejects that form, so end-to-end ordinary
+  enum statements still need explicit variant coverage today.
 
 ### Typed error matching (Terminal Arm Rule)
 
@@ -217,12 +253,18 @@ Key semantic rule (Terminal Arm Rule):
 
 Implementation status:
 
-- The compiler currently implements `match` as an expression for:
-  - the optional subset (`T?`), and
-  - exhaustive `enum` matches (no guards) for the current CFG IR backend subset.
+- The compiler currently implements `match` as an expression for the documented
+  current subset:
+  - optionals (`T?`),
+  - primitive integers,
+  - type unions,
+  - recoverable `Result`-style values,
+  - and exhaustive enum matches.
+- No match arm guards (`pattern if cond => ...`) are implemented yet in either
+  expression or statement form.
 - The statement form is implemented for:
   - ordinary values in the supported subset (block arms), and
-  - typed errors as part of the typed errors feature work (`docs/language/typed-errors.md`).
+  - typed errors in the current subset (`docs/language/typed-errors.md`).
 
 Note: the compiler also allows the `match` statement form to destructure
 recoverable `Result`-style values. This form does not trigger the Terminal Arm
@@ -250,15 +292,30 @@ Rules (current subset):
   - The scrutinee expression must have an enum type with variants `Ok` and `Err`.
   - `Ok(...)` / `Err(...)` patterns are shorthand for `R::Ok(...)` / `R::Err(...)` where `R`
     is the scrutinee enum type, and may appear alongside other enum variant patterns.
-  - Exhaustiveness follows the enum rules: there must be exactly one arm per enum variant.
+  - In expression form, exhaustiveness follows the enum rules: there must be
+    exactly one arm per enum variant.
 - Struct form:
   - The scrutinee expression must have a nominal struct type that contains
     `value: T?` and `err: E?`.
 - Matches must be exhaustive:
-  - for enum scrutinees, follow the enum rules (one arm per variant),
-  - for struct scrutinees, there must be exactly one `Ok(...)` arm and exactly one `Err(...)` arm.
+  - for enum scrutinees in expression form, follow the enum rules (one arm per
+    variant),
+  - for struct scrutinees, there must be exactly one `Ok(...)` arm and exactly
+    one `Err(...)` arm.
+- No guards are implemented for result arms either:
+  - `Ok(v) if cond => ...`
+  - `Err(e) if cond => ...`
 - In `Ok(v) => ...`, the binder `v` has type `T`.
 - In `Err(e) => ...`, the binder `e` has type `E`.
+
+Until guards land, write the condition inside the selected arm body:
+
+```silk
+let s: String = match String.from_string("hello") {
+  Ok(v) => if v.len > 0 { v } else { String.empty() },
+  Err(_) => String.empty(),
+};
+```
 
 Example:
 
@@ -267,10 +324,28 @@ import std::result;
 import std::strings::String;
 
 fn main () -> int {
-  let s = match String.from_string("hello") {
+  let s: String = match String.from_string("hello") {
     Ok(v) => v,
-    Err(_) => return 1,
+    Err(_) => String.empty(),
   };
   return s.len as int;
+}
+```
+
+One-arm statement examples:
+
+```silk
+match (parse_port(input)) {
+  Ok(port) => {
+    use_port(port);
+  },
+}
+```
+
+```silk
+match (std::env::get("HOME")) {
+  None => {
+    std::io::println("HOME is not set");
+  },
 }
 ```

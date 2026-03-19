@@ -1,9 +1,9 @@
 # `std::` Module Structure
 
-Status: **Implemented subset + design**. This describes the organization and
-build integration for `std::`. Auto-resolving `std::...` imports from a
-configurable stdlib root is implemented today, and the in-tree stdlib already
-ships a broad hosted subset across core, runtime, and systems modules.
+Status: **Implemented subset + active expansion**. This describes the current
+organization and build integration for `std::`, including `std::...` import
+resolution from a configurable stdlib root and archive-based std linkage on the
+supported hosted targets.
 
 This document defines how the standard library is organized and how it is made
 available to user programs.

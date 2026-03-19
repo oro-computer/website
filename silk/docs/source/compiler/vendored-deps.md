@@ -92,16 +92,30 @@ For distribution and `make install`, the hosted toolchain expects vendored
 archives and headers under the compiler prefix:
 
 - staged (repo build prefix): `build/lib/silk/vendor/lib/x64-linux/`
-- staged headers: `build/lib/silk/vendor/include/`
+- staged headers: `build/include/silk/`
 - installed: `<prefix>/lib/silk/vendor/lib/x64-linux/` (typically
   `/usr/local/lib/silk/vendor/lib/x64-linux/`)
-- installed headers: `<prefix>/lib/silk/vendor/include/` (typically
-  `/usr/local/lib/silk/vendor/include/`)
+- installed headers: `<prefix>/include/silk/` (typically
+  `/usr/local/include/silk/`)
 
-`make build` copies `.a` files from `vendor/lib/x64-linux/` into the staged
-prefix under `build/lib/silk/vendor/lib/x64-linux/` and headers from
-`vendor/include/` into `build/lib/silk/vendor/include/`. `make install` copies
-the staged prefix into `<prefix>/`.
+`zig build install --prefix <dir>` installs headers from `vendor/include/`
+directly into `<dir>/include/silk/` whenever the vendored include tree is
+present. `make build` also mirrors those headers into `build/include/silk/`
+while continuing to stage `.a` files under `build/lib/silk/vendor/lib/x64-linux/`.
+`make install` copies the staged prefix into `<prefix>/`.
+
+Raw vendored headers keep their upstream include spelling under the canonical
+Silk namespace. For example:
+
+- `vendor/include/mbedtls/error.h` stages as `build/include/silk/mbedtls/error.h`
+- `vendor/include/psa/crypto.h` stages as `build/include/silk/psa/crypto.h`
+
+Downstream code that includes headers such as `<mbedtls/error.h>` therefore
+needs the canonical vendored-header root on the search path:
+
+```sh
+-I<prefix>/include/silk
+```
 
 ## Bundling Into `libsilk.a`
 

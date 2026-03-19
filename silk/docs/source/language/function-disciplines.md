@@ -8,7 +8,8 @@ Const functions (`const fn`) are specified separately in
 `docs/language/const-functions.md`. The `const` modifier is orthogonal to the
 discipline system described here (a `const fn` may also be declared `pure`).
 
-Status: **Implemented subset + design**. The current compiler subset implements
+Status: **Implemented subset + ongoing design work**. The current compiler
+subset implements
 `pure fn` parsing and a strict purity checker. Concurrency disciplines (`task` /
 `async`) are parsed and `Task(T)` / `Promise(T)` handles plus `yield` (task
 values) and `await` (promise values) are implemented in the current subset
@@ -16,11 +17,9 @@ values) and `await` (promise values) are implemented in the current subset
 now ships a hosted async runtime (single-threaded executor + stackful
 coroutines in `libsilk_rt`) so `await` can suspend and resume without blocking
 the OS thread. A compiler state-machine coroutine transform, structured
-concurrency scope semantics, and richer Send/Sync-style reasoning remain future
-work. The current compiler already enforces a conservative task-boundary safety
-rule (`E2037`) that rejects non-opaque references across `task fn` boundaries.
-See `docs/language/concurrency.md` for the concurrency model and implementation
-status.
+concurrency scope semantics, and task-safety (`Send`/`Sync`)-like rules remain
+future work. See `docs/language/concurrency.md` for the concurrency model and
+implementation status.
 
 ## Overview
 
@@ -35,74 +34,31 @@ The language design distinguishes:
 - `async task fn` — async function executed as a separate task (self-contained
   worker).
 
-## Example
-
-```silk
-pure fn add (x: int, y: int) -> int {
-  return x + y;
-}
-
-task fn worker (x: int) -> int {
-  return add(x, 1);
-}
-
-async fn answer () -> int {
-  return 42;
-}
-
-async fn main () -> int {
-  let p = answer();
-
-  task {
-    let values: int[] = yield * worker(41);
-    let v: int = await p;
-    if values[0] != 42 { return 1; }
-    if v != 42 { return 2; }
-    return 0;
-  }
-}
-```
-
 ## Intended Call Rules (Design)
 
 The checker is expected to enforce:
 
 - `pure` code may call only `pure` code (and cannot perform I/O or mutation
   outside local, non-escaping temporaries).
-- `task` code may call `task`, `pure`, and `async` code, but any resulting
-  `Task(T)` / `Promise(T)` handles must be consumed explicitly with
-  `yield` / `yield *` / `await`, and task-boundary argument/result data must
-  satisfy the current task-safety rules.
-- `async` code may `await` other async operations; it may call `pure` code and,
-  in the hosted subset, may use explicit adapters such as `std::task`,
-  `std::io::async`, and `std::runtime::event_loop` to hand waiting work to the
-  runtime.
+- `task` code may call `task` and `pure` code, and must satisfy task-safety
+  rules for captured/argument data.
+- `async` code may `await` other async operations; it may call `pure` code and
+  may offload blocking work via explicit adapters (planned intrinsics).
 
 Crossing discipline boundaries is intended to be explicit and diagnostic-driven
 (for example suggesting the correct adapter/intrinsic).
 
-## Current Hosted Adapters
+## Standard Intrinsics (Planned)
 
-The in-tree stdlib already exposes a small hosted adapter surface for common
-discipline crossings:
+The standard library is expected to provide typed adapters to cross boundaries
+safely (names and exact signatures are design work):
 
-- awaitable sleep via
-  `std::task::{sleep_ms_async,sleep_async,sleep_until_async}`,
-- fd readiness and abort-aware waits via `std::runtime::event_loop`,
-- minimal async fd wrappers via
-  `std::io::async::{read,write,read_abortable,write_abortable}`,
-- async TCP connect/accept via
-  `std::net::{TCPStream.connect_async,TCPListener.accept_async}`,
-- task-based fd/socket stream adapters via `std::io::stream` and
-  `std::net::stream`,
-- task-pool scheduling selection via `attr(task=pool)` / `attr(task_pool)` on
-  `task fn` and `async task fn`.
+- lifting sync work onto a task pool,
+- presenting a task as an async operation,
+- running blocking work from async without stalling the event loop,
+- structured spawn/join primitives.
 
-Still missing from the broader design:
-
-- a first-class `run_blocking` / task-to-promise bridge,
-- general structured spawn/join helpers,
-- richer scheduler-backed structured-concurrency scopes.
+These APIs are not yet present in the in-tree `std/` implementation.
 
 ## Implementation Notes (Current Compiler)
 
@@ -151,19 +107,26 @@ Today:
     `task fn` / `async task fn`.
 - Lowering/codegen implements `task` execution using OS threads on `linux/x86_64`
   and implements `yield`/`yield *` for task values plus `await` for promises.
-  - By default, each `task fn` call spawns a dedicated OS thread.
-  - When a `task fn` / `async task fn` is annotated with `attr(task=pool)` (or
-    `attr(task_pool)`), calls are scheduled on the global task pool instead.
-  - On hosted `linux/x86_64`, the compiler ships a bundled hosted async
-    runtime so `await` is a true suspension point:
+  - By default, each `task fn` call is scheduled on the global task pool.
+  - `attr(task=thread)` forces a dedicated OS thread per call.
+  - On hosted `linux/x86_64`, the compiler ships a bring-up async runtime
+    (`src/silk_rt_async.c`) so `await` is a true suspension point:
     - awaiting a pending `Promise(T)` parks the current fiber and allows other
       runnable fibers to execute (it does not block the OS thread),
     - outside the executor owner thread (including when no executor is active),
       `await` blocks the OS thread until the promise resolves.
+    - `yield` / `yield *` waits on task output use the same hosted fd-wait
+      runtime path, so waiting for task values from executor-driven async code
+      suspends the current coroutine instead of blocking the executor owner
+      thread.
     - the long-term design remains a compiler coroutine transform plus a stable
       `std::runtime::event_loop` API; see `docs/compiler/async-runtime.md`.
-  - `async { ... }` / `task { ... }` blocks are still lexical blocks in the
-    current subset (they do not yet introduce scheduler behavior).
+  - `async { ... }` / `task { ... }` blocks remain lexical scopes, but scope
+    exit is now runtime-backed for live handle cleanup:
+    - live `Promise(T)` bindings are awaited/destroyed,
+    - live `Task(T)` bindings are drained/destroyed (joining dedicated-thread
+      tasks; pooled/default tasks skip the join),
+    - and the same cleanup runs on overwrite and early scope exit.
 - Function types are parsed in type positions (notably for `ext`).
 - Function expressions are implemented as first-class function values:
   - `fn (x: int) -> x + 1` (expression body),

@@ -69,17 +69,48 @@ Choose the form that matches the C API contract you are binding.
 - `CFreeFn = fn (u64) -> void`
 - `cstr_copy_and_free(ptr: u64, free_fn: CFreeFn) -> Result(std::strings::String, std::memory::OutOfMemory)`
 - `OwnedCStr` (owned pointer + drop)
+  - `Drop` releases the underlying C allocation and nulls the pointer.
+  - `Len` returns the current C string length in bytes.
+  - `IsEmpty` reports whether the pointer is null or points at an empty string.
+  - `Serialize(string)` returns the borrowed Silk `string` view, so
+    `owned as string` is the canonical cast path.
+  - `TrySerialize(std::memory::OutOfMemory)` returns an owned
+    `std::strings::String` copy for callers that need the bytes to outlive the
+    underlying C allocation.
+
+Notes:
+
+- `OwnedCStr.len()` scans until the terminating NUL each time, just like
+  `cstr_len`.
+- `OwnedCStr.serialize()` and `OwnedCStr.as_string()` borrow the C bytes; if
+  you need an owned Silk allocation, call `OwnedCStr.try_serialize()` or
+  `OwnedCStr.copy()` instead.
 
 ## Example
 
 ```silk
-import c from "std/ffi/c";
-
-ext lib_version = fn () -> u64; // returns `const char*`
+import c_owned from "std/ffi/c_owned";
+import std::runtime::mem;
 
 fn main () -> int {
-  let p = lib_version();
-  let v = c::cstr_string(p);
-  return if v == "" { 1 } else { 0 };
+  let p: u64 = std::runtime::mem::alloc(3);
+  if p == 0 { return 1; }
+
+  std::runtime::mem::store_u8(p, 0, 104);
+  std::runtime::mem::store_u8(p, 1, 105);
+  std::runtime::mem::store_u8(p, 2, 0);
+
+  let free_fn: c_owned::CFreeFn = fn (ptr: u64) {
+    std::runtime::mem::free(ptr);
+  };
+
+  let mut owned = c_owned::OwnedCStr.from_ptr(p, free_fn);
+  let v: string = owned as string;
+  if v != "hi" { owned.drop(); return 2; }
+  if owned.len() != 2 { owned.drop(); return 3; }
+  if owned.is_empty() { owned.drop(); return 4; }
+
+  owned.drop();
+  return 0;
 }
 ```

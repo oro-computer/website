@@ -21,6 +21,15 @@ This module is intentionally strict and focused:
 - `parse(input: string) -> ParseResult`
   - Returns `Ok(Version)` on success.
   - Returns `Err(ParseError)` on error.
+- `Version.parse(input: string) -> ParseResult`
+  - Receiverless static-protocol form of the same parser via
+    `std::interfaces::Parse(ParseError)`.
+- `Version.try_serialize() -> Result(std::strings::String, std::memory::OutOfMemory)`
+  - Canonical fallible owned-string rendering via
+    `std::interfaces::TrySerialize(std::memory::OutOfMemory)`.
+- `Version.to_string() -> Result(std::strings::String, std::memory::OutOfMemory)`
+  - Legacy/explicit formatting helper; returns the same canonical output as
+    `try_serialize()`.
 
 `ParseResult` is `std::result::Result(Version, ParseError)`.
 
@@ -33,6 +42,8 @@ Allocation and lifetimes:
 - `Version.prerelease` and `Version.build` are `string?` slices into `input`.
   The caller must ensure `input` remains alive for as long as the returned
   `Version` is used.
+- formatting does allocate, so the canonical output-side generic path is
+  `v.try_serialize()`.
 
 ### Version values
 
@@ -51,6 +62,23 @@ Allocation and lifetimes:
   - Returns `0` if `self` and `other` have equal precedence.
   - Returns `1` if `self` has higher precedence than `other`.
 
+Formal contract surface:
+
+- `Version.cmp` carries verified postconditions that:
+  - the result is always in `[-1, 1]`,
+  - when the `major.minor.patch` core triplet already proves `self > other`,
+    the result is positive,
+  - and when the core triplet already proves `self < other`, the result is
+    negative.
+- Helper comparators inside `std::semver` (`cmp_u64`, `cmp_lex`, `cmp_ident`,
+  `cmp_prerelease`) also carry result-range postconditions, so downstream
+  verified code can rely on the public comparison path rather than duplicating
+  ad hoc ordering lemmas.
+- The current formal surface intentionally stops short of fully encoding the
+  prerelease identifier ordering rules as a reusable theory. Those rules are
+  implemented and tested at runtime, but the shipped proof vocabulary focuses
+  on the SemVer core triplet where the current verifier subset is strongest.
+
 Notes:
 
 - Build metadata does not affect precedence, so:
@@ -63,24 +91,34 @@ Notes:
 import std::semver;
 
 fn main () -> int {
-  let v = match std::semver::parse("1.2.3-alpha.1+build.5") {
-    Ok(v) => v,
-    Err(_) => return 1,
-  };
+  match (std::semver::parse("1.2.3-alpha.1+build.5")) {
+    Ok(v) => {
+      if v.major != 1 { return 2; }
+      if v.prerelease == None { return 3; }
+    },
+    Err(_) => {
+      return 1;
+    },
+  }
 
-  if v.major != 1 { return 2; }
-  if v.prerelease == None { return 3; }
-
-  let a = match std::semver::parse("1.0.0-alpha") {
-    Ok(v) => v,
-    Err(_) => return 4,
-  };
-  let b = match std::semver::parse("1.0.0") {
-    Ok(v) => v,
-    Err(_) => return 5,
-  };
-  if a.cmp(b) >= 0 { return 6; }
-
-  return 0;
+  match (std::semver::parse("1.0.0-alpha")) {
+    Ok(a) => {
+      match (std::semver::parse("1.0.0")) {
+        Ok(b) => {
+          if a.cmp(b) >= 0 { return 6; }
+          match (std::semver::Version.parse("1.0.0+build.7")) {
+            Ok(_) => { return 0; },
+            Err(_) => { return 7; },
+          }
+        },
+        Err(_) => {
+          return 5;
+        },
+      }
+    },
+    Err(_) => {
+      return 4;
+    },
+  }
 }
 ```

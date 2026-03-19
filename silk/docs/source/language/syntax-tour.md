@@ -819,10 +819,11 @@ fn main () -> int {
 panic OutOfBounds { index: 1, len: 0 };
 ```
 
-### `match` statement (typed errors)
+### `match` statement (block arms)
 
-See `docs/language/typed-errors.md` for the Terminal Arm Rule and the supported
-pattern forms.
+See `docs/language/flow-match.md` for ordinary value matching and
+`docs/language/typed-errors.md` for the Terminal Arm Rule when the scrutinee
+has a typed-error contract.
 
 ### `async { ... }` and `task { ... }`
 

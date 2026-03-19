@@ -3,14 +3,13 @@
 This page describes how `std::` modules are organized and how the compiler
 finds and links them (including std-root selection and archive wiring).
 
-[Canonical doc](../docs/?p=std/package-structure).
+Canonical doc: `docs/std/package-structure.md`.
 
 ## Status
 
-- Std-root resolution, `std::...` import mapping, and std-archive selection are
-  part of the current toolchain.
-- The canonical doc covers the exact CLI flags, environment variables, and
-  install-layout rules.
+- Implemented subset: std-root resolution, `std::...` import mapping, and
+  archive-based std linkage are documented in the canonical page.
+- Details: `docs/std/package-structure.md`
 
 ## How `std::` resolves
 
@@ -44,5 +43,5 @@ silk build --std-root ./my-stdlib --std-lib ./my-stdlib/libsilk_std.a main.slk
 
 ## See also
 
-- [Canonical doc](../docs/?p=std/package-structure)
-- [Runtime interface layer](?p=std/runtime)
+- Canonical doc: `docs/std/package-structure.md`
+- Runtime interface layer: `docs/wiki/std/runtime.md`

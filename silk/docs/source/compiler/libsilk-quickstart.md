@@ -1,194 +1,202 @@
 # `libsilk` quickstart
 
-`libsilk.a` is the public C99 embedding surface for driving Silk compilation from native host tools, editors, build systems, and language integrations.
+This page is the shortest path to embedding the Silk compiler from C or C++.
 
-If you want the full ABI contract, read [C ABI (`libsilk`)](?p=compiler/abi-libsilk). This page is the shortest path to a working embedder.
+Use it when you want to:
 
-## Start here
+- compile Silk source from your own host process,
+- build executables, libraries, objects, or wasm modules,
+- capture diagnostics programmatically, and
+- decide which deeper ABI/manpage document to read next.
 
-1. Include `silk.h`.
-2. Link `libsilk.a`.
-3. Create a `SilkCompiler`.
-4. Add one or more source buffers.
-5. Build either to the filesystem or to an in-memory `SilkBytes` buffer.
-6. On failure, read `silk_compiler_last_error` and format it with `silk_error_format`.
-7. Destroy the compiler, and free any `SilkBytes` output with `silk_bytes_free`.
+For the full ABI contract, see [C ABI (`libsilk`)](?p=compiler/abi-libsilk).
 
-On `linux/x86_64`, `libsilk.a` vendors Z3 and must also link the host C++ runtime:
+## 1) Smallest working embedder
 
-```sh
-cc -std=c99 -Wall -Wextra \
-   -I/path/to/include your_app.c \
-   -L/path/to/lib -lsilk \
-   -lstdc++ -lpthread -lm
-```
-
-## Smallest working embedder
-
-This example builds a tiny executable from an in-memory Silk module. It avoids `std::` imports so you can focus on the embedding flow first.
+This builds one in-memory Silk source buffer to an executable on disk:
 
 ```c
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
+#include <silk/silk.h>
 
-#include "silk.h"
-
-static SilkString silk_cstr(const char *s) {
-  SilkString out;
-  out.ptr = (char *)s;
-  out.len = (int64_t)strlen(s);
-  return out;
+static SilkString silk_str(const char *ptr) {
+    SilkString s;
+    s.ptr = (char *)ptr;
+    s.len = 0;
+    while (ptr[s.len] != '\0') s.len++;
+    return s;
 }
 
-static int fail_with_last_error(SilkCompiler *compiler) {
-  SilkError *err = silk_compiler_last_error(compiler);
-  char buf[4096];
-  size_t n;
+static void print_last_error(SilkCompiler *compiler) {
+    SilkError *err = silk_compiler_last_error(compiler);
+    if (!err) return;
 
-  if (!err) {
-    fputs("unknown Silk compiler error\n", stderr);
-    return 1;
-  }
+    int64_t needed = silk_error_format(err, NULL, 0);
+    if (needed <= 0) return;
 
-  n = silk_error_format(err, buf, sizeof buf);
-  if (n >= sizeof buf) {
-    n = sizeof buf - 1;
-  }
-  buf[n] = '\0';
+    char *buf = (char *)malloc((size_t)needed);
+    if (!buf) return;
 
-  fputs(buf, stderr);
-  fputc('\n', stderr);
-  return 1;
+    silk_error_format(err, buf, needed);
+    fprintf(stderr, "%s\n", buf);
+    free(buf);
 }
 
 int main(void) {
-  SilkCompiler *compiler = silk_compiler_create();
-  int rc = 0;
+    SilkCompiler *compiler = silk_compiler_create();
+    if (!compiler) return 1;
 
-  if (!compiler) {
-    return 1;
-  }
+    SilkString name = silk_str("main.slk");
+    SilkString src = silk_str("fn main () -> int { return 0; }\n");
+    if (!silk_compiler_add_source_buffer(compiler, name, src)) {
+        print_last_error(compiler);
+        silk_compiler_destroy(compiler);
+        return 1;
+    }
 
-  if (!silk_compiler_add_source_buffer(
-        compiler,
-        silk_cstr("main.slk"),
-        silk_cstr("fn main () -> int { return 0; }\n"))) {
-    rc = fail_with_last_error(compiler);
-    goto done;
-  }
+    if (!silk_compiler_build(
+            compiler,
+            SILK_OUTPUT_EXECUTABLE,
+            silk_str("hello"))) {
+        print_last_error(compiler);
+        silk_compiler_destroy(compiler);
+        return 1;
+    }
 
-  if (!silk_compiler_build(
+    silk_compiler_destroy(compiler);
+    return 0;
+}
+```
+
+Minimal workflow:
+
+1. create a `SilkCompiler`,
+2. add source buffers,
+3. build an artifact,
+4. print diagnostics on failure,
+5. destroy the compiler.
+
+## 2) Compile real files and use the stdlib
+
+If your host reads Silk files from disk, keep the source text ownership on the
+host side and pass the contents through `silk_compiler_add_source_buffer`, or
+load them yourself before calling the ABI.
+
+For programs that import `std::...`, point the compiler at the stdlib root:
+
+```c
+SilkCompiler *compiler = silk_compiler_create();
+if (!compiler) return 1;
+
+silk_compiler_set_stdlib(compiler, silk_str("std"));
+silk_compiler_set_std_root(compiler, silk_str("./std"));
+
+silk_compiler_add_source_buffer(
+    compiler,
+    silk_str("src/main.slk"),
+    silk_str(
+        "import std::fs;\n"
+        "fn main () -> int { return 0; }\n"));
+
+if (!silk_compiler_build(
         compiler,
         SILK_OUTPUT_EXECUTABLE,
-        silk_cstr("build/hello"))) {
-    rc = fail_with_last_error(compiler);
-    goto done;
-  }
-
-done:
-  silk_compiler_destroy(compiler);
-  return rc;
+        silk_str("app"))) {
+    print_last_error(compiler);
 }
 ```
 
-## Common paths
-
-### Build an artifact on disk
-
-Use `silk_compiler_build` when you want the compiler to write:
-
-- an executable,
-- a relocatable object,
-- a static library,
-- or a shared library.
-
-Start with:
-
-- [`silk_compiler` (3)](?p=man/silk_compiler.3)
-- [C ABI (`libsilk`)](?p=compiler/abi-libsilk)
-
-### Generate a C header for exported Silk symbols
-
-For non-executable outputs, call `silk_compiler_set_c_header` before the build:
+If you want to disable filesystem stdlib auto-loading entirely, call:
 
 ```c
-silk_compiler_set_c_header(compiler, silk_cstr("build/mylib.h"));
-silk_compiler_build(compiler, SILK_OUTPUT_SHARED, silk_cstr("build/libmylib.so"));
+silk_compiler_set_nostd(compiler, true);
 ```
 
-The detailed ABI lowering rules for exported `string`, optionals, and multi-slot structs live here:
+## 3) Build to memory instead of disk
 
-- [C ABI (`libsilk`)](?p=compiler/abi-libsilk)
-- [`silk_compiler` (3)](?p=man/silk_compiler.3)
-
-### Build to memory instead of the filesystem
-
-Use `silk_compiler_build_to_bytes` when the host wants to own the output bytes directly, for example when:
-
-- emitting a `.wasm` module into an application-managed buffer,
-- storing an object file in a cache,
-- or passing an artifact to another tool without creating a temporary file.
+Use `silk_compiler_build_to_bytes` when your host needs the output artifact in
+memory:
 
 ```c
-SilkBytes out = {0};
+SilkBytes bytes = {0};
 
-if (!silk_compiler_build_to_bytes(compiler, SILK_OUTPUT_OBJECT, &out)) {
-  return fail_with_last_error(compiler);
+silk_compiler_set_target(compiler, silk_str("wasm32-wasi"));
+silk_compiler_add_source_buffer(
+    compiler,
+    silk_str("main.slk"),
+    silk_str("fn main () -> int { return 0; }\n"));
+
+if (!silk_compiler_build_to_bytes(
+        compiler,
+        SILK_OUTPUT_EXECUTABLE,
+        &bytes)) {
+    print_last_error(compiler);
+    silk_compiler_destroy(compiler);
+    return 1;
 }
 
-/* use out.ptr / out.len */
-silk_bytes_free(&out);
+/* bytes.ptr / bytes.len now contain the final .wasm module */
+silk_bytes_free(&bytes);
 ```
 
-Reference pages:
+This is the common pattern for:
 
-- [`silk_bytes` (3)](?p=man/silk_bytes.3)
-- [C ABI (`libsilk`)](?p=compiler/abi-libsilk)
+- wasm embedders,
+- build systems,
+- editor integrations,
+- test harnesses that want to inspect output bytes directly.
 
-### Format diagnostics for users
+## 4) Generate libraries and headers
 
-The normal failure path is:
+For shared-library or object outputs, you can set metadata before building:
 
-1. call a `silk_compiler_*` function,
-2. if it returns `false`, fetch `silk_compiler_last_error`,
-3. format that error with `silk_error_format`.
+```c
+silk_compiler_set_c_header(compiler, silk_str("libadd.h"));
+silk_compiler_set_soname(compiler, silk_str("libadd.so"));
+silk_compiler_add_runpath(compiler, silk_str("$ORIGIN"));
+silk_compiler_add_needed_library(compiler, silk_str("libm.so.6"));
 
-For the full two-pass formatting pattern, read:
+silk_compiler_add_source_buffer(
+    compiler,
+    silk_str("lib.slk"),
+    silk_str(
+        "export fn add (a: int, b: int) -> int {\n"
+        "  return a + b;\n"
+        "}\n"));
 
-- [`silk_error` (3)](?p=man/silk_error.3)
-- [Compiler diagnostics](?p=compiler/diagnostics)
+if (!silk_compiler_build(
+        compiler,
+        SILK_OUTPUT_SHARED_LIBRARY,
+        silk_str("libadd.so"))) {
+    print_last_error(compiler);
+}
+```
 
-### Check ABI compatibility at startup
+Read the ABI reference before relying on exported layout rules for `string`,
+optionals, structs, and other public interface shapes.
 
-Embedders that ship their own copy of `silk.h` should call `silk_abi_get_version` when they start and reject incompatible library versions explicitly.
+## 5) Diagnostics: two-pass formatting
 
-Reference:
+The error API is intentionally low-level and stable:
 
-- [`silk_abi_get_version` (3)](?p=man/silk_abi_get_version.3)
+```c
+SilkError *err = silk_compiler_last_error(compiler);
+if (err) {
+    int64_t needed = silk_error_format(err, NULL, 0);
+    char *buf = (char *)malloc((size_t)needed);
+    silk_error_format(err, buf, needed);
+    fprintf(stderr, "%s\n", buf);
+    free(buf);
+}
+```
 
-## When you need `std::`
+Use this pattern whenever an ABI call returns `false`.
 
-The smallest example above uses no standard library modules. Real applications usually do.
+## 6) What to read next
 
-When your Silk sources import `std::...`, configure the compiler before adding sources:
-
-- `silk_compiler_set_std_root` to point at the stdlib root,
-- `silk_compiler_set_stdlib` to select the stdlib package name,
-- `silk_compiler_set_nostd(true)` only when you intentionally want a filesystem-free embedder with no stdlib auto-loading.
-
-Reference:
-
-- [CLI reference](?p=compiler/cli-silk)
-- [Standard library integration](?p=compiler/stdlib-integration)
-- [`libsilk` (7)](?p=man/libsilk.7)
-
-## See also
-
-- [Zig embedding API](?p=compiler/zig-api)
-- [C ABI (`libsilk`)](?p=compiler/abi-libsilk)
-- [`libsilk` (7)](?p=man/libsilk.7)
-- [`silk_compiler` (3)](?p=man/silk_compiler.3)
-- [`silk_error` (3)](?p=man/silk_error.3)
-- [`silk_bytes` (3)](?p=man/silk_bytes.3)
-- [`silk_abi_get_version` (3)](?p=man/silk_abi_get_version.3)
+- Need the full function-by-function ABI contract: [C ABI (`libsilk`)](?p=compiler/abi-libsilk)
+- Need the public C manpages: [`libsilk` (7)](?p=man/libsilk.7), [`silk_compiler` (3)](?p=man/silk_compiler.3), [`silk_error` (3)](?p=man/silk_error.3)
+- Need Zig instead of C: [Zig embedding API](?p=compiler/zig-api)

@@ -5,19 +5,14 @@ Silk concurrency is built around:
 - `async fn` (pausable/awaitable concurrency),
 - `task fn` (parallelizable work),
 - `await` for promises,
-- `yield` / `yield *` for task values.
+- `yield`/`yield *` for task values.
 
-[Canonical doc](../docs/?p=language/concurrency).
+Canonical spec + implemented subset notes: `docs/language/concurrency.md`.
 
 ## Status
 
-- Hosted concurrency already includes `std::task`, `std::sync`,
-  `std::runtime::event_loop`, and `std::io::async`.
-- `std::task` / `std::sync` are still mostly blocking primitives today; richer
-  async coverage and structured-concurrency runtime semantics remain incomplete.
-- Hosted async TCP `connect` / `accept` already exist under `std::net`, and
-  task-based fd/socket stream adapters already exist under `std::io::stream`
-  and `std::net::stream`.
+- Implemented subset is documented in detail: `docs/language/concurrency.md`
+- End-to-end fixtures: `tests/silk/pass_concurrency_*.slk`
 
 ## Examples
 ### `task` inside `async fn` + `yield *`
@@ -63,6 +58,5 @@ async fn main () -> int {
 
 ## See also
 
-- [Canonical doc](../docs/?p=language/concurrency)
-- [`std::task`](?p=std/task)
-- [`std::sync`](?p=std/sync)
+- Canonical spec: `docs/language/concurrency.md`
+- `std::task` and `std::sync`: `docs/std/task.md`, `docs/std/sync.md`

@@ -1,14 +1,13 @@
 # `std::io`
 
-Status: **Implemented subset + design**. Basic stdin reads, stdout/stderr
-writes, tty helpers, and initial async-aware wrappers are implemented today.
-Buffered I/O and broader async stream/file integration remain future work.
+Status: **Implemented subset**. `std::io` provides blocking fd reads/writes,
+formatted stdout/stderr helpers, TTY helpers, async wrappers, and stream
+adapters in the current shipped stdlib.
 
 `std::io` provides console and basic stream I/O.
 
-Hosted baseline: POSIX file descriptors and blocking I/O, plus initial
-hosted async integration through `std::io::async` and
-`std::runtime::event_loop`.
+Hosted baseline: POSIX file descriptors and blocking I/O, with async wrappers
+layered on the hosted runtime.
 
 See also:
 
@@ -108,11 +107,8 @@ Notes:
   Abortable variants (`read_abortable` / `write_abortable`) accept an optional
   `std::abort_controller::AbortSignalBorrow` and return `IOErrorKind::Aborted`
   when cancelled.
-  Note: in the current subset, these `read` / `write` wrappers observe aborts
-  conservatively around each I/O attempt; they do not interrupt an in-flight
-  read/write operation. Lower-level readiness waits in
-  `std::runtime::event_loop` can be more responsive when a pollable abort fd is
-  available.
+  Note: in the current subset, aborts are observed before starting an I/O
+  attempt; they do not interrupt an in-flight operation.
 - `std::io::stream` provides task-based adapters that connect POSIX/WASI file
   descriptors (`fd`) with `std::stream` (`ReadableStream` / `WritableStream`):
   - `std::io::stream::pipe_fd_to_stream` / `pipe_fd_to_stream_abortable`
@@ -145,21 +141,23 @@ fn main () -> int {
   }
 
   while true {
-    let n = match std::io::read_stdin(std::arrays::ByteSlice{ ptr: buf, len: 64 }) {
-      std::io::IOResult::Ok(v) => v,
+    let r: std::io::IOResult = std::io::read_stdin(std::arrays::ByteSlice{ ptr: buf, len: 64 });
+    match (r) {
+      std::io::IOResult::Ok(n) => {
+        if n == 0 {
+          break;
+        }
+
+        let w_err: std::io::IOFailed? = std::io::write_all(std::runtime::io::STDOUT_FD, std::arrays::ByteSlice{ ptr: buf, len: n as i64 });
+        if w_err != None {
+          std::runtime::mem::free(buf);
+          return 4;
+        }
+      },
       std::io::IOResult::Err(_) => {
         std::runtime::mem::free(buf);
         return 3;
       },
-    };
-    if n == 0 {
-      break;
-    }
-
-    let w_err: std::io::IOFailed? = std::io::write_all(std::runtime::io::STDOUT_FD, std::arrays::ByteSlice{ ptr: buf, len: n as i64 });
-    if w_err != None {
-      std::runtime::mem::free(buf);
-      return 4;
     }
   }
 
@@ -214,16 +212,8 @@ key point is that `std::fs` and `std::net` can reuse the same I/O traits.
 ## Future Work
 
 - Buffered I/O wrappers (`BufReader`, `BufWriter`).
-- Async-aware adapters:
-  - the hosted `linux/x86_64` toolchain now ships a hosted async executor and
-    exposes timers + fd readiness via `std::runtime::event_loop`,
-  - `std::task` includes awaitable sleep helpers (`sleep_ms_async`, `sleep_async`),
-  - `std::io::async` provides minimal `async fn` wrappers over fd-based
-    `read`/`write` using the hosted async runtime I/O ops.
-  Async socket support already exists for TCP `connect` / `accept` in
-  `std::net`, task-based filesystem/fd stream adapters already exist under
-  `std::io::stream`, and abort-aware variants (`read_abortable` /
-  `write_abortable`) plus abortable readiness waits already exist today.
-  Broader async I/O coverage (buffered async I/O, richer async socket/file I/O,
-  stronger in-flight cancellation, and `select`-style waiting) remains future
-  work.
+- Broader async I/O surface beyond the current wrappers:
+  - buffered async I/O,
+  - richer socket/filesystem stream integrations,
+  - stronger cancellation semantics for in-flight operations,
+  - and `select`-style waiting across multiple sources.

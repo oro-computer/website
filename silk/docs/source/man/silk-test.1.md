@@ -1,5 +1,6 @@
 # `silk-test` (1) — Run Language-Level Tests
 
+> NOTE: This is the Markdown source for the eventual man 1 page for `silk test`. The roff-formatted manpage should be generated from this content.
 
 ## Name
 
@@ -30,7 +31,7 @@ When explicit input files are used (no `--package`), the `silk` CLI may load add
 - `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`).
 - `--debug`, `-g` — enable debug build mode (also enables extra Formal Silk debug output when verification fails).
 - `--feature <spec>`, `-F<spec>` — enable a build feature for `attr(feature="...")` queries and declaration gating. Repeatable.
-  - Spec forms: `NAME` or `NAME=VALUE` (see [Attributes](?p=language/attributes)).
+  - Spec forms: `NAME` or `NAME=VALUE` (see `?p=language/attributes`).
   - For package builds, you may target a specific package with `PKG/NAME` or
     `PKG/NAME=VALUE` (for example `ui/tui` or `ui/tui=false`).
 - `-O <0-3>` — set optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`). `-O1`+ prunes unused extern symbols before code generation and prunes unreachable functions in executable builds (typically reducing output size).
@@ -38,6 +39,8 @@ When explicit input files are used (no `--package`), the `silk` CLI may load add
 - `--jobs <n>`, `-j <n>` — run up to `<n>` test processes in parallel. Default: `1`. `0` means “auto” (based on CPU count). Jobs are capped at `8`.
 - `--filter <pattern>` — run only tests whose test path contains `<pattern>` (substring match). The test path is the nested test name stack joined with `/` (for example `suite/case`).
 - `--package <dir|manifest>`, `--pkg <dir|manifest>` — load the module set from a `silk.toml` manifest instead of explicit input files. When `<file> ...` inputs are omitted and `--package` / `--pkg` is also omitted, but `./silk.toml` exists, `silk test` behaves as if `--package .` was provided.
+  - manifest-native link metadata for the test harness (`[[target]].inputs`, `needed`, and `runpath`) is taken from `[build].default_target` when it names a code target, otherwise the first declared code target; `kind = "man"` targets are ignored for this purpose.
+  - if a package has no code targets, tests still run from the package source set but no manifest link metadata is applied.
 - `--` — end of options; treat following args as file paths (even if they begin with `-`).
 
 ## Examples
@@ -73,6 +76,6 @@ silk test --package . --filter url
 
 ## See Also
 
-- [`silk` (1)](?p=man/silk.1), [`silk-build` (1)](?p=man/silk-build.1)
-- [`silk` CLI](?p=compiler/cli-silk)
-- [Testing](?p=language/testing)
+- `silk` (1), `silk-build` (1)
+- `?p=compiler/cli-silk`
+- `?p=language/testing`
