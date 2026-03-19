@@ -10,11 +10,6 @@ backend subset.
 - bit rotations (`rotl_*`, `rotr_*`),
 - and bit counts (`popcount_*`, `clz_*`, `ctz_*`).
 
-See also:
-
-- `docs/language/operators.md` (bitwise operators and shift semantics)
-- `docs/std/networking.md` (`std::net` byte-order helpers built on the hosted baseline)
-
 ## Exported API
 
 ```silk
@@ -56,7 +51,7 @@ target-specific shift masking behavior.
 For `clz_*` and `ctz_*`, when the input is `0` the function returns the full
 bit width (`32` or `64`).
 
-## Example
+## Examples
 
 ```silk
 import std::bits;
@@ -75,3 +70,8 @@ fn main () -> int {
   return 0;
 }
 ```
+
+## See also
+
+- [Operators](?p=language/operators)
+- [`std::networking`](?p=std/networking)

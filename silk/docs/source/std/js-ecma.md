@@ -188,7 +188,7 @@ Notes:
 - The `*_write` function copies **raw UTF‑8 bytes** (no NUL terminator) into the
   destination buffer and returns the number of bytes written.
 
-## Future Work
+## Design goals
 
 Expected follow-ups as `silk bindgen` becomes concrete:
 

@@ -1,6 +1,6 @@
 # `std::crypto`
 
-Status: **Implemented subset + active expansion**. `std::crypto` provides cryptographic
+Status: **Implemented subset**. `std::crypto` provides cryptographic
 primitives backed by the system `libsodium` library on the hosted
 `linux/x86_64` baseline.
 

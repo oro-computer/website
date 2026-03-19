@@ -4,22 +4,6 @@ Status: **Implemented subset**.
 
 `std::toml` provides a TOML v1.0-style parser over an index-based DOM.
 
-## Design rules
-
-- `Document` is the owning TOML DOM container.
-- `ValueId` is the stable handle for values inside a `Document`.
-- Parsing is explicit about ownership:
-  - `doc.parse(s)` borrows simple strings and numeric/datetime lexemes from `s`,
-  - `doc.parse_owned(s)` copies strings and lexemes into `doc`.
-- TOML emission is not implemented yet. The module currently exposes a parser
-  and query helpers only.
-- `Document` intentionally does not implement `Serialize(string)` or
-  `Parse(E, string)`:
-  - TOML text is a structured format, not the plain textual identity of the
-    DOM,
-  - and borrowed versus owned parsing is an explicit choice that should remain
-    visible at the call site.
-
 ## Exported API
 
 ```silk
@@ -83,7 +67,57 @@ Notes:
   `std::formal::index_dom_storage_well_formed` contract, and the public
   document accessors attach that theory directly.
 
-## String, numeric, and datetime values
+## Examples
+
+```silk
+import std::toml;
+
+fn main () -> int {
+  let mut doc: Document = Document{};
+
+  match (doc.parse(`
+title = "silk"
+ports = [8000, 8001]
+pi = 3.14
+`)) {
+    Ok(root) => {
+      let title_id = doc.table_get(root, "title") ?? 0 as i64;
+      let ports_id = doc.table_get(root, "ports") ?? 0 as i64;
+      let first = doc.array_first(ports_id) ?? 0 as i64;
+      let pi_id = doc.table_get(root, "pi") ?? 0 as i64;
+
+      if doc.as_string(title_id) != Some("silk") { return 2; }
+      if doc.int_as_i64(first) != Some(8000 as i64) { return 3; }
+
+      let pi = doc.float_as_f64(pi_id) ?? 0.0;
+      if pi <= 3.0 { return 4; }
+      if pi >= 4.0 { return 5; }
+      return 0;
+    },
+    Err(_) => {
+      return 1;
+    },
+  }
+}
+```
+
+## Considerations
+
+### Ownership and parse modes
+
+- `Document` is the owning TOML DOM container.
+- `ValueId` is the stable handle for values inside a `Document`.
+- Parsing is explicit about ownership:
+  - `doc.parse(s)` borrows simple strings and numeric/datetime lexemes from `s`,
+  - `doc.parse_owned(s)` copies strings and lexemes into `doc`.
+- `Document` intentionally does not implement `Serialize(string)` or
+  `Parse(E, string)`:
+  - TOML text is a structured format, not the plain textual identity of the
+    DOM,
+  - and borrowed versus owned parsing is an explicit choice that should remain
+    visible at the call site.
+
+### String, numeric, and datetime values
 
 Supported string forms:
 
@@ -102,7 +136,7 @@ Value access follows the parsed TOML shape:
 The returned `string` values are borrowed views into either the original input
 buffer or storage owned by `doc`.
 
-## Borrowed vs owned parse
+### Error and lifetime behavior
 
 `doc.parse(s)` is the fast path:
 
@@ -120,73 +154,13 @@ Both methods:
 - update `doc.root` / `doc.err`,
 - and report out-of-memory as `ERR_OUT_OF_MEMORY`.
 
-## Example
+## See also
 
-```silk
-import std::toml;
+- [`std::json`](?p=std/json)
+- [`std::strings`](?p=std/strings)
+- [`std::temporal`](?p=std/temporal)
 
-fn main () -> int {
-  let mut doc: Document = Document{};
-
-  let root_r = doc.parse(`
-title = "silk"
-ports = [8000, 8001]
-pi = 3.14
-`);
-  if root_r.is_err() {
-    return 1;
-  }
-
-  let root: i64 = match (root_r) {
-    Ok(v) => v,
-    Err(_) => 0 as i64,
-  };
-
-  let title_id_opt = doc.table_get(root, "title");
-  if title_id_opt == None {
-    return 2;
-  }
-  let title_id: i64 = title_id_opt ?? 0 as i64;
-  if (doc.as_string(title_id) ?? "") != "silk" {
-    return 3;
-  }
-
-  let ports_id_opt = doc.table_get(root, "ports");
-  if ports_id_opt == None {
-    return 4;
-  }
-  let ports_id: i64 = ports_id_opt ?? 0 as i64;
-  let first_opt = doc.array_first(ports_id);
-  if first_opt == None {
-    return 5;
-  }
-  let first: i64 = first_opt ?? 0 as i64;
-  if (doc.int_as_i64(first) ?? 0 as i64) != 8000 {
-    return 6;
-  }
-
-  let pi_id_opt = doc.table_get(root, "pi");
-  if pi_id_opt == None {
-    return 7;
-  }
-  let pi_id: i64 = pi_id_opt ?? 0 as i64;
-  let pi_opt = doc.float_as_f64(pi_id);
-  if pi_opt == None {
-    return 8;
-  }
-  let pi: f64 = pi_opt ?? 0.0;
-  if pi <= 3.0 {
-    return 9;
-  }
-  if pi >= 4.0 {
-    return 10;
-  }
-
-  return 0;
-}
-```
-
-## Follow-ups
+## Design goals
 
 - Streaming tokenization for very large inputs.
 - Canonical TOML emission once the DOM/query surface is considered stable.

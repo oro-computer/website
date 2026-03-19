@@ -13,24 +13,6 @@ fn main (argc: int, argv: u64) -> int { ... }
 
 and the current `std::args::Args` view.
 
-See also:
-
-- `docs/std/args.md` (argv helpers)
-- `docs/std/conventions.md` (error/ownership conventions)
-- `docs/std/result.md` (`Result(T, E)` and `Ok(...)`/`Err(...)` match usage)
-
-## Design goals
-
-- **Typed flags**: parse `bool`, `int`, `i64`, `u64`, and `string` values.
-- **Typed positionals**: declare and parse positional arguments (required and
-  optional), separate from flags.
-- **`--` rest**: support `--` to stop parsing flags and expose the remaining
-  arguments as a “rest” list for forwarding to subcommands/tools.
-- **Stable errors**: return a structured `FlagFailed` value (no `errno`, no
-  sentinel returns, no hidden error state).
-- **No hidden allocation**: the parser stores only string *views* into the
-  original argv bytes; it does not copy argument strings.
-
 ## Parsing rules (current subset)
 
 Given an argv slice `args[start..]` (typically `start = 1` to skip `argv[0]`):
@@ -125,7 +107,7 @@ Notes:
 - Flag declarations prefer options structs (`BoolOptions`, `IntOptions`, ...).
 - Options structs use `default_value` because `default` is a reserved keyword.
 
-## Example
+## Examples
 
 ```silk
 import std::args;
@@ -189,3 +171,21 @@ fn main (argc: int, argv: u64) -> int {
   }
 }
 ```
+
+## See also
+
+- [`std::args`](?p=std/args)
+- [`std::conventions`](?p=std/conventions)
+- [`std::result`](?p=std/result)
+
+## Design goals
+
+- **Typed flags**: parse `bool`, `int`, `i64`, `u64`, and `string` values.
+- **Typed positionals**: declare and parse positional arguments (required and
+  optional), separate from flags.
+- **`--` rest**: support `--` to stop parsing flags and expose the remaining
+  arguments as a “rest” list for forwarding to subcommands/tools.
+- **Stable errors**: return a structured `FlagFailed` value (no `errno`, no
+  sentinel returns, no hidden error state).
+- **No hidden allocation**: the parser stores only string *views* into the
+  original argv bytes; it does not copy argument strings.

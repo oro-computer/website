@@ -1,18 +1,11 @@
 # `std::strings`
 
-Status: **Implemented subset + active expansion**. A broad and growing subset
-is implemented in `std/strings.slk`; the rest of this document describes the
-near-term expansion path and long-term API shape.
+Status: **Implemented subset**. `std::strings` provides allocation-free string
+helpers plus owned string construction surfaces used throughout the standard
+library.
 
 This module provides string utilities and abstractions built on top of the core
 `string` type (UTF-8 bytes) and the `Buffer(T)` intrinsic.
-
-See also:
-
-- `docs/language/literals-string.md` (string semantics: UTF-8 bytes)
-- `docs/language/ext.md` (ABI/external-call representation and null-termination rule)
-- `docs/language/buffers.md` (Buffer(T) as the low-level backing store)
-- `docs/std/conventions.md` (UTF-8, allocation, and error conventions)
 
 ## Exported API
 
@@ -46,8 +39,8 @@ Notes:
 - These are simple wrappers over the language’s built-in string comparisons and
   optional-coalesce operator (`??`), chosen because they are implementable in
   the current compiler subset.
-- This surface will grow alongside language/runtime features
-  required for richer string operations (slicing, iteration, allocation, etc.).
+- These functions cover the lightweight, allocation-free helpers that operate
+  directly on the built-in `string` type.
 
 In addition, a low-level `StringBuilder` type exists today for
 incremental byte construction:
@@ -138,7 +131,7 @@ Notes:
   which makes generic fallible string-construction code read consistently
   across the stdlib.
 
-Example:
+## Examples
 
 ```silk
 import std::strings;
@@ -176,7 +169,7 @@ fn main () -> int {
 }
 ```
 
-## Scope
+## Considerations
 
 `std::strings` is responsible for:
 
@@ -190,7 +183,7 @@ Non-goals (initially):
 - Locale-aware collation and normalization (future work).
 - Full Unicode grapheme segmentation (future work).
 
-## Core Types (Initial Design)
+### Owned string surfaces
 
 The language provides a built-in `string` type (an immutable UTF-8 byte
 sequence). The stdlib adds:
@@ -210,7 +203,28 @@ Key invariants:
   null-terminated (with the trailing `\0` byte not counted in `.len`), matching
   the external-call contract in `docs/language/ext.md`.
 
-## Planned expansion
+### FFI interop
+
+`string` values crossing the C ABI use `SilkString { ptr, len }` as documented
+in `docs/language/ext.md` and `docs/compiler/abi-libsilk.md`.
+
+`std::strings` provides the core invariants needed for common interop patterns:
+
+- Passing `string` to C APIs that expect `const char *` (use `.ptr`; Silk’s
+  runtime representation guarantees a trailing NUL).
+- Producing an owned, NUL-terminated string for FFI calls that require the
+  backing storage to outlive the call.
+
+## See also
+
+- [String literals](?p=language/literals-string)
+- [External declarations](?p=language/ext)
+- [Buffers](?p=language/buffers)
+- [`std::conventions`](?p=std/conventions)
+
+## Design goals
+
+### Wider string surface
 
 These signatures are illustrative and will be refined alongside the language
 features required to implement them (references, generics, enums/results, etc.).
@@ -239,19 +253,7 @@ export fn find (s: string, needle: string) -> int?;
 export fn concat (alloc: std::memory::Allocator, a: string, b: string) -> String;
 ```
 
-## FFI Interop
-
-`string` values crossing the C ABI use `SilkString { ptr, len }` as documented
-in `docs/language/ext.md` and `docs/compiler/abi-libsilk.md`.
-
-`std::strings` should provide helpers for common interop patterns:
-
-- Passing `string` to C APIs that expect `const char *` (use `.ptr`; Silk’s
-  runtime representation guarantees a trailing NUL).
-- Producing an owned, NUL-terminated string for FFI calls that require the
-  backing storage to outlive the call (e.g. when C stores the pointer).
-
-## Future Work
+### Additional planned surface
 
 - `split`, `replace`, `join`.
 - UTF-8 scalar iteration (`chars()`), case mapping, and normalization.

@@ -1,6 +1,6 @@
 # `std::sqlite`
 
-Status: **Implemented subset + active expansion**. `std::sqlite` provides SQLite database
+Status: **Implemented subset**. `std::sqlite` provides SQLite database
 primitives for the hosted POSIX baseline. On `linux/x86_64`, `silk build`
 auto-links the vendored `libsqlite3.a` so outputs do not depend on a system
 SQLite shared library at runtime.

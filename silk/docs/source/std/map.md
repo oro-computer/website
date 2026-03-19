@@ -5,49 +5,8 @@
 - `HashMap(K, V)` — an unordered map backed by a hash table.
 - `TreeMap(K, V)` — an ordered map backed by a red-black tree.
 
-Status: **Implemented subset + active expansion**. The API is usable in the
-current compiler/backend subset and will grow as the language gains more
-borrow- and move-aware container ergonomics.
-
-## Design Goals
-
-- Provide a consistent, ergonomic key→value container story in `std::` without
-  relying on a builtin `map(K, V)` type form.
-- Make allocation behavior explicit and compatible with regions (`with`) and
-  `--noheap`.
-- Keep the API close in spirit to C++’s `std::unordered_map` and `std::map`
-  (operations, complexity expectations, and terminology), adapted to Silk.
-
-## Considerations
-
-### Important Limitations (Current Compiler Subset)
-
-In the current subset:
-
-- `HashMap(K, V)` owns keys and values by value:
-  - `clear` / `drop` run `Drop` for all live entries,
-  - `remove` drops the removed key and returns the removed value,
-  - `put` returns the previous value when replacing an existing entry.
-- `TreeMap(K, V)` does not run `Drop` for stored keys/values yet; it should be
-  treated as single-slot storage in the current subset.
-- `HashMap(K, V)` stores keys and values in the compiler’s **scalar-slot**
-  layout (`sizeof(K)` / `sizeof(V)` bytes, multiples of 8 in the current
-  subset). This supports multi-slot value types such as `string` and non-opaque
-  structs/enums over supported primitives.
-- `TreeMap(K, V)` is still limited by its current node layout and, for now,
-  should be treated as **single-slot** storage (keys/values that lower to a
-  single `u64` slot).
-- These containers are intended for “plain” value types:
-  - primitive scalars,
-  - `string` views,
-  - and small POD structs over those primitives.
-- `get` and `iter` produce values by value (copy element bytes). For value types
-  that require `Drop`, copying out creates duplicate ownership. Prefer move-out
-  operations (`remove` and the returned previous value from `put`) for
-  `Drop`-managed values.
-
-These limits are expected to be relaxed as the language gains borrow-aware
-accessors and iterators for container storage.
+Status: **Implemented subset**. The API is usable in the current
+compiler/backend subset, with current limitations called out below.
 
 ## Exported API
 
@@ -71,61 +30,6 @@ Default helper functions are provided for these key types:
 - platform integers (`int`, `usize`, `size`/`isize`)
 - `char`
 - `string` (bytewise FNV-1a)
-
-Example (using `std::map` defaults via `HashMap.init(cap)` / `HashMap.empty()`):
-
-```silk
-import std::map;
-import std::result;
-import std::memory;
-
-type Map = std::map::HashMap(u64, int);
-type InitResult = std::result::Result(Map, std::memory::AllocFailed);
-
-fn main () -> int {
-  match (Map.init(16)) {
-    InitResult::Ok(map) => {
-      let mut m: Map = map;
-      let put_r = m.put(1, 10);
-      if put_r.is_err() { m.drop(); return 2; }
-
-      let v: int = m.get(1) ?? 0;
-      m.drop();
-      return v;
-    },
-    InitResult::Err(_) => {
-      return 1;
-    },
-  }
-}
-```
-
-Example (custom hashing/equality):
-
-```silk
-import std::map;
-import std::result;
-import std::memory;
-
-type Map = std::map::HashMap(u64, int);
-type InitResult = std::result::Result(Map, std::memory::AllocFailed);
-
-fn hash_u64 (k: u64) -> u64 { return k; }
-fn eq_u64 (a: u64, b: u64) -> bool { return a == b; }
-
-fn main () -> int {
-  match (Map.init_with(16, hash_u64, eq_u64)) {
-    InitResult::Ok(map) => {
-      let mut m: Map = map;
-      m.drop();
-      return 0;
-    },
-    InitResult::Err(_) => {
-      return 1;
-    },
-  }
-}
-```
 
 `HashMap.init_with(cap, ...)` validates the requested capacity:
 
@@ -205,3 +109,106 @@ Notes:
 - Iteration is by value (copies out `key` and `value`).
 - `HashMap` iteration order is unspecified.
 - `TreeMap` iteration yields entries in ascending key order (as defined by `cmp`).
+
+## Examples
+
+### HashMap with default helpers
+
+```silk
+import std::map;
+import std::result;
+import std::memory;
+
+type Map = std::map::HashMap(u64, int);
+type InitResult = std::result::Result(Map, std::memory::AllocFailed);
+
+fn main () -> int {
+  match (Map.init(16)) {
+    InitResult::Ok(map) => {
+      let mut m: Map = map;
+      let put_r = m.put(1, 10);
+      if put_r.is_err() { m.drop(); return 2; }
+
+      let v: int = m.get(1) ?? 0;
+      m.drop();
+      return v;
+    },
+    InitResult::Err(_) => {
+      return 1;
+    },
+  }
+}
+```
+
+### HashMap with custom hashing and equality
+
+```silk
+import std::map;
+import std::result;
+import std::memory;
+
+type Map = std::map::HashMap(u64, int);
+type InitResult = std::result::Result(Map, std::memory::AllocFailed);
+
+fn hash_u64 (k: u64) -> u64 { return k; }
+fn eq_u64 (a: u64, b: u64) -> bool { return a == b; }
+
+fn main () -> int {
+  match (Map.init_with(16, hash_u64, eq_u64)) {
+    InitResult::Ok(map) => {
+      let mut m: Map = map;
+      m.drop();
+      return 0;
+    },
+    InitResult::Err(_) => {
+      return 1;
+    },
+  }
+}
+```
+
+## Considerations
+
+### Ownership and current storage limits
+
+In the current subset:
+
+- `HashMap(K, V)` owns keys and values by value:
+  - `clear` / `drop` run `Drop` for all live entries,
+  - `remove` drops the removed key and returns the removed value,
+  - `put` returns the previous value when replacing an existing entry.
+- `TreeMap(K, V)` does not run `Drop` for stored keys/values yet; it should be
+  treated as single-slot storage in the current subset.
+- `HashMap(K, V)` stores keys and values in the compiler’s **scalar-slot**
+  layout (`sizeof(K)` / `sizeof(V)` bytes, multiples of 8 in the current
+  subset). This supports multi-slot value types such as `string` and non-opaque
+  structs/enums over supported primitives.
+- `TreeMap(K, V)` is still limited by its current node layout and, for now,
+  should be treated as **single-slot** storage (keys/values that lower to a
+  single `u64` slot).
+- These containers are intended for “plain” value types:
+  - primitive scalars,
+  - `string` views,
+  - and small POD structs over those primitives.
+- `get` and `iter` produce values by value (copy element bytes). For value types
+  that require `Drop`, copying out creates duplicate ownership. Prefer move-out
+  operations (`remove` and the returned previous value from `put`) for
+  `Drop`-managed values.
+
+These limits are expected to be relaxed as the language gains borrow-aware
+accessors and iterators for container storage.
+
+## See also
+
+- [`std::set`](?p=std/set)
+- [`std::vector`](?p=std/vector)
+- [`std::interfaces`](?p=std/interfaces)
+
+## Design goals
+
+- Provide a consistent, ergonomic key→value container story in `std::` without
+  relying on a builtin `map(K, V)` type form.
+- Make allocation behavior explicit and compatible with regions (`with`) and
+  `--noheap`.
+- Keep the API close in spirit to C++’s `std::unordered_map` and `std::map`
+  (operations, complexity expectations, and terminology), adapted to Silk.

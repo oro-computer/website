@@ -1,6 +1,6 @@
 # `std::ssh2`
 
-Status: **Implemented subset + active expansion**. `std::ssh2` provides SSH2 client
+Status: **Implemented subset**. `std::ssh2` provides SSH2 client
 primitives for the hosted POSIX baseline. On `linux/x86_64`, `silk build`
 auto-links the vendored `libssh2.a` so outputs do not depend on a system
 `libssh2` shared object at runtime.

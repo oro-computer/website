@@ -195,6 +195,12 @@ fn main () -> int {
 - On the hosted `linux/x86_64` baseline, `silk build` auto-links ggml after
   `zig build deps` has staged the vendored archives.
 
+## See also
+
+- [`std::runtime::mem`](?p=std/runtime)
+- [`Vendored dependencies`](?p=compiler/vendored-deps)
+- [`CLI build reference`](?p=compiler/cli-silk)
+
 ## Design goals
 
 - Keep the public surface small and predictable.
@@ -202,9 +208,3 @@ fn main () -> int {
   graph construction.
 - Expose enough tensor inspection and arithmetic to build real inference or
   numeric pipelines without forcing every caller down to raw FFI.
-
-## See also
-
-- [`std::runtime::mem`](?p=std/runtime)
-- [`Vendored dependencies`](?p=compiler/vendored-deps)
-- [`CLI build reference`](?p=compiler/cli-silk)

@@ -1,6 +1,6 @@
 # `std::url`
 
-Status: **Implemented (core)**. `std::url` provides a WHATWG-URL-compatible URL parser and serializer plus `URLSearchParams` behavior (`application/x-www-form-urlencoded`).
+Status: **Implemented subset**. `std::url` provides a WHATWG-URL-compatible URL parser and serializer plus `URLSearchParams` behavior (`application/x-www-form-urlencoded`).
 
 This module focuses on:
 
@@ -72,7 +72,9 @@ which forwards to `std::url::parse`.
 - `set(name: string, value: string) -> std::memory::OutOfMemory?`
 - `sort() -> std::memory::OutOfMemory?` — stable sort by decoded name, then re-serialize.
 
-## Example: parse, resolve, and mutate query params
+## Examples
+
+### Parse, resolve, and mutate query params
 
 ```silk
 import std::url;
@@ -117,7 +119,13 @@ fn main () -> int {
 }
 ```
 
-## Notes
+## Considerations
 
 - This module does not implement the JavaScript `URL` object API (setters, live `searchParams` binding, etc.); it provides a low-level URL record plus helpers that follow the WHATWG parsing and serialization rules.
 - Domain processing uses a UTF-8 + punycode-based `domain_to_ascii` implementation and supports common Unicode dot separators; full UTS46 mapping and normalization requires additional Unicode data.
+
+## See also
+
+- [`std::strings`](?p=std/strings)
+- [`std::http`](?p=std/http)
+- [`std::https`](?p=std/https)

@@ -1,6 +1,6 @@
 # Standard Library Overview (`std::`)
 
-Status: **Implemented subset + active expansion**. The `docs/std/` directory is
+Status: **Implemented subset**. The `docs/std/` directory is
 the public reference for the shipped stdlib surface, and the in-tree stdlib
 under `std/` satisfies `import std::...;` for the current compiler subset.
 

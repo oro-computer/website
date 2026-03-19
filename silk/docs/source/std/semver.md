@@ -1,6 +1,6 @@
 # `std::semver`
 
-Status: **implemented (core)**. `std::semver` provides a SemVer 2.0.0 parser and
+Status: **Implemented subset**. `std::semver` provides a SemVer 2.0.0 parser and
 precedence comparison.
 
 This module is intentionally strict and focused:
@@ -85,7 +85,7 @@ Notes:
   - `1.0.0+1` and `1.0.0+2` compare equal (`cmp == 0`),
   - but they are not exactly equal (`eq` is false).
 
-## Example
+## Examples
 
 ```silk
 import std::semver;
@@ -122,3 +122,9 @@ fn main () -> int {
   }
 }
 ```
+
+## See also
+
+- [`std::strings`](?p=std/strings)
+- [`std::result`](?p=std/result)
+- [`std::interfaces`](?p=std/interfaces)

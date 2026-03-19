@@ -58,6 +58,8 @@ structure unless a module is intentionally design-only:
 - `Exported API`,
   - grouped by exported structs, types, theories, functions, constants, and
     other exported declarations when that improves readability,
+  - and should document the full shipped surface rather than a partial “current
+    API” snapshot,
 - `Examples`,
 - `Considerations` when ownership, portability, blocking behavior, or ABI
   details matter,
@@ -68,6 +70,10 @@ structure unless a module is intentionally design-only:
 Avoid headings like `Current API` for exported stdlib surfaces. They imply a
 parallel replacement API instead of documenting the module that downstream
 users actually import today.
+
+When a module exports submodules, errors, constants, handles, or runtime-facing
+families, document those explicitly under `Exported API` instead of leaving
+them implicit in surrounding prose.
 
 ## Allocation and Ownership
 

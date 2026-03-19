@@ -8,7 +8,7 @@ modules** from Silk.
 This module is about *running* wasm. It is not the Silk compiler’s wasm output
 backend (see `docs/compiler/backend-wasm.md`).
 
-## Goals
+## Description
 
 - Provide a portable API for:
   - loading/validating wasm bytes,
@@ -333,7 +333,7 @@ fn main () -> int {
 }
 ```
 
-## Future Work
+## Design goals
 
 - A stable, ergonomic host import resolver API (beyond the MVP `Imports` list).
 - WASI bindings and host library shims.

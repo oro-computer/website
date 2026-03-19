@@ -9,12 +9,6 @@ adapters in the current shipped stdlib.
 Hosted baseline: POSIX file descriptors and blocking I/O, with async wrappers
 layered on the hosted runtime.
 
-See also:
-
-- `docs/std/strings.md` (formatting targets and string building)
-- `docs/std/fmt.md` (format string syntax)
-- `docs/std/conventions.md` (error conventions)
-
 ## Exported API
 
 The current stdlib provides basic unbuffered stdio primitives
@@ -115,7 +109,9 @@ Notes:
   - `std::io::stream::pipe_stream_to_fd` / `pipe_stream_to_fd_abortable`
   These adapters take ownership of the `fd` and close it before returning.
 
-Example (formatted printing):
+## Examples
+
+### Formatted printing
 
 ```silk
 import std::io;
@@ -126,7 +122,7 @@ fn main () -> int {
 }
 ```
 
-Example (stdin → stdout echo using unbuffered reads/writes):
+### Stdin → stdout echo using unbuffered reads and writes
 
 ```silk
 import std::io;
@@ -165,14 +161,16 @@ fn main () -> int {
   return 0;
 }
 ```
-## Scope
+## Considerations
+
+### Module scope
 
 `std::io` is responsible for:
 
 - Standard input, output, and error streams.
 - Simple printing and formatted output APIs.
 
-## Core Interfaces (Initial Design)
+### Interface model
 
 The stdlib should standardize reader/writer interfaces:
 
@@ -202,14 +200,21 @@ export interface Reader {
 The concrete representation of interfaces will evolve with the language; the
 key point is that `std::fs` and `std::net` can reuse the same I/O traits.
 
-## Convenience API
+### Convenience surface
 
 - stdout/stderr: `print`/`println` and `eprint`/`eprintln` (formatted output).
 - unbuffered primitives: `read_stdin`, `write_stdout`, `write_stderr`.
 - future (design): `stdout()` / `stderr()` / `stdin()` handle-returning helpers
   built on a stable reader/writer interface.
 
-## Future Work
+## See also
+
+- [`std::fmt`](?p=std/fmt)
+- [`std::strings`](?p=std/strings)
+- [`std::stream`](?p=std/stream)
+- [`std::conventions`](?p=std/conventions)
+
+## Design goals
 
 - Buffered I/O wrappers (`BufReader`, `BufWriter`).
 - Broader async I/O surface beyond the current wrappers:

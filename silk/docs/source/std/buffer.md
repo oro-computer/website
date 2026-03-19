@@ -11,12 +11,6 @@ In the long-term design, the compiler may treat `Buffer(T)` as a special
 primitive, but the shipped stdlib surface is already usable end-to-end (see
 `docs/language/buffers.md`).
 
-See also:
-
-- `docs/std/vector.md` (`Vector(T)`)
-- `docs/language/buffers.md` (intrinsic `Buffer(T)` design)
-- `docs/std/io.md` and `docs/std/strings.md` (byte-oriented APIs)
-
 ## Exported API
 
 `std::buffer` provides:
@@ -115,7 +109,45 @@ export type BufferF32 = std::vector::Vector(f32);
 export type BufferF64 = std::vector::Vector(f64);
 ```
 
-Notes:
+## Examples
+
+### Fixed-capacity typed storage and packed byte output
+
+```silk
+import std::buffer;
+
+fn main () -> int {
+  let mut ints = match std::buffer::Buffer(int).init(3) {
+    Ok(v) => v,
+    Err(_) => return 1,
+  };
+  ints.write(0, 10);
+  ints.write(1, 20);
+  ints.write(2, 30);
+  if ints.read(1) != 20 {
+    ints.drop();
+    return 2;
+  }
+  ints.drop();
+
+  let mut bytes = match std::buffer::BufferU8.init(4) {
+    Ok(v) => v,
+    Err(_) => return 3,
+  };
+  if bytes.push(65) != None || bytes.push(66) != None {
+    bytes.drop();
+    return 4;
+  }
+  if bytes.as_bytes().len != 2 {
+    bytes.drop();
+    return 5;
+  }
+  bytes.drop();
+  return 0;
+}
+```
+
+## Considerations
 
 - `Buffer(T)` is a scalar-slot buffer: `cap` is in elements, and the allocation
   size is `cap * sizeof(T)` bytes (in the current backend subset, `sizeof(u8) == 8`).
@@ -131,3 +163,10 @@ Notes:
 - The width-oriented aliases are still backed by `std::vector::Vector(T)` in
   the current subset, so their underlying storage follows the
   scalar-slot model described in `docs/std/vector.md`.
+
+## See also
+
+- [`std::arrays`](?p=std/arrays)
+- [`std::vector`](?p=std/vector)
+- [`Buffer(T)` language design](?p=language/buffers)
+- [`std::io`](?p=std/io)

@@ -1,6 +1,6 @@
 # `std::runtime`
 
-Status: **Implemented core interfaces + active expansion**.
+Status: **Implemented core interfaces**.
 
 `std::runtime` defines a *runtime interface layer* that sits underneath the
 rest of the standard library.

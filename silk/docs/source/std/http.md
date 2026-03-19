@@ -4,13 +4,7 @@ Status: **Implemented (hosted, blocking; HTTP/1.1 subset)**. `std::http` provide
 HTTP/1.1 request/response parsing and a small blocking client/server connection
 API on top of `std::net::TCPStream`.
 
-See also:
-
-- `docs/std/networking.md` (`std::net`)
-- `docs/std/https.md` (`std::https` layered on `std::tls`)
-- RFC 7230 / RFC 7231 (HTTP/1.1 message syntax and semantics)
-
-## Scope (Current)
+## Description
 
 Implemented:
 
@@ -89,13 +83,37 @@ impl Connection {
 }
 ```
 
-Notes:
+### Errors
 
-- This API is currently blocking and uses `Connection: close` by default.
-- Parsed messages own their backing bytes and return borrowed `string` views into
-  those bytes; the returned views are valid until the message is dropped.
+- `DEFAULT_MAX_HEADER_BYTES`
+- `ERR_IO`
+- `ERR_TOO_LARGE`
+- `ERR_BAD_MESSAGE`
+- `ERR_UNSUPPORTED_TRANSFER_ENCODING`
+- `ERR_BAD_CONTENT_LENGTH`
+- `ERR_OUT_OF_MEMORY`
+- `Error`
 
-## Example (Client)
+### Message types
+
+- `Request`
+  - `Request.parse(input) -> RequestResult`
+  - `method()`, `target()`, `version()`, `header(name)`, `body()`
+- `Response`
+  - `Response.parse(input) -> ResponseResult`
+  - `version()`, `status_code()`, `reason()`, `header(name)`, `body()`
+
+### Connection
+
+- `Connection.from_stream(stream) -> Connection`
+- `is_valid() -> bool`
+- `close() -> Error?`
+- client helpers: `write_request(...)`, `read_response()`
+- server helpers: `read_request()`, `write_response(...)`
+
+## Examples
+
+### Blocking client request
 
 ```silk
 import std::http;
@@ -132,10 +150,24 @@ export fn main () -> int {
 }
 ```
 
-## Validation Rules
+## Considerations
+
+### Ownership and blocking behavior
+
+- This API is currently blocking and uses `Connection: close` by default.
+- Parsed messages own their backing bytes and return borrowed `string` views into
+  those bytes; the returned views are valid until the message is dropped.
+
+### Protocol and validation rules
 
 - `Content-Length` must parse as a non-negative decimal value.
 - When `Transfer-Encoding` is present, only `"identity"` and `"chunked"` are
   accepted; other encodings fail with `ERR_UNSUPPORTED_TRANSFER_ENCODING`.
 - Request/response header blocks are limited by `DEFAULT_MAX_HEADER_BYTES`
   (and per-connection configuration where applicable).
+
+## See also
+
+- [`std::net`](?p=std/networking)
+- [`std::https`](?p=std/https)
+- RFC 7230 / RFC 7231

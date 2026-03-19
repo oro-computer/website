@@ -1,6 +1,6 @@
 # `std::vector`
 
-Status: **Implemented subset + active expansion**. This module provides a generic, growable
+Status: **Implemented subset**. This module provides a generic, growable
 vector type `Vector(T)` used broadly across `std::`.
 
 `Vector(T)` is an owning container with:
@@ -79,6 +79,45 @@ impl Vector(T) as std::interfaces::Drop {
 }
 ```
 
+## Examples
+
+`Vector(T)` is the stdlib’s default growable container for typed elements. When
+you see code manually managing `{ ptr, len, cap }` for a typed array, it is
+often a sign that a `Vector(T)` (or a small wrapper around it) is the intended
+tool.
+
+This example collects `TabState` values into a `Vector(TabState)`:
+
+```silk
+import std::arrays;
+import std::vector;
+
+struct TabState {
+  path: string,
+  top_off: i64,
+  gutter_on: bool,
+}
+
+type Tabs = std::vector::Vector(TabState);
+
+fn tabs_collect (paths: std::arrays::Slice(string)) -> Tabs? {
+  let cap: i64 = paths.len;
+  let mut tabs: Tabs = Tabs.try_init(cap) ?? Tabs.empty();
+
+  var i: i64 = 0;
+  while i < paths.len {
+    let err = tabs.push(TabState{ path: paths.get(i), top_off: 0, gutter_on: false });
+    if err != None {
+      // `tabs` is dropped on scope exit (drops elements + frees its allocation).
+      return None;
+    }
+    i = i + 1;
+  }
+
+  return Some(tabs);
+}
+```
+
 ## Considerations
 
 ### Ownership and `Drop`
@@ -121,45 +160,6 @@ Notes:
   - `at` returns `None` when `index` is out of bounds,
   - `try_set` returns `false` when `index` is out of bounds.
 - `swap_remove` removes an element by swapping in the last element (O(1), order not preserved).
-
-## Examples
-
-`Vector(T)` is the stdlib’s default growable container for typed elements. When
-you see code manually managing `{ ptr, len, cap }` for a typed array, it is
-often a sign that a `Vector(T)` (or a small wrapper around it) is the intended
-tool.
-
-This example collects `TabState` values into a `Vector(TabState)`:
-
-```silk
-import std::arrays;
-import std::vector;
-
-struct TabState {
-  path: string,
-  top_off: i64,
-  gutter_on: bool,
-}
-
-type Tabs = std::vector::Vector(TabState);
-
-fn tabs_collect (paths: std::arrays::Slice(string)) -> Tabs? {
-  let cap: i64 = paths.len;
-  let mut tabs: Tabs = Tabs.try_init(cap) ?? Tabs.empty();
-
-  var i: i64 = 0;
-  while i < paths.len {
-    let err = tabs.push(TabState{ path: paths.get(i), top_off: 0, gutter_on: false });
-    if err != None {
-      // `tabs` is dropped on scope exit (drops elements + frees its allocation).
-      return None;
-    }
-    i = i + 1;
-  }
-
-  return Some(tabs);
-}
-```
 
 ## See also
 

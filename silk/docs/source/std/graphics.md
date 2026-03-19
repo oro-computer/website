@@ -101,14 +101,14 @@ This example assumes a valid OpenGL context is already current on the thread.
   structs by value. The generated bindings therefore favor pointer-based ABI
   mapping.
 
+## See also
+
+- [`std::ffi::c`](?p=std/ffi-c)
+- [`Package structure`](?p=std/package-structure)
+
 ## Design goals
 
 - Pin the registry inputs so the public surface is reproducible and reviewable.
 - Provide exhaustive raw symbol coverage for the selected core API versions.
 - Keep the standard library layer mechanical; let higher-level rendering
   packages build ergonomic abstractions above it.
-
-## See also
-
-- [`std::ffi::c`](?p=std/ffi-c)
-- [`Package structure`](?p=std/package-structure)

@@ -155,7 +155,9 @@ export type Writer = std::tar::AsyncWriter;
 Note: the implementations live in `std/tar.slk`; `std/tar/async.slk` is a thin
 re-export module so callers can `import std::tar::async;`.
 
-## Example: in-memory roundtrip
+## Examples
+
+### In-memory roundtrip
 
 ```silk
 import std::arrays;
@@ -202,3 +204,9 @@ fn main () -> int {
   return 0;
 }
 ```
+
+## See also
+
+- [`std::filesystem`](?p=std/filesystem)
+- [`std::stream`](?p=std/stream)
+- [`std::buffer`](?p=std/buffer)

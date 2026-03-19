@@ -8,14 +8,9 @@ feature set.
 The public `std::fs` surface does not expose POSIX `errno`. Runtime-specific
 details live under `std::runtime`.
 
-See also:
+## Description
 
-- `docs/std/io.md` (shared I/O error conventions and reader/writer traits)
-- `docs/std/path.md` (path manipulation helpers)
-- `docs/std/runtime.md` (runtime interface layer and pluggable runtimes)
-- `docs/std/conventions.md`
-
-## Platform notes
+### Platform notes
 
 - Hosted baseline (`linux/x86_64`): `std::runtime::fs` delegates to
   `std::runtime::posix::fs` and uses POSIX syscalls.
@@ -244,7 +239,33 @@ Notes:
     baseline). `std::fs` does not yet wrap this in a higher-level temp-file
     API.
 
-## Scope
+## Examples
+
+```silk
+import std::fs;
+
+fn main () -> int {
+  match (std::fs::write_file_string("notes.txt", "silk\n", 420)) {
+    Ok(_) => {},
+    Err(_) => return 1,
+  }
+
+  match (std::fs::read_file_string("notes.txt")) {
+    Ok(mut contents) => {
+      let ok = (contents as string) == "silk\n";
+      contents.drop();
+      return if ok { 0 } else { 2 };
+    },
+    Err(_) => {
+      return 3;
+    },
+  }
+}
+```
+
+## Considerations
+
+### Scope
 
 `std::fs` is responsible for:
 
@@ -260,7 +281,16 @@ Hosted baseline:
 - APIs that accept `string` paths must specify encoding behavior. The initial
   baseline assumes UTF-8 on POSIX but does not require it for all operations.
 
-## Core Types (Initial Design)
+## See also
+
+- [`std::io`](?p=std/io)
+- [`std::path`](?p=std/path)
+- [`std::runtime`](?p=std/runtime)
+- [`std::stream`](?p=std/stream)
+
+## Design goals
+
+### Broader filesystem surface
 
 - `Path` / `PathBuf` for path manipulation (borrowed vs owned).
 - `File` for open file handles.
@@ -292,8 +322,6 @@ export struct OpenOptions {
 export fn open (path: string, opts: OpenOptions) -> Result(File, FsError);
 export fn read_to_string (alloc: std::memory::Allocator, path: string) -> Result(std::strings::String, FsError);
 ```
-
-## Future Work
 
 - Symlink support and canonicalization.
 - File watching (platform-dependent).

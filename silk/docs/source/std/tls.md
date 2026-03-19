@@ -1,6 +1,6 @@
 # `std::tls`
 
-Status: **Implemented subset + active expansion**. `std::tls` provides TLS client/server
+Status: **Implemented subset**. `std::tls` provides TLS client/server
 primitives for the hosted POSIX baseline using vendored `mbedTLS` static
 archives.
 

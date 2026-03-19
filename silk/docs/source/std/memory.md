@@ -6,12 +6,6 @@ implemented yet.
 `std::memory` provides allocation interfaces and low-level memory utilities.
 It sits at the bottom of most other std modules.
 
-See also:
-
-- `docs/language/regions.md` (`region`, `with`, and region-backed `new`)
-- `docs/language/buffers.md` (`Buffer(T)` intrinsic)
-- `docs/std/conventions.md` (allocation conventions)
-
 ## Exported API
 
 A small subset is implemented in `std/memory.slk` for early compiler bring-up.
@@ -58,7 +52,23 @@ Notes:
 - `AllocFailed` is a small, stable “constructor failed” error used by APIs
   like `BufferU8.init` / `Vector(T).init` where invalid inputs (negative
   capacities, overflow) must be distinguished from out-of-memory.
-## Scope
+
+## Examples
+
+```silk
+import std::memory;
+
+fn main () -> int {
+  if !std::memory::is_power_of_two_u64(64) { return 1; }
+  if std::memory::align_up_u64(65, 64) != 128 { return 2; }
+  if std::memory::div_ceil_u64(9, 4) != 3 { return 3; }
+  return 0;
+}
+```
+
+## Considerations
+
+### Scope
 
 `std::memory` is responsible for:
 
@@ -74,7 +84,7 @@ Non-goals (initially):
 - Region inference beyond the region model already described in the language
   docs.
 
-## Intrinsics and Their Std Surface
+### Intrinsics and their std surface
 
 The language defines:
 
@@ -86,7 +96,15 @@ namespace (allocation, read/write, drop, view/slice). The `std::memory` design
 assumes those operations exist (implemented by the compiler/runtime) and that
 higher-level containers in `std::arrays` and `std::strings` are layered on top.
 
-## Allocator Interface (Initial Design)
+## See also
+
+- [Regions](?p=language/regions)
+- [Buffers](?p=language/buffers)
+- [`std::conventions`](?p=std/conventions)
+
+## Design goals
+
+### Allocator interface
 
 The stdlib needs a first-class allocator abstraction so that:
 
@@ -117,7 +135,7 @@ The exact interface depends on how generics and interfaces are represented in
 the implemented language. The key requirement is that containers can accept an
 allocator value and use it consistently.
 
-## Common Utilities
+### Common utilities
 
 `std::memory` should provide low-level routines that are useful across the
 stdlib:

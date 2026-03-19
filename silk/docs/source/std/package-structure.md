@@ -1,6 +1,6 @@
 # `std::` Module Structure
 
-Status: **Implemented subset + active expansion**. This describes the current
+Status: **Implemented subset**. This describes the current
 organization and build integration for `std::`, including `std::...` import
 resolution from a configurable stdlib root and archive-based std linkage on the
 supported hosted targets.

@@ -4,7 +4,7 @@ Status: **Implemented subset**. A small endian/byte-order
 helper subset plus hosted **IPv4/IPv6 TCP** and **IPv4/IPv6 UDP** socket APIs
 are implemented in `std/net.slk`.
 
-Async integration (current snapshot):
+Async integration:
 
 - `std::net` exposes async TCP `connect` and `accept` via:
   - `std::net::TCPStream.{connect_async,connect_v6_async}`
@@ -17,7 +17,7 @@ Async integration (current snapshot):
 
 `std::net` provides networking primitives on POSIX systems.
 
-Hostname resolution (DNS) integration (current snapshot):
+Hostname resolution (DNS) integration:
 
 - `std::net` provides `resolve_host(...)` and `TCPStream.connect_host(...)` helpers
   built on a small hosted POSIX `getaddrinfo(3)` shim.
@@ -307,14 +307,35 @@ Notes:
 - `send_to` / `recv_from` require the socket domain to match `addr.domain`
   (`AF_INET` for IPv4, `AF_INET6` for IPv6).
 
-## Scope
+## Examples
+
+### Address construction and normalization
+
+```silk
+import std::net;
+
+fn main () -> int {
+  let loopback = std::net::SocketAddrV4.loopback(8080);
+  let any = std::net::SocketAddr.from_v4(loopback);
+
+  if !loopback.ip().is_loopback() { return 1; }
+  if !any.is_v4() { return 2; }
+  if any.port() != 8080 { return 3; }
+
+  return 0;
+}
+```
+
+## Considerations
+
+### Scope
 
 `std::net` is responsible for:
 
 - Sockets and basic protocols.
 - Integration with concurrency primitives (`async`, `task`).
 
-## Core Types (Initial Design)
+### Design shape
 
 - `IpAddr` (`V4` / `V6`) and `SocketAddr`.
 - `TCPStream`, `TCPListener`, `UDPSocket`.
@@ -337,7 +358,7 @@ export fn tcp_connect (addr: SocketAddr) -> Result(TCPStream, NetError);
 export fn tcp_listen (addr: SocketAddr) -> Result(TCPListener, NetError);
 ```
 
-## Blocking vs Async
+### Blocking and async behavior
 
 The shipped hosted subset now includes both:
 
@@ -351,6 +372,14 @@ Remaining expansion areas include:
 - and higher-level blocking-offload helpers if the std/task surface grows a
   dedicated `run_blocking()`-style API.
 
-## Future Work
+## See also
+
+- [`std::io`](?p=std/io)
+- [`std::stream`](?p=std/stream)
+- [`std::http`](?p=std/http)
+- [`std::https`](?p=std/https)
+- [Concurrency](?p=language/concurrency)
+
+## Design goals
 
 - DNS resolution, TLS integration (as optional packages).

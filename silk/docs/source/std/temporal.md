@@ -16,11 +16,6 @@ remain future work.
 types (`docs/language/duration-instant.md`) and a proleptic Gregorian calendar
 model for date/time computations.
 
-See also:
-
-- `docs/language/duration-instant.md`
-- `docs/std/conventions.md`
-
 ## Exported API
 
 The following helpers exist today in `std/temporal.slk` and are available to
@@ -94,42 +89,79 @@ export fn parse_time_iso (s: string) -> TimeParseResult;
 export fn parse_datetime_iso (s: string) -> DateTimeParseResult;
 ```
 
-## Scope
+## Examples
+
+```silk
+import std::temporal;
+
+fn main () -> int {
+  let start_r = std::temporal::now_monotonic();
+  match (start_r) {
+    Ok(start) => {
+      let later = std::temporal::add(start, 250ms);
+      let delta = std::temporal::since(later, start);
+      if std::temporal::duration_to_secs_trunc(delta) != 0 as i64 {
+        return 2;
+      }
+
+      let date = std::temporal::Date.from_unix_days(0);
+      if date.iso_weekday() != Some(4) {
+        return 3;
+      }
+
+      match (std::temporal::parse_datetime_iso("2026-03-19T08:30:00")) {
+        Ok(dt) => {
+          let rendered_r = std::temporal::format_datetime_iso(dt);
+          match (rendered_r) {
+            Ok(mut rendered) => {
+              let ok = (rendered as string) == "2026-03-19T08:30:00";
+              rendered.drop();
+              return if ok { 0 } else { 4 };
+            },
+            Err(_) => { return 5; },
+          }
+        },
+        Err(_) => { return 6; },
+      }
+    },
+    Err(_) => {
+      return 1;
+    },
+  }
+}
+```
+
+## Considerations
+
+### Scope
 
 `std::temporal` is responsible for:
 
 - Access to time sources:
   - a monotonic clock for measuring durations (`Instant`),
-  - a wall-clock time source (UTC/local timestamps) for `DateTime` (future work).
+  - a wall-clock time source exposed today only via lower-level Unix timestamp
+    helpers in `std::runtime::time`.
 - Conversions between units and convenience helpers for `Duration`.
 - Pure calendar/time computations that do not require OS services:
   - validation and construction of `Date`, `TimeOfDay`, and `DateTime`,
   - Unix epoch conversions (days/seconds/nanoseconds),
   - strict ISO formatting/parsing helpers.
 
-## Planned expansion
-
-The language examples use `std::now()`; the stdlib should make the clock source
-explicit:
-
-`std::temporal` currently exposes only a monotonic clock read:
-
-Notes:
+### Clock and duration behavior
 
 - `now_monotonic()` must be monotonic (not subject to wall-clock adjustments).
 - Sleeping is exposed via `std::task` (`sleep` / `sleep_until`) in the current
   stdlib.
+- `Duration` literals exist at the language level. `std::temporal` adds helper
+  functions for zero tests, sign tests, truncating conversions, and epoch math.
 
-## Duration Helpers
+## See also
 
-`Duration` literals exist at the language level. The stdlib adds helpers such
-as:
+- [Duration and instant literals](?p=language/duration-instant)
+- [`std::task`](?p=std/task)
+- [`std::runtime`](?p=std/runtime)
 
-- `to_millis(d)`, `to_secs(d)`
-- checked arithmetic (`checked_add`, `checked_mul`) where overflow behavior
-  needs to be explicit.
-
-## Future Work
+## Design goals
 
 - Wall-clock time (`now_utc`, `now_local`) via higher-level wrappers on top of
   `std::runtime::time::unix_now_ns` / `unix_now_ms`.

@@ -1,31 +1,8 @@
 # `std::uuid`
 
-Status: **implemented**. `std::uuid` provides a robust UUID/ULID-like
+Status: **Implemented subset**. `std::uuid` provides a robust UUID/ULID-like
 identifier primitive with full support for UUID versions **1, 3, 4, 5, 6, 7,
 and 8** (RFC 4122 + RFC 9562 family).
-
-Goals:
-
-- a small, auditable implementation (no external dependencies required for
-  parsing/formatting and name-based UUIDs),
-- explicit constructors for each UUID version,
-- ergonomic helpers (parse, format, version/variant inspection),
-- Formal Silk contracts for buffer and shape preconditions.
-
-## Considerations
-
-### Representation
-
-`UUID` is represented as two `u64` words:
-
-- `hi`: the first 8 bytes (bytes 0..7) in network order,
-- `lo`: the last 8 bytes (bytes 8..15) in network order.
-
-This matches the canonical string form:
-
-`xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
-
-where the leftmost hex pairs correspond to lower byte indices.
 
 ## Exported API
 
@@ -85,6 +62,19 @@ fn main () -> int {
 
 ## Considerations
 
+### Representation
+
+`UUID` is represented as two `u64` words:
+
+- `hi`: the first 8 bytes (bytes 0..7) in network order,
+- `lo`: the last 8 bytes (bytes 8..15) in network order.
+
+This matches the canonical string form:
+
+`xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
+
+where the leftmost hex pairs correspond to lower byte indices.
+
 ### Version and Variant
 
 - `UUID.version()` returns the 4-bit version field (0..15).
@@ -117,7 +107,22 @@ Fallibility:
 `std::runtime::time::unix_now_ns` / `unix_now_ms` so callers can generate UUIDs
 without passing explicit timestamps.
 
-Planned follow-ups:
+## See also
+
+- [`std::crypto`](?p=std/crypto)
+- [`std::temporal`](?p=std/temporal)
+- [`std::strings`](?p=std/strings)
+
+## Design goals
+
+- Keep the implementation small and auditable, without external dependencies
+  for parsing/formatting and name-based UUIDs.
+- Provide explicit constructors for each UUID version.
+- Keep parse, format, and inspection helpers straightforward to embed into
+  application code and tooling.
+- Attach Formal Silk contracts to buffer and shape preconditions where useful.
+
+### Additional planned surface
 
 - richer formatting options (uppercase, simple hex, braced form, URN form),
 - UUIDv2 (DCE Security) if/when `std::process` exposes stable UID/GID APIs.
