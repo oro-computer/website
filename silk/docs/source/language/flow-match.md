@@ -5,8 +5,7 @@ The `match` expression provides structured pattern matching.
 Key ideas:
 
 - A `match` selects one of several branches based on a scrutinee expression.
-- The full language design includes richer patterns and arm guards, but the
-  current shipped subset documented here does not implement `if` guards in any
+- Arm guards of the form `pattern if cond => ...` are not implemented in any
   `match` form yet.
 - `match` is an expression; all arms must be compatible in type.
 
@@ -15,14 +14,9 @@ The compiler must:
 - Enforce exhaustiveness rules (where specified).
 - Type check each arm and compute a consistent result type.
 
-## Surface Syntax (Initial Implemented Subset)
+## Surface Syntax
 
-The full language design includes rich pattern matching, guards, and matching
-over many scrutinee types. The current compiler implementation supports only a
-narrow, explicitly documented subset so we can validate end-to-end lowering and
-code generation.
-
-In the initial subset, `match` is accepted as an *expression* of the form:
+`match` is accepted as an *expression* of the form:
 
 ```silk
 match <scrutinee> {
@@ -34,19 +28,19 @@ match <scrutinee> {
 Notes:
 
 - Arms are separated by commas; a trailing comma is permitted.
-- In the initial subset, arm bodies are expressions (not blocks).
-- In the current compiler, expression-form `match` is implemented for:
+- Arm bodies are expressions (not blocks).
+- Expression-form `match` is implemented for:
   - optionals,
   - primitive integers,
   - enums,
   - type unions,
   - and recoverable `Result`-style values.
-- Guard clauses of the form `pattern if cond => ...` are currently unsupported
+- Guard clauses of the form `pattern if cond => ...` are unsupported
   across all of those subsets.
 
 ### Optional Matching (`T?`)
 
-For optionals, the implemented subset is:
+For optionals:
 
 - The scrutinee expression must have optional type `T?` (`Option(T)`), where `T`
   is a payload type supported by the current backend subset.
@@ -71,12 +65,12 @@ fn main () -> int {
 }
 ```
 
-### Integer Matching (Primitive Integers) (Implemented Subset)
+### Integer Matching (Primitive Integers)
 
 The compiler also supports a small `match` subset for integer-like primitive
 scrutinees.
 
-Implemented initial subset:
+Current behavior:
 
 - The scrutinee expression must have a primitive integer type in the current
   backend subset (`int`, `i64`, `u64`, and the fixed-width integer primitives).
@@ -101,12 +95,12 @@ fn main () -> int {
 }
 ```
 
-### Enum Matching (`enum`) (Implemented Subset)
+### Enum Matching (`enum`)
 
 The language design supports matching over user-defined `enum` types
 (`docs/language/enums.md`).
 
-Implemented initial subset:
+Current behavior:
 
 - The scrutinee expression must have an enum type `E` (including an
   instantiated generic enum in module-set builds).
@@ -123,11 +117,11 @@ Implemented initial subset:
   - there must be exactly one arm for each enum variant, and
   - wildcard `_` arms are not part of the expression-form enum subset.
 
-### Type Union Matching (`T1 | T2 | ...`) (Implemented Subset)
+### Type Union Matching (`T1 | T2 | ...`)
 
 The language supports matching over **type unions** (`docs/language/type-unions.md`).
 
-Implemented initial subset:
+Current behavior:
 
 - The scrutinee expression must have a union type `T1 | ... | Tn`.
 - Patterns are restricted to typed binders:
@@ -138,7 +132,7 @@ Implemented initial subset:
 - Matches must be exhaustive: there must be exactly one arm per union member
   type (order is not significant).
 
-## Semantics (Initial Subset)
+## Semantics
 
 - The scrutinee expression is evaluated exactly once.
 - The selected arm is chosen based on the scrutinee value; non-selected arms
@@ -146,7 +140,7 @@ Implemented initial subset:
 - For `Some(v) => ...`, the binder `v` is in scope only within that arm and has
   type `T` (the inner payload type of the scrutinee `T?`).
 - The result type of a `match` expression is the common type of its arms; all
-  arms must type-check to the same result type in the initial subset.
+  arms must type-check to the same result type.
 
 ## `match` Statement (Block Arms)
 
@@ -177,12 +171,12 @@ An optional trailing semicolon is permitted after the closing brace:
 match (x) { _ => { } };
 ```
 
-In the current compiler subset, the statement form is supported for:
+Today, the statement form is supported for:
 
 - ordinary value matching (no typed-error contract), and
 - typed error handling (`docs/language/typed-errors.md`).
 
-### Ordinary value matching (implemented subset)
+### Ordinary value matching
 
 When the scrutinee expression is an ordinary value (it does *not* have a typed
 error contract), the statement form supports the same scrutinee + pattern
@@ -215,7 +209,7 @@ Notes:
 - For enums, wildcard support is not end-to-end yet:
   - expression-form enum matches require explicit arms for every variant,
   - statement-form ordinary enum matches also still require explicit variant
-    coverage in the current backend subset,
+    coverage in the current backend,
   - and although the checker already reserves `_` as a catch-all pattern for
     ordinary enum statements, lowering still rejects that form today.
 
@@ -229,7 +223,7 @@ Enum variant pattern note (statement form):
   arm, while `match (stream) { IOStream::Error => { ... } }` matches the unit
   enum variant.
 - The checker reserves `_` as a catch-all arm for ordinary enum statements, but
-  the current backend subset still rejects that form, so end-to-end ordinary
+  the current backend still rejects that form, so end-to-end ordinary
   enum statements still need explicit variant coverage today.
 
 ### Typed error matching (Terminal Arm Rule)
@@ -251,10 +245,10 @@ Key semantic rule (Terminal Arm Rule):
 - If `expr` is an error-producing expression (its signature includes `T | ErrorType...`),
   then any arm that matches an `error` type must end in a terminal statement.
 
-Implementation status:
+Current behavior:
 
 - The compiler currently implements `match` as an expression for the documented
-  current subset:
+  surface:
   - optionals (`T?`),
   - primitive integers,
   - type unions,
@@ -264,16 +258,16 @@ Implementation status:
   expression or statement form.
 - The statement form is implemented for:
   - ordinary values in the supported subset (block arms), and
-  - typed errors in the current subset (`docs/language/typed-errors.md`).
+  - typed errors (`docs/language/typed-errors.md`).
 
 Note: the compiler also allows the `match` statement form to destructure
 recoverable `Result`-style values. This form does not trigger the Terminal Arm
 Rule because it is not a `T | ...` typed-error expression.
 
-### Result Matching (`Ok(...)` / `Err(...)`) (Implemented Subset)
+### Result Matching (`Ok(...)` / `Err(...)`)
 
 The `match` expression also supports a small subset for
-recoverable “success or error” values. In the initial subset, this includes:
+recoverable “success or error” values. This includes:
 
 - `std::result::Result(T, E)` (an `enum` with `Ok(T)` and `Err(E)` variants), and
 - “Result-like” structs of the form `{ value: T?, err: E? }`.
@@ -286,7 +280,7 @@ Patterns:
 - `Ok(name)` / `Ok(_)`
 - `Err(name)` / `Err(_)`
 
-Rules (current subset):
+Rules:
 
 - Enum form:
   - The scrutinee expression must have an enum type with variants `Ok` and `Err`.

@@ -14,11 +14,11 @@ Currently:
 
 Canonical spec: `docs/language/flow-match.md`.
 
-## Status
+## Reference
 
-- Implemented subset + tests: `docs/language/flow-match.md`
+- Canonical spec and current behavior: `docs/language/flow-match.md`
 
-## Syntax (Current subset)
+## Syntax
 
 ```silk
 match value {

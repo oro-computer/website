@@ -12,7 +12,7 @@ Use enums to model:
 If your goal is “a function can fail with one of several error shapes”, prefer
 typed errors (`docs/language/typed-errors.md`) over enums.
 
-## Implementation Status (Current Compiler Subset)
+## Current behavior
 
 What works end-to-end today (parser → checker → lowering → codegen):
 
@@ -36,12 +36,12 @@ What works end-to-end today (parser → checker → lowering → codegen):
   - binders may be names or `_`,
   - no guarded arms (`if ...`) yet in either expression or statement form,
   - and expression-form matches must be *exhaustive* by explicit variant
-    coverage in the current subset.
+    coverage.
 - **`match` statement over ordinary enum values**:
   - enum variant arms must use the qualified form `E::Variant(...)`,
   - bare identifiers remain reserved for binder-style arms,
-  - and the checker already reserves `_` as a catch-all arm, but the current
-    lowering/backend subset does not support that form end to end yet.
+  - and the checker already reserves `_` as a catch-all arm, but lowering does
+    not support that form end to end yet.
 - **Generic enums (monomorphized)**:
   - `enum Name(T, ...) { ... }` declarations are supported in module-set builds
     that run monomorphization,
@@ -57,7 +57,7 @@ What works end-to-end today (parser → checker → lowering → codegen):
   - instance methods are callable as `value.method(...)` when the first
     parameter is a receiver (`self: &EnumName` / `mut self: &EnumName`),
   - the special `constructor` method used by `new Type(...)` is for `struct`
-    types; enums do not support `constructor` methods in the current subset.
+    types; enums do not support `constructor` methods.
 
 Not implemented yet (or not yet stable/documented):
 
@@ -66,9 +66,9 @@ Not implemented yet (or not yet stable/documented):
 - A stable ABI story for passing/returning enums across the C99 boundary (do
   not assume an enum layout until it is specified in `docs/compiler/abi-libsilk.md`).
 
-When the compiler rejects an enum construct in the current subset, the most
-common error is `E2002` (“unsupported expression in the current subset”). Type
-mismatches inside enum constructors or match arms are `E2001` (“type mismatch”).
+When the compiler rejects an enum construct in the documented enum surface, the
+most common error is `E2002` (“unsupported expression in the current subset”).
+Type mismatches inside enum constructors or match arms are `E2001` (“type mismatch”).
 
 ## Surface Syntax
 
@@ -115,7 +115,7 @@ fn main () -> int {
 
 Notes:
 
-- `E::A()` and `A()` are invalid in the current subset (unit variants are not callable).
+- `E::A()` and `A()` are invalid (unit variants are not callable).
 
 ### Tuple variants
 
@@ -140,8 +140,8 @@ fn main () -> int {
 
 Notes:
 
-- `E::Data` by itself is not a value in the current subset (tuple variants must
-  be constructed with `(...)`).
+- `E::Data` by itself is not a value (tuple variants must be constructed with
+  `(...)`).
 - If a tuple-variant constructor argument has the wrong type, you get `E2001`.
 - If the argument count does not match the variant definition, the compiler
   currently rejects the construct with `E2002`.
@@ -208,9 +208,9 @@ Binders:
 - shadow outer bindings of the same name (because they create a new binding in
   the arm’s environment).
 
-### Exhaustiveness (current subset)
+### Exhaustiveness
 
-In the current subset, enum exhaustiveness is split by `match` form:
+Enum exhaustiveness is split by `match` form:
 
 - Expression form:
   - there must be exactly one arm per enum variant,
@@ -219,7 +219,7 @@ In the current subset, enum exhaustiveness is split by `match` form:
 - Statement form over ordinary enum values:
   - end-to-end today, there must be exactly one qualified arm per variant,
   - and although the checker recognizes `_` as a catch-all arm, lowering still
-    rejects that form in the current backend subset.
+    rejects that form in the current backend.
 
 If a match is not exhaustive:
 
@@ -301,7 +301,7 @@ fn main () -> int {
 }
 ```
 
-## Representation (Current Backend Subset)
+## Representation
 
 Enums are values. In the current IR-backed lowering, an enum value is lowered to
 scalar slots as:
@@ -322,20 +322,18 @@ Conceptually:
 Only the active variant’s payload region is meaningful for a given value; other
 payload regions are unspecified.
 
-This representation is an implementation detail and is expected to evolve (for
-example, toward a tag + max-payload “union-style” layout) as the compiler and
-ABI mature.
+This representation is an implementation detail rather than a downstream ABI
+contract.
 
 ## Common Pitfalls
 
-- **Forgetting parentheses**: `E::Data(7)` is valid, but `E::Data` is not a value
-  in the current subset (error `E2002`).
+- **Forgetting parentheses**: `E::Data(7)` is valid, but `E::Data` is not a
+  value (error `E2002`).
 - **Calling a unit variant**: `E::A` is a value; `E::A()` is rejected (`E2002`).
 - **Wrong binder count**: `E::Pair(a)` does not match `Pair(int, int)` (`E2002`).
-- **Non-exhaustive matches**: you must list every variant (error `E2002` in the
-  current subset).
+- **Non-exhaustive matches**: you must list every variant (error `E2002`).
 - **Assuming enum equality is defined**: use `match` to inspect the tag/payload;
-  the current backend subset does not define `==`/`!=` over enums yet.
+  the current backend does not define `==`/`!=` over enums yet.
 
 ## Related Documents
 

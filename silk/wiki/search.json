@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-19T19:13:36+00:00",
+  "generatedAt": "2026-03-22T00:25:23+00:00",
   "kind": "wiki",
   "count": 84,
   "items": [
@@ -43,21 +43,21 @@
       "title": "`match`",
       "section": "language",
       "summary": "`match` provides structured pattern matching.",
-      "text": "match match provides structured pattern matching. Currently: match <optional> { None => expr, Some(x) => expr } is supported (expression form), primitive-integer, enum, type-union, and Result-style expression matches are supported in the documented subset, ordinary value matching and typed-error handling use a separate statement form match (expr) { ... }, guarded arms (pattern if cond => ...) are still unsupported in both expression and statement form, enum wildcard remains a split case: expression-form enum matches do not accept , statement-form ordinary enum matches reserve , but the backend still requires explicit variant coverage end to end. Canonical spec: docs/language/flow-match.md. Syntax match value { Pattern => expr, Pattern => expr, } match (value) { Pattern => { ... }, Pattern => { ... }, } Examples Example: matching an optional fn main () -> int { let x: int? = Some(7); let y: int = match x { None => 5, Some(v) => v, }; return y; } Example: matching an enum enum Msg { Quit, Add(int), } fn main () -> int { let m: Msg = Msg::Add(5); return match m { Msg::Quit => 0, Msg::Add(n) => n, }; } Example: matching a result import std::result; fn main () -> int { let r: std::result::Result(int, int) = std::result::Result(int, int).ok(7); return match r { Ok(v) => v, Err() => 0, }; } See also Canonical spec: docs/language/flow-match.md Enums: docs/language/enums.md Typed errors (match statement): docs/language/typed-errors.md"
+      "text": "match match provides structured pattern matching. Currently: match <optional> { None => expr, Some(x) => expr } is supported (expression form), primitive-integer, enum, type-union, and Result-style expression matches are supported in the documented subset, ordinary value matching and typed-error handling use a separate statement form match (expr) { ... }, guarded arms (pattern if cond => ...) are still unsupported in both expression and statement form, enum wildcard remains a split case: expression-form enum matches do not accept , statement-form ordinary enum matches reserve , but the backend still requires explicit variant coverage end to end. Canonical spec: docs/language/flow-match.md. Reference Canonical spec and current behavior: docs/language/flow-match.md Syntax match value { Pattern => expr, Pattern => expr, } match (value) { Pattern => { ... }, Pattern => { ... }, } Examples Example: matching an optional fn main () -> int { let x: int? = Some(7); let y: int = match x { None => 5, Some(v) => v, }; return y; } Example: matching an enum enum Msg { Quit, Add(int), } fn main () -> int { let m: Msg = Msg::Add(5); return match m { Msg::Quit => 0, Msg::Add(n) => n, }; } Example: matching a result import std::result; fn main () -> int { let r: std::result::Result(int, int) = std::result::Result(int, int).ok(7); return match r { Ok(v) => v, Err() => 0, }; } See also Canonical spec: docs/language/flow-match.md Enums: docs/language/enums.md Typed errors (match statement): docs/language/typed-errors.md"
     },
     {
       "id": "language/flow-loop",
       "title": "`loop`",
       "section": "language",
       "summary": "`loop { ... }` is an infinite loop that exits via `break` or `return`.",
-      "text": "loop loop { ... } is an infinite loop that exits via break or return. Canonical spec: docs/language/flow-loop.md. Syntax loop { // ... } Example fn main () -> int { let mut i: int = 0; loop { if i == 3 { break; } i += 1; } return i; } See also Canonical spec: docs/language/flow-loop.md break: docs/wiki/language/flow-break.md"
+      "text": "loop loop { ... } is an infinite loop that exits via break or return. Canonical spec: docs/language/flow-loop.md. Reference Canonical spec and current behavior: docs/language/flow-loop.md Syntax loop { // ... } Example fn main () -> int { let mut i: int = 0; loop { if i == 3 { break; } i += 1; } return i; } See also Canonical spec: docs/language/flow-loop.md break: docs/wiki/language/flow-break.md"
     },
     {
       "id": "language/flow-while",
       "title": "`while`",
       "section": "language",
       "summary": "Use `while` for condition-controlled looping.",
-      "text": "while Use while for condition-controlled looping. Canonical spec: docs/language/flow-while.md. Syntax while condition { // ... } Example fn main () -> int { let mut i: int = 0; let mut sum: int = 0; while i < 3 { sum += i; i += 1; } return sum; // 0 + 1 + 2 = 3 } See also Canonical spec: docs/language/flow-while.md break / continue: docs/wiki/language/flow-break.md, docs/wiki/language/flow-continue.md"
+      "text": "while Use while for condition-controlled looping. Canonical spec: docs/language/flow-while.md. Reference Canonical spec and current behavior: docs/language/flow-while.md Syntax while condition { // ... } Example fn main () -> int { let mut i: int = 0; let mut sum: int = 0; while i < 3 { sum += i; i += 1; } return sum; // 0 + 1 + 2 = 3 } See also Canonical spec: docs/language/flow-while.md break / continue: docs/wiki/language/flow-break.md, docs/wiki/language/flow-continue.md"
     },
     {
       "id": "language/flow-for",
@@ -71,14 +71,14 @@
       "title": "`break`",
       "section": "language",
       "summary": "`break;` exits the nearest enclosing loop.",
-      "text": "break break; exits the nearest enclosing loop. Canonical spec: docs/language/flow-break.md. Syntax break; Example fn main () -> int { let mut i: int = 0; while true { i += 1; if i == 3 { break; } } return i; } See also Canonical spec: docs/language/flow-break.md continue: docs/wiki/language/flow-continue.md"
+      "text": "break break; exits the nearest enclosing loop. Canonical spec: docs/language/flow-break.md. Reference Canonical spec and current behavior: docs/language/flow-break.md Syntax break; Example fn main () -> int { let mut i: int = 0; while true { i += 1; if i == 3 { break; } } return i; } See also Canonical spec: docs/language/flow-break.md continue: docs/wiki/language/flow-continue.md"
     },
     {
       "id": "language/flow-continue",
       "title": "`continue`",
       "section": "language",
       "summary": "`continue;` skips the remainder of the current loop body and advances to the next iteration.",
-      "text": "continue continue; skips the remainder of the current loop body and advances to the next iteration. Canonical spec: docs/language/flow-continue.md. Syntax continue; Example fn main () -> int { let mut sum: int = 0; for i in 0..5 { if i == 3 { continue; } sum += i; } return sum; // 0 + 1 + 2 + 4 = 7 } See also Canonical spec: docs/language/flow-continue.md break: docs/wiki/language/flow-break.md"
+      "text": "continue continue; skips the remainder of the current loop body and advances to the next iteration. Canonical spec: docs/language/flow-continue.md. Reference Canonical spec and current behavior: docs/language/flow-continue.md Syntax continue; Example fn main () -> int { let mut sum: int = 0; for i in 0..5 { if i == 3 { continue; } sum += i; } return sum; // 0 + 1 + 2 + 4 = 7 } See also Canonical spec: docs/language/flow-continue.md break: docs/wiki/language/flow-break.md"
     },
     {
       "id": "language/flow-return",
@@ -211,7 +211,7 @@
       "title": "Structs and `impl`",
       "section": "language",
       "summary": "`struct` is Silk\u2019s primary record type: named fields stored together as one value. `impl` blocks attach methods (and special methods like `constructor` and `drop`) to a type.",
-      "text": "Structs and impl struct is Silk\u2019s primary record type: named fields stored together as one value. impl blocks attach methods (and special methods like constructor and drop) to a type. Canonical spec: docs/language/structs-impls-layout.md. Syntax struct Point { x: int, y: int, } impl Point { public fn sum (self: &Point) -> int { return self.x + self.y; } } Examples Example: struct literal + method call struct Point { x: int, y: int, } impl Point { public fn add (self: &Point, other: Point) -> Point { return Point{ x: self.x + other.x, y: self.y + other.y, }; } } fn main () -> int { let p: Point = Point{ x: 1, y: 2 }; let q: Point = Point{ x: 3, y: 4 }; let r: Point = p.add(q); return r.x + r.y; // 10 } See also Canonical spec: docs/language/structs-impls-layout.md Mutability and mut &T: docs/language/mutability.md Enums and matching: docs/language/enums.md, docs/language/flow-match.md"
+      "text": "Structs and impl struct is Silk\u2019s primary record type: named fields stored together as one value. impl blocks attach methods (and special methods like constructor and drop) to a type. Canonical spec: docs/language/structs-impls-layout.md. Reference Canonical spec and current behavior: docs/language/structs-impls-layout.md Syntax struct Point { x: int, y: int, } impl Point { public fn sum (self: &Point) -> int { return self.x + self.y; } } Examples Example: struct literal + method call struct Point { x: int, y: int, } impl Point { public fn add (self: &Point, other: Point) -> Point { return Point{ x: self.x + other.x, y: self.y + other.y, }; } } fn main () -> int { let p: Point = Point{ x: 1, y: 2 }; let q: Point = Point{ x: 3, y: 4 }; let r: Point = p.add(q); return r.x + r.y; // 10 } See also Canonical spec: docs/language/structs-impls-layout.md Mutability and mut &T: docs/language/mutability.md Enums and matching: docs/language/enums.md, docs/language/flow-match.md"
     },
     {
       "id": "language/struct-requirements",
@@ -232,7 +232,7 @@
       "title": "Enums",
       "section": "language",
       "summary": "`enum` defines a nominal sum type with a fixed set of variants.",
-      "text": "Enums enum defines a nominal sum type with a fixed set of variants. Currently, enums support: unit variants (E::A), tuple variants (E::B(x)), exhaustive expression-form match over enum values with explicit variant coverage, no guarded arms (if ...) in either expression or statement form, and statement-form ordinary enum match with qualified variant arms and explicit end-to-end variant coverage. Canonical spec: docs/language/enums.md. Syntax enum Msg { Quit, Add(int), } Examples Example: construct + match enum Msg { Quit, Add(int), } fn main () -> int { let m: Msg = Msg::Add(5); return match m { Msg::Quit => 0, Msg::Add(n) => n, }; } See also Canonical spec: docs/language/enums.md match expressions: docs/language/flow-match.md Enum fixtures: tests/silk/passenum"
+      "text": "Enums enum defines a nominal sum type with a fixed set of variants. Currently, enums support: unit variants (E::A), tuple variants (E::B(x)), exhaustive expression-form match over enum values with explicit variant coverage, no guarded arms (if ...) in either expression or statement form, and statement-form ordinary enum match with qualified variant arms and explicit end-to-end variant coverage. Canonical spec: docs/language/enums.md. Reference Canonical spec and current behavior: docs/language/enums.md Syntax enum Msg { Quit, Add(int), } Examples Example: construct + match enum Msg { Quit, Add(int), } fn main () -> int { let m: Msg = Msg::Add(5); return match m { Msg::Quit => 0, Msg::Add(n) => n, }; } See also Canonical spec: docs/language/enums.md match expressions: docs/language/flow-match.md Enum fixtures: tests/silk/passenum"
     },
     {
       "id": "language/errors",

@@ -5,9 +5,9 @@ next iteration.
 
 Canonical spec: `docs/language/flow-continue.md`.
 
-## Status
+## Reference
 
-- Implemented subset + diagnostics: `docs/language/flow-continue.md`
+- Canonical spec and current behavior: `docs/language/flow-continue.md`
 
 ## Syntax
 

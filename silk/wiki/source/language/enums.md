@@ -12,9 +12,9 @@ Currently, enums support:
 
 Canonical spec: `docs/language/enums.md`.
 
-## Status
+## Reference
 
-- Implemented subset + representation: `docs/language/enums.md`
+- Canonical spec and current behavior: `docs/language/enums.md`
 
 ## Syntax
 ```silk

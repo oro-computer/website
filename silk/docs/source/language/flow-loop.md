@@ -3,9 +3,6 @@
 The `loop` statement executes a block repeatedly until it is terminated by a
 `break` or `return`.
 
-Status: **Implemented subset**: `loop { ... }`, plus `async loop { ... }` and
-`task loop { ... }`.
-
 ## Surface Syntax
 
 ```silk
@@ -50,10 +47,9 @@ Notes:
 - `break;` outside a loop is rejected (`docs/compiler/diagnostics.md`, `E2007`).
 - `continue;` outside a loop is rejected (`docs/compiler/diagnostics.md`, `E2008`).
 
-## Implementation Status (Current Compiler Subset)
+## Current behavior
 
 Implemented end-to-end:
 
 - `loop { ... }`, `async loop { ... }`, and `task loop { ... }` parse, type-check,
   and lower with correct `break` / `continue` semantics.
-

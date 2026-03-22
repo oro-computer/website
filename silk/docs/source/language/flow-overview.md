@@ -20,9 +20,9 @@ scoping, and diagnostics).
 Each construct has defined syntax, typing, and evaluation semantics which the
 compiler must implement.
 
-## Implementation Status (Current Compiler Subset)
+## Current behavior
 
-Implemented end-to-end in the current compiler:
+Implemented end-to-end:
 
 - `if` / `else` as statement forms (`docs/language/flow-if-else.md`)
 - `loop` loops (`docs/language/flow-loop.md`)
@@ -41,7 +41,7 @@ Implemented end-to-end in the current compiler:
 - Expression statements for calls and assignments only
   (`docs/language/flow-expression-statements.md`)
 
-Additional control-flow forms with narrower current subsets:
+Additional control-flow forms with narrower surfaces:
 
 - `if` as a value-producing expression form is implemented for the documented
   subset; see `docs/language/flow-if-else.md`.

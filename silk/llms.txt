@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-03-19T19:14:57+00:00
+Generated: 2026-03-22T00:25:21+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -3722,6 +3722,37 @@ scoping, and diagnostics).
 Each construct has defined syntax, typing, and evaluation semantics which the
 compiler must implement.
 
+## Current behavior
+
+Implemented end-to-end:
+
+- `if` / `else` as statement forms (`docs/language/flow-if-else.md`)
+- `loop` loops (`docs/language/flow-loop.md`)
+- `while` loops (`docs/language/flow-while.md`)
+- `for` loops (ranges, builtin arrays/slices, and C-style `for (init; cond; step)`; `docs/language/flow-for.md`)
+- `break` / `continue` inside loops (`docs/language/flow-break.md`,
+  `docs/language/flow-continue.md`)
+- `return` statements, including “all paths must return” checking for non-`void`
+  functions (`docs/language/flow-return.md`)
+- `match` as an expression for optionals, primitive integers, enums, type
+  unions, and recoverable `Result`-style values
+  (`docs/language/flow-match.md`)
+- `match` as a statement for ordinary values in the supported subset and for
+  typed errors (`docs/language/flow-match.md`,
+  `docs/language/typed-errors.md`)
+- Expression statements for calls and assignments only
+  (`docs/language/flow-expression-statements.md`)
+
+Additional control-flow forms with narrower surfaces:
+
+- `if` as a value-producing expression form is implemented for the documented
+  subset; see `docs/language/flow-if-else.md`.
+
+When in doubt, consult:
+
+- `docs/compiler/diagnostics.md` (error codes)
+- the runnable examples embedded throughout `docs/language/`
+
 ## Principles
 
 These rules help keep control flow explicit and statically checkable:
@@ -4102,8 +4133,7 @@ The `match` expression provides structured pattern matching.
 Key ideas:
 
 - A `match` selects one of several branches based on a scrutinee expression.
-- The full language design includes richer patterns and arm guards, but the
-  current shipped subset documented here does not implement `if` guards in any
+- Arm guards of the form `pattern if cond => ...` are not implemented in any
   `match` form yet.
 - `match` is an expression; all arms must be compatible in type.
 
@@ -4114,12 +4144,7 @@ The compiler must:
 
 ## Surface Syntax
 
-The full language design includes rich pattern matching, guards, and matching
-over many scrutinee types. The current compiler implementation supports only a
-narrow, explicitly documented subset so we can validate end-to-end lowering and
-code generation.
-
-In the initial subset, `match` is accepted as an *expression* of the form:
+`match` is accepted as an *expression* of the form:
 
 ```silk
 match <scrutinee> {
@@ -4131,19 +4156,19 @@ match <scrutinee> {
 Notes:
 
 - Arms are separated by commas; a trailing comma is permitted.
-- In the initial subset, arm bodies are expressions (not blocks).
-- In the current compiler, expression-form `match` is implemented for:
+- Arm bodies are expressions (not blocks).
+- Expression-form `match` is implemented for:
   - optionals,
   - primitive integers,
   - enums,
   - type unions,
   - and recoverable `Result`-style values.
-- Guard clauses of the form `pattern if cond => ...` are currently unsupported
+- Guard clauses of the form `pattern if cond => ...` are unsupported
   across all of those subsets.
 
 ### Optional Matching (`T?`)
 
-For optionals, the implemented subset is:
+For optionals:
 
 - The scrutinee expression must have optional type `T?` (`Option(T)`), where `T`
   is a payload type supported by the backend.
@@ -4173,7 +4198,7 @@ fn main () -> int {
 The compiler also supports a small `match` subset for integer-like primitive
 scrutinees.
 
-Defined initial subset:
+Current behavior:
 
 - The scrutinee expression must have a primitive integer type in the current
   backend subset (`int`, `i64`, `u64`, and the fixed-width integer primitives).
@@ -4203,7 +4228,7 @@ fn main () -> int {
 The language design supports matching over user-defined `enum` types
 (`docs/language/enums.md`).
 
-Defined initial subset:
+Current behavior:
 
 - The scrutinee expression must have an enum type `E` (including an
   instantiated generic enum in module-set builds).
@@ -4224,7 +4249,7 @@ Defined initial subset:
 
 The language supports matching over **type unions** (`docs/language/type-unions.md`).
 
-Defined initial subset:
+Current behavior:
 
 - The scrutinee expression must have a union type `T1 | ... | Tn`.
 - Patterns are restricted to typed binders:
@@ -4235,7 +4260,7 @@ Defined initial subset:
 - Matches must be exhaustive: there must be exactly one arm per union member
   type (order is not significant).
 
-## Semantics (Initial Subset)
+## Semantics
 
 - The scrutinee expression is evaluated exactly once.
 - The selected arm is chosen based on the scrutinee value; non-selected arms
@@ -4243,7 +4268,7 @@ Defined initial subset:
 - For `Some(v) => ...`, the binder `v` is in scope only within that arm and has
   type `T` (the inner payload type of the scrutinee `T?`).
 - The result type of a `match` expression is the common type of its arms; all
-  arms must type-check to the same result type in the initial subset.
+  arms must type-check to the same result type.
 
 ## `match` Statement (Block Arms)
 
@@ -4274,7 +4299,7 @@ An optional trailing semicolon is permitted after the closing brace:
 match (x) { _ => { } };
 ```
 
-In Silk, the statement form is supported for:
+Today, the statement form is supported for:
 
 - ordinary value matching (no typed-error contract), and
 - typed error handling (`docs/language/typed-errors.md`).
@@ -4312,7 +4337,7 @@ Notes:
 - For enums, wildcard support is not end-to-end yet:
   - expression-form enum matches require explicit arms for every variant,
   - statement-form ordinary enum matches also still require explicit variant
-    coverage in Silk,
+    coverage in the current backend,
   - and although the checker already reserves `_` as a catch-all pattern for
     ordinary enum statements, lowering still rejects that form today.
 
@@ -4326,7 +4351,7 @@ Enum variant pattern note (statement form):
   arm, while `match (stream) { IOStream::Error => { ... } }` matches the unit
   enum variant.
 - The checker reserves `_` as a catch-all arm for ordinary enum statements, but
-  the backend still rejects that form, so end-to-end ordinary
+  the current backend still rejects that form, so end-to-end ordinary
   enum statements still need explicit variant coverage today.
 
 ### Typed error matching (Terminal Arm Rule)
@@ -4348,9 +4373,10 @@ Key semantic rule (Terminal Arm Rule):
 - If `expr` is an error-producing expression (its signature includes `T | ErrorType...`),
   then any arm that matches an `error` type must end in a terminal statement.
 
+Current behavior:
 
 - The compiler currently implements `match` as an expression for the documented
-  :
+  surface:
   - optionals (`T?`),
   - primitive integers,
   - type unions,
@@ -4360,7 +4386,7 @@ Key semantic rule (Terminal Arm Rule):
   expression or statement form.
 - The statement form is implemented for:
   - ordinary values in the supported subset (block arms), and
-  - typed errors in Silk (`docs/language/typed-errors.md`).
+  - typed errors (`docs/language/typed-errors.md`).
 
 Note: the compiler also allows the `match` statement form to destructure
 recoverable `Result`-style values. This form does not trigger the Terminal Arm
@@ -4369,7 +4395,7 @@ Rule because it is not a `T | ...` typed-error expression.
 ### Result Matching (`Ok(...)` / `Err(...)`)
 
 The `match` expression also supports a small subset for
-recoverable “success or error” values. In the initial subset, this includes:
+recoverable “success or error” values. This includes:
 
 - `std::result::Result(T, E)` (an `enum` with `Ok(T)` and `Err(E)` variants), and
 - “Result-like” structs of the form `{ value: T?, err: E? }`.
@@ -4382,7 +4408,7 @@ Patterns:
 - `Ok(name)` / `Ok(_)`
 - `Err(name)` / `Err(_)`
 
-Rules ():
+Rules:
 
 - Enum form:
   - The scrutinee expression must have an enum type with variants `Ok` and `Err`.
@@ -4456,9 +4482,6 @@ URL: /silk/docs/?p=language/flow-loop
 The `loop` statement executes a block repeatedly until it is terminated by a
 `break` or `return`.
 
-`loop { ... }`, plus `async loop { ... }` and
-`task loop { ... }`.
-
 ## Surface Syntax
 
 ```silk
@@ -4502,6 +4525,13 @@ Notes:
 - The loop body is checked in a loop context so `break` / `continue` are valid.
 - `break;` outside a loop is rejected (`docs/compiler/diagnostics.md`, `E2007`).
 - `continue;` outside a loop is rejected (`docs/compiler/diagnostics.md`, `E2008`).
+
+## Current behavior
+
+Implemented end-to-end:
+
+- `loop { ... }`, `async loop { ... }`, and `task loop { ... }` parse, type-check,
+  and lower with correct `break` / `continue` semantics.
 
 ==============================================================================
 DOCS: `while` Loop (language/flow-while)
@@ -4576,7 +4606,7 @@ Semantics:
   body, but they do not escape the loop.
 - The loop exits when any clause fails (pattern mismatch or boolean `false`).
 
-Parsing note ():
+Parsing note:
 
 - `&&` at the top level is parsed as a clause separator. Use parentheses if a
   clause needs its own `&&` / `||` / `??` expression at the top level.
@@ -4684,6 +4714,26 @@ fn main () -> int {
   return 0;
 }
 ```
+
+## Current behavior
+
+Implemented end-to-end:
+
+- `while` loops with boolean conditions.
+- `while let <pattern> = <expr> { ... }` pattern-destructuring loops.
+- `&&` let-chains in `while let` loop conditions.
+- `break` / `continue` inside `while` bodies.
+- `#invariant` (type-checked as `bool`), `#variant` (type-checked as an
+  integer), and `#monovariant` (type-checked as an integer) attached to `while`.
+
+Examples that exercise this surface:
+
+- `tests/silk/pass_while_bool.slk`
+- `tests/silk/pass_invariant_while.slk`
+- `tests/silk/pass_spec_const_while.slk`
+- `tests/silk/pass_nested_if_while.slk`
+- `tests/silk/pass_while_let_optional_countdown.slk`
+- `tests/silk/pass_while_let_chain_optional_basic.slk`
 
 ==============================================================================
 DOCS: `for` Loop (language/flow-for)
@@ -4933,6 +4983,22 @@ fn main () -> int {
 - A `break` outside a loop is a type-check error (`docs/compiler/diagnostics.md`,
   `E2007`).
 
+## Current behavior
+
+
+
+- `break;` is accepted inside loops (`loop`, `while`, and `for`) and lowered
+  end-to-end.
+- `break;` outside of a loop is rejected (`E2007`).
+
+Examples that exercise this surface:
+
+- `tests/silk/pass_loop_basic.slk`
+- `tests/silk/pass_while_bool.slk`
+- `tests/silk/pass_for_continue_break.slk`
+- `tests/silk/fail_break_outside.slk`
+- `tests/silk/pass_invariant_while.slk` (shows `break` in a loop with specs)
+
 ## Common Pitfalls
 
 - Forgetting the semicolon (`break` is a statement).
@@ -5004,6 +5070,20 @@ fn main () -> int {
 - `continue` is only permitted inside a loop body.
 - A `continue` outside a loop is a type-check error (`docs/compiler/diagnostics.md`,
   `E2008`).
+
+## Current behavior
+
+
+
+- `continue;` is accepted inside loops (`loop`, `while`, and `for`) and lowered
+  end-to-end.
+- `continue;` outside a loop is rejected (`E2008`).
+
+Examples that use `continue`:
+
+- `tests/silk/pass_nested_if_while.slk`
+- `tests/silk/pass_for_continue_break.slk`
+- `tests/silk/pass_loop_basic.slk`
 
 ## Common Pitfalls
 
@@ -9008,7 +9088,7 @@ Evaluation mode:
 
 - `typename` is always a compile-time constant string.
 
-Operand notes ():
+Operand notes:
 
 - When the operand is a bare name that does **not** resolve to an in-scope
   runtime binding (for example `int`, `User`, or `std::wasm::Module`), the
@@ -9031,7 +9111,7 @@ Evaluation mode:
 
 - `is` is always a compile-time constant boolean.
 
-Rules ():
+Rules:
 
 - The right-hand side must be a type (primitive, nominal `struct`/`enum`/`error`,
   `interface`, a function type, or a type alias for one of those).
@@ -9094,7 +9174,7 @@ type.
   reference: `(new Type{ ... }) as &Other`. Without parentheses,
   `new Type{ ... } as &Other` parses as `new (Type{ ... } as &Other)`.
 
-### Supported conversions ()
+### Supported conversions
 
 In Silk, `as` is supported for primitive scalar
 conversions:
@@ -9195,7 +9275,7 @@ conversions:
   - The conversion is explicit (it does not introduce implicit coercions).
   - The `serialize` method must be infallible (no typed errors).
   - Purity rules apply: inside `pure fn`, the `serialize` method must be `pure`.
-  - Limitation: the compiler must be able to resolve the
+  - Current behavior: the compiler must be able to resolve the
     receiver’s nominal type at the cast site so it can lower the implicit
     `serialize()` call. This includes name expressions, field accesses, calls,
     and array/slice indexing (`arr[i] as T`) in Silk.
@@ -9269,7 +9349,7 @@ Syntax:
 
 - `<expr> as raw <Type>`
 
-Rules ():
+Rules:
 
 - Both the operand and the target type must be numeric primitive types
   supported by the backend:
@@ -10375,7 +10455,7 @@ struct Point {
 When a struct literal omits a field, the compiler initializes the field from its
 default expression.
 
-In Silk, default field expressions use the same
+Today, default field expressions use the same
 restriction as default function arguments:
 
 - no name references, and
@@ -10434,7 +10514,7 @@ Type checking rules:
 
 Notes:
 
-- `extends` does not imply implicit subtyping in Silk:
+- `extends` does not imply implicit subtyping today:
   there is no implicit coercion from `Derived` to `Base` (or `&Derived` to
   `&Base`) yet.
 
@@ -10476,9 +10556,9 @@ library.
 Using an opaque handle after it has been destroyed is **undefined behavior**.
 The compiler does not currently enforce this at compile time.
 
-#### ABI and Lowering ()
+#### ABI and Lowering
 
-In Silk, an `&Opaque` value is lowered as a single pointer
+In the current backend, an `&Opaque` value is lowered as a single pointer
 scalar (`u64` on the current `linux/x86_64` target), rather than as a
 struct-of-pointers like `&struct` borrows.
 
@@ -10545,9 +10625,8 @@ though the intended C-like packed layout would be 8 bytes.
 
 ### ABI and Code Generation
 
-The Silk language design includes full support for user-defined structs, nested
-aggregates, and FFI-safe ABI mapping. The current compiler/backend
-implementation supports only a narrow, explicitly documented subset:
+The current compiler/backend implementation supports this documented struct
+surface:
 
 - Only "plain" structs with **0+ fields** are supported by codegen.
   - Empty structs (`struct Empty {}`) are currently represented as a single
@@ -10590,10 +10669,9 @@ behavior consistent with C for the supported cases.
 `impl` blocks attach functions and methods to existing types without affecting
 memory layout.
 
-The intent is to provide “high-level” APIs without baking behavior into `struct`
-layout. In the initial implementation, `impl` blocks are *syntax and
-type-checking structure*; code generation treats methods as ordinary functions
-that follow the same calling conventions as other Silk functions.
+The intent is to provide high-level APIs without baking behavior into `struct`
+layout. Today, code generation treats methods as ordinary functions that follow
+the same calling conventions as other Silk functions.
 
 ### Generic impl blocks
 
@@ -10622,7 +10700,7 @@ impl Data(u8) {
 Specialized impl blocks are merged with any other applicable impl blocks for
 the same type specialization, subject to the usual duplicate method-name rules.
 
-Limitation:
+Specialization rule:
 
 - Only **primitive type names** (for example `u64`, `string`, `bool`) are
   recognized as concrete specialization arguments in `impl Name(...)`. Any
@@ -10680,7 +10758,7 @@ Rules:
     See `docs/language/interfaces.md`.
 - The method named `constructor` is treated specially:
   - it is only meaningful for `struct` types (it backs `new Type(...)`); enums
-    do not support `constructor` methods in Silk,
+    do not support `constructor` methods,
   - it is `public` by default,
     - when explicitly marked `private`, it is callable only within the defining
       `impl { ... }` block,
@@ -10711,7 +10789,7 @@ The surface call syntax uses field-access + call:
 Semantically, method calls behave like ordinary function calls where the
 receiver is passed as an explicit first argument.
 
-Static-method receiver sugar ():
+Static-method receiver sugar:
 
 - If `value.method(...)` does not resolve to an instance method (a method whose
   first parameter is a receiver `self: &Type` / `mut self: &Type`), the
@@ -10725,7 +10803,7 @@ Static-method receiver sugar ():
   let x: int = r.unwrap_or(0); // sugar for `R.unwrap_or(r, 0)`
   ```
 
-Mutability rule ():
+Mutability rule:
 
 - If the method receiver is `self: &Type`, the call site passes a read-only
   borrow of the receiver (for example `value.method(...)`).
@@ -10742,19 +10820,13 @@ Mutability rule ():
   types with `Drop`), this consumes the receiver binding (use after move is
   rejected); for plain scalars and POD structs it behaves like a copy.
 
- limitations:
+Current call-site limits:
 
 - Mutable **borrow** receiver calls (`mut self: &Type`) must use a name receiver;
   mutable borrows from non-name receiver expressions (for example `make().push(1)`)
   are rejected.
 - Non-`mut` receivers may be arbitrary expressions (including calls), so
   chaining like `url.href().as_string()` is permitted.
-
-Compiler requirements:
-
-- Keep data layout and behavior separate in the IR.
-- Preserve struct layout exactly for ABI and FFI.
-- Enforce rules for opaque structs and UB as described in this document and the ABI spec.
 
 ==============================================================================
 DOCS: Struct Requirements (`#require`) (language/struct-requirements)
@@ -11070,6 +11142,64 @@ Use enums to model:
 If your goal is “a function can fail with one of several error shapes”, prefer
 typed errors (`docs/language/typed-errors.md`) over enums.
 
+## Current behavior
+
+What works end-to-end today (parser → checker → lowering → codegen):
+
+- **Enum declarations** with:
+  - unit variants (`A`),
+  - tuple variants (`Data(int)` and `Pair(int, int)`),
+  - and an optional trailing comma after the last variant.
+- **Construction**:
+  - unit variants as values: `E::A`,
+  - tuple variants as calls: `E::Data(7)`.
+  - type-directed shorthand:
+    - when the expected type is an enum `E`, unit variants may be written as `A`
+      (sugar for `E::A`),
+    - when the expected type is an enum `E`, tuple variants may be written as
+      `Data(7)` (sugar for `E::Data(7)`).
+- **Function signatures**:
+  - enums may be used in parameter lists and return types,
+  - error-producing functions may return enums (`-> E | ErrorType...`), and `call()?` works when the success type is an enum.
+- **`match` expression over enums**:
+  - patterns are restricted to enum variants (`E::A`, `E::Data(x)`) and may use shorthand (`A`, `Data(x)`) when the scrutinee type is the enum,
+  - binders may be names or `_`,
+  - no guarded arms (`if ...`) yet in either expression or statement form,
+  - and expression-form matches must be *exhaustive* by explicit variant
+    coverage.
+- **`match` statement over ordinary enum values**:
+  - enum variant arms must use the qualified form `E::Variant(...)`,
+  - bare identifiers remain reserved for binder-style arms,
+  - and the checker already reserves `_` as a catch-all arm, but lowering does
+    not support that form end to end yet.
+- **Generic enums (monomorphized)**:
+  - `enum Name(T, ...) { ... }` declarations are supported in module-set builds
+    that run monomorphization,
+  - instantiated enums behave like ordinary enums once referenced (including
+    construction and `match`),
+  - callers typically introduce a local type alias for the instantiated enum
+    (for example `type R = Result(int, string);`) and then use `R::Ok(...)` /
+    `R::Err(...)` as constructors and patterns.
+- **`impl` blocks on enums**:
+  - enums may have `impl` blocks (including generic `impl EnumName(T, ...)`),
+  - static methods are callable as `EnumName.method(...)` (including through
+    type aliases for instantiated generic enums),
+  - instance methods are callable as `value.method(...)` when the first
+    parameter is a receiver (`self: &EnumName` / `mut self: &EnumName`),
+  - the special `constructor` method used by `new Type(...)` is for `struct`
+    types; enums do not support `constructor` methods.
+
+Not implemented yet (or not yet stable/documented):
+
+- Guards in enum match arms (`E::A if cond => ...`).
+- Wildcard/catch-all enum match arms (`_ => ...`) in expression form.
+- A stable ABI story for passing/returning enums across the C99 boundary (do
+  not assume an enum layout until it is specified in `docs/compiler/abi-libsilk.md`).
+
+When the compiler rejects an enum construct in the documented enum surface, the
+most common error is `E2002` (“unsupported expression in Silk”).
+Type mismatches inside enum constructors or match arms are `E2001` (“type mismatch”).
+
 ## Surface Syntax
 
 Enum declarations introduce a nominal type and its variants:
@@ -11115,7 +11245,7 @@ fn main () -> int {
 
 Notes:
 
-- `E::A()` and `A()` are invalid in Silk (unit variants are not callable).
+- `E::A()` and `A()` are invalid (unit variants are not callable).
 
 ### Tuple variants
 
@@ -11140,8 +11270,8 @@ fn main () -> int {
 
 Notes:
 
-- `E::Data` by itself is not a value in Silk (tuple variants must
-  be constructed with `(...)`).
+- `E::Data` by itself is not a value (tuple variants must be constructed with
+  `(...)`).
 - If a tuple-variant constructor argument has the wrong type, you get `E2001`.
 - If the argument count does not match the variant definition, the compiler
   currently rejects the construct with `E2002`.
@@ -11208,9 +11338,9 @@ Binders:
 - shadow outer bindings of the same name (because they create a new binding in
   the arm’s environment).
 
-### Exhaustiveness ()
+### Exhaustiveness
 
-In Silk, enum exhaustiveness is split by `match` form:
+Enum exhaustiveness is split by `match` form:
 
 - Expression form:
   - there must be exactly one arm per enum variant,
@@ -11219,7 +11349,7 @@ In Silk, enum exhaustiveness is split by `match` form:
 - Statement form over ordinary enum values:
   - end-to-end today, there must be exactly one qualified arm per variant,
   - and although the checker recognizes `_` as a catch-all arm, lowering still
-    rejects that form in Silk.
+    rejects that form in the current backend.
 
 If a match is not exhaustive:
 
@@ -11322,20 +11452,18 @@ Conceptually:
 Only the active variant’s payload region is meaningful for a given value; other
 payload regions are unspecified.
 
-This representation is an implementation detail and is expected to evolve (for
-example, toward a tag + max-payload “union-style” layout) as the compiler and
-ABI mature.
+This representation is an implementation detail rather than a downstream ABI
+contract.
 
 ## Common Pitfalls
 
-- **Forgetting parentheses**: `E::Data(7)` is valid, but `E::Data` is not a value
-  In Silk (error `E2002`).
+- **Forgetting parentheses**: `E::Data(7)` is valid, but `E::Data` is not a
+  value (error `E2002`).
 - **Calling a unit variant**: `E::A` is a value; `E::A()` is rejected (`E2002`).
 - **Wrong binder count**: `E::Pair(a)` does not match `Pair(int, int)` (`E2002`).
-- **Non-exhaustive matches**: you must list every variant (error `E2002` in the
-  ).
+- **Non-exhaustive matches**: you must list every variant (error `E2002`).
 - **Assuming enum equality is defined**: use `match` to inspect the tag/payload;
-  the backend does not define `==`/`!=` over enums yet.
+  the current backend does not define `==`/`!=` over enums yet.
 
 ## Related Documents
 
@@ -48567,7 +48695,11 @@ Currently:
 
 Canonical spec: `docs/language/flow-match.md`.
 
-## Syntax ()
+## Reference
+
+- Canonical spec and current behavior: `docs/language/flow-match.md`
+
+## Syntax
 
 ```silk
 match value {
@@ -48643,6 +48775,10 @@ URL: /silk/wiki/?p=language/flow-loop
 
 Canonical spec: `docs/language/flow-loop.md`.
 
+## Reference
+
+- Canonical spec and current behavior: `docs/language/flow-loop.md`
+
 ## Syntax
 
 ```silk
@@ -48680,6 +48816,10 @@ URL: /silk/wiki/?p=language/flow-while
 Use `while` for condition-controlled looping.
 
 Canonical spec: `docs/language/flow-while.md`.
+
+## Reference
+
+- Canonical spec and current behavior: `docs/language/flow-while.md`
 
 ## Syntax
 
@@ -48781,6 +48921,10 @@ URL: /silk/wiki/?p=language/flow-break
 
 Canonical spec: `docs/language/flow-break.md`.
 
+## Reference
+
+- Canonical spec and current behavior: `docs/language/flow-break.md`
+
 ## Syntax
 
 ```silk
@@ -48817,6 +48961,10 @@ URL: /silk/wiki/?p=language/flow-continue
 next iteration.
 
 Canonical spec: `docs/language/flow-continue.md`.
+
+## Reference
+
+- Canonical spec and current behavior: `docs/language/flow-continue.md`
 
 ## Syntax
 
@@ -49595,6 +49743,10 @@ and `drop`) to a type.
 
 Canonical spec: `docs/language/structs-impls-layout.md`.
 
+## Reference
+
+- Canonical spec and current behavior: `docs/language/structs-impls-layout.md`
+
 ## Syntax
 ```silk
 struct Point {
@@ -49726,6 +49878,10 @@ Currently, enums support:
 - and statement-form ordinary enum `match` with qualified variant arms and explicit end-to-end variant coverage.
 
 Canonical spec: `docs/language/enums.md`.
+
+## Reference
+
+- Canonical spec and current behavior: `docs/language/enums.md`
 
 ## Syntax
 ```silk

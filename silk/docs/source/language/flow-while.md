@@ -66,7 +66,7 @@ Semantics:
   body, but they do not escape the loop.
 - The loop exits when any clause fails (pattern mismatch or boolean `false`).
 
-Parsing note (current subset):
+Parsing note:
 
 - `&&` at the top level is parsed as a clause separator. Use parentheses if a
   clause needs its own `&&` / `||` / `??` expression at the top level.
@@ -175,7 +175,7 @@ fn main () -> int {
 }
 ```
 
-## Implementation Status (Current Compiler Subset)
+## Current behavior
 
 Implemented end-to-end:
 
@@ -186,7 +186,7 @@ Implemented end-to-end:
 - `#invariant` (type-checked as `bool`), `#variant` (type-checked as an
   integer), and `#monovariant` (type-checked as an integer) attached to `while`.
 
-Examples that exercise the implemented subset:
+Examples that exercise this surface:
 
 - `tests/silk/pass_while_bool.slk`
 - `tests/silk/pass_invariant_while.slk`

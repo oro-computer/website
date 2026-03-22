@@ -297,7 +297,7 @@ Evaluation mode:
 
 - `typename` is always a compile-time constant string.
 
-Operand notes (current subset):
+Operand notes:
 
 - When the operand is a bare name that does **not** resolve to an in-scope
   runtime binding (for example `int`, `User`, or `std::wasm::Module`), the
@@ -320,7 +320,7 @@ Evaluation mode:
 
 - `is` is always a compile-time constant boolean.
 
-Rules (current subset):
+Rules:
 
 - The right-hand side must be a type (primitive, nominal `struct`/`enum`/`error`,
   `interface`, a function type, or a type alias for one of those).
@@ -383,7 +383,7 @@ type.
   reference: `(new Type{ ... }) as &Other`. Without parentheses,
   `new Type{ ... } as &Other` parses as `new (Type{ ... } as &Other)`.
 
-### Supported conversions (current subset)
+### Supported conversions
 
 In the current compiler/backend subset, `as` is supported for primitive scalar
 conversions:
@@ -484,7 +484,7 @@ conversions:
   - The conversion is explicit (it does not introduce implicit coercions).
   - The `serialize` method must be infallible (no typed errors).
   - Purity rules apply: inside `pure fn`, the `serialize` method must be `pure`.
-  - Current subset limitation: the compiler must be able to resolve the
+  - Current behavior: the compiler must be able to resolve the
     receiver’s nominal type at the cast site so it can lower the implicit
     `serialize()` call. This includes name expressions, field accesses, calls,
     and array/slice indexing (`arr[i] as T`) in the current subset.
@@ -499,7 +499,7 @@ conversions:
   - The `deserialize` method must be infallible (no typed errors).
   - Purity rules apply: inside `pure fn`, the `deserialize` method must be `pure`.
 
-Examples (implemented subset):
+Examples:
 
 ```silk
 struct Data {
@@ -558,7 +558,7 @@ Syntax:
 
 - `<expr> as raw <Type>`
 
-Rules (current subset):
+Rules:
 
 - Both the operand and the target type must be numeric primitive types
   supported by the current backend subset:

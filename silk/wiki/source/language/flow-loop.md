@@ -4,9 +4,9 @@
 
 Canonical spec: `docs/language/flow-loop.md`.
 
-## Status
+## Reference
 
-- Implemented subset + tests: `docs/language/flow-loop.md`
+- Canonical spec and current behavior: `docs/language/flow-loop.md`
 
 ## Syntax
 
