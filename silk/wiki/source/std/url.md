@@ -17,7 +17,7 @@ import std::url;
 import std::strings;
 ```
 
-## Exported API (selected)
+## API (selected)
 
 - `std::url::parse(input: string) -> URLResult`
 - `std::url::parse_with_base(input: string, base: &URL) -> URLResult`

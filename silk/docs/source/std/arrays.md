@@ -1,12 +1,18 @@
 # `std::arrays`
 
-Status: **Implemented subset**. A generic `Slice(T)` view type is provided for
-FFI-friendly bridging; higher-level owning containers live in `std::vector`.
+A generic `Slice(T)` view type is provided
+for early FFI-friendly bridging; higher-level owning containers live in
+`std::vector`.
 
 `std::arrays` provides array and vector-like types built on top of the `Buffer(T)`
 intrinsic (`docs/language/buffers.md`).
 
-## Exported API
+See also:
+
+- `docs/std/memory.md` (allocators)
+- `docs/std/conventions.md` (allocation and error conventions)
+
+## Current API (Implemented)
 
 A tiny generic subset is implemented in `std/arrays.slk` to provide a
 non-owning, FFI-friendly slice representation for early bridging:
@@ -97,34 +103,7 @@ impl ByteSliceIter as std::interfaces::Iterator(u8) {
 }
 ```
 
-## Examples
-
-### Borrowed typed slices and packed byte slices
-
-```silk
-import std::arrays;
-
-fn main () -> int {
-  let values: int[3] = [10, 20, 30];
-  let slice = std::arrays::Slice(int).init(values as u64, 3);
-  if slice.first() != Some(10) {
-    return 1;
-  }
-  if slice.last() != Some(30) {
-    return 2;
-  }
-
-  let bytes: u8[4] = [1, 2, 3, 4];
-  let view = std::arrays::ByteSlice.init(bytes as u64, 4);
-  if view.find_u8(3) != Some(2) {
-    return 3;
-  }
-
-  return 0;
-}
-```
-
-## Considerations
+Notes:
 
 - `ByteSlice` is the packed-byte view type used for OS/FFI byte APIs. For owning
   packed-byte storage, use `std::buffer::BufferU8`. For owning scalar-slot
@@ -140,24 +119,62 @@ fn main () -> int {
   reusable theories in `std::formal` (for example `slice_well_formed(ptr, len)`).
 - `get` / `set` are intentionally low-level in the current subset and
   are unchecked beyond `#require` contracts. They are implemented using
-  compiler-backed memory intrinsics routed through `std::runtime::mem`.
+  compiler-backed memory intrinsics routed through `std::runtime::mem` (see
+  `docs/std/runtime.md`).
 - `Slice(T)` uses the scalar-slot memory model of the current compiler subset:
   elements occupy `sizeof(T)` bytes (8 bytes per scalar slot), so multi-slot
   values like `string` and non-opaque structs/enums are supported.
   For byte-oriented APIs that require packed bytes, use `ByteSlice`.
-- `at` / `try_set` are the checked accessors in the current subset:
+- `at` / `try_set` are the “checked” accessors in the current subset:
   - `at` returns `None` when `index` is out of bounds,
   - `try_set` returns `false` when `index` is out of bounds.
 - `SliceIter(T)` provides a minimal sequential iterator for `Slice(T)` values.
   It implements `std::interfaces::Iterator(T)`; iteration is by value (copies).
 - `ByteSlice.find_bytes(empty)` returns `Some(0)` (matches `memmem(3)` semantics).
-- `std::arrays` is the non-owning contiguous-view layer in `std::`. Owning
-  growth belongs in `std::vector`, while packed-byte storage belongs in
-  `std::buffer::BufferU8`.
 
-## See also
+## Implemented `std::interfaces` surface
 
-- [`std::buffer`](?p=std/buffer)
-- [`std::vector`](?p=std/vector)
-- [`std::memory`](?p=std/memory)
-- [`std::conventions`](?p=std/conventions)
+The shipped `std::arrays` subset already participates in the shared stdlib
+protocol story:
+
+- `Slice(T)` implements `std::interfaces::Len` and `std::interfaces::IsEmpty`.
+- `ByteSlice` implements `std::interfaces::Len` and `std::interfaces::IsEmpty`.
+- `SliceIter(T)` implements `std::interfaces::Iterator(T)`.
+- `ByteSliceIter` implements `std::interfaces::Iterator(u8)`.
+
+This matters for two reasons:
+
+- it gives readers a uniform mental model for “view-like” stdlib types,
+- and it is the protocol surface used by loops and generic container-style code
+  as the compiler grows.
+
+## Scope
+
+`std::arrays` is responsible for:
+
+- Slice/view types over contiguous elements.
+- Helpers for fixed-size arrays (`T[N]`) and for working with slices derived
+  from them.
+- Iteration utilities compatible with the `for` loop semantics (once `for` is
+  implemented as specified in `docs/language/flow-for.md`).
+
+## Core Types
+- `Slice(T)` — a non-owning view over `T` elements (`ptr + len`).
+- `std::vector::Vector(T)` — the owning, growable sequence type.
+- Fixed-size arrays (`T[N]`) are part of the language design; `std::arrays`
+  provides helpers and algorithms that operate on them via `Slice(T)` views.
+
+Illustrative sketch (non-authoritative):
+
+- `std::arrays::Slice(T)` for views, and
+- `std::vector::Vector(T)` for owning growth.
+
+## Indexing and Bounds
+
+The stdlib should provide both:
+
+- checked accessors that return `T?` (or a result) on out-of-bounds, and
+- unchecked accessors for verified code paths.
+
+The exact behavior must be consistent across the stdlib; see
+`docs/std/conventions.md`.

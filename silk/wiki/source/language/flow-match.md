@@ -5,32 +5,21 @@
 Currently:
 
 - `match <optional> { None => expr, Some(x) => expr }` is supported (expression form),
-- primitive-integer, enum, type-union, and `Result`-style expression matches are supported in the documented subset,
-- ordinary value matching and typed-error handling use a separate statement form `match (expr) { ... }`,
-- guarded arms (`pattern if cond => ...`) are still unsupported in both expression and statement form,
-- enum wildcard `_` remains a split case:
-  - expression-form enum matches do not accept `_`,
-  - statement-form ordinary enum matches reserve `_`, but the backend still requires explicit variant coverage end to end.
+- `match <enum> { E::V => expr, ... }` is supported in a restricted exhaustive subset,
+- typed-error handling uses a separate `match (expr) { ... }` statement form (see typed errors).
 
 Canonical spec: `docs/language/flow-match.md`.
 
-## Reference
+## Status
 
-- Canonical spec and current behavior: `docs/language/flow-match.md`
+- Implemented subset + tests: `docs/language/flow-match.md`
 
-## Syntax
+## Syntax (Current match-expression subset)
 
 ```silk
 match value {
   Pattern => expr,
   Pattern => expr,
-}
-```
-
-```silk
-match (value) {
-  Pattern => { ... },
-  Pattern => { ... },
 }
 ```
 
@@ -60,19 +49,6 @@ fn main () -> int {
   return match m {
     Msg::Quit => 0,
     Msg::Add(n) => n,
-  };
-}
-```
-
-### Example: matching a result
-```silk
-import std::result;
-
-fn main () -> int {
-  let r: std::result::Result(int, int) = std::result::Result(int, int).ok(7);
-  return match r {
-    Ok(v) => v,
-    Err(_) => 0,
   };
 }
 ```

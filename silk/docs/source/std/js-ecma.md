@@ -1,7 +1,5 @@
 # ECMAScript FFI (`std::js::ecma`)
 
-Status: **Implemented subset**.
-
 This module defines a small, environment-agnostic interface for interacting
 with an ECMAScript engine from Silk.
 
@@ -14,7 +12,7 @@ Scope constraints:
   (for example: **Web IDL → Silk** bindings when targeting WASM and calling out
   to a JavaScript host).
 
-## Exported API
+## High-Level API
 
 The public Silk surface is centered around:
 
@@ -188,14 +186,7 @@ Notes:
 - The `*_write` function copies **raw UTF‑8 bytes** (no NUL terminator) into the
   destination buffer and returns the number of bytes written.
 
-## See also
-
-- [`std::idl::web`](?p=std/idl-web)
-- [`std::wasm`](?p=std/wasm)
-- [`std::ffi::c`](?p=std/ffi-c)
-
-## Design goals
-
+## Considerations
 Expected follow-ups as `silk bindgen` becomes concrete:
 
 - richer conversions (arrays, maps, typed arrays / `ArrayBuffer` via a separate

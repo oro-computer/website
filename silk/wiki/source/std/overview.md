@@ -8,8 +8,7 @@ Canonical doc: `docs/std/overview.md`.
 
 ## Status
 
-- Implemented subset: many modules are shipped and documented; the overall
-  surface is still expanding.
+- Design + initial implementation: many modules have an implemented subset; the overall surface is still evolving.
 - Details: `docs/std/overview.md`
 
 ## Importing

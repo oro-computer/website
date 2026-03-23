@@ -6,11 +6,11 @@ be used as an allocation context for `new`.
 Regions are represented at runtime as a first-class `Region` handle value. A
 `Region` value may be passed to functions, stored in structs, and exported.
 
-## Implemented behavior
+## Implementation Status (Current Compiler)
 
-Status: **Implemented subset**.
+Status: **in progress**.
 
-The shipped implementation includes:
+Implemented subset:
 
 - Parsing and type-checking of:
   - `const region <name>: u8[N];`
@@ -30,7 +30,7 @@ The shipped implementation includes:
   `std::runtime::mem::alloc` allocate from the active region (8-byte aligned).
 - Region allocation overflow traps at runtime.
 
-Active boundaries:
+Limitations (current subset):
 
 - The region backing store is currently restricted to `u8[N]` (a fixed-size
   byte array type annotation).
@@ -61,7 +61,7 @@ store and cursor.
 A region declaration has the surface form:
 
 ```silk
-const region scratch_region: u8[1024];
+const region region_buf: u8[1024];
 ```
 
 Rules:
@@ -84,9 +84,9 @@ Rules:
 struct Frame { x: int }
 
 fn main () -> int {
-  const region scratch_region: u8[1024];
+  const region region_buf: u8[1024];
 
-  with scratch_region {
+  with region_buf {
     let p: &Frame = new Frame{ x: 1 };
     // ...
   }
@@ -126,7 +126,7 @@ fn main () -> int {
 }
 ```
 
-Rules:
+Rules (current subset):
 
 - `<bytes>` must be a positive integer literal.
 
@@ -139,9 +139,9 @@ first `<bytes>` bytes of `<region>`:
 struct Frame { x: int }
 
 fn main () -> int {
-  const region scratch_region: u8[2048];
+  const region region_buf: u8[2048];
 
-  with 1024 from scratch_region {
+  with 1024 from region_buf {
     let p: &Frame = new Frame{ x: 1 };
     // ...
   }
@@ -153,20 +153,20 @@ fn main () -> int {
 You may also specify a byte slice of the source region:
 
 ```silk
-with 1024 from scratch_region[64..] {
-  // uses bytes 64..(64 + 1024) of `scratch_region`
+with 1024 from region_buf[64..] {
+  // uses bytes 64..(64 + 1024) of `region_buf`
 }
 
-with 1024 from scratch_region[64..1088] {
-  // uses bytes 64..1088 of `scratch_region`
+with 1024 from region_buf[64..1088] {
+  // uses bytes 64..1088 of `region_buf`
 }
 ```
 
-Rules:
+Rules (current subset):
 
 - `<bytes>` must be a positive integer literal.
-- `<region>` must name a `Region` value that has a compile-time-known backing
-  size in the shipped subset (for example a `const region` declaration).
+- `<region>` must name a `Region` value that has a compile-time-known backing size
+  in the current subset (for example a `const region` declaration).
 - Slice bounds use **byte offsets** (the region backing store is `u8[N]`).
 - `<start>` / `<end>` must be non-negative integer literals.
 - When an explicit `<end>` is present, it is exclusive (`[start..end]`).
@@ -183,11 +183,11 @@ Within a `with <region> { ... }` block:
 
 - any `new` allocation performed by the compiler’s `new` lowering uses the
   active region as its backing store,
-- allocations are **8-byte aligned**,
-  - if the region does not have enough remaining space, the program traps.
+- allocations are **8-byte aligned** in the current subset,
+- if the region does not have enough remaining space, the program traps.
 
 Outside of a `with` block, `new` uses the current heap model described in
-[Memory model](?p=language/memory-model).
+`docs/language/memory-model.md`.
 
 ### Region-backed raw allocation (`std::runtime::mem::alloc`)
 
@@ -222,13 +222,13 @@ with a {
 }
 ```
 
-## Reclaiming Region Memory
+## Reclaiming Region Memory (Current Subset)
 
 Regions are bump allocators: each allocation advances a cursor within the
 backing byte buffer.
 
-Because region-backed `new` allocations are still RC-managed and do not free
-backing bytes on last-release, reclaiming region memory
+Because region-backed `new` allocations are still RC-managed in the current
+subset and do not free backing bytes on last-release, reclaiming region memory
 requires resetting the region cursor so the backing bytes can be reused.
 
 Current behavior:
@@ -253,7 +253,7 @@ Important limitation:
 Region declarations may be exported and imported like other top-level bindings:
 
 ```silk
-export const region shared_region: u8[4096];
+export const region global_region_buf: u8[4096];
 ```
 
 Exporting a region exports a `Region` handle that refers to the same backing

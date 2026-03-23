@@ -1,13 +1,18 @@
 # `std::memory`
 
-Status: **Design document**. This describes intended memory APIs; it is not
+This describes intended memory APIs; it is not
 implemented yet.
 
 `std::memory` provides allocation interfaces and low-level memory utilities.
 It sits at the bottom of most other std modules.
 
-## Exported API
+See also:
 
+- `docs/language/regions.md` (`region`, `with`, and region-backed `new`)
+- `docs/language/buffers.md` (`Buffer(T)` intrinsic)
+- `docs/std/conventions.md` (allocation conventions)
+
+## Exported API
 A small subset is implemented in `std/memory.slk` for early compiler bring-up.
 These helpers are pure and operate on scalar types only, plus a shared
 allocation-failure error type used across `std::`.
@@ -52,23 +57,7 @@ Notes:
 - `AllocFailed` is a small, stable “constructor failed” error used by APIs
   like `BufferU8.init` / `Vector(T).init` where invalid inputs (negative
   capacities, overflow) must be distinguished from out-of-memory.
-
-## Examples
-
-```silk
-import std::memory;
-
-fn main () -> int {
-  if !std::memory::is_power_of_two_u64(64) { return 1; }
-  if std::memory::align_up_u64(65, 64) != 128 { return 2; }
-  if std::memory::div_ceil_u64(9, 4) != 3 { return 3; }
-  return 0;
-}
-```
-
-## Considerations
-
-### Scope
+## Scope
 
 `std::memory` is responsible for:
 
@@ -84,7 +73,7 @@ Non-goals (initially):
 - Region inference beyond the region model already described in the language
   docs.
 
-### Intrinsics and their std surface
+## Intrinsics and Their Std Surface
 
 The language defines:
 
@@ -96,16 +85,7 @@ namespace (allocation, read/write, drop, view/slice). The `std::memory` design
 assumes those operations exist (implemented by the compiler/runtime) and that
 higher-level containers in `std::arrays` and `std::strings` are layered on top.
 
-## See also
-
-- [Regions](?p=language/regions)
-- [Buffers](?p=language/buffers)
-- [`std::conventions`](?p=std/conventions)
-
-## Design goals
-
-### Allocator interface
-
+## Allocator Interface
 The stdlib needs a first-class allocator abstraction so that:
 
 - containers can be written without hardcoding a global heap,
@@ -135,7 +115,7 @@ The exact interface depends on how generics and interfaces are represented in
 the implemented language. The key requirement is that containers can accept an
 allocator value and use it consistently.
 
-### Common utilities
+## Common Utilities
 
 `std::memory` should provide low-level routines that are useful across the
 stdlib:

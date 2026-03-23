@@ -160,8 +160,55 @@ Scope note:
 - The same token is also used for recoverable `Result`-like values:
   `result ?? fallback` yields the `Ok(...)` payload or the fallback for
   `Err(...)`.
+- The same token is also used for ordinary named enums with exactly two
+  declared variants:
+  - if the first declared variant is unit, `value ?? fallback` yields that enum
+    value,
+  - if the first declared variant carries exactly one payload, it yields that
+    payload,
+  - and if the value is the second declared variant, `fallback` is evaluated.
+- The right-hand side may also be one of the narrow terminal control-flow
+  forms accepted only after `??`:
+  - `value ?? return expr`
+  - `value ?? break`
+  - `value ?? continue`
+- These forms keep the same validity rules as their statement counterparts:
+  - `return` must be valid in the enclosing function and type-check against its
+    result type,
+  - `break` and `continue` are only valid inside loops.
+- This is still a narrow rule for coalescing. It does not make `return`,
+  `break`, or `continue` general expressions elsewhere in the language.
 - The optional and recoverable-result forms are distinguished by the left-hand
-  operand type; expression `match` remains the more general payload-aware tool.
+  operand type; expression `match` remains the more general payload-aware tool
+  when you need explicit names, multiple payload elements, or more than two
+  states.
+
+Examples:
+
+```silk
+fn read_port () -> int {
+  let port: int = maybe_port() ?? return 80;
+  return port;
+}
+
+fn drain () -> int {
+  let mut seen: int = 0;
+  loop {
+    let value: int = next_value() ?? break;
+    seen = value;
+  }
+  return seen;
+}
+
+fn scan (values: int?[]) -> int {
+  let mut found: int = 0;
+  for item in values {
+    let value: int = item ?? continue;
+    found = value;
+  }
+  return found;
+}
+```
 
 ## Using Optional Values
 

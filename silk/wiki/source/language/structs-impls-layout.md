@@ -6,9 +6,9 @@ and `drop`) to a type.
 
 Canonical spec: `docs/language/structs-impls-layout.md`.
 
-## Reference
+## Status
 
-- Canonical spec and current behavior: `docs/language/structs-impls-layout.md`
+- Implemented subset + layout model: `docs/language/structs-impls-layout.md`
 
 ## Syntax
 ```silk

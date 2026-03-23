@@ -6,7 +6,7 @@
     <title>Oro Runtime · Oro Computer</title>
     <meta
       name="description"
-      content="Oro Runtime embeds the platform WebView and provides high-level oro:* JavaScript APIs for native capabilities."
+      content="Oro Runtime runs web applications as native applications with oroc, oro.toml, copy_map, and a broad oro:* JavaScript API surface."
     />
     <meta name="theme-color" content="#101012" />
     <link rel="icon" type="image/png" href="../docs/branding/assets/logo-icon-small.png" sizes="32x32" />
@@ -63,10 +63,11 @@
           <div class="hero-grid">
             <div class="hero-copy">
               <div class="hero-kicker">Oro Runtime</div>
-              <h1>A native runtime for web applications.</h1>
+              <h1>Ship native applications with web code.</h1>
               <p class="lede">
-                Build UI with HTML/CSS, behavior with JavaScript, and import native capabilities as explicit ES modules under
-                <code>oro:*</code> — without platform-specific application code.
+                Build UI with HTML/CSS, behavior with JavaScript, configure projects with <code>oro.toml</code>, and import
+                native capabilities as explicit ES modules under <code>oro:*</code>. Use <code>oroc</code> to run, build,
+                package, inspect, and publish updates from the same project model.
               </p>
               <div class="hero-actions">
                 <a class="button button-primary" href="./docs/">Read the docs</a>
@@ -76,10 +77,10 @@
               </div>
             </div>
 
-            <div class="panel" aria-label="Hello world">
+            <div class="panel" aria-label="Runtime workflow">
               <div class="panel-header">
-                <div class="panel-title">Hello world</div>
-                <a class="button button-quiet" href="./docs/?p=guides/hello-world">Guide</a>
+                <div class="panel-title">Common workflow</div>
+                <a class="button button-quiet" href="./docs/?p=start">Start</a>
               </div>
               <div class="panel-body">
                 <pre><code class="language-plaintext">hello/
@@ -87,10 +88,13 @@
   copy-map.toml
   src/
     index.html
-    main.js</code></pre>
+  main.js</code></pre>
                 <pre><code class="language-bash">oroc run .
-oroc build .</code></pre>
-                <p><code>globalThis.isOroRuntime === true</code> when running inside Oro Runtime.</p>
+oroc run src/index.html
+oroc run src/main.js
+oroc build . --platform=ios-simulator
+oroc update init</code></pre>
+                <p>Start from a project directory, a single HTML entry point, or a single JavaScript module.</p>
               </div>
             </div>
           </div>
@@ -125,8 +129,8 @@ oroc build .</code></pre>
               <div class="card-body">
                 <h3 class="card-title">Explicit capabilities</h3>
                 <div class="card-meta">
-                  Import native functionality as ES modules under <code>oro:*</code>. Start with
-                  <code>oro:application</code>, <code>oro:window</code>, and <code>oro:hooks</code>.
+                  Import native functionality as ES modules under <code>oro:*</code>. The public surface spans application and
+                  windows, filesystem and process, networking and transport, storage, workers, notifications, MCP, and AI.
                 </div>
                 <div class="card-links">
                   <a class="button button-quiet" href="./docs/?p=javascript/module-index">Module index</a>
@@ -136,13 +140,14 @@ oroc build .</code></pre>
 
             <div class="card col-span-4">
               <div class="card-body">
-                <h3 class="card-title">Bundle and ship</h3>
+                <h3 class="card-title">CLI, config, and updates</h3>
                 <div class="card-meta">
-                  Define what enters your bundle via <code>copy_map</code>. Build outputs land under <code>./build</code> by
-                  default.
+                  Define bundle inputs with <code>copy_map</code>, tune behavior in <code>oro.toml</code> and
+                  <code>.ororc</code>, then use <code>oroc</code> for setup, packaging, device install, versioning, MCP, and
+                  signed update manifests and bundles.
                 </div>
                 <div class="card-links">
-                  <a class="button button-quiet" href="./docs/?p=guides/build-and-package">Build and package</a>
+                  <a class="button button-quiet" href="./docs/?p=cli/oroc">CLI reference</a>
                 </div>
               </div>
             </div>
@@ -161,7 +166,7 @@ oroc build .</code></pre>
             <a class="list-row" href="./docs/?p=start">
               <div>
                 <div class="list-title">Start</div>
-                <div class="list-desc">Hello world, reading path, and the runtime’s programming model.</div>
+                <div class="list-desc">Hello world, CLI input forms, reading path, and the runtime’s programming model.</div>
               </div>
               <div class="list-meta">Docs</div>
             </a>
@@ -175,14 +180,19 @@ oroc build .</code></pre>
             <a class="list-row" href="./docs/?p=cli/oroc">
               <div>
                 <div class="list-title">CLI</div>
-                <div class="list-desc"><code>oroc</code> commands, flags, environment variables, and workflow helpers.</div>
+                <div class="list-desc">
+                  <code>oroc</code> build, run, init, setup, install-app, config, env, versions, MCP, and update tooling.
+                </div>
               </div>
               <div class="list-meta">CLI</div>
             </a>
             <a class="list-row" href="./docs/?p=config/overview">
               <div>
                 <div class="list-title">Configuration</div>
-                <div class="list-desc"><code>oro.toml</code>, <code>.ororc</code>, and <code>copy_map</code>.</div>
+                <div class="list-desc">
+                  <code>oro.toml</code>, <code>.ororc</code>, <code>copy_map</code>, and the build, webview, window, and
+                  permissions surfaces.
+                </div>
               </div>
               <div class="list-meta">Config</div>
             </a>
@@ -190,10 +200,20 @@ oroc build .</code></pre>
               <div>
                 <div class="list-title">JavaScript APIs</div>
                 <div class="list-desc">
-                  Overview, module index, and the exhaustive list of importable <code>oro:*</code> specifiers.
+                  Overview, module index, and the exhaustive <code>oro:*</code> reference across application, OS, networking,
+                  storage, workers, and services.
                 </div>
               </div>
               <div class="list-meta">API</div>
+            </a>
+            <a class="list-row" href="./docs/?p=cli/update">
+              <div>
+                <div class="list-title">Update tooling</div>
+                <div class="list-desc">
+                  Manifest scaffolding, signing, verification, bundling, extraction, validation, and update servers.
+                </div>
+              </div>
+              <div class="list-meta">Deploy</div>
             </a>
           </div>
         </div>

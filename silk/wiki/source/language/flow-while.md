@@ -4,9 +4,9 @@ Use `while` for condition-controlled looping.
 
 Canonical spec: `docs/language/flow-while.md`.
 
-## Reference
+## Status
 
-- Canonical spec and current behavior: `docs/language/flow-while.md`
+- Implemented subset + tests: `docs/language/flow-while.md`
 
 ## Syntax
 

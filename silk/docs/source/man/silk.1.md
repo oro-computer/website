@@ -28,9 +28,14 @@
 
 ## Description
 
-`silk` is the command-line compiler for the Silk language. It reads Silk source files, performs parsing and type checking, and builds artifacts for the current documented compiler subset, including executables, objects, static libraries, shared libraries, package builds, documentation, and manpages.
+`silk` is the command-line compiler for the Silk language. It reads Silk source files, performs parsing and type checking, and (in the initial implementation) can build simple executable programs for a small, documented subset of the language. As the compiler matures, `silk` will grow to support full code generation for executables, static libraries, and shared libraries.
 
-For command-specific help, run `silk help <command>` or see the corresponding manpages (`silk-build` (1), `silk-package` (1), `silk-check` (1), `silk-test` (1), `silk-doc` (1), `silk-man` (1), `silk-cc` (1), `silk-env` (1), `silk-format` (1)). For a toolchain overview, see `silk` (7).
+For command-specific help, run `silk help <command>` or see the corresponding manpages ([silk-build (1)](?p=man/silk-build.1), [silk-package (1)](?p=man/silk-package.1), [silk-check (1)](?p=man/silk-check.1), [silk-test (1)](?p=man/silk-test.1), [silk-doc (1)](?p=man/silk-doc.1), [silk-man (1)](?p=man/silk-man.1), [silk-cc (1)](?p=man/silk-cc.1), [silk-env (1)](?p=man/silk-env.1), [silk-format (1)](?p=man/silk-format.1)). For a toolchain overview, see [silk (7)](?p=man/silk.7).
+
+For terminal-first discovery, `silk man` is the main entrypoint: use
+`silk man --list` to see the shipped surface, `silk man --search <pattern>` to
+discover commands/concepts/modules/symbols, `silk man <query>` to open a page,
+and `silk doc --man <query> -o <path>` when you need the generated roff file.
 
 `silk format` is the canonical source formatter for Silk code; it now enforces statement splitting, block-spacing readability rules, and canonical import grouping in addition to indentation cleanup.
 
@@ -50,7 +55,7 @@ When stderr is a TTY, `silk` may decorate diagnostics with ANSI colors. Set `NO_
 
 ## Options
 
-The current CLI supports:
+For the initial implementation, the supported options are:
 
 - **Global options:**
   - `--help` / `-h` — show global usage and exit.
@@ -113,6 +118,8 @@ The current CLI supports:
     - `--arch <arch>` — shorthand target selector (mutually exclusive with `--target`).
     - `--target <triple>` — target triple (mutually exclusive with `--arch`).
     - `--package <dir|manifest>` (or `--pkg`) — load the module set from a package manifest (`silk.toml`) instead of explicit input files. When `--package` is provided, `<file> ...` inputs must be omitted.
+      - when the root manifest enables a build module via `[build].build_module = true`, `silk check --package` runs that build module and uses the emitted manifest/module set instead of the raw `silk.toml`,
+      - for compatibility, package checks currently invoke the build module with the action string `build`,
     - When `<file> ...` inputs are omitted and `--package` / `--pkg` is also omitted, but `./silk.toml` exists, `silk check` behaves as if `--package .` was provided.
     - `--` — end of options; treat remaining args as file paths (even if they begin with `-`).
 
@@ -128,6 +135,8 @@ The current CLI supports:
     - `--package <dir|manifest>` (or `--pkg`) — load the module set from a package manifest (`silk.toml`) instead of explicit input files. When `--package` is provided:
       - `<file> ...` inputs must be omitted.
       - When `<file> ...` inputs are omitted and `--package` / `--pkg` is also omitted, but `./silk.toml` exists, `silk test` behaves as if `--package .` was provided.
+      - when the root manifest enables a build module via `[build].build_module = true`, `silk test --package` runs that build module and uses the emitted manifest/module set for package tests,
+      - for compatibility, package tests currently invoke the build module with the action string `build`,
       - manifest-native link metadata for the test harness (`[[target]].inputs`, `needed`, and `runpath`) comes from `[build].default_target` when it names a code target, otherwise the first declared code target; `kind = "man"` targets are ignored for this purpose.
     - `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`).
     - `--` — end of options; treat remaining args as file paths (even if they begin with `-`).
@@ -152,8 +161,8 @@ The current CLI supports:
       - when building multiple targets, per-output flags are rejected (`-o/--out`, `--kind`, `--emit`, `--arch`, `--target`, `--c-header`, `--cflag`, `--ldflag`, `--needed`, `--runpath`, `--soname`, `--elf-interp`).
     - `-p <path>`, `--prefix <path>` — install/uninstall prefix (default: `$PREFIX` when set, otherwise `/usr/local`).
     - `--destdir <path>` — stage install/uninstall paths under `<destdir><prefix>/...`.
-    - `silk build install` installs package artifacts, package-owned manpages, and writes an uninstall receipt (see `silk-build` (1)).
-    - `silk build uninstall` removes files listed in the uninstall receipt (see `silk-build` (1)).
+    - `silk build install` installs package artifacts, package-owned manpages, and writes an uninstall receipt (see [silk-build (1)](?p=man/silk-build.1)).
+    - `silk build uninstall` removes files listed in the uninstall receipt (see [silk-build (1)](?p=man/silk-build.1)).
     - `silk package inspect|lint [--package <dir|manifest>]`:
       - `inspect` prints package metadata, public definitions, dependency constraints, declared artifacts, and the current package hash.
       - `lint` validates that `[package].definitions`, `[dist]`, and `[[artifact]]` describe a coherent distributable package root.
@@ -190,7 +199,7 @@ The current CLI supports:
       - `wasm32` → `wasm32-unknown-unknown`,
       - `wasm32-wasi` → `wasm32-wasi`,
       - for convenience, `--arch` also accepts full target triples recognized by `--target`.
-    - `--target <triple>` — select the compilation target (current implementation):
+    - `--target <triple>` — select the compilation target (initial implementation):
       - `linux-x86_64` (default; emits ELF64 binaries as described below),
       - common `x86_64-*-linux-*` triples such as `x86_64-linux-gnu` are accepted as aliases for `linux-x86_64`,
       - const-main-only native executable output (no IR backend yet; requires a constant-expression `main` that reduces to a constant integer; supports `fn main () -> int` and `fn main(argc: int, argv: u64) -> int` when arguments are unused):
@@ -211,7 +220,7 @@ The current CLI supports:
       - if the parent directories of `<path>` do not exist, the compiler creates them (like `mkdir -p`),
       - only supported for `--kind object|static|shared` (rejected for `--kind executable`),
       - requires the root package (the first input module’s package) to be the global package (omit `package ...;` in exported library sources).
-    - `--cflag <arg>` — add an additional host C compiler argument used when compiling `.c`/`.h` inputs; may be repeated.
+    - `--cflag <arg>` — add an additional host C compiler argument used when compiling `.c` inputs and `.h` inputs that fall back to header-compilation; may be repeated.
     - `--ldflag <arg>` — add a link-related argument; in the current toolchain this is translated into `--needed`/`--runpath`/`--soname`/`--elf-interp` effects; may be repeated.
     - `--needed <soname>` — add a dynamic loader dependency (emitted as `DT_NEEDED`) for executable and shared outputs; may be repeated.
     - `--runpath <path>`, `--rpath <path>` — add a runtime search path element (emitted as `DT_RUNPATH`) for executable and shared outputs; may be repeated (joined with ':').
@@ -275,7 +284,7 @@ The current CLI supports:
           - use boolean expressions in `let` initializers and `bool` return statements, including short-circuit `&&` / `||` (for example `let flag: bool = a && b;`),
           - allow call expressions as standalone statements (discarding the returned value),
           - allow assignment and compound assignment to `let mut` locals by name (`x = expr;`, `x += y;`); `=` is supported for all currently supported value types (including `string`, the supported `struct` subset, and optionals of those), and compound assignments are supported only for numeric scalar locals,
-          - for optionals in the supported subset (scalar payloads, `string?`, and optionals of the supported `struct` subset), supports `None`, `Some(<expr>)`, `==` / `!=` comparisons (tag + payload equality; `opt == None` and `opt == Some(x)` infer type from the other operand), optional field access (`opt?.field`), `match <scrutinee> { None => <expr>, Some(<name|_>) => <expr>, }`, and `??` coalescing with short-circuit fallback evaluation (including unwrapping `T??` to `T?`); nested optionals (`T??`) are supported for the same payload subset, and optionals pass/return between helpers as `(bool tag, payload0, payload1, ...)` where the payload slots follow the lowering of the underlying type (for example `string?` is `(bool, u64 ptr, i64 len)`); for non-executable outputs, exported functions may accept and return these optionals,
+          - for optionals in the supported subset (scalar payloads, `string?`, and optionals of the supported `struct` subset), supports `None`, `Some(<expr>)`, `==` / `!=` comparisons (tag + payload equality; `opt == None` and `opt == Some(x)` infer type from the other operand), optional field access (`opt?.field`), `match <scrutinee> { None => <expr>, Some(<name|_>) => <expr>, }`, and `??` coalescing with short-circuit fallback evaluation (including unwrapping `T??` to `T?`); the same `??` operator is also accepted for recoverable `Result`-style values and for ordinary named enums with exactly two declared variants, where declaration order defines the coalescing shape (first variant = success side, second variant = fallback side); the right-hand side of `??` may also be the narrow terminal control-flow forms `return`, `break`, or `continue` (with the same validity rules as the statement forms); nested optionals (`T??`) are supported for the same payload subset, and optionals pass/return between helpers as `(bool tag, payload0, payload1, ...)` where the payload slots follow the lowering of the underlying type (for example `string?` is `(bool, u64 ptr, i64 len)`); for non-executable outputs, exported functions may accept and return these optionals,
           - for a limited subset of structs (slot-flattened structs with 0+ fields of supported value types), supports `struct` declarations, struct literals (`Type{ field: expr, ... }`, including partial initialization), field access (`value.field`, including nested access), `==` / `!=` comparisons (deep/slot-wise), and passing/returning such structs by value using the System V AMD64 convention (one ABI “eightbyte” per slot). For non-executable outputs, exported functions accept only ABI-safe structs whose flattened scalar slots are restricted to `i64`/`u64`/`f64`; downstream C callers should declare separate parameters for 3+ slot structs,
           - and, for helpers, use direct calls between functions that fit this subset, following the System V AMD64 scalar calling convention (`rdi`..`r9` for integer-like args, `xmm0`..`xmm7` for `f32`/`f64`, stack spill for remaining args, and `rax`/`xmm0` results), and
         - `main` may either be a single structured function or call such helpers; the compiler lowers these programs into an IR program and compiles them to a single ELF64 executable,
@@ -345,6 +354,12 @@ The current CLI supports:
     - Package-scoped source-doc queries are evaluated against the root package’s own source modules, not dependency docs in the same manifest graph.
     - With no explicit query, `silk man` opens the nearest package overview when one is available; otherwise it falls back to the quick-start/list view.
     - `--list` and `--search` include these package-local pages whenever a package root is already in scope.
+    - `--search <pattern>` searches:
+      - shipped section `1` / `3` / `7` pages,
+      - stdlib module names,
+      - public stdlib symbol paths,
+      - package-local overview/docs/man pages when a package root is in scope,
+      - and public root-package symbol paths when a package root is in scope.
     - When a local `package.readme` exists, `silk man readme`, `silk man overview`, `silk man <package-name>`, and qualified aliases such as `silk man <package-name> readme` prefer the package overview page.
     - When a local `package.documentation` page exists, `silk man docs`, `silk man documentation`, and qualified aliases such as `silk man <package-name> documentation` open it directly.
 - **C compiler wrapper:**
@@ -357,7 +372,7 @@ The current CLI supports:
 
 ## Environment
 
-See also: `silk-env` (1) for a complete list of environment variables printed by `silk env`.
+See also: [silk-env (1)](?p=man/silk-env.1) for a complete list of environment variables printed by `silk env`.
 
 - `SILK_STD_ROOT` — path to the stdlib root directory used to resolve
   `import std::...;` declarations when `--std`/`--std-root` is not provided. When neither
@@ -394,7 +409,7 @@ See also: `silk-env` (1) for a complete list of environment variables printed by
 
 ## See Also
 
-- `silk-build` (1), `silk-package` (1), `silk-check` (1), `silk-test` (1), `silk-doc` (1), `silk-man` (1), `silk-cc` (1), `silk-lsp` (1)
-- `silk` (7)
-- `libsilk` (7)
+- [silk-build (1)](?p=man/silk-build.1), [silk-package (1)](?p=man/silk-package.1), [silk-check (1)](?p=man/silk-check.1), [silk-test (1)](?p=man/silk-test.1), [silk-doc (1)](?p=man/silk-doc.1), [silk-man (1)](?p=man/silk-man.1), [silk-cc (1)](?p=man/silk-cc.1), [silk-lsp (1)](?p=man/silk-lsp.1)
+- [silk (7)](?p=man/silk.7)
+- [libsilk (7)](?p=man/libsilk.7)
 - `https://oro.computer/silk`

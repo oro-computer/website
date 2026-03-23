@@ -107,7 +107,17 @@ Embedders are expected to:
 The canonical include form is `#include <silk/silk.h>`. A flat
 `include/silk.h` wrapper is still shipped for compatibility.
 
-This manpage summarizes the ABI; the normative specification lives at `?p=compiler/abi-libsilk`.
+This manpage summarizes the ABI; the normative specification lives at [libsilk ABI reference](?p=compiler/abi-libsilk).
+
+For terminal-driven discovery:
+
+- use `man 7 libsilk` for the embedding overview,
+- use `man 3 silk_compiler`, `man 3 silk_error`, `man 3 silk_bytes`, and
+  `man 3 silk_abi_get_version` for the section 3 ABI entrypoints,
+- use `silk env` and `silk cc` when you need the toolchain’s embedder-facing
+  environment and default compiler/linker flags,
+- and use `docs/compiler/abi-libsilk.md` when you need the full normative ABI
+  contract.
 
 ## Types
 
@@ -226,6 +236,20 @@ void          silk_compiler_destroy(SilkCompiler *compiler);
 
 A single `SilkCompiler` instance is not currently specified as thread-safe; callers should either confine it to one thread or synchronize access.
 
+## Examples
+
+```sh
+# Read the embedding overview and then the compiler handle API.
+man 7 libsilk
+man 3 silk_compiler
+
+# Ask Silk for the environment variables used by the CLI/toolchain.
+silk env
+
+# Compile a simple embedder against the staged install.
+silk cc c-tests/basic_abi.c -o basic_abi
+```
+
 ## Configuration
 
 ### Standard library selection
@@ -282,7 +306,7 @@ bool silk_compiler_set_debug(SilkCompiler *compiler,
   - debug-mode lowering for supported native outputs (e.g. stack traces on
     failed `assert` for `linux/x86_64`),
   - additional Z3 debug output and `.smt2` dump emission on failing Formal Silk
-    verification (see `?p=language/formal-verification`).
+    verification (see [Formal verification](?p=language/formal-verification)).
 - `--debug` is currently incompatible with `--noheap`.
 
 ### No-heap build mode (`noheap`)
@@ -305,7 +329,7 @@ bool silk_compiler_set_target(SilkCompiler *compiler,
 
 - Sets the code generation target triple (for example `"x86_64-linux-gnu"`).
 - The triple is copied; errors are recorded in the compiler’s last‑error state.
-- Supported targets (current implementation):
+- Supported targets (initial implementation):
   - `linux-x86_64` (default), plus common `x86_64-*-linux-*` triples such as `x86_64-linux-gnu` and `x86_64-unknown-linux-gnu`,
   - `linux-aarch64`,
   - `android-aarch64`,
@@ -625,7 +649,7 @@ size_t silk_error_format(const SilkError *error,
   - always NUL‑terminates if `buffer_len > 0`,
   - returns the number of bytes that would be required to format the full message, **excluding** the terminating NUL.
 - If the return value is greater than or equal to `buffer_len`, the message was truncated.
-- The formatted message is intended for end-user display and follows the standard compiler diagnostic format (error code + optional file/line/column + caret snippet) as specified at `?p=compiler/diagnostics`.
+- The formatted message is intended for end-user display and follows the standard compiler diagnostic format (error code + optional file/line/column + caret snippet) as specified at [Diagnostics](?p=compiler/diagnostics).
 
 Callers can use a two‑step pattern:
 
@@ -686,11 +710,11 @@ compiler:
 
 - On `linux/x86_64`, the compiler can emit native ELF64 executables, objects,
   static libraries, and shared libraries for the current IR subset documented
-  in `?p=compiler/abi-libsilk` (structured control flow, helper calls,
+  in [libsilk ABI reference](?p=compiler/abi-libsilk) (structured control flow, helper calls,
   limited `string`/`struct`/optional support, and a limited FFI subset).
 - On `wasm32-unknown-unknown` and `wasm32-wasi`, executable builds emit `.wasm`
   modules for the current IR-backed wasm32 subset documented in
-  `?p=compiler/abi-libsilk` (including multi-module builds, export-only
+  [libsilk ABI reference](?p=compiler/abi-libsilk) (including multi-module builds, export-only
   modules, and `ext` imports under `env.<name>`).
 - On other targets, no code generation backend is available yet.
 - For well‑typed programs outside these subsets, `silk_compiler_build` fails
@@ -718,8 +742,8 @@ covers the full std surface.
 
 ## See Also
 
-- `silk` (1) — Silk language compiler CLI.
-- `silk_abi_get_version` (3), `silk_compiler` (3), `silk_error` (3), `silk_bytes` (3)
-- `silk` (7)
-- `?p=compiler/abi-libsilk` — normative ABI spec.
+- [silk (1)](?p=man/silk.1) — Silk language compiler CLI.
+- [silk_abi_get_version (3)](?p=man/silk_abi_get_version.3), [silk_compiler (3)](?p=man/silk_compiler.3), [silk_error (3)](?p=man/silk_error.3), [silk_bytes (3)](?p=man/silk_bytes.3)
+- [silk (7)](?p=man/silk.7)
+- [libsilk ABI reference](?p=compiler/abi-libsilk) — normative ABI spec.
 - `silk/silk.h` — canonical C99 ABI header in the source tree.

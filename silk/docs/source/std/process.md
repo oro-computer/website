@@ -1,16 +1,15 @@
 # `std::process`
 
-Status: **Implemented subset** (hosted baseline).
+Status: **Work in progress** (hosted POSIX baseline).
 
 `std::process` provides access to process-level operations that are not tied to
 environment variables, such as the current working directory.
 
-This module targets a hosted POSIX baseline (Linux/glibc) and is implemented
-on top of the pluggable `std::runtime::process` interface. The cwd APIs are
-also implemented for WASI; child-process support remains POSIX-only (see
-“Platform notes”).
+This module targets a hosted POSIX baseline (Linux/glibc) and is
+implemented on top of the pluggable `std::runtime::process` interface. WASI
+support is Implemented (see “Platform notes”).
 
-## Exported API
+## API
 
 ```silk
 module std::process;
@@ -66,30 +65,7 @@ task-based adapters in `std::io::stream`:
 This keeps the child-process API small and portable while still enabling
 stream-oriented composition.
 
-## Examples
-
-### Query and restore the working directory
-
-```silk
-import std::process;
-
-fn main () -> int {
-  let cwd = match std::process::getcwd() {
-    Ok(v) => v,
-    Err(_) => return 1,
-  };
-
-  if std::process::chdir(cwd.as_string()) != None {
-    return 2;
-  }
-
-  return 0;
-}
-```
-
-## Considerations
-
-### `getcwd`
+## `getcwd`
 
 `std::process::getcwd()` returns the current working directory as an owned
 `std::strings::String`.
@@ -107,7 +83,7 @@ Errors are reported as a recoverable result:
 `GetCwdFailed` does not expose platform `errno` values. Use `GetCwdFailed.kind()`
 to classify failures into `GetCwdErrorKind` values.
 
-### `chdir`
+## `chdir`
 
 `std::process::chdir(path)` changes the process working directory.
 
@@ -125,7 +101,7 @@ Notes:
 - `chdir` does not update environment variables like `PWD`. Use
   `std::process::getcwd()` to query the real current directory.
 
-### Platform notes
+## Platform notes
 
 - **POSIX (default shipped stdlib)**: implemented via `getcwd(3)` and
   `chdir(2)`. `getpid(2)` is available.
@@ -134,9 +110,3 @@ Notes:
 - **WASI (Preview 1)**: `getcwd` and `chdir` are implemented via a virtual
   working directory. `getpid()` currently returns 0. `std::process::child`
   operations remain unsupported.
-
-## See also
-
-- [`std::env`](?p=std/env)
-- [`std::io`](?p=std/io)
-- [`std::stream`](?p=std/stream)

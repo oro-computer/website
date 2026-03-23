@@ -1,14 +1,26 @@
 # `std::stream`
 
-`std::stream` provides a Web Streams-inspired API for **byte streams** that
-composes with Silk’s `async` / `task` model.
+This module provides a Web Streams-inspired API
+for **byte streams** designed to work well with Silk’s `async`/`task` model.
 
-It uses owned `Bytes` chunks plus bounded in-memory queues so producers,
-transformers, and consumers can be composed without borrowed-slice lifetime
-hazards.
+The core goals of the current subset are:
+
+- **Ergonomic piping** between producers and consumers.
+- **Backpressure** via bounded buffering.
+- **Safe chunk ownership** across tasks using an owned `Bytes` type (no borrowed
+  slice lifetime hazards).
+
+Runtime note (current subset):
+
+- `ReadableStream.read()` / `WritableStream.write()` are **blocking OS-thread**
+  operations implemented with mutex/condvar primitives.
+
+See also:
+
+- `docs/language/concurrency.md` (tasks, `yield`, structured blocks)
+- `docs/std/sync.md` (mutex/condvar/channel; same blocking baseline)
 
 ## Exported API
-
 ```silk
 module std::stream;
 
@@ -159,7 +171,49 @@ export fn pipe_to_abortable (
 ) -> std::result::Result(int, StreamFailed);
 ```
 
-## Examples
+## Semantics
+
+### Backpressure
+
+Each stream has a bounded in-memory queue. The `cap` is expressed in **chunks**
+(`Bytes` values), not bytes:
+
+- `PassThroughStream.init(cap)` / `TransformStream.init(cap)` require `cap > 0`
+  (otherwise they return `Err(StreamFailed)` with `kind() == InvalidInput`).
+- `WritableStream.write()` blocks while the queue is full.
+- `ReadableStream.read()` blocks while the queue is empty (until closed or errored).
+
+### Close vs cancel vs abort
+
+- `WritableStream.close()`:
+  - graceful end-of-stream,
+  - readers drain remaining buffered chunks and then observe `Read::Done`.
+- `ReadableStream.cancel()`:
+  - marks the stream cancelled,
+  - discards buffered chunks,
+  - causes writers to fail with a `Cancelled` error.
+- `WritableStream.abort(err)`:
+  - marks the stream aborted with `err`,
+  - discards buffered chunks,
+  - causes readers to return `Err(err)` from `read` / `try_read`.
+
+### Transform streams
+
+`TransformStream` models a Web Streams-style transform stage.
+
+In the current compiler subset, `std::stream` does **not** attach a transformer
+callback internally. Instead, `TransformStream` exposes two bounded pipes and
+expects you to run the transform loop in a task:
+
+- input pipe: producers write to `writable`, transformer reads from
+  `transform_readable`,
+- output pipe: transformer writes to `transform_writable`, consumers read from
+  `readable`.
+
+This design composes naturally with task-based structured concurrency: run the
+transform loop in a `task` and rely on backpressure to bound memory.
+
+## Usage patterns
 
 ### Producer → consumer (tasks)
 
@@ -266,56 +320,7 @@ fn run_pipeline (src: std::stream::ReadableStream, dst: std::stream::WritableStr
 }
 ```
 
-## Considerations
-
-### Blocking behavior
-
-- `ReadableStream.read()` and `WritableStream.write()` are blocking OS-thread
-  operations implemented with mutex/condvar primitives.
-- `pipe_to_abortable` observes abort signals between read/write steps; it does
-  not interrupt an already-blocking `read()` call.
-
-### Backpressure
-
-Each stream has a bounded in-memory queue. The `cap` is expressed in **chunks**
-(`Bytes` values), not bytes:
-
-- `PassThroughStream.init(cap)` / `TransformStream.init(cap)` require `cap > 0`
-  (otherwise they return `Err(StreamFailed)` with `kind() == InvalidInput`).
-- `WritableStream.write()` blocks while the queue is full.
-- `ReadableStream.read()` blocks while the queue is empty (until closed or errored).
-
-### Close vs cancel vs abort
-
-- `WritableStream.close()`:
-  - graceful end-of-stream,
-  - readers drain remaining buffered chunks and then observe `Read::Done`.
-- `ReadableStream.cancel()`:
-  - marks the stream cancelled,
-  - discards buffered chunks,
-  - causes writers to fail with a `Cancelled` error.
-- `WritableStream.abort(err)`:
-  - marks the stream aborted with `err`,
-  - discards buffered chunks,
-  - causes readers to return `Err(err)` from `read` / `try_read`.
-
-### Transform streams
-
-`TransformStream` models a Web Streams-style transform stage.
-
-In the current compiler subset, `std::stream` does **not** attach a transformer
-callback internally. Instead, `TransformStream` exposes two bounded pipes and
-expects you to run the transform loop in a task:
-
-- input pipe: producers write to `writable`, transformer reads from
-  `transform_readable`,
-- output pipe: transformer writes to `transform_writable`, consumers read from
-  `readable`.
-
-This design composes naturally with task-based structured concurrency: run the
-transform loop in a `task` and rely on backpressure to bound memory.
-
-### Ownership and blocking behavior
+## Notes
 
 - The current subset uses blocking primitives; it is intended to become
   suspension-friendly once the async runtime exists.
@@ -326,10 +331,3 @@ transform loop in a `task` and rely on backpressure to bound memory.
 - `PassThroughStream.take_readable` / `take_writable` exist to make ownership
   transfer ergonomic in the current subset (moving out of struct fields is
   limited).
-
-## See also
-
-- [Concurrency](?p=language/concurrency)
-- [`std::sync`](?p=std/sync)
-- [`std::task`](?p=std/task)
-- [`std::fs`](?p=std/filesystem)

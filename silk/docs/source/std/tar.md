@@ -1,8 +1,8 @@
 # `std::tar`
 
-Status: **Implemented subset**. `std::tar` provides a portable, streaming tar
-reader/writer for building and inspecting tar archives without loading whole
-archives into memory.
+`std::tar` provides a portable,
+streaming tar reader/writer for building and inspecting tar archives without
+loading whole archives into memory.
 
 Key goals:
 
@@ -34,7 +34,7 @@ Entry kinds:
 
 Unsupported/unknown entry kinds return `TarErrorKind::Unsupported`.
 
-## Exported API
+## API (Implemented)
 
 ```silk
 module std::tar;
@@ -155,9 +155,7 @@ export type Writer = std::tar::AsyncWriter;
 Note: the implementations live in `std/tar.slk`; `std/tar/async.slk` is a thin
 re-export module so callers can `import std::tar::async;`.
 
-## Examples
-
-### In-memory roundtrip
+## Example: in-memory roundtrip
 
 ```silk
 import std::arrays;
@@ -204,9 +202,3 @@ fn main () -> int {
   return 0;
 }
 ```
-
-## See also
-
-- [`std::filesystem`](?p=std/filesystem)
-- [`std::stream`](?p=std/stream)
-- [`std::buffer`](?p=std/buffer)

@@ -1,10 +1,10 @@
 # `std::net`
 
-Status: **Implemented subset**. A small endian/byte-order
+A small endian/byte-order
 helper subset plus hosted **IPv4/IPv6 TCP** and **IPv4/IPv6 UDP** socket APIs
 are implemented in `std/net.slk`.
 
-Async integration:
+Async integration (current implementation):
 
 - `std::net` exposes async TCP `connect` and `accept` via:
   - `std::net::TCPStream.{connect_async,connect_v6_async}`
@@ -17,7 +17,7 @@ Async integration:
 
 `std::net` provides networking primitives on POSIX systems.
 
-Hostname resolution (DNS) integration:
+Hostname resolution (DNS) integration (current implementation):
 
 - `std::net` provides `resolve_host(...)` and `TCPStream.connect_host(...)` helpers
   built on a small hosted POSIX `getaddrinfo(3)` shim.
@@ -37,9 +37,7 @@ See also:
 - `docs/std/websocket.md` (`std::websocket` on top of `std::net`)
 
 ## Exported API
-
-`std::net` starts with byte-order helpers and address types, then extends into
-hosted socket APIs:
+A small, non-socket subset exists in `std/net.slk` for early bring-up:
 
 ```silk
 module std::net;
@@ -84,7 +82,7 @@ Notes:
 - This is currently implemented as a byte-swap for the `linux/x86_64`
   little-endian hosted baseline.
 
-### TCP
+## Hosted TCP API (Implemented)
 
 `std::net` exposes a small TCP API for hosted targets via the
 pluggable runtime interface `std::runtime::net`:
@@ -237,7 +235,7 @@ Notes:
   - `std::net::stream::pipe_stream_to_tcpstream` / `pipe_stream_to_tcpstream_abortable`
   These adapters take ownership of the `TCPStream` and close it before returning.
 
-### UDP
+## Hosted UDP API (Implemented)
 
 `std::net` also exposes a small UDP API for hosted targets. The API is
 datagram-oriented but remains blocking.
@@ -307,36 +305,14 @@ Notes:
 - `send_to` / `recv_from` require the socket domain to match `addr.domain`
   (`AF_INET` for IPv4, `AF_INET6` for IPv6).
 
-## Examples
-
-### Address construction and normalization
-
-```silk
-import std::net;
-
-fn main () -> int {
-  let loopback = std::net::SocketAddrV4.loopback(8080);
-  let any = std::net::SocketAddr.from_v4(loopback);
-
-  if !loopback.ip().is_loopback() { return 1; }
-  if !any.is_v4() { return 2; }
-  if any.port() != 8080 { return 3; }
-
-  return 0;
-}
-```
-
-## Considerations
-
-### Scope
+## Scope
 
 `std::net` is responsible for:
 
 - Sockets and basic protocols.
 - Integration with concurrency primitives (`async`, `task`).
 
-### Design shape
-
+## Core Types
 - `IpAddr` (`V4` / `V6`) and `SocketAddr`.
 - `TCPStream`, `TCPListener`, `UDPSocket`.
 
@@ -358,28 +334,16 @@ export fn tcp_connect (addr: SocketAddr) -> Result(TCPStream, NetError);
 export fn tcp_listen (addr: SocketAddr) -> Result(TCPListener, NetError);
 ```
 
-### Blocking and async behavior
+## Blocking vs Async
 
-The shipped hosted subset now includes both:
+The initial hosted baseline may be blocking I/O. Once the language’s async
+model is implemented, `std::net` should provide:
 
-- blocking socket operations for the baseline TCP/UDP surface, and
-- async TCP connect/accept wrappers integrated with the hosted event loop.
+- non-blocking sockets + integration with an event loop,
+- `async fn` wrappers for common operations,
+- integration with task offloading for blocking adapters (design target:
+  `std::task::run_blocking()`; until that exists, users can explicitly use a
+  `task fn` wrapper around blocking calls).
 
-Remaining expansion areas include:
-
-- broader async coverage for additional socket operations,
-- cancellation of in-flight socket operations,
-- and higher-level blocking-offload helpers if the std/task surface grows a
-  dedicated `run_blocking()`-style API.
-
-## See also
-
-- [`std::io`](?p=std/io)
-- [`std::stream`](?p=std/stream)
-- [`std::http`](?p=std/http)
-- [`std::https`](?p=std/https)
-- [Concurrency](?p=language/concurrency)
-
-## Design goals
-
+## Considerations
 - DNS resolution, TLS integration (as optional packages).

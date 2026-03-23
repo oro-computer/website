@@ -11,7 +11,7 @@ This document describes the command-line interface of the `silk` compiler from t
 
 ## Core Responsibilities
 
-The current `silk` CLI:
+At maturity, the `silk` CLI should:
 
 - Compile Silk source files into:
   - executables,
@@ -23,10 +23,9 @@ The current `silk` CLI:
   - control linkage to the default `std::` implementation or an alternative,
   - enable/disable or tune Formal Silk verification checks,
   - configure external and ABI-related behaviors where appropriate (e.g. visibility of `libsilk.a` symbols, header emission).
-- Emits clear diagnostics with stable error codes and machine‑readable output
-  when requested.
+- Emit clear diagnostics with stable error codes and machine‑readable output when requested.
 
-The current shipped command surface includes:
+The initial implementation is intentionally smaller and focuses on:
 
 - global options:
   - `--help` / `-h` — print global usage and exit,
@@ -82,6 +81,11 @@ The current shipped command surface includes:
   - code `0` on success,
   - non-zero on error, printing a human-readable diagnostic (format specified in `docs/compiler/diagnostics.md`).
   - when `<file> ...` inputs are omitted and `--package` / `--pkg` is also omitted, but `./silk.toml` exists, `silk check` behaves as if `--package .` was provided.
+  - when `--package` is provided and the root manifest enables a build module
+    via `[build].build_module = true`, the compiler runs that build module and
+    type-checks the emitted manifest/module set instead of the raw `silk.toml`;
+    for compatibility, the build module currently receives the action string
+    `build`.
 - `silk test [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [--feature <spec> ...] [-O <0-3>] [--noheap] [--jobs <n>] [--filter <pattern>] [--package <dir|manifest>] <file> [<file> ...]` — compile and run language-level `test` declarations found in the module set, emitting TAP output:
   - uses TAP version 13 formatting (`TAP version 13`, `1..N`, `ok`/`not ok` lines),
   - each test runs in its own process, so a failing `assert` (panic/abort) does not stop the whole suite,
@@ -99,6 +103,7 @@ The current shipped command surface includes:
 - when `--package` is provided:
   - input files must be omitted (the compiler loads the package module set from the manifest),
   - the manifest file is `silk.toml` (when a directory is provided, it is discovered in that directory),
+  - when the root manifest enables a build module via `[build].build_module = true`, the compiler runs that build module and uses the emitted manifest for package tests; for compatibility, the build module currently receives the action string `build`,
   - manifest-native link metadata for the test harness (`[[target]].inputs`, `needed`, and `runpath`) is taken from:
     - `[build].default_target` when it names a code target,
     - otherwise the first declared code target,
@@ -135,7 +140,15 @@ The current shipped command surface includes:
   - discovery helpers:
     - `silk man` (no arguments) opens the nearest package overview when one is in scope; otherwise it prints a quick-start plus a list of entrypoints,
     - `silk man --list` lists shipped pages, common stdlib entrypoints, and package-local pages when a package root is in scope,
-    - `silk man --search <pattern>` searches shipped pages, stdlib module names, and package-local pages when a package root is in scope.
+    - `silk man --search <pattern>` searches:
+      - shipped section 1/3/7 pages,
+      - stdlib module names,
+      - public stdlib API symbol paths,
+      - package-local overview/docs/man pages when a package root is in scope,
+      - and public root-package symbol paths when a package root is in scope.
+    - use `silk man <query>` when you want to open docs immediately, and
+      `silk doc --man <query> -o <path>` when you want the generated roff page
+      as a file.
   - shorthands:
     - `silk man build` opens `silk-build(1)` (same for `package`, `check`, `test`, `doc`, `man`, `cc`, `env`, `format`),
     - when no package is selected/resolvable, `silk man fs` is treated as `silk man std::fs` (and similarly for other top-level std modules).
@@ -249,10 +262,12 @@ The current shipped command surface includes:
     - `.a` — static archives; their `.o` members are treated like object inputs,
     - `.so` — shared libraries treated as dynamic dependencies (equivalent to `--needed <soname>` using the library’s basename),
     - `.c` — C sources compiled to objects via the host C compiler (see `silk cc` / `SILK_CC` / `CC`) and then treated like `.o` inputs,
-    - `.h` — header files compiled as C translation units (`-x c`) via the host C compiler and then treated like `.o` inputs,
-    - note: linking `.o`/`.a`/`.c` inputs is currently supported only for `linux/x86_64` outputs,
+    - `.h` — header build inputs:
+      - if a sibling `.c` exists next to the header, Silk compiles that `.c` and treats the resulting object like a `.o` input,
+      - otherwise Silk falls back to compiling the header itself as a C translation unit (`-x c`) and then treats the resulting object like a `.o` input,
+    - note: linking `.o`/`.a`/`.c`/`.h` inputs is currently supported only for `linux/x86_64` outputs,
     - note: when linking non-PIC object inputs that reference external data symbols directly via `R_X86_64_PC32` (for example `stdout`/`stderr` from `fprintf`), the backend supports the common pointer-load pattern by emitting a writable COPY slot and `R_X86_64_COPY` relocation so the dynamic loader initializes it; other external-data `R_X86_64_PC32` patterns are rejected,
-    - `--cflag <arg>` may be repeated to add additional `cc` arguments when compiling `.c`/`.h` inputs,
+    - `--cflag <arg>` may be repeated to add additional `cc` arguments when compiling `.c` inputs and `.h` inputs that fall back to header-compilation,
   - when multiple input files are provided (or when imports load multiple modules), runs module-set front-end checks (package/import resolver + multi-module type checking that accounts for imported exported constants and imported `export fn` calls),
   - declaration-only exported function prototypes (`export fn name(...) -> T;`) are accepted as module exports for type-checking, but do not emit code; calls lower as link-time symbol references that must be satisfied by other Silk sources in the module set and/or non-`.slk` link inputs (`.o`/`.a`/`.c`),
   - when a single input file is provided and no imports load additional modules, the compiler may run the existing single-module front-end checks (a fast path intended for constant-expression programs),
@@ -417,6 +432,22 @@ The current shipped command surface includes:
       - calling methods on optional structs via optional chaining (`opt?.method(args...)`), producing an optional result of the method result type (`ResultType?`) and short-circuiting when the receiver is `None`,
       - matching on optionals via `match <scrutinee> { None => <expr>, Some(<name|_>) => <expr>, }` (exactly one `None` arm and one `Some(...)` arm; arm bodies are expressions),
       - unwrapping optionals via `??` with short-circuit evaluation of the fallback expression (including unwrapping `T??` to `T?`),
+      - using the same `??` operator on:
+        - recoverable `Result`-style enums,
+        - and ordinary named enums with exactly two declared variants, where
+          declaration order defines the coalescing shape:
+          - if the first variant is unit, `value ?? fallback` yields that enum
+            value,
+          - if the first variant carries exactly one payload, it yields that
+            payload,
+          - and if the value is the second variant, the fallback expression is
+            evaluated,
+        - and permitting the narrow terminal control-flow forms on the
+          right-hand side of `??`:
+          - `value ?? return expr`,
+          - `value ?? break`,
+          - `value ?? continue`,
+          with the same validity rules as the statement forms,
       - and passing/returning optionals between helpers at ABI boundaries as `(bool tag, payload0, payload1, ...)`, where the payload slots follow the lowering of the underlying non-optional type (for example `string?` is `(bool, u64 ptr, i64 len)`).
       - for non-executable outputs, exported functions may accept and return these optionals; see `docs/compiler/abi-libsilk.md` for the exact C ABI mapping.
     - on `linux/x86_64`, the current backend also supports a limited external call subset:
@@ -551,6 +582,8 @@ Top-level commands:
     - For package builds (`--package`), you may target a specific package with
       `PKG/NAME` or `PKG/NAME=VALUE` (for example `ui/tui`).
   - When `--package` is provided, input files must be omitted and the module set is loaded from the package manifest (see `docs/compiler/package-manifests.md`).
+    - when the root manifest enables a build module via `[build].build_module = true`, `silk check --package` runs that build module and uses the emitted manifest/module set instead of the raw `silk.toml`,
+    - for compatibility, package checks currently invoke the build module with the action string `build`,
   - When `<file> ...` inputs are omitted and `--package` / `--pkg` is also omitted, but `./silk.toml` exists, `silk check` behaves as if `--package .` was provided.
   - Prints a success message on stdout for valid programs.
   - Prints a human-readable error on stderr and exits non-zero for invalid programs.
@@ -572,6 +605,8 @@ Top-level commands:
     - `SILK_TEST_JOBS` overrides the number of test processes run in parallel (default: `1`; `0` means auto; capped at `8`). Overridden by `--jobs`.
     - `SILK_TEST_MAX_OUTPUT_BYTES` caps captured stdout/stderr per test process for diagnostics (default: `1048576`; output beyond this limit is truncated).
   - When `<file> ...` inputs are omitted and `--package` is also omitted, but `./silk.toml` exists, `silk test` behaves as if `--package .` was provided.
+  - When `--package` is provided and the root manifest enables a build module via `[build].build_module = true`, `silk test --package` runs that build module and uses the emitted manifest for the test harness/module set.
+    - for compatibility, package tests currently invoke the build module with the action string `build`.
 - `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [--feature <spec> ...] [-O <0-3>] [--noheap] [--package <dir|manifest>] [--build-module] [--package-target <name> ...] <file> [<file> ...] -o <path> [--kind executable|object|static|shared] [--emit bin|asm] [--arch <arch>] [--target <triple>] [--c-header <path>] [--cflag <arg> ...] [--ldflag <arg> ...] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>] [--elf-interp <path>]` (or `--out <path>`):
   - Reads one or more input files, runs the same front-end pipeline as `check`.
   - Optimization:
@@ -583,6 +618,9 @@ Top-level commands:
     - native build inputs (`.c`, `.h`, `.o`, `.a`, `.so`) may still be provided:
       - per-target via `[[target]].inputs` in `silk.toml`,
       - and, when building a single target, on the command line (merged with the manifest inputs),
+      - `.h` follows the same safer rule as direct CLI builds:
+        - sibling `.c` wins when present,
+        - otherwise the header itself is compiled as a C translation unit,
     - `--build-module` runs `<package_root>/build.slk` and uses the manifest it
       emits as the package manifest (see `docs/compiler/build-scripts.md`),
       - `--build-module-path <path>` overrides the default build module path
@@ -617,7 +655,7 @@ Top-level commands:
     - `--emit asm` writes an `objdump`-style disassembly (Intel syntax) of the selected output on `linux/x86_64` and writes it to `<path>`,
     - `-S` is accepted as an alias of `--emit asm` and defaults to `--kind object` when `--kind` is not set.
   - Dynamic dependencies:
-    - `--cflag <arg>` adds an additional `cc` argument used when compiling `.c`/`.h` inputs; it may be repeated,
+    - `--cflag <arg>` adds an additional `cc` argument used when compiling `.c` inputs and `.h` inputs that fall back to header-compilation; it may be repeated,
     - `--ldflag <arg>` adds a link-related argument; in the current toolchain, these are translated into `--needed`/`--runpath`/`--soname`/`--elf-interp` effects (see `docs/compiler/package-manifests.md`),
     - `--needed <soname>` adds a `DT_NEEDED` entry for executable and shared outputs; it may be repeated,
     - `--runpath <path>` (or `--rpath <path>`) adds a runpath element for executable and shared outputs; it may be repeated (joined with ':' into `DT_RUNPATH`),

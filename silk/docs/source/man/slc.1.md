@@ -19,8 +19,8 @@
 silk build <args...>
 ```
 
-See `silk-build` (1) for full documentation of options, arguments, and behavior.
+See [silk-build (1)](?p=man/silk-build.1) for full documentation of options, arguments, and behavior.
 
 ## See Also
 
-- `silk` (1), `silk-build` (1)
+- [silk (1)](?p=man/silk.1), [silk-build (1)](?p=man/silk-build.1)

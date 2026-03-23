@@ -1,6 +1,6 @@
 # `std::args`
 
-Status: **Implemented subset**. A small native-argv helper surface is implemented in
+A small native-argv helper surface is implemented in
 `std/args.slk` to make early programs ergonomic while `string[]` parameters and
 richer slice/iterator features are still future work.
 
@@ -18,7 +18,6 @@ See also:
 - `docs/language/ext.md` (string ABI `{ ptr, len }` and C-string lowering rules)
 
 ## Exported API
-
 The following items are implemented in `std/args.slk`:
 
 ```silk

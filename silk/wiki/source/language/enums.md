@@ -6,15 +6,14 @@ Currently, enums support:
 
 - unit variants (`E::A`),
 - tuple variants (`E::B(x)`),
-- exhaustive expression-form `match` over enum values with explicit variant coverage,
-- no guarded arms (`if ...`) in either expression or statement form,
-- and statement-form ordinary enum `match` with qualified variant arms and explicit end-to-end variant coverage.
+- exhaustive `match` expressions over enum values (restricted subset; no guards),
+- and statement-form ordinary enum `match` with qualified variant arms.
 
 Canonical spec: `docs/language/enums.md`.
 
-## Reference
+## Status
 
-- Canonical spec and current behavior: `docs/language/enums.md`
+- Implemented subset + representation: `docs/language/enums.md`
 
 ## Syntax
 ```silk

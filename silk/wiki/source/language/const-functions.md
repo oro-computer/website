@@ -19,14 +19,16 @@ fn main () -> int {
 }
 ```
 
-## Notes
+## Notes (Current Subset)
 
 - Const functions are intended for `const` initializer evaluation.
 - Const functions are compile-time-only: they are not callable from runtime
   code and are not emitted as runtime/linkable symbols.
-- Today, const evaluation targets scalar values plus eligible POD structs.
-- `const fn` bodies must not allocate (`new`) or use regions/`with`, must not
-  contain `panic`, and may only call other `const fn` declarations.
+- The current subset targets scalar-only const evaluation; `string`/aggregate
+  return values and higher-order const evaluation are planned.
+- In the current subset, `const fn` bodies must not allocate (`new`) or use
+  regions/`with`, must not contain `panic`, and may only call other `const fn`
+  declarations.
 
 ## See also
 

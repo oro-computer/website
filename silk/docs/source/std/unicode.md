@@ -1,7 +1,5 @@
 # `std::unicode`
 
-Status: **Implemented**.
-
 This module provides practical Unicode helpers focused on:
 
 - code point classification (whitespace, identifier rules, casing metadata),
@@ -9,7 +7,7 @@ This module provides practical Unicode helpers focused on:
 
 The core `char` type in Silk is a Unicode scalar value (see `docs/language/types.md`).
 
-## Exported API
+## API (Implemented)
 
 ```silk
 module std::unicode;

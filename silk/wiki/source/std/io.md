@@ -7,8 +7,7 @@ Canonical doc: `docs/std/io.md`.
 
 ## Status
 
-- Implemented subset: blocking reads/writes, formatting helpers, async wrappers,
-  and stream adapters are documented in the canonical page.
+- Design + initial implementation: basic reads/writes are implemented via `std::runtime::io`.
 - Details: `docs/std/io.md`
 
 ## Importing

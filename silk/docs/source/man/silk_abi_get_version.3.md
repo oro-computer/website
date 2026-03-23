@@ -38,5 +38,5 @@ None.
 
 ## See Also
 
-- `libsilk` (7)
-- `?p=compiler/abi-libsilk`
+- [libsilk (7)](?p=man/libsilk.7)
+- [libsilk ABI reference](?p=compiler/abi-libsilk)

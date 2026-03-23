@@ -11,6 +11,7 @@ This page documents every public CLI flag on `sage`.
 
 ## Standalone modes
 
+- `--print` — print inputs directly to `stdout` with Sage's safe renderer and syntax highlighting, without entering the pager UI
 - `--compile-cache` — compile syntax sources from `XDG_CONFIG_HOME/sage/syntax` into the syntax cache
 - `--list-syntax` — print compiled syntax keys, one per line
 - `--index-only [PATH|-]` — build the background line index, print stats, and exit
@@ -95,3 +96,9 @@ Index-only perf run:
 sage --verbose --index-only large.log
 ```
 
+Safe direct output:
+
+```bash
+sage --print README.md
+sage --print src/main.slk src/sage/out.slk
+```

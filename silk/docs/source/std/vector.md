@@ -1,6 +1,6 @@
 # `std::vector`
 
-Status: **Implemented subset**. This module provides a generic, growable
+This module provides a generic, growable
 vector type `Vector(T)` used broadly across `std::`.
 
 `Vector(T)` is an owning container with:
@@ -24,7 +24,101 @@ Where byte-exact layout matters (I/O buffers, strings), the stdlib uses
 `std::buffer::BufferU8`, a packed byte buffer whose `ptr` points to
 byte-addressed memory and whose `len`/`cap` are in bytes.
 
-## Exported API
+See also:
+
+- `docs/std/arrays.md` (`std::arrays::Slice(T)` views)
+- `docs/std/buffer.md` (width-oriented buffer helpers built on vectors)
+- `docs/language/generics.md` (generic syntax and rules)
+
+## Example (Struct Elements)
+
+`Vector(T)` is the stdlib’s default growable container for typed elements. When
+you see code manually managing `{ ptr, len, cap }` for a typed array, it is
+often a sign that a `Vector(T)` (or a small wrapper around it) is the intended
+tool.
+
+This example collects `TabState` values into a `Vector(TabState)`:
+
+```silk
+import std::arrays;
+import std::vector;
+
+struct TabState {
+  path: string,
+  top_off: i64,
+  gutter_on: bool,
+}
+
+type Tabs = std::vector::Vector(TabState);
+
+fn tabs_collect (paths: std::arrays::Slice(string)) -> Tabs? {
+  let cap: i64 = paths.len;
+  let mut tabs: Tabs = Tabs.try_init(cap) ?? Tabs.empty();
+
+  var i: i64 = 0;
+  while i < paths.len {
+    let err = tabs.push(TabState{ path: paths.get(i), top_off: 0, gutter_on: false });
+    if err != None {
+      // `tabs` is dropped on scope exit (drops elements + frees its allocation).
+      return None;
+    }
+    i = i + 1;
+  }
+
+  return Some(tabs);
+}
+```
+
+## Ownership and `Drop`
+
+`Vector(T)` is an owning container:
+
+- `push` moves a value into the vector.
+- `pop` / `swap_remove` move a value out of the vector (the caller owns the
+  returned value).
+- `set` overwrites an element and runs `Drop` for the overwritten element when
+  `T` requires drop.
+- `clear` runs `Drop` for all live elements and then sets `len = 0`.
+- `drop` runs `Drop` for all live elements, frees the backing allocation, and
+  resets the vector to an empty state.
+
+### Copy accessors (`get`, `iter`)
+
+`get`, `at`, and `iter` produce values by value without removing them. In other
+words, they copy element bytes out of the vector.
+
+These accessors are intended for plain value types (primitives, `string` views,
+and small POD structs). For `Drop`-managed element types, copying an element out
+creates duplicate ownership; use move-out operations like `pop` / `swap_remove`
+instead of `get`/`iter`.
+
+## Implemented `std::interfaces` surface
+
+`Vector(T)` is one of the stdlib’s canonical owning container types, so its
+interface surface is intentionally aligned with the rest of `std::`:
+
+- `Vector(T)` implements `std::interfaces::Len`.
+- `Vector(T)` implements `std::interfaces::Capacity`.
+- `Vector(T)` implements `std::interfaces::IsEmpty`.
+- `Vector(T)` implements `std::interfaces::Clear`.
+- `Vector(T)` implements `std::interfaces::ReserveAdditional`.
+- `Vector(T)` implements `std::interfaces::Drop`.
+- `Vector.iter()` returns `std::arrays::SliceIter(T)`, so iteration reuses the
+  shared `std::interfaces::Iterator(T)` surface documented by `std::arrays`
+  instead of inventing a vector-specific iterator type.
+
+That split is the intended reader-facing style:
+
+- `Vector(T)` is the owning growable container that exposes the standard
+  container-management protocols.
+- `std::arrays::Slice(T)` / `SliceIter(T)` provide the non-owning view and
+  iteration vocabulary layered on top of that storage.
+
+This makes the stdlib easier to learn by reading: vectors, slices, maps, sets,
+and buffers all participate in a shared interface story instead of presenting a
+different naming model for each module.
+
+## Current API (Implemented)
 
 ```silk
 module std::vector;
@@ -79,70 +173,6 @@ impl Vector(T) as std::interfaces::Drop {
 }
 ```
 
-## Examples
-
-`Vector(T)` is the stdlib’s default growable container for typed elements. When
-you see code manually managing `{ ptr, len, cap }` for a typed array, it is
-often a sign that a `Vector(T)` (or a small wrapper around it) is the intended
-tool.
-
-This example collects `TabState` values into a `Vector(TabState)`:
-
-```silk
-import std::arrays;
-import std::vector;
-
-struct TabState {
-  path: string,
-  top_off: i64,
-  gutter_on: bool,
-}
-
-type Tabs = std::vector::Vector(TabState);
-
-fn tabs_collect (paths: std::arrays::Slice(string)) -> Tabs? {
-  let cap: i64 = paths.len;
-  let mut tabs: Tabs = Tabs.try_init(cap) ?? Tabs.empty();
-
-  var i: i64 = 0;
-  while i < paths.len {
-    let err = tabs.push(TabState{ path: paths.get(i), top_off: 0, gutter_on: false });
-    if err != None {
-      // `tabs` is dropped on scope exit (drops elements + frees its allocation).
-      return None;
-    }
-    i = i + 1;
-  }
-
-  return Some(tabs);
-}
-```
-
-## Considerations
-
-### Ownership and `Drop`
-
-`Vector(T)` is an owning container:
-
-- `push` moves a value into the vector.
-- `pop` / `swap_remove` move a value out of the vector (the caller owns the
-  returned value).
-- `set` overwrites an element and runs `Drop` for the overwritten element when
-  `T` requires drop.
-- `clear` runs `Drop` for all live elements and then sets `len = 0`.
-- `drop` runs `Drop` for all live elements, frees the backing allocation, and
-  resets the vector to an empty state.
-
-### Copy accessors (`get`, `iter`)
-
-`get`, `at`, and `iter` produce values by value without removing them. In other
-words, they copy element bytes out of the vector.
-
-These accessors are intended for plain value types (primitives, `string` views,
-and small POD structs). For `Drop`-managed element types, copying an element out
-creates duplicate ownership; use move-out operations like `pop` / `swap_remove`
-instead of `get`/`iter`.
-
 Notes:
 
 - `Vector(T)` is intentionally low-level in the current subset:
@@ -160,9 +190,3 @@ Notes:
   - `at` returns `None` when `index` is out of bounds,
   - `try_set` returns `false` when `index` is out of bounds.
 - `swap_remove` removes an element by swapping in the last element (O(1), order not preserved).
-
-## See also
-
-- `docs/std/arrays.md` (`std::arrays::Slice(T)` views)
-- `docs/std/buffer.md` (width-oriented buffer helpers built on vectors)
-- `docs/language/generics.md` (generic syntax and rules)

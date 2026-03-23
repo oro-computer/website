@@ -4,7 +4,7 @@ Oro Runtime · LLMS Pack
 This file concatenates the full Oro Runtime documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-03-04T15:51:01+00:00
+Generated: 2026-03-22T16:16:32+00:00
 
 How to link:
 - Docs: /runtime/docs/?p=<id>
@@ -146,6 +146,16 @@ This documentation is organized into:
 - **CLI** — `oroc` commands, flags, and environment variables.
 - **Configuration** — `oro.toml`, `.ororc`, and `copy_map`.
 - **JavaScript APIs** — `oro:*` modules like `oro:application`, `oro:window`, and `oro:hooks`.
+
+## CLI input forms
+
+The CLI accepts three common inputs:
+
+- a **project directory** containing `oro.toml`
+- a single **HTML entry point**
+- a single **JavaScript module**
+
+That means you can start with a full project or point `oroc run` / `oroc build` at one source file while the CLI infers a minimal configuration.
 
 
 For AI assistants and LLM tooling:
@@ -1566,7 +1576,7 @@ oroc config --list
 oroc config --describe build.copy_map
 ```
 
-## Common keys
+## High-traffic keys
 
 | TOML key | Default | What it does |
 | - | - | - |
@@ -1577,12 +1587,18 @@ oroc config --describe build.copy_map
 | `meta.lang` | `en-US` | Primary BCP-47 language tag. |
 | `build.name` | (required) | Short name used for bundle names and packaging. |
 | `build.output` | `build` | Output directory for build artifacts. |
+| `build.copy` | — | Inline directory/file pattern copied into the build output. |
 | `build.copy_map` | — | Copy-map file that defines bundle inputs. |
+| `build.env` | — | Space-separated environment variable names forwarded into the runtime. |
 | `build.script` | — | Script to run before the copy phase (common for web build steps). |
+| `build.script_after` | — | Script to run after the build lifecycle completes. |
 | `build.headless` | `false` | Start the application in headless mode (no visible window). |
 | `build.allow_exec` | `false` | Allow external command execution during builds (Gradle, NDK, scripts). |
+| `webview.root` | — | Root path under the app origin used as the default navigation base. |
 | `webview.default_index` | `/index.html` | Default index path for navigation. |
 | `webview.allow_any_route` | `false` | SPA-style fallback: unmatched routes resolve to `default_index`. |
+| `webview.url_protocols` | — | Space-separated protocol schemes treated as WebView-safe origins. |
+| `webview.protocol_handlers` | — | Space-separated protocol handlers registered for the URL shim. |
 | `webview.watch` | `false` | Watch files in development (emits change events). |
 | `webview.watch_reload` | `true` | Reload the page when a file change event is emitted. |
 | `window.width` | `80%` | Default window width (percentage or pixels). |
@@ -1600,6 +1616,18 @@ oroc config --describe build.copy_map
 - `[permissions]` — runtime permission gates
 - `[mcp]` — defaults for `oroc mcp` (host/port/token)
 - `[ai]` — defaults for embedded AI features (when enabled)
+
+## Exhaustive inspection from the CLI
+
+The runtime’s configuration registry is broader than this summary page. Use the CLI when you need the exact live key set:
+
+```bash
+oroc config --list
+oroc config --describe webview.root
+oroc config --describe build.env
+```
+
+This is the fastest way to confirm platform-specific keys, defaults, and any keys added by newer runtime builds.
 
 ## Permissions
 
@@ -1678,6 +1706,19 @@ URL: /runtime/docs/?p=javascript/overview
 Oro Runtime apps run inside the platform WebView. You use standard web APIs (DOM, ES modules, `fetch`, URLs, WebCrypto,
 WebAssembly) and import Oro-specific native capabilities as explicit ES modules under the `oro:*` namespace.
 
+## How the JavaScript surface is organized
+
+The runtime’s JavaScript surface is broad, but it stays predictable:
+
+- **Application shell** — `oro:application`, `oro:window`, `oro:hooks`, `oro:navigation`
+- **Filesystem and process** — `oro:fs`, `oro:path`, `oro:os`, `oro:process`, `oro:child_process`
+- **Networking and transport** — `oro:fetch`, `oro:http`, `oro:https`, `oro:net`, `oro:dns`, `oro:tcp`, `oro:tls`
+- **Security and identity** — `oro:secure-storage`, `oro:crypto`, `oro:cookies`, `oro:did`
+- **Data and formats** — `oro:url`, `oro:querystring`, `oro:buffer`, `oro:stream`, `oro:sqlite`, `oro:toml`, `oro:semver`
+- **Background work and automation** — `oro:worker`, `oro:worker_threads`, `oro:service-worker`, `oro:shared-worker`, `oro:background`, `oro:mcp`, `oro:ai`
+
+See: [Module index](?p=javascript/module-index).
+
 ## Importing `oro:*` modules
 
 Modules are standard ES modules:
@@ -1687,8 +1728,6 @@ import application from 'oro:application'
 import { onReady } from 'oro:hooks'
 import * as secureStorage from 'oro:secure-storage'
 ```
-
-See: [Module index](?p=javascript/module-index).
 
 If you need an exhaustive list of every `oro:*` specifier (including subpaths), see: [All module specifiers](?p=javascript/all-modules).
 
@@ -1714,8 +1753,9 @@ If you’re looking for the TOML keys and defaults, see: [Configuration](?p=conf
 ## Next
 
 - Core modules: [`oro:application`](?p=javascript/application) · [`oro:window`](?p=javascript/window) · [`oro:hooks`](?p=javascript/hooks)
-- Integrations: [`oro:mcp`](?p=javascript/mcp) · [`oro:ai`](?p=javascript/ai)
-- Security: [`oro:secure-storage`](?p=javascript/secure-storage) · [`oro:fs`](?p=javascript/fs)
+- OS + data: [`oro:fs`](?p=javascript/fs) · [`oro:path`](?p=javascript/path) · [`oro:process`](?p=javascript/process) · [`oro:url`](?p=javascript/url)
+- Networking: [`oro:fetch`](?p=javascript/fetch) · [`oro:http`](?p=javascript/http) · [`oro:https`](?p=javascript/https) · [`oro:tls`](?p=javascript/tls)
+- Services: [`oro:mcp`](?p=javascript/mcp) · [`oro:ai`](?p=javascript/ai) · [`oro:notification`](?p=javascript/notification) · [`oro:secure-storage`](?p=javascript/secure-storage)
 
 ==============================================================================
 DOCS: Module index (javascript/module-index)
@@ -1738,6 +1778,18 @@ Oro Runtime exposes native capabilities as explicit ES modules under the `oro:*`
 - [`oro:ai`](?p=javascript/ai) — local AI helpers (LLM + chat)
 
 See also: [All module specifiers](?p=javascript/all-modules).
+
+## Public API families
+
+The runtime publishes many module families. The highest-traffic groups are:
+
+- **App shell and lifecycle** — [`oro:application`](?p=javascript/application), [`oro:window`](?p=javascript/window), [`oro:hooks`](?p=javascript/hooks), [`oro:navigation`](?p=javascript/navigation), [`oro:notification`](?p=javascript/notification)
+- **Filesystem, process, and platform** — [`oro:fs`](?p=javascript/fs), [`oro:path`](?p=javascript/path), [`oro:os`](?p=javascript/os), [`oro:process`](?p=javascript/process), [`oro:child_process`](?p=javascript/child_process), [`oro:clipboard`](?p=javascript/clipboard)
+- **Networking and transport** — [`oro:fetch`](?p=javascript/fetch), [`oro:http`](?p=javascript/http), [`oro:https`](?p=javascript/https), [`oro:net`](?p=javascript/net), [`oro:dns`](?p=javascript/dns), [`oro:tcp`](?p=javascript/tcp), [`oro:tls`](?p=javascript/tls), [`oro:network`](?p=javascript/network)
+- **Data, formats, and storage** — [`oro:buffer`](?p=javascript/buffer), [`oro:stream`](?p=javascript/stream), [`oro:url`](?p=javascript/url), [`oro:querystring`](?p=javascript/querystring), [`oro:sqlite`](?p=javascript/sqlite), [`oro:toml`](?p=javascript/toml), [`oro:semver`](?p=javascript/semver), [`oro:mime`](?p=javascript/mime)
+- **Security and identity** — [`oro:secure-storage`](?p=javascript/secure-storage), [`oro:crypto`](?p=javascript/crypto), [`oro:cookies`](?p=javascript/cookies), [`oro:did`](?p=javascript/did)
+- **Workers, services, and automation** — [`oro:worker`](?p=javascript/worker), [`oro:worker_threads`](?p=javascript/worker_threads), [`oro:service-worker`](?p=javascript/service-worker), [`oro:shared-worker`](?p=javascript/shared-worker), [`oro:background`](?p=javascript/background), [`oro:mcp`](?p=javascript/mcp), [`oro:ai`](?p=javascript/ai)
+- **Advanced or compatibility surfaces** — [`oro:commonjs`](?p=javascript/commonjs), [`oro:module`](?p=javascript/module), [`oro:bootstrap`](?p=javascript/bootstrap), [`oro:diagnostics`](?p=javascript/diagnostics), plus the `oro:internal/*`, `oro:node/*`, `oro:npm/*`, and `oro:external/*` families
 
 ## Importable top-level module specifiers
 
@@ -2180,10 +2232,6 @@ await application.backend.open()
 // ...
 await application.backend.close()
 ```
-
-## API reference
-
-## API reference
 
 ## API reference
 
@@ -3145,10 +3193,6 @@ console.log(paths)
 
 ## API reference
 
-## API reference
-
-## API reference
-
 <!-- GENERATED: ORO_API_REFERENCE_START -->
 
 ### Module specifiers
@@ -3962,10 +4006,6 @@ await wait('__runtime_ready__')
 
 ## API reference
 
-## API reference
-
-## API reference
-
 <!-- GENERATED: ORO_API_REFERENCE_START -->
 
 ### Module specifiers
@@ -4360,10 +4400,6 @@ The runtime can restrict filesystem access via configuration. Common keys:
 - `filesystem.no_follow_symlinks`
 
 See: [Config reference](?p=config/reference).
-
-## API reference
-
-## API reference
 
 ## API reference
 
@@ -6960,10 +6996,6 @@ const restored = await secureStorage.getItem('blob', { encoding: 'buffer' })
 
 ## API reference
 
-## API reference
-
-## API reference
-
 <!-- GENERATED: ORO_API_REFERENCE_START -->
 
 ### Module specifiers
@@ -7106,10 +7138,6 @@ onNotificationResponse((event) => {
   console.log('response:', event)
 })
 ```
-
-## API reference
-
-## API reference
 
 ## API reference
 
@@ -7610,10 +7638,6 @@ console.log(status)
 
 ## API reference
 
-## API reference
-
-## API reference
-
 <!-- GENERATED: ORO_API_REFERENCE_START -->
 
 ### Module specifiers
@@ -7963,10 +7987,6 @@ chat.addEventListener('message', (event) => {
 await chat.message({ prompt: 'Hello!' })
 await chat.generate({ prompt: 'Tell me a joke.' })
 ```
-
-## API reference
-
-## API reference
 
 ## API reference
 

@@ -304,6 +304,13 @@ For regex bytecode values (`regexp`):
   required to be null‑terminated.
 - At ABI boundaries, `regexp` uses the same C shape as `SilkString`, but C code
   must treat it as an opaque `(ptr, len)` byte span (not a C string).
+- Runtime regex helpers validate malformed or undersized foreign `regexp`
+  payloads before execution and report them as invalid input, but C code must
+  still not fabricate regex bytecode as if it were a stable public format.
+- Runtime regex helpers also track which bytecode buffers they actually
+  allocated: only `std::regex::RegExp.compile(...)` produces an owned regex
+  allocation, while borrowed/literal/foreign `regexp` views are ignored by the
+  regex free/drop path instead of being freed as if they were runtime-owned.
 
 For the embedding ABI (`libsilk.a`):
 

@@ -43,7 +43,7 @@ fn main () -> int {
 - A `break` outside a loop is a type-check error (`docs/compiler/diagnostics.md`,
   `E2007`).
 
-## Current behavior
+## Implementation Status (Current Compiler Subset)
 
 Implemented:
 
@@ -51,7 +51,7 @@ Implemented:
   end-to-end.
 - `break;` outside of a loop is rejected (`E2007`).
 
-Examples that exercise this surface:
+Examples that exercise the implemented subset:
 
 - `tests/silk/pass_loop_basic.slk`
 - `tests/silk/pass_while_bool.slk`

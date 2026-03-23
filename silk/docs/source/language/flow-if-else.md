@@ -2,12 +2,11 @@
 
 The `if` / `else` construct provides branching based on a boolean condition.
 
-`if` works in both roles:
+In the current compiler subset, `if` is a **statement** that selects which
+block of statements executes. The broader language design also includes
+expression-oriented forms; those are documented as planned where relevant.
 
-- as a **statement** that selects which block executes, and
-- as an **expression** for the documented value-producing subset.
-
-## Surface Syntax
+## Surface Syntax (Current Implemented Subset)
 
 Minimal form:
 
@@ -79,7 +78,7 @@ Semantics:
   - the `then` block.
   They are not in scope in the `else` block, and they do not escape the `if`.
 
-Parsing note:
+Parsing note (current subset):
 
 - `&&` at the top level is parsed as a clause separator. Use parentheses if a
   clause needs its own `&&` / `||` / `??` expression at the top level.
@@ -101,7 +100,7 @@ fn main () -> int {
 }
 ```
 
-Supported patterns (same as `match` expressions; see
+Supported patterns in the current subset (same as `match` expressions; see
 `docs/language/flow-match.md`):
 
 - optionals: `None`, `Some(name)`, `Some(_)`
@@ -162,8 +161,8 @@ Notes:
   let v: int = if a { 1 } else if b { 2 } else { 3 };
   ```
 
-- Today, the `{ ... }` bodies of `if` expressions contain a single expression
-  (not a full statement block).
+- Current compiler subset restriction: the `{ ... }` bodies of `if` expressions
+  contain a single expression (not a full statement block).
 
 ## Semantics
 
@@ -189,7 +188,7 @@ For `if` expressions:
 - The expression’s result type is the shared branch type (or the expected type
   when the expression is type-directed).
 
-## `else if` Chains
+## `else if` Chains (Planned vs Current Subset)
 
 The language supports chained conditions (“else-if chains”). The compiler
 parses `else if` as sugar for nesting an `if` inside the `else` block:
@@ -272,7 +271,7 @@ fn main () -> int {
 }
 ```
 
-## Implemented today
+## Implementation Status (Current Compiler Subset)
 
 Implemented end-to-end:
 

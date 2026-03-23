@@ -4,9 +4,9 @@ Blocks (`{ ... }`) group statements and introduce a new scope.
 
 Canonical spec: `docs/language/flow-blocks-statements.md`.
 
-## Reference
+## Status
 
-- Canonical spec and current behavior: `docs/language/flow-blocks-statements.md`
+- Implemented subset + syntax notes: `docs/language/flow-blocks-statements.md`
 
 ## Example: scope boundaries
 ```silk

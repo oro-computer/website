@@ -5,7 +5,8 @@ The `match` expression provides structured pattern matching.
 Key ideas:
 
 - A `match` selects one of several branches based on a scrutinee expression.
-- Arm guards of the form `pattern if cond => ...` are not implemented in any
+- The full language design includes richer patterns and arm guards, but the
+  current shipped subset documented here does not implement `if` guards in any
   `match` form yet.
 - `match` is an expression; all arms must be compatible in type.
 
@@ -14,9 +15,14 @@ The compiler must:
 - Enforce exhaustiveness rules (where specified).
 - Type check each arm and compute a consistent result type.
 
-## Surface Syntax
+## Surface Syntax (Initial Implemented Subset)
 
-`match` is accepted as an *expression* of the form:
+The full language design includes rich pattern matching, guards, and matching
+over many scrutinee types. The current compiler implementation supports only a
+narrow, explicitly documented subset so we can validate end-to-end lowering and
+code generation.
+
+In the initial subset, `match` is accepted as an *expression* of the form:
 
 ```silk
 match <scrutinee> {
@@ -28,19 +34,19 @@ match <scrutinee> {
 Notes:
 
 - Arms are separated by commas; a trailing comma is permitted.
-- Arm bodies are expressions (not blocks).
-- Expression-form `match` is implemented for:
+- In the initial subset, arm bodies are expressions (not blocks).
+- In the current compiler, expression-form `match` is implemented for:
   - optionals,
   - primitive integers,
   - enums,
   - type unions,
   - and recoverable `Result`-style values.
-- Guard clauses of the form `pattern if cond => ...` are unsupported
+- Guard clauses of the form `pattern if cond => ...` are currently unsupported
   across all of those subsets.
 
 ### Optional Matching (`T?`)
 
-For optionals:
+For optionals, the implemented subset is:
 
 - The scrutinee expression must have optional type `T?` (`Option(T)`), where `T`
   is a payload type supported by the current backend subset.
@@ -65,12 +71,12 @@ fn main () -> int {
 }
 ```
 
-### Integer Matching (Primitive Integers)
+### Integer Matching (Primitive Integers) (Implemented Subset)
 
 The compiler also supports a small `match` subset for integer-like primitive
 scrutinees.
 
-Current behavior:
+Implemented initial subset:
 
 - The scrutinee expression must have a primitive integer type in the current
   backend subset (`int`, `i64`, `u64`, and the fixed-width integer primitives).
@@ -95,12 +101,12 @@ fn main () -> int {
 }
 ```
 
-### Enum Matching (`enum`)
+### Enum Matching (`enum`) (Implemented Subset)
 
 The language design supports matching over user-defined `enum` types
 (`docs/language/enums.md`).
 
-Current behavior:
+Implemented initial subset:
 
 - The scrutinee expression must have an enum type `E` (including an
   instantiated generic enum in module-set builds).
@@ -112,16 +118,16 @@ Current behavior:
   `R::Ok(v)` / `R::Err(e)`), or patterns may omit the qualifier and use the
   variant name directly.
 - No guards (`if ...`) are implemented yet.
-- In expression form, enum matches must be exhaustive by explicit variant
-  coverage:
-  - there must be exactly one arm for each enum variant, and
-  - wildcard `_` arms are not part of the expression-form enum subset.
+- In expression form, enum matches must still be exhaustive:
+  - either there is exactly one explicit arm for each enum variant,
+  - or a final wildcard `_` arm covers every remaining unmatched variant,
+  - and if `_` is used, it may appear at most once and must be the final arm.
 
-### Type Union Matching (`T1 | T2 | ...`)
+### Type Union Matching (`T1 | T2 | ...`) (Implemented Subset)
 
 The language supports matching over **type unions** (`docs/language/type-unions.md`).
 
-Current behavior:
+Implemented initial subset:
 
 - The scrutinee expression must have a union type `T1 | ... | Tn`.
 - Patterns are restricted to typed binders:
@@ -132,7 +138,7 @@ Current behavior:
 - Matches must be exhaustive: there must be exactly one arm per union member
   type (order is not significant).
 
-## Semantics
+## Semantics (Initial Subset)
 
 - The scrutinee expression is evaluated exactly once.
 - The selected arm is chosen based on the scrutinee value; non-selected arms
@@ -140,7 +146,7 @@ Current behavior:
 - For `Some(v) => ...`, the binder `v` is in scope only within that arm and has
   type `T` (the inner payload type of the scrutinee `T?`).
 - The result type of a `match` expression is the common type of its arms; all
-  arms must type-check to the same result type.
+  arms must type-check to the same result type in the initial subset.
 
 ## `match` Statement (Block Arms)
 
@@ -171,12 +177,12 @@ An optional trailing semicolon is permitted after the closing brace:
 match (x) { _ => { } };
 ```
 
-Today, the statement form is supported for:
+In the current compiler subset, the statement form is supported for:
 
 - ordinary value matching (no typed-error contract), and
 - typed error handling (`docs/language/typed-errors.md`).
 
-### Ordinary value matching
+### Ordinary value matching (implemented subset)
 
 When the scrutinee expression is an ordinary value (it does *not* have a typed
 error contract), the statement form supports the same scrutinee + pattern
@@ -206,12 +212,12 @@ Notes:
 
 - The preferred single-branch control-flow forms remain `if let`, `let ... else`,
   and `while let` when they fit naturally.
-- For enums, wildcard support is not end-to-end yet:
-  - expression-form enum matches require explicit arms for every variant,
-  - statement-form ordinary enum matches also still require explicit variant
-    coverage in the current backend,
-  - and although the checker already reserves `_` as a catch-all pattern for
-    ordinary enum statements, lowering still rejects that form today.
+- For ordinary enum matches, both expression and statement form now support one
+  final wildcard `_` arm end to end.
+- That wildcard arm:
+  - may appear at most once,
+  - must be the final arm,
+  - and must cover at least one still-unmatched variant.
 
 Enum variant pattern note (statement form):
 
@@ -222,9 +228,9 @@ Enum variant pattern note (statement form):
 - `match (stream) { Error => { ... } }` therefore treats `Error` as a binder
   arm, while `match (stream) { IOStream::Error => { ... } }` matches the unit
   enum variant.
-- The checker reserves `_` as a catch-all arm for ordinary enum statements, but
-  the current backend still rejects that form, so end-to-end ordinary
-  enum statements still need explicit variant coverage today.
+- Ordinary enum statement matches now also allow one final `_` catch-all arm,
+  with the same final-arm and non-redundancy rules as expression-form enum
+  matches.
 
 ### Typed error matching (Terminal Arm Rule)
 
@@ -245,10 +251,10 @@ Key semantic rule (Terminal Arm Rule):
 - If `expr` is an error-producing expression (its signature includes `T | ErrorType...`),
   then any arm that matches an `error` type must end in a terminal statement.
 
-Current behavior:
+Implementation status:
 
 - The compiler currently implements `match` as an expression for the documented
-  surface:
+  current subset:
   - optionals (`T?`),
   - primitive integers,
   - type unions,
@@ -258,16 +264,16 @@ Current behavior:
   expression or statement form.
 - The statement form is implemented for:
   - ordinary values in the supported subset (block arms), and
-  - typed errors (`docs/language/typed-errors.md`).
+  - typed errors as part of the typed errors feature work (`docs/language/typed-errors.md`).
 
 Note: the compiler also allows the `match` statement form to destructure
 recoverable `Result`-style values. This form does not trigger the Terminal Arm
 Rule because it is not a `T | ...` typed-error expression.
 
-### Result Matching (`Ok(...)` / `Err(...)`)
+### Result Matching (`Ok(...)` / `Err(...)`) (Implemented Subset)
 
 The `match` expression also supports a small subset for
-recoverable “success or error” values. This includes:
+recoverable “success or error” values. In the initial subset, this includes:
 
 - `std::result::Result(T, E)` (an `enum` with `Ok(T)` and `Err(E)` variants), and
 - “Result-like” structs of the form `{ value: T?, err: E? }`.
@@ -280,7 +286,7 @@ Patterns:
 - `Ok(name)` / `Ok(_)`
 - `Err(name)` / `Err(_)`
 
-Rules:
+Rules (current subset):
 
 - Enum form:
   - The scrutinee expression must have an enum type with variants `Ok` and `Err`.
@@ -296,20 +302,8 @@ Rules:
     variant),
   - for struct scrutinees, there must be exactly one `Ok(...)` arm and exactly
     one `Err(...)` arm.
-- No guards are implemented for result arms either:
-  - `Ok(v) if cond => ...`
-  - `Err(e) if cond => ...`
 - In `Ok(v) => ...`, the binder `v` has type `T`.
 - In `Err(e) => ...`, the binder `e` has type `E`.
-
-Until guards land, write the condition inside the selected arm body:
-
-```silk
-let s: String = match String.from_string("hello") {
-  Ok(v) => if v.len > 0 { v } else { String.empty() },
-  Err(_) => String.empty(),
-};
-```
 
 Example:
 

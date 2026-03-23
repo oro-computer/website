@@ -1,7 +1,5 @@
 # Web IDL (`std::idl::web`)
 
-Status: **Implemented subset**.
-
 This module provides a Web IDL parser plus an ergonomic, query-oriented API for
 inspecting the parsed document.
 
@@ -15,7 +13,17 @@ The long-term goal is to support bidirectional binding generation:
 This first slice focuses on a stable, testable parsing substrate that can be
 grown as `silk bindgen` work lands.
 
-## Exported API
+## Design Goals
+
+- **Lossless enough for bindgen**: preserve source spans for identifiers and
+  raw values so downstream tools can generate bindings and diagnostics.
+- **Ergonomic queries**: parse once, then ask the document for interfaces,
+  members, argument lists, and types via IDs and ranges (no recursion required
+  for common workflows).
+- **Compact storage**: avoid heavyweight allocation patterns; store
+  parsed data in compact slot vectors (`std::vector::Vector(i64)`).
+
+## High-Level API
 
 - `std::idl::web::parse(source: string) -> Result(Document, ParseError)`
 - `std::idl::web::parse_owned(source: std::strings::String) -> Result(Document, ParseError)`
@@ -40,31 +48,7 @@ The `Document` API exposes:
 All names and raw values are represented as `SpanId`s that can be rendered to
 `string` views via `Document.span_text(span_id)`.
 
-## Examples
-
-```silk
-import std::idl::web;
-
-fn main () -> int {
-  let source = "interface Window { attribute DOMString name; };";
-
-  match (std::idl::web::parse(source)) {
-    Ok(doc) => {
-      if doc.def_count() != 1 as i64 { return 2; }
-      let name = doc.def_name(0 as i64) ?? 0 as i64;
-      if doc.span_text(name) != Some("Window") { return 3; }
-      return 0;
-    },
-    Err(_) => {
-      return 1;
-    },
-  }
-}
-```
-
-## Considerations
-
-### Grammar coverage
+## Current Grammar Coverage (Initial)
 
 Implemented as a **lenient** parser that can preserve and skip unknown
 constructs:
@@ -90,7 +74,7 @@ constructs:
 
 The grammar coverage will expand as the bindgen pipeline becomes concrete.
 
-### Bindgen-oriented behavior
+## Notes For Bindgen
 
 The parser intentionally preserves:
 
@@ -98,19 +82,3 @@ The parser intentionally preserves:
 - raw spans for constant/default values,
 - enough structural information (member kinds, argument lists, type AST) to map
   Web platform APIs to a generated Silk surface and to synthesize JS host glue.
-
-## See also
-
-- [`std::js-ecma`](?p=std/js-ecma)
-- [`std::strings`](?p=std/strings)
-- [`std::vector`](?p=std/vector)
-
-## Design goals
-
-- **Lossless enough for bindgen**: preserve source spans for identifiers and
-  raw values so downstream tools can generate bindings and diagnostics.
-- **Ergonomic queries**: parse once, then ask the document for interfaces,
-  members, argument lists, and types via IDs and ranges (no recursion required
-  for common workflows).
-- **Compact storage**: avoid heavyweight allocation patterns; store
-  parsed data in compact slot vectors (`std::vector::Vector(i64)`).

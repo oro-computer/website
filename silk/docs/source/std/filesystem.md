@@ -1,6 +1,6 @@
 # `std::fs`
 
-Status: **Implemented subset**. `std::fs` provides a small hosted
+`std::fs` provides a small hosted
 filesystem API backed by `std::runtime::fs`. It exposes a low-level `File`
 handle and byte-oriented I/O primitives, staying within the current compiler’s
 feature set.
@@ -8,9 +8,14 @@ feature set.
 The public `std::fs` surface does not expose POSIX `errno`. Runtime-specific
 details live under `std::runtime`.
 
-## Description
+See also:
 
-### Platform notes
+- `docs/std/io.md` (shared I/O error conventions and reader/writer traits)
+- `docs/std/path.md` (path manipulation helpers)
+- `docs/std/runtime.md` (runtime interface layer and pluggable runtimes)
+- `docs/std/conventions.md`
+
+## Platform notes
 
 - Hosted baseline (`linux/x86_64`): `std::runtime::fs` delegates to
   `std::runtime::posix::fs` and uses POSIX syscalls.
@@ -24,7 +29,6 @@ details live under `std::runtime`.
   - `.` and `..` segments are normalized; `..` cannot escape above the sandbox root.
 
 ## Exported API
-
 A hosted POSIX baseline exists today in `std/fs.slk`. The low-level OS bindings
 are provided via `std::runtime::fs` (which defaults to a POSIX implementation
 in the shipped stdlib).
@@ -202,6 +206,21 @@ export fn rmdir (path: string) -> FSFailed?;
 export fn mkdir_all (path: string, mode: int) -> FSError?;
 ```
 
+## Implemented `std::interfaces` surface
+
+The filesystem subset already participates in the shared stdlib protocol story:
+
+- `File` implements `std::interfaces::Drop`.
+- `MMap` implements `std::interfaces::Len`, `std::interfaces::IsEmpty`, and
+  `std::interfaces::Drop`.
+- `Dir` implements `std::interfaces::Iterator(DirEntryResult)` and
+  `std::interfaces::Drop`.
+
+These protocol impls are the standard way to think about the ownership model of
+filesystem handles and mappings in Silk: files/directories/mappings own hosted
+resources and clean them up via `Drop`, while `MMap` also behaves like a
+view-like byte source with a logical length.
+
 Notes:
 
 - These functions call POSIX/libc `access(2)` via `ext`. Executable outputs
@@ -239,33 +258,7 @@ Notes:
     baseline). `std::fs` does not yet wrap this in a higher-level temp-file
     API.
 
-## Examples
-
-```silk
-import std::fs;
-
-fn main () -> int {
-  match (std::fs::write_file_string("notes.txt", "silk\n", 420)) {
-    Ok(_) => {},
-    Err(_) => return 1,
-  }
-
-  match (std::fs::read_file_string("notes.txt")) {
-    Ok(mut contents) => {
-      let ok = (contents as string) == "silk\n";
-      contents.drop();
-      return if ok { 0 } else { 2 };
-    },
-    Err(_) => {
-      return 3;
-    },
-  }
-}
-```
-
-## Considerations
-
-### Scope
+## Scope
 
 `std::fs` is responsible for:
 
@@ -281,17 +274,7 @@ Hosted baseline:
 - APIs that accept `string` paths must specify encoding behavior. The initial
   baseline assumes UTF-8 on POSIX but does not require it for all operations.
 
-## See also
-
-- [`std::io`](?p=std/io)
-- [`std::path`](?p=std/path)
-- [`std::runtime`](?p=std/runtime)
-- [`std::stream`](?p=std/stream)
-
-## Design goals
-
-### Broader filesystem surface
-
+## Core Types
 - `Path` / `PathBuf` for path manipulation (borrowed vs owned).
 - `File` for open file handles.
 - `Dir` / directory iteration.
@@ -323,5 +306,6 @@ export fn open (path: string, opts: OpenOptions) -> Result(File, FsError);
 export fn read_to_string (alloc: std::memory::Allocator, path: string) -> Result(std::strings::String, FsError);
 ```
 
+## Considerations
 - Symlink support and canonicalization.
 - File watching (platform-dependent).

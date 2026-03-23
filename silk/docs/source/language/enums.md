@@ -12,7 +12,7 @@ Use enums to model:
 If your goal is “a function can fail with one of several error shapes”, prefer
 typed errors (`docs/language/typed-errors.md`) over enums.
 
-## Current behavior
+## Implementation Status (Current Compiler Subset)
 
 What works end-to-end today (parser → checker → lowering → codegen):
 
@@ -32,16 +32,29 @@ What works end-to-end today (parser → checker → lowering → codegen):
   - enums may be used in parameter lists and return types,
   - error-producing functions may return enums (`-> E | ErrorType...`), and `call()?` works when the success type is an enum.
 - **`match` expression over enums**:
-  - patterns are restricted to enum variants (`E::A`, `E::Data(x)`) and may use shorthand (`A`, `Data(x)`) when the scrutinee type is the enum,
+  - patterns are restricted to enum variants (`E::A`, `E::Data(x)`) and may
+    use shorthand (`A`, `Data(x)`) when the scrutinee type is the enum,
   - binders may be names or `_`,
-  - no guarded arms (`if ...`) yet in either expression or statement form,
-  - and expression-form matches must be *exhaustive* by explicit variant
-    coverage.
+  - no guards (`if ...`) yet,
+  - and expression-form matches must still be *exhaustive* in the current
+    subset:
+    - either by explicit arm coverage for every variant,
+    - or by a single final wildcard `_` arm that covers all remaining
+      unmatched variants.
+- **`??` over ordinary two-variant enums**:
+  - for a named enum with exactly two declared variants, `value ?? fallback`
+    treats the first declared variant as the “success” arm,
+  - if that first variant is unit, the expression yields that enum value,
+  - if that first variant carries exactly one payload, the expression yields
+    that payload,
+  - and if the enum value is the second declared variant, the fallback
+    expression is evaluated.
 - **`match` statement over ordinary enum values**:
   - enum variant arms must use the qualified form `E::Variant(...)`,
   - bare identifiers remain reserved for binder-style arms,
-  - and the checker already reserves `_` as a catch-all arm, but lowering does
-    not support that form end to end yet.
+  - and both expression-form and statement-form ordinary enum matches now allow
+    one final `_` catch-all arm, which must cover at least one remaining
+    variant.
 - **Generic enums (monomorphized)**:
   - `enum Name(T, ...) { ... }` declarations are supported in module-set builds
     that run monomorphization,
@@ -57,18 +70,17 @@ What works end-to-end today (parser → checker → lowering → codegen):
   - instance methods are callable as `value.method(...)` when the first
     parameter is a receiver (`self: &EnumName` / `mut self: &EnumName`),
   - the special `constructor` method used by `new Type(...)` is for `struct`
-    types; enums do not support `constructor` methods.
+    types; enums do not support `constructor` methods in the current subset.
 
 Not implemented yet (or not yet stable/documented):
 
 - Guards in enum match arms (`E::A if cond => ...`).
-- Wildcard/catch-all enum match arms (`_ => ...`) in expression form.
 - A stable ABI story for passing/returning enums across the C99 boundary (do
   not assume an enum layout until it is specified in `docs/compiler/abi-libsilk.md`).
 
-When the compiler rejects an enum construct in the documented enum surface, the
-most common error is `E2002` (“unsupported expression in the current subset”).
-Type mismatches inside enum constructors or match arms are `E2001` (“type mismatch”).
+When the compiler rejects an enum construct in the current subset, the most
+common error is `E2002` (“unsupported expression in the current subset”). Type
+mismatches inside enum constructors or match arms are `E2001` (“type mismatch”).
 
 ## Surface Syntax
 
@@ -115,7 +127,49 @@ fn main () -> int {
 
 Notes:
 
-- `E::A()` and `A()` are invalid (unit variants are not callable).
+- `E::A()` and `A()` are invalid in the current subset (unit variants are not callable).
+
+## Two-Variant `??` Shortcut
+
+When a named enum declares exactly two variants, the `??` operator may be used
+as a compact success/fallback form.
+
+Rules in the current subset:
+
+- declaration order matters: the first declared variant is the “success” case,
+  and the second declared variant triggers the fallback,
+- if the first variant is unit, `value ?? fallback` yields that enum value,
+- if the first variant carries exactly one payload, `value ?? fallback` yields
+  that payload,
+- if the first variant carries more than one payload element, use `match`
+  instead,
+- the second variant may be unit or may carry payloads; its payload is ignored
+  by the `??` form and the fallback expression runs.
+- the right-hand side is still an expression in the current grammar; terminal
+  statements such as `return`, `break`, and `continue` are not accepted there
+  yet.
+
+Examples:
+
+```silk
+enum Ready {
+  Go,
+  Stop,
+}
+
+fn require_ready (r: Ready) -> Ready {
+  return r ?? Ready::Go;
+}
+
+enum ParsedPort {
+  Port(int),
+  Invalid,
+}
+
+fn port_or_default (p: ParsedPort) -> int {
+  return p ?? 80;
+}
+```
 
 ### Tuple variants
 
@@ -140,8 +194,8 @@ fn main () -> int {
 
 Notes:
 
-- `E::Data` by itself is not a value (tuple variants must be constructed with
-  `(...)`).
+- `E::Data` by itself is not a value in the current subset (tuple variants must
+  be constructed with `(...)`).
 - If a tuple-variant constructor argument has the wrong type, you get `E2001`.
 - If the argument count does not match the variant definition, the compiler
   currently rejects the construct with `E2002`.
@@ -208,18 +262,20 @@ Binders:
 - shadow outer bindings of the same name (because they create a new binding in
   the arm’s environment).
 
-### Exhaustiveness
+### Exhaustiveness (current subset)
 
-Enum exhaustiveness is split by `match` form:
+In the current subset, enum exhaustiveness is split by `match` form:
 
 - Expression form:
-  - there must be exactly one arm per enum variant,
-  - each variant must appear exactly once,
-  - and wildcard arms (`_ => ...`) are not supported.
+  - either there is exactly one arm per enum variant,
+  - or a single final wildcard arm (`_ => ...`) covers the remaining unmatched
+    variants,
+  - explicit variant arms must not repeat the same variant,
+  - and if `_` is used, it may appear at most once and must be the final arm.
 - Statement form over ordinary enum values:
   - end-to-end today, there must be exactly one qualified arm per variant,
   - and although the checker recognizes `_` as a catch-all arm, lowering still
-    rejects that form in the current backend.
+    rejects that form in the current backend subset.
 
 If a match is not exhaustive:
 
@@ -247,6 +303,23 @@ fn main () -> int {
     return 1;
   }
   return 0;
+}
+```
+
+### Example: unit enum match with final wildcard
+
+```silk
+enum State {
+  Ready,
+  Busy,
+  Closed,
+}
+
+fn score (s: State) -> int {
+  return match s {
+    Ready => 10,
+    _ => 20,
+  };
 }
 ```
 
@@ -301,7 +374,7 @@ fn main () -> int {
 }
 ```
 
-## Representation
+## Representation (Current Backend Subset)
 
 Enums are values. In the current IR-backed lowering, an enum value is lowered to
 scalar slots as:
@@ -322,18 +395,20 @@ Conceptually:
 Only the active variant’s payload region is meaningful for a given value; other
 payload regions are unspecified.
 
-This representation is an implementation detail rather than a downstream ABI
-contract.
+This representation is an implementation detail and is expected to evolve (for
+example, toward a tag + max-payload “union-style” layout) as the compiler and
+ABI mature.
 
 ## Common Pitfalls
 
-- **Forgetting parentheses**: `E::Data(7)` is valid, but `E::Data` is not a
-  value (error `E2002`).
+- **Forgetting parentheses**: `E::Data(7)` is valid, but `E::Data` is not a value
+  in the current subset (error `E2002`).
 - **Calling a unit variant**: `E::A` is a value; `E::A()` is rejected (`E2002`).
 - **Wrong binder count**: `E::Pair(a)` does not match `Pair(int, int)` (`E2002`).
-- **Non-exhaustive matches**: you must list every variant (error `E2002`).
+- **Non-exhaustive matches**: you must list every variant (error `E2002` in the
+  current subset).
 - **Assuming enum equality is defined**: use `match` to inspect the tag/payload;
-  the current backend does not define `==`/`!=` over enums yet.
+  the current backend subset does not define `==`/`!=` over enums yet.
 
 ## Related Documents
 

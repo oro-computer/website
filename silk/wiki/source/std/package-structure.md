@@ -7,8 +7,7 @@ Canonical doc: `docs/std/package-structure.md`.
 
 ## Status
 
-- Implemented subset: std-root resolution, `std::...` import mapping, and
-  archive-based std linkage are documented in the canonical page.
+- Design + initial implementation: std-root resolution and `std::...` import mapping are implemented.
 - Details: `docs/std/package-structure.md`
 
 ## How `std::` resolves

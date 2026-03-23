@@ -1,8 +1,8 @@
 # Blocks and Statement Composition
 
 Blocks group statements, establish lexical scopes, and provide the “body” form
-for structured control-flow constructs like `if`, `while`, and the block-armed
-`match` statement.
+for structured control-flow constructs like `if`, `while`, and the `match`
+statement used for typed errors.
 
 ## Surface Syntax
 
@@ -18,9 +18,9 @@ A block is a sequence of zero or more statements delimited by braces:
 
 The empty block `{}` is permitted.
 
-## Statements
+## Statements (Current Implemented Subset)
 
-Silk supports these statement forms (see
+The current compiler subset supports these statement forms (see
 `docs/language/grammar.md` for exact syntax):
 
 - Local bindings:
@@ -28,8 +28,8 @@ Silk supports these statement forms (see
   - `let` and `let mut` (and `var` as an alias for `let mut`).
 - Specification-only declarations: `#const` (Formal Silk; not usable in runtime expressions).
 - Structured blocks: `async { ... }` / `task { ... }` (see `docs/language/concurrency.md`).
-- Expression statements currently accept calls, assignments, and
-  increment/decrement (`docs/language/flow-expression-statements.md`).
+- Expression statements: limited to calls, assignments, and increment/decrement
+  in the current subset (`docs/language/flow-expression-statements.md`).
 - Flow control:
   - `if` / `else` statements (including `if let` pattern destructuring),
   - `while` loops,
@@ -37,8 +37,7 @@ Silk supports these statement forms (see
   - `return`,
   - `assert`,
   - `panic` (typed errors),
-  - `match` statement (ordinary values and typed errors; see
-    `docs/language/flow-match.md` and `docs/language/typed-errors.md`).
+  - `match` statement (typed errors; see `docs/language/typed-errors.md`).
 
 ## Semantics
 
@@ -64,7 +63,7 @@ A block introduces a lexical scope:
   - Any produced runtime value is cleaned up at end-of-statement (not at scope
     exit).
 
-Destructuring `let` bindings bind multiple locals from a
+Destructuring `let` bindings (implemented subset) bind multiple locals from a
 single struct value:
 
 - Positional (field order):
@@ -91,7 +90,7 @@ let records: Record[] = [{ id: 123, data: "a" }, { id: 456, data: "b" }];
 let [a, b] = records;
 ```
 
-Rules:
+Rules (current subset):
 
 - Only flat patterns are supported (no nested destructuring).
 - The initializer is required.
@@ -132,7 +131,7 @@ fn main () -> int {
 }
 ```
 
-Rules:
+Rules (current subset):
 
 - The initializer is required.
 - The initializer must have an enum type `E` (including a monomorphized generic enum).
@@ -155,7 +154,7 @@ let <pattern> = <expr> else {
 };
 ```
 
-Semantics:
+Semantics (current subset):
 
 - The initializer expression is evaluated exactly once.
 - If the pattern matches, the pattern binders are introduced into the **current
@@ -198,9 +197,10 @@ fn main () -> int {
 - the binding is immutable (there is no `const mut`),
 - a `const` binding is a normal runtime value (unlike `#const`), but its value
   is computed by the compiler at compile time and does not incur runtime
-  computation cost.
+  computation cost in the current compiler subset.
 
-Today, compile-time evaluation for runtime `const` bindings is restricted to:
+In the current compiler subset, compile-time evaluation for runtime `const`
+bindings is restricted to:
 
 - scalar primitive types (`bool`, integer/float scalars, `char`, `Instant`, `Duration`),
 - compile-time POD `struct` types whose fields are compile-time scalar value types and that do not require `Drop`, and
@@ -230,12 +230,12 @@ Formal Silk declarations (`#const`) are compile-time-only names intended for spe
 in runtime expressions (see `docs/language/formal-verification.md` and
 `docs/compiler/diagnostics.md`, `E2014`).
 
-### Blocks as Expressions
+### Blocks as Expressions (Planned)
 
 The broader language design includes expression-oriented flow constructs (for
 example `match` expressions today and `if` expressions).
 
-Today:
+In the current compiler subset:
 
 - a block is not an expression and does not produce a value; it is purely a
   statement list used as the body of constructs.
@@ -285,7 +285,7 @@ fn main () -> int {
 }
 ```
 
-## Implemented today
+## Implementation Status (Current Compiler Subset)
 
 Implemented end-to-end:
 

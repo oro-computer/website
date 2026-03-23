@@ -54,6 +54,12 @@ Inspect a remote document:
 sage https://example.com/
 ```
 
+Render directly to `stdout`:
+
+```bash
+sage --print README.md
+```
+
 ## What `sage` accepts
 
 `sage` accepts:
@@ -103,4 +109,3 @@ See [Configuration](?p=cli/configuration) and [Syntax and cache](?p=cli/syntax-a
 - Adopt it in shell workflows: [Pager workflows](?p=guides/pager-workflows)
 - Tune the CLI surface: [Options](?p=cli/options)
 - Add automation: [Plugins quickstart](?p=guides/plugins-quickstart)
-

@@ -18,6 +18,10 @@
   const defaultId = app.getAttribute("data-default") || "start";
   const githubRepo = app.getAttribute("data-github-repo") || "";
   const githubRef = app.getAttribute("data-github-ref") || "";
+  const githubPathPrefixes = (app.getAttribute("data-github-path-prefixes") || "")
+    .split(/[,\s]+/)
+    .map((value) => normalizeRelPath(value))
+    .filter(Boolean);
   const inlineLang = app.getAttribute("data-inline-lang") || "";
 
   const titleSuffix =
@@ -107,23 +111,26 @@
     const path = normalizeRelPath(raw);
     if (!path) return null;
 
-    const repoPath =
-      path === "build.zig" ||
-      path === "build.zig.zon" ||
-      path === "src" ||
-      path === "tests" ||
-      path === "examples" ||
-      path === "include" ||
-      path === "vendor" ||
-      path === "c-tests" ||
-      path === "std" ||
-      path.startsWith("src/") ||
-      path.startsWith("tests/") ||
-      path.startsWith("examples/") ||
-      path.startsWith("include/") ||
-      path.startsWith("vendor/") ||
-      path.startsWith("c-tests/") ||
-      path.startsWith("std/");
+    const repoPath = githubPathPrefixes.length
+      ? githubPathPrefixes.some(
+          (prefix) => path === prefix || path.startsWith(`${prefix}/`)
+        )
+      : path === "build.zig" ||
+        path === "build.zig.zon" ||
+        path === "src" ||
+        path === "tests" ||
+        path === "examples" ||
+        path === "include" ||
+        path === "vendor" ||
+        path === "c-tests" ||
+        path === "std" ||
+        path.startsWith("src/") ||
+        path.startsWith("tests/") ||
+        path.startsWith("examples/") ||
+        path.startsWith("include/") ||
+        path.startsWith("vendor/") ||
+        path.startsWith("c-tests/") ||
+        path.startsWith("std/");
 
     if (!repoPath) return null;
 
@@ -889,6 +896,50 @@
         a.textContent = raw.toUpperCase();
         code.replaceWith(a);
         continue;
+      }
+
+      // Convert legacy raw viewer refs like `?p=compiler/package-manifests`
+      // into the corresponding docs/wiki links with a human title.
+      const rawPLink = raw.match(/^(?:(docs|wiki)\/)?\?p=([a-zA-Z0-9_./-]+)$/);
+      if (rawPLink) {
+        const targetKind = rawPLink[1] || kind;
+        const targetId = rawPLink[2];
+        const resolvedTitle = titleById.get(targetId) || targetId;
+        const plainTitle = stripBackticks(resolvedTitle);
+
+        const a = document.createElement("a");
+        a.href = viewerHref(targetKind, targetId);
+        if (plainTitle.startsWith("std::") || plainTitle.startsWith("oro:")) {
+          a.className = "docs-inline-code";
+          a.textContent = plainTitle;
+        } else {
+          a.className = "docs-inline-ref";
+          appendInlineCodeNodes(a, resolvedTitle);
+        }
+        code.replaceWith(a);
+        continue;
+      }
+
+      // Convert inline manpage references written as `silk-build` (1) into
+      // docs links, preserving the familiar manpage spelling in rendered copy.
+      const nextSibling = code.nextSibling;
+      if (nextSibling && nextSibling.nodeType === Node.TEXT_NODE) {
+        const nextText = String(nextSibling.textContent || "");
+        const manMatch = nextText.match(/^\s+\((\d)\)(.*)$/);
+        if (manMatch) {
+          const section = manMatch[1];
+          const rest = manMatch[2] || "";
+          const manId = `man/${raw}.${section}`;
+          if (titleById?.has?.(manId)) {
+            const a = document.createElement("a");
+            a.className = "docs-inline-ref";
+            a.href = viewerHref("docs", manId);
+            appendInlineCodeNodes(a, `\`${raw}\` (${section})`);
+            nextSibling.textContent = rest;
+            code.replaceWith(a);
+            continue;
+          }
+        }
       }
 
       // Convert Silk stdlib module specifiers like `std::task` or `std::io::async`

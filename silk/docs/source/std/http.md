@@ -1,11 +1,16 @@
 # `std::http`
 
-Status: **Implemented (hosted, blocking; HTTP/1.1 subset)**. `std::http` provides
+`std::http` provides
 HTTP/1.1 request/response parsing and a small blocking client/server connection
 API on top of `std::net::TCPStream`.
 
-## Description
+See also:
 
+- `docs/std/networking.md` (`std::net`)
+- `docs/std/https.md` (`std::https` layered on `std::tls`)
+- RFC 7230 / RFC 7231 (HTTP/1.1 message syntax and semantics)
+
+## Scope
 Implemented:
 
 - HTTP/1.1 request line and response status line parsing.
@@ -19,7 +24,7 @@ Not implemented (yet):
 - Streaming bodies (incremental read/write APIs).
 - Automatic decompression, redirects, cookies, proxies, etc.
 
-## Exported API
+## Public API (Current Compiler Subset)
 
 ```silk
 module std::http;
@@ -83,37 +88,13 @@ impl Connection {
 }
 ```
 
-### Errors
+Notes:
 
-- `DEFAULT_MAX_HEADER_BYTES`
-- `ERR_IO`
-- `ERR_TOO_LARGE`
-- `ERR_BAD_MESSAGE`
-- `ERR_UNSUPPORTED_TRANSFER_ENCODING`
-- `ERR_BAD_CONTENT_LENGTH`
-- `ERR_OUT_OF_MEMORY`
-- `Error`
+- This API is currently blocking and uses `Connection: close` by default.
+- Parsed messages own their backing bytes and return borrowed `string` views into
+  those bytes; the returned views are valid until the message is dropped.
 
-### Message types
-
-- `Request`
-  - `Request.parse(input) -> RequestResult`
-  - `method()`, `target()`, `version()`, `header(name)`, `body()`
-- `Response`
-  - `Response.parse(input) -> ResponseResult`
-  - `version()`, `status_code()`, `reason()`, `header(name)`, `body()`
-
-### Connection
-
-- `Connection.from_stream(stream) -> Connection`
-- `is_valid() -> bool`
-- `close() -> Error?`
-- client helpers: `write_request(...)`, `read_response()`
-- server helpers: `read_request()`, `write_response(...)`
-
-## Examples
-
-### Blocking client request
+## Example (Client)
 
 ```silk
 import std::http;
@@ -150,24 +131,10 @@ export fn main () -> int {
 }
 ```
 
-## Considerations
-
-### Ownership and blocking behavior
-
-- This API is currently blocking and uses `Connection: close` by default.
-- Parsed messages own their backing bytes and return borrowed `string` views into
-  those bytes; the returned views are valid until the message is dropped.
-
-### Protocol and validation rules
+## Validation Rules
 
 - `Content-Length` must parse as a non-negative decimal value.
 - When `Transfer-Encoding` is present, only `"identity"` and `"chunked"` are
   accepted; other encodings fail with `ERR_UNSUPPORTED_TRANSFER_ENCODING`.
 - Request/response header blocks are limited by `DEFAULT_MAX_HEADER_BYTES`
   (and per-connection configuration where applicable).
-
-## See also
-
-- [`std::net`](?p=std/networking)
-- [`std::https`](?p=std/https)
-- RFC 7230 / RFC 7231

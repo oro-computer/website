@@ -44,6 +44,12 @@ sage https://example.com/
 sage ssh://user@example.com/etc/hosts
 ```
 
+Render directly to `stdout` without entering the TUI:
+
+```bash
+sage --print README.md
+```
+
 ## Recommended reading path
 
 1. [Getting started](?p=guides/getting-started)
@@ -56,4 +62,3 @@ sage ssh://user@example.com/etc/hosts
 8. [Diagnostics](?p=cli/diagnostics)
 9. [JavaScript runtime overview](?p=javascript/runtime)
 10. [Module index](?p=javascript/module-index)
-

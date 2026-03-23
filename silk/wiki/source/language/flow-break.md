@@ -4,9 +4,9 @@
 
 Canonical spec: `docs/language/flow-break.md`.
 
-## Reference
+## Status
 
-- Canonical spec and current behavior: `docs/language/flow-break.md`
+- Implemented subset + diagnostics: `docs/language/flow-break.md`
 
 ## Syntax
 

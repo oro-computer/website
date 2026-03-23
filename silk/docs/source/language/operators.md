@@ -97,7 +97,28 @@ The language includes the following operators and delimiters:
       payload subset; see `docs/language/optional.md`), and
     - recoverable `Result`-like values, where `result ?? fallback` yields the
       `Ok(...)` payload and evaluates `fallback` only for `Err(...)`
-      (`docs/std/result.md`).
+      (`docs/std/result.md`), and
+    - ordinary named enums with exactly two declared variants, where the first
+      declared variant is the “success” arm:
+      - if the first variant is unit, `value ?? fallback` yields that enum
+        value,
+      - if the first variant carries exactly one payload, it yields that
+        payload,
+      - and if the value is the second variant, `fallback` is evaluated.
+    - The right-hand side may be either:
+      - an ordinary fallback expression, or
+      - one of the narrow terminal control-flow forms accepted only after
+        `??`:
+        - `value ?? return expr`
+        - `value ?? break`
+        - `value ?? continue`
+    - `return`, `break`, and `continue` keep their normal statement validity
+      rules:
+      - `return` must match the enclosing function result type,
+      - `break` and `continue` are only valid inside loops.
+    - This does not make those control-flow forms general expressions
+      elsewhere; the grammar extension is specific to the right-hand side of
+      `??`.
     The `?` token is used both in type annotations (`T?`) and as the postfix
     typed error propagation operator for error-producing calls (`call()?`; see
     `docs/language/typed-errors.md`).
@@ -297,7 +318,7 @@ Evaluation mode:
 
 - `typename` is always a compile-time constant string.
 
-Operand notes:
+Operand notes (current subset):
 
 - When the operand is a bare name that does **not** resolve to an in-scope
   runtime binding (for example `int`, `User`, or `std::wasm::Module`), the
@@ -320,7 +341,7 @@ Evaluation mode:
 
 - `is` is always a compile-time constant boolean.
 
-Rules:
+Rules (current subset):
 
 - The right-hand side must be a type (primitive, nominal `struct`/`enum`/`error`,
   `interface`, a function type, or a type alias for one of those).
@@ -383,7 +404,7 @@ type.
   reference: `(new Type{ ... }) as &Other`. Without parentheses,
   `new Type{ ... } as &Other` parses as `new (Type{ ... } as &Other)`.
 
-### Supported conversions
+### Supported conversions (current subset)
 
 In the current compiler/backend subset, `as` is supported for primitive scalar
 conversions:
@@ -484,7 +505,7 @@ conversions:
   - The conversion is explicit (it does not introduce implicit coercions).
   - The `serialize` method must be infallible (no typed errors).
   - Purity rules apply: inside `pure fn`, the `serialize` method must be `pure`.
-  - Current behavior: the compiler must be able to resolve the
+  - Current subset limitation: the compiler must be able to resolve the
     receiver’s nominal type at the cast site so it can lower the implicit
     `serialize()` call. This includes name expressions, field accesses, calls,
     and array/slice indexing (`arr[i] as T`) in the current subset.
@@ -499,7 +520,7 @@ conversions:
   - The `deserialize` method must be infallible (no typed errors).
   - Purity rules apply: inside `pure fn`, the `deserialize` method must be `pure`.
 
-Examples:
+Examples (implemented subset):
 
 ```silk
 struct Data {
@@ -558,7 +579,7 @@ Syntax:
 
 - `<expr> as raw <Type>`
 
-Rules:
+Rules (current subset):
 
 - Both the operand and the target type must be numeric primitive types
   supported by the current backend subset:

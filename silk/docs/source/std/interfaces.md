@@ -1,6 +1,6 @@
 # `std::interfaces`
 
-Status: **Implemented subset**. This module defines small,
+This module defines small,
 non-generic standard-library interfaces (“protocols”) that can be used today to
 express common capabilities across `std::` types.
 
@@ -17,8 +17,12 @@ When the standard library is enabled (the default), all interfaces in
 `std::interfaces` are available without explicit imports via the std prelude
 module `std::runtime::globals`, so you can write `impl T as Drop { ... }`.
 
-## Exported API
+See also:
 
+- `docs/language/interfaces.md` (syntax, conformance, dispatch status)
+- `docs/language/structs-impls-layout.md` (method + `export` rules)
+
+## Exported API
 `std/interfaces.slk` currently defines the following interfaces:
 
 ```silk
@@ -157,6 +161,48 @@ Notes:
   - `std::uuid::UUID`
   These types can now expose a consistent receiverless parse surface without
   overloading the cast operator.
+- Current stdlib adopters of the core container/view protocols include:
+  - `std::arrays::Slice(T)` and `std::arrays::ByteSlice` implement `Len` and
+    `IsEmpty`, while `SliceIter(T)` and `ByteSliceIter` implement `Iterator(...)`.
+  - `std::buffer::BufferU8` implements `Len`, `Capacity`, `IsEmpty`, `Clear`,
+    `ReserveAdditional`, `WriteU8`, and `Drop`; the lower-level
+    `std::buffer::Buffer(T)` implements `Capacity` and `Drop`.
+  - `std::vector::Vector(T)` implements `Len`, `Capacity`, `IsEmpty`, `Clear`,
+    `ReserveAdditional`, and `Drop`. Its `iter()` method returns the shared
+    `std::arrays::SliceIter(T)` iterator instead of introducing a vector-only
+    iterator protocol surface.
+  - `std::map::HashMap(K, V)` implements `Len`, `Capacity`, `IsEmpty`, `Clear`,
+    `ReserveAdditional`, and `Drop`; `TreeMap(K, V)` implements `Len`,
+    `IsEmpty`, `Clear`, and `Drop`; both iterator types implement
+    `Iterator(Entry(K, V))`.
+  - `std::set::SetMap(T)` implements `Len`, `Capacity`, `IsEmpty`, `Clear`,
+    `ReserveAdditional`, and `Drop`; `TreeSet(T)` implements `Len`,
+    `IsEmpty`, `Clear`, and `Drop`; both iterator types implement
+    `Iterator(...)`.
+  - `std::fs::File` implements `Drop`, `std::fs::Dir` implements
+    `Iterator(DirEntryResult)` and `Drop`, and `std::fs::MMap` implements
+    `Len`, `IsEmpty`, and `Drop`.
+- Current regression coverage for that protocol story is intentionally split:
+  - `tests/silk/pass_std_interfaces_core_containers.slk` is the focused shared
+    smoke test for in-memory/container protocol surfaces, including
+    representative `for`-loop iterator consumption for both empty and populated
+    slices, bytes, vectors, maps, sets, and the empty `MMap` byte view. Each
+    representative iterator family in that fixture is exercised through both
+    iterator call expressions and iterator value bindings, with the empty and
+    populated checks split across the in-memory/container set.
+  - `tests/silk/pass_std_fs_file_drop_and_helpers.slk` is the stronger
+    end-to-end regression for `std::fs::File as Drop`, including proof that
+    `drop()` actually closes the saved OS file descriptor.
+  - `tests/silk/pass_std_fs_file_drop_basic.slk` is the narrower companion pin
+    for post-drop invalidation and idempotent cleanup on invalid handles.
+  - Compiler-inserted `Drop` glue for `std::fs::File` is covered separately by
+    `tests/silk/pass_drop_scope_exit_file_close.slk`,
+    `tests/silk/pass_drop_overwrite_file_close.slk`,
+    `tests/silk/pass_drop_heap_ref_file_close.slk`, and
+    `tests/silk/pass_drop_overwrite_heap_ref_file_close.slk`.
+  - `tests/silk/pass_std_fs_read_dir_basic.slk` remains the dedicated
+    end-to-end regression for `std::fs::Dir.next()` and real directory-handle
+    iteration.
 - Stdlib conversion convention:
   - `Serialize(string)` is reserved for infallible textual views of the
     current value. In practice that means stable, allocation-free borrows such
@@ -180,9 +226,44 @@ Notes:
     - `module my_pkg::build as Builder;` (preferred; `Builder` is in the std prelude)
     - or `module my_pkg::build as std::interfaces::Builder;` (fully qualified)
 
-## Examples
+## Drop semantics (Implemented subset)
 
-### Conformance
+`std::interfaces::Drop` is recognized by the compiler as the standard way for a
+type to release resources it owns (file descriptors, heap allocations, OS
+handles, etc.). A type is considered “droppable” when it provides a method with
+this surface signature:
+
+```silk
+impl T as Drop {
+  public fn drop (mut self: &T) -> void { ... }
+}
+```
+
+Automatic invocation (current compiler):
+
+- **Scope exit:** when a `struct` *value* binding goes out of scope (including
+  via fallthrough, `break`, and `continue`), the compiler calls `drop` before
+  the storage is discarded.
+- **Return:** on `return`, the compiler drops all in-scope droppable bindings
+  except any value moved into the return result (for example `return value;`
+  and `return Some(value);` treat `value` as moved in the current subset).
+- **Overwrite:** when a `struct` *value* binding is overwritten via assignment,
+  the compiler calls `drop` on the old value before copying in the new value.
+- **Heap last-release:** for compiler-managed `new` allocations (`&T` with RC),
+  the compiler calls `drop` before freeing the backing allocation when the
+  refcount reaches zero.
+
+Notes and limitations (current subset):
+
+- `drop` is resolved statically (no dynamic dispatch).
+- `drop` should invalidate the value so calling it multiple times is safe.
+- The language does not yet implement a general move/ownership model; **do not
+  rely on copying `Drop` types** to be safe until move/copy semantics are
+  specified and enforced.
+- See `docs/language/memory-model.md` for the current `new` + RC rules and how
+  cleanup is performed.
+
+## Example (Conformance)
 
 ```silk
 struct Counter {
@@ -196,7 +277,7 @@ impl Counter as Len {
 }
 ```
 
-### `Serialize(string)` in the stdlib
+## Example (`Serialize(string)` in the stdlib)
 
 ```silk
 import c_owned from "std/ffi/c_owned";
@@ -256,7 +337,7 @@ fn main () -> int {
 }
 ```
 
-### `TrySerialize` for owned text output
+## Example (`TrySerialize` for owned text output)
 
 ```silk
 import std::semver;
@@ -298,7 +379,7 @@ fn main () -> int {
 }
 ```
 
-### `Parse` in the stdlib
+## Example (`Parse` in the stdlib)
 
 ```silk
 import std::path;
@@ -339,54 +420,3 @@ fn main () -> int {
   }
 }
 ```
-
-## Considerations
-
-### Interface model
-
-- Dynamic interface dispatch (trait objects / vtables) remains part of the
-  broader language design; the shipped stdlib surface today is centered on
-  concrete-type conformance and compile-time checking.
-- `std::interfaces::Drop` is the compiler-recognized protocol for deterministic
-  cleanup of owned values.
-
-### Drop semantics
-
-`std::interfaces::Drop` is recognized by the compiler as the standard way for a
-type to release resources it owns (file descriptors, heap allocations, OS
-handles, etc.). A type is considered “droppable” when it provides a method with
-this surface signature:
-
-```silk
-impl T as Drop {
-  public fn drop (mut self: &T) -> void { ... }
-}
-```
-
-Automatic invocation (current compiler):
-
-- **Scope exit:** when a `struct` *value* binding goes out of scope (including
-  via fallthrough, `break`, and `continue`), the compiler calls `drop` before
-  the storage is discarded.
-- **Return:** on `return`, the compiler drops all in-scope droppable bindings
-  except any value moved into the return result (for example `return value;`
-  and `return Some(value);` treat `value` as moved in the current subset).
-- **Overwrite:** when a `struct` *value* binding is overwritten via assignment,
-  the compiler calls `drop` on the old value before copying in the new value.
-- **Heap last-release:** for compiler-managed `new` allocations (`&T` with RC),
-  the compiler calls `drop` before freeing the backing allocation when the
-  refcount reaches zero.
-
-Notes:
-
-- `drop` is resolved statically (no dynamic dispatch).
-- `drop` should invalidate the value so calling it multiple times is safe.
-- The language does not yet implement a general move/ownership model; **do not
-  rely on copying `Drop` types** to be safe until move/copy semantics are
-  specified and enforced.
-
-## See also
-
-- [Interfaces](?p=language/interfaces)
-- [Structs, impls, and layout](?p=language/structs-impls-layout)
-- [Memory model](?p=language/memory-model)

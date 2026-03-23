@@ -1,114 +1,80 @@
-# `std::graphics`
+# `std::graphics` — Graphics API Bindings
 
-Status: **Implemented raw bindings**. `std::graphics` is the standard library’s
-low-level namespace for pinned graphics API bindings.
+`std::graphics` is a namespace for
+low-level, FFI-oriented bindings to common graphics APIs.
 
-This layer intentionally does not provide window creation, swapchains,
-resource-lifetime wrappers, or renderer abstractions. It exists to give Silk
-programs direct access to the underlying APIs.
+This layer intentionally does **not** include:
 
-## Exported API
+- window-system integration (creating a surface/context),
+- swapchain/window management,
+- higher-level rendering abstractions,
+- automatic resource lifetime management.
 
-### Root module
+Those pieces are platform- and engine-specific and are expected to live above
+`std::graphics` (either as future `std::...` modules or downstream packages).
 
-`std::graphics` exports the shared binding conventions:
+## Module Layout
 
-- `Ptr = u64` — raw pointer-shaped values passed through the C ABI
-- `Handle = u64` — raw handle-shaped values used by APIs such as Vulkan and GL
-  sync objects
+`std::graphics` is organized as:
 
-### `std::graphics::opengl`
+- `std::graphics` — shared conventions and basic pointer/handle aliases.
+- `std::graphics::opengl` — generated OpenGL bindings (core OpenGL 4.6).
+- `std::graphics::opengles` — generated OpenGL ES bindings (core OpenGL ES 3.2).
+- `std::graphics::vulkan` — generated Vulkan bindings (core Vulkan 1.3).
 
-The OpenGL binding module is generated from the Khronos OpenGL registry at core
-OpenGL 4.6. It exports:
-
-- 39 type aliases such as `GLenum`, `GLuint`, `GLsizei`, `GLsync`, and callback
-  pointer aliases like `GLDEBUGPROC`
-- 1367 constants such as `GL_COLOR_BUFFER_BIT`, `GL_NO_ERROR`, and
-  `GL_TEXTURE_2D`
-- 657 `gl*` entry points such as `glClear`, `glClearColor`, `glBindBuffer`,
-  `glCreateShader`, `glDrawElements`, and `glGetString`
-
-### `std::graphics::opengles`
-
-The OpenGL ES binding module is generated from the Khronos OpenGL registry at
-core OpenGL ES 3.2. It exports:
-
-- 39 type aliases such as `GLenum`, `GLuint`, `GLsizei`, `GLsync`, and
-  callback pointer aliases
-- 1001 constants covering the ES 3.2 core surface
-- 358 `gl*` entry points such as `glClear`, `glBindTexture`, `glUseProgram`,
-  and `glDrawArrays`
-
-### `std::graphics::vulkan`
-
-The Vulkan binding module is generated from the Khronos Vulkan registry at core
-Vulkan 1.3. It exports:
-
-- 233 type aliases including handle types like `VkInstance`, `VkDevice`,
-  `VkBuffer`, `VkCommandBuffer`, flag types, enums, and callback pointer types
-- 1102 constants covering core Vulkan enums, bitfields, result codes, and
-  structure tags
-- 215 `vk*` entry points such as `vkCreateInstance`, `vkEnumeratePhysicalDevices`,
-  `vkCreateDevice`, `vkQueueSubmit`, and `vkCmdDraw`
-
-### Registry provenance
+These bindings are generated from the Khronos registries and pinned to specific
+upstream commits so the surface area is stable and reviewable.
 
 Pinned registry inputs:
 
 - OpenGL / OpenGL ES: `gl.xml` from `KhronosGroup/OpenGL-Registry` commit
-  `0b449b97cdf1043eef5e1f0e235cbbab6ec10c86`
+  `0b449b97cdf1043eef5e1f0e235cbbab6ec10c86`.
 - Vulkan: `vk.xml` from `KhronosGroup/Vulkan-Docs` commit
-  `fb8116669f76e26bdab4c7ad0bf1cafdeff484dc`
+  `fb8116669f76e26bdab4c7ad0bf1cafdeff484dc`.
 
-Generated outputs:
+Regeneration:
 
-- `std/graphics/opengl.slk`
-- `std/graphics/opengles.slk`
-- `std/graphics/vulkan.slk`
+- Run `python3 docs/tools/gen_graphics_bindings.py`.
+- The generated outputs are:
+  - `std/graphics/opengl.slk`
+  - `std/graphics/opengles.slk`
+  - `std/graphics/vulkan.slk`
 
-## Examples
+## Linking (Hosted `linux/x86_64` Baseline)
 
-### Call OpenGL after a context already exists
+These modules declare external symbols via `ext`. On the hosted baseline, they
+are typically provided by dynamic loader libraries such as:
 
-```silk
-import std::graphics::opengl;
+- OpenGL: `libGL.so.1`
+- OpenGL ES: `libGLESv2.so.2` (or a platform-specific GL ES loader)
+- Vulkan: `libvulkan.so.1`
 
-fn main () -> int {
-  let mask: std::graphics::opengl::GLbitfield = std::graphics::opengl::GL_COLOR_BUFFER_BIT;
-  std::graphics::opengl::glClearColor(0.08, 0.08, 0.12, 1.0);
-  std::graphics::opengl::glClear(mask);
-  return 0;
-}
-```
+Downstream programs must link the appropriate library via the CLI:
 
-This example assumes a valid OpenGL context is already current on the thread.
+- `silk build ... --needed libGL.so.1`
+- `silk build ... --needed libGLESv2.so.2`
+- `silk build ... --needed libvulkan.so.1`
 
-## Considerations
+and may also need to provide search paths via `--runpath` depending on how the
+system libraries are installed.
 
-- These are raw bindings. Ownership, synchronization, context lifetime, and
-  higher-level safety remain the caller’s responsibility.
-- Most pointer parameters are represented as `std::graphics::Ptr` (`u64`).
-  Ensure any pointed-to storage is correctly laid out and remains valid for the
-  full duration of the call.
-- On the hosted `linux/x86_64` baseline, you still need to link the relevant
-  system loader library, for example:
-  - `silk build ... --needed libGL.so.1`
-  - `silk build ... --needed libGLESv2.so.2`
-  - `silk build ... --needed libvulkan.so.1`
-- Returned driver-managed strings or pointers are borrowed. Do not free them.
-- The current compiler subset does not rely on passing user-defined packed C
-  structs by value. The generated bindings therefore favor pointer-based ABI
-  mapping.
+## Safety Notes
 
-## See also
+These APIs are inherently low-level:
 
-- [`std::ffi::c`](?p=std/ffi-c)
-- [`Package structure`](?p=std/package-structure)
+- Many functions are unsafe without an active context/device.
+- Most pointer parameters are represented as `std::graphics::Ptr` (`u64`)
+  addresses and must be valid for the duration of the call.
+- Some `const char *` inputs are represented as Silk `string` values for
+  convenience (lowered as C-string pointers by the current `ext` ABI mapping).
+- Returned pointers (for example from `glGetString`) are borrowed views into
+  driver-managed memory and must not be freed.
 
-## Design goals
+The `std::graphics` bindings focus on mechanical ABI mapping and leave
+ownership/lifetime management to higher layers.
 
-- Pin the registry inputs so the public surface is reproducible and reviewable.
-- Provide exhaustive raw symbol coverage for the selected core API versions.
-- Keep the standard library layer mechanical; let higher-level rendering
-  packages build ergonomic abstractions above it.
+Important current limitation (compiler subset):
+
+- The compiler does not yet implement packed C struct layout. As a result,
+  these bindings use `u64` pointers for C pointer parameters and do not rely on
+  passing user-defined structs by value to C.

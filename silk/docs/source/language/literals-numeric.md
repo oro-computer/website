@@ -6,7 +6,7 @@ Numeric literals produce integer (`int`, `u8`, `i128`, …) and floating-point
 In Silk, the sign is an operator: `-1` is a unary `-` expression applied to the
 integer literal token `1`, not a distinct “negative literal” token.
 
-## Current behavior
+## Implementation Status (Current Compiler Subset)
 
 What works end-to-end today (lexer → parser → checker → lowering → codegen):
 
@@ -27,11 +27,11 @@ What works end-to-end today (lexer → parser → checker → lowering → codeg
   - float literals default to `f64`, but adopt `f32`/`f64`/`f128` from context.
 - Duration literal tokens of the form `<number><unit>` (no whitespace) such as
   `500ms` and `1.5s` (specified in `docs/language/literals-duration.md`).
-- Lowering note: unannotated local `let` bindings participate only in the
-  integer subset. Prefer explicit type annotations for `bool` and float locals
-  when you intend to build an executable/library.
+- Lowering note (current IR backend subset): unannotated local `let` bindings
+  participate only in the integer subset. Prefer explicit type annotations for
+  `bool` and float locals when you intend to build an executable/library.
 
-Not supported today:
+Not implemented yet:
 
 - Exponent notation (`1e6`, `1.0e-3`).
 - Numeric type suffixes (`42u8`, `1.5f32`).
@@ -55,7 +55,7 @@ fn main () -> int {
 }
 ```
 
-## Surface Syntax
+## Surface Syntax (Current Lexer)
 
 Numeric literal tokens are recognized as:
 
@@ -76,9 +76,9 @@ Notes:
   - invalid: `_1`, `1_`, `1__0`, `0x_FF`.
 - A float literal must have digits on both sides of the `.`:
   - `1.0` is a float literal.
-  - `1.` is not a float literal in today’s lexer.
+  - `1.` is not a float literal in the current lexer.
   - `.5` is not a float literal; write `0.5`.
-- Numeric literals must start with a digit in today’s lexer.
+- Numeric literals must start with a digit in the current lexer.
 - The `-` sign is not part of the literal token:
   - `-1` parses as unary `-` applied to the integer literal `1`.
   - `-1.5` parses as unary `-` applied to the float literal `1.5`.
@@ -93,7 +93,7 @@ Notes:
   - `08` is a lexical error in Silk because multi-digit literals starting with
     `0` are legacy octal (use `0o10` for octal 8, or write `8` for decimal).
 
-## Type Rules
+## Type Rules (Current Subset)
 
 See `docs/language/types.md` for the primitive type names used below.
 
@@ -122,7 +122,7 @@ fn main () -> int {
 }
 ```
 
-Example: time types share an `i64`-based representation today
+Example: time types share an `i64`-based representation in the current subset
 (`docs/language/duration-instant.md`), so integer literals can be used as
 `Instant`/`Duration` values via context:
 
@@ -165,7 +165,7 @@ fn main () -> int {
 
 - **Trying to use suffixes**: `42u8` / `1.5f32` are not supported. Use type
   annotations (`let x: u8 = 42;`) or casts (`42 as u8`).
-- **Using exponent notation**: `1e6` is not supported today.
+- **Using exponent notation**: `1e6` is not supported yet.
 - **Writing incomplete floats**: write `1.0` (not `1.`) and `0.5` (not `.5`).
 - **Mixing integers and floats implicitly**: use `as` casts (`docs/language/operators.md`)
   to convert explicitly when you need to combine integer and float values.

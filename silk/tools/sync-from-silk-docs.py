@@ -50,9 +50,11 @@ KEEP_DOCS_FILES = {
     "usage/tutorials/04-filesystem.md",
     "usage/tutorials/05-concurrency.md",
     "usage/tutorials/06-async-io-streams-abort.md",
+    "usage/tutorials/07-formal-silk.md",
     # Website-owned copy edits to avoid repo-internal wording/refs.
     "compiler/backend-wasm.md",
     "compiler/testing-strategy.md",
+    "compiler/libsilk-quickstart.md",
     "compiler/zig-api.md",
     "language/conventions.md",
     "language/cheat-sheet.md",
@@ -99,6 +101,23 @@ def should_skip(rel: str, keep_files: set[str], keep_prefixes: tuple[str, ...]) 
     return False
 
 
+def normalize_region_identifiers(markdown: str) -> str:
+    out = markdown
+    replacements = (
+        (r"\bexport const region global_arena\b", "export const region global_region_buf"),
+        (r"\bconst region arena\b", "const region region_buf"),
+        (r"\bwith arena\b", "with region_buf"),
+        (r"\bfrom arena\b", "from region_buf"),
+        (r"\bglobal_arena\b", "global_region_buf"),
+        (r"\barena\[", "region_buf["),
+        (r"`arena`", "`region_buf`"),
+        (r"`global_arena`", "`global_region_buf`"),
+    )
+    for pattern, replacement in replacements:
+        out = re.sub(pattern, replacement, out)
+    return out
+
+
 def normalize_shared_markdown(markdown: str) -> str:
     markdown = markdown.replace("https://oro.computer/silk/docs/?p=", "?p=")
     markdown = markdown.replace("https://oro.computer/silk/wiki/?p=", "wiki/?p=")
@@ -121,10 +140,11 @@ def normalize_shared_markdown(markdown: str) -> str:
     )
     markdown = re.sub(r"(?m)^Works today\b", "Current subset", markdown)
     markdown = markdown.replace("examples labeled “Works today”", "examples labeled “Example”")
+    markdown = normalize_region_identifiers(markdown)
     return markdown
 
 
-def sanitize_wiki_markdown(markdown: str) -> str:
+def sanitize_wiki_markdown(rel: str, markdown: str) -> str:
     """
     The upstream Silk wiki is written for repo contributors and sometimes
     references internal tracker files (STATUS.md, PLAN.md) that don't exist (or
@@ -197,7 +217,7 @@ def sanitize_wiki_markdown(markdown: str) -> str:
     return "\n".join(out_lines) + ("\n" if markdown.endswith("\n") else "")
 
 
-def sanitize_docs_markdown(markdown: str) -> str:
+def sanitize_docs_markdown(rel: str, markdown: str) -> str:
     """
     The upstream Silk docs are written for the Silk compiler repository and may
     use ambiguous phrasing like "this repository" or project-internal jargon
@@ -259,9 +279,40 @@ def sanitize_docs_markdown(markdown: str) -> str:
 
         return out
 
+    def sanitize_std_markdown(text: str) -> str:
+        out = text
+        out = re.sub(r"(?m)^Status:\s*\*\*[^*]+\*\*\.\s*", "", out)
+        out = re.sub(r"(?m)^Status:\s*\*\*[^*]+\*\*\.\s*$", "", out)
+        out = re.sub(r"(?m)^##\s+Current API\s*$", "## Exported API", out)
+        out = re.sub(r"(?m)^##\s+Implemented API\s*$", "## Exported API", out)
+        out = re.sub(r"(?m)^##\s+Public API\s*$", "## Exported API", out)
+        out = re.sub(
+            r"(?m)^##\s+(Future Work|Future work|Follow-ups|Current Limitations|Notes and Limitations)\s*$",
+            "## Considerations",
+            out,
+        )
+        out = re.sub(r"(?m)^##\s+Current Scope\s*$", "## Considerations", out)
+        out = re.sub(r"(?m)^##\s+(.+?)\s+\((?:Initial Design|MVP|Current)\)\s*$", r"## \1", out)
+        out = re.sub(r"active expansion", "current module surface", out, flags=re.I)
+        out = re.sub(r"current snapshot", "current implementation", out, flags=re.I)
+        out = re.sub(r"Partially implemented", "Implemented", out, flags=re.I)
+        out = re.sub(r"initial std wrapper", "stdlib wrapper", out, flags=re.I)
+        out = re.sub(r"\bMVP\b", "baseline", out)
+        return out
+
+    def sanitize_spec_markdown(text: str) -> str:
+        out = drop_named_section(text, "Silk Proposal Process (TC39-Inspired)")
+        out = out.replace("// Works today", "// Supported")
+        out = out.replace("checker.checkModuleSetWithImports", "the module-set import helper")
+        return out
+
     markdown = normalize_shared_markdown(markdown)
     markdown = drop_named_section(markdown, "Arenas")
     markdown = drop_named_section(markdown, "Tests")
+    if rel.startswith("std/"):
+        markdown = sanitize_std_markdown(markdown)
+    if rel == "spec/2026.md":
+        markdown = sanitize_spec_markdown(markdown)
 
     out_lines: list[str] = []
     in_code = False
@@ -292,7 +343,7 @@ def sync_tree(
     *,
     keep_files: set[str],
     keep_prefixes: tuple[str, ...],
-    sanitize: Callable[[str], str] | None = None,
+    sanitize: Callable[[str, str], str] | None = None,
 ) -> SyncStats:
     copied: set[str] = set()
     skipped = 0
@@ -313,7 +364,7 @@ def sync_tree(
         dst.parent.mkdir(parents=True, exist_ok=True)
 
         if sanitize and path.suffix == ".md":
-            dst.write_text(sanitize(path.read_text(encoding="utf-8")), encoding="utf-8")
+            dst.write_text(sanitize(rel, path.read_text(encoding="utf-8")), encoding="utf-8")
         else:
             shutil.copyfile(path, dst)
         copied.add(rel)

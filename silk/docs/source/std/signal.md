@@ -10,9 +10,7 @@ pending signals as a readable file descriptor. This integrates naturally with:
 - `std::sync::ChannelBorrow(T).wait_fd()`
 - `std::abort_controller::AbortSignalBorrow.wait_fd()`
 
-## Exported API
-
-### `signalfd(2)` integration
+## `signalfd(2)` integration
 
 The main type is `SignalFD`:
 
@@ -39,9 +37,7 @@ In practice:
 Newly-created threads inherit the parent thread’s signal mask, so blocking
 signals early keeps delivery consistent.
 
-## Examples
-
-### `SIGWINCH` resize notifications
+## Example: `SIGWINCH` resize notifications
 
 This pattern avoids polling terminal size in a loop:
 
@@ -80,9 +76,7 @@ async fn main () -> int {
 }
 ```
 
-## Considerations
-
-### Portability
+## Portability
 
 Today:
 

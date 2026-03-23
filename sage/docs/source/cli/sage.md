@@ -6,6 +6,7 @@
 
 ```bash
 sage [OPTIONS] [PATH ...]
+sage --print [OPTIONS] [PATH ...]
 sage --compile-cache
 sage --list-syntax
 sage --index-only [PATH|-]
@@ -39,6 +40,18 @@ Compile syntax definitions from your config directory into the cache:
 ```bash
 sage --compile-cache
 ```
+
+### Safe direct output
+
+Render one or more inputs straight to `stdout` without starting the TUI:
+
+```bash
+sage --print README.md
+sage --print src/main.slk src/sage/out.slk
+```
+
+This uses Sage's safe renderer and syntax highlighter, but it does not render
+the pager chrome or the line-number gutter.
 
 ### Syntax index lister
 
@@ -95,6 +108,12 @@ sage --theme ocean README.md
 sage --theme light README.md
 ```
 
+Print multiple files directly:
+
+```bash
+sage --print README.md src/main.slk
+```
+
 Force safe mode for plugins:
 
 ```bash
@@ -113,4 +132,3 @@ See [Diagnostics](?p=cli/diagnostics) for common failure cases.
 - Exact input behavior: [Inputs and modes](?p=cli/inputs-and-modes)
 - Every flag: [Options](?p=cli/options)
 - Keybindings and `:` commands: [Keys and commands](?p=cli/keys-and-commands)
-

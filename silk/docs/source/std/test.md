@@ -1,17 +1,16 @@
 # `std::test`
 
-Status: **Implemented subset**. This module provides test-only helpers that
+This module provides test-only helpers that
 record test failures without aborting the process.
 
 These helpers are intended to be used under `silk test` and integrate with the
 language-level `assert` behavior in test builds (`docs/language/testing.md`).
 
 Each helper also carries a Formal Silk contract requiring `BUILD_MODE == "test"`
-via `std::formal.requires_test_mode()` so downstream verification can model
+via `std::test::requires_test_mode()` so downstream verification can model
 them as test-only APIs.
 
 ## Exported API
-
 ### `expect`
 
 ```silk
@@ -49,3 +48,20 @@ Semantics:
 
 - Returns `true` when `err` is `Some(...)`.
 - Returns `false` when `err` is `None` and records a failure.
+
+## Example
+
+```silk
+import std::test;
+
+test "parsing smoke test" {
+  let value = Some(42);
+
+  std::test::expect(value != None, "value should be present");
+  std::test::expect_equal(42, match (value) {
+    Some(v) => v,
+    None => 0,
+  });
+  std::test::expect_error(Some("boom"));
+}
+```

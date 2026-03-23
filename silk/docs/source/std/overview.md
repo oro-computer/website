@@ -1,10 +1,10 @@
 # Standard Library Overview (`std::`)
 
-Status: **Implemented subset**. The `docs/std/` directory is
-the public reference for the shipped stdlib surface, and the in-tree stdlib
-under `std/` satisfies `import std::...;` for the shipped toolchain.
+The `docs/std/` directory specifies the
+intended API and structure. A minimal in-tree stdlib source tree also
+exists under `std/` (used by the toolchain to satisfy `import std::...;`).
 
-The in-tree stdlib includes a
+As of the current compiler/backend subset, the in-tree stdlib includes a
 small but functional set of utilities implemented purely in Silk (including
 monomorphized, type-parameter generics for core collection types),
 plus a tiny hosted POSIX baseline for OS-facing modules (`std::fs`, `std::task`,
@@ -13,12 +13,13 @@ plus a tiny hosted POSIX baseline for OS-facing modules (`std::fs`, `std::task`,
 libc for executable outputs).
 
 The Silk standard library, `std::`, provides foundational functionality built
-on top of the language core (regions, buffers, concurrency, etc.). It is:
+on top of the language core (regions, buffers, concurrency, etc.). It is intended
+to be:
 
 - **Linked by default** for normal builds driven by `silk`.
 - **Swappable**: an alternative `std::` implementation can be selected at build
   time, without changing the language or the C ABI.
-- **POSIX-first** for OS interactions (current hosted baseline), while still
+- **POSIX-first** for OS interactions (initial hosted baseline), while still
   supporting freestanding/embedded builds via a smaller “core” subset.
 
 See also:
@@ -27,9 +28,10 @@ See also:
 - `docs/std/conventions.md` (API conventions: errors, allocation, ownership)
 - `docs/std/result.md` (the standard `Result(T, E)` error return type)
 
-## Core Areas
+## Core Areas (Initial)
 
-These are the major areas of the shipped and documented `std::` surface:
+These are the minimum required areas for the initial standard library
+distribution:
 
 - `std::buffer` — typed, width-oriented buffer utilities built on top of
   `std::vector` for common scalar element types (see `docs/std/buffer.md`).
@@ -46,7 +48,7 @@ These are the major areas of the shipped and documented `std::` surface:
 - `std::limits` — numeric min/max limits for primitive types (see `docs/std/limits.md`).
 - `std::crypto` — cryptography primitives (hosted baseline via libsodium; see
   `docs/std/crypto.md`).
-- `std::ggml` — ggml tensor library bindings (implemented subset; see `docs/std/ggml.md`).
+- `std::ggml` — ggml tensor library bindings (early bring-up; see `docs/std/ggml.md`).
 - `std::uuid` — UUID primitives (v1/v3/v4/v5/v6/v7/v8) with parsing/formatting
   (see `docs/std/uuid.md`).
 - `std::semver` — Semantic Versioning (SemVer 2.0.0) parsing and precedence
@@ -59,7 +61,7 @@ These are the major areas of the shipped and documented `std::` surface:
 - `std::xml` — XML parsing and traversal (via libxml2; see `docs/std/xml.md`).
 - `std::idl::web` — Web IDL parsing and query API (see `docs/std/idl-web.md`).
 - `std::js::ecma` — ECMAScript FFI surface for JS/WASM interop (see `docs/std/js-ecma.md`).
-- `std::wasm` — WebAssembly runtime API (see `docs/std/wasm.md`).
+- `std::wasm` — WebAssembly runtime API (baseline wasm32 interpreter; see `docs/std/wasm.md`).
 - `std::memory` — allocation interfaces and low-level memory utilities.
 - `std::arrays` — slice/view types and helpers for fixed arrays.
 - `std::bits` — bit manipulation helpers (byte swaps, rotates, bit counts; see
@@ -80,16 +82,16 @@ These are the major areas of the shipped and documented `std::` surface:
 - `std::signal` — pollable signal waiting for TUI programs (Linux `signalfd(2)`
   backend; see `docs/std/signal.md`).
 - `std::stream` — Web Streams-inspired byte streams and piping (see `docs/std/stream.md`).
-- `std::args` — native `main(argc, argv)` argument helpers (see `docs/std/args.md`).
+- `std::args` — native `main(argc, argv)` argument helpers (current subset; see `docs/std/args.md`).
 - `std::readline` — interactive line editor for CLI programs (TTY mode) built on
   the bundled `linenoise` sources (see `docs/std/readline.md`).
-- `std::flag` — command line flag + positional parsing (see `docs/std/flag.md`).
-- `std::test` — test helpers for `silk test` (see `docs/std/test.md`).
+- `std::flag` — command line flag + positional parsing (current subset; see `docs/std/flag.md`).
+- `std::test` — test helpers for `silk test` (current subset; see `docs/std/test.md`).
 - `std::build` — build module helpers for generating `silk.toml` manifests (see `docs/std/build.md`).
 - `std::env` — environment variable access (hosted baseline; see `docs/std/env.md`).
 - `std::process` — process primitives (hosted baseline; see `docs/std/process.md`).
 - `std::os` — target OS/arch metadata and small OS helpers (see `docs/std/os.md`).
-- `std::path` — path manipulation utilities (see `docs/std/path.md`).
+- `std::path` — path manipulation utilities (current subset; see `docs/std/path.md`).
 - `std::io` — basic I/O (unbuffered fd reads/writes, formatting, stdout/stderr;
   see `docs/std/io.md`). Stream adapters live under `std::io::stream`.
 - `std::fmt` — shared formatting layer used by `std::io` and string builders.
@@ -113,8 +115,9 @@ These are the major areas of the shipped and documented `std::` surface:
 - `std::ffi::c` — C FFI helpers (C strings and interop utilities; see `docs/std/ffi-c.md`).
 - `std::interfaces` — shared std interface contracts (“protocols”) such as
   `Drop`, `Len`, `Capacity`, etc. (see `docs/std/interfaces.md`).
-- `std::formal` — reusable Formal Silk theories (“standard lemmas”) used by
-  std and downstream verified code (see `docs/std/formal.md`).
+- `std::formal` — foundational Formal Silk theories for generic arithmetic and
+  storage reasoning; module-specific theories live with their owning std
+  modules (see `docs/std/formal.md`).
 
 Each area has a dedicated design document under `docs/std/` (for intrinsic
 surfaces like `std::buffer`, the design lives in both `docs/std/` and the

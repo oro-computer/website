@@ -84,6 +84,14 @@ same metadata:
 Use `std::runtime::build` when you prefer explicit namespacing or when writing
 code intended to run under alternate stdlib roots.
 
+The same module also owns the reusable Formal Silk vocabulary for build
+metadata:
+
+- `std::runtime::build::build_kind_is(...)`
+- `std::runtime::build::build_mode_is(...)`
+- `std::runtime::build::{requires_debug_mode,requires_release_mode,requires_executable_kind,requires_object_kind,requires_static_kind,requires_shared_kind}`
+- `std::runtime::build::build_version_at_least(...)`
+
 ## Examples
 
 ### Build-mode gated behavior
@@ -100,5 +108,6 @@ fn main () -> int {
 
 ### Version-gated behavior
 
-For semver parsing and comparison, use `std::semver` at runtime or reuse the
-formal theories provided by `std::formal` (see `docs/language/formal-verification.md`).
+For semver parsing and comparison, use `std::semver` at runtime.
+For Formal Silk version gating against build metadata, reuse
+`std::runtime::build::build_version_at_least(...)`.

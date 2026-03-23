@@ -20,6 +20,10 @@ It supports two modes:
 - Markdown mode (default): emits Markdown documentation for one or more input files.
 - Manpage mode (`--man`): renders a single roff `man(7)` page derived from doc comments and displays or writes it.
 
+Use `silk man` when you want terminal-first discovery and viewing. Use
+`silk doc --man` when you already know the exact query and want the generated
+roff output as a file or build artifact.
+
 In Markdown mode, by default `silk doc` includes exported values, types, and Formal Silk theories, plus all `struct`/`enum`/`error`/`interface` declarations. Use `--all` to include non-exported declarations.
 
 In manpage mode, the rendered manpage section is derived from doc tags:
@@ -28,7 +32,7 @@ In manpage mode, the rendered manpage section is derived from doc tags:
 - `@misc` → section 7
 - otherwise API docs → section 3
 
-Doc tag semantics are specified in `?p=language/doc-comments`.
+Doc tag semantics are specified in [Doc comments](?p=language/doc-comments).
 
 ## Options
 
@@ -57,6 +61,13 @@ silk doc --all src/main.slk -o api.md
 
 # Render a roff manpage for a stdlib module.
 silk doc --man std::flag -o std_flag.3
+
+# Render a stdlib symbol page to a file after discovering it via `silk man --search`.
+silk man --search String
+silk doc --man std::strings::String -o std_strings_string.3
+
+# Render a package-local page from the nearest or selected manifest root.
+silk doc --man --package . readme -o pkg_readme.7
 ```
 
 ## Exit status
@@ -66,6 +77,6 @@ silk doc --man std::flag -o std_flag.3
 
 ## See Also
 
-- `silk` (1)
-- `silk-man` (1)
-- `?p=compiler/cli-silk`
+- [silk (1)](?p=man/silk.1)
+- [silk-man (1)](?p=man/silk-man.1)
+- [CLI reference](?p=compiler/cli-silk)

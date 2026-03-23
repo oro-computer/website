@@ -24,8 +24,14 @@ on a concrete manifest.
 
 ## Invocation
 
-For package builds (`silk build --package ...`), build modules are opt-in: they
-run only when enabled by the CLI or the root manifest.
+For package commands that compile code from a package manifest, build modules
+are opt-in:
+
+- `silk build --package ...`
+- `silk check --package ...`
+- `silk test --package ...`
+
+They run only when enabled by the CLI or the root manifest.
 
 CLI forms (always override defaults):
 
@@ -36,7 +42,7 @@ Manifest configuration:
 
 ```toml
 [build]
-# Opt in to running the build module for package builds.
+# Opt in to running the build module for package commands.
 build_module = true
 
 # Optional default path used when the build module is executed and the CLI does
@@ -54,6 +60,9 @@ Rules:
 - The build module is executed when either:
   - the CLI enables it (`--build-module` / `--build-module-path`), or
   - the root manifest sets `[build].build_module = true`.
+- `silk check --package ...` and `silk test --package ...` do not currently
+  accept dedicated build-module CLI flags, but they still honor
+  `[build].build_module = true` and `[build].build_module_path`.
 - Precedence (highest to lowest):
   - `--build-module-path <path>` wins (and implies build module execution),
   - otherwise `--build-module` wins,
@@ -115,7 +124,10 @@ Build module requirements:
 Parameters:
 
 - `package_root` — the absolute package root directory.
-- `action` — the build action (currently one of: `build`, `install`, `uninstall`).
+- `action` — the package action.
+  - `silk build --package ...` passes `build`, `install`, or `uninstall`.
+  - `silk check --package ...` and `silk test --package ...` currently pass
+    `build` for compatibility with existing build modules.
   - When omitted by the driver, the action is treated as `build`.
 
 ## Security Model
@@ -124,8 +136,9 @@ Build modules are arbitrary code execution.
 
 For this reason:
 
-- package builds execute code on the build host when build modules are enabled
-  (via `--build-module` / `--build-module-path` or `[build].build_module = true`),
+- package builds, package checks, and package tests execute code on the build
+  host when build modules are enabled (via `--build-module` /
+  `--build-module-path` or `[build].build_module = true`),
 - downstream tooling (package managers, CI, editor integrations) MUST treat
   build modules as untrusted inputs unless they are pinned and reviewed.
 

@@ -5,19 +5,19 @@ Concurrency in Silk is built around two orthogonal function modifiers:
 - `async` — marks a function as pausable/awaitable (concurrency),
 - `task` — marks a function as safe to execute on a worker pool (parallelism),
 
-plus structured concurrency blocks (`async { ... }` and `task { ... }`) that
-give async/task scopes deterministic cleanup.
+plus structured concurrency blocks (`async { ... }` and `task { ... }`)
+intended to provide **structured concurrency**.
 
-- On hosted targets, the runtime manages a task pool and async executor.
-- The compiler enforces conservative task-safety and suspension-safety rules
-  when values cross task or async boundaries.
+- The runtime can manage a thread pool to execute tasks.
+- The compiler is intended to enforce task-safety rules when values cross task
+  boundaries (Send/Sync-like constraints).
 
-## Implemented behavior
+## Implementation Status (Current Compiler)
 
-This document describes the shipped concurrency surface and its current runtime
-boundaries.
+This document describes the **language design** for concurrency and the subset
+implemented by the compiler/runtime today.
 
-### Core behavior
+### Implemented Subset
 
 - Parsing of `task fn`, `async fn`, and `async task fn` / `task async fn`.
 - Parsing of `yield <expr>` and `yield * <expr>` (see `yield` below).
@@ -38,7 +38,7 @@ boundaries.
       instead of blocking the executor owner OS thread,
     - outside an executor (or on non-owner threads), it blocks the current OS
       thread until the task produces a value.
-- `yield` on a temporary task handle is eager:
+- `yield` on a temporary task handle is eager in the current subset:
   - `yield <task_expr>` where `<task_expr>` is not a named handle drains the
     task (joining dedicated-thread tasks only) and yields its final value `T`
     (so the temporary handle does not leak).
@@ -89,11 +89,11 @@ boundaries.
   - live `Task(T)` bindings are drained/destroyed on scope exit,
   - and the same cleanup runs for lowered early-exit paths such as `return`.
   - these blocks do not create nested executors or inject implicit cancellation
-    tokens.
+    tokens in the current subset.
 - `yield` is **task-context-only**:
   - `yield` is only allowed inside `task` functions (`task fn` / `async task fn`)
     and inside `task { ... }` / `task loop { ... }` blocks.
-- Task-safety rules are enforced at the `task fn` boundary:
+- Initial task-safety rules are enforced at the `task fn` boundary:
   - `task fn` / `async task fn` parameter and result types must not contain
     non-opaque reference types (`&T`), including within structs and optionals.
   - references to opaque structs (types declared as `struct Name;`) are permitted
@@ -104,12 +104,12 @@ boundaries.
     supports patterns like `Task(Promise(T))` (for tasks that produce promises)
     and `await * yield * t` for `t: Task(Promise(T))`.
 
-### Thread Safety and Sharing
+### Thread Safety and Sharing (Current Subset)
 
 `task` concurrency runs on OS threads. Crossing a task boundary is therefore a
 thread-crossing operation.
 
-In the shipped implementation:
+In the current compiler subset:
 
 - Passing values into a `task fn` is **by value**. For ownership-tracked values
   (for example `Drop` types and `Task(T)` / `Promise(T)` handles), this is a
@@ -128,23 +128,24 @@ In the shipped implementation:
   `Channel(T)` + `ChannelBorrow(T)` and `AbortSignal` + `AbortSignalBorrow`).
 
 Note: this includes `&Struct` values produced by `new`. The compiler-inserted
-reference counting (RC) used for `new` is non-atomic and is not safe to share
-across OS threads.
+reference counting (RC) used for `new` is non-atomic in the current subset and
+is not safe to share across OS threads.
 
 These rules prevent common “accidentally share a borrowed view across threads”
-bugs. They do not prevent data races in programs that explicitly share memory
-through FFI or other low-level mechanisms; such sharing must be synchronized by
-the program.
+bugs in the current subset. They do not prevent data races in programs that
+explicitly share memory through FFI or other low-level mechanisms; such sharing
+must be synchronized by the program.
 
-### Runtime boundaries
+### Important Limitations
 
-- A hosted async runtime ships on the hosted `linux/x86_64` target:
+- Hosted async runtime bring-up exists on the hosted `linux/x86_64` target:
   - `await` is a true suspension point backed by a single-threaded executor
     (fibers), so awaiting a pending `Promise(T)` can park and resume without
     blocking the OS thread.
-  - The hosted async runtime uses stackful coroutines in `libsilk_rt`
-    rather than a compiler state-machine coroutine transform. See
-    [Async runtime](?p=compiler/async-runtime) for the runtime structure.
+  - The current implementation uses stackful coroutines in `libsilk_rt`
+    (`src/silk_rt_async.c`) rather than a compiler state-machine coroutine
+    transform. The long-term design remains a compiler transform + stable
+    `std::runtime::event_loop` surface (see `docs/compiler/async-runtime.md`).
   - The shipped executor is **thread-affine**:
     - only the thread that created the executor may spawn and drive stackful
       coroutines (stackful coroutines are never migrated across OS threads),
@@ -166,32 +167,34 @@ the program.
   described above) is not implemented yet. In particular, the compiler does not
   attempt to prove absence of data races for shared state; programs must use
   explicit synchronization for any shared mutation.
-- The hosted toolchain ships `std::task` and `std::sync` for the hosted
-  `linux/x86_64` target. Many of these primitives remain blocking; integrating
-  OS-facing std modules with the async executor/event loop is still pending.
+- A small initial set of standard-library primitives exists now under
+  `std::task` and `std::sync` for the hosted `linux/x86_64` subset. These are
+  mostly blocking primitives today; integrating OS-facing std modules with the
+  async executor/event loop is follow-up work.
 - For cooperative cancellation across tasks and `async` functions, `std::`
   provides WHATWG-style abort signals via `std::abort_controller` (see
-  [Abort controller](?p=std/abort-controller)).
+  `docs/std/abort-controller.md`).
 
 ## Core Keywords: `async` and `task`
 
 ### `async`
 
 - Marks a function as **awaitable** (pausable).
-- Primary domain: I/O-bound concurrency on an event loop/executor.
+- Primary domain (design): I/O-bound concurrency on an event loop/executor.
 
 ### `task`
 
 - Marks a function as **task-safe** and eligible to be executed as a parallel
   task on a worker pool.
-- Primary domain: CPU-bound parallelism and offloading blocking work.
-- Calling a `task fn` is non-blocking and produces a task handle.
+- Primary domain (design): CPU-bound parallelism and offloading blocking work.
+- In the intended design, *calling a `task fn` is non-blocking* and produces a
+  task handle.
 
 ### `await`
 
 `await <expr>` is the surface syntax for unwrapping a `Promise(T)` handle.
 
-In the shipped implementation:
+In the current compiler subset:
 
 - `await Promise(T)` unwraps the completed promise and yields `T`.
 - `await Promise(Task(T))` yields `Task(T)` (which can then be consumed via `yield` / `yield *`).
@@ -200,10 +203,11 @@ In the shipped implementation:
   fixed-array storage at the suspension point; end such borrows before
   awaiting.
 
-#### Typed Errors Across Async Calls
+#### Typed Errors Across Async Calls (Current Subset)
 
-Typed-error handling composes with async calls, but the fallible operation
-remains the **async call site** rather than the `await` itself.
+Typed-error handling composes with async calls in the current subset, but the
+fallible operation remains the **async call site** rather than the `await`
+itself.
 
 For an async function like:
 
@@ -217,14 +221,14 @@ async fn open_value () -> int | OpenFailed {
 }
 ```
 
-the checker behavior is:
+the current checker behavior is:
 
 - `await open_value()` is rejected with `E2023` because the fallible async call
   has not been handled yet.
 - `let p: Promise(int) = open_value()?;` is accepted inside a matching error
   contract.
 - `let v: int = await open_value()?;` is accepted and is the supported
-  propagation form.
+  propagation form in the current subset.
 - Explicit handling with `match` applies to the async call itself, so the
   success arm receives the `Promise(T)` handle:
 
@@ -240,9 +244,9 @@ match (open_value()) {
 }
 ```
 
-#### Task/Promise Handle Ownership
+#### Task/Promise Handle Ownership (Current Subset)
 
-In the shipped implementation, `Task(T)` and `Promise(T)` are **single-use
+In the current compiler subset, `Task(T)` and `Promise(T)` are **single-use
 handles**:
 
 - A `Promise(T)` handle may be **awaited at most once**. `await` consumes the handle.
@@ -255,19 +259,19 @@ handles**:
   passed through consuming call positions, and moved into collections that
   accept move-only element values.
 - Direct `Task(T)` / `Promise(T)` storage in struct or enum fields is not yet
-  supported.
+  part of the current supported subset.
 - A consumed handle may not be used again (including attempting to `await` it a
   second time, or attempting to `yield *` it a second time).
-- The checker rejects consuming a handle that was created outside the current
-  loop body (a loop may iterate multiple times).
+- Consuming a handle that was created outside the current loop body is rejected
+  in the current subset (a loop may iterate multiple times).
 
 These rules are enforced at compile time and exist to prevent double-free and
 use-after-free bugs in the current runtime lowering, where `await` frees the
 underlying handle storage after join/unwrap.
 
-#### Handle Lifetime and Cleanup
+#### Handle Lifetime and Cleanup (Current Subset)
 
-In the shipped implementation, `Task(T)` and `Promise(T)` handles are stored in
+In the current compiler subset, `Task(T)` and `Promise(T)` handles are stored in
 heap-allocated handle memory:
 
 - `await` unwraps a promise and then frees the promise handle storage.
@@ -280,23 +284,24 @@ heap-allocated handle memory:
     there is no per-call worker thread to join.
   - `Promise(T)` cleanup frees the handle storage.
 
-Because tasks are implemented using OS threads, this automatic cleanup can
-block the current OS thread when it joins a task. Promise cleanup uses the
-hosted async runtime’s destroy helper and may suspend the current coroutine
-while waiting for a pending promise to resolve when running under an executor.
+Because tasks are implemented using OS threads in the current subset, this
+automatic cleanup can block the current OS thread when it joins a task. Promise
+cleanup uses the hosted async runtime’s destroy helper and may suspend the
+current coroutine while waiting for a pending promise to resolve when running
+under an executor.
 
 ### `yield`
 
 `yield` is the task-side counterpart to `await`.
 
-Task-side semantics:
+In the intended model for tasks:
 
 - A `task fn ... -> T` produces a `Task(T)` handle when called.
 - Inside the task body, `yield <expr>;` sends a value (convertible to `T`) to
   the task’s receiver and continues execution.
 - `return <expr>;` sends the final task value (of type `T`) and terminates the
   task.
-- Outside the task, `yield <task_handle>` waits until the task produces its
+- Outside the task, `yield <task_handle>` blocks until the task produces its
   next value and yields it.
 - `yield * <task_handle>` drains all remaining task values and then joins the
   worker thread for cleanup when the task uses `attr(task=thread)`.
@@ -306,22 +311,20 @@ Task-side semantics:
   right-hand task to the enclosing task’s receiver and then joins/cleans up the
   drained task.
 
-In the shipped runtime:
+In the current compiler subset:
 
-- `yield <task_handle>` and `yield * <task_handle>` suspend the current
-  coroutine when used under the hosted async executor.
-- Outside the executor owner thread (or when no executor is active), the same
-  waits block the current OS thread.
+- `yield` is a blocking OS-thread operation (like the rest of the current
+  concurrency runtime).
 - `yield` is permitted only inside `task fn` / `async task fn` bodies and inside
   `task { ... }` / `task loop { ... }` blocks.
 - The statement forms (`yield <value>;` and `yield * <task_handle>;` forwarding)
   require an enclosing task function (`task fn` / `async task fn`), since they
   send values to the task’s receiver.
 
-#### Collected Array Ownership
+#### Collected Array Ownership (Current Subset)
 
-`yield *` and `await *` produce a heap-allocated collection of values (`T[]`)
-for convenience. The shipped lowering behaves as follows:
+In the current subset, `yield *` and `await *` produce a heap-allocated
+collection of values (`T[]`) for convenience. This is a current behavior:
 
 - the compiler inserts deterministic cleanup for these collections when their
   bindings are overwritten or go out of scope,
@@ -333,8 +336,8 @@ for convenience. The shipped lowering behaves as follows:
 `async { ... }`, `task { ... }`, `async loop { ... }`, and `task loop { ... }`
 introduce surface syntax for structured regions.
 
-These forms remain lexical scopes, but they are runtime-backed for live-handle
-cleanup:
+In the current compiler subset, these forms remain lexical scopes, but they are
+runtime-backed for live-handle cleanup:
 
 - live `Promise(T)` bindings are awaited/destroyed on scope exit,
 - live `Task(T)` bindings are drained/destroyed on scope exit,
@@ -343,13 +346,14 @@ cleanup:
   current coroutine rather than blocking the executor owner thread,
 - and no implicit nested scheduler or abort-controller injection occurs.
 
-## Runtime Boundaries
+## Current Runtime Boundaries
 
-This language document describes the shipped concurrency surface and its active
-runtime boundaries. Longer-term runtime architecture notes are tracked in
-[Async runtime](?p=compiler/async-runtime).
+This language document describes the shipped concurrency subset and its current
+boundaries. Longer-term runtime architecture notes are tracked in
+`docs/compiler/async-runtime.md`; the runtime backlog items for the current
+hosted subset are now implemented.
 
-Active boundaries and non-goals:
+Current boundaries and non-goals:
 
 - `async` is cooperative: there is no preemptive async scheduling.
 - `task fn` calls default to the global task pool; `attr(task=thread)` is the
@@ -360,7 +364,7 @@ Active boundaries and non-goals:
 - structured blocks/loops guarantee deterministic live-handle cleanup on scope
   exit and early exit, but they do not inject implicit cancellation tokens or
   nested executors.
-- Task-boundary safety still uses the conservative rule that rejects
+- Task-boundary safety still uses the conservative current rule that rejects
   ordinary non-opaque `&T` across `task fn` / `async task fn` boundaries.
 - `await Task(T)` remains rejected; task values are consumed via `yield` /
   `yield *`.

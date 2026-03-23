@@ -21,6 +21,8 @@ WIKI_INDEX = SILK_ROOT / "wiki" / "index.json"
 
 P_LINK_RE = re.compile(r"(?:(?P<kind>docs|wiki)/)?\?p=(?P<id>[a-zA-Z0-9_./-]+)")
 MD_LINK_RE = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
+RAW_VIEWER_REF_RE = re.compile(r"(?<!\]\()(?<!\()(?<!/)\?p=[a-zA-Z0-9_./-]+")
+RAW_MANPAGE_REF_RE = re.compile(r"(?<!\[)`[A-Za-z0-9_:+.-]+` \(([137])\)")
 
 SKIP_PREFIXES = ("http://", "https://", "mailto:", "tel:", "data:", "javascript:", "#")
 
@@ -218,6 +220,41 @@ def check_spec_has_no_repo_internal_paths(spec_path: Path) -> list[Issue]:
     return issues
 
 
+def iter_auditable_lines(md: Path) -> list[tuple[int, str]]:
+    text = md.read_text(encoding="utf-8")
+    out: list[tuple[int, str]] = []
+    in_fence = False
+    for lineno, line in enumerate(text.splitlines(), start=1):
+        stripped = line.lstrip()
+        if stripped.startswith("```") or stripped.startswith("~~~"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        if stripped.startswith("#"):
+            continue
+        out.append((lineno, line))
+    return out
+
+
+def check_no_raw_viewer_refs(source_root: Path) -> list[Issue]:
+    issues: list[Issue] = []
+    for md in source_root.rglob("*.md"):
+        for lineno, line in iter_auditable_lines(md):
+            if RAW_VIEWER_REF_RE.search(line):
+                issues.append(Issue(md, f"Line {lineno}: raw ?p= reference must be a markdown link."))
+    return issues
+
+
+def check_no_raw_manpage_refs(source_root: Path) -> list[Issue]:
+    issues: list[Issue] = []
+    for md in source_root.rglob("*.md"):
+        for lineno, line in iter_auditable_lines(md):
+            if RAW_MANPAGE_REF_RE.search(line):
+                issues.append(Issue(md, f"Line {lineno}: raw manpage reference must be a markdown link."))
+    return issues
+
+
 def main() -> int:
     if not DOCS_INDEX.exists() or not WIKI_INDEX.exists():
         print("Missing Silk index.json files; run build scripts first.", file=sys.stderr)
@@ -237,6 +274,10 @@ def main() -> int:
     issues += check_no_arena_identifiers(WIKI_SOURCE)
     issues += check_no_works_today_labels(DOCS_SOURCE)
     issues += check_no_works_today_labels(WIKI_SOURCE)
+    issues += check_no_raw_viewer_refs(DOCS_SOURCE)
+    issues += check_no_raw_viewer_refs(WIKI_SOURCE)
+    issues += check_no_raw_manpage_refs(DOCS_SOURCE)
+    issues += check_no_raw_manpage_refs(WIKI_SOURCE)
     issues += check_spec_has_no_repo_internal_paths(DOCS_SOURCE / "spec" / "2026.md")
 
     if issues:

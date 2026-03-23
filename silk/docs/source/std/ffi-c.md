@@ -1,7 +1,5 @@
 # `std::ffi::c` (C FFI helpers)
 
-Status: **Implemented subset**.
-
 This module provides small, explicit helpers for interoperating with C APIs
 from Silk via `ext` declarations.
 
@@ -54,7 +52,7 @@ Choose the form that matches the C API contract you are binding.
   or not NUL-terminated, behavior is undefined.
 - These helpers do not validate UTF-8. A C string may contain arbitrary bytes.
 
-## Exported API
+## API
 
 - C scalar aliases: `c_int`, `size_t`, `ssize_t`, …
 - `cstr_len(ptr: u64) -> int`

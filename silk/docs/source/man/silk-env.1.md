@@ -50,6 +50,6 @@ silk env
 
 ## See Also
 
-- `silk` (1)
-- `silk-cc` (1)
-- `silk-build` (1)
+- [silk (1)](?p=man/silk.1)
+- [silk-cc (1)](?p=man/silk-cc.1)
+- [silk-build (1)](?p=man/silk-build.1)

@@ -15,6 +15,8 @@ What is intended to work end-to-end (lexer → parser → checker → lowering �
 - Compile-time compilation during type checking:
   - invalid patterns are rejected during type checking,
   - invalid or duplicate flags are rejected during type checking,
+  - overly deep regexp nesting is rejected within a conservative compile
+    stack budget instead of recursing without a bound in the embedder,
   - successful literals embed compiled bytecode into the output.
 - The literal’s type is `regexp`.
 
@@ -59,8 +61,20 @@ The type checker rejects:
   compiled bytecode embedded in read-only data.
 - The bytecode format is owned by the runtime regex engine; `regexp` values are
   opaque and must be consumed via `std::regex`.
+- A literal `regexp` is borrowed data, not a heap-owned regex object:
+  `std::regex::RegExp.compile(...)` is the owning/runtime-allocated path, while
+  wrapping a literal in `std::regex::RegExp` does not transfer ownership.
+- When a foreign ABI caller supplies a malformed `regexp` buffer to
+  `std::regex`, the runtime rejects it as invalid input before entering the
+  bundled engine.
+- If a literal/borrowed/foreign `regexp` is later passed to the low-level
+  regex free path, the runtime ignores it safely instead of freeing arbitrary
+  pointers.
 - In the current subset, matching is defined over the raw bytes of the input
   `string`, and match indices are byte offsets.
+- Literal compilation uses the same conservative regexp compile stack budget as
+  runtime `std::regex::RegExp.compile(...)`; excessively deep patterns are
+  rejected as `E2104` (`invalid regexp literal`).
 
 ## Examples
 

@@ -18,7 +18,7 @@ The server indexes open documents together with the nearest-package
 `silk.toml` graph, manifest definition files, stdlib modules (when enabled),
 and manifest-owned native C sources/headers used by `ext` declarations.
 
-The LSP behavior and supported requests are documented at `?p=compiler/lsp-silk`.
+The LSP behavior and supported requests are documented at [silk-lsp](?p=compiler/lsp-silk).
 
 ## Options
 
@@ -31,5 +31,5 @@ The LSP behavior and supported requests are documented at `?p=compiler/lsp-silk`
 
 ## See Also
 
-- `silk` (1)
-- `?p=compiler/lsp-silk`
+- [silk (1)](?p=man/silk.1)
+- [silk-lsp reference](?p=compiler/lsp-silk)

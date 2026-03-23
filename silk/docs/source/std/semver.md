@@ -1,6 +1,6 @@
 # `std::semver`
 
-Status: **Implemented subset**. `std::semver` provides a SemVer 2.0.0 parser and
+`std::semver` provides a SemVer 2.0.0 parser and
 precedence comparison.
 
 This module is intentionally strict and focused:
@@ -15,7 +15,6 @@ This module is intentionally strict and focused:
   slices from the input.
 
 ## Exported API
-
 ### Parsing
 
 - `parse(input: string) -> ParseResult`
@@ -74,6 +73,15 @@ Formal contract surface:
   `cmp_prerelease`) also carry result-range postconditions, so downstream
   verified code can rely on the public comparison path rather than duplicating
   ad hoc ordering lemmas.
+- `std::semver` also exports reusable Formal Silk theories for the
+  `major.minor.patch` core triplet:
+  - `semver_core_eq(...)`
+  - `semver_core_ge(...)`
+  - `semver_core_gt(...)`
+  - `semver_core_lt(...)`
+  - `semver_core_le(...)`
+  These are the right vocabulary when a proof cares about stable-release core
+  ordering but intentionally ignores prerelease/build suffix semantics.
 - The current formal surface intentionally stops short of fully encoding the
   prerelease identifier ordering rules as a reusable theory. Those rules are
   implemented and tested at runtime, but the shipped proof vocabulary focuses
@@ -85,7 +93,7 @@ Notes:
   - `1.0.0+1` and `1.0.0+2` compare equal (`cmp == 0`),
   - but they are not exactly equal (`eq` is false).
 
-## Examples
+## Example
 
 ```silk
 import std::semver;
@@ -122,9 +130,3 @@ fn main () -> int {
   }
 }
 ```
-
-## See also
-
-- [`std::strings`](?p=std/strings)
-- [`std::result`](?p=std/result)
-- [`std::interfaces`](?p=std/interfaces)

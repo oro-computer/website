@@ -1,7 +1,5 @@
 # `std::runtime`
 
-Status: **Implemented core interfaces**.
-
 `std::runtime` defines a *runtime interface layer* that sits underneath the
 rest of the standard library.
 
@@ -12,7 +10,7 @@ non-POSIX, embedded, sandboxed runtimes) should be able to provide their own
 runtime implementation by supplying an alternate stdlib root with compatible
 `std::runtime::...` modules.
 
-## Description
+## Motivation
 
 - `std::fs`, `std::task`, `std::sync`, and other OS-facing std modules need
   low-level primitives (files, clocks, threads, syscalls).
@@ -20,7 +18,7 @@ runtime implementation by supplying an alternate stdlib root with compatible
 - Keeping these differences confined to `std::runtime::...` avoids scattering
   `ext` and platform `#if` style logic across the entire stdlib.
 
-### Backend structure
+## Structure
 
 The std runtime is organized as:
 
@@ -64,7 +62,7 @@ interface point, while platform backends (such as `std::runtime::posix::<area>`
 and `std::runtime::windows::<area>`) can exist as separate modules in an
 alternate stdlib root without changing higher-level `std::...` modules.
 
-### Interface design rules
+## Interface Design Rules
 
 - The `std::runtime::...` surface is allowed to be low-level and `unsafe`:
   raw pointers, integer error codes, and OS-specific constants are acceptable.
@@ -88,8 +86,7 @@ alternate stdlib root without changing higher-level `std::...` modules.
       `std::runtime::wasi::time`) use `std::runtime::wasi::mem` for allocation
       and `__silk_*` intrinsics.
 
-## Exported API
-
+## Considerations
 Implemented runtime areas in the shipped stdlib:
 
 - `std::runtime::mem` — low-level allocation and compiler-backed intrinsics used by
@@ -112,6 +109,16 @@ Implemented runtime areas in the shipped stdlib:
   - `kind() -> string` returns the current build kind (`"executable"`, `"object"`, `"static"`, or `"shared"`).
   - `mode() -> string` returns the current build mode (`"debug"`, `"release"`, or `"test"`).
   - `version() -> string` returns the current package version when building a package, otherwise `"0.0.0"`.
+  - the module also exports Formal Silk build-gating theories:
+    - `build_kind_is(...)`
+    - `build_mode_is(...)`
+    - `requires_debug_mode()`
+    - `requires_release_mode()`
+    - `requires_executable_kind()`
+    - `requires_object_kind()`
+    - `requires_static_kind()`
+    - `requires_shared_kind()`
+    - `build_version_at_least(...)`
 - `std::runtime::fs` — filesystem primitives used by `std::fs` (hosted baseline;
   on `wasm32-wasi` the shipped backend supports a small subset using the first
   preopened directory as a sandbox root, and resolves relative paths against a
@@ -171,40 +178,38 @@ Implemented runtime areas in the shipped stdlib:
     affects allocations routed through `silk_rt_malloc_bytes` /
     `silk_rt_realloc_bytes` / `silk_rt_free_bytes`; it does not change the
     allocator used by `std::runtime::mem` for heap-backed pointers.
+  - allocator changes affect future bundled-runtime allocations. Any pointer
+    returned by `silk_rt_malloc_bytes(...)` remembers the realloc/free hooks
+    that created it, so later `silk_rt_realloc_bytes(...)` /
+    `silk_rt_free_bytes(...)` calls keep allocator identity stable across later
+    allocator changes. Runtime-owned regex bytecode uses that same lifetime
+    rule.
+  - the allocator override is process-global, but bundled-runtime helper calls
+    and `silk_rt_set_allocator` are internally synchronized while reading or
+    updating the current hook set. Concurrent allocator changes can still
+    affect which hook future bundled-runtime allocations use.
+  - `silk_rt_realloc_bytes(...)` and `silk_rt_free_bytes(...)` only accept
+    pointers that correspond to a currently live allocation previously
+    returned by `silk_rt_malloc_bytes(...)` or
+    `silk_rt_realloc_bytes(...)`. Foreign pointers, forged helper headers,
+    stale pre-`realloc` pointers, and already-freed helper pointers are all
+    treated as non-live inputs and ignored safely (`realloc` returns `NULL`,
+    `free` is a no-op).
   - when building with `--noheap`, the compiler links `libsilk_rt_noheap.a`
     instead of `libsilk_rt.a`. In that configuration, `libsilk_rt` performs no
     default heap allocation unless an embedder installs an allocator via
     `silk_rt_set_allocator`.
 
-## Examples
-
-```silk
-import std::runtime::build;
-
-fn main () -> int {
-  let kind = std::runtime::build.kind();
-  let mode = std::runtime::build.mode();
-  let version = std::runtime::build.version();
-
-  if kind == "" { return 1; }
-  if mode == "" { return 2; }
-  if version == "" { return 3; }
-  return 0;
-}
-```
-
-## Considerations
-
-### Runtime areas that continue to expand
+Follow-ups are expected to introduce additional runtime areas:
 
 - Async event loop / executor integration (`std::runtime::event_loop`) for hosted `async`/`await`:
-  - the compiler ships a bundled hosted executor in `libsilk_rt`
-    (`src/silk_rt_async.c`) and lowers `async`/`await` to it on hosted
-    targets with that backend,
+  - the compiler already ships a bundled bring-up executor in `libsilk_rt`
+    (`src/silk_rt_async.c`) and lowers `async`/`await` to it on the hosted
+    `linux/x86_64` target,
   - the `std::runtime::event_loop` module now exposes low-level awaitable
     building blocks (timers + fd readiness, including `fd_wait_readable2` and `fd_wait_readable_any`) and an explicit `Handle`/`poll`
     surface for manually driving the hosted executor/event loop. Higher-level
-    async adapters continue expanding on top of this
+    async adapters are still follow-up work
     (see `docs/compiler/async-runtime.md`).
   - the hosted executor is thread-affine: `Handle.poll()` / `Handle.deinit()`
     must be called from the same OS thread that created the handle; cross-thread
@@ -221,7 +226,7 @@ fn main () -> int {
     checks.
 - WASI networking (via WASI sockets or similar proposals) when supported by the toolchain targets.
 
-### Providing a custom runtime
+## Providing a Custom Runtime
 
 To provide your own runtime implementation underneath the standard library,
 ship an alternate stdlib root that includes compatible `std::runtime::...`
@@ -287,10 +292,3 @@ Archive member naming requirement (current scheme):
 - for example: `std/runtime/posix/task.slk` → `runtime_posix_task.o`.
 
 The in-repo `make stdlib` target produces archives with this naming scheme.
-
-## See also
-
-- [`std::package-structure`](?p=std/package-structure)
-- [`std::filesystem`](?p=std/filesystem)
-- [`std::io`](?p=std/io)
-- [`std::task`](?p=std/task)

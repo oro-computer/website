@@ -1,10 +1,9 @@
 # Silk Language Server (LSP)
 
-This document specifies the Silk Language Server Protocol (LSP) server.
+This document specifies the current Language Server Protocol (LSP)
+implementation for Silk.
 
-The goal of the language server is to provide editor and IDE integrations
-(diagnostics, hover, completion, signature help, and definition lookup) while
-remaining a thin wrapper around the existing compiler front-end.
+The goal of the language server is to provide editor and IDE integrations (diagnostics, and eventually features like completion and hover) while remaining a thin, spec-driven wrapper around the existing compiler front-end.
 
 ## Overview
 
@@ -21,10 +20,7 @@ The Silk language server:
   those sources are available,
 - does not change the language surface or ABI; it is a tooling layer on top of the existing compiler.
 
-No language features or CLI options are introduced by the LSP itself. Any
-later additions that affect language semantics or user-facing flags must still
-be documented in the relevant language docs or the
-[CLI reference](?p=compiler/cli-silk) first.
+No language features or CLI options are introduced by the LSP itself. Any future extensions that affect language semantics or user-facing flags must still be documented in the appropriate `docs/language/` or `docs/compiler/cli-silk.md` files first.
 
 ## Running the Server
 
@@ -65,8 +61,8 @@ Position handling note:
 The server supports the standard LSP initialization sequence:
 
 - `initialize` (request):
-  - Advertised capabilities:
-    - `positionEncoding`: `"utf-16"` (the server uses UTF-16 positions for broad client compatibility).
+  - Advertised capabilities (initial version):
+    - `positionEncoding`: `"utf-16"` (the server currently operates in UTF-16 positions for maximum client compatibility).
     - `textDocumentSync`:
       - `openClose: true`,
       - `change: 1` (Full document sync),
@@ -81,18 +77,15 @@ The server supports the standard LSP initialization sequence:
     - `signatureHelpProvider`:
       - trigger characters `(` and `,`,
       - provides function and method signatures for the current call.
-    - The server does not advertise references/rename, semantic tokens, or
-      other advanced features.
+    - No references/rename, semantic tokens, or other advanced features are claimed in the initial implementation.
 - The server uses `rootUri` (or `rootPath`) to help locate a stdlib root when no explicit `--std-root` or `SILK_STD_ROOT` is set.
 - `initialized` (notification):
-  - Accepted but does not trigger additional behavior.
+  - Accepted but does not currently trigger additional behavior.
 - `shutdown` (request) and `exit` (notification) are honored as in the LSP spec.
 - Requests received after `shutdown` (other than `exit`) are treated as invalid and answered with an error response.
-- `$\/cancelRequest` notifications are accepted and ignored; the server does not
-  track per-request cancellation state.
+- `$\/cancelRequest` notifications are accepted and ignored; the initial server does not track per-request cancellation state.
 
-Any additional capabilities must be documented here before being implemented
-and advertised.
+Any future capabilities (completion, hover, goto definition, etc.) must be documented here before being implemented.
 
 ## Hover
 
@@ -163,7 +156,7 @@ The server provides `textDocument/definition` for open documents.
   declaration, using the same function-vs-variable matching rule as hover.
 - If symbol resolution fails, the server falls back to a lexical scan of the current file for the first matching `let`/`fn`/`ext`/`struct`/`enum`/`interface`/`error` declaration.
 
-Current resolution limits:
+Known limitations in this initial support:
 
 - local block scopes and shadowing are only modeled for `let`-style bindings (not for match-expression binders),
 - ambiguous names across multiple imports are not disambiguated; the first match wins,
@@ -198,7 +191,7 @@ module set.
   - namespace completions after `::` for known packages, package-import aliases, default/namespace imports, and `using`-introduced namespace aliases,
   - member completions for struct fields and methods after `.` when the receiver type is known (including locals with type annotations or struct-literal/cast inference),
   - struct-literal field suggestions in `Type { ... }` expressions when the cursor is in a field-name position (before the `:`).
-- The server:
+- Currently:
   - returns completion items with `label`, `kind`, and `detail` populated when symbol data is available,
   - attaches a plaintext signature preview for functions and methods in completion documentation,
   - filters results by the identifier prefix immediately preceding the cursor position,
@@ -214,9 +207,9 @@ As richer front-end support becomes available, completion may be extended to:
 - distinguish between functions, types, variables, and other symbol kinds,
 - surface standard library symbols by consulting the resolver.
 
-## Signature Help
+## Signature Help (Initial Support)
 
-The server provides `textDocument/signatureHelp`:
+The server provides a minimal implementation of `textDocument/signatureHelp`:
 
 - Signature help is computed for the innermost call expression at the cursor.
 - The server supports:
@@ -233,13 +226,11 @@ The server provides `textDocument/signatureHelp`:
 
 For constructor overload sets, the server returns multiple signatures and selects an active signature using argument-count heuristics. The implicit receiver parameter (`mut self: &Type`) is not shown in the signature parameters for `new Type(...)`.
 
-Signature help is heuristic. Some clients request signature help even before
-`(` is typed; the server attempts to resolve the identifier under the cursor as
-a callee in that case.
+Signature help is heuristic and will become richer as the front-end’s symbol tables evolve. Some clients may request signature help even before `(` is typed; the server will attempt to resolve the identifier under the cursor as a callee in that case.
 
-## Document Symbols
+## Document Symbols (Initial Support)
 
-The server provides `textDocument/documentSymbol`:
+The server provides a minimal implementation of `textDocument/documentSymbol`:
 
 - Document symbols are derived lexically from the source text:
   - top-level `fn` declarations are reported as function symbols,
@@ -260,7 +251,7 @@ The server provides `textDocument/documentSymbol`:
   - `ext` declarations use `Function` (numeric value `12`),
   - `impl` declarations use `Namespace` (numeric value `3`).
 
-Likely extensions here are:
+Future extensions may:
 
 - organize symbols hierarchically (for example nesting methods under an `impl`),
 - add additional declaration kinds (imports and interface members).
@@ -319,24 +310,19 @@ By default, the language server will load standard library packages referenced b
 
 You can disable stdlib integration entirely with `--nostd`, which is useful for sandboxed editor setups or custom stdlib forks.
 
-### Diagnostics Source and Current Limits
+### Diagnostics Source and Limitations (Initial)
 
 Diagnostics are derived from the existing compiler front-end:
 
-- Parsing uses `parser.Parser` and the existing rules from
-  [Grammar](?p=language/grammar).
-- Type checking uses `checker.checkModule` and the rules from
-  [Grammar](?p=language/grammar), [Types](?p=language/types), and related
-  language docs.
+- Parsing uses `parser.Parser` and the existing grammar in `docs/language/grammar.md`.
+- Type checking uses `checker.checkModule` and the rules from `docs/language/types.md` and related concept docs.
 
 For responsiveness while typing:
 
 - `didChange` diagnostics are computed for the changed document by parsing it and type-checking it against the cached module set (imports + std modules). The cache is not rebuilt on every change.
 - A full module-set parse + resolve + type-check (including imports) is performed on `didSave`, and diagnostics are published for all affected modules.
 
-The current front-end exposes errors as simple error codes (e.g.
-`UnexpectedToken`, `TypeMismatch`) without rich spans. The LSP therefore
-follows these rules:
+The current front-end exposes errors as simple error codes (e.g. `UnexpectedToken`, `TypeMismatch`) without rich spans. The initial LSP implementation therefore follows these rules:
 
 - Parse errors:
   - reported at the location of the unexpected token using the token’s line/column and length,
@@ -345,27 +331,26 @@ follows these rules:
   - reported at an approximate source location associated with the expression or statement that triggered the error (for example, the initializer expression for a mismatched `let` binding or the `break` / `continue` / `return` keyword),
   - message text distinguishes between known error kinds (e.g. `TypeMismatch`, `InvalidReturn`) and carries the span reported by the type checker when available; if no span is available, diagnostics fall back to a coarse location.
 - Conditional compilation (`if attr(...)`):
-  - the server evaluates `attr(...)` query conditions using the host target (`arch`, `os`, `target`) and the enabled feature set (currently empty),
+  - the server evaluates `attr(...)` query conditions using the host target (`arch`, `os`, `target`) and the enabled feature set (empty in the current compiler subset),
   - when an `if` / `else if` condition is an attribute-query boolean expression that resolves to a constant `true`/`false`, the inactive branch body is published as a `Hint` diagnostic tagged `Unnecessary` so editors may render it faded (similar to inactive `#if` blocks in C/C++).
 
-As the compiler evolves to carry richer diagnostic information (spans, notes,
-labels), this document and the LSP implementation must be updated so that:
+As the compiler evolves to carry richer diagnostic information (spans, notes, labels), this document and the LSP implementation must be updated so that:
 
 - diagnostics map directly to the front-end’s structured error data,
 - positions and ranges reflect the exact source spans of the underlying errors.
 
-## Current scope boundaries
+## Non-Goals (Initial Version)
 
-`silk-lsp` does **not** provide:
+The initial `silk-lsp` implementation explicitly does **not** provide:
 
 - full semantic completions with scope-precise filtering and type inference (beyond the current heuristic symbol index),
 - cross-file go-to-definition / references,
 - semantic tokens or inlay hints,
 - code actions or formatting.
 
-These features must be:
+These features are intended as future extensions and must be:
 
-- designed and documented here (and in any relevant language or std docs),
+- designed and documented here (and in any relevant `docs/language/` or `docs/std/` docs),
 - backed by the underlying compiler front-end and/or standard library,
 - covered by tests (Zig and, where appropriate, C) before being advertised as supported capabilities.
 
@@ -373,6 +358,12 @@ These features must be:
 
 The language server is part of the broader tooling story described in:
 
-- [Compiler architecture](?p=compiler/architecture),
-- [CLI reference](?p=compiler/cli-silk),
-- [Usage guides](?p=usage/getting-started).
+- `docs/compiler/architecture.md` (compiler and tool layout),
+- `docs/compiler/cli-silk.md` (CLI behavior for `silk`),
+- `docs/usage/` (editor integrations, including Vim and LSP-based workflows).
+
+The `tmp/zls/` directory in the Silk compiler repository contains a vendored copy of the Zig Language Server (ZLS) for inspiration and experimentation only:
+
+- it is **not** part of the supported Silk toolchain,
+- it must not be treated as authoritative for Silk semantics,
+- ideas from it may inform the design and implementation of `silk-lsp`, but Silk remains spec-driven from the `docs/` tree.

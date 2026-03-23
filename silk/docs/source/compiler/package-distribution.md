@@ -1,9 +1,10 @@
 # Silk Package Distribution
 
-This document describes the package authoring, publication, and consumption
-model Silk uses today. The manifest, CLI, install, inspection/linting, and
-binary-dependency consumption behavior described here are part of the current
-toolchain surface.
+Status: **Current supported package-distribution model**. The manifest, CLI,
+install, inspection/linting, and binary-dependency consumption behavior
+described here are implemented in the current toolchain. This document
+describes the package authoring, publication, and consumption model Silk uses
+today.
 
 ## Summary
 
@@ -16,6 +17,41 @@ authors may manage that separately for whatever ecosystems they target.
 
 This keeps `silk.toml` as the single canonical manifest while letting packages
 move through ordinary distribution systems.
+
+## Goals
+
+- Keep `silk.toml` as the canonical package manifest for authoring, packaging,
+  and consumption.
+- Make the package unit portable across:
+  - local source checkouts,
+  - vendored directories in a repo,
+  - unpacked GitHub release/source archives,
+  - filesystem trees populated by third-party package managers,
+  - and system package manager installs.
+- Support four first-class package shapes:
+  - source packages,
+  - interface-only packages,
+  - binary-only packages,
+  - hybrid packages that ship both source and prebuilt artifacts.
+- Keep package identity independent of any external registry or package manager.
+- Preserve ergonomic modularity inspired by successful package ecosystems:
+  - one manifest at package root,
+  - explicit public package metadata,
+  - explicit packaged file set,
+  - clear executable/library exposure,
+  - and predictable install/lookup rules.
+
+## Non-Goals
+
+- A Silk-owned central registry.
+- Requiring the `silk` compiler to fetch packages from the network during an
+  ordinary build.
+- Generating distro-native packaging recipes for every ecosystem in the first
+  iteration.
+- Replacing distro package managers, npm, or GitHub releases with Silk-specific
+  infrastructure.
+- Adding manager-specific manifest sections or resolver rules for each external
+  ecosystem.
 
 ## Design Principles
 

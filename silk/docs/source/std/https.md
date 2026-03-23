@@ -1,11 +1,16 @@
 # `std::https`
 
-Status: **Implemented (hosted, blocking; HTTPS subset)**. `std::https` provides a
+`std::https` provides a
 small HTTPS client/server connection API on top of `std::tls` (mbedTLS) and
 `std::net::TCPStream`.
 
-## Description
+See also:
 
+- `docs/std/http.md` (`std::http` message parsing/serialization)
+- `docs/std/tls.md` (`std::tls` TLS sessions and transport integration)
+- RFC 2818 (HTTP over TLS)
+
+## Scope
 Implemented:
 
 - Blocking TLS handshake using `std::tls::Session`.
@@ -18,7 +23,7 @@ Not implemented (yet):
 - ALPN configuration and HTTP/2 negotiation.
 - Non-blocking integration with an async runtime.
 
-## Exported API
+## Public API (Current Compiler Subset)
 
 ```silk
 module std::https;
@@ -70,65 +75,9 @@ impl Server {
 }
 ```
 
-### Errors
-
-- `ERR_CONNECT`
-- `ERR_TLS`
-- `ERR_IO`
-- `ERR_HTTP`
-- `ERR_OUT_OF_MEMORY`
-- `Error`
-
-### Client connection
-
-- `Connection.connect(addr)`
-- `Connection.connect_v6(addr)`
-- `Connection.connect_host(addr, hostname)`
-- `Connection.connect_host_v6(addr, hostname)`
-- `is_valid()`, `close()`
-- `write_request(...)`, `read_request()`, `write_response(...)`, `read_response()`
-
-### Server
-
-- `Server.listen(...)`
-- `Server.listen_v6(...)`
-- `is_valid()`
-- `local_port()`
-- `accept()`
-- `close()`
-
-## Examples
-
-### Connect with hostname verification
-
-```silk
-import std::https;
-import std::net;
-
-fn main () -> int {
-  let addr = std::net::SocketAddrV4.loopback(443);
-  let conn = match std::https::Connection.connect_host(addr, "localhost") {
-    Ok(v) => v,
-    Err(err) => return if err.kind == std::https::ERR_CONNECT { 0 } else { 1 },
-  };
-
-  if !conn.is_valid() {
-    return 2;
-  }
-
-  return 0;
-}
-```
-
-## Considerations
+Notes:
 
 - This API is blocking and intended for the hosted POSIX baseline.
 - `connect_host(...)` / `connect_host_v6(...)` perform certificate chain
   verification using a system CA bundle and enable hostname verification by
   calling `std::tls::Session.set_hostname(...)` before the handshake.
-
-## See also
-
-- [`std::http`](?p=std/http)
-- [`std::tls`](?p=std/tls)
-- RFC 2818

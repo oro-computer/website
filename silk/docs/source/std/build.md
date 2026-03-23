@@ -18,10 +18,11 @@ This module is intentionally a *tooling* surface:
 A `Context` describes the build-module invocation.
 
 - `package_root`: absolute package root directory.
-- `action`: one of:
-  - `"build"`
-  - `"install"`
-  - `"uninstall"`
+- `action`: the current package action string.
+  - `"build"` for `silk build --package`, `silk check --package`, and
+    `silk test --package`
+  - `"install"` for `silk build install --package`
+  - `"uninstall"` for `silk build uninstall --package`
 
 The driver provides these values to the build module via the
 `std::interfaces::Builder` entrypoint parameters:
@@ -49,7 +50,15 @@ archives used by `std::tls` on `linux/x86_64`), `[[target]].inputs` supports
 `@vendored/<name>.a` entries (see `docs/compiler/package-manifests.md`). Build
 modules may emit these via `Build.target_add_input(...)`.
 
-## Exported API
+For native header inputs, `Build.target_add_input(...)` follows the same rule
+as direct manifest/CLI builds:
+
+- if the added path ends in `.h` and a sibling `.c` exists, Silk compiles that
+  `.c`,
+- otherwise Silk falls back to compiling the header itself as a C translation
+  unit.
+
+## API (current)
 
 Build modules are intended to be normal modules that export a `run` entrypoint.
 
@@ -173,14 +182,7 @@ export async fn run (package_root: string, action: string) -> int {
 }
 ```
 
-## See also
-
-- [`std::interfaces`](?p=std/interfaces)
-- [`Package manifests`](?p=compiler/package-manifests)
-- [`Build scripts`](?p=compiler/build-scripts)
-
-## Design goals
-
+## Considerations
 This module is expected to grow toward a Zig-like build system:
 
 - programmatic installation/uninstallation hooks,

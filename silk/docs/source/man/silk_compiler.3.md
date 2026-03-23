@@ -50,10 +50,10 @@ Typical workflow:
 2. Optionally configure it (stdlib selection, target triple, etc).
 3. Add one or more source buffers with `silk_compiler_add_source_buffer`.
 4. Build an artifact with `silk_compiler_build` (filesystem) or `silk_compiler_build_to_bytes` (in-memory).
-5. On error, retrieve diagnostics via `silk_compiler_last_error` and `silk_error_format` (see `silk_error` (3)).
+5. On error, retrieve diagnostics via `silk_compiler_last_error` and `silk_error_format` (see [silk_error (3)](?p=man/silk_error.3)).
 6. Destroy the compiler with `silk_compiler_destroy`.
 
-The canonical ABI specification lives at `?p=compiler/abi-libsilk`.
+The canonical ABI specification lives at [libsilk ABI reference](?p=compiler/abi-libsilk).
 
 ## Configuration
 
@@ -85,7 +85,7 @@ The `name` parameter is used for diagnostics and does not need to correspond to 
 
 `silk_compiler_build` writes an artifact to `output_path`. Unlike the CLI, this ABI call does not create parent directories; the output directory must exist.
 
-`silk_compiler_build_to_bytes` returns an in-memory artifact via `SilkBytes`. On success, the caller must free the buffer with `silk_bytes_free` (see `silk_bytes` (3)).
+`silk_compiler_build_to_bytes` returns an in-memory artifact via `SilkBytes`. On success, the caller must free the buffer with `silk_bytes_free` (see [silk_bytes (3)](?p=man/silk_bytes.3)).
 
 ## Thread safety
 
@@ -93,6 +93,6 @@ The `SilkCompiler` object is not currently specified as thread-safe. Confine it 
 
 ## See Also
 
-- `silk_error` (3), `silk_bytes` (3), `silk_abi_get_version` (3)
-- `libsilk` (7)
-- `?p=compiler/abi-libsilk`
+- [silk_error (3)](?p=man/silk_error.3), [silk_bytes (3)](?p=man/silk_bytes.3), [silk_abi_get_version (3)](?p=man/silk_abi_get_version.3)
+- [libsilk (7)](?p=man/libsilk.7)
+- [libsilk ABI reference](?p=compiler/abi-libsilk)

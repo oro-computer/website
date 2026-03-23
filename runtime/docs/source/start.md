@@ -13,6 +13,16 @@ This documentation is organized into:
 - **Configuration** — `oro.toml`, `.ororc`, and `copy_map`.
 - **JavaScript APIs** — `oro:*` modules like `oro:application`, `oro:window`, and `oro:hooks`.
 
+## CLI input forms
+
+The CLI accepts three common inputs:
+
+- a **project directory** containing `oro.toml`
+- a single **HTML entry point**
+- a single **JavaScript module**
+
+That means you can start with a full project or point `oroc run` / `oroc build` at one source file while the CLI infers a minimal configuration.
+
 ## Ask AI / `llms.txt`
 
 For AI assistants and LLM tooling:

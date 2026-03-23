@@ -1,6 +1,6 @@
 # `std::buffer`
 
-Status: **Implemented (scalar-slot + packed bytes)**. `std::buffer` provides:
+`std::buffer` provides:
 
 - `Buffer(T)`: an owning, fixed-capacity **scalar-slot** buffer (cap measured in
   elements), with view/slice helpers returning `std::arrays::Slice(T)`.
@@ -11,7 +11,13 @@ In the long-term design, the compiler may treat `Buffer(T)` as a special
 primitive, but the shipped stdlib surface is already usable end-to-end (see
 `docs/language/buffers.md`).
 
-## Exported API
+See also:
+
+- `docs/std/vector.md` (`Vector(T)`)
+- `docs/language/buffers.md` (intrinsic `Buffer(T)` design)
+- `docs/std/io.md` and `docs/std/strings.md` (byte-oriented APIs)
+
+## Current API (Implemented)
 
 `std::buffer` provides:
 
@@ -109,45 +115,7 @@ export type BufferF32 = std::vector::Vector(f32);
 export type BufferF64 = std::vector::Vector(f64);
 ```
 
-## Examples
-
-### Fixed-capacity typed storage and packed byte output
-
-```silk
-import std::buffer;
-
-fn main () -> int {
-  let mut ints = match std::buffer::Buffer(int).init(3) {
-    Ok(v) => v,
-    Err(_) => return 1,
-  };
-  ints.write(0, 10);
-  ints.write(1, 20);
-  ints.write(2, 30);
-  if ints.read(1) != 20 {
-    ints.drop();
-    return 2;
-  }
-  ints.drop();
-
-  let mut bytes = match std::buffer::BufferU8.init(4) {
-    Ok(v) => v,
-    Err(_) => return 3,
-  };
-  if bytes.push(65) != None || bytes.push(66) != None {
-    bytes.drop();
-    return 4;
-  }
-  if bytes.as_bytes().len != 2 {
-    bytes.drop();
-    return 5;
-  }
-  bytes.drop();
-  return 0;
-}
-```
-
-## Considerations
+Notes:
 
 - `Buffer(T)` is a scalar-slot buffer: `cap` is in elements, and the allocation
   size is `cap * sizeof(T)` bytes (in the current backend subset, `sizeof(u8) == 8`).
@@ -164,9 +132,22 @@ fn main () -> int {
   the current subset, so their underlying storage follows the
   scalar-slot model described in `docs/std/vector.md`.
 
-## See also
+## Implemented `std::interfaces` surface
 
-- [`std::arrays`](?p=std/arrays)
-- [`std::vector`](?p=std/vector)
-- [`Buffer(T)` language design](?p=language/buffers)
-- [`std::io`](?p=std/io)
+`std::buffer` exposes two different protocol profiles:
+
+- `Buffer(T)` is the low-level fixed-capacity owner:
+  - it implements `std::interfaces::Capacity`,
+  - and `std::interfaces::Drop`.
+- `BufferU8` is the byte-oriented growable buffer:
+  - it implements `std::interfaces::Len`,
+  - `std::interfaces::Capacity`,
+  - `std::interfaces::IsEmpty`,
+  - `std::interfaces::Clear`,
+  - `std::interfaces::ReserveAdditional`,
+  - `std::interfaces::WriteU8`,
+  - and `std::interfaces::Drop`.
+
+That split is intentional. `Buffer(T)` models raw scalar-slot storage where a
+logical initialized length is not tracked, while `BufferU8` is the ergonomic
+byte sink used by OS/FFI-style APIs.

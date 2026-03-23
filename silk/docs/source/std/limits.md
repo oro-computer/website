@@ -1,14 +1,12 @@
 # `std::limits`
 
-Status: **Implemented**.
-
 This module provides shared numeric limits for Silk primitive types.
 
 The initial surface is intentionally small and focuses on min/max bounds for
 fixed-width integer primitives (useful for validating conversions and host
 APIs that cap sizes to a particular width, such as `i32`).
 
-## Exported API
+## API (Implemented)
 
 ```silk
 module std::limits;

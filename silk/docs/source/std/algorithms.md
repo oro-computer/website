@@ -1,10 +1,15 @@
 # `std::algorithms`
 
-Status: **Design document**. This describes intended algorithm APIs; it is not
+This describes intended algorithm APIs; it is not
 implemented yet.
 
 `std::algorithms` provides common algorithms over collections (primarily
 `std::arrays::Slice(T)` and related types).
+
+See also:
+
+- `docs/std/arrays.md`
+- `docs/std/conventions.md`
 
 ## Implemented subset
 
@@ -39,37 +44,14 @@ export fn min_instant (a: Instant, b: Instant) -> Instant;
 export fn max_instant (a: Instant, b: Instant) -> Instant;
 ```
 
-## Examples
-
-```silk
-import std::algorithms;
-
-fn main () -> int {
-  let low = std::algorithms::min_int(4, 9);
-  let clamped = std::algorithms::clamp_int(15, 0, 10);
-  if low != 4 { return 1; }
-  if clamped != 10 { return 2; }
-  return 0;
-}
-```
-
-## Considerations
-
-### Scope
+## Scope
 
 `std::algorithms` is responsible for:
 
 - Searching, sorting, and transformation routines.
 - Designed to work with `std::arrays` and other iterable types.
 
-## See also
-
-- [`std::arrays`](?p=std/arrays)
-- [`std::conventions`](?p=std/conventions)
-
-## Design goals
-
-### Broader algorithm surface
+## Initial API Surface (Illustrative)
 
 The initial algorithms target `Slice(T)` since it is the most universal view
 type for contiguous collections.
@@ -93,5 +75,6 @@ Notes:
 - Stable sorting may require temporary allocations; this should be explicit
   (accept an allocator) or clearly documented.
 
+## Considerations
 - `dedup`, `partition`, `reverse`, `rotate`, `shuffle`.
 - Iterator-based algorithms once iterators and `for` are fully implemented.

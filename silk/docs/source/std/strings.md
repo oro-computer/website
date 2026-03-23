@@ -1,13 +1,20 @@
 # `std::strings`
 
-Status: **Implemented subset**. `std::strings` provides allocation-free string
-helpers plus owned string construction surfaces used throughout the standard
-library.
+A small but growing subset is
+implemented in `std/strings.slk` to support early toolchain bring-up; the rest
+of this document describes the intended long-term API.
 
 This module provides string utilities and abstractions built on top of the core
 `string` type (UTF-8 bytes) and the `Buffer(T)` intrinsic.
 
-## Exported API
+See also:
+
+- `docs/language/literals-string.md` (string semantics: UTF-8 bytes)
+- `docs/language/ext.md` (ABI/external-call representation and null-termination rule)
+- `docs/language/buffers.md` (Buffer(T) as the low-level backing store)
+- `docs/std/conventions.md` (UTF-8, allocation, and error conventions)
+
+## Current API (Implemented)
 
 The following functions exist today in `std/strings.slk` and are available to
 import:
@@ -39,8 +46,8 @@ Notes:
 - These are simple wrappers over the language’s built-in string comparisons and
   optional-coalesce operator (`??`), chosen because they are implementable in
   the current compiler subset.
-- These functions cover the lightweight, allocation-free helpers that operate
-  directly on the built-in `string` type.
+- This surface will grow alongside language/runtime features
+  required for richer string operations (slicing, iteration, allocation, etc.).
 
 In addition, a low-level `StringBuilder` type exists today for
 incremental byte construction:
@@ -115,13 +122,12 @@ Notes:
 
 - `String` uses the zero-capacity empty state `{ ptr: 0, cap: 0, len: 0 }`
   when no allocation is needed. Allocated states maintain a trailing NUL
-  terminator and satisfy `std::formal::string_storage_well_formed`, so the
+  terminator and satisfy `std::strings::string_storage_well_formed`, so the
   borrowed `string` view from `as_string()` remains safe for C APIs that expect
   `const char *`.
 - The current `String` implementation does **not** validate UTF‑8.
 - `String.as_string()` yields a non-owning view into the `String` allocation;
   callers must not use the returned `string` after the `String` is dropped.
-- `String` also implements `std::interfaces::{Len,Capacity,IsEmpty,Clear,ReserveAdditional,WriteU8,Serialize(string),Parse(std::memory::OutOfMemory),Drop}`.
 - `String` also implements `std::interfaces::{Len,Capacity,IsEmpty,Clear,ReserveAdditional,WriteU8,Serialize(string),TrySerialize(std::memory::OutOfMemory),Parse(std::memory::OutOfMemory),Drop}`.
   In practice this means `let s: string = owned as string;` is the standard,
   allocation-free way to borrow an owned `String` as a plain `string`.
@@ -130,8 +136,12 @@ Notes:
 - `String.parse(s)` is a standardized alias for `String.from_string(s)`,
   which makes generic fallible string-construction code read consistently
   across the stdlib.
+- `std::strings` also owns the reusable verification vocabulary for this
+  representation: downstream verified code that wants to talk about owned
+  string/path/search-params storage should import
+  `std::strings::string_storage_well_formed(...)`, not `std::formal`.
 
-## Examples
+Example:
 
 ```silk
 import std::strings;
@@ -169,7 +179,7 @@ fn main () -> int {
 }
 ```
 
-## Considerations
+## Scope
 
 `std::strings` is responsible for:
 
@@ -183,8 +193,7 @@ Non-goals (initially):
 - Locale-aware collation and normalization (future work).
 - Full Unicode grapheme segmentation (future work).
 
-### Owned string surfaces
-
+## Core Types
 The language provides a built-in `string` type (an immutable UTF-8 byte
 sequence). The stdlib adds:
 
@@ -203,28 +212,7 @@ Key invariants:
   null-terminated (with the trailing `\0` byte not counted in `.len`), matching
   the external-call contract in `docs/language/ext.md`.
 
-### FFI interop
-
-`string` values crossing the C ABI use `SilkString { ptr, len }` as documented
-in `docs/language/ext.md` and `docs/compiler/abi-libsilk.md`.
-
-`std::strings` provides the core invariants needed for common interop patterns:
-
-- Passing `string` to C APIs that expect `const char *` (use `.ptr`; Silk’s
-  runtime representation guarantees a trailing NUL).
-- Producing an owned, NUL-terminated string for FFI calls that require the
-  backing storage to outlive the call.
-
-## See also
-
-- [String literals](?p=language/literals-string)
-- [External declarations](?p=language/ext)
-- [Buffers](?p=language/buffers)
-- [`std::conventions`](?p=std/conventions)
-
-## Design goals
-
-### Wider string surface
+## API Sketch (Illustrative)
 
 These signatures are illustrative and will be refined alongside the language
 features required to implement them (references, generics, enums/results, etc.).
@@ -253,8 +241,19 @@ export fn find (s: string, needle: string) -> int?;
 export fn concat (alloc: std::memory::Allocator, a: string, b: string) -> String;
 ```
 
-### Additional planned surface
+## FFI Interop
 
+`string` values crossing the C ABI use `SilkString { ptr, len }` as documented
+in `docs/language/ext.md` and `docs/compiler/abi-libsilk.md`.
+
+`std::strings` should provide helpers for common interop patterns:
+
+- Passing `string` to C APIs that expect `const char *` (use `.ptr`; Silk’s
+  runtime representation guarantees a trailing NUL).
+- Producing an owned, NUL-terminated string for FFI calls that require the
+  backing storage to outlive the call (e.g. when C stores the pointer).
+
+## Considerations
 - `split`, `replace`, `join`.
 - UTF-8 scalar iteration (`chars()`), case mapping, and normalization.
 - Formatting integration (shared with `std::io`).

@@ -1,7 +1,7 @@
 # `std::math`
 
-Status: **Implemented subset**. This module provides linear
-algebra utilities for graphics and general-purpose computation.
+This module provides linear
+algebra utilities intended for graphics and general-purpose computation.
 
 The initial focus is:
 
@@ -34,7 +34,7 @@ See also:
 Dynamic-dimension operations return `Result(T, MathFailed)` when shapes are
 incompatible (for example adding vectors of different lengths).
 
-## Exported API
+## Current API (Initial Subset)
 
 ```silk
 module std::math;

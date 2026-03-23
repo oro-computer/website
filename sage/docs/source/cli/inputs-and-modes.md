@@ -99,6 +99,26 @@ Current pass-through behavior:
 
 That means pass-through mode is a different code path from the TUI.
 
+### `--print` mode
+
+`--print` is a third execution path. It does not enter the TUI, but it also
+does not fall back to the raw pass-through branch.
+
+Examples:
+
+```bash
+sage --print README.md
+sage --print src/main.slk src/sage/out.slk
+```
+
+Current `--print` behavior:
+
+- it renders inputs through Sage's safe output path
+- it may apply syntax highlighting for path inputs
+- it prints multiple inputs in the order they were provided
+- it does not render the pager chrome
+- it does not render the line-number gutter
+
 ## Syntax selection for each input kind
 
 ### Local paths
@@ -152,4 +172,3 @@ This matters when a path begins with `-`:
 ```bash
 sage -- --literal-file-named-like-a-flag
 ```
-

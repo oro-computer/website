@@ -1,9 +1,15 @@
 # Const Functions (`const fn`)
 
+## Status
+
+- Parser: **implemented**
+- Checker rules: **implemented** (current subset)
+- Compile-time evaluation: **implemented** (current subset)
+
 This document defines the surface syntax and semantics for compile-time
 functions.
 
-Today, `const fn` (and `const pure fn`) can be called
+In the current compiler subset, `const fn` (and `const pure fn`) can be called
 from `const` binding initializers when all arguments and the result are
 compile-time values (scalar values and eligible POD `struct` values).
 
@@ -38,12 +44,12 @@ Notes:
   - it is not emitted as a runtime/linkable symbol in executable, object, or
     library outputs.
 
-## Compile-Time Values
+## Compile-Time Values (Current Subset)
 
 In this document, a “compile-time value” is a value that the compiler can
 produce and manipulate during compile-time evaluation.
 
-Supported compile-time values today:
+Current subset (initial implementation target):
 
 - scalar primitives:
   - `bool`
@@ -63,20 +69,20 @@ Supported compile-time values today:
   declaration order. They may be returned from and passed to `const fn`, and
   used in `const` initializers.
 
-Not supported in `const fn` evaluation today:
+Planned (not yet supported for `const fn` in the current subset):
 
 - `string` values (string literals are supported directly in `const` bindings),
 - aggregate values beyond compile-time POD structs (enum/optional/slice/array),
 - function values as compile-time values (for higher-order const evaluation).
 
-## Rules
+## Rules (Current Subset)
 
-Today, `const fn` evaluation uses a deliberately small const-eval surface. A
-`const fn` must fit within it.
+The current subset defines a deliberately small “const-eval VM” surface. A
+`const fn` must fit within this surface.
 
 ### Signature rules
 
-Today, a `const fn`:
+In the current subset, a `const fn`:
 
 - must not be `task` or `async`,
 - must not declare a typed-error contract (`-> T | ErrorType...`),
@@ -85,14 +91,14 @@ Today, a `const fn`:
 
 ### Body rules
 
-Today, a `const fn`:
+In the current subset, a `const fn`:
 
 - must not allocate (`new`) and must not use regions/`with`,
 - must not contain `panic` statements,
 - must not declare `const` local bindings,
 - may call only other `const fn` declarations,
 - is restricted to a small expression subset over scalar values:
-  - literals and local names (parameters and `let` bindings; no global `const` reads today),
+  - literals and local names (parameters and `let` bindings; no global `const` reads in the current subset),
   - `as` casts between supported scalar types,
   - unary operators: `-`, `~`, `!`,
   - binary operators:
@@ -144,7 +150,7 @@ Const functions do not create new static storage. In particular:
 - compile-time execution may compute scalar values and fold them into constants,
 - compile-time execution must not allocate heap memory,
 - compile-time execution must not synthesize new global read-only data (for
-  example, it cannot build a new string at compile time today).
+  example, it cannot build a new string at compile time in the current subset).
 
 String literals are still backed by read-only static storage, but they are
 introduced by the literal syntax itself (see `literals-string.md`), not by the

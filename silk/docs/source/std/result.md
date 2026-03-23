@@ -1,7 +1,5 @@
 # `std::result`
 
-Status: **implemented**.
-
 The language’s error model is explicit and typed (`docs/language/errors.md`).
 `std::result` standardizes the common “success or error” return shape so that
 APIs across `std::` compose cleanly.
@@ -10,9 +8,7 @@ When the standard library is enabled (the default), `Result` is available
 without explicit imports via the std prelude module `std::runtime::globals`.
 Import `std::result` only when you need other exports from the module.
 
-## Exported API
-
-### `Result(T, E)`
+## `Result(T, E)`
 
 `Result(T, E)` models a recoverable “success or error” outcome.
 

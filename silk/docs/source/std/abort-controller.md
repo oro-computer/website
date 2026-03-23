@@ -1,6 +1,6 @@
 # `std::abort_controller`
 
-Status: **Implemented subset**. This module provides a WHATWG-style
+This module provides a WHATWG-style
 `AbortController` / `AbortSignal` pair for cooperative cancellation across
 `async` functions and OS-thread-backed `task` concurrency.
 
@@ -21,7 +21,6 @@ Thread-safety:
   across OS threads and `task` boundaries.
 
 ## Exported API
-
 ```silk
 module std::abort_controller;
 

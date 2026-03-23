@@ -1,15 +1,21 @@
 # `std::io`
 
-Status: **Implemented subset**. `std::io` provides blocking fd reads/writes,
-formatted stdout/stderr helpers, TTY helpers, async wrappers, and stream
-adapters in the current shipped stdlib.
+Basic stdin reads and stdout/stderr writes
+are implemented in `std/io.slk` via `std::runtime::io`; buffered and
+async I/O remain future work.
 
 `std::io` provides console and basic stream I/O.
 
-Hosted baseline: POSIX file descriptors and blocking I/O, with async wrappers
-layered on the hosted runtime.
+Hosted baseline: POSIX file descriptors and blocking I/O. Future extensions may
+include async integration.
 
-## Exported API
+See also:
+
+- `docs/std/strings.md` (formatting targets and string building)
+- `docs/std/fmt.md` (format string syntax)
+- `docs/std/conventions.md` (error conventions)
+
+## Current API (Implemented)
 
 The current stdlib provides basic unbuffered stdio primitives
 (stdin reads and stdout/stderr writes), plus a small formatting surface
@@ -109,9 +115,7 @@ Notes:
   - `std::io::stream::pipe_stream_to_fd` / `pipe_stream_to_fd_abortable`
   These adapters take ownership of the `fd` and close it before returning.
 
-## Examples
-
-### Formatted printing
+Example (formatted printing):
 
 ```silk
 import std::io;
@@ -122,7 +126,7 @@ fn main () -> int {
 }
 ```
 
-### Stdin → stdout echo using unbuffered reads and writes
+Example (stdin → stdout echo using unbuffered reads/writes):
 
 ```silk
 import std::io;
@@ -161,17 +165,14 @@ fn main () -> int {
   return 0;
 }
 ```
-## Considerations
-
-### Module scope
+## Scope
 
 `std::io` is responsible for:
 
 - Standard input, output, and error streams.
 - Simple printing and formatted output APIs.
 
-### Interface model
-
+## Core Interfaces
 The stdlib should standardize reader/writer interfaces:
 
 ```silk
@@ -200,25 +201,20 @@ export interface Reader {
 The concrete representation of interfaces will evolve with the language; the
 key point is that `std::fs` and `std::net` can reuse the same I/O traits.
 
-### Convenience surface
+## Convenience API
 
 - stdout/stderr: `print`/`println` and `eprint`/`eprintln` (formatted output).
 - unbuffered primitives: `read_stdin`, `write_stdout`, `write_stderr`.
 - future (design): `stdout()` / `stderr()` / `stdin()` handle-returning helpers
   built on a stable reader/writer interface.
 
-## See also
-
-- [`std::fmt`](?p=std/fmt)
-- [`std::strings`](?p=std/strings)
-- [`std::stream`](?p=std/stream)
-- [`std::conventions`](?p=std/conventions)
-
-## Design goals
-
+## Considerations
 - Buffered I/O wrappers (`BufReader`, `BufWriter`).
-- Broader async I/O surface beyond the current wrappers:
-  - buffered async I/O,
-  - richer socket/filesystem stream integrations,
-  - stronger cancellation semantics for in-flight operations,
-  - and `select`-style waiting across multiple sources.
+- Async-aware adapters:
+  - the hosted `linux/x86_64` toolchain now ships a bring-up async executor and
+    exposes timers + fd readiness via `std::runtime::event_loop`,
+  - `std::task` includes awaitable sleep helpers (`sleep_ms_async`, `sleep_async`),
+  - `std::io::async` provides minimal `async fn` wrappers over fd-based
+    `read`/`write` using the hosted async runtime I/O ops.
+  Broader async I/O surface (buffered async I/O, sockets, filesystem streams,
+  cancellation, and `select`-style waiting) remains future work.

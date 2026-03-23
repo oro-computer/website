@@ -118,5 +118,5 @@ fn main () -> int {
 
 ## See Also
 
-- `silk` (1)
-- `silk-check` (1)
+- [silk (1)](?p=man/silk.1)
+- [silk-check (1)](?p=man/silk-check.1)

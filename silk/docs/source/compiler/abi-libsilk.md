@@ -1,11 +1,12 @@
 # C99 ABI and `libsilk.a`
 
-This document defines the C99 ABI and the interface of the `libsilk.a` static
-library.
+This document defines the C99 ABI and the interface of the `libsilk.a` static library.
 
-It is the downstream embedder reference for the Silk compiler’s C surface:
-types, handles, configuration entrypoints, build entrypoints, diagnostics, and
-linking requirements.
+## Goals
+
+- Provide a stable C ABI for embedders.
+- Mirror the external-declaration semantics described in `docs/language/ext.md`.
+- Keep the ABI small, explicit, and well-documented.
 
 ## Library & Headers
 
@@ -194,7 +195,7 @@ The initial C header provided in the Silk compiler repository defines:
   auto-loaded `import std::...;` modules.
 
   `silk_compiler_set_target` selects the code generation target. The
-  `target_triple` string is copied. The current implementation recognizes the
+  `target_triple` string is copied. The initial implementation recognizes the
   same targets as the CLI (`silk build --list-targets`), including:
 
   - `linux-x86_64` (default), and common `x86_64-*-linux-*` triples such as
@@ -421,6 +422,11 @@ The initial C header provided in the Silk compiler repository defines:
       - within the current `linux/x86_64` IR subset, `string` and `regexp` values are supported at ABI boundaries in a C-friendly `SilkString { ptr, len }` layout:
         - `string`/`regexp` parameters lower to two integer-like scalars in order (`u64` pointer, then `i64` byte length) and consume the normal integer argument locations (registers then stack),
         - `string`/`regexp` results return as two integer-like scalars in `rax`/`rdx`,
+        - `regexp` values remain opaque runtime-engine bytecode views: downstream C code may forward them, but must not construct them as if the byte layout were a stable public format,
+        - regex literals and other borrowed `regexp` views are not caller-owned heap objects; only `std::regex::RegExp.compile(...)` produces runtime-owned regex bytecode,
+        - when `std::regex` executes a foreign ABI-supplied `regexp`, the bundled runtime first validates the bytecode header/control-flow shape and reports malformed inputs as `EXEC_ERR_INVALID_INPUT` instead of entering the engine blindly,
+        - when Silk code later frees or drops a `regexp` through the regex runtime, only those runtime-owned compiled values are released; borrowed/literal/foreign views are ignored safely,
+        - the bundled runtime allocator override used by runtime regex compilation is process-global but internally synchronized; concurrent `silk_rt_set_allocator(...)` calls can affect which hook future runtime allocations use, but any individual allocation returned by `silk_rt_malloc_bytes(...)` keeps the realloc/free hooks that created it for its full lifetime, and foreign, forged, stale pre-`realloc`, or already-freed helper pointers that do not correspond to a live bundled-runtime allocation are ignored instead of steering helper realloc/free calls,
         - within function bodies, the compiler supports a small `string`/`regexp` expression subset:
           - `string`: string literals, `let` bindings of `string`, `return` of a `string` value, direct calls to `string`-returning helpers, and `==`/`!=`/`<`/`<=`/`>`/`>=` comparisons over `string` values (producing `bool`),
           - `regexp`: regex literals (`/pattern/flags`), `let` bindings of `regexp`, `return` of a `regexp` value, and direct calls between helpers that accept/return `regexp`,
@@ -694,5 +700,5 @@ Any deviation from the mappings documented in `docs/language/ext.md` must be jus
 
 ## See Also
 
-- `libsilk` (7) — C99 ABI manpage for embedders.
+- [libsilk (7)](?p=man/libsilk.7) — C99 ABI manpage for embedders.
 - `silk/silk.h` — canonical public C header shipped with the library.

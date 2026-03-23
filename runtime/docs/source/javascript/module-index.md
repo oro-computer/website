@@ -15,6 +15,18 @@ Oro Runtime exposes native capabilities as explicit ES modules under the `oro:*`
 
 See also: [All module specifiers](?p=javascript/all-modules).
 
+## Public API families
+
+The runtime publishes many module families. The highest-traffic groups are:
+
+- **App shell and lifecycle** — [`oro:application`](?p=javascript/application), [`oro:window`](?p=javascript/window), [`oro:hooks`](?p=javascript/hooks), [`oro:navigation`](?p=javascript/navigation), [`oro:notification`](?p=javascript/notification)
+- **Filesystem, process, and platform** — [`oro:fs`](?p=javascript/fs), [`oro:path`](?p=javascript/path), [`oro:os`](?p=javascript/os), [`oro:process`](?p=javascript/process), [`oro:child_process`](?p=javascript/child_process), [`oro:clipboard`](?p=javascript/clipboard)
+- **Networking and transport** — [`oro:fetch`](?p=javascript/fetch), [`oro:http`](?p=javascript/http), [`oro:https`](?p=javascript/https), [`oro:net`](?p=javascript/net), [`oro:dns`](?p=javascript/dns), [`oro:tcp`](?p=javascript/tcp), [`oro:tls`](?p=javascript/tls), [`oro:network`](?p=javascript/network)
+- **Data, formats, and storage** — [`oro:buffer`](?p=javascript/buffer), [`oro:stream`](?p=javascript/stream), [`oro:url`](?p=javascript/url), [`oro:querystring`](?p=javascript/querystring), [`oro:sqlite`](?p=javascript/sqlite), [`oro:toml`](?p=javascript/toml), [`oro:semver`](?p=javascript/semver), [`oro:mime`](?p=javascript/mime)
+- **Security and identity** — [`oro:secure-storage`](?p=javascript/secure-storage), [`oro:crypto`](?p=javascript/crypto), [`oro:cookies`](?p=javascript/cookies), [`oro:did`](?p=javascript/did)
+- **Workers, services, and automation** — [`oro:worker`](?p=javascript/worker), [`oro:worker_threads`](?p=javascript/worker_threads), [`oro:service-worker`](?p=javascript/service-worker), [`oro:shared-worker`](?p=javascript/shared-worker), [`oro:background`](?p=javascript/background), [`oro:mcp`](?p=javascript/mcp), [`oro:ai`](?p=javascript/ai)
+- **Advanced or compatibility surfaces** — [`oro:commonjs`](?p=javascript/commonjs), [`oro:module`](?p=javascript/module), [`oro:bootstrap`](?p=javascript/bootstrap), [`oro:diagnostics`](?p=javascript/diagnostics), plus the `oro:internal/*`, `oro:node/*`, `oro:npm/*`, and `oro:external/*` families
+
 ## Importable top-level module specifiers
 
 Each module family has its own API reference page in this docs set. Use the sidebar search for `oro:<name>`.

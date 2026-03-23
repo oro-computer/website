@@ -109,7 +109,7 @@ record failures without aborting:
 See `docs/std/test.md` for the detailed API.
 
 Note: `std::test` helpers carry a Formal Silk contract requiring
-`BUILD_MODE == "test"` via `std::formal.requires_test_mode()` so downstream
+`BUILD_MODE == "test"` via `std::test::requires_test_mode()` so downstream
 verification can model them as test-only APIs.
 
 ## Status (implementation subset)

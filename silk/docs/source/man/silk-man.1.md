@@ -20,13 +20,24 @@
 
 `silk man` is an interactive documentation viewer. It resolves shipped toolchain pages, package-authored docs/man pages, and source-derived API docs, then displays the selected page through the user’s pager.
 
+It is designed to be the terminal-first discovery entrypoint for both humans
+and automated tooling:
+
+- use `silk man --list` to see the shipped entry surface,
+- use `silk man --search <pattern>` when you know a concept or name fragment
+  but not the exact query spelling yet,
+- use `silk man <query>` once you know the page, module, or public symbol you
+  want,
+- and use `silk doc --man <query> -o <path>` when you need the generated roff
+  page as a file.
+
 `silk man` recognizes:
 
 - conceptual pages defined by doc blocks tagged with `@misc <label>` (intended for man section 7),
 - CLI pages defined by doc blocks tagged with `@cli` (intended for man section 1),
 - API pages derived from declaration docs (intended for man section 3).
 
-The doc-comment tag semantics are specified in `?p=language/doc-comments`.
+The doc-comment tag semantics are specified in [Doc comments](?p=language/doc-comments).
 
 Notes:
 
@@ -55,11 +66,32 @@ When Silk is installed (for example via `zig build install`), the toolchain also
 
 Note: `man` subpage resolution only joins **one** level (like `man git log` → `git-log(1)`), so multi-segment queries should use the hyphenated page name (for example `man 3 silk-io-println`).
 
+## Discovery Workflow
+
+Sections are used consistently across the toolchain:
+
+- section `1` — commands and subcommands,
+- section `3` — public API / stdlib modules and symbols,
+- section `7` — concepts, overviews, and workflows.
+
+Typical workflow:
+
+1. start with `silk man` or `silk man 7 silk`,
+2. run `silk man --search <pattern>` when you only know part of a name,
+3. open the exact page with `silk man <query>`,
+4. when you need a saved roff page, use `silk doc --man <query> -o <path>`.
+
 ## Options
 
 - `--help`, `-h` — show command help and exit.
 - `--list` — list shipped pages, common stdlib entrypoints, and package-local pages when a package root is in scope, then exit.
-- `--search <pattern>` — search shipped pages, stdlib module names, and package-local pages when a package root is in scope, then exit.
+- `--search <pattern>` — search:
+  - shipped section `1` / `3` / `7` pages,
+  - stdlib module names,
+  - public stdlib API symbol paths,
+  - package-local pages when a package root is in scope,
+  - and public root-package symbol paths when a package root is in scope,
+  then exit.
 - `--section <n>`, `-s <n>` — select the manpage section (`1`, `3`, or `7`).
 - `--package <dir|manifest|module>`, `--pkg <dir|manifest|module>` — load a module set from a package manifest (`silk.toml`) rooted at the provided directory or manifest path; when a `.slk` / `.silk` module path is provided, `silk man` walks upward to the nearest owning `silk.toml`.
   - when omitted, and the query is not `std::...`, `silk man` searches the current working directory and its parent directories for `silk.toml` and uses the nearest match.
@@ -83,8 +115,11 @@ silk man
 # List shipped pages and common stdlib entrypoints.
 silk man --list
 
-# Search shipped pages + stdlib modules.
+# Search shipped pages + stdlib modules/symbols.
 silk man --search fs
+
+# Search public stdlib symbols too.
+silk man --search String
 
 # View a shipped toolchain overview page (section 7).
 silk man 7 silk
@@ -97,6 +132,7 @@ silk man fs
 
 # View docs for a stdlib symbol.
 silk man std::sqlite::Database
+silk man std::strings::String
 
 # View a package overview/docs page discovered from silk.toml metadata.
 silk man readme
@@ -116,6 +152,9 @@ silk man build
 
 # View a conceptual page labeled via @misc.
 silk man std::result::design
+
+# Write a generated roff page to a file instead of opening it.
+silk doc --man std::fs -o std_fs.3
 ```
 
 ## Exit status
@@ -125,5 +164,5 @@ silk man std::result::design
 
 ## See Also
 
-- `silk` (1), `silk-doc` (1)
-- `?p=language/doc-comments`
+- [silk (1)](?p=man/silk.1), [silk-doc (1)](?p=man/silk-doc.1)
+- [Doc comments](?p=language/doc-comments)

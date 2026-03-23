@@ -1,7 +1,5 @@
 # `std::number`
 
-Status: **Implemented**.
-
 This module provides small, dependency-light number parsing and formatting
 helpers.
 
@@ -10,7 +8,7 @@ The initial surface focuses on:
 - stable, strict parsing from `string` to numeric types, and
 - formatting numeric values into owned `std::strings::String` outputs.
 
-## Exported API
+## API (Implemented)
 
 ### Parsing
 

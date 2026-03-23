@@ -5,9 +5,9 @@ Function modifiers declare constraints and concurrency behavior:
 - `pure fn` for side-effect-free functions (checker-enforced subset)
 - `async fn` for promise-producing functions
 - `task fn` for task-producing functions
-- `const fn` for compile-time-evaluable functions (see [`/silk/docs/?p=language/const-functions`](/silk/docs/?p=language/const-functions))
+- `const fn` for compile-time-evaluable functions (see `docs/wiki/language/const-functions.md`)
 
-Canonical doc: [`/silk/docs/?p=language/function-disciplines`](/silk/docs/?p=language/function-disciplines).
+Canonical doc: `docs/language/function-disciplines.md`.
 
 ## Examples
 ```silk
@@ -22,5 +22,5 @@ task fn worker (x: int) -> int {
 
 ## See also
 
-- Canonical doc: [`/silk/docs/?p=language/function-disciplines`](/silk/docs/?p=language/function-disciplines)
-- Concurrency: [`/silk/wiki/?p=language/concurrency`](/silk/wiki/?p=language/concurrency)
+- Canonical doc: `docs/language/function-disciplines.md`
+- Concurrency: `docs/wiki/language/concurrency.md`

@@ -4,7 +4,7 @@ Sage · LLMS Pack
 This file concatenates the full Sage documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-03-09T14:43:25+00:00
+Generated: 2026-03-22T15:21:44+00:00
 
 How to link:
 - Docs: /sage/docs/?p=<id>
@@ -98,6 +98,12 @@ sage https://example.com/
 sage ssh://user@example.com/etc/hosts
 ```
 
+Render directly to `stdout` without entering the TUI:
+
+```bash
+sage --print README.md
+```
+
 ## Recommended reading path
 
 1. [Getting started](?p=guides/getting-started)
@@ -170,6 +176,12 @@ Inspect a remote document:
 
 ```bash
 sage https://example.com/
+```
+
+Render directly to `stdout`:
+
+```bash
+sage --print README.md
 ```
 
 ## What `sage` accepts
@@ -442,6 +454,7 @@ URL: /sage/docs/?p=cli/sage
 
 ```bash
 sage [OPTIONS] [PATH ...]
+sage --print [OPTIONS] [PATH ...]
 sage --compile-cache
 sage --list-syntax
 sage --index-only [PATH|-]
@@ -475,6 +488,18 @@ Compile syntax definitions from your config directory into the cache:
 ```bash
 sage --compile-cache
 ```
+
+### Safe direct output
+
+Render one or more inputs straight to `stdout` without starting the TUI:
+
+```bash
+sage --print README.md
+sage --print src/main.slk src/sage/out.slk
+```
+
+This uses Sage's safe renderer and syntax highlighter, but it does not render
+the pager chrome or the line-number gutter.
 
 ### Syntax index lister
 
@@ -529,6 +554,12 @@ Change the theme:
 ```bash
 sage --theme ocean README.md
 sage --theme light README.md
+```
+
+Print multiple files directly:
+
+```bash
+sage --print README.md src/main.slk
 ```
 
 Force safe mode for plugins:
@@ -656,6 +687,26 @@ Current pass-through behavior:
 
 That means pass-through mode is a different code path from the TUI.
 
+### `--print` mode
+
+`--print` is a third execution path. It does not enter the TUI, but it also
+does not fall back to the raw pass-through branch.
+
+Examples:
+
+```bash
+sage --print README.md
+sage --print src/main.slk src/sage/out.slk
+```
+
+Current `--print` behavior:
+
+- it renders inputs through Sage's safe output path
+- it may apply syntax highlighting for path inputs
+- it prints multiple inputs in the order they were provided
+- it does not render the pager chrome
+- it does not render the line-number gutter
+
 ## Syntax selection for each input kind
 
 ### Local paths
@@ -728,6 +779,7 @@ This page documents every public CLI flag on `sage`.
 
 ## Standalone modes
 
+- `--print` — print inputs directly to `stdout` with Sage's safe renderer and syntax highlighting, without entering the pager UI
 - `--compile-cache` — compile syntax sources from `XDG_CONFIG_HOME/sage/syntax` into the syntax cache
 - `--list-syntax` — print compiled syntax keys, one per line
 - `--index-only [PATH|-]` — build the background line index, print stats, and exit
@@ -810,6 +862,13 @@ Index-only perf run:
 
 ```bash
 sage --verbose --index-only large.log
+```
+
+Safe direct output:
+
+```bash
+sage --print README.md
+sage --print src/main.slk src/sage/out.slk
 ```
 
 ==============================================================================
@@ -2746,6 +2805,7 @@ URL: /sage/docs/?p=man/sage-1
 
 ```bash
 sage [OPTIONS] [PATH ...]
+sage --print [OPTIONS] [PATH ...]
 sage --compile-cache
 sage --list-syntax
 sage --index-only [PATH]
@@ -2758,6 +2818,7 @@ sage --index-only [PATH]
 The man page defines the user-facing CLI modes:
 
 - normal interactive paging
+- `--print`
 - `--compile-cache`
 - `--list-syntax`
 - `--index-only`
@@ -2768,6 +2829,10 @@ It also defines the two top-level execution branches:
 
 - interactive TUI when `stdout` is a TTY
 - pass-through behavior when `stdout` is not a TTY
+
+And it defines the direct-output mode:
+
+- `--print` for safe rendered output without entering the pager UI
 
 ### Options
 

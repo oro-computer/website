@@ -1,9 +1,9 @@
 # `std::` Module Structure
 
-Status: **Implemented subset**. This describes the current
-organization and build integration for `std::`, including `std::...` import
-resolution from a configurable stdlib root and archive-based std linkage on the
-supported hosted targets.
+This describes the intended organization and
+build integration for `std::`. A first, minimal slice of the build integration
+is implemented (auto-resolving `std::...` imports from a configurable stdlib
+root), while most std APIs remain unimplemented.
 
 This document defines how the standard library is organized and how it is made
 available to user programs.

@@ -163,4 +163,4 @@ When you’re in the “call a C compiler” world, `silk cc` is a convenience w
 silk cc -std=c99 -Wall -Wextra my_program.c -o build/my_program
 ```
 
-Reference: `libsilk` (sidebar → man → `libsilk` (7)).
+Reference: [libsilk (7)](?p=man/libsilk.7).

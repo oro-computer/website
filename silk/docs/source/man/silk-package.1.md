@@ -49,7 +49,7 @@ silk package lint --package ../my-lib
 
 ## See Also
 
-- `silk` (1)
-- `silk-build` (1)
-- `?p=compiler/package-manifests`
-- `?p=compiler/package-distribution`
+- [silk (1)](?p=man/silk.1)
+- [silk-build (1)](?p=man/silk-build.1)
+- [Package manifests](?p=compiler/package-manifests)
+- [Package distribution](?p=compiler/package-distribution)

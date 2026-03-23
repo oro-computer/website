@@ -1,6 +1,6 @@
 # `std::websocket`
 
-Status: **Implemented (hosted, blocking)**. `std::websocket` provides an RFC 6455
+`std::websocket` provides an RFC 6455
 WebSocket implementation on top of `std::net::TCPStream` (client + server
 handshake, framing, ping/pong, close, fragmentation).
 
@@ -32,7 +32,7 @@ Non-goals (for now):
 - TLS (`wss://`) integration (use `std::tls` + a future adapter layer).
 - Per-message compression (RSV1 / `permessage-deflate`).
 
-## Exported API
+## Public API (Current Compiler Subset)
 
 ```silk
 module std::websocket;

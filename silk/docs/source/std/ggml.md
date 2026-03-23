@@ -1,210 +1,81 @@
 # `std::ggml`
 
-Status: **Implemented core wrapper**. `std::ggml` exposes a focused, usable
-subset of ggml for creating tensors, building graphs, and computing them on the
-hosted baseline.
+`std::ggml` exposes the ggml tensor library to Silk programs. The long-term
+goal is to make ggml the standard tensor backend for Silk’s ML-oriented
+standard library surface.
 
 Upstream:
 
 - Repository: `ggml-org/ggml`
 - Pinned version: `v0.9.5`
 
-## Exported API
+## Goals
 
-### Types and constants
+- Provide a safe, Silk-native wrapper layer over the ggml C API.
+- Keep raw access available for power users (with explicit unsafe/pointer APIs).
+- Make building/linking predictable by treating ggml as a core vendored
+  dependency (similar to libsodium/mbedTLS/libssh2/sqlite in the hosted
+  baseline).
 
-- `Type = i32`
-- tensor element type constants:
-  - `TYPE_F32`
-  - `TYPE_F16`
-  - `TYPE_I32`
-  - `TYPE_I64`
-  - `TYPE_F64`
-  - `TYPE_BF16`
+## ABI / FFI Notes (Current Compiler Subset)
 
-Status constants:
+The current Silk backend subset uses a scalar-slot memory model for structs
+(`docs/language/structs-impls-layout.md`). At ABI boundaries (`export fn` and
+`ext`), passing C structs by value is only ABI-safe when the struct’s flattened
+slots are all `i64`/`u64`/`f64`.
 
-- `STATUS_ALLOC_FAILED`
-- `STATUS_FAILED`
-- `STATUS_SUCCESS`
-- `STATUS_ABORTED`
+For FFI with upstream C APIs, note that Silk’s `int` currently maps to `i64` on
+`linux/x86_64`. The `std::ggml` bindings therefore use `i32` for ggml’s C
+`int`/`enum` values (type codes, status values, indices, and thread counts) to
+match the upstream ABI.
 
-Error constants:
+ggml includes several C entrypoints that accept small structs by value (notably
+`ggml_init(struct ggml_init_params)`), where the C layout includes `bool` and
+`size_t`. This is not ABI-safe to call directly from Silk in the current subset.
 
-- `ERR_INIT_FAILED`
-- `ERR_INVALID_INPUT`
-- `ERR_OUT_OF_MEMORY`
-- `ERR_COMPUTE_FAILED`
-- `ERR_ABORTED`
+Therefore, `std::ggml` uses a tiny C shim layer (built as part of the toolchain)
+to expose ABI-safe wrapper functions for the few by-value-struct APIs.
 
-### Errors and result aliases
+## Build + Dependency Workflow
 
-- `GgmlFailed`
-  - `err.kind() -> GgmlErrorKind`
-- `ContextResult = std::result::Result(Context, GgmlFailed)`
-- `TensorResult = std::result::Result(Tensor, GgmlFailed)`
-- `GraphResult = std::result::Result(Graph, GgmlFailed)`
-- `BoolResult = std::result::Result(bool, GgmlFailed)`
-- `F32Result = std::result::Result(f32, GgmlFailed)`
-- `IntResult = std::result::Result(i32, GgmlFailed)`
-- `I64Result = std::result::Result(i64, GgmlFailed)`
-- `U64Result = std::result::Result(u64, GgmlFailed)`
+`zig build deps` is responsible for fetching/building ggml and staging:
 
-### `Context`
+- headers into `vendor/include/` (for shim compilation),
+- static archives into `vendor/lib/x64-linux/` (for linking),
 
-`Context` owns the ggml arena and therefore also owns every tensor and graph
-created from it.
+alongside existing vendored deps. See `docs/compiler/vendored-deps.md`.
 
-Methods:
+In staged/installed toolchains, the auto-linked archives are expected under the
+compiler prefix:
 
-- `Context.invalid() -> Context`
-- `ctx.is_valid() -> bool`
-- `Context.init(mem_size: u64, mem_buffer: u64 = 0, no_alloc: bool = false) -> ContextResult`
-- `ctx.free() -> void`
-- `ctx.drop() -> void`
-- `ctx.used_mem() -> U64Result`
-- `ctx.new_tensor_1d(ty: Type, ne0: i64) -> TensorResult`
-- `ctx.new_tensor_2d(ty: Type, ne0: i64, ne1: i64) -> TensorResult`
-- `ctx.add(a: Tensor, b: Tensor) -> TensorResult`
-- `ctx.sub(a: Tensor, b: Tensor) -> TensorResult`
-- `ctx.mul(a: Tensor, b: Tensor) -> TensorResult`
-- `ctx.mul_mat(a: Tensor, b: Tensor) -> TensorResult`
-- `ctx.new_graph() -> GraphResult`
+- `build/lib/silk/vendor/lib/x64-linux/` (repo build prefix)
+- `<prefix>/lib/silk/vendor/lib/x64-linux/` (installed)
 
-### `Tensor`
+On `linux/x86_64`, `silk build` automatically links the staged ggml archives
+when `std::ggml` is included in the module set. If the archives are missing,
+the build fails with an actionable error pointing to `zig build deps`.
 
-`Tensor` is a lightweight handle into storage owned by a `Context`.
+When linking `.o` / `.a` inputs, `silk build` also auto-links ggml if any input
+references `silk_ggml_init` (for example, when a prebuilt static library was
+produced from Silk code that uses `std::ggml`). This keeps downstream consumers
+from needing to import `std::ggml` purely to satisfy link/runtime dependencies.
 
-Methods:
+The current auto-linked archives are:
+`libggml.a`, `libggml-base.a`, `libggml-cpu.a`, and `libsilk_ggml_shims.a`.
 
-- `Tensor.invalid() -> Tensor`
-- `tensor.is_valid() -> bool`
-- `tensor.set_f32(value: f32) -> BoolResult`
-- `tensor.set_f32_1d(i: i32, value: f32) -> BoolResult`
-- `tensor.get_f32_1d(i: i32) -> F32Result`
-- `tensor.nelements() -> I64Result`
-- `tensor.nbytes() -> U64Result`
-- `tensor.n_dims() -> IntResult`
-- `tensor.is_scalar() -> BoolResult`
-- `tensor.is_contiguous() -> BoolResult`
+Because ggml is built as C++ on the hosted baseline, the produced executables
+and shared libraries also depend on the system C++ runtime (`libstdc++`) and
+math library (`libm`); `silk build` adds these as `DT_NEEDED` entries when it
+auto-links ggml.
 
-### `Graph`
+## Intended Surface (Initial)
 
-`Graph` is a compute graph handle associated with the context that created it.
+The initial surface is intentionally small:
 
-Methods:
+- create/free a ggml context,
+- create basic tensors,
+- compute a graph,
+- basic tensor inspection helpers.
 
-- `Graph.invalid() -> Graph`
-- `graph.is_valid() -> bool`
-- `graph.build_forward_expand(t: &Tensor) -> BoolResult`
-- `graph.compute(n_threads: i32) -> BoolResult`
-
-## Examples
-
-### Add two scalar tensors
-
-```silk
-import std::ggml;
-
-export fn main () -> int {
-  let ctx = match std::ggml::Context.init(16 * 1024 * 1024) {
-    Ok(v) => v,
-    Err(_) => return 1,
-  };
-
-  let mut a = match ctx.new_tensor_1d(std::ggml::TYPE_F32, 1) {
-    Ok(v) => v,
-    Err(_) => return 2,
-  };
-  let mut b = match ctx.new_tensor_1d(std::ggml::TYPE_F32, 1) {
-    Ok(v) => v,
-    Err(_) => return 3,
-  };
-
-  if a.set_f32_1d(0 as i32, 3.0).is_err() {
-    return 4;
-  }
-  if b.set_f32_1d(0 as i32, 4.0).is_err() {
-    return 5;
-  }
-
-  let c = match ctx.add(a, b) {
-    Ok(v) => v,
-    Err(_) => return 6,
-  };
-
-  let mut graph = match ctx.new_graph() {
-    Ok(v) => v,
-    Err(_) => return 7,
-  };
-  if graph.build_forward_expand(&c).is_err() {
-    return 8;
-  }
-  if graph.compute(1 as i32).is_err() {
-    return 9;
-  }
-
-  let value = match c.get_f32_1d(0 as i32) {
-    Ok(v) => v,
-    Err(_) => return 10,
-  };
-  if value != 7.0 {
-    return 11;
-  }
-
-  return 0;
-}
-```
-
-### Inspect tensor shape and storage
-
-```silk
-import std::ggml;
-
-fn main () -> int {
-  let ctx = match std::ggml::Context.init(4 * 1024 * 1024) {
-    Ok(v) => v,
-    Err(_) => return 1,
-  };
-  let t = match ctx.new_tensor_2d(std::ggml::TYPE_F32, 4, 8) {
-    Ok(v) => v,
-    Err(_) => return 2,
-  };
-
-  if t.n_dims() != Ok(2 as i32) {
-    return 3;
-  }
-  if t.is_contiguous() != Ok(true) {
-    return 4;
-  }
-
-  return 0;
-}
-```
-
-## Considerations
-
-- `Context` is the owner. Tensors and graphs become invalid when the context is
-  freed or dropped.
-- The wrapper intentionally exposes a focused subset. It is suitable for small
-  hosted computations and embedding scenarios without re-exporting the whole
-  upstream C API.
-- The current FFI boundary uses a small shim layer for by-value ggml structs
-  such as `ggml_init_params`, because the current Silk ABI subset does not call
-  those C entry points directly.
-- On the hosted `linux/x86_64` baseline, `silk build` auto-links ggml after
-  `zig build deps` has staged the vendored archives.
-
-## See also
-
-- [`std::runtime::mem`](?p=std/runtime)
-- [`Vendored dependencies`](?p=compiler/vendored-deps)
-- [`CLI build reference`](?p=compiler/cli-silk)
-
-## Design goals
-
-- Keep the public surface small and predictable.
-- Preserve ggml’s core execution model: context-owned tensors plus explicit
-  graph construction.
-- Expose enough tensor inspection and arithmetic to build real inference or
-  numeric pipelines without forcing every caller down to raw FFI.
+The module is expected to grow incrementally as we map more of the upstream API
+into a stable Silk wrapper layer.

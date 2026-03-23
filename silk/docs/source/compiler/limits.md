@@ -79,3 +79,42 @@ that `main` may reference.
 
 If a module exceeds this, additional candidate bindings are ignored for the
 purposes of const-evaluating `main` in that path.
+
+## Bundled Regex Runtime Limits
+
+The bundled regexp engine is intentionally wrapped with conservative resource
+limits so the compiler/runtime does not hand unbounded recursion or pathological
+backtracking to the engine when compiling or executing untrusted patterns.
+Before runtime execution, Silk also performs conservative structural validation
+of foreign `(ptr, len)` regexp bytecode so malformed ABI-supplied buffers are
+rejected as invalid input instead of being handed directly to the engine.
+The runtime also tracks which regex bytecode buffers it allocated itself, so
+the regex free/drop path ignores borrowed/literal/foreign `regexp` views
+instead of releasing arbitrary pointers.
+
+- **Regexp compile stack budget**: **128 KiB**
+  - Applies to:
+    - compile-time regexp literals during type checking (`src/checker.zig`),
+    - runtime `std::regex::RegExp.compile(...)` via `silk_rt_regexp_compile`
+      (`src/silk_rt_api.c`).
+  - Effect:
+    - overly deep regexp nesting is rejected as an invalid regexp rather than
+      recursing without a bound in the embedder.
+- **Regexp execution timeout poll budget**: **256 polls**
+  - Applies to runtime `std::regex::exec(...)` / `search(...)` / iterator-based
+    matching via `silk_rt_regexp_exec` (`src/silk_rt_api.c`).
+  - Boundary guard:
+    - `silk_rt_regexp_exec(...)` first validates the regex header, declared
+      bytecode extent, reachable control-flow targets, and stack discipline of
+      the supplied bytecode view,
+    - malformed foreign `regexp` buffers are rejected with
+      `std::regex::EXEC_ERR_INVALID_INPUT` (`-3`) before the bundled engine is
+      entered.
+  - Engine behavior:
+    - the bundled QuickJS regexp engine consults the timeout hook once every
+      **10000** internal execution steps,
+    - so the current shipped execution budget is approximately **2.56 million**
+      hook-accounted steps before the runtime returns `EXEC_ERR_TIMEOUT`.
+  - Effect:
+    - pathological backtracking is bounded and reported as a timeout instead of
+      running indefinitely.

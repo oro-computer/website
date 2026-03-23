@@ -183,6 +183,7 @@ def update_curated_page(path: Path, family: str, specs: list[str], blocks: dict[
     if REF_START in text and REF_END in text:
         before, rest = text.split(REF_START, 1)
         _, after = rest.split(REF_END, 1)
+        before = re.sub(r"(?:\n## API reference\s*)+\Z", "\n", before.rstrip())
         # Keep content outside the generated region; regenerate the region itself.
         next_text = before.rstrip() + "\n\n" + render_reference_section(family, specs, blocks) + after.lstrip()
     else:

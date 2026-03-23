@@ -18,8 +18,8 @@
 silk cc <cc args...>
 ```
 
-See `silk-cc` (1) for details, including the default `-I`/`-L`/`-lsilk` flags.
+See [silk-cc (1)](?p=man/silk-cc.1) for details, including the default `-I`/`-L`/`-lsilk` flags.
 
 ## See Also
 
-- `silk` (1), `silk-cc` (1)
+- [silk (1)](?p=man/silk.1), [silk-cc (1)](?p=man/silk-cc.1)

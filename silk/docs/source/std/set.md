@@ -5,12 +5,35 @@
 - `SetMap(T)` — an unordered set backed by an open-addressing hash table.
 - `TreeSet(T)` — an ordered set backed by a red-black tree.
 
-Status: **Implemented subset**. The API is usable in the current
-compiler/backend subset, with current limitations called out below.
+The API is specified here; it
+targets the current compiler/backend subset and will grow as the language gains
+first-class move/Drop semantics for values stored inside heap-backed data
+structures.
 
-## Exported API
+## Design Goals
 
-### Hash Set (`SetMap(T)`)
+- Provide a consistent “set of unique values” container story in `std::` that
+  mirrors `std::map`:
+  - hashing + equality for `SetMap(T)`,
+  - ordering comparison for `TreeSet(T)`.
+- Make allocation behavior explicit and compatible with regions (`with`) and
+  `--noheap`.
+- Keep terminology and operation shapes close to C++ (`std::unordered_set` and
+  `std::set`), adapted to Silk’s current method/optional model.
+
+## Important Limitations (Current Compiler Subset)
+
+In the current subset:
+
+- `SetMap(T)` and `TreeSet(T)` store elements by value, but do not automatically
+  run `Drop` for stored elements when entries are removed.
+- `SetMap(T)` and `TreeSet(T)` currently store each element in a single 8-byte
+  scalar slot (`as raw u64`). Multi-slot values such as `string` (and most
+  structs) are not supported as set elements yet.
+- Avoid storing Drop-managed structs as set elements until the compiler has
+  complete Drop integration for values stored inside container memory.
+
+## Hash Set (`SetMap(T)`)
 
 ### Core API
 
@@ -58,7 +81,7 @@ Complexity expectations:
 - average `O(1)` for `contains`/`insert`/`remove` when the hash distribution is good,
 - worst case `O(n)` in adversarial collision patterns.
 
-### Ordered Set (`TreeSet(T)`)
+## Ordered Set (`TreeSet(T)`)
 
 `TreeSet(T)` is an ordered set. It requires an ordering function.
 
@@ -81,7 +104,7 @@ Complexity expectations:
 
 - `O(log n)` lookup/insert/remove.
 
-### Iteration
+## Iteration
 
 Both sets provide iteration through an iterator interface:
 
@@ -94,87 +117,25 @@ Notes:
 - `SetMap` iteration order is unspecified.
 - `TreeSet` iteration yields values in ascending order (as defined by `cmp`).
 
-## Examples
+## Implemented `std::interfaces` surface
 
-### SetMap with default helpers
+The current `std::set` implementation follows the same shared protocol story as
+`std::map`:
 
-```silk
-import std::set;
+- `SetMap(T)` implements:
+  - `Len`
+  - `Capacity`
+  - `IsEmpty`
+  - `Clear`
+  - `ReserveAdditional`
+  - `Drop`
+- `TreeSet(T)` implements:
+  - `Len`
+  - `IsEmpty`
+  - `Clear`
+  - `Drop`
+- `SetMapIter(T)` and `TreeSetIter(T)` implement `std::interfaces::Iterator(...)`.
 
-fn main () -> int {
-  match (std::set::SetMap(int).init(8)) {
-    Ok(mut values) => {
-      let insert_r = values.insert(42);
-      if insert_r.is_err() {
-        values.drop();
-        return 2;
-      }
-
-      let present = values.contains(42);
-      values.drop();
-      return if present { 0 } else { 3 };
-    },
-    Err(_) => {
-      return 1;
-    },
-  }
-}
-```
-
-### TreeSet with explicit ordering
-
-```silk
-import std::set;
-
-fn cmp_int (a: int, b: int) -> int {
-  if a < b { return -1; }
-  if a > b { return 1; }
-  return 0;
-}
-
-fn main () -> int {
-  let mut values = std::set::TreeSet(int).init(cmp_int);
-  match (values.insert(7)) {
-    Ok(_) => {
-      let ok = values.contains(7);
-      values.drop();
-      return if ok { 0 } else { 2 };
-    },
-    Err(_) => {
-      values.drop();
-      return 1;
-    },
-  }
-}
-```
-
-## Considerations
-
-### Ownership and current storage limits
-
-In the current subset:
-
-- `SetMap(T)` and `TreeSet(T)` store elements by value, but do not automatically
-  run `Drop` for stored elements when entries are removed.
-- `SetMap(T)` and `TreeSet(T)` currently store each element in a single 8-byte
-  scalar slot (`as raw u64`). Multi-slot values such as `string` (and most
-  structs) are not supported as set elements yet.
-- Avoid storing Drop-managed structs as set elements until the compiler has
-  complete Drop integration for values stored inside container memory.
-
-## See also
-
-- [`std::map`](?p=std/map)
-- [`std::vector`](?p=std/vector)
-- [`std::interfaces`](?p=std/interfaces)
-
-## Design goals
-
-- Provide a consistent “set of unique values” container story in `std::` that
-  mirrors `std::map`:
-  - hashing + equality for `SetMap(T)`,
-  - ordering comparison for `TreeSet(T)`.
-- Make allocation behavior explicit and compatible with regions (`with`) and
-  `--noheap`.
-- Keep terminology and operation shapes close to C++ (`std::unordered_set` and
-  `std::set`), adapted to Silk’s current method/optional model.
+That makes the set types good reader-facing examples of the stdlib’s
+container-oriented interface conventions even in the current static-only
+interface subset.

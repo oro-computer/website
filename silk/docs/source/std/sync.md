@@ -1,10 +1,10 @@
 # `std::sync`
 
-Status: **Implemented subset**. This module provides a small hosted baseline for
+This module provides a small hosted baseline for
 synchronization primitives used by the current `task` lowering on
 `linux/x86_64`.
 
-This is a deliberately narrow current hosted subset:
+This is an intentionally narrow subset intended for early bring-up:
 
 - It is intentionally small and conservative (a hosted baseline, not a final
   async runtime).
@@ -34,7 +34,6 @@ See also:
   last sender is dropped.
 
 ## Exported API
-
 ```silk
 module std::sync;
 

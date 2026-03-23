@@ -1,6 +1,6 @@
 # `std::xml` — XML Parsing (libxml2)
 
-Status: **Implemented subset**. `std::xml` provides a small,
+`std::xml` provides a small,
 DOM-style XML parsing and traversal API backed by libxml2.
 
 ## Vendored Dependencies + Linking
@@ -32,8 +32,7 @@ inputs that reference the shim symbols.
 
 Note: libxml2 requires libm at link/runtime (typically `libm.so.6`).
 
-## Exported API
-
+## API Summary
 - `Document.parse(xml: string) -> Result(Document, XmlFailed)`
 - `Document.parse_with_options(xml: string, options: int) -> Result(Document, XmlFailed)`
 - `Document.root() -> Node?`

@@ -1,7 +1,5 @@
 # `std::path`
 
-Status: **Implemented subset**.
-
 `std::path` provides path manipulation utilities.
 
 Design goals (modeled after Rust `std::path` and Node.js `path`):
@@ -13,7 +11,7 @@ Design goals (modeled after Rust `std::path` and Node.js `path`):
 - **Allocation-aware**: functions that produce new paths return owned
   `std::strings::String` values (callers must drop them).
 
-## Exported API
+## API (Implemented Subset)
 
 ```silk
 module std::path;
@@ -75,8 +73,7 @@ Notes:
 - On POSIX, the root path `"/"` has no basename, so `basename("/") == ""`.
 - `PathBuf` uses the same zero-capacity-empty / trailing-NUL invariant as
   `std::strings::String`, captured by
-  `std::formal::string_storage_well_formed`.
-- `PathBuf` implements `std::interfaces::{Len,Capacity,IsEmpty,ReserveAdditional,Serialize(string),Drop}` for ergonomic use in generic code.
+  `std::strings::string_storage_well_formed`.
 - `PathBuf` implements `std::interfaces::{Len,Capacity,IsEmpty,ReserveAdditional,Serialize(string),TrySerialize(std::memory::OutOfMemory),Drop}` for ergonomic use in generic code.
 - `PathBuf.parse(s)` is the standardized receiverless parse surface and
   forwards to `PathBuf.from_string(s)`.

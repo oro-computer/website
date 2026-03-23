@@ -6,6 +6,7 @@
 
 ```bash
 sage [OPTIONS] [PATH ...]
+sage --print [OPTIONS] [PATH ...]
 sage --compile-cache
 sage --list-syntax
 sage --index-only [PATH]
@@ -18,6 +19,7 @@ sage --index-only [PATH]
 The man page defines the user-facing CLI modes:
 
 - normal interactive paging
+- `--print`
 - `--compile-cache`
 - `--list-syntax`
 - `--index-only`
@@ -28,6 +30,10 @@ It also defines the two top-level execution branches:
 
 - interactive TUI when `stdout` is a TTY
 - pass-through behavior when `stdout` is not a TTY
+
+And it defines the direct-output mode:
+
+- `--print` for safe rendered output without entering the pager UI
 
 ### Options
 

@@ -448,8 +448,11 @@ Fields:
       in the current toolchain,
   - each entry MUST end with one of:
     - `.c` — compiled via the host C compiler and linked as an object,
-    - `.h` — compiled via the host C compiler as a C translation unit (passed
-      as `-x c`) and linked as an object,
+    - `.h` — treated as a C build input:
+      - if a sibling `.c` file exists next to the header, Silk compiles that
+        `.c` file and links the resulting object,
+      - otherwise Silk falls back to compiling the header itself as a C
+        translation unit (passed as `-x c`) and links the resulting object,
     - `.o` — linked as an object (and included in static archives),
     - `.a` — linked as a static archive,
     - `.so` / `*.so.<ver>` — treated as a dynamic dependency (equivalent to
@@ -574,10 +577,14 @@ Rules:
   - when no code targets exist, tests still run from the package source set but
     no manifest link metadata is applied.
 - `build.build_module` (optional; default `false`) enables build module
-  execution for package builds:
-  - when `true`, the build module runs for `silk build --package` (and
-    `silk build install` / `silk build uninstall`) without requiring
-    `--build-module` on the CLI.
+  execution for manifest-driven package commands:
+  - when `true`, the build module runs for:
+    - `silk build --package`,
+    - `silk check --package`,
+    - `silk test --package`,
+    - `silk build install`,
+    - and `silk build uninstall`,
+    without requiring CLI build-module opt-in.
 - `build.build_module_path` (optional) specifies the default build module path
   used when a build module is executed and the CLI does not provide
   `--build-module-path`.
@@ -591,6 +598,9 @@ Rules:
   - the emitted manifest’s `[build].build_module` / `[build].build_module_path`
     values are ignored for the current invocation to prevent recursive build
     module execution,
+  - `silk check --package` and `silk test --package` currently invoke the build
+    module with the action string `"build"` for compatibility with existing
+    build modules,
   - CLI overrides:
     - `--build-module-path <path>` wins (and implies build module execution),
     - otherwise `--build-module` wins.

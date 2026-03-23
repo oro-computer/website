@@ -1,10 +1,11 @@
 # `std::` Conventions
 
-This document defines the conventions Silk `std::` modules should follow. New
-and refactored `std::` APIs must follow it, and older surfaces should be
-updated toward it when they are touched.
+This defines the intended
+conventions for the Silk standard library. New and refactored `std::` APIs must
+follow this document; older surfaces may temporarily diverge but
+must be migrated as they are touched.
 
-This document keeps `std::` APIs consistent across modules.
+This document exists to keep `std::` APIs consistent across modules.
 
 ## Public vs Internal API
 
@@ -46,33 +47,6 @@ This is enforced by the test suite so the stdlib can be fully documented via
 The canonical narrative/spec for each module lives under `docs/std/`. The
 source-level doc comments are the machine-consumable layer used by `silk doc`,
 `silk man`, and editor tooling (hover and completion documentation).
-
-## Module documentation structure
-
-Canonical `docs/std/*.md` pages should use a predictable downstream-facing
-structure unless a module is intentionally design-only:
-
-- module name,
-- short description,
-- `Exported API`,
-  - grouped by exported structs, types, theories, functions, constants, and
-    other exported declarations when that improves readability,
-  - and should document the full shipped surface rather than a partial “current
-    API” snapshot,
-- `Examples`,
-- `Considerations` when ownership, portability, blocking behavior, or ABI
-  details matter,
-- `See also`,
-- `Design goals` only when the module is intentionally documenting follow-on
-  design work beyond the shipped surface.
-
-Avoid headings like `Current API` for exported stdlib surfaces. They imply a
-parallel replacement API instead of documenting the module that downstream
-users actually import today.
-
-When a module exports submodules, errors, constants, handles, or runtime-facing
-families, document those explicitly under `Exported API` instead of leaving
-them implicit in surrounding prose.
 
 ## Allocation and Ownership
 

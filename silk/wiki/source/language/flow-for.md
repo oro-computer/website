@@ -9,9 +9,9 @@
 
 Canonical spec: `docs/language/flow-for.md`.
 
-## Reference
+## Status
 
-- Canonical spec and current behavior: `docs/language/flow-for.md`
+- Implemented subset + current limitations: `docs/language/flow-for.md`
 
 ## Syntax
 ```silk
@@ -52,4 +52,4 @@ fn main () -> int {
 ## See also
 
 - Canonical spec: `docs/language/flow-for.md`
-- Iterator protocol: `docs/std/interfaces.md`
+- Iterator protocol (current subset): `docs/std/interfaces.md`

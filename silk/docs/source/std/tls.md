@@ -1,10 +1,10 @@
 # `std::tls`
 
-Status: **Implemented subset**. `std::tls` provides TLS client/server
+`std::tls` provides TLS client/server
 primitives for the hosted POSIX baseline using vendored `mbedTLS` static
 archives.
 
-The design goals are:
+The initial goals are:
 
 - a small but usable `std::tls` session API for clients and servers,
 - a transport-agnostic I/O model so TLS can be layered over `std::net::TCPStream`
@@ -34,7 +34,6 @@ configuring a legacy `f_rng` callback (the historical `mbedtls_ssl_conf_rng(...)
 API is not present in mbedTLS 4.x).
 
 ## Exported API
-
 ### Error model
 
 The current `std::tls` API uses `std::result::Result(T, E)` and a stable
