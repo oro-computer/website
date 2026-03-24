@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-03-24T13:31:06+00:00
+Generated: 2026-03-24T21:20:49+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -313,10 +313,6 @@ This documentation site is written for downstream users. It is organized into:
 - **Reference** — the detailed language, standard library, CLI, and ABI surfaces.
 
 If you’re setting up a workspace, start with: [Getting started](?p=usage/getting-started).
-
-
-For AI assistants and LLM tooling:
-
 
 ## A minimal “hello world”
 

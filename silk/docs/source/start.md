@@ -10,13 +10,6 @@ This documentation site is written for downstream users. It is organized into:
 
 If you’re setting up a workspace, start with: [Getting started](?p=usage/getting-started).
 
-## Ask AI / `llms.txt`
-
-For AI assistants and LLM tooling:
-
-- Whole-site pack: [`llms.txt`](../../llms.txt)
-- Silk docs pack: [`silk/llms.txt`](../llms.txt)
-
 ## A minimal “hello world”
 
 Silk programs are ordinary `.slk` files. A small program can look like this:
