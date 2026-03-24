@@ -1,15 +1,23 @@
 # `oro:background`
 
-This page is the API reference for this runtime module family. It includes all exported bindings as
-declared by the runtime’s published TypeScript definitions.
+`oro:background` lets you inspect and coordinate the runtime background task surface.
 
-## Import
+## Examples
+
+Check whether background execution is available before scheduling work:
 
 ```js
-import * as api from 'oro:background'
+import background from 'oro:background'
 
-console.log(Object.keys(api))
+if (background.available) {
+  console.log(await background.status())
+}
 ```
+
+## See also
+
+- [Module index](?p=javascript/module-index)
+- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -27,15 +35,15 @@ oro:background
 <summary><code>oro:background</code></summary>
 
 ```ts
-declare module 'oro:background' {
-  export default background
-  export namespace background {
-    let available: boolean
-    function register(options: any): Promise<never>
-    function schedule(id: any, overrides: any): Promise<never>
-    function cancel(id: any): Promise<never>
-    function status(id: any): Promise<never>
-  }
+declare module "oro:background" {
+    export default background;
+    export namespace background {
+        let available: boolean;
+        function register(): Promise<never>;
+        function schedule(): Promise<never>;
+        function cancel(): Promise<never>;
+        function status(): Promise<never>;
+    }
 }
 ```
 

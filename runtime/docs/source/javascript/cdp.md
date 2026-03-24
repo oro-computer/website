@@ -1,15 +1,26 @@
 # `oro:cdp`
 
-This page is the API reference for this runtime module family. It includes all exported bindings as
-declared by the runtime’s published TypeScript definitions.
+`oro:cdp` controls the runtime Chrome DevTools Protocol endpoint used for inspection and debugging.
 
-## Import
+## Examples
+
+Inspect the current DevTools state and start the endpoint when needed:
 
 ```js
-import * as api from 'oro:cdp'
+import { status, listen, close } from 'oro:cdp'
 
-console.log(Object.keys(api))
+console.log(await status())
+await listen({ host: '127.0.0.1', port: 9222 })
+
+// ...connect a DevTools client...
+
+await close()
 ```
+
+## See also
+
+- [Module index](?p=javascript/module-index)
+- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -27,66 +38,66 @@ oro:cdp
 <summary><code>oro:cdp</code></summary>
 
 ```ts
-declare module 'oro:cdp' {
-  /**
-   * @typedef {object} CDPListenOptions
-   * @property {string} [hostname='127.0.0.1'] - Bind address (defaults to loopback).
-   * @property {number} [port=0] - Port to listen on. Use `0` for a random port.
-   */
-  /**
-   * @typedef {object} CDPStatus
-   * @property {boolean} listening
-   * @property {string} hostname
-   * @property {number} port
-   * @property {string} browserId
-   * @property {string} wsEndpoint
-   * @property {string} httpEndpoint
-   */
-  /**
-   * Starts the runtime CDP (Chrome DevTools Protocol) server.
-   *
-   * This exposes Chromium-style endpoints such as:
-   * - `GET /json/version`
-   * - `ws://<hostname>:<port>/devtools/browser/<browserId>`
-   *
-   * @param {CDPListenOptions} [options]
-   * @returns {Promise<CDPStatus>}
-   */
-  export function listen(options?: CDPListenOptions): Promise<CDPStatus>
-  /**
-   * Stops the runtime CDP server.
-   * @returns {Promise<void>}
-   */
-  export function close(): Promise<void>
-  /**
-   * Gets the current CDP server status.
-   * @returns {Promise<CDPStatus>}
-   */
-  export function status(): Promise<CDPStatus>
-  namespace _default {
-    export { listen }
-    export { close }
-    export { status }
-  }
-  export default _default
-  export type CDPListenOptions = {
+declare module "oro:cdp" {
     /**
-     * - Bind address (defaults to loopback).
+     * @typedef {object} CDPListenOptions
+     * @property {string} [hostname='127.0.0.1'] - Bind address (defaults to loopback).
+     * @property {number} [port=0] - Port to listen on. Use `0` for a random port.
      */
-    hostname?: string
     /**
-     * - Port to listen on. Use `0` for a random port.
+     * @typedef {object} CDPStatus
+     * @property {boolean} listening
+     * @property {string} hostname
+     * @property {number} port
+     * @property {string} browserId
+     * @property {string} wsEndpoint
+     * @property {string} httpEndpoint
      */
-    port?: number
-  }
-  export type CDPStatus = {
-    listening: boolean
-    hostname: string
-    port: number
-    browserId: string
-    wsEndpoint: string
-    httpEndpoint: string
-  }
+    /**
+     * Starts the runtime CDP (Chrome DevTools Protocol) server.
+     *
+     * This exposes Chromium-style endpoints such as:
+     * - `GET /json/version`
+     * - `ws://<hostname>:<port>/devtools/browser/<browserId>`
+     *
+     * @param {CDPListenOptions} [options]
+     * @returns {Promise<CDPStatus>}
+     */
+    export function listen(options?: CDPListenOptions): Promise<CDPStatus>;
+    /**
+     * Stops the runtime CDP server.
+     * @returns {Promise<void>}
+     */
+    export function close(): Promise<void>;
+    /**
+     * Gets the current CDP server status.
+     * @returns {Promise<CDPStatus>}
+     */
+    export function status(): Promise<CDPStatus>;
+    namespace _default {
+        export { listen };
+        export { close };
+        export { status };
+    }
+    export default _default;
+    export type CDPListenOptions = {
+        /**
+         * - Bind address (defaults to loopback).
+         */
+        hostname?: string;
+        /**
+         * - Port to listen on. Use `0` for a random port.
+         */
+        port?: number;
+    };
+    export type CDPStatus = {
+        listening: boolean;
+        hostname: string;
+        port: number;
+        browserId: string;
+        wsEndpoint: string;
+        httpEndpoint: string;
+    };
 }
 ```
 

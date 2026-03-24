@@ -1,15 +1,23 @@
 # `oro:node-esm-loader`
 
-This page is the API reference for this runtime module family. It includes all exported bindings as
-declared by the runtime’s published TypeScript definitions.
+`oro:node-esm-loader` exposes the runtime’s ESM loader resolution hook.
 
-## Import
+## Examples
+
+Reuse the runtime resolver from a custom ESM loader hook:
 
 ```js
-import * as api from 'oro:node-esm-loader'
+import resolve from 'oro:node-esm-loader'
 
-console.log(Object.keys(api))
+export async function resolveHook(specifier, context, nextResolve) {
+  return resolve(specifier, context, nextResolve)
+}
 ```
+
+## See also
+
+- [Module index](?p=javascript/module-index)
+- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -27,9 +35,9 @@ oro:node-esm-loader
 <summary><code>oro:node-esm-loader</code></summary>
 
 ```ts
-declare module 'oro:node-esm-loader' {
-  export function resolve(specifier: any, _ctx: any, next: any): Promise<any>
-  export default resolve
+declare module "oro:node-esm-loader" {
+    export function resolve(specifier: any, _ctx: any, next: any): Promise<any>;
+    export default resolve;
 }
 ```
 

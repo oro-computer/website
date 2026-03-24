@@ -1,15 +1,22 @@
 # `oro:location`
 
-This page is the API reference for this runtime module family. It includes all exported bindings as
-declared by the runtime’s published TypeScript definitions.
+`oro:location` normalizes the current runtime location and origin semantics across platforms.
 
-## Import
+## Examples
+
+Inspect the runtime-normalized location values for the current context:
 
 ```js
-import * as api from 'oro:location'
+import location from 'oro:location'
 
-console.log(Object.keys(api))
+console.log(location.href)
+console.log(location.origin)
 ```
+
+## See also
+
+- [Module index](?p=javascript/module-index)
+- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -27,22 +34,22 @@ oro:location
 <summary><code>oro:location</code></summary>
 
 ```ts
-declare module 'oro:location' {
-  export class Location {
-    get url(): URL
-    get protocol(): string
-    get host(): string
-    get hostname(): string
-    get port(): string
-    get pathname(): string
-    get search(): string
-    get origin(): any
-    get href(): any
-    get hash(): string
-    toString(): any
-  }
-  const _default: Location
-  export default _default
+declare module "oro:location" {
+    export class Location {
+        get url(): URL;
+        get protocol(): string;
+        get host(): string;
+        get hostname(): string;
+        get port(): string;
+        get pathname(): string;
+        get search(): string;
+        get origin(): any;
+        get href(): any;
+        get hash(): string;
+        toString(): any;
+    }
+    const _default: Location;
+    export default _default;
 }
 ```
 

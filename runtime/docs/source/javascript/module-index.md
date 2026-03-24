@@ -24,8 +24,9 @@ The runtime publishes many module families. The highest-traffic groups are:
 - **Networking and transport** — [`oro:fetch`](?p=javascript/fetch), [`oro:http`](?p=javascript/http), [`oro:https`](?p=javascript/https), [`oro:net`](?p=javascript/net), [`oro:dns`](?p=javascript/dns), [`oro:tcp`](?p=javascript/tcp), [`oro:tls`](?p=javascript/tls), [`oro:network`](?p=javascript/network)
 - **Data, formats, and storage** — [`oro:buffer`](?p=javascript/buffer), [`oro:stream`](?p=javascript/stream), [`oro:url`](?p=javascript/url), [`oro:querystring`](?p=javascript/querystring), [`oro:sqlite`](?p=javascript/sqlite), [`oro:toml`](?p=javascript/toml), [`oro:semver`](?p=javascript/semver), [`oro:mime`](?p=javascript/mime)
 - **Security and identity** — [`oro:secure-storage`](?p=javascript/secure-storage), [`oro:crypto`](?p=javascript/crypto), [`oro:cookies`](?p=javascript/cookies), [`oro:did`](?p=javascript/did)
+- **Device and host integration** — [`oro:usb`](?p=javascript/usb), [`oro:hci`](?p=javascript/hci), [`oro:dbus`](?p=javascript/dbus), [`oro:xpc`](?p=javascript/xpc), [`oro:extension`](?p=javascript/extension)
 - **Workers, services, and automation** — [`oro:worker`](?p=javascript/worker), [`oro:worker_threads`](?p=javascript/worker_threads), [`oro:service-worker`](?p=javascript/service-worker), [`oro:shared-worker`](?p=javascript/shared-worker), [`oro:background`](?p=javascript/background), [`oro:mcp`](?p=javascript/mcp), [`oro:ai`](?p=javascript/ai)
-- **Advanced or compatibility surfaces** — [`oro:commonjs`](?p=javascript/commonjs), [`oro:module`](?p=javascript/module), [`oro:bootstrap`](?p=javascript/bootstrap), [`oro:diagnostics`](?p=javascript/diagnostics), plus the `oro:internal/*`, `oro:node/*`, `oro:npm/*`, and `oro:external/*` families
+- **Advanced or compatibility surfaces** — [`oro:commonjs`](?p=javascript/commonjs), [`oro:module`](?p=javascript/module), [`oro:bootstrap`](?p=javascript/bootstrap), [`oro:diagnostics`](?p=javascript/diagnostics), and the `oro:npm/*` family
 
 ## Importable top-level module specifiers
 
@@ -108,6 +109,7 @@ oro:tls
 oro:toml
 oro:tty
 oro:url
+oro:usb
 oro:util
 oro:vm
 oro:window
@@ -117,13 +119,10 @@ oro:xpc
 oro:zlib
 ```
 
-## Subpath-only module families
+## Subpath-only public module families
 
-Some families only exist as subpath imports (there is no `oro:<family>` top-level specifier):
+Some public module families only exist as subpath imports (there is no `oro:<family>` top-level specifier):
 
-- `oro:internal/*` — internal runtime building blocks
-- `oro:node/*` — Node interop helpers used by the runtime loader
 - `oro:npm/*` — NPM/module integration helpers
-- `oro:external/*` — bundled third-party libraries
 
 See: [All module specifiers](?p=javascript/all-modules).

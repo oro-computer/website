@@ -1,15 +1,25 @@
 # `oro:worker`
 
-This page is the API reference for this runtime module family. It includes all exported bindings as
-declared by the runtime’s published TypeScript definitions.
+`oro:worker` re-exports the runtime worker classes for dedicated, shared, and service workers.
 
-## Import
+## Examples
+
+Launch a dedicated worker through the runtime worker surface:
 
 ```js
-import * as api from 'oro:worker'
+import Worker from 'oro:worker'
 
-console.log(Object.keys(api))
+const worker = new Worker(new URL('./worker.js', import.meta.url), {
+  workerData: { job: 'thumbnail' }
+})
+
+worker.postMessage({ type: 'start' })
 ```
+
+## See also
+
+- [Module index](?p=javascript/module-index)
+- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -27,12 +37,12 @@ oro:worker
 <summary><code>oro:worker</code></summary>
 
 ```ts
-declare module 'oro:worker' {
-  export default Worker
-  import { SharedWorker } from 'oro:shared-worker/index'
-  import { ServiceWorker } from 'oro:service-worker/instance'
-  import { Worker } from 'oro:worker_threads'
-  export { SharedWorker, ServiceWorker, Worker }
+declare module "oro:worker" {
+    export default Worker;
+    import { SharedWorker } from "oro:shared-worker/index";
+    import { ServiceWorker } from "oro:service-worker/instance";
+    import { Worker } from "oro:worker_threads";
+    export { SharedWorker, ServiceWorker, Worker };
 }
 ```
 

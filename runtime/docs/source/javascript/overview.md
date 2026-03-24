@@ -11,6 +11,7 @@ The runtime’s JavaScript surface is broad, but it stays predictable:
 - **Filesystem and process** — `oro:fs`, `oro:path`, `oro:os`, `oro:process`, `oro:child_process`
 - **Networking and transport** — `oro:fetch`, `oro:http`, `oro:https`, `oro:net`, `oro:dns`, `oro:tcp`, `oro:tls`
 - **Security and identity** — `oro:secure-storage`, `oro:crypto`, `oro:cookies`, `oro:did`
+- **Device and host integration** — `oro:usb`, `oro:hci`, `oro:dbus`, `oro:xpc`, `oro:extension`
 - **Data and formats** — `oro:url`, `oro:querystring`, `oro:buffer`, `oro:stream`, `oro:sqlite`, `oro:toml`, `oro:semver`
 - **Background work and automation** — `oro:worker`, `oro:worker_threads`, `oro:service-worker`, `oro:shared-worker`, `oro:background`, `oro:mcp`, `oro:ai`
 
@@ -52,4 +53,5 @@ If you’re looking for the TOML keys and defaults, see: [Configuration](?p=conf
 - Core modules: [`oro:application`](?p=javascript/application) · [`oro:window`](?p=javascript/window) · [`oro:hooks`](?p=javascript/hooks)
 - OS + data: [`oro:fs`](?p=javascript/fs) · [`oro:path`](?p=javascript/path) · [`oro:process`](?p=javascript/process) · [`oro:url`](?p=javascript/url)
 - Networking: [`oro:fetch`](?p=javascript/fetch) · [`oro:http`](?p=javascript/http) · [`oro:https`](?p=javascript/https) · [`oro:tls`](?p=javascript/tls)
+- Devices + services: [`oro:usb`](?p=javascript/usb) · [`oro:dbus`](?p=javascript/dbus) · [`oro:xpc`](?p=javascript/xpc) · [`oro:extension`](?p=javascript/extension)
 - Services: [`oro:mcp`](?p=javascript/mcp) · [`oro:ai`](?p=javascript/ai) · [`oro:notification`](?p=javascript/notification) · [`oro:secure-storage`](?p=javascript/secure-storage)

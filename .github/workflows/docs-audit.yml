@@ -37,6 +37,9 @@ jobs:
           python3 slg/tools/build-indexes.py
           python3 slg/tools/build-llms-txt.py
 
+          python3 virtnosis/tools/build-indexes.py
+          python3 virtnosis/tools/build-llms-txt.py
+
           python3 silk/tools/build-indexes.py
           python3 silk/tools/build-llms-txt.py
 
@@ -45,6 +48,7 @@ jobs:
           python3 runtime/tools/audit-site.py
           python3 sage/tools/audit-site.py
           python3 slg/tools/audit-site.py
+          python3 virtnosis/tools/audit-site.py
           python3 silk/tools/audit-site.py
           python3 silk/tools/audit-stdlib-docs.py
 
@@ -53,6 +57,7 @@ jobs:
           python3 -m py_compile runtime/tools/*.py
           python3 -m py_compile sage/tools/*.py
           python3 -m py_compile slg/tools/*.py
+          python3 -m py_compile virtnosis/tools/*.py
           python3 -m py_compile silk/tools/*.py
 
           node --check assets/docs-viewer.js
@@ -70,6 +75,9 @@ jobs:
             slg/docs/index.json \
             slg/docs/search.json \
             slg/llms.txt \
+            virtnosis/docs/index.json \
+            virtnosis/docs/search.json \
+            virtnosis/llms.txt \
             silk/docs/index.json \
             silk/docs/search.json \
             silk/wiki/index.json \

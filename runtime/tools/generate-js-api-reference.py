@@ -6,6 +6,12 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from js_api_reference_content import (
+    DEFAULT_SEE_ALSO,
+    DESCRIPTION_BY_FAMILY,
+    EXAMPLES_BY_FAMILY,
+)
+
 
 MODULE_START = re.compile(r"^declare module ['\"](?P<name>oro:[^'\"]+)['\"]\s*\{\s*$")
 
@@ -19,6 +25,13 @@ CURATED_FAMILIES = {
     "oro:notification",
     "oro:secure-storage",
     "oro:window",
+}
+
+
+EXCLUDED_PUBLIC_FAMILIES = {
+    "oro:external",
+    "oro:internal",
+    "oro:node",
 }
 
 
@@ -117,30 +130,25 @@ def family_title(family: str, blocks: dict[str, ModuleBlock]) -> str:
 
 
 def family_intro(family: str) -> str:
-    if family == "oro:internal":
-        return (
-            "`oro:internal/*` modules are internal runtime building blocks. They exist so the runtime can compose its\n"
-            "Node-compatibility surface and WebView integrations, but they are not considered stable application-facing API.\n"
-        )
-    if family == "oro:external":
-        return (
-            "`oro:external/*` modules expose bundled third-party libraries that the runtime ships internally.\n"
-            "They are not a stable public API surface; prefer higher-level modules when available.\n"
-        )
-    if family == "oro:node":
-        return (
-            "`oro:node/*` modules provide Node interop helpers used by the runtime’s module loader.\n"
-            "Most apps should not import these directly.\n"
-        )
-    if family == "oro:npm":
-        return (
-            "`oro:npm/*` modules support the runtime’s NPM/module integration paths.\n"
-            "Most apps should not import these directly.\n"
-        )
-    return (
-        "This page is the API reference for this runtime module family. It includes all exported bindings as\n"
-        "declared by the runtime’s published TypeScript definitions.\n"
+    return DESCRIPTION_BY_FAMILY.get(
+        family,
+        f"This page documents the exported JavaScript surface for `{family}` as declared by the runtime’s published TypeScript definitions.\n",
     )
+
+
+def render_examples_section(family: str) -> str:
+    body = EXAMPLES_BY_FAMILY.get(family)
+    if not body:
+        raise SystemExit(f"Missing generated examples for {family}")
+    return f"## Examples\n\n{body.rstrip()}\n"
+
+
+def render_see_also_section() -> str:
+    lines = ["## See also", ""]
+    for label, doc_id in DEFAULT_SEE_ALSO:
+        lines.append(f"- [{label}](?p={doc_id})")
+    lines.append("")
+    return "\n".join(lines)
 
 
 def render_reference_section(family: str, specs: list[str], blocks: dict[str, ModuleBlock]) -> str:
@@ -197,20 +205,15 @@ def update_curated_page(path: Path, family: str, specs: list[str], blocks: dict[
 def render_generated_page(path: Path, family: str, specs: list[str], blocks: dict[str, ModuleBlock]) -> str:
     title = family_title(family, blocks)
     specs_sorted = sort_specs_in_family(family, specs)
-    import_spec = preferred_import_spec(family, specs_sorted, blocks)
 
     lines: list[str] = []
     lines.append(f"# {title}")
     lines.append("")
     lines.append(family_intro(family).rstrip())
     lines.append("")
-    lines.append("## Import")
+    lines.append(render_examples_section(family).rstrip())
     lines.append("")
-    lines.append("```js")
-    lines.append(f"import * as api from '{import_spec}'")
-    lines.append("")
-    lines.append("console.log(Object.keys(api))")
-    lines.append("```")
+    lines.append(render_see_also_section().rstrip())
     lines.append("")
     lines.append(render_reference_section(family, specs_sorted, blocks).rstrip())
     lines.append("")
@@ -233,8 +236,12 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     written: list[Path] = []
+    removed: list[Path] = []
 
     for family in sorted(families.keys()):
+        if family in EXCLUDED_PUBLIC_FAMILIES:
+            continue
+
         specs = families[family]
 
         if family in CURATED_FAMILIES:
@@ -252,10 +259,18 @@ def main() -> None:
         if write_text_if_changed(path, text):
             written.append(path)
 
-    if written:
+    for family in sorted(EXCLUDED_PUBLIC_FAMILIES):
+        stale_path = out_dir / f"{family.removeprefix('oro:')}.md"
+        if stale_path.exists():
+            stale_path.unlink()
+            removed.append(stale_path)
+
+    if written or removed:
         print("Wrote:")
         for p in written:
             print(f"- {p}")
+        for p in removed:
+            print(f"- removed {p}")
     else:
         print("Unchanged: generated JavaScript API reference pages")
 

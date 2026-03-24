@@ -1,0 +1,127 @@
+{
+  "generatedAt": "2026-03-24T14:27:25+00:00",
+  "kind": "docs",
+  "count": 19,
+  "sections": [
+    {
+      "name": "overview",
+      "items": [
+        {
+          "id": "start",
+          "title": "Virtnosis Docs",
+          "file": "start.md"
+        }
+      ]
+    },
+    {
+      "name": "guides",
+      "items": [
+        {
+          "id": "guides/getting-started",
+          "title": "Getting Started",
+          "file": "guides/getting-started.md"
+        },
+        {
+          "id": "guides/install-and-package",
+          "title": "Install and Package",
+          "file": "guides/install-and-package.md"
+        },
+        {
+          "id": "guides/operator-guide",
+          "title": "Operator Guide",
+          "file": "guides/operator-guide.md"
+        },
+        {
+          "id": "guides/deployment",
+          "title": "Deployment Guide",
+          "file": "guides/deployment.md"
+        },
+        {
+          "id": "guides/systemd",
+          "title": "Systemd Guide",
+          "file": "guides/systemd.md"
+        },
+        {
+          "id": "guides/output-and-automation",
+          "title": "Output and Automation",
+          "file": "guides/output-and-automation.md"
+        }
+      ]
+    },
+    {
+      "name": "cli",
+      "items": [
+        {
+          "id": "cli/vnactl",
+          "title": "`vnactl`",
+          "file": "cli/vnactl.md"
+        },
+        {
+          "id": "cli/virtnosis-agent",
+          "title": "`virtnosis-agent`",
+          "file": "cli/virtnosis-agent.md"
+        }
+      ]
+    },
+    {
+      "name": "reference",
+      "items": [
+        {
+          "id": "reference/overview",
+          "title": "Overview",
+          "file": "reference/overview.md"
+        },
+        {
+          "id": "reference/scan-analysis",
+          "title": "Scan Analysis",
+          "file": "reference/scan-analysis.md"
+        },
+        {
+          "id": "reference/architecture",
+          "title": "Architecture",
+          "file": "reference/architecture.md"
+        },
+        {
+          "id": "reference/development",
+          "title": "Development Guide",
+          "file": "reference/development.md"
+        },
+        {
+          "id": "reference/repository-docs",
+          "title": "Repository Documents",
+          "file": "reference/repository-docs.md"
+        }
+      ]
+    },
+    {
+      "name": "man",
+      "items": [
+        {
+          "id": "man/vnactl-1",
+          "title": "`vnactl(1)`",
+          "file": "man/vnactl-1.md"
+        },
+        {
+          "id": "man/virtnosis-agent-1",
+          "title": "`virtnosis-agent(1)`",
+          "file": "man/virtnosis-agent-1.md"
+        },
+        {
+          "id": "man/virtnosis-7",
+          "title": "`virtnosis(7)`",
+          "file": "man/virtnosis-7.md"
+        },
+        {
+          "id": "man/virtnosis-agent-protocol-7",
+          "title": "`virtnosis-agent-protocol(7)`",
+          "file": "man/virtnosis-agent-protocol-7.md"
+        },
+        {
+          "id": "man/virtnosis-scan-report-7",
+          "title": "`virtnosis-scan-report(7)`",
+          "file": "man/virtnosis-scan-report-7.md"
+        }
+      ]
+    }
+  ]
+}

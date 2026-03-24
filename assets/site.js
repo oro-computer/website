@@ -84,6 +84,9 @@
     if (path.includes("/slg/") || path.endsWith("/slg")) {
       return new URL("slg/llms.txt", root).toString();
     }
+    if (path.includes("/virtnosis/") || path.endsWith("/virtnosis")) {
+      return new URL("virtnosis/llms.txt", root).toString();
+    }
     return new URL("llms.txt", root).toString();
   }
 

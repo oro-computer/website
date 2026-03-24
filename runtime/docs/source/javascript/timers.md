@@ -1,15 +1,23 @@
 # `oro:timers`
 
-This page is the API reference for this runtime module family. It includes all exported bindings as
-declared by the runtime’s published TypeScript definitions.
+`oro:timers` exposes timer primitives, promise-based sleeps, and scheduler helpers.
 
-## Import
+## Examples
+
+Sleep without writing your own timeout wrapper:
 
 ```js
-import * as api from 'oro:timers'
+import { sleep } from 'oro:timers'
 
-console.log(Object.keys(api))
+await sleep(250)
+
+console.log('quarter second elapsed')
 ```
+
+## See also
+
+- [Module index](?p=javascript/module-index)
+- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -32,10 +40,10 @@ oro:timers/timer
 <summary><code>oro:timers</code></summary>
 
 ```ts
-declare module 'oro:timers' {
-  export * from 'oro:timers/index'
-  export default exports
-  import * as exports from 'oro:timers/index'
+declare module "oro:timers" {
+    export * from "oro:timers/index";
+    export default exports;
+    import * as exports from "oro:timers/index";
 }
 ```
 
@@ -45,53 +53,42 @@ declare module 'oro:timers' {
 <summary><code>oro:timers/index</code></summary>
 
 ```ts
-declare module 'oro:timers/index' {
-  export function setTimeout(
-    callback: any,
-    delay: any,
-    ...args: any[]
-  ): import('oro:timers/timer').Timer
-  export function clearTimeout(timeout: any): void
-  export function setInterval(
-    callback: any,
-    delay: any,
-    ...args: any[]
-  ): import('oro:timers/timer').Timer
-  export function clearInterval(interval: any): void
-  export function setImmediate(
-    callback: any,
-    ...args: any[]
-  ): import('oro:timers/timer').Timer
-  export function clearImmediate(immediate: any): void
-  /**
-   * Pause async execution for `timeout` milliseconds.
-   * @param {number} timeout
-   * @return {Promise}
-   */
-  export function sleep(timeout: number): Promise<any>
-  export namespace sleep {
+declare module "oro:timers/index" {
+    export function setTimeout(callback: any, delay: any, ...args: any[]): import("oro:timers/timer").Timer;
+    export function clearTimeout(timeout: any): void;
+    export function setInterval(callback: any, delay: any, ...args: any[]): import("oro:timers/timer").Timer;
+    export function clearInterval(interval: any): void;
+    export function setImmediate(callback: any, ...args: any[]): import("oro:timers/timer").Timer;
+    export function clearImmediate(immediate: any): void;
     /**
-     * Pause sync execution for `timeout` milliseconds.
+     * Pause async execution for `timeout` milliseconds.
      * @param {number} timeout
+     * @return {Promise}
      */
-    function sync(timeout: number): void
-  }
-  export { platform }
-  namespace _default {
-    export { platform }
-    export { promises }
-    export { scheduler }
-    export { setTimeout }
-    export { clearTimeout }
-    export { setInterval }
-    export { clearInterval }
-    export { setImmediate }
-    export { clearImmediate }
-  }
-  export default _default
-  import platform from 'oro:timers/platform'
-  import promises from 'oro:timers/promises'
-  import scheduler from 'oro:timers/scheduler'
+    export function sleep(timeout: number): Promise<any>;
+    export namespace sleep {
+        /**
+         * Pause sync execution for `timeout` milliseconds.
+         * @param {number} timeout
+         */
+        function sync(timeout: number): void;
+    }
+    export { platform };
+    namespace _default {
+        export { platform };
+        export { promises };
+        export { scheduler };
+        export { setTimeout };
+        export { clearTimeout };
+        export { setInterval };
+        export { clearInterval };
+        export { setImmediate };
+        export { clearImmediate };
+    }
+    export default _default;
+    import platform from "oro:timers/platform";
+    import promises from "oro:timers/promises";
+    import scheduler from "oro:timers/scheduler";
 }
 ```
 
@@ -101,17 +98,17 @@ declare module 'oro:timers/index' {
 <summary><code>oro:timers/platform</code></summary>
 
 ```ts
-declare module 'oro:timers/platform' {
-  export namespace platform {
-    let setTimeout: any
-    let setInterval: any
-    let setImmediate: any
-    let clearTimeout: any
-    let clearInterval: any
-    let clearImmediate: any
-    let postTask: any
-  }
-  export default platform
+declare module "oro:timers/platform" {
+    export namespace platform {
+        let setTimeout: any;
+        let setInterval: any;
+        let setImmediate: any;
+        let clearTimeout: any;
+        let clearInterval: any;
+        let clearImmediate: any;
+        let postTask: any;
+    }
+    export default platform;
 }
 ```
 
@@ -121,24 +118,16 @@ declare module 'oro:timers/platform' {
 <summary><code>oro:timers/promises</code></summary>
 
 ```ts
-declare module 'oro:timers/promises' {
-  export function setTimeout(
-    delay?: number,
-    value?: any,
-    options?: any
-  ): Promise<any>
-  export function setInterval(
-    delay?: number,
-    value?: any,
-    options?: any
-  ): AsyncGenerator<any, void, unknown>
-  export function setImmediate(value?: any, options?: any): Promise<any>
-  namespace _default {
-    export { setImmediate }
-    export { setInterval }
-    export { setTimeout }
-  }
-  export default _default
+declare module "oro:timers/promises" {
+    export function setTimeout(delay?: number, value?: any, options?: any): Promise<any>;
+    export function setInterval(delay?: number, value?: any, options?: any): AsyncGenerator<any, void, unknown>;
+    export function setImmediate(value?: any, options?: any): Promise<any>;
+    namespace _default {
+        export { setImmediate };
+        export { setInterval };
+        export { setTimeout };
+    }
+    export default _default;
 }
 ```
 
@@ -148,16 +137,16 @@ declare module 'oro:timers/promises' {
 <summary><code>oro:timers/scheduler</code></summary>
 
 ```ts
-declare module 'oro:timers/scheduler' {
-  export function wait(delay: any, options?: any): Promise<any>
-  export function postTask(callback: any, options?: any): Promise<any>
-  namespace _default {
-    export { postTask }
-    export { setImmediate as yield }
-    export { wait }
-  }
-  export default _default
-  import { setImmediate } from 'oro:timers/promises'
+declare module "oro:timers/scheduler" {
+    export function wait(delay: any, options?: any): Promise<any>;
+    export function postTask(callback: any, options?: any): Promise<any>;
+    namespace _default {
+        export { postTask };
+        export { setImmediate as yield };
+        export { wait };
+    }
+    export default _default;
+    import { setImmediate } from "oro:timers/promises";
 }
 ```
 
@@ -167,37 +156,37 @@ declare module 'oro:timers/scheduler' {
 <summary><code>oro:timers/timer</code></summary>
 
 ```ts
-declare module 'oro:timers/timer' {
-  export class Timer extends AsyncResource {
-    [x: number]: () => {
-      args: any[]
-      handle(id: any, destroy: any): void
+declare module "oro:timers/timer" {
+    export class Timer extends AsyncResource {
+        [x: number]: () => {
+            args: any[];
+            handle(id: any, destroy: any): void;
+        };
+        static from(...args: any[]): Timer;
+        constructor(type: any, create: any, destroy: any);
+        get id(): number;
+        init(...args: any[]): this;
+        close(): boolean;
+        [Symbol.toPrimitive](): number;
+        #private;
     }
-    static from(...args: any[]): Timer
-    constructor(type: any, create: any, destroy: any)
-    get id(): number
-    init(...args: any[]): this
-    close(): boolean
-    [Symbol.toPrimitive](): number
-    #private
-  }
-  export class Timeout extends Timer {
-    constructor()
-  }
-  export class Interval extends Timer {
-    constructor()
-  }
-  export class Immediate extends Timer {
-    constructor()
-  }
-  namespace _default {
-    export { Timer }
-    export { Immediate }
-    export { Timeout }
-    export { Interval }
-  }
-  export default _default
-  import { AsyncResource } from 'oro:async/resource'
+    export class Timeout extends Timer {
+        constructor();
+    }
+    export class Interval extends Timer {
+        constructor();
+    }
+    export class Immediate extends Timer {
+        constructor();
+    }
+    namespace _default {
+        export { Timer };
+        export { Immediate };
+        export { Timeout };
+        export { Interval };
+    }
+    export default _default;
+    import { AsyncResource } from "oro:async/resource";
 }
 ```
 

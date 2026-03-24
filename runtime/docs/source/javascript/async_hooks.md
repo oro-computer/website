@@ -1,15 +1,31 @@
 # `oro:async_hooks`
 
-This page is the API reference for this runtime module family. It includes all exported bindings as
-declared by the runtime’s published TypeScript definitions.
+`oro:async_hooks` exposes hook-based async lifecycle inspection compatible with Node-style instrumentation.
 
-## Import
+## Examples
+
+Inspect async-resource lifecycles as work is scheduled:
 
 ```js
-import * as api from 'oro:async_hooks'
+import { createHook, executionAsyncId } from 'oro:async_hooks'
 
-console.log(Object.keys(api))
+const hook = createHook({
+  init(asyncId, type, triggerAsyncId) {
+    console.log({ asyncId, type, triggerAsyncId })
+  }
+})
+
+hook.enable()
+queueMicrotask(() => {
+  console.log(executionAsyncId())
+  hook.disable()
+})
 ```
+
+## See also
+
+- [Module index](?p=javascript/module-index)
+- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -27,23 +43,17 @@ oro:async_hooks
 <summary><code>oro:async_hooks</code></summary>
 
 ```ts
-declare module 'oro:async_hooks' {
-  export default exports
-  import { AsyncLocalStorage } from 'oro:async/storage'
-  import { AsyncResource } from 'oro:async/resource'
-  import { executionAsyncResource } from 'oro:async/hooks'
-  import { executionAsyncId } from 'oro:async/hooks'
-  import { triggerAsyncId } from 'oro:async/hooks'
-  import { createHook } from 'oro:async/hooks'
-  import * as exports from 'oro:async_hooks'
-  export {
-    AsyncLocalStorage,
-    AsyncResource,
-    executionAsyncResource,
-    executionAsyncId,
-    triggerAsyncId,
-    createHook,
-  }
+declare module "oro:async_hooks" {
+    export default exports;
+    import { AsyncLocalStorage } from "oro:async/storage";
+    import { AsyncResource } from "oro:async/resource";
+    import { executionAsyncResource } from "oro:async/hooks";
+    import { executionAsyncId } from "oro:async/hooks";
+    import { triggerAsyncId } from "oro:async/hooks";
+    import { createHook } from "oro:async/hooks";
+    import * as exports from "oro:async_hooks";
+
+    export { AsyncLocalStorage, AsyncResource, executionAsyncResource, executionAsyncId, triggerAsyncId, createHook };
 }
 ```
 

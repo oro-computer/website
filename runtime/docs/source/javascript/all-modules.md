@@ -1,6 +1,6 @@
-# All module specifiers
+# All public module specifiers
 
-This page lists every ES module specifier that Oro Runtime publishes under the `oro:*` namespace.
+This page lists the public ES module specifiers documented on this site under the `oro:*` namespace.
 
 If you’re new, start with the curated [Module index](?p=javascript/module-index) and the core modules it links to.
 
@@ -8,11 +8,12 @@ If you’re new, start with the curated [Module index](?p=javascript/module-inde
 
 - Most apps should stick to the modules documented in this docs set (for example `oro:application`, `oro:window`,
   `oro:hooks`, `oro:secure-storage`).
-- This list also includes compatibility modules and advanced/internal modules used by the runtime and tooling.
+- This list excludes private implementation families and bundled third-party shims that are not part of the
+  supported application-facing API.
 - The authoritative surface is the runtime’s published TypeScript declarations; this list is derived from those
-  declarations.
+  declarations and filtered to the public application-facing modules.
 
-## All `oro:*` module specifiers
+## Public `oro:*` module specifiers
 
 ```text
 oro:ai
@@ -74,7 +75,6 @@ oro:errno
 oro:errors
 oro:events
 oro:extension
-oro:external/libsodium/index
 oro:fetch
 oro:fetch/fetch
 oro:fetch/index
@@ -98,40 +98,6 @@ oro:http
 oro:http/adapters
 oro:https
 oro:i18n
-oro:internal/async/hooks
-oro:internal/bluetooth-web
-oro:internal/callsite
-oro:internal/credentials
-oro:internal/database
-oro:internal/direct-sockets-policy
-oro:internal/error
-oro:internal/events
-oro:internal/geolocation
-oro:internal/globals
-oro:internal/hid-web
-oro:internal/init
-oro:internal/iterator
-oro:internal/permissions
-oro:internal/pickers
-oro:internal/post-message
-oro:internal/primitives
-oro:internal/promise
-oro:internal/runtime-schemes
-oro:internal/scheduler
-oro:internal/serialize
-oro:internal/service-worker
-oro:internal/shared-array-buffer
-oro:internal/streams
-oro:internal/streams/web
-oro:internal/symbols
-oro:internal/tcp-server-socket
-oro:internal/tcp-socket
-oro:internal/timers
-oro:internal/udp-socket
-oro:internal/usb-web
-oro:internal/webassembly
-oro:internal/web-share
-oro:internal/worker
 oro:ip
 oro:ipc
 oro:ipfs
@@ -159,7 +125,6 @@ oro:navigation/navigation
 oro:net
 oro:network
 oro:node-esm-loader
-oro:node/index
 oro:notification
 oro:npm/module
 oro:npm/service-worker
@@ -226,6 +191,7 @@ oro:url
 oro:url/index
 oro:url/urlpattern/urlpattern
 oro:url/url/url
+oro:usb
 oro:util
 oro:util/types
 oro:vm
@@ -240,4 +206,3 @@ oro:worker_threads/init
 oro:xpc
 oro:zlib
 ```
-

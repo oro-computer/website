@@ -1,15 +1,23 @@
 # `oro:protocol-handlers`
 
-This page is the API reference for this runtime module family. It includes all exported bindings as
-declared by the runtime’s published TypeScript definitions.
+`oro:protocol-handlers` exposes runtime helpers for custom protocol and service-worker routing.
 
-## Import
+## Examples
+
+Ask the runtime which service worker is currently handling a custom scheme:
 
 ```js
-import * as api from 'oro:protocol-handlers'
+import { getServiceWorker } from 'oro:protocol-handlers'
 
-console.log(Object.keys(api))
+const worker = await getServiceWorker({ scheme: 'npm' })
+
+console.log(worker)
 ```
+
+## See also
+
+- [Module index](?p=javascript/module-index)
+- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -27,27 +35,25 @@ oro:protocol-handlers
 <summary><code>oro:protocol-handlers</code></summary>
 
 ```ts
-declare module 'oro:protocol-handlers' {
-  /**
+declare module "oro:protocol-handlers" {
+    /**
      * @typedef {{ scheme: string }} GetServiceWorkerOptions
 
     /**
      * @param {GetServiceWorkerOptions} options
      * @return {Promise<ServiceWorker|null>
      */
-  export function getServiceWorker(
-    options: GetServiceWorkerOptions
-  ): Promise<ServiceWorker | null>
-  namespace _default {
-    export { getServiceWorker }
-  }
-  export default _default
-  /**
-   * /**
-   */
-  export type GetServiceWorkerOptions = {
-    scheme: string
-  }
+    export function getServiceWorker(options: GetServiceWorkerOptions): Promise<ServiceWorker | null>;
+    namespace _default {
+        export { getServiceWorker };
+    }
+    export default _default;
+    /**
+     * /**
+     */
+    export type GetServiceWorkerOptions = {
+        scheme: string;
+    };
 }
 ```
 

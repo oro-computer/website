@@ -1,15 +1,24 @@
 # `oro:shared-worker`
 
-This page is the API reference for this runtime module family. It includes all exported bindings as
-declared by the runtime’s published TypeScript definitions.
+`oro:shared-worker/*` exposes the shared-worker environment and runtime helpers.
 
-## Import
+## Examples
+
+Launch a shared worker and communicate through its shared port:
 
 ```js
-import * as api from 'oro:shared-worker'
+import { SharedWorker } from 'oro:shared-worker'
 
-console.log(Object.keys(api))
+const worker = new SharedWorker(new URL('./shared.js', import.meta.url))
+
+worker.port.start()
+worker.port.postMessage({ type: 'warmup' })
 ```
+
+## See also
+
+- [Module index](?p=javascript/module-index)
+- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -33,16 +42,16 @@ oro:shared-worker/worker
 <summary><code>oro:shared-worker</code></summary>
 
 ```ts
-declare module 'oro:shared-worker' {
-  /**
-   * A reference to the opened environment. This value is an instance of an
-   * `Environment` if the scope is a ServiceWorker scope.
-   * @type {Environment|null}
-   */
-  export const env: Environment | null
-  export default SharedWorker
-  import { SharedWorker } from 'oro:shared-worker/index'
-  export { Environment, SharedWorker }
+declare module "oro:shared-worker" {
+    /**
+     * A reference to the opened environment. This value is an instance of an
+     * `Environment` if the scope is a ServiceWorker scope.
+     * @type {Environment|null}
+     */
+    export const env: Environment | null;
+    export default SharedWorker;
+    import { SharedWorker } from "oro:shared-worker/index";
+    export { Environment, SharedWorker };
 }
 ```
 
@@ -52,9 +61,9 @@ declare module 'oro:shared-worker' {
 <summary><code>oro:shared-worker/debug</code></summary>
 
 ```ts
-declare module 'oro:shared-worker/debug' {
-  export function debug(...args: any[]): void
-  export default debug
+declare module "oro:shared-worker/debug" {
+    export function debug(...args: any[]): void;
+    export default debug;
 }
 ```
 
@@ -64,14 +73,14 @@ declare module 'oro:shared-worker/debug' {
 <summary><code>oro:shared-worker/global</code></summary>
 
 ```ts
-declare module 'oro:shared-worker/global' {
-  export class SharedWorkerGlobalScope {
-    get isSharedWorkerScope(): boolean
-    set onconnect(listener: any)
-    get onconnect(): any
-  }
-  const _default: SharedWorkerGlobalScope
-  export default _default
+declare module "oro:shared-worker/global" {
+    export class SharedWorkerGlobalScope {
+        get isSharedWorkerScope(): boolean;
+        set onconnect(listener: any);
+        get onconnect(): any;
+    }
+    const _default: SharedWorkerGlobalScope;
+    export default _default;
 }
 ```
 
@@ -81,39 +90,37 @@ declare module 'oro:shared-worker/global' {
 <summary><code>oro:shared-worker/index</code></summary>
 
 ```ts
-declare module 'oro:shared-worker/index' {
-  export function init(sharedWorker: any, options: any): Promise<void>
-  /**
-   * Gets the SharedWorker context window.
-   * This function will create it if it does not already exist.
-   * @return {Promise<import('./window.js').ApplicationWindow}
-   */
-  export function getContextWindow(): Promise<any>
-  export const SHARED_WORKER_WINDOW_TITLE: 'oro:shared-worker'
-  export const SHARED_WORKER_WINDOW_PATH: '/oro/shared-worker/index.html'
-  export const channel: BroadcastChannel
-  export const workers: Map<any, any>
-  export class SharedWorkerMessagePort extends ipc.IPCMessagePort {}
-  export class SharedWorker extends EventTarget {
+declare module "oro:shared-worker/index" {
+    export function init(sharedWorker: any, options: any): Promise<void>;
     /**
-     * `SharedWorker` class constructor.
-     * @param {string|URL|Blob} aURL
-     * @param {string|object=} [nameOrOptions]
+     * Gets the SharedWorker context window.
+     * This function will create it if it does not already exist.
+     * @return {Promise<import('./window.js').ApplicationWindow}
      */
-    constructor(
-      aURL: string | URL | Blob,
-      nameOrOptions?: (string | object) | undefined
-    )
-    set onerror(onerror: any)
-    get onerror(): any
-    get ready(): any
-    get channel(): ipc.IPCMessageChannel
-    get port(): any
-    get id(): any
-    #private
-  }
-  export default SharedWorker
-  import ipc from 'oro:ipc'
+    export function getContextWindow(): Promise<any>;
+    export const SHARED_WORKER_WINDOW_TITLE: "oro:shared-worker";
+    export const SHARED_WORKER_WINDOW_PATH: "/oro/shared-worker/index.html";
+    export const channel: BroadcastChannel;
+    export const workers: Map<any, any>;
+    export class SharedWorkerMessagePort extends ipc.IPCMessagePort {
+    }
+    export class SharedWorker extends EventTarget {
+        /**
+         * `SharedWorker` class constructor.
+         * @param {string|URL|Blob} aURL
+         * @param {string|object=} [nameOrOptions]
+         */
+        constructor(aURL: string | URL | Blob, nameOrOptions?: (string | object) | undefined);
+        set onerror(onerror: any);
+        get onerror(): any;
+        get ready(): any;
+        get channel(): ipc.IPCMessageChannel;
+        get port(): any;
+        get id(): any;
+        #private;
+    }
+    export default SharedWorker;
+    import ipc from "oro:ipc";
 }
 ```
 
@@ -123,31 +130,31 @@ declare module 'oro:shared-worker/index' {
 <summary><code>oro:shared-worker/init</code></summary>
 
 ```ts
-declare module 'oro:shared-worker/init' {
-  export function onInstall(event: any): Promise<void>
-  export function onUninstall(event: any): Promise<void>
-  export function onConnect(event: any): Promise<void>
-  export const workers: Map<any, any>
-  export { channel }
-  export class SharedWorkerInstance extends Worker {
-    constructor(filename: any, options: any)
-    get info(): any
-    onMessage(event: any): Promise<void>
-    #private
-  }
-  export class SharedWorkerInfo {
-    constructor(data: any)
-    id: any
-    port: any
-    client: any
-    scriptURL: any
-    url: any
-    hash: any
-    get pathname(): string
-  }
-  const _default: any
-  export default _default
-  import { channel } from 'oro:shared-worker/index'
+declare module "oro:shared-worker/init" {
+    export function onInstall(event: any): Promise<void>;
+    export function onUninstall(event: any): Promise<void>;
+    export function onConnect(event: any): Promise<void>;
+    export const workers: Map<any, any>;
+    export { channel };
+    export class SharedWorkerInstance extends Worker {
+        constructor(filename: any, options: any);
+        get info(): any;
+        onMessage(event: any): Promise<void>;
+        #private;
+    }
+    export class SharedWorkerInfo {
+        constructor(data: any);
+        id: any;
+        port: any;
+        client: any;
+        scriptURL: any;
+        url: any;
+        hash: any;
+        get pathname(): string;
+    }
+    const _default: any;
+    export default _default;
+    import { channel } from "oro:shared-worker/index";
 }
 ```
 
@@ -157,9 +164,9 @@ declare module 'oro:shared-worker/init' {
 <summary><code>oro:shared-worker/state</code></summary>
 
 ```ts
-declare module 'oro:shared-worker/state' {
-  export const state: any
-  export default state
+declare module "oro:shared-worker/state" {
+    export const state: any;
+    export default state;
 }
 ```
 
@@ -169,18 +176,18 @@ declare module 'oro:shared-worker/state' {
 <summary><code>oro:shared-worker/worker</code></summary>
 
 ```ts
-declare module 'oro:shared-worker/worker' {
-  export function onReady(): void
-  export function onMessage(event: any): Promise<void>
-  const _default: any
-  export default _default
-  export namespace SHARED_WORKER_READY_TOKEN {
-    let __shared_worker_ready: boolean
-  }
-  export namespace module {
-    let exports: {}
-  }
-  export const connections: Set<any>
+declare module "oro:shared-worker/worker" {
+    export function onReady(): void;
+    export function onMessage(event: any): Promise<void>;
+    const _default: any;
+    export default _default;
+    export namespace SHARED_WORKER_READY_TOKEN {
+        let __shared_worker_ready: boolean;
+    }
+    export namespace module {
+        let exports: {};
+    }
+    export const connections: Set<any>;
 }
 ```
 

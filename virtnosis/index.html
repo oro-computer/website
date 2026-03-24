@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Virtnosis · Oro Computer</title>
+    <meta
+      name="description"
+      content="Virtnosis is a read-only libvirt security analysis and diagnosis toolset built around a bounded local agent and an operator CLI."
+    />
+    <meta name="theme-color" content="#101012" />
+    <link rel="icon" type="image/png" href="../docs/branding/assets/logo-icon-small.png" sizes="32x32" />
+    <link rel="stylesheet" href="../assets/site.css" />
+    <link rel="stylesheet" href="../assets/highlight/highlight.css" />
+    <script src="../assets/highlight/highlight.min.js" defer></script>
+    <script src="../assets/highlight/languages/bash.min.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-top" id="top">
+      <div class="container">
+        <div class="site-header">
+          <a class="brand" href="../">
+            <img
+              class="brand-mark"
+              src="../docs/branding/assets/logo-icon.png"
+              alt="Oro Computer logo"
+              width="32"
+              height="32"
+            />
+            <span class="brand-name">Oro Computer</span>
+          </a>
+          <nav class="nav" aria-label="Primary navigation">
+            <a href="../">Home</a>
+            <a href="../runtime/">Runtime</a>
+            <a href="../silk/">Silk</a>
+            <a href="../sage/">Sage</a>
+            <a href="../slg/">slg</a>
+            <a href="./" aria-current="page">Virtnosis</a>
+            <a href="https://github.com/oro-computer/virtnosis" target="_blank" rel="noreferrer">GitHub</a>
+            <a href="../#contact">Contact</a>
+            <a class="button button-primary" href="./docs/?p=start">Get started</a>
+          </nav>
+          <div class="site-subnav" aria-label="Virtnosis section navigation">
+            <div class="site-subnav-label">Inside</div>
+            <div class="site-subnav-parent">Virtnosis</div>
+            <nav class="site-subnav-links" aria-label="Virtnosis pages">
+              <a href="./" aria-current="page">Overview</a>
+              <a href="./docs/">Docs</a>
+              <a href="./docs/?p=cli/vnactl">CLI</a>
+              <a href="./docs/?p=man/virtnosis-7">virtnosis(7)</a>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-label="Virtnosis overview">
+        <div class="container">
+          <div class="hero-grid">
+            <div class="hero-copy">
+              <div class="hero-kicker">Virtnosis</div>
+              <h1>Read-only libvirt security analysis and diagnosis.</h1>
+              <p class="lede">
+                Virtnosis is a bounded, local-first control plane for inspecting libvirt-exposed infrastructure. It is built
+                for operators and automation that need high-signal findings, explicit degraded-state reporting, and stable
+                machine-consumable output.
+              </p>
+              <p class="lede">Use it only on systems you own or are explicitly authorized to assess.</p>
+              <div class="hero-actions">
+                <a class="button button-primary" href="./docs/">Read the docs</a>
+                <a class="button" href="./docs/?p=cli/vnactl">vnactl</a>
+                <a class="button" href="./docs/?p=cli/virtnosis-agent">virtnosis-agent</a>
+                <a class="button button-quiet" href="https://github.com/oro-computer/virtnosis" target="_blank" rel="noreferrer">GitHub</a>
+              </div>
+            </div>
+
+            <div class="panel" aria-label="CLI examples">
+              <div class="panel-header">
+                <div class="panel-title">CLI examples</div>
+                <a class="button button-quiet" href="./docs/?p=guides/getting-started">Start</a>
+              </div>
+              <div class="panel-body">
+                <pre><code class="language-bash">make build
+./build/bin/virtnosis-agent --verbose
+./build/bin/vnactl status
+./build/bin/vnactl scan --deep --confirm-xml --redact -f json</code></pre>
+                <p>Control-plane transport is local UNIX sockets only.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-label="Why Virtnosis">
+        <div class="container">
+          <div class="prose">
+            <h2>Why Virtnosis</h2>
+            <p>A bounded defensive tool for libvirt environments, not a general management client.</p>
+          </div>
+
+          <div class="card-grid mt-lg">
+            <div class="card col-span-4">
+              <div class="card-body">
+                <h3 class="card-title">Read-only by default</h3>
+                <div class="card-meta">
+                  Virtnosis is designed to inspect configuration and topology without mutating host or guest state.
+                </div>
+                <div class="card-links">
+                  <a class="button button-quiet" href="./docs/?p=reference/overview">Overview</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="card col-span-4">
+              <div class="card-body">
+                <h3 class="card-title">Bounded control plane</h3>
+                <div class="card-meta">
+                  The agent enforces request and response caps, per-client timeouts, peer authentication, and explicit local
+                  deployment boundaries.
+                </div>
+                <div class="card-links">
+                  <a class="button button-quiet" href="./docs/?p=cli/virtnosis-agent">Agent CLI</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="card col-span-4">
+              <div class="card-body">
+                <h3 class="card-title">Automation-friendly output</h3>
+                <div class="card-meta">
+                  Scan output stays machine-consumable under partial coverage, bounded capture, and redaction.
+                </div>
+                <div class="card-links">
+                  <a class="button button-quiet" href="./docs/?p=guides/output-and-automation">Output and automation</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-label="Documentation map">
+        <div class="container">
+          <div class="prose">
+            <h2>Docs map</h2>
+            <p>Installation, operator workflows, deployment, CLI reference, architecture, and shipped man pages.</p>
+          </div>
+
+          <div class="list mt-lg">
+            <a class="list-row" href="./docs/?p=start">
+              <div>
+                <div class="list-title">Start</div>
+                <div class="list-desc">Purpose, safety boundary, quick start, and the recommended reading path.</div>
+              </div>
+              <div class="list-meta">Docs</div>
+            </a>
+            <a class="list-row" href="./docs/?p=guides/install-and-package">
+              <div>
+                <div class="list-title">Install and package</div>
+                <div class="list-desc">Build, install, staged systemd assets, package metadata, and release verification.</div>
+              </div>
+              <div class="list-meta">Guide</div>
+            </a>
+            <a class="list-row" href="./docs/?p=guides/operator-guide">
+              <div>
+                <div class="list-title">Operator guide</div>
+                <div class="list-desc">Daily workflows, deep-scan tuning, redaction, troubleshooting, and automation posture.</div>
+              </div>
+              <div class="list-meta">Guide</div>
+            </a>
+            <a class="list-row" href="./docs/?p=cli/vnactl">
+              <div>
+                <div class="list-title">CLI</div>
+                <div class="list-desc">Exact public surface for <code>vnactl</code> and <code>virtnosis-agent</code>.</div>
+              </div>
+              <div class="list-meta">CLI</div>
+            </a>
+            <a class="list-row" href="./docs/?p=man/virtnosis-7">
+              <div>
+                <div class="list-title">Man pages</div>
+                <div class="list-desc">Reader-friendly command and protocol references with the same public surface as the repo manuals.</div>
+              </div>
+              <div class="list-meta">Man</div>
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-inner">
+          <strong>Virtnosis</strong>
+          <span>© <span data-year>2026</span> Oro Computer.</span>
+        </div>
+      </div>
+    </footer>
+    <script src="../assets/site.js" defer></script>
+  </body>
+</html>

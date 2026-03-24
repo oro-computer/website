@@ -1,15 +1,23 @@
 # `oro:cookies`
 
-This page is the API reference for this runtime module family. It includes all exported bindings as
-declared by the runtime’s published TypeScript definitions.
+`oro:cookies` reads and writes cookies for application-controlled origins.
 
-## Import
+## Examples
+
+Set, read, and remove cookies for an application-controlled origin:
 
 ```js
-import * as api from 'oro:cookies'
+import { set, get, remove } from 'oro:cookies'
 
-console.log(Object.keys(api))
+await set('https://app.example', 'session=abc123; Path=/; HttpOnly')
+console.log(await get('https://app.example'))
+await remove('https://app.example', 'session')
 ```
+
+## See also
+
+- [Module index](?p=javascript/module-index)
+- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -27,57 +35,51 @@ oro:cookies
 <summary><code>oro:cookies</code></summary>
 
 ```ts
-declare module 'oro:cookies' {
-  /**
-   * Get cookies for a URL as a `Cookie` header value ("a=b; c=d").
-   *
-   * @param {string} url
-   * @returns {Promise<{ value: string }>}
-   */
-  export function get(url: string): Promise<{
-    value: string
-  }>
-  /**
-   * Set a cookie for a URL from a `Set-Cookie` header value.
-   *
-   * @param {string} url
-   * @param {string} cookie - a Set-Cookie header value
-   * @returns {Promise<{ ok: boolean }>}
-   */
-  export function set(
-    url: string,
-    cookie: string
-  ): Promise<{
-    ok: boolean
-  }>
-  /**
-   * Remove cookies matching `name` for a URL.
-   *
-   * @param {string} url
-   * @param {string} name
-   * @returns {Promise<{ ok: boolean }>}
-   */
-  export function remove(
-    url: string,
-    name: string
-  ): Promise<{
-    ok: boolean
-  }>
-  /**
-   * Clear all cookies in the current WebView data store.
-   *
-   * @returns {Promise<{ ok: boolean }>}
-   */
-  export function clear(): Promise<{
-    ok: boolean
-  }>
-  namespace _default {
-    export { get }
-    export { set }
-    export { remove }
-    export { clear }
-  }
-  export default _default
+declare module "oro:cookies" {
+    /**
+     * Get cookies for a URL as a `Cookie` header value ("a=b; c=d").
+     *
+     * @param {string} url
+     * @returns {Promise<{ value: string }>}
+     */
+    export function get(url: string): Promise<{
+        value: string;
+    }>;
+    /**
+     * Set a cookie for a URL from a `Set-Cookie` header value.
+     *
+     * @param {string} url
+     * @param {string} cookie - a Set-Cookie header value
+     * @returns {Promise<{ ok: boolean }>}
+     */
+    export function set(url: string, cookie: string): Promise<{
+        ok: boolean;
+    }>;
+    /**
+     * Remove cookies matching `name` for a URL.
+     *
+     * @param {string} url
+     * @param {string} name
+     * @returns {Promise<{ ok: boolean }>}
+     */
+    export function remove(url: string, name: string): Promise<{
+        ok: boolean;
+    }>;
+    /**
+     * Clear all cookies in the current WebView data store.
+     *
+     * @returns {Promise<{ ok: boolean }>}
+     */
+    export function clear(): Promise<{
+        ok: boolean;
+    }>;
+    namespace _default {
+        export { get };
+        export { set };
+        export { remove };
+        export { clear };
+    }
+    export default _default;
 }
 ```
 

@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-02-18T21:04:53+00:00",
+  "generatedAt": "2026-03-24T15:24:53+00:00",
   "kind": "docs",
-  "count": 108,
+  "count": 106,
   "sections": [
     {
       "name": "overview",
@@ -148,7 +148,7 @@
         },
         {
           "id": "javascript/all-modules",
-          "title": "All module specifiers",
+          "title": "All public module specifiers",
           "file": "javascript/all-modules.md"
         },
         {
@@ -322,11 +322,6 @@
           "file": "javascript/extension.md"
         },
         {
-          "id": "javascript/external",
-          "title": "`oro:external/*`",
-          "file": "javascript/external.md"
-        },
-        {
           "id": "javascript/fetch",
           "title": "`oro:fetch`",
           "file": "javascript/fetch.md"
@@ -355,11 +350,6 @@
           "id": "javascript/i18n",
           "title": "`oro:i18n`",
           "file": "javascript/i18n.md"
-        },
-        {
-          "id": "javascript/internal",
-          "title": "`oro:internal/*`",
-          "file": "javascript/internal.md"
         },
         {
           "id": "javascript/ip",
@@ -425,11 +415,6 @@
           "id": "javascript/node-esm-loader",
           "title": "`oro:node-esm-loader`",
           "file": "javascript/node-esm-loader.md"
-        },
-        {
-          "id": "javascript/node",
-          "title": "`oro:node/*`",
-          "file": "javascript/node.md"
         },
         {
           "id": "javascript/npm",
@@ -535,6 +520,11 @@
           "id": "javascript/url",
           "title": "`oro:url`",
           "file": "javascript/url.md"
+        },
+        {
+          "id": "javascript/usb",
+          "title": "`oro:usb`",
+          "file": "javascript/usb.md"
         },
         {
           "id": "javascript/util",

@@ -1,0 +1,2347 @@
+Virtnosis · LLMS Pack
+=====================
+
+This file concatenates the full Virtnosis documentation hosted on this website,
+so an LLM can answer questions using the same source of truth as readers.
+
+Generated: 2026-03-24T14:49:01+00:00
+
+How to link:
+- Docs: /virtnosis/docs/?p=<id>
+
+Table of contents
+-----------------
+
+Virtnosis Docs
+- Start
+  - start — Virtnosis Docs — /virtnosis/docs/?p=start
+- Guides
+  - guides/getting-started — Getting Started — /virtnosis/docs/?p=guides/getting-started
+  - guides/install-and-package — Install and Package — /virtnosis/docs/?p=guides/install-and-package
+  - guides/operator-guide — Operator Guide — /virtnosis/docs/?p=guides/operator-guide
+  - guides/deployment — Deployment Guide — /virtnosis/docs/?p=guides/deployment
+  - guides/systemd — Systemd Guide — /virtnosis/docs/?p=guides/systemd
+  - guides/output-and-automation — Output and Automation — /virtnosis/docs/?p=guides/output-and-automation
+- CLI
+  - cli/vnactl — `vnactl` — /virtnosis/docs/?p=cli/vnactl
+  - cli/virtnosis-agent — `virtnosis-agent` — /virtnosis/docs/?p=cli/virtnosis-agent
+- Reference
+  - reference/overview — Overview — /virtnosis/docs/?p=reference/overview
+  - reference/scan-analysis — Scan Analysis — /virtnosis/docs/?p=reference/scan-analysis
+  - reference/architecture — Architecture — /virtnosis/docs/?p=reference/architecture
+  - reference/development — Development Guide — /virtnosis/docs/?p=reference/development
+  - reference/repository-docs — Repository Documents — /virtnosis/docs/?p=reference/repository-docs
+- Man Pages
+  - man/vnactl-1 — `vnactl(1)` — /virtnosis/docs/?p=man/vnactl-1
+  - man/virtnosis-agent-1 — `virtnosis-agent(1)` — /virtnosis/docs/?p=man/virtnosis-agent-1
+  - man/virtnosis-7 — `virtnosis(7)` — /virtnosis/docs/?p=man/virtnosis-7
+  - man/virtnosis-agent-protocol-7 — `virtnosis-agent-protocol(7)` — /virtnosis/docs/?p=man/virtnosis-agent-protocol-7
+  - man/virtnosis-scan-report-7 — `virtnosis-scan-report(7)` — /virtnosis/docs/?p=man/virtnosis-scan-report-7
+
+==============================================================================
+DOCS: Virtnosis Docs (start)
+URL: /virtnosis/docs/?p=start
+==============================================================================
+
+# Virtnosis Docs
+
+Virtnosis is a read-only libvirt security analysis and diagnosis toolset.
+
+It is built for operators, responders, and automation that need to inspect
+libvirt-exposed infrastructure without mutating host or guest state. Public
+binaries:
+
+- `virtnosis-agent` — the local control-plane daemon
+- `vnactl` — the operator and automation client
+
+Use it only on systems you own or are explicitly authorized to assess.
+
+## Operating model
+
+Virtnosis is:
+
+- local-first and UNIX-socket-first,
+- read-only by default,
+- bounded in memory, output size, and scan timing,
+- explicit about partial and unavailable scan stages,
+- designed to emit stable machine-consumable output.
+
+The control plane is local UNIX sockets only. Remote transports are not part of
+the public product surface.
+
+## Quick start
+
+```bash
+cd virtnosis
+make build
+make verify
+
+./build/bin/virtnosis-agent --verbose
+./build/bin/vnactl status
+./build/bin/vnactl scan --deep --confirm-xml --redact
+```
+
+## Recommended reading path
+
+1. [Getting Started](?p=guides/getting-started)
+2. [Install and Package](?p=guides/install-and-package)
+3. [Operator Guide](?p=guides/operator-guide)
+4. [Deployment Guide](?p=guides/deployment)
+5. [Systemd Guide](?p=guides/systemd)
+6. [`vnactl`](?p=cli/vnactl)
+7. [`virtnosis-agent`](?p=cli/virtnosis-agent)
+8. [Scan Analysis](?p=reference/scan-analysis)
+9. [Architecture](?p=reference/architecture)
+10. [Repository Documents](?p=reference/repository-docs)
+11. [Man pages](?p=man/virtnosis-7)
+
+## Docs map
+
+- **Guides** — build, install, deployment, systemd, operator workflows, and
+  automation.
+- **CLI** — the exact public surface of `vnactl` and `virtnosis-agent`.
+- **Reference** — product model, scan semantics, architecture, contributor
+  docs, and the repository documentation map.
+- **Man pages** — `virtnosis-agent(1)`, `vnactl(1)`, `virtnosis(7)`,
+  `virtnosis-agent-protocol(7)`, and `virtnosis-scan-report(7)`.
+
+==============================================================================
+DOCS: Getting Started (guides/getting-started)
+URL: /virtnosis/docs/?p=guides/getting-started
+==============================================================================
+
+# Getting Started
+
+This guide gets you from source checkout to a useful first scan.
+
+## Requirements
+
+- Silk toolchain (`silk`)
+- access to the repository
+- access to a target libvirt UNIX socket if you want to scan a real host
+
+Virtnosis does not require external libvirt spec files at runtime.
+
+## Build
+
+Build the shipped binaries:
+
+```bash
+cd virtnosis
+make build
+make verify
+```
+
+Built binaries:
+
+- `build/bin/virtnosis-agent`
+- `build/bin/vnactl`
+
+For build internals, packaging, and extended verification lanes, use
+[Development](?p=reference/development).
+
+## First scan through the agent
+
+```bash
+cd virtnosis
+./build/bin/virtnosis-agent --verbose
+./build/bin/vnactl scan \
+  --socket /var/run/libvirt/libvirt-sock \
+  --uri qemu:///system \
+  --deep --confirm-xml --redact
+```
+
+Use `--connect unix:///run/virtnosis/agent.sock` when talking to a shared system agent instead of the default rootless socket.
+
+## Rootless agent workflow
+
+For non-root users:
+
+```bash
+cd virtnosis
+./build/bin/virtnosis-agent --verbose
+./build/bin/vnactl status
+./build/bin/vnactl scan --deep --redact
+```
+
+What this gives you:
+
+- `virtnosis-agent` defaults to `$XDG_RUNTIME_DIR/virtnosis/agent.sock`
+- `vnactl` auto-prefers that socket when `--connect` is not set
+- this avoids `sudo` for the control plane
+
+Important: the scan still depends on the agent process having access to the target libvirt socket.
+
+## Shared system agent workflow
+
+Start a system-visible socket:
+
+```bash
+cd virtnosis
+sudo ./build/bin/virtnosis-agent \
+  --listen /run/virtnosis/agent.sock \
+  --listen-mode 0660 \
+  --listen-gid 123
+```
+
+Then connect:
+
+```bash
+cd virtnosis
+./build/bin/vnactl status --connect unix:///run/virtnosis/agent.sock
+```
+
+Replace `123` with the numeric gid you actually want to authorize.
+
+## Where to go next
+
+- Daily workflows: [Operator Guide](?p=guides/operator-guide)
+- Output interpretation: [Output and Automation](?p=guides/output-and-automation)
+- Deployment details: [Deployment Guide](?p=guides/deployment)
+- Troubleshooting: [Operator Guide](?p=guides/operator-guide#common-operator-problems)
+- Build, install, and packaging details: [Install and Package](?p=guides/install-and-package)
+- Contributor and maintenance details: [Development](?p=reference/development)
+
+==============================================================================
+DOCS: Install and Package (guides/install-and-package)
+URL: /virtnosis/docs/?p=guides/install-and-package
+==============================================================================
+
+# Install and Package
+
+This guide covers source builds, local installs, docs installs, and the
+packaging-oriented make targets shipped in the repository.
+
+## Build from source
+
+Recommended build path:
+
+```bash
+cd virtnosis
+make build
+make verify
+```
+
+`make build` always goes through `build.slk`, builds both shipped executables,
+verifies the declared output surface, and writes `build/build-manifest.json`.
+
+Built binaries:
+
+- `build/bin/virtnosis-agent`
+- `build/bin/vnactl`
+
+## Install
+
+Install binaries, docs, and man pages:
+
+```bash
+cd virtnosis
+make install PREFIX=/usr/local
+```
+
+Install docs and section-7 references only:
+
+```bash
+cd virtnosis
+make install-docs PREFIX=/usr/local
+```
+
+What the install surface includes:
+
+- executables under `$(PREFIX)/bin`
+- markdown docs under `$(PREFIX)/share/doc/virtnosis/`
+- section 1 and section 7 man pages under `$(PREFIX)/share/man/`
+- install metadata under `$(PREFIX)/share/virtnosis/metadata/`
+
+## Systemd example assets
+
+Install example units and packaging assets:
+
+```bash
+cd virtnosis
+make install-systemd-examples PREFIX=/usr \
+  SYSTEM_LISTEN_GID=123 \
+  SYSTEM_SOCKET_GROUP=virtnosis
+```
+
+Remove those staged assets again:
+
+```bash
+cd virtnosis
+make uninstall-systemd-examples PREFIX=/usr
+```
+
+Use [Systemd Guide](?p=guides/systemd) for the operational story behind those
+assets.
+
+## Verification and release lanes
+
+Common verification targets:
+
+```bash
+make verify
+make runtime-deps
+make binary-footprint
+make repro-check
+make systemd-verify
+make control-plane-soak
+```
+
+Packaging and release-oriented targets:
+
+```bash
+make package-stage-verify
+make package-stage-verify-systemd
+make release-verify
+make dist
+```
+
+These targets matter because the repo treats install metadata, staged install
+verification, and packaging templates as part of the maintained product
+surface.
+
+## Packaging metadata and provenance
+
+When you are building packages or auditing release outputs, the important
+targets are:
+
+- `make build-preflight`
+- `make build-outputs`
+- `make build-manifest`
+- `make build-manifest-check`
+- `make install-manifest*`
+- `make install-metadata*`
+- `make package-metadata*`
+- `make package-templates*`
+- `make package-skeletons*`
+- `make package-artifact-manifest*`
+
+## See also
+
+- [Getting Started](?p=guides/getting-started)
+- [Deployment Guide](?p=guides/deployment)
+- [Systemd Guide](?p=guides/systemd)
+- [Development](?p=reference/development)
+- [Repository documents](?p=reference/repository-docs)
+
+==============================================================================
+DOCS: Operator Guide (guides/operator-guide)
+URL: /virtnosis/docs/?p=guides/operator-guide
+==============================================================================
+
+# Operator Guide
+
+This guide focuses on day-to-day use of Virtnosis as an operator, responder, or CI consumer.
+
+## Agent-based workflow
+
+Check the control plane:
+
+```bash
+./build/bin/vnactl status
+./build/bin/vnactl version
+```
+
+Run a scan through the agent:
+
+```bash
+./build/bin/vnactl scan \
+  --connect unix:///run/virtnosis/agent.sock \
+  --socket /var/run/libvirt/libvirt-sock \
+  --uri qemu:///system \
+  --deep --confirm-xml --redact
+```
+
+## Deep scan tuning
+
+The deep scan is bounded. Public controls exposed by `vnactl scan` today:
+
+- `--deep-enum-max`: list enumeration bound per inventory type
+- `--deep-resolve-max`: resolved objects per type
+- `--deep-vol-resolve-max`: resolved volumes per pool
+- `--deep-xml-max`: resolved objects per type with XML fetch
+- `--deep-vol-xml-max`: resolved volumes per pool with XML fetch
+- `--timeout-ms-scan`: libvirt socket timeout used during the scan
+- `--scan-timeout-ms`: requested wall-time budget for the scan
+
+Set any deep bound to `0` to disable that phase entirely.
+
+## Redaction
+
+Use `--redact` when output may be captured in shared logs, CI logs, tickets, or external systems.
+
+Redaction suppresses or masks values such as:
+
+- socket paths and URIs
+- object names and UUIDs
+- XML snippets and evidence excerpts
+- selected remote error string prefixes
+
+The scan still keeps structural fields, counts, and booleans so automation remains useful.
+
+## Exit behavior
+
+Public `vnactl` builds do not expose separate fail-policy flags.
+
+For automation:
+
+- gate on the command exit code,
+- archive JSON or XML output for later inspection,
+- inspect structured warning and error records,
+- treat partial and unavailable markers as explicit control signals.
+
+## JSON and XML output
+
+`vnactl scan` supports:
+
+- `-f default`
+- `-f json`
+- `-f xml`
+
+Example:
+
+```bash
+./build/bin/vnactl scan --deep -f json
+./build/bin/vnactl scan --deep -f xml
+```
+
+The JSON/XML wrappers preserve the same logical report as the default dotted-key output.
+
+## Common operator problems
+
+### `vnactl status` or `vnactl version` hangs
+
+Status and version use one request per connection and close those sessions
+immediately after replying. If a client still appears stuck, check the basics
+first:
+
+- confirm you are targeting the intended socket
+- confirm the socket is live and not stale
+- check whether `vnactl` has fallen back from a missing rootless socket to `/run/virtnosis/agent.sock`
+- check `result.pid` across repeated probes; the daemon pid should stay stable
+- check `result.exe_path` and `result.build_identity_status` to confirm which agent binary is actually serving the socket
+- run `virtnosis-agent agent --verbose` and watch the accept / handler / response / reap sequence
+- if the daemon is at `--max-clients`, expect a prompt `TOO_MANY_CLIENTS` error rather than a long timeout
+- do not mix a stale installed `virtnosis-agent` from `$PATH` with a freshly rebuilt `./build/bin/vnactl`; use matching binaries or reinstall first
+
+For the detailed status/build-identity field contract, use
+[Output and Automation](?p=guides/output-and-automation). For deployment and
+socket-selection behavior, use [Deployment Guide](?p=guides/deployment).
+
+### Long or quiet scans
+
+- raise `--timeout-ms-agent-scan` for `vnactl scan`
+- lower deep scan bounds for very large installations
+- use `--redact` if the output may be large and widely visible
+
+### Response too large
+
+- lower deep scan bounds
+- increase `--max-response-bytes` only when necessary and stay within the hard cap
+
+## Where to go next
+
+- What the scanner checks: [Scan Analysis](?p=reference/scan-analysis)
+- Stable fields and exit behavior: [Output and Automation](?p=guides/output-and-automation)
+- Agent deployment and permissions: [Deployment Guide](?p=guides/deployment)
+
+==============================================================================
+DOCS: Deployment Guide (guides/deployment)
+URL: /virtnosis/docs/?p=guides/deployment
+==============================================================================
+
+# Deployment Guide
+
+This guide covers local agent deployment, shared socket deployment, and the important permission and auth choices.
+
+## Transport model
+
+The agent supports local UNIX domain sockets only.
+
+Important defaults:
+
+- rootless socket: `$XDG_RUNTIME_DIR/virtnosis/agent.sock`
+- system socket: `/run/virtnosis/agent.sock`
+- rootless runtime directory mode: `0700`
+- system-style listen directory mode: `0755`
+
+## Rootless deployment
+
+Recommended for a single local operator or CI user:
+
+```bash
+cd virtnosis
+./build/bin/virtnosis-agent --verbose
+```
+
+This keeps the control plane local to the user account and avoids `sudo` for `vnactl`.
+
+## Shared local deployment
+
+Recommended when multiple trusted local users need access:
+
+```bash
+cd virtnosis
+sudo ./build/bin/virtnosis-agent \
+  --listen /run/virtnosis/agent.sock \
+  --listen-mode 0660 \
+  --listen-gid 123
+```
+
+Replace `123` with the gid of the group you want to authorize.
+
+## Socket-activated deployment
+
+Virtnosis also supports a narrow `systemd` socket-activation path for local UNIX sockets.
+
+Use it when:
+
+- you want `systemd` to own socket permissions and lifecycle
+- you want lazy startup on first client connection
+- you are comfortable keeping the deployment to one inherited UNIX listener fd
+
+Important constraints:
+
+- `.socket` units must use `Accept=no`
+- the inherited socket must be filesystem-backed and absolute
+- `--listen-mode` and `--listen-gid` do not reconfigure an inherited socket
+
+Use the example units in `deploy/systemd/` and the detailed walkthrough in
+[Systemd Guide](?p=guides/systemd).
+
+For package-style staging of those assets, use:
+
+```bash
+cd virtnosis
+make install-systemd-examples PREFIX=/usr \
+  SYSTEM_LISTEN_GID=123 \
+  SYSTEM_SOCKET_GROUP=virtnosis
+```
+
+`SYSTEM_LISTEN_GID` must be numeric; `SYSTEM_SOCKET_GROUP` may be a group name or numeric gid.
+
+Remove staged examples again with:
+
+```bash
+cd virtnosis
+make uninstall-systemd-examples PREFIX=/usr
+```
+
+For package metadata, staged install verification, and release-facing build
+requirements, use [Development](?p=reference/development).
+
+## Peer authentication policies
+
+### `same-uid`
+
+Use when you want strict same-user local access.
+
+### `same-uid-or-listen-gid`
+
+Default. Use when:
+
+- the socket mode and gid are controlled
+- you want a shared local group model
+- you still want local peer credential checks
+
+### `none`
+
+Use only when you intentionally want filesystem permissions to be the sole gate.
+
+## Operational notes
+
+- the agent creates a missing listen directory when possible
+- the socket is bound with restrictive permissions by default
+- the agent warns about group- or world-writable listen directories and sockets
+- stale socket cleanup is enabled by default when the agent can safely determine the socket is not live
+
+## Rootless and shared-agent interaction
+
+For non-root users, `vnactl` auto-prefers the rootless socket when `--connect` is not set. If that socket is absent or stale, it falls back to the system socket target.
+
+This gives a practical split:
+
+- personal workflow: rootless agent
+- team or host-level workflow: shared system agent
+
+## Timeouts and bounded behavior
+
+The agent enforces:
+
+- request and response frame caps
+- per-client transport timeouts
+- scan wall-time budgets
+- bounded client concurrency
+
+`vnactl --timeout-ms` applies to the connect phase as well as request/response I/O.
+
+## Deployment direction
+
+The broader technical design includes:
+
+- systemd service support
+- local UNIX socket activation via `systemd`
+- future explicit remote transports with stronger policy gates
+
+Current systemd-facing examples and limitations are documented in
+[Systemd Guide](?p=guides/systemd).
+
+For the design target and security boundaries, read
+[Architecture](?p=reference/architecture) and
+[Repository documents](?p=reference/repository-docs).
+
+==============================================================================
+DOCS: Systemd Guide (guides/systemd)
+URL: /virtnosis/docs/?p=guides/systemd
+==============================================================================
+
+# Systemd Guide
+
+This guide documents the `systemd` deployment story for Virtnosis.
+
+## Support boundary
+
+Virtnosis supports two local deployment models:
+
+- direct-bind services, where `virtnosis-agent` creates and owns the control socket
+- socket-activated services, where `systemd` creates the control socket and passes one inherited listener fd to the agent
+
+Socket-activation support is intentionally narrow:
+
+- exactly one inherited listener fd
+- UNIX domain sockets only
+- filesystem-backed absolute paths only
+- `.socket` units must use `Accept=no`
+
+Multiple inherited fds, abstract UNIX sockets, and remote control-plane listeners are still outside the supported surface.
+
+## Example files
+
+Example units live in:
+
+- `deploy/systemd/system/virtnosis-agent.service`
+- `deploy/systemd/user/virtnosis-agent.service`
+- `deploy/systemd/system/virtnosis-agent.socket`
+- `deploy/systemd/system/virtnosis-agent-socket-activated.service`
+- `deploy/systemd/user/virtnosis-agent.socket`
+- `deploy/systemd/user/virtnosis-agent-socket-activated.service`
+- `deploy/systemd/tmpfiles.d/virtnosis.conf`
+- `deploy/systemd/sysusers.d/virtnosis.conf`
+- `deploy/systemd/README.md`
+
+These are examples, not a promise that the exact paths or gids match your environment.
+
+## Direct-bind system service
+
+Use the direct system service when:
+
+- the host should expose a shared local control socket
+- the agent should manage stale-socket cleanup itself
+- multiple trusted local users need access through a controlled gid
+
+Typical flow:
+
+1. review `deploy/systemd/system/virtnosis-agent.service`
+2. adjust `ExecStart=` and `--listen-gid`
+3. install the unit under `/etc/systemd/system/`
+4. run `systemctl daemon-reload`
+5. run `systemctl enable --now virtnosis-agent.service`
+
+## Direct-bind user service
+
+Use the user service when:
+
+- you want a per-user control plane
+- you want `vnactl` to work without `sudo`
+- the user account already has access to the target libvirt socket
+
+Typical flow:
+
+1. review `deploy/systemd/user/virtnosis-agent.service`
+2. adjust `ExecStart=`
+3. install the unit under `~/.config/systemd/user/`
+4. run `systemctl --user daemon-reload`
+5. run `systemctl --user enable --now virtnosis-agent.service`
+
+## Socket-activated system service
+
+Use the socket-activated system pair when:
+
+- you want `systemd` to own socket creation and permissions
+- you want lazy startup on first client connection
+- you want the service and the socket configured separately
+
+Typical flow:
+
+1. review `deploy/systemd/system/virtnosis-agent.socket`
+2. set `SocketGroup=` and `ListenStream=`
+3. review `deploy/systemd/system/virtnosis-agent-socket-activated.service`
+4. adjust `ExecStart=`
+5. install both units under `/etc/systemd/system/`
+6. run `systemctl daemon-reload`
+7. run `systemctl enable --now virtnosis-agent.socket`
+
+Important behavior:
+
+- the `.socket` unit controls socket mode, gid, and directory mode
+- `virtnosis-agent --listen-mode` and `--listen-gid` are ignored when the socket is inherited from `systemd`
+- `vnactl status` reports `result.listen.socket_activation: true` when the agent is serving from an inherited listener
+
+## Packaging assets
+
+The repo now also ships packaging-oriented examples:
+
+- `deploy/systemd/sysusers.d/virtnosis.conf` creates the shared local control-socket group used by the example socket-activated system deployment
+- `deploy/systemd/tmpfiles.d/virtnosis.conf` optionally materializes `/run/virtnosis` before first service start
+
+The tmpfiles asset is optional with the shipped unit files because:
+
+- the direct-bind system service already uses `RuntimeDirectory=virtnosis`
+- the socket-activated system unit pair already uses `DirectoryMode=` in the `.socket` unit
+
+Use it when your packaging or wrapper conventions require the runtime directory to exist independently of those units.
+
+For repo-side validation of the staged units, run:
+
+```bash
+cd virtnosis
+make systemd-verify
+```
+
+That path stages the example assets into a temporary tree, rewrites `ExecStart=` to a temporary stub binary, runs `systemd-analyze verify` on the units, and validates the `tmpfiles.d` / `sysusers.d` assets with the native systemd tools when they are available on the host.
+
+## Socket-activated user service
+
+Use the rootless socket-activated pair when:
+
+- you want rootless on-demand startup
+- you want the control socket under `%t/virtnosis/agent.sock`
+- you want `systemd --user` to own socket lifecycle
+
+Typical flow:
+
+1. review `deploy/systemd/user/virtnosis-agent.socket`
+2. review `deploy/systemd/user/virtnosis-agent-socket-activated.service`
+3. adjust `ExecStart=`
+4. install both units under `~/.config/systemd/user/`
+5. run `systemctl --user daemon-reload`
+6. run `systemctl --user enable --now virtnosis-agent.socket`
+
+## Hardening notes
+
+The shipped service examples include a conservative baseline:
+
+- `NoNewPrivileges=yes`
+- `PrivateTmp=yes`
+- `ProtectSystem=strict`
+- `ProtectHome=` restrictions
+- `ProtectKernelTunables=yes`
+- `ProtectKernelModules=yes`
+- `ProtectKernelLogs=yes`
+- `LockPersonality=yes`
+- `MemoryDenyWriteExecute=yes`
+- `RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6`
+- empty `CapabilityBoundingSet=` and `AmbientCapabilities=`
+
+The address-family allowlist includes `AF_INET` and `AF_INET6` intentionally so the scan engine can still reach remote libvirt TCP/TLS URIs when operators use them.
+If your deployment is strictly local-libvirt-only, you can narrow that directive to `AF_UNIX`.
+
+## Important operational caveat
+
+The control socket and the libvirt socket are separate concerns.
+
+Even if `vnactl` can reach `virtnosis-agent`, the scan still fails if the agent process does not have access to the target libvirt socket or remote libvirt URI you asked it to inspect.
+
+## Where to go next
+
+- broader deployment guidance: [Deployment Guide](?p=guides/deployment)
+- installable docs layout: [Install and Package](?p=guides/install-and-package)
+- deeper design target: [Repository documents](?p=reference/repository-docs)
+
+==============================================================================
+DOCS: Output and Automation (guides/output-and-automation)
+URL: /virtnosis/docs/?p=guides/output-and-automation
+==============================================================================
+
+# Output and Automation
+
+Virtnosis output is designed to stay machine-consumable even when the scan is partial, bounded, or degraded.
+
+## Output formats
+
+Supported formats:
+
+- `default` — dotted-key records on stdout
+- `json` — single JSON report document
+- `xml` — single XML report document
+
+`vnactl scan` supports all three formats.
+
+## Important record families
+
+The most important stable output families are:
+
+- `inventory.*`
+- `scan.warnings.warning.<n>.*`
+- `scan.errors.error.<n>.*`
+- `scan.risks_prefix.*`
+- `scan.risks_full.*`
+- `scan.exit_code`
+
+These are the primary automation surface. They should be preferred over ad-hoc parsing of human-oriented text.
+
+## Warnings and errors
+
+Warnings and errors are structured records, not free-form prose.
+
+Important properties:
+
+- warning and error codes are stable automation keys
+- many records carry correlation fields such as `key_prefix`
+- partial and unavailable conditions are explicit
+
+## Prefix and full evidence
+
+Virtnosis separates:
+
+- prefix-derived findings
+- full-XML-confirmed findings
+
+This matters for enterprise automation. A prefix-only signal can still be useful, but a full-confirmed signal is a stronger basis for gating or escalation.
+
+## Partial and unavailable states
+
+Consumers should not treat missing data as “clean” unless the relevant stage was complete.
+
+Instead, check for:
+
+- partial coverage markers
+- unavailable markers
+- warning and error totals
+
+This is especially important for XML-derived subscans and nwfilter coverage analysis.
+
+## Exit codes
+
+Common exit behavior:
+
+- `0` — success, or scan completed without tripping a fail policy
+- `1` — scan completed, but fail policy triggered
+- `2` — usage or argument error
+- `3` — transport, protocol, runtime, or internal failure
+
+`vnactl scan` exits with the scan exit code so it can be used directly in automation.
+
+## Recommended CI pattern
+
+Example:
+
+```bash
+./build/bin/vnactl scan \
+  --connect unix:///run/virtnosis/agent.sock \
+  --socket /var/run/libvirt/libvirt-sock \
+  --uri qemu:///system \
+  --deep --confirm-xml --redact \
+  -f json
+```
+
+Recommended CI behavior:
+
+- archive the full JSON or XML report
+- gate on exit code
+- inspect warning/error codes for targeted policy decisions
+- treat partial/unavailable markers as first-class signals
+
+## Agent status for automation
+
+`vnactl status` and `vnactl version` are the machine-readable control-plane introspection surface.
+
+They expose stable fields such as:
+
+- supported methods in `result.methods`
+- stable daemon identity in `result.pid`
+- per-request handler identity in `result.handler_pid`
+- serving executable path in `result.exe_path`
+- effective listener path
+- auto-path state
+- transport policy fields
+- auth target gid
+- socket mode and writability diagnostics
+- exact-build verification state in `result.build_identity_status`
+- exact build identity in `result.build_identity` when verification succeeds, with `result.build_identity_source` and `result.build_identity_path`
+- sampled executable-content fingerprint in `result.build_fingerprint`
+
+This lets automation verify the control plane before submitting expensive scans.
+
+### Build identity status
+
+`result.build_identity_status` is always present. Current values are:
+
+- `verified` — `result.build_identity` is trustworthy and present
+- `not_found` — no nearby build/install metadata applies to the serving executable
+- `metadata_unreadable` — exact identity metadata existed but could not be read
+- `metadata_invalid` — exact identity metadata existed but did not parse or did not match the expected shape
+- `fingerprint_mismatch` — metadata was readable but did not match the current executable fingerprint
+- `fingerprint_unavailable` — the executable fingerprint could not be computed
+
+When exact identity is verified, `result.build_identity` is an exact manifest-backed identifier for the serving executable. When it is not verified, `result.build_fingerprint` remains the bounded sampled fallback.
+
+### Client-side identity checks
+
+`vnactl status` and `vnactl version` prefer exact build-identity comparison when both sides can resolve it. Otherwise they fall back to sampled fingerprint comparison.
+
+Automation should treat:
+
+- stderr warnings about exact-identity mismatch or unavailable exact identity as actionable control-plane drift signals
+- `build_identity_status = not_found` as a valid no-metadata state, not an automatic fault
+- `exe_path`, `build_identity_status`, and `build_fingerprint` together as the practical minimum for diagnosing stale or mixed binaries
+
+## Where to go next
+
+- What is being scanned: [Scan Analysis](?p=reference/scan-analysis)
+- Operator workflows: [Operator Guide](?p=guides/operator-guide)
+- Protocol and product structure: [Architecture](?p=reference/architecture)
+
+==============================================================================
+DOCS: `vnactl` (cli/vnactl)
+URL: /virtnosis/docs/?p=cli/vnactl
+==============================================================================
+
+# `vnactl`
+
+`vnactl` is the operator and automation client for `virtnosis-agent`.
+
+It does not talk to libvirt directly. It connects to the agent, issues
+`status`, `version`, or `scan` requests, and renders the resulting machine
+output.
+
+## Synopsis
+
+```bash
+vnactl status [--connect <unix:///abs-path|abs-path>] [--timeout-ms <n>] [--max-response-bytes <n>] [--raw-json]
+vnactl version [--connect <unix:///abs-path|abs-path>] [--timeout-ms <n>] [--max-response-bytes <n>] [--raw-json]
+vnactl scan [--connect <unix:///abs-path|abs-path>] [--timeout-ms <n>] [--max-response-bytes <n>] [--raw-json]
+           [--timeout-ms-agent-scan <n>]
+           [-f, --format <default|json|xml>]
+           [--socket <abs-path>] [--uri <uri>] [--program remote|admin]
+           [--deep-enum-max <n>] [--deep-resolve-max <n>] [--deep-vol-resolve-max <n>]
+           [--deep-xml-max <n>] [--deep-vol-xml-max <n>]
+           [--timeout-ms-scan <n>] [--scan-timeout-ms <n>]
+           [--deep] [--confirm-xml] [--redact] [--verbose]
+```
+
+## Commands
+
+### `status`
+
+Fetches machine-readable daemon status and capability metadata.
+
+Use it to answer questions such as:
+
+- which socket is the agent actually serving,
+- whether socket activation is in effect,
+- which peer-auth policy is active,
+- which build identity the agent is serving,
+- which methods the agent supports.
+
+### `version`
+
+Fetches machine-readable version and build identity metadata for the serving
+agent.
+
+### `scan`
+
+Requests a scan from the agent and prints or streams the resulting report.
+
+## Common options
+
+- `--connect <target>` — agent control target. Public builds accept
+  only `unix:///absolute/path` or a plain absolute UNIX socket path.
+- `--timeout-ms <n>` — control-plane connect and request/response timeout in
+  milliseconds.
+- `--max-response-bytes <n>` — upper bound for accepted response data.
+  Hard-capped at `33554432` bytes (32 MiB).
+- `--raw-json` — print the raw JSON response envelope instead of command-specific output.
+
+## Scan options
+
+### Target selection
+
+- `--socket <abs-path>` — libvirt UNIX socket path for the scan
+- `--uri <uri>` — libvirt URI for the scan
+- `--program remote|admin` — select the libvirt RPC program family
+
+Current defaults:
+
+- socket: `/var/run/libvirt/libvirt-sock`
+- URI: `qemu:///system`
+- program: `remote`
+
+### Scan depth and confirmation
+
+- `--deep` — enable deeper inventory and XML-related analysis
+- `--confirm-xml` — allow full XML confirmation fetches when prefix evidence is
+  insufficient
+- `--redact` — redact sensitive values from output
+- `--verbose` — emit extra diagnostics
+
+### Deep scan bounds
+
+- `--deep-enum-max <n>` — max inventory enumeration per type
+- `--deep-resolve-max <n>` — max objects resolved per type
+- `--deep-vol-resolve-max <n>` — max storage volumes resolved per pool
+- `--deep-xml-max <n>` — max resolved objects per type with XML fetch
+- `--deep-vol-xml-max <n>` — max resolved volumes per pool with XML fetch
+
+Current defaults:
+
+- `--deep-enum-max 32`
+- `--deep-resolve-max 8`
+- `--deep-vol-resolve-max 16`
+- `--deep-xml-max 2`
+- `--deep-vol-xml-max 4`
+
+### Timeouts and output
+
+- `--timeout-ms-agent-scan <n>` — longer agent-scan socket timeout while
+  waiting for scan output; default `600000` ms (10 minutes)
+- `--timeout-ms-scan <n>` — libvirt scan socket timeout; default `5000` ms
+- `--scan-timeout-ms <n>` — requested scan wall-time budget; `-1` means use the
+  agent default
+- `-f, --format default|json|xml` — select emitted scan formatting
+
+## Rootless behavior
+
+For non-root users, `vnactl` auto-prefers:
+
+```text
+$XDG_RUNTIME_DIR/virtnosis/agent.sock
+```
+
+when that socket exists. If it is absent or stale, the client falls back to
+`/run/virtnosis/agent.sock`.
+
+## Transport model
+
+The control plane is local UNIX sockets only.
+
+`vnactl` already classifies future transports and emits explicit
+unsupported-transport guidance, but `tcp://`, `tls://`, `ssh://`, `http://`,
+`https://`, `ws://`, and `wss://` are not public transport inputs.
+
+## Examples
+
+### `status`
+
+```bash
+vnactl status --connect unix:///run/virtnosis/agent.sock
+```
+
+### Version
+
+```bash
+vnactl version --connect /run/virtnosis/agent.sock
+```
+
+### Deep scan
+
+```bash
+vnactl scan \
+  --connect unix:///run/virtnosis/agent.sock \
+  --socket /var/run/libvirt/libvirt-sock \
+  --uri qemu:///system \
+  --deep --confirm-xml --redact \
+  -f json
+```
+
+## Considerations
+
+- `vnactl` is a control-plane client, not a general libvirt management client.
+- `scan` prefers the streaming scan protocol when the agent advertises it, and
+  falls back to a framed raw-stdout mode for older agents.
+- `status` and `version` are one-request-per-connection probes so repeated
+  health checks do not accumulate idle handlers in the agent.
+- Public builds do not expose dedicated fail-policy flags; automation
+  should gate on exit code and inspect structured warning/error records in the
+  report.
+
+## See also
+
+- [Operator Guide](?p=guides/operator-guide)
+- [Output and Automation](?p=guides/output-and-automation)
+- [virtnosis-agent](?p=cli/virtnosis-agent)
+- [vnactl(1)](?p=man/vnactl-1)
+- [virtnosis-agent-protocol(7)](?p=man/virtnosis-agent-protocol-7)
+
+==============================================================================
+DOCS: `virtnosis-agent` (cli/virtnosis-agent)
+URL: /virtnosis/docs/?p=cli/virtnosis-agent
+==============================================================================
+
+# `virtnosis-agent`
+
+`virtnosis-agent` is the local control-plane daemon for Virtnosis.
+
+It binds or adopts a local UNIX socket, accepts bounded JSON-framed requests,
+and runs status, version, and scan work on behalf of operators and automation
+clients.
+
+## Synopsis
+
+```bash
+virtnosis-agent [--listen <abs-path|unix://...>] [--listen-mode <octal>] [--listen-gid <n>] [--backlog <n>] [--max-clients <n>] [--client-timeout-ms <n>]
+                 [--max-request-bytes <n>] [--max-response-bytes <n>] [--scan-timeout-ms <n>]
+                 [--peer-auth <none|same-uid|same-uid-or-listen-gid>] [--once] [--no-unlink-stale] [--verbose]
+
+virtnosis-agent agent [same options]
+```
+
+## Purpose
+
+Use `virtnosis-agent` when you want:
+
+- a stable local control plane for repeated scans,
+- rootless workflows that avoid `sudo` for `vnactl`,
+- shared local access through a controlled socket gid,
+- machine-readable status and build-identity metadata,
+- bounded request/response behavior around the scan engine.
+
+## Options
+
+- `--listen <path>` — absolute UNIX socket path or `unix://` path. Remote
+  listen transports are rejected.
+- `--listen-mode <octal>` — post-bind socket mode such as `0660`. Ignored when
+  the listener is inherited from `systemd`.
+- `--listen-gid <gid>` — post-bind socket gid. Ignored when the listener is
+  inherited from `systemd`.
+- `--backlog <n>` — listen backlog.
+- `--max-clients <n>` — max concurrent client handlers.
+- `--client-timeout-ms <n>` — per-client transport timeout.
+- `--max-request-bytes <n>` — request frame cap. Hard max: `4194304` bytes
+  (4 MiB).
+- `--max-response-bytes <n>` — response frame cap. Hard max: `33554432` bytes
+  (32 MiB).
+- `--scan-timeout-ms <n>` — default wall-time budget for agent-triggered scans.
+- `--peer-auth <policy>` — peer-auth policy. Current values:
+  `none`, `same-uid`, `same-uid-or-listen-gid`.
+- `--once` — handle one successful request and exit.
+- `--no-unlink-stale` — disable automatic stale-socket cleanup.
+- `--verbose` — emit extra diagnostics to stderr.
+
+## Rootless mode
+
+When running as a non-root user and `--listen` is omitted, the agent binds:
+
+```text
+$XDG_RUNTIME_DIR/virtnosis/agent.sock
+```
+
+The runtime directory is created with mode `0700`.
+
+## Systemd socket activation
+
+Socket activation support is intentionally narrow:
+
+- exactly one inherited listener fd,
+- local UNIX sockets only,
+- filesystem-backed absolute socket paths only,
+- `.socket` units must use `Accept=no`.
+
+When the listener is inherited from `systemd`, socket ownership and mode come
+from the `.socket` unit, not from `--listen-mode` or `--listen-gid`.
+
+## Peer authentication
+
+### `same-uid`
+
+Allows only the same effective UID and root.
+
+### `same-uid-or-listen-gid`
+
+Default policy. Allows:
+
+- the same UID,
+- root,
+- or peers in the configured or resolved socket gid.
+
+### `none`
+
+Relies only on filesystem permissions for access control.
+
+## Examples
+
+### Rootless
+
+```bash
+XDG_RUNTIME_DIR=/run/user/1000 virtnosis-agent --verbose
+```
+
+### Shared local socket
+
+```bash
+virtnosis-agent \
+  --listen /run/virtnosis/agent.sock \
+  --listen-mode 0660 \
+  --listen-gid 123
+```
+
+### One-shot diagnostic run
+
+```bash
+virtnosis-agent --once --verbose
+```
+
+## Considerations
+
+- The control socket and the libvirt socket are separate concerns. Even if the
+  agent is reachable, scans still fail if the agent process cannot access the
+  requested libvirt socket or URI.
+- Virtnosis is intentionally local-only on the control plane.
+- The agent is safe-by-default: bounded frames, bounded timeouts, peer-auth, and
+  conservative socket ownership.
+
+## See also
+
+- [Deployment Guide](?p=guides/deployment)
+- [Systemd Guide](?p=guides/systemd)
+- [`vnactl`](?p=cli/vnactl)
+- [virtnosis-agent(1)](?p=man/virtnosis-agent-1)
+- [virtnosis-agent-protocol(7)](?p=man/virtnosis-agent-protocol-7)
+
+==============================================================================
+DOCS: Overview (reference/overview)
+URL: /virtnosis/docs/?p=reference/overview
+==============================================================================
+
+# Overview
+
+Virtnosis is a read-only libvirt security analysis and diagnosis toolset.
+
+Its purpose is to assess libvirt-exposed infrastructure without mutating host or guest state. The product is built for operators who need high-signal findings, explicit degraded-state reporting, and stable machine-consumable output.
+
+## Product surfaces
+
+Virtnosis exposes two user-facing binaries:
+
+- `virtnosis-agent` — long-running local control-plane daemon
+- `vnactl` — client CLI for the agent
+
+## When to use each binary
+
+### `virtnosis-agent` + `vnactl`
+
+Use this when:
+
+- you want repeated scans through a stable local control plane
+- you want rootless operator workflows
+- you need a cleaner interface for automation
+- you want agent status, control-socket diagnostics, and a bounded request/response protocol
+
+## Core properties
+
+Virtnosis is built around these principles:
+
+- read-only by default
+- bounded memory and output behavior
+- explicit reporting of partial and unavailable scan stages
+- stable output suitable for automation and CI gating
+- local-first transport and permission boundaries
+
+## What the scanner looks for
+
+At a high level, Virtnosis looks for risky patterns in:
+
+- domain exposure surfaces such as VNC, SPICE, serial, channel, and selected QEMU TCP listeners
+- network forwarding and other host-facing network posture
+- storage pools and volumes with dangerous host paths, remote backends, or weak permissions
+- nwfilter configurations that look ineffective or overly permissive
+- XML-derived footguns that are common in libvirt and QEMU environments
+
+## Safety boundary
+
+Virtnosis is intended for authorized defensive use. It should only be used on systems you own or are explicitly authorized to assess.
+
+## Example workflow
+
+```bash
+./build/bin/virtnosis-agent --verbose
+./build/bin/vnactl status
+./build/bin/vnactl scan --deep --confirm-xml --redact -f json
+```
+
+That flow gives you:
+
+- control-plane status and capability metadata,
+- a bounded scan through the agent,
+- structured output that can be archived or fed into automation.
+
+## Where to go next
+
+- First run: [Getting Started](?p=guides/getting-started)
+- Daily use: [Operator Guide](?p=guides/operator-guide)
+- Deeper semantics: [Scan Analysis](?p=reference/scan-analysis)
+- Protocol and product design: [Architecture](?p=reference/architecture)
+
+==============================================================================
+DOCS: Scan Analysis (reference/scan-analysis)
+URL: /virtnosis/docs/?p=reference/scan-analysis
+==============================================================================
+
+# Scan Analysis
+
+This guide explains what Virtnosis scans, what “deep” means, and how to interpret partial versus confirmed findings.
+
+## Scan model
+
+Virtnosis starts with a safe inventory pass and then layers additional analysis on top.
+
+The scan can operate in multiple evidence modes:
+
+- inventory-only and basic RPC-derived state
+- XML prefix analysis from bounded captures
+- full XML confirmation when `--confirm-xml` is enabled and needed
+
+## Why prefix-first exists
+
+Large libvirt replies can be expensive and risky to handle naively. Virtnosis therefore prefers bounded prefix capture first. This gives good signal without committing to large allocations or broad parsing by default.
+
+When prefix-only evidence is not enough and `--confirm-xml` is enabled, the scanner can fetch and parse full XML for confirmation.
+
+## Major analysis areas
+
+### Domains
+
+Current domain analysis includes:
+
+- host-facing VNC, SPICE, websocket, serial, console, channel, and selected TCP-backed QEMU surfaces
+- risky filesystem shares and host path exposure
+- domain source path checks
+- unix socket path checks
+- network references and nwfilter references
+- nwfilter coverage and partial-coverage signaling
+
+### Networks
+
+Current network analysis focuses on:
+
+- risky forwarding posture
+- bridge and exposure-related configuration
+- XML-derived patterns that imply dangerous host reachability or weak isolation
+
+### Storage pools and volumes
+
+Current storage analysis includes:
+
+- world-writable targets
+- host-root or sensitive path targeting
+- remote backends
+- plaintext network disk protocols
+- path-based file type and permission checks where available
+
+### Nwfilters
+
+Current nwfilter analysis includes:
+
+- permissive or broad accept patterns
+- include-chain following within configured bounds
+- domain interface coverage checks for whether risky interfaces have usable filter references
+
+## Partial, unavailable, and full confirmation
+
+Virtnosis intentionally distinguishes:
+
+- complete — the relevant scan stage ran successfully
+- partial — the stage ran, but coverage was truncated or incomplete
+- unavailable — the stage could not run and a reason is reported
+
+This matters because a missing finding is only meaningful if the relevant stage actually ran.
+
+## Interpreting severity
+
+The scanner prefers high-signal findings. Not every risky pattern means immediate compromise, but each finding is intended to be operationally meaningful enough to review.
+
+Use:
+
+- `scan.risks_prefix.*` for prefix-derived signal
+- `scan.risks_full.*` for full-XML-confirmed signal
+
+Treat full-confirmed findings as stronger evidence when both are available.
+
+## Recommended operating pattern
+
+For most environments:
+
+1. run a redacted deep scan
+2. inspect warning and error totals
+3. inspect partial/unavailable markers
+4. review full-confirmed findings where present
+5. tune bounds only if coverage is insufficient
+
+## Examples
+
+### Deep scan with confirmation
+
+```bash
+./build/bin/vnactl scan \
+  --deep \
+  --confirm-xml \
+  --redact \
+  -f json
+```
+
+### Records worth checking first
+
+```text
+scan.summary.warning_count
+scan.summary.error_count
+scan.domains.coverage
+scan.networks.coverage
+scan.storage.coverage
+scan.risks_prefix.total
+scan.risks_full.total
+scan.exit_code
+```
+
+Read the coverage keys before concluding that an area is clean.
+
+## Where to go next
+
+- Stable output fields: [Output and Automation](?p=guides/output-and-automation)
+- User workflows: [Operator Guide](?p=guides/operator-guide)
+- Technical design: [Architecture](?p=reference/architecture)
+
+==============================================================================
+DOCS: Architecture (reference/architecture)
+URL: /virtnosis/docs/?p=reference/architecture
+==============================================================================
+
+# Architecture
+
+This document explains the product architecture from a systems perspective.
+
+## Product shape
+
+The codebase exposes:
+
+- `virtnosis-agent` as a local control-plane daemon
+- `vnactl` as the client CLI
+
+The agent and client share the same core scan and transport engine.
+
+## High-level model
+
+```text
+vnactl
+  |
+  | control protocol
+  v
+virtnosis-agent
+  |
+  | libvirt RPC
+  v
+libvirt daemon sockets / libvirt URI targets
+```
+
+## Core layers
+
+### Transport layer
+
+Responsibilities:
+
+- bounded I/O
+- framing
+- connect/read/write timeouts
+- size caps
+
+Control-plane transport is local UNIX sockets only.
+
+### Libvirt RPC layer
+
+Responsibilities:
+
+- virNet framing
+- XDR encoding and decoding
+- remote error handling
+- procedure mapping for libvirt program families
+
+### Scan engine
+
+Responsibilities:
+
+- inventory collection
+- prefix-only XML analysis
+- full XML confirmation when allowed
+- risk extraction and summary generation
+- structured warning and error emission
+
+### Agent control plane
+
+Responsibilities:
+
+- request/response envelope handling
+- status, version, scan, and streaming scan endpoints
+- peer authentication
+- request/response size limits
+- concurrency and timeout boundaries
+
+## Control protocol
+
+The control protocol is a length-prefixed JSON envelope over stream transports.
+
+Important characteristics:
+
+- bounded message framing
+- explicit method set
+- explicit success/error envelopes
+- separate handling for larger scan stdout payloads
+- streaming mode for backpressure-aware scan delivery
+
+For the protocol reference and broader repository design documents, see
+[virtnosis-agent-protocol(7)](?p=man/virtnosis-agent-protocol-7) and
+[Repository documents](?p=reference/repository-docs).
+
+## Security boundaries
+
+The architecture assumes:
+
+- untrusted input can arrive from libvirt replies
+- untrusted local users may exist on a host
+- control sockets must not be treated as safe by default
+- partial and unavailable states must be surfaced explicitly
+
+The agent therefore prefers:
+
+- local-only transport by default
+- deny-by-default peer auth
+- explicit request/response caps
+- bounded scan execution
+
+## Transport direction
+
+Virtnosis implements local UNIX socket transport for the agent.
+
+The design direction includes future, explicitly gated support for:
+
+- `tcp://`
+- `tls://`
+- `ssh://`
+- `http(s)://`
+- `ws(s)://`
+
+Those transports are not part of the product surface and require stronger auth
+and channel-security policy before being enabled.
+
+## Operational consequence
+
+There is one shared truth to keep in mind:
+
+- the scanner is the analysis engine
+- the agent is the bounded control plane around that engine
+- `vnactl` is the operator and automation entrypoint for the control plane
+
+## Where to go next
+
+- Roadmap and design target: [Repository documents](?p=reference/repository-docs)
+- Deployment details: [Deployment Guide](?p=guides/deployment)
+- Development details: [Development](?p=reference/development)
+
+==============================================================================
+DOCS: Development Guide (reference/development)
+URL: /virtnosis/docs/?p=reference/development
+==============================================================================
+
+# Development Guide
+
+This guide is for contributors working inside `virtnosis/`.
+
+## Documentation model
+
+Use the documentation stack intentionally:
+
+- `README.md` — concise repo entrypoint
+- `docs/` — structured product and operator documentation
+- `man/man1/` and `man/man7/` — command and reference docs
+- `deploy/systemd/` — example direct-bind and socket-activated unit files for maintained service deployments
+- `VIRTNOSIS.md` — design target and roadmap
+- `STATUS.md` — current implementation state
+- `PLAN.md` — milestones and roadmap
+- `NOTES.md` — implementation-focused engineering notes and Silk observations
+
+For installed documentation and man pages, use:
+
+```bash
+cd virtnosis
+make install-docs PREFIX=/usr/local
+```
+
+If behavior changes, update the appropriate layer rather than stuffing everything into one file.
+
+## Build paths
+
+Use `make help` for the full target list. The common contributor paths are below.
+
+### Common commands
+
+```bash
+cd virtnosis
+make build
+make verify
+```
+
+`make build` is the normal build entrypoint and always runs through `build.slk`.
+
+For local installation:
+
+```bash
+cd virtnosis
+make install PREFIX=/usr/local
+```
+
+For staged systemd example assets:
+
+```bash
+cd virtnosis
+make install-systemd-examples PREFIX=/usr \
+  SYSTEM_LISTEN_GID=123 \
+  SYSTEM_SOCKET_GROUP=virtnosis
+```
+
+`SYSTEM_LISTEN_GID` is validated as a numeric gid so the staged direct-bind system unit cannot be generated with an invalid `--listen-gid`.
+
+Remove those staged assets with:
+
+```bash
+cd virtnosis
+make uninstall-systemd-examples PREFIX=/usr
+```
+
+### Verification and release lanes
+
+Routine verification:
+
+```bash
+cd virtnosis
+make verify
+```
+
+Additional targeted lanes:
+
+```bash
+cd virtnosis
+make runtime-deps
+make binary-footprint
+make repro-check
+make systemd-verify
+make control-plane-soak
+make release-verify
+make dist
+```
+
+What these do:
+
+- `make runtime-deps` checks the direct ELF dependency surface
+- `make binary-footprint` checks binary size and key section growth
+- `make repro-check` builds the retained compiler/backend reduction cases
+- `make systemd-verify` validates the staged systemd example assets
+- `make control-plane-soak` runs the longer live control-plane stability lane
+- `make release-verify` runs the release gate
+- `make dist` produces the deterministic source release archive
+
+### Packaging and install metadata
+
+The repo ships a large packaging and provenance surface, but the commands fall into a few groups:
+
+- install file lists: `make install-manifest*`
+- install provenance JSON: `make install-metadata*`
+- staged install checks: `make install-stage-verify`, `make package-stage-verify*`
+- package metadata: `make package-metadata*`
+- generated packaging outputs: `make package-templates*`, `make package-skeletons*`, `make package-artifacts*`
+
+Use those when working on packaging, staged installs, or release provenance. The emitted metadata carries build, source-release, and package-artifact linkage forward into staged roots and generated package outputs.
+
+### Build and provenance checks
+
+These targets are useful when you are changing build or packaging behavior:
+
+- `make build-preflight` checks the current host/toolchain against the maintained production build contract
+- `make build-outputs` verifies the shipped executable target surface from `silk.toml`
+- `make build-manifest` writes `build/build-manifest.json`
+- `make build-manifest-check` verifies that manifest against the current binaries
+
+`make build` already runs the preflight and refreshes the build manifest automatically.
+
+### CI and stress lanes
+
+`make control-plane-soak-nightly`, `make fake-libvirt-lint`, and `make workflow-lint` are the heavier repo-maintenance lanes. They back the scheduled and CI workflows under `.github/workflows/`.
+
+Maintained verification lane:
+
+```bash
+cd virtnosis
+make verify
+```
+
+`make verify` intentionally disables the test-script VM cap so the full maintained local developer verification lane is reliable on larger builds. It starts with `make build` (which already runs the production preflight, shipped-output check, and build-manifest write), includes the build-contract lint that mutates temporary `silk.toml` / `build.slk` copies to prove the parser fails closed, then runs `make repro-check`, which builds the retained embedded repro cases and verifies their maintained expected outcomes.
+
+`make control-plane-soak` stays out of `make verify` intentionally, so the maintained default verification lane remains fast and deterministic.
+
+## Test paths
+
+Use the lighter default path first:
+
+```bash
+cd virtnosis
+bash tools/test_default.sh
+```
+
+Heavier suites:
+
+```bash
+cd virtnosis
+silk test -O 0 src/tests_deep_scan.slk
+bash tools/test_full.sh
+```
+
+`tools/test_full.sh` runs sequentially and uses a best-effort virtual-memory cap. Set `VN_TEST_ULIMIT_V=0` to disable that cap.
+
+## Key engineering constraints
+
+- keep the scanner read-only by default
+- prefer bounded memory and output behavior over broad convenience
+- partial and unavailable states must be explicit in output
+- do not silently widen the transport or auth surface
+- keep CLI and agent behavior aligned
+
+## Implementation anchors
+
+Important code areas:
+
+- `src/virtnosis/libvirt/` — low-level libvirt RPC and transport
+- `src/virtnosis/scan/` — scan extraction, risk logic, and output helpers
+- `src/virtnosis/agent/` — agent socket, auth, transport policy, and control helpers
+- `src/virtnosis/output/` — record capture and report wrapping
+- `src/entry_impl.slk` — main entry implementation for scanner and agent
+- `src/vnactl.slk` — client CLI
+- `src/virtnosis/cli.slk` — shared CLI parsing and usage text
+
+## Silk-specific notes
+
+Authoritative Silk and stdlib observations for this repo live in the repository
+notes tracked in [Repository documents](?p=reference/repository-docs).
+
+That file exists because the current Silk subset and stdlib have real engineering implications for:
+
+- memory ownership
+- string lifetime
+- vector behavior
+- build-module portability
+- framing and write loops
+- test-memory behavior
+
+Do not treat those notes as optional background reading.
+
+## Documentation maintenance expectations
+
+When behavior changes:
+
+- update `README.md` if the user-facing workflow changes
+- update `docs/` if the product, operator, or architecture story changes
+- update man pages if command or design references change
+- update `deploy/systemd/` when service-unit examples or deployment assumptions change
+- keep `tools/install_docs.sh` and `tools/lint_docs.py` aligned with the docs tree when adding or renaming docs pages
+- update `STATUS.md` and `PLAN.md` if project state or direction changes
+- update `NOTES.md` when the change teaches us something about Silk, the stdlib, or implementation pitfalls
+
+## Where to go next
+
+- Product and operator docs: [Start](?p=start) and [Overview](?p=reference/overview)
+- Technical design target and internal engineering notes: [Repository documents](?p=reference/repository-docs)
+
+==============================================================================
+DOCS: Repository Documents (reference/repository-docs)
+URL: /virtnosis/docs/?p=reference/repository-docs
+==============================================================================
+
+# Repository Documents
+
+This page maps the documentation layers that exist in the `virtnosis`
+repository and explains which ones are public/operator-facing versus
+contributor/internal.
+
+## Public documentation layers
+
+- `README.md` — concise repository entrypoint and quick start
+- `docs/` — structured operator and product documentation
+- `man/man1/` and `man/man7/` — command and design references
+
+On this website, those layers are represented by:
+
+- [Start](?p=start)
+- [Guides](?p=guides/getting-started)
+- [CLI](?p=cli/vnactl)
+- [Man pages](?p=man/virtnosis-7)
+
+## Technical and contributor documents
+
+The repository also ships additional documents that are useful for contributors
+and maintainers:
+
+- [`VIRTNOSIS.md`](https://github.com/oro-computer/virtnosis/blob/master/VIRTNOSIS.md) —
+  technical design target and roadmap
+- [`STATUS.md`](https://github.com/oro-computer/virtnosis/blob/master/STATUS.md) —
+  implementation state and hardening notes
+- [`PLAN.md`](https://github.com/oro-computer/virtnosis/blob/master/PLAN.md) —
+  milestones and roadmap tracking
+- [`NOTES.md`](https://github.com/oro-computer/virtnosis/blob/master/NOTES.md) —
+  implementation-focused Silk and engineering notes
+
+These documents are part of the repository and were included in the audit for
+this website pass, but they are not the primary downstream/operator entrypoint.
+
+## Audit summary
+
+The repository documentation breaks down cleanly into:
+
+- operator docs for using the tool,
+- deployment docs for shared/rootless/systemd use,
+- reference docs for architecture, protocol, and report semantics,
+- contributor docs for build, packaging, release, and engineering constraints.
+
+Two important cleanup findings from the repo audit:
+
+- public `vnactl` builds do **not** expose the fail-policy flags
+  mentioned in some upstream docs (`--fail-on-errors`, `--fail-on-warnings`,
+  `--fail-severity`), so the website docs do not present them as public CLI
+  surface;
+- public `vnactl` builds also do **not** expose
+  `--evidence-max-bytes`, `--nwfilter-include-max-depth`, or
+  `--nwfilter-include-max-filters`, so the website docs keep the public tuning
+  story aligned with the actual parser and help text.
+
+## Recommended use
+
+- If you are adopting the tool: start with [Getting Started](?p=guides/getting-started)
+  and [Operator Guide](?p=guides/operator-guide).
+- If you are deploying it for multiple users: read [Deployment Guide](?p=guides/deployment)
+  and [Systemd Guide](?p=guides/systemd).
+- If you need protocol and output semantics: read
+  [Architecture](?p=reference/architecture),
+  [virtnosis-agent-protocol(7)](?p=man/virtnosis-agent-protocol-7), and
+  [virtnosis-scan-report(7)](?p=man/virtnosis-scan-report-7).
+- If you are contributing: read [Development](?p=reference/development), then
+  the repository-side documents linked above.
+
+==============================================================================
+DOCS: `vnactl(1)` (man/vnactl-1)
+URL: /virtnosis/docs/?p=man/vnactl-1
+==============================================================================
+
+# `vnactl(1)`
+
+## Name
+
+`vnactl` — Virtnosis agent control client
+
+## Synopsis
+
+```bash
+vnactl status [options]
+vnactl version [options]
+vnactl scan [options]
+```
+
+## Description
+
+`vnactl` connects to `virtnosis-agent` and performs control-plane operations
+such as status queries, version probes, and remote scan requests.
+
+The public implementation supports only local UNIX domain sockets for agent
+transport.
+
+## Commands
+
+- `status` — fetch agent status and capability metadata
+- `version` — fetch agent version metadata
+- `scan` — request a scan from the agent and print or stream the result
+
+## Common options
+
+- `--connect <target>`
+- `--timeout-ms <n>`
+- `--max-response-bytes <n>`
+- `--raw-json`
+
+Accepted `--connect` forms today are `unix:///absolute/path` or a plain
+absolute UNIX socket path.
+
+## Scan options
+
+- `--timeout-ms-agent-scan <n>`
+- `-f, --format default|json|xml`
+- `--socket <path>`
+- `--uri <uri>`
+- `--program remote|admin`
+- `--deep`
+- `--confirm-xml`
+- `--redact`
+- `--verbose`
+- `--deep-enum-max <n>`
+- `--deep-resolve-max <n>`
+- `--deep-vol-resolve-max <n>`
+- `--deep-xml-max <n>`
+- `--deep-vol-xml-max <n>`
+- `--timeout-ms-scan <n>`
+- `--scan-timeout-ms <n>`
+
+## Rootless behavior
+
+For non-root users, `vnactl` auto-prefers
+`$XDG_RUNTIME_DIR/virtnosis/agent.sock` when it exists. If that socket is
+absent or stale, the client falls back to `/run/virtnosis/agent.sock`.
+
+## Transport policy
+
+Public builds support only local UNIX socket control connections.
+Planned transports such as `tcp://`, `tls://`, `ssh://`, `http://`, `https://`,
+`ws://`, and `wss://` are intentionally rejected today.
+
+## Protocol notes
+
+`vnactl` uses the length-prefixed JSON control protocol described in
+[virtnosis-agent-protocol(7)](?p=man/virtnosis-agent-protocol-7).
+
+For large scan output it prefers the streaming scan method when available and
+falls back to the older framed raw-stdout mode for older agents.
+
+## Exit status
+
+- `0` — success
+- `2` — CLI usage or argument error
+- `3` — connection, protocol, framing, or internal runtime failure
+
+For `scan`, the command propagates the scan exit code.
+
+## Examples
+
+```bash
+vnactl status --connect unix:///run/virtnosis/agent.sock
+vnactl version --connect /run/virtnosis/agent.sock
+vnactl scan --connect unix:///run/virtnosis/agent.sock --deep --confirm-xml
+```
+
+## Files
+
+- `/run/virtnosis/agent.sock`
+- `$XDG_RUNTIME_DIR/virtnosis/agent.sock`
+
+## Environment
+
+- `XDG_RUNTIME_DIR`
+
+## See also
+
+- [vnactl](?p=cli/vnactl)
+- [virtnosis-agent(1)](?p=man/virtnosis-agent-1)
+- [virtnosis(7)](?p=man/virtnosis-7)
+- [virtnosis-agent-protocol(7)](?p=man/virtnosis-agent-protocol-7)
+- [virtnosis-scan-report(7)](?p=man/virtnosis-scan-report-7)
+
+==============================================================================
+DOCS: `virtnosis-agent(1)` (man/virtnosis-agent-1)
+URL: /virtnosis/docs/?p=man/virtnosis-agent-1
+==============================================================================
+
+# `virtnosis-agent(1)`
+
+## Name
+
+`virtnosis-agent` — Virtnosis local agent and daemon
+
+## Synopsis
+
+```bash
+virtnosis-agent [agent] [options]
+```
+
+## Description
+
+`virtnosis-agent` starts the Virtnosis control-plane daemon. It binds a local
+UNIX domain socket itself or adopts one inherited from `systemd`, accepts
+bounded JSON-framed requests, and runs libvirt scan work on behalf of operators
+and automation clients.
+
+## Options
+
+- `--listen <path>`
+- `--listen-mode <octal>`
+- `--listen-gid <gid>`
+- `--backlog <n>`
+- `--max-clients <n>`
+- `--client-timeout-ms <n>`
+- `--max-request-bytes <n>`
+- `--max-response-bytes <n>`
+- `--scan-timeout-ms <n>`
+- `--peer-auth none|same-uid|same-uid-or-listen-gid`
+- `--once`
+- `--no-unlink-stale`
+- `--verbose`
+
+## Systemd socket activation
+
+Current support is intentionally narrow:
+
+- exactly one inherited listener fd,
+- a filesystem-backed absolute UNIX socket path,
+- `.socket` units with `Accept=no`.
+
+## Rootless mode
+
+When `--listen` is not provided and the process is running as a non-root user,
+the default listener is `$XDG_RUNTIME_DIR/virtnosis/agent.sock`.
+
+## Peer authentication
+
+- `same-uid` — allow the same effective UID and root
+- `same-uid-or-listen-gid` — allow the same UID, root, or peers in the socket
+  gid
+- `none` — rely only on filesystem permissions
+
+## Status surface
+
+The agent answers `status` and `version` requests with machine-readable
+metadata such as:
+
+- effective listen path,
+- auto-path selection state,
+- socket-activation state,
+- transport policy fields,
+- resolved auth target gid,
+- socket mode and writability diagnostics.
+
+## Exit status
+
+- `0` — normal exit
+- `2` — CLI usage error
+- `3` — listener setup, permission, or runtime failure
+
+## Examples
+
+```bash
+virtnosis-agent --listen /run/virtnosis/agent.sock --verbose
+virtnosis-agent --listen /run/virtnosis/agent.sock --listen-mode 0660 --listen-gid 123
+XDG_RUNTIME_DIR=/run/user/1000 virtnosis-agent --verbose
+```
+
+## Files
+
+- `/run/virtnosis/agent.sock`
+- `$XDG_RUNTIME_DIR/virtnosis/agent.sock`
+
+## Environment
+
+- `XDG_RUNTIME_DIR`
+- `LISTEN_PID`
+- `LISTEN_FDS`
+
+## See also
+
+- [virtnosis-agent](?p=cli/virtnosis-agent)
+- [vnactl(1)](?p=man/vnactl-1)
+- [virtnosis(7)](?p=man/virtnosis-7)
+- [Systemd Guide](?p=guides/systemd)
+
+==============================================================================
+DOCS: `virtnosis(7)` (man/virtnosis-7)
+URL: /virtnosis/docs/?p=man/virtnosis-7
+==============================================================================
+
+# `virtnosis(7)`
+
+## Name
+
+`virtnosis` — libvirt security analysis and diagnosis architecture
+
+## Description
+
+Virtnosis is the project and product direction for this repository. It is a
+read-only libvirt security analysis and diagnosis system built around:
+
+- `virtnosis-agent` — the long-running local control-plane daemon
+- `vnactl` — the operator and automation client
+
+## Design goals
+
+- read-only by default
+- bounded resource use
+- explicit partial-state reporting
+- automation-friendly output
+- safe transport exposure
+
+## Public surface
+
+The codebase provides:
+
+- direct local libvirt scanning over libvirt UNIX sockets,
+- a local agent with bounded JSON-framed control messages,
+- rootless runtime socket defaults,
+- local `systemd` socket activation for one inherited UNIX listener fd,
+- peer-auth enforcement for local UNIX socket clients,
+- stable status metadata and scan output contracts.
+
+## Roadmap direction
+
+Future design direction includes optional loopback TCP, stronger secure-remote
+deployment paths, and web-facing adapters once the core local control plane is
+considered stable enough to expose more broadly.
+
+Those are not part of the public product surface.
+
+## Security model
+
+Important assumptions:
+
+- use only against systems you own or are authorized to assess,
+- keep control sockets local and permission-restricted by default,
+- use redaction when output may enter shared logs,
+- treat partial and unavailable sub-scans as first-class conditions.
+
+## Example workflow
+
+```bash
+virtnosis-agent --listen /run/virtnosis/agent.sock --listen-mode 0660 --listen-gid 123
+vnactl status --connect unix:///run/virtnosis/agent.sock
+vnactl scan --connect unix:///run/virtnosis/agent.sock --deep --confirm-xml --redact
+```
+
+## Documents
+
+- [Start](?p=start)
+- [Architecture](?p=reference/architecture)
+- [Repository documents](?p=reference/repository-docs)
+
+## See also
+
+- [virtnosis-agent(1)](?p=man/virtnosis-agent-1)
+- [vnactl(1)](?p=man/vnactl-1)
+- [virtnosis-agent-protocol(7)](?p=man/virtnosis-agent-protocol-7)
+- [virtnosis-scan-report(7)](?p=man/virtnosis-scan-report-7)
+
+==============================================================================
+DOCS: `virtnosis-agent-protocol(7)` (man/virtnosis-agent-protocol-7)
+URL: /virtnosis/docs/?p=man/virtnosis-agent-protocol-7
+==============================================================================
+
+# `virtnosis-agent-protocol(7)`
+
+## Name
+
+`virtnosis-agent-protocol` — control protocol and transport model for
+Virtnosis
+
+## Description
+
+This is the framing and message model used between `vnactl` and
+`virtnosis-agent`.
+
+The protocol is designed to be:
+
+- simple,
+- bounded,
+- transport-agnostic at the framing layer,
+- safe to implement in Silk.
+
+## Framing
+
+For stream transports, each message is:
+
+1. a 32-bit big-endian length prefix,
+2. followed by that many payload bytes,
+3. containing one UTF-8 JSON object.
+
+Large scan output uses a separate raw frame or a streamed sequence of raw
+stdout frames so the agent does not need to embed arbitrarily large multiline
+scan output inside one JSON value.
+
+## Message types
+
+- `request`
+- `response`
+- `stream_start`
+- `event` (reserved for future progress/server-originated traffic)
+
+## Core fields
+
+- `v`
+- `id`
+- `type`
+- `method`
+- `params`
+- `ok`
+- `result`
+- `error`
+
+## Status contract
+
+`status` and `version` responses report:
+
+- agent identity and version,
+- serving executable path,
+- build-identity verification state,
+- supported methods,
+- effective listen path and auto-selection state,
+- socket-activation state,
+- transport policy fields,
+- listener/client security summaries,
+- socket mode, gid, and local peer-auth diagnostics.
+
+## Scan contract
+
+Current scan methods:
+
+- `scan` — JSON envelope plus a second framed raw-stdout payload
+- `scan_stream` — start envelope, stdout frames, zero-length terminator, and a
+  final response envelope
+
+Clients should prefer `scan_stream` when supported.
+
+## Transport policy
+
+Public builds support only local UNIX domain sockets for the control plane,
+either bound directly by the agent or inherited from `systemd`.
+
+The protocol already classifies future transports, but the build does not
+enable them today.
+
+## Security properties
+
+- strict length-prefix framing
+- request and response size caps
+- bounded timeouts
+- no silent downgrade of partial results
+- local peer-auth policy for UNIX sockets
+
+## Examples
+
+Example request envelope:
+
+```json
+{
+  "v": 1,
+  "id": "req-1",
+  "type": "request",
+  "method": "status",
+  "params": {}
+}
+```
+
+Example success envelope:
+
+```json
+{
+  "v": 1,
+  "id": "req-1",
+  "type": "response",
+  "ok": true,
+  "result": {
+    "methods": ["status", "version", "scan", "scan_stream"]
+  }
+}
+```
+
+## See also
+
+- [vnactl(1)](?p=man/vnactl-1)
+- [virtnosis-agent(1)](?p=man/virtnosis-agent-1)
+- [virtnosis(7)](?p=man/virtnosis-7)
+- [Architecture](?p=reference/architecture)
+
+==============================================================================
+DOCS: `virtnosis-scan-report(7)` (man/virtnosis-scan-report-7)
+URL: /virtnosis/docs/?p=man/virtnosis-scan-report-7
+==============================================================================
+
+# `virtnosis-scan-report(7)`
+
+## Name
+
+`virtnosis-scan-report` — output model and reporting semantics for Virtnosis
+scans
+
+## Description
+
+Virtnosis scan output is designed to remain machine-consumable even when the
+scanner operates under partial failure, bounded capture, or mixed prefix/full
+XML availability.
+
+Virtnosis emits a stable dotted-key record stream. Higher-level JSON and XML
+wrappers preserve that logical report.
+
+## Output principles
+
+- stable keys
+- explicit incompleteness
+- bounded evidence
+- redaction-aware output
+
+## Major record families
+
+- `inventory.*`
+- `scan.warnings.warning.<n>.*`
+- `scan.errors.error.<n>.*`
+- `scan.risks_prefix.*`
+- `scan.risks_full.*`
+- `scan.exit_code`
+
+## Partial and unavailable states
+
+The report distinguishes:
+
+- `complete`
+- `partial`
+- `unavailable`
+
+That distinction is important because a missing finding is only meaningful if
+the relevant stage actually ran.
+
+## Redaction
+
+With `--redact`, the scanner preserves structural output and booleans but
+suppresses sensitive values such as object names, UUIDs, socket paths, URIs,
+XML prefixes, evidence excerpts, and selected remote error details.
+
+## Formats
+
+- `default`
+- `json`
+- `xml`
+
+## Examples
+
+```bash
+vnactl scan --deep --confirm-xml --redact -f default
+vnactl scan --deep --confirm-xml --redact -f json
+```
+
+```text
+scan.summary.warning_count=2
+scan.summary.error_count=0
+scan.domains.coverage=partial
+scan.risks_prefix.total=3
+scan.risks_full.total=1
+scan.exit_code=0
+```
+
+## Operator guidance
+
+Consumers should treat:
+
+- warning and error codes as stable automation keys,
+- coverage and unavailable markers as first-class signals,
+- prefix-vs-full risk totals as distinct evidence levels.
+
+## See also
+
+- [Output and Automation](?p=guides/output-and-automation)
+- [vnactl(1)](?p=man/vnactl-1)
+- [virtnosis(7)](?p=man/virtnosis-7)
+- [virtnosis-agent-protocol(7)](?p=man/virtnosis-agent-protocol-7)

@@ -1,15 +1,25 @@
 # `oro:navigation`
 
-This page is the API reference for this runtime module family. It includes all exported bindings as
-declared by the runtime’s published TypeScript definitions.
+`oro:navigation` surfaces the Navigation API state that the runtime makes available to application code.
 
-## Import
+## Examples
+
+Read the current navigation entry and listen for browser-style navigation events:
 
 ```js
-import * as api from 'oro:navigation'
+import navigation from 'oro:navigation'
 
-console.log(Object.keys(api))
+console.log(navigation.currentEntry?.url)
+
+navigation.addEventListener('navigate', (event) => {
+  console.log(event.destination.url)
+})
 ```
+
+## See also
+
+- [Module index](?p=javascript/module-index)
+- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -28,11 +38,11 @@ oro:navigation/navigation
 <summary><code>oro:navigation</code></summary>
 
 ```ts
-declare module 'oro:navigation' {
-  export const Navigation: any
-  export const NavigationHistoryEntry: any
-  export const navigation: any
-  export default navigation
+declare module "oro:navigation" {
+    export const Navigation: any;
+    export const NavigationHistoryEntry: any;
+    export const navigation: any;
+    export default navigation;
 }
 ```
 
@@ -42,8 +52,8 @@ declare module 'oro:navigation' {
 <summary><code>oro:navigation/navigation</code></summary>
 
 ```ts
-declare module 'oro:navigation/navigation' {
-  export function setSerializer(serializer: any): void
+declare module "oro:navigation/navigation" {
+    export function setSerializer(serializer: any): void;
 }
 ```
 

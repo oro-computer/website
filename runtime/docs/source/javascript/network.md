@@ -1,15 +1,24 @@
 # `oro:network`
 
-This page is the API reference for this runtime module family. It includes all exported bindings as
-declared by the runtime’s published TypeScript definitions.
+`oro:network` exposes a higher-level networking surface built on the Latica stack.
 
-## Import
+## Examples
+
+Start the higher-level networking surface and attach event listeners:
 
 ```js
-import * as api from 'oro:network'
+import network from 'oro:network'
 
-console.log(Object.keys(api))
+const bus = await network({})
+
+bus.on('error', console.error)
+bus.on('message', (message) => console.log(message))
 ```
+
+## See also
+
+- [Module index](?p=javascript/module-index)
+- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -27,16 +36,16 @@ oro:network
 <summary><code>oro:network</code></summary>
 
 ```ts
-declare module 'oro:network' {
-  export default network
-  export function network(options: any): Promise<events>
-  import { Cache } from 'oro:latica/index'
-  import { sha256 } from 'oro:latica/index'
-  import { Encryption } from 'oro:latica/index'
-  import { Packet } from 'oro:latica/index'
-  import { NAT } from 'oro:latica/index'
-  import events from 'oro:events'
-  export { Cache, sha256, Encryption, Packet, NAT }
+declare module "oro:network" {
+    export default network;
+    export function network(options: any): Promise<events>;
+    import { Cache } from "oro:latica/index";
+    import { sha256 } from "oro:latica/index";
+    import { Encryption } from "oro:latica/index";
+    import { Packet } from "oro:latica/index";
+    import { NAT } from "oro:latica/index";
+    import events from "oro:events";
+    export { Cache, sha256, Encryption, Packet, NAT };
 }
 ```
 

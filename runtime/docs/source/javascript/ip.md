@@ -1,15 +1,24 @@
 # `oro:ip`
 
-This page is the API reference for this runtime module family. It includes all exported bindings as
-declared by the runtime’s published TypeScript definitions.
+`oro:ip` normalizes and validates IP address inputs.
 
-## Import
+## Examples
+
+Normalize user-provided IP input before using it in socket code:
 
 ```js
-import * as api from 'oro:ip'
+import { normalizeIPv4, isIPv4 } from 'oro:ip'
 
-console.log(Object.keys(api))
+const address = normalizeIPv4('127.000.000.001')
+
+console.log(address)
+console.log(isIPv4(address))
 ```
+
+## See also
+
+- [Module index](?p=javascript/module-index)
+- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -27,28 +36,24 @@ oro:ip
 <summary><code>oro:ip</code></summary>
 
 ```ts
-declare module 'oro:ip' {
-  /**
-   * Normalizes input as an IPv4 address string
-   * @param {string|object|string[]|Uint8Array} input
-   * @return {string}
-   */
-  export function normalizeIPv4(
-    input: string | object | string[] | Uint8Array
-  ): string
-  /**
-   * Determines if an input `string` is in IP address version 4 format.
-   * @param {string|object|string[]|Uint8Array} input
-   * @return {boolean}
-   */
-  export function isIPv4(
-    input: string | object | string[] | Uint8Array
-  ): boolean
-  namespace _default {
-    export { normalizeIPv4 }
-    export { isIPv4 }
-  }
-  export default _default
+declare module "oro:ip" {
+    /**
+     * Normalizes input as an IPv4 address string
+     * @param {string|object|string[]|Uint8Array} input
+     * @return {string}
+     */
+    export function normalizeIPv4(input: string | object | string[] | Uint8Array): string;
+    /**
+     * Determines if an input `string` is in IP address version 4 format.
+     * @param {string|object|string[]|Uint8Array} input
+     * @return {boolean}
+     */
+    export function isIPv4(input: string | object | string[] | Uint8Array): boolean;
+    namespace _default {
+        export { normalizeIPv4 };
+        export { isIPv4 };
+    }
+    export default _default;
 }
 ```
 

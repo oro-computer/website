@@ -1,15 +1,23 @@
 # `oro:signal`
 
-This page is the API reference for this runtime module family. It includes all exported bindings as
-declared by the runtime’s published TypeScript definitions.
+`oro:signal` exposes process-signal constants, conversion helpers, and event listeners.
 
-## Import
+## Examples
+
+Listen for runtime process signals using the signal helper surface:
 
 ```js
-import * as api from 'oro:signal'
+import signal from 'oro:signal'
 
-console.log(Object.keys(api))
+signal.addEventListener('SIGTERM', (event) => {
+  console.log(event.type)
+})
 ```
+
+## See also
+
+- [Module index](?p=javascript/module-index)
+- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -27,10 +35,10 @@ oro:signal
 <summary><code>oro:signal</code></summary>
 
 ```ts
-declare module 'oro:signal' {
-  export * from 'oro:process/signal'
-  export default signal
-  import signal from 'oro:process/signal'
+declare module "oro:signal" {
+    export * from "oro:process/signal";
+    export default signal;
+    import signal from "oro:process/signal";
 }
 ```
 

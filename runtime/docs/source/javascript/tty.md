@@ -1,15 +1,22 @@
 # `oro:tty`
 
-This page is the API reference for this runtime module family. It includes all exported bindings as
-declared by the runtime’s published TypeScript definitions.
+`oro:tty` exposes terminal streams and TTY detection helpers.
 
-## Import
+## Examples
+
+Detect interactive terminals before enabling richer output:
 
 ```js
-import * as api from 'oro:tty'
+import { isatty } from 'oro:tty'
 
-console.log(Object.keys(api))
+console.log(isatty(0))
+console.log(isatty(1))
 ```
+
+## See also
+
+- [Module index](?p=javascript/module-index)
+- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -27,18 +34,18 @@ oro:tty
 <summary><code>oro:tty</code></summary>
 
 ```ts
-declare module 'oro:tty' {
-  export function WriteStream(fd: any): Writable
-  export function ReadStream(fd: any): Readable
-  export function isatty(fd: any): boolean
-  namespace _default {
-    export { WriteStream }
-    export { ReadStream }
-    export { isatty }
-  }
-  export default _default
-  import { Writable } from 'oro:stream'
-  import { Readable } from 'oro:stream'
+declare module "oro:tty" {
+    export function WriteStream(fd: any): Writable;
+    export function ReadStream(fd: any): Readable;
+    export function isatty(fd: any): boolean;
+    namespace _default {
+        export { WriteStream };
+        export { ReadStream };
+        export { isatty };
+    }
+    export default _default;
+    import { Writable } from "oro:stream";
+    import { Readable } from "oro:stream";
 }
 ```
 
