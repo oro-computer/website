@@ -137,6 +137,6 @@ These pointers can be passed to `Session.set_bio_mempipe(...)`.
 - The current subset wires `Session` to transports via `MemPipe` and hosted
   POSIX file descriptors (`set_bio_fd`). General user-provided transport
   callbacks are planned but require additional FFI expressiveness beyond the
-  current compiler subset.
+  current compiler.
 - The initial tests use `MemPipe` instead of real sockets so `make test` can run
   in environments where `socket(2)` is restricted.

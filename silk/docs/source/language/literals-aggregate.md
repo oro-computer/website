@@ -33,7 +33,7 @@ let empty_slice: i32[] = [];
   exactly `N` elements.
 - When an expected type is present and it is `T[]`, the literal’s elements are
   type-checked against `T` and the resulting value has type `T[]`.
-  - In the current compiler subset, this slice form is lowered as a non-owning
+  - In the current compiler, this slice form is lowered as a non-owning
     view over a compiler-generated backing array.
   - Lifetime rules are not yet enforced for such
     slices; do not allow a slice derived from a stack-backed array literal to
@@ -171,7 +171,7 @@ Visibility rule:
   package (constructors are `public` by default; an explicitly `private`
   constructor is not invoked implicitly).
 
-Current subset note:
+Note:
 
 - Non-empty struct literals (for example `Type{ x: 1 }`) do **not** invoke
   constructors implicitly.
@@ -183,10 +183,10 @@ Compiler requirements:
   are default-initialized).
 - Respect struct lowering/layout rules from `structs-impls-layout.md`.
 
-### Implemented Subset
+### Supported forms
 
-The current compiler implementation supports struct literals only for the
-limited struct subset described in `structs-impls-layout.md`:
+Struct literals follow the struct subset described in
+`structs-impls-layout.md`:
 
 - structs with 0+ fields of supported value types (scalar primitives, `string`,
   nested structs, and supported optionals),

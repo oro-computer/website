@@ -3,11 +3,11 @@
 Silk is safe-by-default: bindings and borrows are immutable unless you opt in
 to mutation.
 
-Canonical spec: `docs/language/mutability.md`.
+Full reference: `docs/language/mutability.md`.
 
-## Status
+## Notes
 
-- Implemented subset + borrow rules: `docs/language/mutability.md`
+- Full reference: `docs/language/mutability.md`
 
 ## Syntax
 ```silk

@@ -90,13 +90,13 @@ The compiler must:
 
 ## Current Implementation Restrictions
 
-The current compiler subset implements:
+Silk currently implements:
 
 - Local `let mut` bindings, including assignment and numeric compound assignment.
 - `mut` value parameters (`fn inc(mut x: int) { x = x + 1; }`) as a callee-local
   mutable binding (no call-site `mut` marker is required).
 - Borrowed reference parameters for:
-  - `&Struct` for the current supported `struct` subset, and
+  - `&Struct` for supported struct values, and
   - `&T` where `T` is a single-slot scalar primitive (for example `&int`,
     `&bool`, `&u64`, `&f64`).
 - The two-part `mut` borrow contract for mutable reference parameters:
@@ -119,9 +119,9 @@ The current compiler subset implements:
   - copying a `&Struct` binding (e.g. `let g: &File = f;`) creates an alias to
     the same underlying heap allocation and increments the refcount.
 
-## Borrow Safety Rules (Current Subset)
+## Borrow Safety Rules
 
-Borrowed references (`&T`) in the current compiler subset are safe-by-default
+Borrowed references (`&T`) are safe-by-default
 and, for now, use conservative **lexical lifetime** checks:
 
 - Borrowed references can be created and stored as local values (see above).

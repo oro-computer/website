@@ -56,7 +56,7 @@ struct Point {
 When a struct literal omits a field, the compiler initializes the field from its
 default expression.
 
-In the current compiler subset, default field expressions use the same
+In the current compiler, default field expressions use the same
 restriction as default function arguments:
 
 - no name references, and
@@ -93,7 +93,7 @@ struct Derived extends Base {
 }
 ```
 
-Semantics (implemented subset):
+Semantics:
 
 - A derived struct inherits all fields of its base struct.
 - The derived struct’s field sequence is:
@@ -105,7 +105,7 @@ Semantics (implemented subset):
   - a `Derived{ ... }` literal may omit inherited fields that have defaults in
     the base struct.
 
-Type checking rules (implemented subset):
+Type checking rules:
 
 - `extends` is permitted only on non-opaque `struct` declarations.
 - The base name must resolve to a `struct` type in the compiled module set.
@@ -115,7 +115,7 @@ Type checking rules (implemented subset):
 
 Notes:
 
-- `extends` does not imply implicit subtyping in the current compiler subset:
+- `extends` does not imply implicit subtyping in the current compiler:
   there is no implicit coercion from `Derived` to `Base` (or `&Derived` to
   `&Base`) yet.
 
@@ -157,7 +157,7 @@ library.
 Using an opaque handle after it has been destroyed is **undefined behavior**.
 The compiler does not currently enforce this at compile time.
 
-#### ABI and Lowering (Current Subset)
+#### ABI and Lowering
 
 In the current backend subset, an `&Opaque` value is lowered as a single pointer
 scalar (`u64` on the current `linux/x86_64` target), rather than as a
@@ -224,7 +224,7 @@ Example (current compiler): the `Frame` above is lowered as 3 scalar
 slots and occupies 24 bytes when stored in memory (3 × 8-byte cells), even
 though the intended C-like packed layout would be 8 bytes.
 
-### ABI and Code Generation (Implemented Subset)
+### ABI and Code Generation
 
 The Silk language design includes full support for user-defined structs, nested
 aggregates, and FFI-safe ABI mapping. The current compiler/backend
@@ -272,7 +272,7 @@ behavior consistent with C for the supported cases.
 memory layout.
 
 The intent is to provide “high-level” APIs without baking behavior into `struct`
-layout. In the initial implementation, `impl` blocks are *syntax and
+layout. Today, `impl` blocks are *syntax and
 type-checking structure*; code generation treats methods as ordinary functions
 that follow the same calling conventions as other Silk functions.
 

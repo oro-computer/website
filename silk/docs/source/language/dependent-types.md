@@ -3,7 +3,7 @@
 This document specifies Silk’s intended support for “dependent-type-like”
 patterns where types mention compile-time values (most notably integers).
 
-Status: **design + partial parsing**. The front-end can parse and preserve:
+Today, the front-end can parse and preserve:
 
 - declaration parameter lists on `struct`, `impl`, and `fn`,
 - type application in type positions (for example `VectorN(int, 1024)`),
@@ -14,7 +14,7 @@ compiler subset, generic parameter lists and applied types are rejected during
 type checking (`docs/compiler/diagnostics.md`, `E2016`). See
 `docs/language/generics.md`.
 
-## Const Parameters (Planned Semantics)
+## Const Parameters
 
 Const parameters are compile-time values that appear in parameter lists with a
 type annotation:
@@ -31,7 +31,7 @@ Where:
 The initial supported const-argument form in type application is integer
 literals (for example `VectorN(int, 1024)`).
 
-## Type-Level Computation (Planned)
+## Type-Level Computation
 
 The language intends to allow certain expressions over const parameters in type
 positions (design-only):
@@ -73,4 +73,4 @@ Const parameters are intended to power:
 - and compile-time-checked indexing/slicing APIs.
 
 These features require additional language and runtime support beyond the
-current compiler subset.
+current compiler.

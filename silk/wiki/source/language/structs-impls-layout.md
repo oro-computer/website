@@ -4,11 +4,11 @@
 value. `impl` blocks attach methods (and special methods like `constructor`
 and `drop`) to a type.
 
-Canonical spec: `docs/language/structs-impls-layout.md`.
+Full reference: `docs/language/structs-impls-layout.md`.
 
-## Status
+## Notes
 
-- Implemented subset + layout model: `docs/language/structs-impls-layout.md`
+- Full reference: `docs/language/structs-impls-layout.md`
 
 ## Syntax
 ```silk

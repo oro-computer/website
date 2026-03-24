@@ -18,9 +18,9 @@ A block is a sequence of zero or more statements delimited by braces:
 
 The empty block `{}` is permitted.
 
-## Statements (Current Implemented Subset)
+## Statements
 
-The current compiler subset supports these statement forms (see
+The current compiler supports these statement forms (see
 `docs/language/grammar.md` for exact syntax):
 
 - Local bindings:
@@ -63,7 +63,7 @@ A block introduces a lexical scope:
   - Any produced runtime value is cleaned up at end-of-statement (not at scope
     exit).
 
-Destructuring `let` bindings (implemented subset) bind multiple locals from a
+Destructuring `let` bindings bind multiple locals from a
 single struct value:
 
 - Positional (field order):
@@ -197,9 +197,9 @@ fn main () -> int {
 - the binding is immutable (there is no `const mut`),
 - a `const` binding is a normal runtime value (unlike `#const`), but its value
   is computed by the compiler at compile time and does not incur runtime
-  computation cost in the current compiler subset.
+  computation cost in the current compiler.
 
-In the current compiler subset, compile-time evaluation for runtime `const`
+Compile-time evaluation for runtime `const`
 bindings is restricted to:
 
 - scalar primitive types (`bool`, integer/float scalars, `char`, `Instant`, `Duration`),
@@ -230,12 +230,12 @@ Formal Silk declarations (`#const`) are compile-time-only names intended for spe
 in runtime expressions (see `docs/language/formal-verification.md` and
 `docs/compiler/diagnostics.md`, `E2014`).
 
-### Blocks as Expressions (Planned)
+### Blocks as Expressions
 
 The broader language design includes expression-oriented flow constructs (for
 example `match` expressions today and `if` expressions).
 
-In the current compiler subset:
+Current compiler behavior:
 
 - a block is not an expression and does not produce a value; it is purely a
   statement list used as the body of constructs.
@@ -285,14 +285,8 @@ fn main () -> int {
 }
 ```
 
-## Implementation Status (Current Compiler Subset)
+## Notes
 
-Implemented end-to-end:
-
-- Block scoping for runtime `let`/`var` bindings and nested blocks.
-- Formal Silk `#const` declarations (parsed, type-checked, and rejected if used at runtime).
-
-Examples that exercise the implemented subset:
-
-- `tests/silk/pass_let_locals.slk`
-- `tests/silk/pass_spec_const_while.slk`
+- Blocks create scopes for runtime `let` / `var` bindings and nested blocks.
+- Formal Silk `#const` declarations are parsed and type-checked, and are
+  rejected when used as runtime statements.

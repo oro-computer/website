@@ -6,8 +6,6 @@ value that is exactly one of several **member types**.
 This feature exists to model small, explicit “one-of-these-types” outcomes
 without requiring a dedicated nominal `enum` declaration for every case.
 
-Status: **implemented (subset)**.
-
 See also:
 
 - `docs/language/typed-errors.md` (unparenthesized `|` in function *signatures*
@@ -39,9 +37,9 @@ fn g () -> (Foo | Bar) | SomeTypedError;
 This disambiguation is required so the parser and checker can treat typed-error
 contracts as authoritative.
 
-## Rules (Current Implemented Subset)
+## Rules
 
-The initial implementation intentionally supports only unions whose member
+The current implementation supports only unions whose member
 types have a safe, well-defined representation in the current compiler/backend
 subset.
 

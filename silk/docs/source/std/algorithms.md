@@ -11,7 +11,7 @@ See also:
 - `docs/std/arrays.md`
 - `docs/std/conventions.md`
 
-## Implemented subset
+## Exported API
 
 A tiny, non-generic subset is implemented in `std/algorithms.slk` for early
 bring-up. These helpers operate on concrete scalar types and are intended to be

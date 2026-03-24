@@ -64,7 +64,7 @@ The currently implemented coverage is documented in:
 
 - [silk (1)](?p=man/silk.1) (see the `build` command and its notes),
 - [CLI reference](?p=compiler/cli-silk),
-- and runnable fixtures under `tests/silk/`.
+- and runnable examples in the language and standard-library docs.
 
 ## Source Layout
 

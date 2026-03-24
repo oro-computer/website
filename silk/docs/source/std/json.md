@@ -1,7 +1,7 @@
 # `std::json`
 
-Status: **Implemented**. `std::json` provides an RFC 8259 parser, an
-index-based DOM, and compact or pretty JSON stringification for Silk programs.
+`std::json` provides an RFC 8259 parser, an index-based DOM, and compact or
+pretty JSON stringification for Silk programs.
 
 ## Exported API
 

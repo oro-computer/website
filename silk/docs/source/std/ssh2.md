@@ -105,7 +105,7 @@ FFI entrypoints that accept or fill byte buffers use Formal Silk theories such
 as `slice_well_formed(ptr, len)` to document shape invariants (`len >= 0` and
 non-null when non-empty).
 
-## Current API (Initial)
+## Exported API
 
 The current `std::ssh2` surface currently lives in a single module
 `std/ssh2.slk` (`module std::ssh2;`) and provides:

@@ -59,19 +59,10 @@ fn main () -> int {
 - A `continue` outside a loop is a type-check error (`docs/compiler/diagnostics.md`,
   `E2008`).
 
-## Implementation Status (Current Compiler Subset)
+## Notes
 
-Implemented:
-
-- `continue;` is accepted inside loops (`loop`, `while`, and `for`) and lowered
-  end-to-end.
-- `continue;` outside a loop is rejected (`E2008`).
-
-Example that uses `continue` in the implemented subset:
-
-- `tests/silk/pass_nested_if_while.slk`
-- `tests/silk/pass_for_continue_break.slk`
-- `tests/silk/pass_loop_basic.slk`
+- `continue;` is valid inside `loop`, `while`, and `for`.
+- `continue;` outside a loop is rejected with `E2008`.
 
 ## Common Pitfalls
 

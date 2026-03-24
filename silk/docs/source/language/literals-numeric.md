@@ -6,9 +6,9 @@ Numeric literals produce integer (`int`, `u8`, `i128`, …) and floating-point
 In Silk, the sign is an operator: `-1` is a unary `-` expression applied to the
 integer literal token `1`, not a distinct “negative literal” token.
 
-## Implementation Status (Current Compiler Subset)
+## Supported forms
 
-What works end-to-end today (lexer → parser → checker → lowering → codegen):
+Includes:
 
 - Decimal integer literals: `0`, `42`, `255`.
 - Digit separators (`_`) within numeric literal digits: `1_000_000`,
@@ -31,7 +31,7 @@ What works end-to-end today (lexer → parser → checker → lowering → codeg
   participate only in the integer subset. Prefer explicit type annotations for
   `bool` and float locals when you intend to build an executable/library.
 
-Not implemented yet:
+Limitations:
 
 - Exponent notation (`1e6`, `1.0e-3`).
 - Numeric type suffixes (`42u8`, `1.5f32`).
@@ -93,7 +93,7 @@ Notes:
   - `08` is a lexical error in Silk because multi-digit literals starting with
     `0` are legacy octal (use `0o10` for octal 8, or write `8` for decimal).
 
-## Type Rules (Current Subset)
+## Type Rules
 
 See `docs/language/types.md` for the primitive type names used below.
 

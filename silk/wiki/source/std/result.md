@@ -3,12 +3,11 @@
 `std::result` standardizes the common “success or error” return shape as
 `Result(T, E)` so APIs across `std::` compose cleanly.
 
-Canonical doc: `docs/std/result.md`.
+Full reference: `docs/std/result.md`.
 
-## Status
+## Notes
 
-- Implemented (current representation is a tagged union enum).
-- Details: `docs/std/result.md`
+- Full reference: `docs/std/result.md`
 
 ## Importing
 

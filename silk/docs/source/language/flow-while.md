@@ -175,22 +175,10 @@ fn main () -> int {
 }
 ```
 
-## Implementation Status (Current Compiler Subset)
+## Notes
 
-Implemented end-to-end:
-
-- `while` loops with boolean conditions.
-- `while let <pattern> = <expr> { ... }` pattern-destructuring loops.
-- `&&` let-chains in `while let` loop conditions.
-- `break` / `continue` inside `while` bodies.
-- `#invariant` (type-checked as `bool`), `#variant` (type-checked as an
-  integer), and `#monovariant` (type-checked as an integer) attached to `while`.
-
-Examples that exercise the implemented subset:
-
-- `tests/silk/pass_while_bool.slk`
-- `tests/silk/pass_invariant_while.slk`
-- `tests/silk/pass_spec_const_while.slk`
-- `tests/silk/pass_nested_if_while.slk`
-- `tests/silk/pass_while_let_optional_countdown.slk`
-- `tests/silk/pass_while_let_chain_optional_basic.slk`
+- Silk supports `while` loops with boolean conditions.
+- `while let <pattern> = <expr> { ... }` and `&&` let-chains are part of the
+  loop surface.
+- `break`, `continue`, `#invariant`, `#variant`, and `#monovariant` are all
+  valid inside `while` loops.

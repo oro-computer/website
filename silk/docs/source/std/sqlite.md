@@ -73,10 +73,9 @@ The raw SQLite return codes remain available for debugging/telemetry.
   - `Stmt.column_text_copy` copies into `std::strings::String`.
   - `Stmt.column_blob_copy` copies into `std::buffer::BufferU8`.
 
-## Current API (Initial)
+## Exported API
 
-The current `std::sqlite` surface currently lives in `std/sqlite.slk` and
-provides:
+The `std::sqlite` surface lives in `std/sqlite.slk` and provides:
 
 - `Database`: `open`, `open_read_only`, `open_in_memory`, `exec`, `prepare`,
   `busy_timeout_ms`, `changes`, `last_insert_rowid`,

@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-import json
 import re
 import sys
-from dataclasses import dataclass
 from pathlib import Path
 
 
@@ -18,152 +16,18 @@ WIKI_SOURCE = SILK_ROOT / "wiki" / "source"
 DOCS_INDEX = SILK_ROOT / "docs" / "index.json"
 WIKI_INDEX = SILK_ROOT / "wiki" / "index.json"
 
+sys.path.insert(0, str(REPO_ROOT / "tools"))
 
-P_LINK_RE = re.compile(r"(?:(?P<kind>docs|wiki)/)?\?p=(?P<id>[a-zA-Z0-9_./-]+)")
-MD_LINK_RE = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
-RAW_VIEWER_REF_RE = re.compile(r"(?<!\]\()(?<!\()(?<!/)\?p=[a-zA-Z0-9_./-]+")
-RAW_MANPAGE_REF_RE = re.compile(r"(?<!\[)`[A-Za-z0-9_:+.-]+` \(([137])\)")
-
-SKIP_PREFIXES = ("http://", "https://", "mailto:", "tel:", "data:", "javascript:", "#")
-
-
-@dataclass(frozen=True)
-class Issue:
-    path: Path
-    message: str
-
-
-def load_ids(index_path: Path) -> set[str]:
-    data = json.loads(index_path.read_text(encoding="utf-8"))
-    ids: set[str] = set()
-    for sec in data.get("sections", []):
-        for it in sec.get("items", []):
-            ids.add(it["id"])
-    return ids
-
-
-def load_index_files(index_path: Path) -> list[str]:
-    data = json.loads(index_path.read_text(encoding="utf-8"))
-    files: list[str] = []
-    for sec in data.get("sections", []):
-        for it in sec.get("items", []):
-            files.append(it["file"])
-    return files
-
-
-def normalize_rel_path(input_path: str) -> str | None:
-    if not input_path:
-        return None
-    p = str(input_path).strip()
-    p = p.replace("\\", "/")
-    p = p.removeprefix("./")
-    p = p.lstrip("/")
-    parts: list[str] = []
-    for raw in p.split("/"):
-        part = raw.strip()
-        if not part or part == ".":
-            continue
-        if part == "..":
-            if not parts:
-                return None
-            parts.pop()
-            continue
-        parts.append(part)
-    out = "/".join(parts)
-    if not out or "\0" in out:
-        return None
-    return out
-
-
-def resolve_doclike_target(href: str, current_file: Path) -> Path | None:
-    raw = href.strip()
-    if not raw:
-        return None
-    if raw.startswith("<") and raw.endswith(">"):
-        raw = raw[1:-1].strip()
-    if not raw or raw.startswith(SKIP_PREFIXES):
-        return None
-
-    # Ignore viewer links.
-    if raw.startswith("?p=") or raw.startswith("/?p=") or "&p=" in raw:
-        return None
-
-    # Strip fragment/query.
-    raw = raw.split("#", 1)[0].split("?", 1)[0].strip()
-    if not raw:
-        return None
-
-    looks_like_doc = (
-        raw.endswith(".md")
-        or raw.endswith(".txt")
-        or raw.startswith("docs/")
-        or raw.startswith("wiki/")
-        or raw.startswith("spec/")
-    )
-    if not looks_like_doc:
-        return None
-
-    if raw.startswith("docs/"):
-        rel = normalize_rel_path(raw.removeprefix("docs/"))
-        return (DOCS_SOURCE / rel) if rel else None
-    if raw.startswith("wiki/"):
-        rel = normalize_rel_path(raw.removeprefix("wiki/"))
-        return (WIKI_SOURCE / rel) if rel else None
-    if raw.startswith("spec/"):
-        rel = normalize_rel_path(raw.removeprefix("spec/"))
-        return (DOCS_SOURCE / "spec" / rel) if rel else None
-
-    rel = normalize_rel_path(raw)
-    if not rel:
-        return None
-
-    # Relative file reference.
-    resolved = (current_file.parent / rel).resolve()
-    try:
-        resolved.relative_to(REPO_ROOT)
-    except ValueError:
-        return None
-    return resolved
-
-
-def check_index_files_exist(index_path: Path, source_root: Path) -> list[Issue]:
-    issues: list[Issue] = []
-    for f in load_index_files(index_path):
-        p = source_root / f
-        if not p.exists():
-            issues.append(Issue(index_path, f"Index refers to missing file: {f}"))
-    return issues
-
-
-def check_p_links(source_root: Path, current_kind: str, docs_ids: set[str], wiki_ids: set[str]) -> list[Issue]:
-    issues: list[Issue] = []
-    for md in source_root.rglob("*.md"):
-        text = md.read_text(encoding="utf-8")
-        for m in P_LINK_RE.finditer(text):
-            target_kind = m.group("kind") or current_kind
-            target_id = m.group("id")
-            ids = docs_ids if target_kind == "docs" else wiki_ids
-            if target_id not in ids:
-                issues.append(Issue(md, f"Broken ?p= link: {target_kind}/{target_id}"))
-    return issues
-
-
-def check_doclike_links(source_root: Path) -> list[Issue]:
-    issues: list[Issue] = []
-    for md in source_root.rglob("*.md"):
-        text = md.read_text(encoding="utf-8")
-        for m in MD_LINK_RE.finditer(text):
-            href = m.group(1)
-            target = resolve_doclike_target(href, md)
-            if not target:
-                continue
-            if not target.exists():
-                try:
-                    rel = target.relative_to(REPO_ROOT)
-                except ValueError:
-                    rel = target
-                issues.append(Issue(md, f"Missing link target: {href} -> {rel}"))
-    return issues
+from site_audit_common import (
+    Issue,
+    check_doclike_links_in_tree,
+    check_index_files_exist_at,
+    check_no_editorial_status_framing_in_tree,
+    check_no_raw_manpage_refs_in_tree,
+    check_no_raw_viewer_refs_in_tree,
+    check_p_links_in_tree,
+    load_ids,
+)
 
 
 def check_no_arena_identifiers(source_root: Path) -> list[Issue]:
@@ -197,12 +61,6 @@ def check_no_works_today_labels(source_root: Path) -> list[Issue]:
 
 
 def check_spec_has_no_repo_internal_paths(spec_path: Path) -> list[Issue]:
-    """
-    The public spec should not cite internal implementation file paths or
-    test harness directories (these frequently drift and are not meaningful to
-    downstream users).
-    """
-
     issues: list[Issue] = []
     if not spec_path.exists():
         return issues
@@ -220,41 +78,6 @@ def check_spec_has_no_repo_internal_paths(spec_path: Path) -> list[Issue]:
     return issues
 
 
-def iter_auditable_lines(md: Path) -> list[tuple[int, str]]:
-    text = md.read_text(encoding="utf-8")
-    out: list[tuple[int, str]] = []
-    in_fence = False
-    for lineno, line in enumerate(text.splitlines(), start=1):
-        stripped = line.lstrip()
-        if stripped.startswith("```") or stripped.startswith("~~~"):
-            in_fence = not in_fence
-            continue
-        if in_fence:
-            continue
-        if stripped.startswith("#"):
-            continue
-        out.append((lineno, line))
-    return out
-
-
-def check_no_raw_viewer_refs(source_root: Path) -> list[Issue]:
-    issues: list[Issue] = []
-    for md in source_root.rglob("*.md"):
-        for lineno, line in iter_auditable_lines(md):
-            if RAW_VIEWER_REF_RE.search(line):
-                issues.append(Issue(md, f"Line {lineno}: raw ?p= reference must be a markdown link."))
-    return issues
-
-
-def check_no_raw_manpage_refs(source_root: Path) -> list[Issue]:
-    issues: list[Issue] = []
-    for md in source_root.rglob("*.md"):
-        for lineno, line in iter_auditable_lines(md):
-            if RAW_MANPAGE_REF_RE.search(line):
-                issues.append(Issue(md, f"Line {lineno}: raw manpage reference must be a markdown link."))
-    return issues
-
-
 def main() -> int:
     if not DOCS_INDEX.exists() or not WIKI_INDEX.exists():
         print("Missing Silk index.json files; run build scripts first.", file=sys.stderr)
@@ -262,28 +85,36 @@ def main() -> int:
 
     docs_ids = load_ids(DOCS_INDEX)
     wiki_ids = load_ids(WIKI_INDEX)
+    ids_by_kind = {"docs": docs_ids, "wiki": wiki_ids}
+    source_roots = {
+        "docs": DOCS_SOURCE,
+        "wiki": WIKI_SOURCE,
+        "spec": DOCS_SOURCE / "spec",
+    }
 
     issues: list[Issue] = []
-    issues += check_index_files_exist(DOCS_INDEX, DOCS_SOURCE)
-    issues += check_index_files_exist(WIKI_INDEX, WIKI_SOURCE)
-    issues += check_p_links(DOCS_SOURCE, "docs", docs_ids, wiki_ids)
-    issues += check_p_links(WIKI_SOURCE, "wiki", docs_ids, wiki_ids)
-    issues += check_doclike_links(DOCS_SOURCE)
-    issues += check_doclike_links(WIKI_SOURCE)
+    issues += check_index_files_exist_at(DOCS_INDEX, DOCS_SOURCE)
+    issues += check_index_files_exist_at(WIKI_INDEX, WIKI_SOURCE)
+    issues += check_p_links_in_tree(DOCS_SOURCE, "docs", ids_by_kind, include_kind_in_message=True)
+    issues += check_p_links_in_tree(WIKI_SOURCE, "wiki", ids_by_kind, include_kind_in_message=True)
+    issues += check_doclike_links_in_tree(DOCS_SOURCE, REPO_ROOT, source_roots)
+    issues += check_doclike_links_in_tree(WIKI_SOURCE, REPO_ROOT, source_roots)
     issues += check_no_arena_identifiers(DOCS_SOURCE)
     issues += check_no_arena_identifiers(WIKI_SOURCE)
     issues += check_no_works_today_labels(DOCS_SOURCE)
     issues += check_no_works_today_labels(WIKI_SOURCE)
-    issues += check_no_raw_viewer_refs(DOCS_SOURCE)
-    issues += check_no_raw_viewer_refs(WIKI_SOURCE)
-    issues += check_no_raw_manpage_refs(DOCS_SOURCE)
-    issues += check_no_raw_manpage_refs(WIKI_SOURCE)
+    issues += check_no_raw_viewer_refs_in_tree(DOCS_SOURCE)
+    issues += check_no_raw_viewer_refs_in_tree(WIKI_SOURCE)
+    issues += check_no_raw_manpage_refs_in_tree(DOCS_SOURCE)
+    issues += check_no_raw_manpage_refs_in_tree(WIKI_SOURCE)
+    issues += check_no_editorial_status_framing_in_tree(DOCS_SOURCE)
+    issues += check_no_editorial_status_framing_in_tree(WIKI_SOURCE)
     issues += check_spec_has_no_repo_internal_paths(DOCS_SOURCE / "spec" / "2026.md")
 
     if issues:
-        for iss in issues[:200]:
-            rel = iss.path.relative_to(REPO_ROOT)
-            print(f"{rel}: {iss.message}", file=sys.stderr)
+        for issue in issues[:200]:
+            rel = issue.path.relative_to(REPO_ROOT)
+            print(f"{rel}: {issue.message}", file=sys.stderr)
         if len(issues) > 200:
             print(f"... and {len(issues) - 200} more", file=sys.stderr)
         print(f"FAIL: {len(issues)} issues", file=sys.stderr)

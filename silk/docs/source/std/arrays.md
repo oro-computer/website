@@ -1,9 +1,5 @@
 # `std::arrays`
 
-A generic `Slice(T)` view type is provided
-for early FFI-friendly bridging; higher-level owning containers live in
-`std::vector`.
-
 `std::arrays` provides array and vector-like types built on top of the `Buffer(T)`
 intrinsic (`docs/language/buffers.md`).
 
@@ -12,10 +8,9 @@ See also:
 - `docs/std/memory.md` (allocators)
 - `docs/std/conventions.md` (allocation and error conventions)
 
-## Current API (Implemented)
+## Exported API
 
-A tiny generic subset is implemented in `std/arrays.slk` to provide a
-non-owning, FFI-friendly slice representation for early bridging:
+`std/arrays.slk` provides a non-owning, FFI-friendly slice representation:
 
 ```silk
 module std::arrays;
@@ -121,7 +116,7 @@ Notes:
   are unchecked beyond `#require` contracts. They are implemented using
   compiler-backed memory intrinsics routed through `std::runtime::mem` (see
   `docs/std/runtime.md`).
-- `Slice(T)` uses the scalar-slot memory model of the current compiler subset:
+- `Slice(T)` uses the scalar-slot memory model of the current compiler:
   elements occupy `sizeof(T)` bytes (8 bytes per scalar slot), so multi-slot
   values like `string` and non-opaque structs/enums are supported.
   For byte-oriented APIs that require packed bytes, use `ByteSlice`.

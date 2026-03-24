@@ -7,11 +7,11 @@ Silk has familiar structured control flow:
 - structured matching: `match`
 - early exit: `break`, `continue`, `return`
 
-Canonical spec: `docs/language/flow-overview.md`.
+Full reference: `docs/language/flow-overview.md`.
 
-## Status
+## Notes
 
-- Implemented-subset details: `docs/language/flow-*.md`
+- Full reference: `docs/language/flow-*.md`
 
 ## Example
 ```silk

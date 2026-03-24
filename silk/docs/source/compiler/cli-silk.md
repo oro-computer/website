@@ -25,7 +25,7 @@ At maturity, the `silk` CLI should:
   - configure external and ABI-related behaviors where appropriate (e.g. visibility of `libsilk.a` symbols, header emission).
 - Emit clear diagnostics with stable error codes and machine‑readable output when requested.
 
-The initial implementation is intentionally smaller and focuses on:
+The CLI focuses on:
 
 - global options:
   - `--help` / `-h` — print global usage and exit,
@@ -369,7 +369,7 @@ The initial implementation is intentionally smaller and focuses on:
       - `windows-x86_64`
       - `windows-aarch64`
     - for `--target wasm32-unknown-unknown`:
-      - an IR→WASM backend for the current supported subset (multi-module builds, control flow, string/data segments, and `ext` imports),
+      - an IR→WASM backend for the documented surface (multi-module builds, control flow, string/data segments, and `ext` imports),
       - exports `memory` plus `main` when present (embedder entry), or emits an **export-only** module (no `main`) that exports supported `export fn` declarations from the root package,
       - note: Silk `int` currently lowers to wasm `i64`, so wasm exports using `int` surface as `i64`,
     - for `--target wasm32-wasi`:
@@ -536,9 +536,10 @@ The initial implementation is intentionally smaller and focuses on:
         }
         ```
 
-      - value-producing `if` expressions whose branch bodies are single expressions (current subset restriction), including optionals:
-        - `tests/silk/pass_if_expr_basic.slk` (`let v: int = if cond { 123 } else { 456 };`)
-        - `tests/silk/pass_if_expr_optional_call.slk` (`let m: i64? = if flag { f() } else { g() };`)
+      - value-producing `if` expressions whose branch bodies are single
+        expressions, including optional-returning branches such as
+        `let v: int = if cond { 123 } else { 456 };` and
+        `let m: i64? = if flag { f() } else { g() };`
 
       - and small helper programs with boolean locals and `if` / `else`, such as:
 
@@ -558,9 +559,9 @@ The initial implementation is intentionally smaller and focuses on:
         ```
   - for programs that type‑check but fall outside both the constant subset and the current IR‑based backend subset, `silk build` exits non‑zero with `E4001` diagnostics that point at the rejected construct (or `E4002` when the backend fails unexpectedly).
 
-## High-Level Command Model (Initial Implementation)
+## High-Level Command Model
 
-The initial CLI implementation supports a small, well-defined subset of the eventual UX.
+The CLI exposes a small, well-defined command surface.
 
 Top-level commands:
 

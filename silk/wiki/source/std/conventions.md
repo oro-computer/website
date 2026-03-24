@@ -3,12 +3,11 @@
 `std::` modules follow shared conventions for naming, ownership/allocation,
 error reporting.
 
-Canonical doc: `docs/std/conventions.md`.
+Full reference: `docs/std/conventions.md`.
 
-## Status
+## Notes
 
-- Design document: use as a guideline for new `std::` APIs.
-- Details: `docs/std/conventions.md`
+- Full reference: `docs/std/conventions.md`
 
 ## Key conventions (selected)
 

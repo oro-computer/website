@@ -1,15 +1,14 @@
 # Standard library overview (`std::`)
 
-`std::` is the Silk standard library namespace. The `docs/std/` tree specifies
-the intended API and structure; an in-tree stdlib implementation exists
-under `std/` for the current compiler subset.
+`std::` is the Silk standard library namespace. The `docs/std/` tree is the
+canonical reference, and the compiler repository ships the corresponding
+modules under `std/`.
 
-Canonical doc: `docs/std/overview.md`.
+Full reference: `docs/std/overview.md`.
 
-## Status
+## Notes
 
-- Design + initial implementation: many modules have an implemented subset; the overall surface is still evolving.
-- Details: `docs/std/overview.md`
+- Full reference: `docs/std/overview.md`
 
 ## Importing
 

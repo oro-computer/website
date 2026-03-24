@@ -10,7 +10,8 @@ See also:
 - `docs/std/tls.md` (`std::tls` TLS sessions and transport integration)
 - RFC 2818 (HTTP over TLS)
 
-## Scope
+## Description
+
 Implemented:
 
 - Blocking TLS handshake using `std::tls::Session`.
@@ -23,7 +24,7 @@ Not implemented (yet):
 - ALPN configuration and HTTP/2 negotiation.
 - Non-blocking integration with an async runtime.
 
-## Public API (Current Compiler Subset)
+## Exported API
 
 ```silk
 module std::https;

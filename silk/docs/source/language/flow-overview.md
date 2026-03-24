@@ -17,12 +17,11 @@ scoping, and diagnostics).
 - blocks and statement composition
 - expression statements
 
-Each construct has defined syntax, typing, and evaluation semantics which the
-compiler must implement.
+Each construct has defined syntax, typing, and evaluation semantics.
 
-## Current behavior
+## Supported forms
 
-Implemented end-to-end:
+Includes:
 
 - `if` / `else` as statement forms (`docs/language/flow-if-else.md`)
 - `loop` loops (`docs/language/flow-loop.md`)
@@ -41,7 +40,7 @@ Implemented end-to-end:
 - Expression statements for calls and assignments only
   (`docs/language/flow-expression-statements.md`)
 
-Additional control-flow forms with narrower surfaces:
+Additional notes:
 
 - `if` as a value-producing expression form is implemented for the documented
   subset; see `docs/language/flow-if-else.md`.

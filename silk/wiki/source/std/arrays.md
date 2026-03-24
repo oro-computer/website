@@ -3,12 +3,11 @@
 `std::arrays` defines borrowed views like `Slice(T)` and helpers for working
 with fixed arrays and slices.
 
-Canonical doc: `docs/std/arrays.md`.
+Full reference: `docs/std/arrays.md`.
 
-## Status
+## Notes
 
-- Implemented subset + design: a usable subset is implemented.
-- Details: `docs/std/arrays.md`
+- Full reference: `docs/std/arrays.md`
 
 ## Importing
 

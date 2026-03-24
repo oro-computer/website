@@ -11,7 +11,7 @@ These values let downstream code:
 - gate behavior on the toolchain version,
 - and express minimum-version requirements in Formal Silk.
 
-## Implementation Status (Current Compiler Subset)
+## Notes
 
 - Implemented: the toolchain metadata constants listed below are available as
   built-in compile-time constants in every module.

@@ -3,12 +3,11 @@
 `std::formal` provides reusable Formal Silk theories (“standard lemmas”) used
 by stdlib code and downstream verified code.
 
-Canonical doc: `docs/std/formal.md`.
+Full reference: `docs/std/formal.md`.
 
-## Status
+## Notes
 
-- Implemented subset is available (initial theory set).
-- Details: `docs/std/formal.md`
+- Full reference: `docs/std/formal.md`
 
 ## Importing
 

@@ -120,7 +120,7 @@ At a high level, the language can be structured as:
 
 	  The surface syntax for packages, imports, and exports is specified in detail in
 	  `docs/language/packages-imports-exports.md`. The grammar in this file mirrors
-	  the implemented subset:
+  the supported surface:
 
   - `PackageDecl ::= 'package' PackagePath ';'`
   - `ModuleDecl ::= 'module' PackagePath ModuleAsOpt ';'`
@@ -278,7 +278,7 @@ At a high level, the language can be structured as:
   - a `FunctionType` (external functions, callable from Silk), or
   - a supported scalar type (external variables, readable as values in Silk).
 
-  The current compiler subset **requires an initializer** for runtime bindings
+  The current compiler **requires an initializer** for runtime bindings
   (`let`/`var`) and for compile-time constant bindings (`const`). Uninitialized
   declarations like `let x: int;` / `const x: int;` are parsed but rejected by
   the checker (see `docs/compiler/diagnostics.md`, `E2015`).
@@ -336,7 +336,7 @@ At a high level, the language can be structured as:
   Exception: the nominal optional form `Option(T)` is recognized as sugar for
   `T?` and is accepted in the current subset.
 
-- Types (implemented subset):
+- Types:
 
   - `Type ::= UnionType`
   - `UnionType ::= TypeNoPipe ('|' TypeNoPipe)*`
@@ -372,7 +372,7 @@ At a high level, the language can be structured as:
   closures as a restricted scalar-only subset; see `docs/language/types.md` and
   `docs/language/memory-model.md`).
 
-- Statements (implemented subset):
+- Statements:
 
   - `Stmt ::= LetStmt | SpecConstStmt | SpecAssertStmt | SpecTheoryDeclStmt | SpecTheoryStmt | AsyncBlockStmt | TaskBlockStmt | ExprStmt | IfStmt | LoopStmt | WhileStmt | ForStmt | MatchStmt | ReturnStmt | PanicStmt | AssertStmt | BreakStmt | ContinueStmt`
 
@@ -448,14 +448,14 @@ At a high level, the language can be structured as:
     matching and typed errors as specified in `docs/language/flow-match.md`
     and `docs/language/typed-errors.md`.
 
-  In the implemented subset, the statement form accepts:
+  The statement form accepts:
 
   - the same ordinary-value scrutinee + pattern subsets documented in
     `docs/language/flow-match.md`, and
   - typed-error statement matches documented in
     `docs/language/typed-errors.md`.
 
-- Expressions (implemented subset):
+- Expressions:
 
   Expressions follow a conventional precedence hierarchy:
 
@@ -606,7 +606,7 @@ At a high level, the language can be structured as:
   - `EnumVariantBinderList ::= EnumVariantBinder (',' EnumVariantBinder)* ','?`
   - `EnumVariantBinder ::= Identifier | '_'`
 
-- Declarations (implemented subset additions):
+- Declarations:
 
   - `Decl ::= ... | ErrorDecl`
   - `ErrorDecl ::= ExportModifier 'error' Identifier '{' StructFieldListOpt '}'`

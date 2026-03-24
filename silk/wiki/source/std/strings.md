@@ -4,12 +4,11 @@
 type (UTF‑8 bytes), including simple comparisons and owned
 string construction.
 
-Canonical doc: `docs/std/strings.md`.
+Full reference: `docs/std/strings.md`.
 
-## Status
+## Notes
 
-- Implemented subset is available; long-term API is still evolving.
-- Details: `docs/std/strings.md`
+- Full reference: `docs/std/strings.md`
 
 ## Importing
 
@@ -17,7 +16,7 @@ Canonical doc: `docs/std/strings.md`.
 import std::strings;
 ```
 
-## API (Implemented subset)
+## Exported API
 
 ```silk
 module std::strings;

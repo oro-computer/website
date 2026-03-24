@@ -17,7 +17,7 @@ See also:
 - `docs/language/buffers.md` (intrinsic `Buffer(T)` design)
 - `docs/std/io.md` and `docs/std/strings.md` (byte-oriented APIs)
 
-## Current API (Implemented)
+## Exported API
 
 `std::buffer` provides:
 

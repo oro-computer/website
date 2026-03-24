@@ -8,7 +8,6 @@ enforce it.
 
 This document specifies the surface syntax and checker rules for typed errors.
 
-Status: **implemented for the front-end + native backend subset**.
 The compiler supports `error` declarations, `panic` statements, error-aware
 return types (`T | ErrorType...`), and the `match` *statement* form for handling
 typed errors (including the Terminal Arm Rule), plus the postfix `?`
@@ -127,7 +126,7 @@ Rules:
 
 Implementation notes:
 
-- `panic` is a statement (not an expression) in the current compiler subset.
+- `panic` is a statement (not an expression) in the current compiler.
 
 ## Propagating Typed Errors (`?`)
 
@@ -275,7 +274,7 @@ Implementation notes:
 - `pure fn` may not have a `|` in its return type.
 - `pure fn` may not contain `panic` statements.
 
-The checker enforces these rules in the current compiler subset (see
+The checker enforces these rules in the current compiler (see
 `docs/compiler/diagnostics.md`).
 
 ### `ext` boundary

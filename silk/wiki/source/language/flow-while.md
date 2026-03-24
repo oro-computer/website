@@ -2,11 +2,11 @@
 
 Use `while` for condition-controlled looping.
 
-Canonical spec: `docs/language/flow-while.md`.
+Full reference: `docs/language/flow-while.md`.
 
-## Status
+## Notes
 
-- Implemented subset + tests: `docs/language/flow-while.md`
+- Full reference: `docs/language/flow-while.md`
 
 ## Syntax
 

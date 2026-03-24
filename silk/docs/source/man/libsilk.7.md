@@ -329,7 +329,7 @@ bool silk_compiler_set_target(SilkCompiler *compiler,
 
 - Sets the code generation target triple (for example `"x86_64-linux-gnu"`).
 - The triple is copied; errors are recorded in the compiler’s last‑error state.
-- Supported targets (initial implementation):
+- Supported targets:
   - `linux-x86_64` (default), plus common `x86_64-*-linux-*` triples such as `x86_64-linux-gnu` and `x86_64-unknown-linux-gnu`,
   - `linux-aarch64`,
   - `android-aarch64`,

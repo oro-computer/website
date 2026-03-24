@@ -1,13 +1,7 @@
 # `std::io`
 
-Basic stdin reads and stdout/stderr writes
-are implemented in `std/io.slk` via `std::runtime::io`; buffered and
-async I/O remain future work.
-
-`std::io` provides console and basic stream I/O.
-
-Hosted baseline: POSIX file descriptors and blocking I/O. Future extensions may
-include async integration.
+`std::io` provides console and basic stream I/O on the hosted baseline through
+`std::runtime::io`.
 
 See also:
 
@@ -15,10 +9,10 @@ See also:
 - `docs/std/fmt.md` (format string syntax)
 - `docs/std/conventions.md` (error conventions)
 
-## Current API (Implemented)
+## Exported API
 
-The current stdlib provides basic unbuffered stdio primitives
-(stdin reads and stdout/stderr writes), plus a small formatting surface
+The stdlib provides basic unbuffered stdio primitives (stdin reads and
+stdout/stderr writes), plus a small formatting surface
 (implemented without libc varargs; formatted bytes are written via
 `std::runtime::io::write`):
 

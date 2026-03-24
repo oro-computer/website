@@ -1,6 +1,6 @@
 # Const Functions (`const fn`)
 
-## Status
+## Notes
 
 - Parser: **implemented**
 - Checker rules: **implemented** (current subset)
@@ -9,7 +9,7 @@
 This document defines the surface syntax and semantics for compile-time
 functions.
 
-In the current compiler subset, `const fn` (and `const pure fn`) can be called
+`const fn` (and `const pure fn`) can be called
 from `const` binding initializers when all arguments and the result are
 compile-time values (scalar values and eligible POD `struct` values).
 
@@ -44,12 +44,12 @@ Notes:
   - it is not emitted as a runtime/linkable symbol in executable, object, or
     library outputs.
 
-## Compile-Time Values (Current Subset)
+## Compile-Time Values
 
 In this document, a “compile-time value” is a value that the compiler can
 produce and manipulate during compile-time evaluation.
 
-Current subset (initial implementation target):
+Current support:
 
 - scalar primitives:
   - `bool`
@@ -75,7 +75,7 @@ Planned (not yet supported for `const fn` in the current subset):
 - aggregate values beyond compile-time POD structs (enum/optional/slice/array),
 - function values as compile-time values (for higher-order const evaluation).
 
-## Rules (Current Subset)
+## Rules
 
 The current subset defines a deliberately small “const-eval VM” surface. A
 `const fn` must fit within this surface.

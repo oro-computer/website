@@ -2,11 +2,11 @@
 
 `loop { ... }` is an infinite loop that exits via `break` or `return`.
 
-Canonical spec: `docs/language/flow-loop.md`.
+Full reference: `docs/language/flow-loop.md`.
 
-## Status
+## Notes
 
-- Implemented subset + tests: `docs/language/flow-loop.md`
+- Full reference: `docs/language/flow-loop.md`
 
 ## Syntax
 

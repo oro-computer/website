@@ -44,7 +44,7 @@ It currently highlights:
 - builtin types and type-like names: `bool`, integer and float types (`u8`, `i8`, …, `u64`, `i64`, `int`, `f32`, `f64`), `char`, `string`, `void`, `Instant`, `Duration`, `Task`, `Promise`, `map`, `Option`, `Buffer`, and other core names drawn from the spec;
 - literal forms: boolean literals (`true`, `false`), `None`/`Some`, numeric literals (decimal integers and floats) and duration literals with unit suffixes (e.g. `10ns`, `250us`, `5ms`, `2s`, `5min`, `1h`, `7d`), character and string literals;
 - compiler/runtime intrinsics: identifiers matching `__silk_*` (internal ABI surface);
-- special method names: `constructor` and `drop` (both have language-defined meaning in the current compiler subset);
+- special method names: `constructor` and `drop` (both have language-defined meaning in the current compiler);
 - well-known package prefixes such as `std::`, so that standard library imports and qualified names stand out from ordinary identifiers;
 - operators and punctuation, including `++`, `--`, `?.`, `??`, `::`, `..`, `..=`, `...`, `->`, `=>` as described in `docs/language/operators.md`;
 - Formal Silk annotations: `#const`, `#require`, `#assure`, `#assert`, `#invariant`, `#variant`, `#monovariant`, `#theory` (including whitespace forms like `#  require`) are treated as preprocessor-style constructs;

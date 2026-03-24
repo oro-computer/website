@@ -10,17 +10,11 @@ This guide complements (not replaces):
 - the concept documents under `docs/language/` (semantics and checker rules),
 - and `docs/compiler/diagnostics.md` (error codes for unsupported forms).
 
-## Implementation Status (Read This First)
+## How to use this guide
 
-Silk’s `docs/` are the canonical specification, and many documents describe both:
-
-- the full language design, and
-- the current compiler subset (what parses, type-checks, and code-generates today).
-
-This tour follows the same approach:
-
-- examples labeled “Supported” are intended to compile in the current subset,
-- examples labeled “Design” illustrate planned syntax and are not necessarily implemented.
+Silk’s `docs/` are the canonical reference. This tour stays example-first and
+points back to the detailed language and compiler pages when exact semantics or
+diagnostics matter.
 
 When in doubt, prefer:
 
@@ -360,7 +354,7 @@ fn log (fmt: string, ...args: std::fmt::Arg) -> void {
 }
 ```
 
-#### Generic function parameter split (`;`) (Current supported surface)
+#### Generic function parameter split (`;`)
 
 Generic functions use `;` to separate compile-time parameters from value parameters:
 
@@ -1037,7 +1031,7 @@ fn main () -> int | OutOfBounds {
 }
 ```
 
-## 8. Formal Silk (Verification) Syntax (Implemented Subset)
+## 8. Formal Silk (Verification) Syntax
 
 Formal Silk is Silk’s compile-time verification surface (Z3-backed). It uses
 directive tokens that attach to functions and loops:

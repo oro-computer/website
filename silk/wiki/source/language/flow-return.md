@@ -2,11 +2,11 @@
 
 Use `return` to exit the current function.
 
-Canonical spec: `docs/language/flow-return.md`.
+Full reference: `docs/language/flow-return.md`.
 
-## Status
+## Notes
 
-- Implemented subset + diagnostics: `docs/language/flow-return.md`
+- Full reference: `docs/language/flow-return.md`
 
 ## Syntax
 

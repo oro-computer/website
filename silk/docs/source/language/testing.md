@@ -112,7 +112,7 @@ Note: `std::test` helpers carry a Formal Silk contract requiring
 `BUILD_MODE == "test"` via `std::test::requires_test_mode()` so downstream
 verification can model them as test-only APIs.
 
-## Status (implementation subset)
+## Notes
 
 - Implemented: parsing of `test` declarations and `silk test` runner with TAP
   output.

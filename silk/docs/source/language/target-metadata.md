@@ -6,7 +6,7 @@ runtime code and Formal Silk (compile-time verification).
 These values let programs adapt to the compilation target (platform/OS and CPU
 architecture) without requiring environment-specific runtime queries.
 
-## Implementation Status (Current Compiler Subset)
+## Notes
 
 - Implemented: target metadata is available as built-in compile-time constants
   in every module:

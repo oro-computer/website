@@ -5,10 +5,8 @@
 - `HashMap(K, V)` — an unordered map backed by a hash table.
 - `TreeMap(K, V)` — an ordered map backed by a red-black tree.
 
-The API is specified here; it
-targets the current compiler/backend subset and will grow as the language gains
-first-class container ergonomics (in particular, more borrow- and move-aware
-iteration and accessors).
+The API is specified here. It is designed to expand alongside richer
+borrow-aware and move-aware container ergonomics.
 
 ## Design Goals
 
@@ -19,9 +17,9 @@ iteration and accessors).
 - Keep the API close in spirit to C++’s `std::unordered_map` and `std::map`
   (operations, complexity expectations, and terminology), adapted to Silk.
 
-## Important Limitations (Current Compiler Subset)
+## Important Limitations
 
-In the current subset:
+Today:
 
 - `HashMap(K, V)` owns keys and values by value:
   - `clear` / `drop` run `Drop` for all live entries,

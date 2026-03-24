@@ -11,11 +11,11 @@ Silk supports both:
 - package imports (`import std::io;`, `import ui;`),
 - file imports (`import { Name } from "./module.slk";`).
 
-Canonical spec: `docs/language/packages-imports-exports.md`.
+Full reference: `docs/language/packages-imports-exports.md`.
 
-## Status
+## Notes
 
-- Full rules and many examples: `docs/language/packages-imports-exports.md`
+- Full reference: `docs/language/packages-imports-exports.md`
 
 ## Syntax
 ```silk

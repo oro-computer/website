@@ -5,7 +5,7 @@ runtime code and Formal Silk (compile-time verification) so programs can adapt
 to build configuration and so theories can express “this code is only valid in
 test builds”, “this feature requires a minimum version”, and similar policies.
 
-## Implementation Status (Current Compiler Subset)
+## Notes
 
 - Implemented: build metadata is available to runtime code via `std::runtime::build`
   (`docs/std/runtime.md`).

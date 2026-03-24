@@ -18,7 +18,7 @@
   - and borrowed versus owned parsing is an explicit choice that should remain
     visible at the call site.
 
-## API (Implemented Subset)
+## Exported API
 
 ```silk
 module std::toml;
@@ -76,7 +76,7 @@ Notes:
 - The exported free functions are thin compatibility wrappers around the
   corresponding `Document` methods.
 - Tables and arrays are stored as linked lists over `ValueId` indices to match
-  the current compiler subset.
+  the current compiler.
 - The internal DOM storage now uses a private
   `std::toml::dom_storage_well_formed(...)` theory defined inside
   `std/toml.slk`, and the public document accessors attach that local contract

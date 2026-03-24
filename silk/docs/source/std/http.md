@@ -10,7 +10,8 @@ See also:
 - `docs/std/https.md` (`std::https` layered on `std::tls`)
 - RFC 7230 / RFC 7231 (HTTP/1.1 message syntax and semantics)
 
-## Scope
+## Description
+
 Implemented:
 
 - HTTP/1.1 request line and response status line parsing.
@@ -24,7 +25,7 @@ Not implemented (yet):
 - Streaming bodies (incremental read/write APIs).
 - Automatic decompression, redirects, cookies, proxies, etc.
 
-## Public API (Current Compiler Subset)
+## Exported API
 
 ```silk
 module std::http;

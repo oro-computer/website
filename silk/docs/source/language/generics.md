@@ -2,9 +2,9 @@
 
 This document specifies Silk’s parameterized type and declaration syntax.
 
-Status: **in progress**. Silk’s generics are **compile-time** features:
-parameterized declarations are **monomorphized** into concrete, fully specified
-types and functions at build time (there are no runtime type parameters).
+Silk’s generics are **compile-time** features: parameterized declarations are
+**monomorphized** into concrete, fully specified types and functions at build
+time (there are no runtime type parameters).
 
 Note: `Option(T)` is a special-case surface form that is treated as sugar for
 `T?` in the current subset (see `docs/language/optional.md`). This is still
@@ -16,7 +16,7 @@ implemented.
 Silk supports parameterized declarations by allowing a parameter list on
 `struct`, `interface`, `enum`, `impl`, and `fn` declarations.
 
-In the current compiler subset:
+Supported forms:
 
 - **Supported**: type parameters (`T`) and const parameters (`N: usize`) on
   `struct`/`interface`/`enum`/`impl`, type application in type positions

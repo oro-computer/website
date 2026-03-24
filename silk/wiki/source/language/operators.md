@@ -6,9 +6,9 @@ casts, ranges, optionals (`?.`, `??`), and typed-error propagation (`?`).
 This wiki page is a learning-oriented companion to the canonical reference:
 `docs/language/operators.md`.
 
-## Status
+## Notes
 
-- Full operator set + precedence: `docs/language/operators.md`
+- Full reference: `docs/language/operators.md`
 
 ## Syntax
 ```silk

@@ -6,7 +6,7 @@ For unrecoverable logic bugs and contract violations, Silk uses **typed
 errors** (`error`, `panic`, and `T | ErrorType...`), specified in
 `docs/language/typed-errors.md`.
 
-## Implementation Status (Current Compiler)
+## Notes
 
 - Typed errors are implemented end-to-end for the current front-end and the
   `linux/x86_64` backends (see `docs/language/typed-errors.md`).
@@ -19,7 +19,7 @@ errors** (`error`, `panic`, and `T | ErrorType...`), specified in
   continues (the test process exits non-zero when failures were recorded). See
   `docs/language/testing.md`.
 
-## Design Goals
+## Principles
 
 - Error signaling is explicit and typed (no hidden global error state).
 - Error paths are part of normal control flow, not out-of-band exceptions.
@@ -118,7 +118,7 @@ Rules:
 - The condition expression must type-check as `bool`.
 - The optional message, when present, must type-check as `string`.
 
-Runtime behavior (current compiler subset):
+Runtime behavior:
 
 - By default (release builds), if the condition evaluates to `false`, execution
   traps immediately (a panic-like abort). In the current `linux/x86_64` backend

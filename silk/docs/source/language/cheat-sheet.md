@@ -2,27 +2,18 @@
 
 This document summarizes the key syntax and concepts from the Silk language in a condensed form. It is meant as a quick reference; detailed semantics live in the other `docs/language/` files.
 
-## Implementation Status (Read This First)
+## Scope
 
-This cheat sheet includes **both**:
+This cheat sheet is intentionally compact. Use the linked language pages for
+precise semantics, diagnostics, and edge cases.
 
-- the full language design (where some features are still evolving), and
-- the **currently implemented compiler subset**.
+Important boundaries:
 
-For the authoritative view of what the compiler supports today, prefer:
+- Regions cover the shipped `with` + `new` allocation model; see `docs/language/regions.md`.
+- Concurrency covers the shipped `Task(T)` / `Promise(T)` plus `yield` / `await` surface; see `docs/language/concurrency.md`.
+- Value constraints are expressed via Formal Silk (`#require` / `#assure`, including `#require` on `struct` declarations), not refinement types.
 
-- any “Implementation Status” sections inside the relevant concept documents.
-
-In particular, features such as regions (beyond the current `with` + `new`
-subset), the full structured-concurrency design, and **full**
-dependent-type-style reasoning beyond the current const-parameter subset are
-not implemented end-to-end yet. A hosted async executor/event loop already
-exists for the current `async` subset; what remains incomplete is the broader
-runtime and safety model around it. Value constraints are expressed via Formal
-Silk (`#require` / `#assure`, including `#require` on `struct` declarations),
-not refinement types.
-
-In the current compiler subset:
+Key notes:
 
 - Runtime `let`/`var` bindings and compile-time `const` bindings must have an initializer (`docs/compiler/diagnostics.md`, `E2015`).
 - Destructuring `let` bindings from structs are supported:

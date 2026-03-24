@@ -118,7 +118,7 @@ This makes the stdlib easier to learn by reading: vectors, slices, maps, sets,
 and buffers all participate in a shared interface story instead of presenting a
 different naming model for each module.
 
-## Current API (Implemented)
+## Exported API
 
 ```silk
 module std::vector;

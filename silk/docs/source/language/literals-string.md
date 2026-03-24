@@ -13,9 +13,9 @@ Use strings for:
 If you need a single Unicode scalar value, use `char` literals
 (`docs/language/literals-character.md`).
 
-## Implementation Status (Current Compiler Subset)
+## Supported forms
 
-What works end-to-end today (lexer → parser → checker → lowering → codegen):
+Includes:
 
 - Double-quote delimited string literals: `"hello"`.
 - Backtick-delimited raw string literals: `` `hello` ``.
@@ -34,7 +34,7 @@ What works end-to-end today (lexer → parser → checker → lowering → codeg
 - Equality and ordering comparisons (`==`, `!=`, `<`, `<=`, `>`, `>=`) over
   `string` values in the current subset.
 
-Not implemented yet (or not specified as stable):
+Limitations:
 
 - A stable, fully-specified string ABI story across the C boundary beyond what
   is documented in `docs/compiler/abi-libsilk.md`.

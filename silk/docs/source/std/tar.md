@@ -17,7 +17,7 @@ Key goals:
 
 ## Supported tar formats
 
-Implemented subset (reader + writer):
+Supported tar formats:
 
 - POSIX ustar headers (`ustar` magic).
 - Pax extended headers (`x` and `g`) for:
@@ -34,7 +34,7 @@ Entry kinds:
 
 Unsupported/unknown entry kinds return `TarErrorKind::Unsupported`.
 
-## API (Implemented)
+## Exported API
 
 ```silk
 module std::tar;

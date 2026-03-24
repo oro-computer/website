@@ -7,12 +7,11 @@ Silk concurrency is built around:
 - `await` for promises,
 - `yield`/`yield *` for task values.
 
-Canonical spec + implemented subset notes: `docs/language/concurrency.md`.
+Full reference: `docs/language/concurrency.md`.
 
-## Status
+## Notes
 
-- Implemented subset is documented in detail: `docs/language/concurrency.md`
-- End-to-end fixtures: `tests/silk/pass_concurrency_*.slk`
+- Full reference: `docs/language/concurrency.md`
 
 ## Examples
 ### `task` inside `async fn` + `yield *`
@@ -58,5 +57,5 @@ async fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/concurrency.md`
+- Full reference: `docs/language/concurrency.md`
 - `std::task` and `std::sync`: `docs/std/task.md`, `docs/std/sync.md`

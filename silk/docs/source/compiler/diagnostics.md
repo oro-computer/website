@@ -18,7 +18,7 @@ The goal is to provide diagnostics that are:
 - **Source span**: a byte range in the UTF‑8 source buffer (`offset`, `length`).
   - Displayed **line** and **column** numbers are **1-based**.
   - Columns are measured in **UTF‑8 bytes** (matching the lexer’s current `Token.column` behavior).
-- **Primary label**: the main span where the error is reported (single span in the initial implementation).
+- **Primary label**: the main span where the error is reported (single span today).
 - **Note / Help**: supplemental lines that explain context or suggest a fix.
 
 ## Text Format (CLI and ABI)

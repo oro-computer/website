@@ -35,7 +35,7 @@ Semantics:
 - Returns `true` when `expected == (actual as X)` and records no failure.
 - Returns `false` when `expected != (actual as X)` and records a failure.
 
-Note: in the current compiler subset, equality must be supported for the
+Note: equality must be supported for the
 concrete instantiated types used at the call site.
 
 ### `expect_error`

@@ -1,15 +1,13 @@
 # `std::process`
 
-Status: **Work in progress** (hosted POSIX baseline).
-
 `std::process` provides access to process-level operations that are not tied to
 environment variables, such as the current working directory.
 
 This module targets a hosted POSIX baseline (Linux/glibc) and is
 implemented on top of the pluggable `std::runtime::process` interface. WASI
-support is Implemented (see “Platform notes”).
+support is documented in the platform notes below.
 
-## API
+## Exported API
 
 ```silk
 module std::process;

@@ -7,9 +7,9 @@ struct literals.
 This wiki page is a learning-oriented companion to the canonical spec:
 `docs/language/literals-overview.md`.
 
-## Status
+## Notes
 
-- Detailed rules and edge cases: `docs/language/literals-*.md`
+- Full reference: `docs/language/literals-*.md`
 
 ## Syntax
 ```silk

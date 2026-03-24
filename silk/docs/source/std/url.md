@@ -1,6 +1,7 @@
 # `std::url`
 
-Status: **Implemented subset**. `std::url` provides a WHATWG-URL-compatible URL parser and serializer plus `URLSearchParams` behavior (`application/x-www-form-urlencoded`).
+`std::url` provides a WHATWG-URL-compatible URL parser and serializer plus
+`URLSearchParams` behavior (`application/x-www-form-urlencoded`).
 
 This module focuses on:
 

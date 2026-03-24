@@ -12,9 +12,9 @@ Use enums to model:
 If your goal is “a function can fail with one of several error shapes”, prefer
 typed errors (`docs/language/typed-errors.md`) over enums.
 
-## Implementation Status (Current Compiler Subset)
+## Notes
 
-What works end-to-end today (parser → checker → lowering → codegen):
+Supported forms:
 
 - **Enum declarations** with:
   - unit variants (`A`),
@@ -72,7 +72,7 @@ What works end-to-end today (parser → checker → lowering → codegen):
   - the special `constructor` method used by `new Type(...)` is for `struct`
     types; enums do not support `constructor` methods in the current subset.
 
-Not implemented yet (or not yet stable/documented):
+Limitations:
 
 - Guards in enum match arms (`E::A if cond => ...`).
 - A stable ABI story for passing/returning enums across the C99 boundary (do

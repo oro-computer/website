@@ -76,7 +76,7 @@ These are user-facing and expected to stay in sync with the compiler:
 Across the site:
 
 - **Guides** teach the common workflow and give runnable examples.
-- **Reference pages** define the syntax, semantics, and current compiler subset.
+- **Reference pages** define the syntax, semantics, and current compiler behavior.
 - **The spec** describes the full intended language surface, even when implementation is still catching up.
 
 When you need the exact behavior of a feature, prefer the feature page over this summary.

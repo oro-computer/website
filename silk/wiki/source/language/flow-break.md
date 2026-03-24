@@ -2,11 +2,11 @@
 
 `break;` exits the nearest enclosing loop.
 
-Canonical spec: `docs/language/flow-break.md`.
+Full reference: `docs/language/flow-break.md`.
 
-## Status
+## Notes
 
-- Implemented subset + diagnostics: `docs/language/flow-break.md`
+- Full reference: `docs/language/flow-break.md`
 
 ## Syntax
 

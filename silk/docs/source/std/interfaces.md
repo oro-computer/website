@@ -182,27 +182,10 @@ Notes:
   - `std::fs::File` implements `Drop`, `std::fs::Dir` implements
     `Iterator(DirEntryResult)` and `Drop`, and `std::fs::MMap` implements
     `Len`, `IsEmpty`, and `Drop`.
-- Current regression coverage for that protocol story is intentionally split:
-  - `tests/silk/pass_std_interfaces_core_containers.slk` is the focused shared
-    smoke test for in-memory/container protocol surfaces, including
-    representative `for`-loop iterator consumption for both empty and populated
-    slices, bytes, vectors, maps, sets, and the empty `MMap` byte view. Each
-    representative iterator family in that fixture is exercised through both
-    iterator call expressions and iterator value bindings, with the empty and
-    populated checks split across the in-memory/container set.
-  - `tests/silk/pass_std_fs_file_drop_and_helpers.slk` is the stronger
-    end-to-end regression for `std::fs::File as Drop`, including proof that
-    `drop()` actually closes the saved OS file descriptor.
-  - `tests/silk/pass_std_fs_file_drop_basic.slk` is the narrower companion pin
-    for post-drop invalidation and idempotent cleanup on invalid handles.
-  - Compiler-inserted `Drop` glue for `std::fs::File` is covered separately by
-    `tests/silk/pass_drop_scope_exit_file_close.slk`,
-    `tests/silk/pass_drop_overwrite_file_close.slk`,
-    `tests/silk/pass_drop_heap_ref_file_close.slk`, and
-    `tests/silk/pass_drop_overwrite_heap_ref_file_close.slk`.
-  - `tests/silk/pass_std_fs_read_dir_basic.slk` remains the dedicated
-    end-to-end regression for `std::fs::Dir.next()` and real directory-handle
-    iteration.
+- Regression coverage for that protocol story is split between focused
+  in-memory/container coverage and end-to-end filesystem coverage, including
+  explicit checks for `Drop` cleanup, post-drop invalidation, and real
+  directory iteration.
 - Stdlib conversion convention:
   - `Serialize(string)` is reserved for infallible textual views of the
     current value. In practice that means stable, allocation-free borrows such
@@ -226,7 +209,7 @@ Notes:
     - `module my_pkg::build as Builder;` (preferred; `Builder` is in the std prelude)
     - or `module my_pkg::build as std::interfaces::Builder;` (fully qualified)
 
-## Drop semantics (Implemented subset)
+## Drop semantics
 
 `std::interfaces::Drop` is recognized by the compiler as the standard way for a
 type to release resources it owns (file descriptors, heap allocations, OS

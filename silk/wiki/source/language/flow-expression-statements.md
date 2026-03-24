@@ -3,11 +3,11 @@
 Many expressions can appear as standalone statements when followed by `;`
 (assignment, calls, `++`/`--`, and other “statement-like” expressions).
 
-Canonical spec: `docs/language/flow-expression-statements.md`.
+Full reference: `docs/language/flow-expression-statements.md`.
 
-## Status
+## Notes
 
-- Implemented subset + restrictions: `docs/language/flow-expression-statements.md`
+- Full reference: `docs/language/flow-expression-statements.md`
 
 ## Example: assignment + increment
 ```silk

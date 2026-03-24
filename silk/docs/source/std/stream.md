@@ -201,7 +201,7 @@ Each stream has a bounded in-memory queue. The `cap` is expressed in **chunks**
 
 `TransformStream` models a Web Streams-style transform stage.
 
-In the current compiler subset, `std::stream` does **not** attach a transformer
+`std::stream` does **not** attach a transformer
 callback internally. Instead, `TransformStream` exposes two bounded pipes and
 expects you to run the transform loop in a task:
 

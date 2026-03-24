@@ -1,9 +1,5 @@
 # `std::fmt`
 
-The initial formatting engine is implemented
-in `std/fmt.slk` and is intentionally scoped to the current compiler/backend
-subset (no generics, no runtime interface dispatch).
-
 `std::fmt` provides a shared, Zig-`std.fmt`-style format-string syntax and a
 small formatting engine used by `std::io::print` / `std::io::println`.
 
@@ -59,9 +55,9 @@ Within `{ ... }`:
   - optional `.` and optional `precision`:
     - digits (`.3`), or bracketed index (`.[1]`) to take the precision from another argument
 
-## Current API (Implemented)
+## Exported API
 
-Because the language does not yet have generics, the current API uses an
+Because the language does not yet have generics, the API uses an
 explicit argument carrier type (`Arg`). With language-level varargs, the
 formatter now accepts a variable number of arguments (up to the current
 compiler’s varargs limit).

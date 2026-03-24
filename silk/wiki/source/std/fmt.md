@@ -4,12 +4,11 @@
 by string-building helpers. It follows a Zig-`std.fmt`-style format-string
 syntax.
 
-Canonical doc: `docs/std/fmt.md`.
+Full reference: `docs/std/fmt.md`.
 
-## Status
+## Notes
 
-- Implemented subset is available to support `std::io` printing.
-- Details: `docs/std/fmt.md`
+- Full reference: `docs/std/fmt.md`
 
 ## Examples
 

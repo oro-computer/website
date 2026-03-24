@@ -41,7 +41,7 @@ The IR is structured in three main layers:
 Values are referenced by small integer IDs (`ValueId`). IR is not yet in full
 SSA form, but the representation is compatible with an SSA-style design.
 
-### Typed Values (Current Subset)
+### Typed Values
 
 Although the earliest experiments treated all values as untyped 64-bit
 integers, the IR now carries an explicit scalar type for each value so that
@@ -444,7 +444,7 @@ interpreter, and back-ends can evolve in lockstep; the current codebase
 still operates primarily on single-function programs, with calls introduced
 incrementally in tests and then in the compiler’s lowering pipeline.
 
-## Status
+## Notes
 
 - `src/ir.zig` defines the initial IR data structures and minimal operations
   for:

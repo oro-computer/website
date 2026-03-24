@@ -2,7 +2,7 @@
 
 This document specifies the Silk type system used by the compiler front-end and type checker.
 
-Implementation status (current compiler subset):
+Current support:
 
 - Supported end-to-end: primitives, nominal `struct` types, optionals (`T?`),
   `&Struct` references (in function parameter types and as local values
@@ -11,7 +11,7 @@ Implementation status (current compiler subset):
   in the current backend subset (including array literals, indexing reads, and
   iterable `for` loops). Indexed assignment targets (`xs[i] = v`) are supported
   for these element types; compound index ops require numeric scalar element
-  types in the current subset.
+  types.
   - Parameterized nominal types (monomorphized): generic `struct` and
     `interface` declarations with **type parameters**, plus applied types in
     type positions (`Name(u8)`, `Name(string)`) for those declarations.
@@ -106,7 +106,7 @@ The core categories are:
     expected (see `docs/language/optional.md`).
 - Reference (borrow): `&T`
   - Examples: `&User`.
-  - Notes: reference type; in the current subset, `&Struct` may appear in
+  - Notes: reference type; `&Struct` may appear in
     parameter types and as local values when produced by `new` or by calls that
     return `&Struct`. Mutability follows the `mut` borrow contract and per-call
     aliasing rules described in `docs/language/mutability.md`.
@@ -117,9 +117,8 @@ The core categories are:
     type lowers to a fixed scalar slot sequence in the current scalar-slot
     memory model (for example primitive scalars, `string`, and supported
     `regexp`, supported non-opaque structs, and enums). See `docs/language/structs-impls-layout.md` for the
-    current scalar-slot memory model. In the current subset, fixed array
-    lengths are limited to `N <= 4096`. Indexing `xs[i]` traps when `i` is out
-    of bounds in the current subset.
+    current scalar-slot memory model. Fixed array lengths are limited to
+    `N <= 4096`. Indexing `xs[i]` traps when `i` is out of bounds.
 - Range: `range`
   - Examples: `let r: range = 0..4;`, `let r2: range = (1..) + 2;`.
   - Notes: an `int`-indexed range value used for slicing and other index-based
@@ -138,8 +137,7 @@ The core categories are:
 - Function Types: `fn(params) -> R`
   - Examples: `fn(i32) -> i32`.
   - Notes: function types are part of the type grammar and function-typed
-    values are supported as function values (including capturing closures) in
-    the current compiler subset.
+    values are supported as function values (including capturing closures).
     Concurrency disciplines (`task` / `async`) are implemented on function
     *declarations* (see `docs/language/concurrency.md`); function types in type
     positions do not currently include discipline modifiers.
@@ -175,7 +173,7 @@ type pure fn PureIntAdder = fn(int, int) -> int;
 export type struct PublicBar = Foo;
 ```
 
-Semantics (current compiler subset):
+Semantics:
 
 - A type alias introduces a new name for an existing type; it does **not**
   introduce a distinct nominal type.
@@ -197,9 +195,9 @@ Import/export:
 - `type` aliases may be exported (`export type ...;`) and imported as type names
   via named file imports (see `docs/language/packages-imports-exports.md`).
 
-## Implicit Call-Argument Coercions (Current Subset)
+## Implicit Call-Argument Coercions
 
-In the current compiler subset, Silk supports a small, **opt-in** implicit
+Silk supports a small, **opt-in** implicit
 coercion mechanism for function call arguments. This exists to keep the
 current standard library ergonomic while generics and richer overload
 systems are still evolving.
@@ -304,7 +302,7 @@ This is intentionally a *stack* construction mechanism:
 - and the temporary’s lifetime is the duration of the call (similar to how C++
   binds temporaries to `const&` parameters).
 
-Eligibility requirements (current subset):
+Eligibility requirements:
 
 - The parameter must be `&T` (not `mut &T`).
 - The destination type `T` must provide a visible `constructor` overload with:
@@ -368,7 +366,7 @@ For structured conversions, it also supports `std::interfaces::Deserialize(S)`
 by lowering `expr as T` to `T.deserialize(expr)` when the target type provides
 a matching static `deserialize` method.
 
-The supported conversions and semantics for the current compiler subset are
+The supported conversions and semantics are
 specified in `docs/language/operators.md` (“Casts (`as`)”).
 
 Notes:
@@ -385,7 +383,7 @@ The compiler must:
 
 - Treat nominal types as distinct even if their field layout is identical.
 - In the full language design, support parameterized types in all contexts
-  where the spec permits them. In the current compiler subset, **type-parameter**
+  where the spec permits them. In the current compiler, **type-parameter**
   generics are supported for nominal declarations (`struct` / `interface`) and
   for applied types in type positions (`Name(u8)`).
   - Const parameters and integer-literal type arguments (`Name(N: int)`,
@@ -447,7 +445,7 @@ Current implementation notes:
 
 ## Function Types and Closures (Implementation Status)
 
-The current compiler subset:
+Current behavior:
 
 - Parses function types in type positions (most notably for `ext` declarations).
 - Implements function expressions (lambdas) in expression positions:
@@ -485,7 +483,7 @@ The current compiler subset:
   implemented. Function types in type positions do not currently include
   discipline modifiers.
 
-### C Function Pointers (`c_fn`) (Implemented Subset)
+### C Function Pointers (`c_fn`)
 
 Silk distinguishes between:
 
@@ -495,7 +493,7 @@ Silk distinguishes between:
 `c_fn` is intended for FFI: it is a safe, storable representation for passing
 callbacks to foreign code.
 
-Rules (current subset):
+Rules:
 
 - A `c_fn` value may be formed only from:
   - a top-level function name, or

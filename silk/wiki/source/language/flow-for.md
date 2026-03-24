@@ -7,11 +7,11 @@
 - iterator values (`for x in it { ... }` when `it.next() -> T?`),
 - and C-style headers (`for (init; cond; step) { ... }`).
 
-Canonical spec: `docs/language/flow-for.md`.
+Full reference: `docs/language/flow-for.md`.
 
-## Status
+## Notes
 
-- Implemented subset + current limitations: `docs/language/flow-for.md`
+- Full reference: `docs/language/flow-for.md`
 
 ## Syntax
 ```silk

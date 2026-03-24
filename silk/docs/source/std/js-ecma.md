@@ -180,7 +180,7 @@ ext silk_js_string_utf8_write = fn (u64, u64, u64, i64) -> i64;
 
 Notes:
 
-- In the current compiler subset, passing a Silk `string` to `ext` lowers as a
+- Passing a Silk `string` to `ext` lowers as a
   NUL-terminated `const char *`. Therefore `silk_js_string_utf8` expects UTF‑8
   without embedded NUL bytes.
 - The `*_write` function copies **raw UTF‑8 bytes** (no NUL terminator) into the

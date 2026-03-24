@@ -95,7 +95,7 @@ When the imported method’s signature depends on `Self` (for example
 across distinct struct types requires that the underlying layouts are
 compatible.
 
-In the current compiler subset, a pair of non-opaque, non-`error` structs are
+In the current compiler, a pair of non-opaque, non-`error` structs are
 considered compatible when they have the same number of fields and the same
 field types in the same order (field names do not matter).
 
@@ -106,7 +106,7 @@ This layout rule applies equally to immutable and mutable borrows: importing
 methods with `mut self: &Self` (or other `mut &Self` parameters) is permitted
 when the source and target layouts are compatible.
 
-## Current Subset Limitations
+## Current Boundaries
 
 - `using` does not accept `public` / `private` modifiers yet (imported methods
   inherit the source method’s visibility).

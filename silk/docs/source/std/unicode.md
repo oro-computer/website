@@ -7,7 +7,7 @@ This module provides practical Unicode helpers focused on:
 
 The core `char` type in Silk is a Unicode scalar value (see `docs/language/types.md`).
 
-## API (Implemented)
+## Exported API
 
 ```silk
 module std::unicode;

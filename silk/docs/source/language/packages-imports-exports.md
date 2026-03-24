@@ -1,12 +1,12 @@
 # Packages, Imports, and Exports
 
-This document specifies the initial surface syntax for packages, imports, and
-exports in Silk. The semantics are intentionally minimal for now and will be
-extended as the compiler’s resolver and linker mature.
+This document specifies the package, module, import, and export surface used by
+Silk projects. The current resolver is intentionally explicit and strict so the
+resulting module graph is predictable.
 
-## Implementation Status (Current Compiler Subset)
+## Notes
 
-Implemented:
+Supported forms:
 
 - `package <path>;` declarations (with the module ordering rules below).
 - `module <path>;` declarations (mutually exclusive with `package`) including
@@ -37,7 +37,7 @@ Implemented:
   providing a body (satisfied by link-time definitions from other Silk sources
   and/or `.o`/`.a` inputs).
 
-Not implemented yet:
+Limitations:
 
 - Package-import aliasing (for example `import std::strings as str;`).
 - Bulk re-exports (“export from ...”) and forwarding of export surfaces.
@@ -153,7 +153,7 @@ export module inner_module {
 }
 ```
 
-Rules (current compiler subset):
+Rules:
 
 - Inline modules MUST appear at top level (not inside function blocks).
 - The inline module name is a single identifier.
@@ -164,7 +164,7 @@ Rules (current compiler subset):
 - Declarations inside an inline module are referenced from outside using `::`
   qualification (`inner_module::hello()`).
 - Within an inline module body, unqualified name lookup for inline-module
-  declarations is not implemented yet in the current compiler subset; use
+  declarations is not implemented yet; use
   explicit `::` qualification.
 - `export module Name { ... }` exports the namespace:
   - exported declarations inside it become part of the containing package’s
@@ -238,11 +238,11 @@ Rules:
       code generation subset (supported parameters/results, direct calls, and
       structured control flow supported by the IR→ELF backend on
       `linux/x86_64`),
-  - struct type names (`struct` declarations) from imported packages are visible in the importing module for the current supported `struct` subset:
+  - struct type names (`struct` declarations) from imported packages are visible in the importing module for supported struct declarations:
     - the qualified form `pkg::Struct` is always accepted when `pkg` is imported,
     - the unqualified form `Struct` is accepted when it is unambiguous across the module’s imports and does not conflict with a locally defined struct name,
     - when multiple imported packages define the same struct name, the unqualified form is rejected as ambiguous and the qualified form must be used,
-  - enum type names (`enum` declarations) from imported packages are visible in the importing module for the current supported enum subset:
+  - enum type names (`enum` declarations) from imported packages are visible in the importing module for supported enum declarations:
     - the qualified form `pkg::Enum` is always accepted when `pkg` is imported,
     - the unqualified form `Enum` is accepted when it is unambiguous across the module’s imports and does not conflict with a locally defined type name,
     - enum variants are referenced relative to the enum name (`Enum::Variant` or `pkg::Enum::Variant`),
@@ -285,7 +285,7 @@ Semantics:
 `import { Name } from "...";` remains the preferred form when you need to rename
 imports (`as`) or import from a file path.
 
-Global namespace (`::name`) rules (current compiler subset):
+Global namespace (`::name`) rules:
 
 - The global namespace is the package formed by modules that have **no**
   `package ...;` or header-form `module ...;` declaration (their package name is
@@ -402,7 +402,7 @@ An import specifier string is interpreted in one of three ways:
 - **Package specifier**: any other string. These imports resolve to a package
   by name (for example `"ui"` or `"std::strings"`).
 
-Note: in the current compiler subset, package specifiers are matched literally
+Note: package specifiers are matched literally
 against package names present in the module set. In practice this means the
 specifier must be a valid Silk package path (identifiers separated by `::`,
 with `task` permitted as a `::` segment).
@@ -631,7 +631,7 @@ Rules:
 - `export` is not allowed inside blocks; it applies only to module-level
   declarations. Inside `impl` blocks, `public` controls method visibility and
   `export` is reserved for static members.
-- The current compiler subset supports `export` on:
+- The current compiler supports `export` on:
   - functions (`export fn ...`), including a declaration-only prototype form
     (`export fn name(...) -> T;`) used for header-style interface modules,
   - `let` and `const` bindings (`export let ...`, `export const ...`).
@@ -729,7 +729,7 @@ export { my_function };
 This is the idiomatic way to build “barrel” modules that forward selected
 exports from other modules.
 
-Rules (current compiler subset):
+Rules:
 
 - A re-export declaration must appear at top level and ends with `;`.
 - Each entry in the `{ ... }` list names a **local** in-scope symbol.
@@ -739,7 +739,7 @@ Rules (current compiler subset):
 - Currently, `export { ... }` supports values and exported
   Formal Silk theories (`theory` declarations). It does not export type names.
 
-## Status and Future Work
+## Notes
 
 Silk’s package/import/export surface is designed to make dependencies explicit
 and keep boundaries obvious.

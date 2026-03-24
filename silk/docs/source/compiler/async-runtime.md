@@ -1,8 +1,6 @@
 # Async Runtime (Hosted)
 
-Status: **Bring-up implementation (linux/x86_64 hosted)**.
-
-This document now serves two roles:
+This document serves two roles:
 
 - Describe the **current shipped hosted async runtime** used by the compiler today.
 - Specify the longer-term architecture (compiler coroutine transform + richer event loop)

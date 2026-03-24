@@ -15,7 +15,7 @@ The compiler must:
 - Enforce exhaustiveness rules (where specified).
 - Type check each arm and compute a consistent result type.
 
-## Surface Syntax (Initial Implemented Subset)
+## Surface Syntax
 
 The full language design includes rich pattern matching, guards, and matching
 over many scrutinee types. The current compiler implementation supports only a
@@ -46,7 +46,7 @@ Notes:
 
 ### Optional Matching (`T?`)
 
-For optionals, the implemented subset is:
+For optionals:
 
 - The scrutinee expression must have optional type `T?` (`Option(T)`), where `T`
   is a payload type supported by the current backend subset.
@@ -71,7 +71,7 @@ fn main () -> int {
 }
 ```
 
-### Integer Matching (Primitive Integers) (Implemented Subset)
+### Integer Matching (Primitive Integers)
 
 The compiler also supports a small `match` subset for integer-like primitive
 scrutinees.
@@ -101,7 +101,7 @@ fn main () -> int {
 }
 ```
 
-### Enum Matching (`enum`) (Implemented Subset)
+### Enum Matching (`enum`)
 
 The language design supports matching over user-defined `enum` types
 (`docs/language/enums.md`).
@@ -123,7 +123,7 @@ Implemented initial subset:
   - or a final wildcard `_` arm covers every remaining unmatched variant,
   - and if `_` is used, it may appear at most once and must be the final arm.
 
-### Type Union Matching (`T1 | T2 | ...`) (Implemented Subset)
+### Type Union Matching (`T1 | T2 | ...`)
 
 The language supports matching over **type unions** (`docs/language/type-unions.md`).
 
@@ -177,12 +177,12 @@ An optional trailing semicolon is permitted after the closing brace:
 match (x) { _ => { } };
 ```
 
-In the current compiler subset, the statement form is supported for:
+The statement form is supported for:
 
 - ordinary value matching (no typed-error contract), and
 - typed error handling (`docs/language/typed-errors.md`).
 
-### Ordinary value matching (implemented subset)
+### Ordinary value matching
 
 When the scrutinee expression is an ordinary value (it does *not* have a typed
 error contract), the statement form supports the same scrutinee + pattern
@@ -270,7 +270,7 @@ Note: the compiler also allows the `match` statement form to destructure
 recoverable `Result`-style values. This form does not trigger the Terminal Arm
 Rule because it is not a `T | ...` typed-error expression.
 
-### Result Matching (`Ok(...)` / `Err(...)`) (Implemented Subset)
+### Result Matching (`Ok(...)` / `Err(...)`)
 
 The `match` expression also supports a small subset for
 recoverable “success or error” values. In the initial subset, this includes:

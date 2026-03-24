@@ -9,7 +9,7 @@ See also:
 - `docs/std/networking.md` (`std::net` sockets)
 - RFC 6455: The WebSocket Protocol (wire format + handshake)
 
-## Overview
+## Description
 
 `std::websocket` is a protocol layer that upgrades an HTTP/1.1 connection to a
 WebSocket and then sends/receives WebSocket frames.
@@ -32,7 +32,7 @@ Non-goals (for now):
 - TLS (`wss://`) integration (use `std::tls` + a future adapter layer).
 - Per-message compression (RSV1 / `permessage-deflate`).
 
-## Public API (Current Compiler Subset)
+## Exported API
 
 ```silk
 module std::websocket;

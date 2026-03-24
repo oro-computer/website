@@ -5,12 +5,11 @@
 - `HashMap(K, V)` (unordered, hash table),
 - `TreeMap(K, V)` (ordered, red-black tree).
 
-Canonical doc: `docs/std/map.md`.
+Full reference: `docs/std/map.md`.
 
-## Status
+## Notes
 
-- Implemented subset: usable in the current compiler subset with documented limits.
-- Details: `docs/std/map.md`
+- Full reference: `docs/std/map.md`
 
 ## Importing
 

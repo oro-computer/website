@@ -200,7 +200,7 @@ Implemented runtime areas in the shipped stdlib:
     default heap allocation unless an embedder installs an allocator via
     `silk_rt_set_allocator`.
 
-Follow-ups are expected to introduce additional runtime areas:
+Additional runtime areas:
 
 - Async event loop / executor integration (`std::runtime::event_loop`) for hosted `async`/`await`:
   - the compiler already ships a bundled bring-up executor in `libsilk_rt`

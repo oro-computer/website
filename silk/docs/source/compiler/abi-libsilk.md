@@ -195,7 +195,7 @@ The initial C header provided in the Silk compiler repository defines:
   auto-loaded `import std::...;` modules.
 
   `silk_compiler_set_target` selects the code generation target. The
-  `target_triple` string is copied. The initial implementation recognizes the
+  `target_triple` string is copied. The current implementation recognizes the
   same targets as the CLI (`silk build --list-targets`), including:
 
   - `linux-x86_64` (default), and common `x86_64-*-linux-*` triples such as

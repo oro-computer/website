@@ -8,7 +8,7 @@ The initial surface focuses on:
 - stable, strict parsing from `string` to numeric types, and
 - formatting numeric values into owned `std::strings::String` outputs.
 
-## API (Implemented)
+## Exported API
 
 ### Parsing
 

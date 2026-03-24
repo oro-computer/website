@@ -7,9 +7,9 @@ Boolean literals are the two built-in logical values:
 
 They have type `bool` (`docs/language/types.md`).
 
-## Implementation Status (Current Compiler Subset)
+## Supported forms
 
-What works end-to-end today (lexer → parser → checker → lowering → codegen):
+Includes:
 
 - `true` / `false` literal tokens.
 - `bool` variables, parameters, and return values.

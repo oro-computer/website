@@ -5,12 +5,11 @@
 - `SetMap(T)` (unordered set, open addressing),
 - `TreeSet(T)` (ordered set, red-black tree).
 
-Canonical doc: `docs/std/set.md`.
+Full reference: `docs/std/set.md`.
 
-## Status
+## Notes
 
-- Implemented subset: usable in the current compiler subset with documented limits.
-- Details: `docs/std/set.md`
+- Full reference: `docs/std/set.md`
 
 ## Importing
 

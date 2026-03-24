@@ -4,7 +4,7 @@ Formal Silk is Silk’s compile-time formal verification language. It is written
 using syntax that does not exist at runtime and is discharged at compile time
 using the Z3 SMT solver.
 
-Status: **implemented subset (Z3-backed)**.
+Formal Silk is available today as a Z3-backed verification surface.
 
 When Formal Silk syntax is present, compilation generates verification
 conditions (VCs), proves them with Z3, and fails the build if any VC cannot be
@@ -281,9 +281,9 @@ Rules:
 - After a `#assert` succeeds, the asserted expression is assumed to hold for
   the remainder of the block (so later proofs may rely on it).
 
-## Implementation Status (Current Compiler Subset)
+## Supported verification surface
 
-Implemented end-to-end (Z3-backed, current subset):
+Includes:
 
 - The verifier runs only when Formal Silk syntax is present.
 - `#require` / `#assure`:
@@ -354,7 +354,7 @@ A **theory** is a reusable, parameterized block of Formal Silk directives that
 can be applied at points inside a function body to assert properties about the
 current symbolic state.
 
-### Syntax (implemented subset)
+### Syntax
 
 Declaration form (top-level):
 
@@ -425,7 +425,7 @@ Notes:
   statements; calling a theory with normal call syntax (`Name(...)`) is a
   compile-time error.
 
-### Prefix `#require` / `#assure` on theories (implemented subset)
+### Prefix `#require` / `#assure` on theories
 
 For ergonomics, a `theory` declaration may be preceded by `#require` and/or
 `#assure` directives:
@@ -440,7 +440,7 @@ export theory ensure_nonnegative_x (x: int) {
 These prefix directives are treated as if they were written at the beginning of
 the theory body.
 
-### Theories as function contracts (implemented subset)
+### Theories as function contracts
 
 A function may attach one or more theories as part of its Formal Silk contract
 surface by placing `#theory Name(args...);` directives in the function-spec
@@ -466,7 +466,7 @@ Contract-theory attachments:
 - are not permitted before a top-level `theory` declaration (only `#require` /
   `#assure` may prefix a theory declaration).
 
-### Importing theories (implemented subset)
+### Importing theories
 
 Exported theories may be imported via JS-style named imports and then applied
 via `#theory` use statements.

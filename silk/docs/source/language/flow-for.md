@@ -3,20 +3,7 @@
 The `for` loop iterates over a range or iterable and executes a block once per
 element.
 
-Status: **Implemented subset**: integer range iteration (`start..end` and
-`start..=end`), array/slice iteration (`for x in xs { ... }` for `T[N]` and
-`T[]`), iterator iteration (`for x in it { ... }` when `it.next() -> T?`), and
-C-style `for (init; condition; step) { ... }` loops.
-
-## Goals
-
-- Provide a readable, structured loop construct for iteration.
-- Avoid “off-by-one” patterns by making range boundaries explicit.
-- Integrate with `break` / `continue`.
-- Integrate with future iteration protocols (interfaces/generics) without
-  introducing hidden allocation.
-
-## Surface Syntax (Current Subset)
+## Surface Syntax
 
 Supported surface forms:
 
@@ -34,16 +21,15 @@ for (<init>; <condition>; <step>) {
 
 Notes:
 
-- `<pattern>` is intended to be a pattern binder. In early implementations it
-  is restricted to a single identifier (and `_`). It will be expanded alongside
-  pattern matching.
+- `<pattern>` is intended to be a pattern binder. For now it is restricted to a
+  single identifier (and `_`).
 - `<iterable>` is an expression.
 - `<init>` is a local binding (`let` / `var` / `const`) with an initializer.
 - `<condition>` is a boolean expression.
 - `<step>` is a statement-like expression (the same restricted subset as
   expression statements; see `docs/language/flow-expression-statements.md`).
 
-## Semantics (Planned)
+## Semantics
 
 General rules:
 
@@ -51,17 +37,17 @@ General rules:
 - The loop body executes once per produced element.
 - `break` exits the loop; `continue` advances to the next element.
 
-### Range iteration (Planned)
+### Range iteration
 
 When the iterable is a range expression (for example `start..end` or
 `start..=end`), the loop iterates over integer values.
 
-Design intent:
+Rules:
 
 - `start..end` iterates `start, start+1, ..., end-1` (end-exclusive).
 - `start..=end` iterates `start, start+1, ..., end` (end-inclusive).
 
-Implemented subset notes:
+Notes:
 
 - The range bounds are evaluated once, left-to-right (`start` then `end`).
 - If the start bound is greater than or equal to the end bound (`start >= end`)
@@ -71,10 +57,10 @@ Implemented subset notes:
 - `continue` advances to the next element (it performs the increment step, then
   re-checks the range condition).
 - The loop binder is in scope only inside the loop body block.
-- The binder is immutable in the current subset (it behaves like a `let`
+- The binder is immutable (it behaves like a `let`
   binding that is updated by the loop machinery; user code cannot assign to it).
 
-Type checking (implemented subset):
+Type checking:
 
 - Both range bounds must have integer type (`int`, `i8`/`u8`, `i16`/`u16`,
   `i32`/`u32`, `i64`/`u64`).
@@ -98,15 +84,15 @@ fn main () -> int {
 }
 ```
 
-### Array and slice iteration (Implemented subset)
+### Array and slice iteration
 
-In the current compiler subset, `for` also supports iterating over builtin
+`for` also supports iterating over builtin
 array and slice types:
 
 - fixed arrays `T[N]`,
 - slices `T[]`.
 
-Semantics (implemented subset):
+Semantics:
 
 - The iterable expression is evaluated once.
 - The loop executes in increasing index order, starting at index `0`.
@@ -136,7 +122,7 @@ fn main () -> int {
 }
 ```
 
-### Iterator protocol (Implemented subset)
+### Iterator protocol
 
 In addition to builtin arrays and slices, `for` supports iterating over a
 stateful iterator value.
@@ -144,7 +130,7 @@ stateful iterator value.
 An expression `it` is treated as an iterator when it has a `next() -> T?`
 instance method (typically by implementing `std::interfaces::Iterator(T)`).
 
-Semantics (implemented subset):
+Semantics:
 
 - The iterable expression is evaluated once to produce the iterator value.
 - The loop repeatedly calls `it.next()`.
@@ -153,7 +139,7 @@ Semantics (implemented subset):
     `value` (a copy) for that iteration and the body executes.
 - `continue` advances by calling `next()` again; `break` exits the loop.
 
-## C-style `for` loops (Implemented subset)
+## C-style `for` loops
 
 Silk also supports the traditional “C-style” `for` loop:
 
@@ -170,7 +156,7 @@ fn main () -> int {
 }
 ```
 
-Semantics (implemented subset):
+Semantics:
 
 - `<init>` executes exactly once before the first condition check.
 - `<condition>` is checked before each iteration; if it is `false`, the loop
@@ -185,15 +171,15 @@ Semantics (implemented subset):
 - The init binding’s name is in scope within the entire loop (condition, step,
   and body) but is not visible after the loop.
 
-Init binding mutability (implemented subset):
+Init binding mutability:
 
 - For ergonomics, `for (let i = 0; ...; ++i)` is accepted and the init binding
   is treated as mutable (equivalent to `var`) within the loop.
   - `const` init bindings remain immutable.
 
-## Guidance (Current Compiler Subset)
+## Guidance
 
-In the current compiler subset, `for` supports integer ranges and builtin
+`for` supports integer ranges and builtin
 array/slice iteration. To write other loops today, use `while`:
 
 ```silk

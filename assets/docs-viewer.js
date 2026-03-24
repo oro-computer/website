@@ -265,6 +265,7 @@
       /(STATUS\.md|PLAN\.md|docs\/wiki\/style-guide\.md|_template-[^`\\s]+|style-guide\.md|README\.md)/;
     const statusLine = /^(Status:|Implementation status:)\s*/i;
     const isSpec = String(currentFile || "").startsWith("spec/");
+    const isLanguageDoc = String(currentFile || "").startsWith("language/");
     const testsHeading = /^(#{1,6})\s+Tests\b/i;
 
     function rewriteStatusLine(line) {
@@ -359,10 +360,19 @@
 
       // Replace status-only headings with neutral labels.
       out = out.replace(
+        /^(\s*#{1,6}\s+)Status(?:\s+and\s+Future\s+Work)?(?:\s*\([^)]*\))?\s*$/i,
+        "$1Notes"
+      );
+      out = out.replace(
         /^(\s*#{1,6}\s+)(?:Current\s+|Initial\s+)?Implemented\s+Subset\s*$/i,
         "$1Details"
       );
       out = out.replace(/^(\s*#{1,6}\s+)Implemented\s*$/i, "$1Details");
+      out = out.replace(/^(\s*#{1,6}\s+)Current API(?:\s*\([^)]*\))?\s*$/i, "$1Exported API");
+      out = out.replace(
+        /^(\s*#{1,6}\s+)API\s*\((?:current|selected|implemented[^)]*|initial[^)]*)\)\s*$/i,
+        "$1Exported API"
+      );
       out = out.replace(/^(\s*#{1,6}\s+)Implemented\s+API\b/i, "$1API");
       // Drop "Implemented:" label prefixes in prose/lists.
       out = out.replace(/^(\s*[-*+]\s+)Implemented\s*:\s*/i, "$1");
@@ -379,9 +389,14 @@
       out = out.replace(/\(\s*\)/g, "");
 
       if (kind === "wiki") {
+        out = out.replace(/^(\s*#{1,6}\s+)Status\s*$/i, "$1Notes");
+        out = out.replace(
+          /^(\s*)Canonical (?:doc|spec|design doc):\s*/i,
+          "$1Full reference: "
+        );
         out = out.replace(
           /^(\s*(?:[-*+]\s+)?)Canonical (?:doc|spec|design doc):\s*/i,
-          "$1Canonical docs: "
+          "$1Full reference: "
         );
         out = out.replace(
           /^(\s*(?:[-*+]\s+)?)Details:\s*/i,
@@ -389,6 +404,22 @@
         );
         out = out.replace(
           /^(\s*(?:[-*+]\s+)?)Implemented subset (?:is documented in detail|is documented|notes|details|rules|syntax notes|tests|diagnostics|restrictions):\s*/i,
+          "$1Full reference: "
+        );
+        out = out.replace(
+          /^(\s*(?:[-*+]\s+)?)Implemented subset \+ [^:]+:\s*/i,
+          "$1Full reference: "
+        );
+        out = out.replace(
+          /^(\s*(?:[-*+]\s+)?)Implemented-subset details(?: and current limitations)?:\s*/i,
+          "$1Full reference: "
+        );
+        out = out.replace(
+          /^(\s*(?:[-*+]\s+)?)Current supported(?: forms and restrictions| `ext` subset \+ ABI notes)?:\s*/i,
+          "$1Full reference: "
+        );
+        out = out.replace(
+          /^(\s*(?:[-*+]\s+)?)Syntax \+ conformance checking:\s*/i,
           "$1Full reference: "
         );
       }
@@ -410,6 +441,8 @@
     let inCode = false;
     let codeLang = null;
     let skipLevel = null;
+    let skipRepoFixtureList = false;
+    let skipWikiFixtureBullets = false;
 
     for (let line of lines) {
       const trimmed = line.trimStart();
@@ -443,6 +476,66 @@
       }
 
       if (skipLevel !== null) continue;
+
+      if (!inCode && kind === "wiki" && skipWikiFixtureBullets) {
+        if (
+          /^\s*$/.test(line) ||
+          /^\s*[-*+]\s+`tests\/silk\/[^`]+`\s*$/.test(line)
+        ) {
+          continue;
+        }
+        skipWikiFixtureBullets = false;
+      }
+
+      if (!inCode && skipRepoFixtureList) {
+        if (
+          /^\s*$/.test(line) ||
+          /^\s*[-*+]\s+`(?:tests|examples|c-tests|src|include|vendor|std)\/[^`]+`\s*$/.test(line)
+        ) {
+          continue;
+        }
+        skipRepoFixtureList = false;
+      }
+
+      if (!inCode && isLanguageDoc) {
+        if (/^\s*Examples that exercise the implemented subset:\s*$/i.test(line)) {
+          skipRepoFixtureList = true;
+          continue;
+        }
+        line = line.replace(
+          /^(\s*#{1,6}\s+)Implementation Status(?:\s*\([^)]*\))?\s*$/i,
+          "$1Notes"
+        );
+        line = line.replace(
+          /^(\s*#{1,6}\s+)Current behavior\s*$/i,
+          "$1Supported forms"
+        );
+        line = line.replace(/^\s*Implemented end-to-end:\s*$/i, "Supported forms:");
+        line = line.replace(/^\s*Not implemented yet:\s*$/i, "Limitations:");
+      }
+
+      if (!inCode && kind === "wiki") {
+        if (/^\s*[-*+]\s+End-to-end fixtures:\s*$/i.test(line)) {
+          skipWikiFixtureBullets = true;
+          continue;
+        }
+        if (
+          /^\s*[-*+]\s+(?:End-to-end fixture(?:s)?|Fixtures|Enum fixtures|Optional-related fixtures)(?:\s*\([^)]*\))?:\s*`tests\/silk\/[^`]+`\s*$/i.test(line)
+        ) {
+          continue;
+        }
+        line = line.replace(
+          /^(\s*[-*+]\s+)Use `tests\/silk\/pass_\*\.slk` for runnable examples\.\s*$/i,
+          "$1Use the canonical docs for runnable examples."
+        );
+      }
+
+      if (
+        !inCode &&
+        /^\s*[-*+]\s+`tests\/silk\/[^`]+`(?:\s*\([^)]*\))?\s*$/i.test(line)
+      ) {
+        continue;
+      }
 
       if (!inCode && statusLine.test(line)) {
         const rewritten = rewriteStatusLine(line);

@@ -17,7 +17,7 @@ expr;
 
 ## Current implementation restrictions
 
-For the current compiler subset, an expression statement is only valid when
+An expression statement is currently valid only when
 the expression is either:
 
 - a call expression (a function call), or

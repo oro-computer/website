@@ -73,12 +73,9 @@ Therefore:
 
 This intentionally limits verification across the `ext` boundary.
 
-## Implementation Status (Current Compiler)
+## Notes
 
-Status: the current compiler subset implements this feature under the `ext`
-keyword. The docs treat `ext` as canonical.
-
-Currently supported:
+Supported forms:
 
 - parsing `ext` external declarations and representing them in the AST,
 - optional external symbol aliases (`ext local "extern" = ...;`),
@@ -93,7 +90,7 @@ Currently supported:
     - a non-capturing `fn (...) -> ...` expression,
   - capturing closures (and arbitrary function-typed locals) are rejected for
     `ext` function-pointer parameters in the current subset,
-- `c_fn (...) -> R` types as explicit C callback pointers (implemented subset):
+- `c_fn (...) -> R` types as explicit C callback pointers:
   - `c_fn` is a code-pointer-only function pointer type intended for FFI,
   - unlike `fn (...) -> R` function values, `c_fn (...) -> R` values do not carry a
     closure environment and are safe to store in locals/struct fields and pass

@@ -1,9 +1,5 @@
 # `std::strings`
 
-A small but growing subset is
-implemented in `std/strings.slk` to support early toolchain bring-up; the rest
-of this document describes the intended long-term API.
-
 This module provides string utilities and abstractions built on top of the core
 `string` type (UTF-8 bytes) and the `Buffer(T)` intrinsic.
 
@@ -14,10 +10,9 @@ See also:
 - `docs/language/buffers.md` (Buffer(T) as the low-level backing store)
 - `docs/std/conventions.md` (UTF-8, allocation, and error conventions)
 
-## Current API (Implemented)
+## Exported API
 
-The following functions exist today in `std/strings.slk` and are available to
-import:
+The following functions are available in `std/strings.slk`:
 
 ```silk
 module std::strings;
@@ -45,9 +40,9 @@ Notes:
 
 - These are simple wrappers over the language’s built-in string comparisons and
   optional-coalesce operator (`??`), chosen because they are implementable in
-  the current compiler subset.
-- This surface will grow alongside language/runtime features
-  required for richer string operations (slicing, iteration, allocation, etc.).
+  the current compiler.
+- Additional text-processing helpers are documented in the canonical std docs
+  as they are added.
 
 In addition, a low-level `StringBuilder` type exists today for
 incremental byte construction:

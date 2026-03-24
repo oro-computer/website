@@ -1,13 +1,13 @@
 # External declarations (`ext`)
 
-`ext` declares foreign symbols so Silk code can call C (or wasm imports)
+`ext` declares foreign symbols so Silk code can call C (or wasm imports) and
 access foreign variables.
 
-Canonical spec: `docs/language/ext.md`.
+Full reference: `docs/language/ext.md`.
 
-## Status
+## Notes
 
-- Current supported `ext` subset + ABI notes: `docs/language/ext.md`
+- Full reference: `docs/language/ext.md`
 - Embedding ABI contract: `docs/compiler/abi-libsilk.md`
 
 ## Syntax

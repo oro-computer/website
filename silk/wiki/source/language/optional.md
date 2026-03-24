@@ -8,11 +8,11 @@ Optionals represent “maybe a value” without sentinel `null`s.
 - Use `??` (coalescing), `?.` (optional field access), and `match` to consume
   optionals.
 
-Canonical spec: `docs/language/optional.md`.
+Full reference: `docs/language/optional.md`.
 
-## Status
+## Notes
 
-- Implemented subset + backend payload limits: `docs/language/optional.md`
+- Full reference: `docs/language/optional.md`
 
 ## Syntax
 ```silk
@@ -63,6 +63,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/optional.md`
+- Full reference: `docs/language/optional.md`
 - `match` expressions: `docs/language/flow-match.md`
-- Optional-related fixtures: `tests/silk/pass_optional_*.slk`

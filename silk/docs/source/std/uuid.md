@@ -1,8 +1,8 @@
 # `std::uuid`
 
-Status: **Implemented subset**. `std::uuid` provides a robust UUID/ULID-like
-identifier primitive with full support for UUID versions **1, 3, 4, 5, 6, 7,
-and 8** (RFC 4122 + RFC 9562 family).
+`std::uuid` provides a robust UUID/ULID-like identifier primitive with full
+support for UUID versions **1, 3, 4, 5, 6, 7, and 8** (RFC 4122 + RFC 9562
+family).
 
 ## Exported API
 

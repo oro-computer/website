@@ -11,9 +11,9 @@ Use `char` for:
 
 If you need multiple characters, use `string` literals (`docs/language/literals-string.md`).
 
-## Implementation Status (Current Compiler Subset)
+## Supported forms
 
-What works end-to-end today (lexer → parser → checker → lowering → codegen):
+Includes:
 
 - UTF-8 character literals like `'x'`, `'é'`, and `'😀'` (exactly one Unicode
   scalar, encoded in UTF-8 in the source file).
@@ -25,7 +25,7 @@ What works end-to-end today (lexer → parser → checker → lowering → codeg
 - Equality and inequality comparisons (`==`, `!=`) over `char` values.
 - `char` values are lowered as a `u32` scalar in the current IR backend subset.
 
-Not implemented yet (or not specified as stable):
+Limitations:
 
 - A dedicated diagnostic for invalid character literal spellings (most invalid
   forms currently surface as generic “unsupported expression” errors in the

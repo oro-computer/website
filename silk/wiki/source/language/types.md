@@ -6,9 +6,9 @@ types and first-class user-defined types (`struct`, `enum`, `interface`).
 This wiki page is a learning-oriented companion to the canonical spec:
 `docs/language/types.md`.
 
-## Status
+## Notes
 
-- Implemented-subset details and current limitations: `docs/language/types.md`
+- Full reference: `docs/language/types.md`
 
 ## Common Type Forms
 

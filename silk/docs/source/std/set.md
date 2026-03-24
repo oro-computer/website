@@ -5,10 +5,8 @@
 - `SetMap(T)` — an unordered set backed by an open-addressing hash table.
 - `TreeSet(T)` — an ordered set backed by a red-black tree.
 
-The API is specified here; it
-targets the current compiler/backend subset and will grow as the language gains
-first-class move/Drop semantics for values stored inside heap-backed data
-structures.
+The API is specified here. It is designed to expand alongside richer move/Drop
+semantics for values stored inside heap-backed data structures.
 
 ## Design Goals
 
@@ -19,11 +17,11 @@ structures.
 - Make allocation behavior explicit and compatible with regions (`with`) and
   `--noheap`.
 - Keep terminology and operation shapes close to C++ (`std::unordered_set` and
-  `std::set`), adapted to Silk’s current method/optional model.
+  `std::set`), adapted to Silk’s method/optional model.
 
-## Important Limitations (Current Compiler Subset)
+## Important Limitations
 
-In the current subset:
+Today:
 
 - `SetMap(T)` and `TreeSet(T)` store elements by value, but do not automatically
   run `Drop` for stored elements when entries are removed.

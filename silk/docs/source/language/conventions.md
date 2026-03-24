@@ -20,7 +20,7 @@ Concept documents should be structured so readers can answer, quickly:
 Recommended sections:
 
 1. **One-paragraph summary**
-2. **Implementation status** (if the concept is partially implemented)
+2. **Notes** or **Supported forms** (when the page needs to call out active boundaries)
 3. **Surface syntax**
 4. **Semantics** (evaluation order, scoping, control-flow behavior)
 5. **Type checking rules** (static requirements and diagnostics)
@@ -34,10 +34,10 @@ Recommended sections:
 Not every concept needs every section, but the goal is that a reader should
 never have to infer critical rules from examples.
 
-## “Implementation status” Format
+## Notes / Supported Forms
 
-When a feature is not fully implemented end-to-end, the concept doc should
-include an explicit “Implementation status” section near the top.
+When a feature needs boundary notes, the concept doc should use a neutral
+section name such as `Notes` or `Supported forms` near the top.
 
 Use concrete statements, not vague language. Prefer describing support in
 these layers:
@@ -82,7 +82,7 @@ These terms are used consistently across the spec:
 - **Block**: `{ stmt* }`, a scope boundary and the unit of structured control
   flow. (Whether blocks are also expressions depends on the concept; docs must
   be explicit.)
-- **Implemented subset**: the set of features that parse, type-check, and
+- **Supported surface**: the set of features that parse, type-check, and
   code-generate end-to-end in the compiler.
 
 ## Cross-References

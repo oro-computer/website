@@ -7,9 +7,9 @@ The regex literal syntax is modeled after JavaScript:
 
 - `/pattern/flags`
 
-## Implementation Status (Current Compiler Subset)
+## Supported forms
 
-What is intended to work end-to-end (lexer → parser → checker → lowering → codegen):
+Includes:
 
 - Regex literal parsing in expression-start positions: `/pattern/flags`.
 - Compile-time compilation during type checking:

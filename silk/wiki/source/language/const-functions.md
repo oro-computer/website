@@ -19,7 +19,7 @@ fn main () -> int {
 }
 ```
 
-## Notes (Current Subset)
+## Notes
 
 - Const functions are intended for `const` initializer evaluation.
 - Const functions are compile-time-only: they are not callable from runtime

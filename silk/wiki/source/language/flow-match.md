@@ -8,13 +8,13 @@ Currently:
 - `match <enum> { E::V => expr, ... }` is supported in a restricted exhaustive subset,
 - typed-error handling uses a separate `match (expr) { ... }` statement form (see typed errors).
 
-Canonical spec: `docs/language/flow-match.md`.
+Full reference: `docs/language/flow-match.md`.
 
-## Status
+## Notes
 
-- Implemented subset + tests: `docs/language/flow-match.md`
+- Full reference: `docs/language/flow-match.md`
 
-## Syntax (Current match-expression subset)
+## Syntax
 
 ```silk
 match value {
@@ -55,6 +55,6 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/flow-match.md`
+- Full reference: `docs/language/flow-match.md`
 - Enums: `docs/language/enums.md`
 - Typed errors (match statement): `docs/language/typed-errors.md`

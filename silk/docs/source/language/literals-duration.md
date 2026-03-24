@@ -2,7 +2,7 @@
 
 The `Duration` and `Instant` types have specialized literal support.
 
-## Syntax (Implemented Subset)
+## Syntax
 
 Duration literals are written as a decimal integer or decimal float immediately
 followed by a unit suffix:

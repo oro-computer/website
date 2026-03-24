@@ -2,7 +2,7 @@
 
 This document specifies Silk’s intended borrow-checking model for references.
 
-Status: **partially implemented**. The current compiler subset implements:
+Silk currently implements:
 
 - call-scoped alias checks for mutable borrows (including slice range borrows),
 - lexical lifetime checks for slice and reference borrows (no escaping borrows
@@ -10,7 +10,7 @@ Status: **partially implemented**. The current compiler subset implements:
 - and a small explicit ownership-transfer form (`move`) used by the checker and
   lowering to prevent accidental double-drops in the safe subset.
 
-## Goals
+## Principles
 
 - Prevent use-after-free and data races in safe code.
 - Make mutation explicit and intentional.
@@ -19,9 +19,9 @@ Status: **partially implemented**. The current compiler subset implements:
 - Keep diagnostics actionable (highlight the borrow origin, conflicting use,
   and suggest a fix).
 
-## Current Implemented Subset
+## Supported forms
 
-Today, the language subset implemented by the compiler supports only:
+Silk currently supports:
 
 - call-scoped borrow alias checks for:
   - borrowed reference parameters (`&T`, `mut p: &T`), and
@@ -51,7 +51,7 @@ positions that matter most for day-to-day code:
 - and whole-value returns / assignments that are checked against lexical escape
   rules even when the borrowed view is carried through an aggregate.
 
-## Lexical Lifetimes (Implemented Subset)
+## Lexical Lifetimes
 
 Slices (`T[]`) are non-owning views. Slice range borrows create slices that
 point into existing storage:
@@ -62,7 +62,7 @@ point into existing storage:
 - When borrowing a range from an existing slice binding `s: T[]`, the borrow’s
   underlying origin is `s`’s origin (sub-slicing does not extend lifetime).
 
-Lexical lifetime rules enforced by the current compiler subset:
+Lexical lifetime rules enforced by the compiler:
 
 - A slice value that ultimately borrows from a **local fixed array binding**
   (`T[N]`) may not escape that binding’s lexical scope.
@@ -81,7 +81,7 @@ Lexical lifetime rules enforced by the current compiler subset:
 These rules are intentionally conservative, but they are the complete lexical
 lifetime model for the currently supported language subset.
 
-## Lexical Reference Lifetimes (Implemented Subset)
+## Lexical Reference Lifetimes
 
 Borrowed `&T` values that ultimately reference **stack storage** may not escape
 that storage’s lexical scope. This includes:
@@ -102,9 +102,9 @@ refer to any caller-owned input borrow that reaches the return expression
 through the supported control-flow forms. If any path introduces a local stack
 or fixed-array origin, the lexical escape check still rejects the return.
 
-## Local Mutation While Borrowed (Implemented Subset)
+## Local Mutation While Borrowed
 
-The current compiler subset also rejects direct mutation of ordinary local
+The compiler also rejects direct mutation of ordinary local
 storage while a borrow of that same storage remains live.
 
 This applies to:
@@ -126,7 +126,7 @@ This rule is intentionally local-storage-specific. Borrowed access to
 caller-owned or external-handle storage is governed by the existing boundary
 rules instead.
 
-## Borrow-Carrying Wrappers and Conservative Control Flow (Implemented Subset)
+## Borrow-Carrying Wrappers and Conservative Control Flow
 
 The current checker also preserves borrow identity through a small set of
 wrapper and control-flow forms:
@@ -168,7 +168,7 @@ wrapper and control-flow forms:
 When a borrowed control-flow expression could refer to multiple distinct local
 origins, the current subset rejects it with `E2122` instead of guessing.
 
-## Boundary Safety (Implemented Subset)
+## Boundary Safety
 
 The current compiler also enforces conservative rules at boundaries where a
 borrowed view could outlive the storage it refers to.
@@ -253,7 +253,7 @@ At `ext` boundaries, the same borrowed-view restriction applies:
 This keeps Silk’s borrow rules out of the C ABI and avoids exposing non-stable
 borrowed layouts to foreign code.
 
-## Ownership Transfer (`move`) (Implemented Subset)
+## Ownership Transfer (`move`)
 
 Silk’s safe subset includes a small explicit ownership-transfer form:
 

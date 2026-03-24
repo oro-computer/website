@@ -1,10 +1,9 @@
 # Silk Package Distribution
 
-Status: **Current supported package-distribution model**. The manifest, CLI,
-install, inspection/linting, and binary-dependency consumption behavior
-described here are implemented in the current toolchain. This document
-describes the package authoring, publication, and consumption model Silk uses
-today.
+This document describes the package authoring, publication, and consumption
+model Silk uses today. The manifest, CLI, install, inspection/linting, and
+binary-dependency consumption behavior described here are implemented in the
+current toolchain.
 
 ## Summary
 

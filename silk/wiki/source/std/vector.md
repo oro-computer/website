@@ -3,12 +3,11 @@
 `std::vector` provides a generic, growable owning container `Vector(T)` used
 widely throughout `std::`.
 
-Canonical doc: `docs/std/vector.md`.
+Full reference: `docs/std/vector.md`.
 
-## Status
+## Notes
 
-- Implemented subset + design: a usable subset is implemented in `std/vector.slk`.
-- Details: `docs/std/vector.md`
+- Full reference: `docs/std/vector.md`
 
 ## Importing
 

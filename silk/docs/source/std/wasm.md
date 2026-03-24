@@ -43,7 +43,7 @@ Imported functions are dispatched through a single host callback:
 - `Imports.func_call: HostCall`
 
 `HostCall` uses a scalar-only calling convention so it can be stored as a
-first-class value and passed around in the current compiler subset:
+first-class value and passed around in the current compiler:
 
 ```silk
 type fn HostCall = fn (import_index: i64,

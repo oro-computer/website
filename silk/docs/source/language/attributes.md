@@ -15,11 +15,9 @@ Values may be:
 - strings (`"..."` or raw string literals)
 - identifiers (treated as a string value, e.g. `abi=c`)
 
-## Implementation status
+## Notes
 
-Status: **in progress**.
-
-Implemented in the current compiler subset:
+Supported forms:
 
 - `attr(...)` as a prefix annotation on declarations and statements.
 - `attr(...)` as a compile-time query expression of type `bool`.
@@ -45,7 +43,7 @@ Implemented in the current compiler subset:
   - `attr(task=thread)` / `attr(task="thread")` forces a dedicated OS thread
     for each call instead of the default task-pool schedule.
 
-Not yet fully implemented:
+Limitations:
 
 - Objective-C / FFM / WASI-component / other ABI selectors beyond the initial
   `abi=c` support.
@@ -123,7 +121,7 @@ and do not exist as runtime calls.
 
 ## Built-in attribute keys (current subset)
 
-The current compiler subset recognizes the following keys in queries and
+The current compiler recognizes the following keys in queries and
 conditional compilation contexts:
 
 - `arch`: `"x86_64"`, `"aarch64"`, or `"wasm32"`
@@ -201,7 +199,7 @@ the pool does not deadlock itself.
 
 Features are named build-time toggles intended for conditional compilation.
 
-In the current compiler subset, features may be enabled from:
+Features may be enabled from:
 
 - the CLI (`--feature` / `-F`), and
 - package manifests (`silk.toml`):

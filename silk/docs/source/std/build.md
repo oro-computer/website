@@ -1,7 +1,5 @@
 # `std::build`
 
-Status: **Implemented subset** (manifest builder + step graph).
-
 `std::build` provides helper APIs for writing Silk build modules (`build.slk`).
 Build modules are executed by the `silk` CLI (see `docs/compiler/build-scripts.md`)
 and must produce a TOML v1.0 package manifest in the `silk.toml` format.
@@ -58,7 +56,7 @@ as direct manifest/CLI builds:
 - otherwise Silk falls back to compiling the header itself as a C translation
   unit.
 
-## API (current)
+## Exported API
 
 Build modules are intended to be normal modules that export a `run` entrypoint.
 

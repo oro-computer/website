@@ -1,10 +1,9 @@
 # `std::crypto`
 
-Status: **Implemented subset**. `std::crypto` provides cryptographic
-primitives backed by the system `libsodium` library on the hosted
-`linux/x86_64` baseline.
+`std::crypto` provides cryptographic primitives backed by the system
+`libsodium` library on the hosted `linux/x86_64` baseline.
 
-The design goals continue to be:
+Design goals:
 
 - a cohesive, ergonomic `std::crypto` API surface that is suitable for Silk
   programs,

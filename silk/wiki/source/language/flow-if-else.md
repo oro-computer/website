@@ -2,15 +2,15 @@
 
 Use `if` / `else` for boolean branching.
 
-In the current compiler subset, `if` is a statement that chooses which block
+`if` is a statement that chooses which block
 executes. The broader language design includes expression-oriented forms; see
 the canonical spec for details.
 
-Canonical spec: `docs/language/flow-if-else.md`.
+Full reference: `docs/language/flow-if-else.md`.
 
-## Status
+## Notes
 
-- Implemented subset + tests: `docs/language/flow-if-else.md`
+- Full reference: `docs/language/flow-if-else.md`
 
 ## Syntax
 
@@ -54,5 +54,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/flow-if-else.md`
+- Full reference: `docs/language/flow-if-else.md`
 - `match` (expression): `docs/language/flow-match.md`

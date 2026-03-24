@@ -27,7 +27,7 @@ Rule: values created without `new` are stack values by default.
   copy.
 - Lifetime is lexical (ends when the scope ends).
 
-This aligns with the current compiler subset, which is value-oriented and does
+This aligns with the current compiler, which is value-oriented and does
 not implement a general heap allocation model.
 
 ### Heap allocation (`new`) and boxed values
@@ -116,7 +116,7 @@ fn main () -> int {
 
 ## Destructors (`Drop`)
 
-In the current compiler subset, Silk supports deterministic cleanup for
+Silk supports deterministic cleanup for
 resource-owning `struct` values via `std::interfaces::Drop`.
 
 A `struct` type is considered “droppable” when it provides a method with this
@@ -166,7 +166,7 @@ The precise syntax for “heap-copy this value” is still under design; any
 proposed surface form must be written down in [Grammar](?p=language/grammar)
 before it is implemented.
 
-## Closure Captures (Implemented Subset)
+## Closure Captures
 
 Silk supports capturing closures as a subset of function values.
 

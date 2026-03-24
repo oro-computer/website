@@ -12,12 +12,11 @@ intended to provide **structured concurrency**.
 - The compiler is intended to enforce task-safety rules when values cross task
   boundaries (Send/Sync-like constraints).
 
-## Implementation Status (Current Compiler)
+## Supported forms
 
-This document describes the **language design** for concurrency and the subset
-implemented by the compiler/runtime today.
+This page documents the shipped concurrency surface and its active boundaries.
 
-### Implemented Subset
+### Core surface
 
 - Parsing of `task fn`, `async fn`, and `async task fn` / `task async fn`.
 - Parsing of `yield <expr>` and `yield * <expr>` (see `yield` below).
@@ -104,12 +103,12 @@ implemented by the compiler/runtime today.
     supports patterns like `Task(Promise(T))` (for tasks that produce promises)
     and `await * yield * t` for `t: Task(Promise(T))`.
 
-### Thread Safety and Sharing (Current Subset)
+### Thread safety and sharing
 
 `task` concurrency runs on OS threads. Crossing a task boundary is therefore a
 thread-crossing operation.
 
-In the current compiler subset:
+Current compiler behavior:
 
 - Passing values into a `task fn` is **by value**. For ownership-tracked values
   (for example `Drop` types and `Task(T)` / `Promise(T)` handles), this is a
@@ -194,7 +193,7 @@ must be synchronized by the program.
 
 `await <expr>` is the surface syntax for unwrapping a `Promise(T)` handle.
 
-In the current compiler subset:
+Current compiler behavior:
 
 - `await Promise(T)` unwraps the completed promise and yields `T`.
 - `await Promise(Task(T))` yields `Task(T)` (which can then be consumed via `yield` / `yield *`).
@@ -203,7 +202,7 @@ In the current compiler subset:
   fixed-array storage at the suspension point; end such borrows before
   awaiting.
 
-#### Typed Errors Across Async Calls (Current Subset)
+#### Typed Errors Across Async Calls
 
 Typed-error handling composes with async calls in the current subset, but the
 fallible operation remains the **async call site** rather than the `await`
@@ -244,9 +243,9 @@ match (open_value()) {
 }
 ```
 
-#### Task/Promise Handle Ownership (Current Subset)
+#### Task/Promise Handle Ownership
 
-In the current compiler subset, `Task(T)` and `Promise(T)` are **single-use
+`Task(T)` and `Promise(T)` are **single-use
 handles**:
 
 - A `Promise(T)` handle may be **awaited at most once**. `await` consumes the handle.
@@ -259,7 +258,7 @@ handles**:
   passed through consuming call positions, and moved into collections that
   accept move-only element values.
 - Direct `Task(T)` / `Promise(T)` storage in struct or enum fields is not yet
-  part of the current supported subset.
+  part of the supported surface.
 - A consumed handle may not be used again (including attempting to `await` it a
   second time, or attempting to `yield *` it a second time).
 - Consuming a handle that was created outside the current loop body is rejected
@@ -269,9 +268,9 @@ These rules are enforced at compile time and exist to prevent double-free and
 use-after-free bugs in the current runtime lowering, where `await` frees the
 underlying handle storage after join/unwrap.
 
-#### Handle Lifetime and Cleanup (Current Subset)
+#### Handle Lifetime and Cleanup
 
-In the current compiler subset, `Task(T)` and `Promise(T)` handles are stored in
+`Task(T)` and `Promise(T)` handles are stored in
 heap-allocated handle memory:
 
 - `await` unwraps a promise and then frees the promise handle storage.
@@ -311,7 +310,7 @@ In the intended model for tasks:
   right-hand task to the enclosing task’s receiver and then joins/cleans up the
   drained task.
 
-In the current compiler subset:
+Current compiler behavior:
 
 - `yield` is a blocking OS-thread operation (like the rest of the current
   concurrency runtime).
@@ -321,7 +320,7 @@ In the current compiler subset:
   require an enclosing task function (`task fn` / `async task fn`), since they
   send values to the task’s receiver.
 
-#### Collected Array Ownership (Current Subset)
+#### Collected Array Ownership
 
 In the current subset, `yield *` and `await *` produce a heap-allocated
 collection of values (`T[]`) for convenience. This is a current behavior:
@@ -336,7 +335,7 @@ collection of values (`T[]`) for convenience. This is a current behavior:
 `async { ... }`, `task { ... }`, `async loop { ... }`, and `task loop { ... }`
 introduce surface syntax for structured regions.
 
-In the current compiler subset, these forms remain lexical scopes, but they are
+These forms remain lexical scopes, but they are
 runtime-backed for live-handle cleanup:
 
 - live `Promise(T)` bindings are awaited/destroyed on scope exit,

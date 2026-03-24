@@ -520,7 +520,7 @@ conversions:
   - The `deserialize` method must be infallible (no typed errors).
   - Purity rules apply: inside `pure fn`, the `deserialize` method must be `pure`.
 
-Examples (implemented subset):
+Examples:
 
 ```silk
 struct Data {

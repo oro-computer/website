@@ -4,11 +4,11 @@ Interfaces declare method signatures that types (or modules) can conform to via
 `impl ... as ...` (or `module ... as ...`). This is the basis for protocol-like
 surfaces such as iterators and Drop.
 
-Canonical spec: `docs/language/interfaces.md`.
+Full reference: `docs/language/interfaces.md`.
 
-## Status
+## Notes
 
-- Syntax + conformance checking: `docs/language/interfaces.md`
+- Full reference: `docs/language/interfaces.md`
 - Dynamic dispatch (trait objects/vtables): not implemented yet
 
 ## Syntax

@@ -3,12 +3,11 @@
 Regions provide a fixed-size, statically allocated backing store that can be
 used as an allocation context for `new`.
 
-Canonical spec: `docs/language/regions.md`.
+Full reference: `docs/language/regions.md`.
 
-## Status
+## Notes
 
-- Implemented subset + current limitations: `docs/language/regions.md`
-- End-to-end fixtures: `tests/silk/pass_region_*.slk`
+- Full reference: `docs/language/regions.md`
 
 ## Syntax
 ```silk
@@ -37,6 +36,6 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/regions.md`
+- Full reference: `docs/language/regions.md`
 - Memory model and `new`: `docs/wiki/language/memory-model.md`
 - `--noheap` and `std::runtime::mem`: `docs/std/runtime.md`

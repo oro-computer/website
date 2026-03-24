@@ -1,14 +1,13 @@
 # `std::crypto`
 
-`std::crypto` provides cryptography primitives (hosted baseline via libsodium
-in the current design).
+`std::crypto` provides cryptography primitives on the hosted baseline via
+libsodium.
 
-Canonical doc: `docs/std/crypto.md`.
+Full reference: `docs/std/crypto.md`.
 
-## Status
+## Notes
 
-- Implemented subset + design: core libsodium-backed primitives are implemented on the hosted baseline.
-- Details: `docs/std/crypto.md`
+- Full reference: `docs/std/crypto.md`
 
 ## Importing
 
@@ -154,7 +153,4 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/crypto.md`
-- End-to-end fixtures:
-  - `tests/silk/pass_std_crypto_libsodium_basic.slk`
-  - `tests/silk/pass_std_crypto_aead_basic.slk`
+- Full reference: `docs/std/crypto.md`

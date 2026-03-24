@@ -10,9 +10,9 @@ At a high level:
 - Heap allocation is introduced via `new`, producing `&Struct` references.
 - `with` regions can redirect `new` allocations away from the heap (see regions).
 
-## Status
+## Notes
 
-- Canonical spec + implementation notes: `docs/language/memory-model.md`
+- Full reference: `docs/language/memory-model.md`
 
 ## Example: `new` + reference field access
 ```silk

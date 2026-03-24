@@ -81,14 +81,14 @@ interface FancyLogger extends BaseLogger {
 }
 ```
 
-Semantics (implemented subset):
+Semantics:
 
 - An interface that `extends` another interface inherits all of the base
   interface’s method signatures.
 - A conformance declaration (`impl T as I` or `module ... as I`) must satisfy
   the full inherited interface surface.
 
-Rules (implemented subset):
+Rules:
 
 - `extends` is permitted only on `interface` declarations.
 - Only single inheritance is permitted (at most one `extends` base).
@@ -141,7 +141,7 @@ Compiler requirements:
   - impl methods that satisfy an interface requirement may omit `public`, but
   - they may not be explicitly marked `private`.
 
-Conformance rules (initial implementation):
+Conformance rules:
 
 - For an `interface I { fn m(p0: T0, ...) -> R; }`, the corresponding impl must
   provide a method `m` whose signature matches after accounting for the
@@ -150,7 +150,7 @@ Conformance rules (initial implementation):
     `mut self: &Type`), and
     - the remaining parameters, including whether the final parameter is
       varargs, and the result type must match the interface method.
-- Exception (static protocol, implemented subset):
+- Exception (static protocol):
   - `std::interfaces::Deserialize(S)` and `std::interfaces::Parse(E, S)` are
     receiverless static protocols. Their conformance does **not** use a
     receiver parameter:
@@ -220,7 +220,7 @@ Conformance rules:
   - `export async task fn m (...) -> R` is treated as `m(...) -> Promise(Task(R))`.
   This allows module interfaces to express async/task entrypoints by writing the
   appropriate handle type in the interface method result.
-- In the current compiler subset, module conformance is checked against the
+- Module conformance is checked against the
   module’s **exported** functions (written as `export fn ...`), since those are
   the module members that are visible across module boundaries.
 
@@ -231,10 +231,10 @@ Generic module conformance:
 - All interface type arguments must be fully specified (modules do not bind
   their own type parameters).
 
-## Dispatch model (status)
+## Dispatch model
 
-Status: **Syntax + conformance checking**. Dynamic interface dispatch (trait
-objects / vtables) is part of the language design, but is not implemented yet.
+Silk currently supports syntax and conformance checking. Dynamic interface
+dispatch (trait objects / vtables) remains outside the shipped runtime surface.
 
 For the initial compiler/backend subset, interface use is limited to:
 

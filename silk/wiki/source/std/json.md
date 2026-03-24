@@ -1,14 +1,12 @@
 # `std::json`
 
-`std::json` provides JSON parsing and stringifying (initial implementation + expanded
-subset).
+`std::json` provides JSON parsing and stringifying.
 
-Canonical doc: `docs/std/json.md`.
+Full reference: `docs/std/json.md`.
 
-## Status
+## Notes
 
-- Implemented subset + design: parsing and stringify are implemented; the DOM/query surface is still evolving.
-- Details: `docs/std/json.md`
+- Full reference: `docs/std/json.md`
 
 ## Importing
 
@@ -17,7 +15,7 @@ import std::json;
 import std::strings;
 ```
 
-## API (selected)
+## Exported API
 
 - `Document.parse(input: string) -> std::json::ParseResult` (borrowed views into `input`)
 - `Document.parse_owned(input: string) -> std::json::ParseResult` (owned copies)
@@ -112,5 +110,4 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/json.md`
-- End-to-end fixture: `tests/silk/pass_std_json_basic.slk`
+- Full reference: `docs/std/json.md`

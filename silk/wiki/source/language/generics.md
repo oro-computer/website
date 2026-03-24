@@ -4,11 +4,11 @@ Silk generics are compile-time and monomorphized: each applied type like
 `Vector(int)` produces a concrete instantiation at build time (no runtime type
 parameters).
 
-Canonical spec: `docs/language/generics.md`.
+Full reference: `docs/language/generics.md`.
 
-## Status
+## Notes
 
-- Current supported forms and restrictions: `docs/language/generics.md`
+- Full reference: `docs/language/generics.md`
 
 ## Syntax
 ```silk

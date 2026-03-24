@@ -21,19 +21,17 @@ Key points:
   - Layer 2: compile-time safety via the verifier.
   - Layer 3: provable safety via Formal Silk (contracts, invariants, and struct requirements).
 
-Compiler requirements:
+## Role in the language
 
 - Treat `Buffer(T)` as an intrinsic type with special semantics.
 - Ensure the verifier has enough information to reason about buffer safety.
 - Coordinate with the standard library so that safe collections are built on top of `Buffer(T)`.
 
-## Implementation Status (Current Compiler)
+## Notes
 
-The full generic intrinsic `Buffer(T)` surface is part of the language design
-but is not yet implemented end-to-end in the compiler and runtime.
-
-To support early stdlib bring-up in the current compiler subset, the Silk compiler repository
-provides a minimal buffer surface in `std::`:
+Silk defines `Buffer(T)` as the low-level storage primitive for contiguous
+memory. In practice, downstream code currently uses the concrete `std::buffer`
+and `std::vector` surfaces below:
 
 - `std::vector::Vector(T)` provides growable, contiguous storage for scalar
   element types.
@@ -45,9 +43,8 @@ provides a minimal buffer surface in `std::`:
 - Raw allocation and low-level memory intrinsics remain confined to
   `std::runtime::mem`.
 
-As the compiler/runtime grows, the intrinsic `Buffer(T)` surface described in
-this document is expected to become the lowest-level building block under
-typed collections, with verifier-friendly contracts layered above it.
+This keeps raw allocation details in runtime helpers while higher-level
+collections remain explicit in the standard library.
 
 ## Practical Today: `std::buffer` and `std::vector`
 

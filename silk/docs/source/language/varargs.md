@@ -83,7 +83,7 @@ while i < args.len {
 }
 ```
 
-## Representation (Current Compiler Subset)
+## Representation
 
 In the current compiler/backend subset, a varargs parameter is lowered as a
 fixed-size **pack value** with:

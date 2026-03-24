@@ -2,11 +2,11 @@
 
 Blocks (`{ ... }`) group statements and introduce a new scope.
 
-Canonical spec: `docs/language/flow-blocks-statements.md`.
+Full reference: `docs/language/flow-blocks-statements.md`.
 
-## Status
+## Notes
 
-- Implemented subset + syntax notes: `docs/language/flow-blocks-statements.md`
+- Full reference: `docs/language/flow-blocks-statements.md`
 
 ## Example: scope boundaries
 ```silk

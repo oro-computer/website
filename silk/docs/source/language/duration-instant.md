@@ -22,7 +22,7 @@ In the current compiler/backend subset:
 These are distinct Silk types in the type system, but share the same underlying
 scalar representation (`i64`) at the IR and native ABI layers.
 
-## Operators (Implemented Subset)
+## Operators
 
 Supported operator subset:
 
@@ -40,14 +40,14 @@ Supported operator subset:
   - `Instant` vs `Instant`
 
 Other arithmetic (`*`, `/`, `%`) and bitwise operators are not defined for time
-types in the implemented subset.
+types in this section.
 
 ## Overflow (Implemented)
 
 Arithmetic uses the same deterministic wrapping behavior as the underlying
 `i64` operations in the current back-end subset (two’s complement wraparound).
 
-## Future Work
+## Remaining Boundaries
 
 At maturity, this document will be expanded to fully specify:
 

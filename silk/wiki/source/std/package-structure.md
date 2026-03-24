@@ -3,12 +3,11 @@
 This page describes how `std::` modules are organized and how the compiler
 finds and links them (including std-root selection and archive wiring).
 
-Canonical doc: `docs/std/package-structure.md`.
+Full reference: `docs/std/package-structure.md`.
 
-## Status
+## Notes
 
-- Design + initial implementation: std-root resolution and `std::...` import mapping are implemented.
-- Details: `docs/std/package-structure.md`
+- Full reference: `docs/std/package-structure.md`
 
 ## How `std::` resolves
 

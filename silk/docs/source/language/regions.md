@@ -6,11 +6,9 @@ be used as an allocation context for `new`.
 Regions are represented at runtime as a first-class `Region` handle value. A
 `Region` value may be passed to functions, stored in structs, and exported.
 
-## Implementation Status (Current Compiler)
+## Notes
 
-Status: **in progress**.
-
-Implemented subset:
+Supported forms:
 
 - Parsing and type-checking of:
   - `const region <name>: u8[N];`
@@ -30,7 +28,7 @@ Implemented subset:
   `std::runtime::mem::alloc` allocate from the active region (8-byte aligned).
 - Region allocation overflow traps at runtime.
 
-Limitations (current subset):
+Limitations:
 
 - The region backing store is currently restricted to `u8[N]` (a fixed-size
   byte array type annotation).
@@ -222,7 +220,7 @@ with a {
 }
 ```
 
-## Reclaiming Region Memory (Current Subset)
+## Reclaiming Region Memory
 
 Regions are bump allocators: each allocation advances a cursor within the
 backing byte buffer.
