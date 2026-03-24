@@ -1,6 +1,12 @@
 # Hello world
 
-This guide builds a minimal Oro Runtime app: a `src/` folder + an `oro.toml`, then runs it with `oroc`.
+This guide builds a small Oro Runtime app that does three things immediately:
+
+- renders ordinary HTML in the main window,
+- opens a second native window through `oro:application`,
+- raises a desktop notification through `oro:notification`.
+
+That makes the first example useful as a product demo, not just a smoke test.
 
 ## 1) Create the files
 
@@ -12,6 +18,7 @@ hello/
   copy-map.toml
   src/
     index.html
+    peer.html
     main.js
 ```
 
@@ -35,6 +42,7 @@ Copy-maps define what files become part of your app bundle:
 
 ```toml
 "./src/index.html" = "index.html"
+"./src/peer.html" = "peer.html"
 "./src/main.js" = "main.js"
 ```
 
@@ -52,11 +60,28 @@ See: [copy_map](?p=config/copy-map).
   <title>Hello · Oro Runtime</title>
 
   <main>
-    <h1>Hello</h1>
-    <p id="status">Starting…</p>
+    <h1>Oro Runtime</h1>
+    <p id="status">Starting native runtime demo…</p>
+    <button id="open-peer" type="button">Open peer window</button>
   </main>
 
   <script type="module" src="./main.js"></script>
+</html>
+```
+
+`src/peer.html`:
+
+```html
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Peer window · Oro Runtime</title>
+
+  <main>
+    <h1>Second native window</h1>
+    <p>This window was created with <code>oro:application</code>.</p>
+  </main>
 </html>
 ```
 
@@ -64,12 +89,39 @@ See: [copy_map](?p=config/copy-map).
 
 ```js
 import application from 'oro:application'
+import { showNotification } from 'oro:notification'
 
 const status = document.getElementById('status')
-status.textContent = `isOroRuntime: ${globalThis.isOroRuntime === true}`
+const openPeer = document.getElementById('open-peer')
+const currentWindow = await application.getCurrentWindow()
 
-application.getScreenSize().then(({ width, height }) => {
-  status.textContent += ` · screen: ${width}×${height}`
+const { width, height } = await application.getScreenSize()
+await currentWindow.setTitle(`Oro Runtime · ${width}×${height}`)
+
+status.textContent = [
+  `isOroRuntime=${globalThis.isOroRuntime === true}`,
+  `runtime=${application.runtimeVersion}`,
+  `screen=${width}×${height}`,
+].join(' · ')
+
+openPeer.addEventListener('click', async () => {
+  const peer = await application.getWindow(1, { max: false })
+
+  if (peer) {
+    await peer.focus()
+  } else {
+    await application.createWindow({
+      index: 1,
+      path: 'peer.html',
+      title: 'Peer window',
+      width: 420,
+      height: 320,
+    })
+  }
+
+  await showNotification('Hello from Oro Runtime', {
+    body: 'Opened a second native window from web code.',
+  })
 })
 ```
 
@@ -86,6 +138,13 @@ oroc run .
 ```bash
 oroc build .
 ```
+
+What this example proves in one pass:
+
+- the runtime is hosting ordinary HTML and ES modules,
+- `oro:application` can inspect and control native windows,
+- `oro:notification` reaches the host notification system,
+- a bundled app can span more than one native window without changing the web programming model.
 
 ## Optional: run a single HTML file
 

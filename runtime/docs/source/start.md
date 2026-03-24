@@ -30,7 +30,7 @@ For AI assistants and LLM tooling:
 - Whole-site pack: [`llms.txt`](../../llms.txt)
 - Runtime docs pack: [`runtime/llms.txt`](../llms.txt)
 
-## A minimal “hello world”
+## A native “hello world”
 
 Project layout:
 
@@ -40,6 +40,7 @@ hello/
   copy-map.toml
   src/
     index.html
+    peer.html
     main.js
 ```
 
@@ -59,6 +60,7 @@ copy_map = "copy-map.toml"
 
 ```toml
 "./src/index.html" = "index.html"
+"./src/peer.html" = "peer.html"
 "./src/main.js" = "main.js"
 ```
 
@@ -72,11 +74,28 @@ copy_map = "copy-map.toml"
   <title>Hello · Oro Runtime</title>
 
   <main>
-    <h1>Hello</h1>
-    <p id="status">Starting…</p>
+    <h1>Oro Runtime</h1>
+    <p id="status">Starting native runtime demo…</p>
+    <button id="open-peer" type="button">Open peer window</button>
   </main>
 
   <script type="module" src="./main.js"></script>
+</html>
+```
+
+`src/peer.html`:
+
+```html
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Peer window · Oro Runtime</title>
+
+  <main>
+    <h1>Second native window</h1>
+    <p>This window was created with <code>oro:application</code>.</p>
+  </main>
 </html>
 ```
 
@@ -84,12 +103,39 @@ copy_map = "copy-map.toml"
 
 ```js
 import application from 'oro:application'
+import { showNotification } from 'oro:notification'
 
 const status = document.getElementById('status')
-status.textContent = `isOroRuntime: ${globalThis.isOroRuntime === true}`
+const openPeer = document.getElementById('open-peer')
+const currentWindow = await application.getCurrentWindow()
 
-application.getScreenSize().then(({ width, height }) => {
-  status.textContent += ` · screen: ${width}×${height}`
+const { width, height } = await application.getScreenSize()
+await currentWindow.setTitle(`Oro Runtime · ${width}×${height}`)
+
+status.textContent = [
+  `isOroRuntime=${globalThis.isOroRuntime === true}`,
+  `runtime=${application.runtimeVersion}`,
+  `screen=${width}×${height}`,
+].join(' · ')
+
+openPeer.addEventListener('click', async () => {
+  const peer = await application.getWindow(1, { max: false })
+
+  if (peer) {
+    await peer.focus()
+  } else {
+    await application.createWindow({
+      index: 1,
+      path: 'peer.html',
+      title: 'Peer window',
+      width: 420,
+      height: 320,
+    })
+  }
+
+  await showNotification('Hello from Oro Runtime', {
+    body: 'Opened a second native window from web code.',
+  })
 })
 ```
 
