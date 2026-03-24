@@ -11,8 +11,8 @@ import application from 'oro:application'
 
 await application.createWindow({
   index: 1,
-  path: 'peer.html',
-  title: 'Peer window',
+  path: 'details.html',
+  title: 'Details window',
 })
 ```
 
@@ -23,7 +23,7 @@ The `path` must resolve inside your bundled resources, so make sure it’s inclu
 ```js
 import application from 'oro:application'
 
-const peer = await application.getWindow(1)
+const detailsWindow = await application.getWindow(1)
 const all = await application.getWindows()
 ```
 
@@ -34,8 +34,8 @@ const all = await application.getWindows()
 ```js
 import application from 'oro:application'
 
-const peer = await application.getWindow(1, { max: false })
-await peer.postMessage({ type: 'ping', at: Date.now() })
+const detailsWindow = await application.getWindow(1)
+await detailsWindow.postMessage({ type: 'ping', at: Date.now() })
 ```
 
 Receive messages in any window:
@@ -61,4 +61,3 @@ await current.send({ window: 1, event: 'message', value: { hello: 'world' } })
 ## Next
 
 - JavaScript APIs: [`oro:application`](?p=javascript/application) · [`oro:window`](?p=javascript/window)
-

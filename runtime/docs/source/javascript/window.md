@@ -25,8 +25,8 @@ await win.navigate('index.html')
 Send a message to another window:
 
 ```js
-const peer = await application.getWindow(1, { max: false })
-await peer.postMessage({ type: 'ping' })
+const detailsWindow = await application.getWindow(1)
+await detailsWindow.postMessage({ type: 'ping' })
 ```
 
 Receive messages:

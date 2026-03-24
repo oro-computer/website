@@ -26,8 +26,8 @@ import application from 'oro:application'
 
 await application.createWindow({
   index: 1,
-  path: 'peer.html',
-  title: 'Peer',
+  path: 'details.html',
+  title: 'Details',
 })
 ```
 
@@ -37,7 +37,7 @@ await application.createWindow({
 import application from 'oro:application'
 
 const current = await application.getCurrentWindow()
-const peer = await application.getWindow(1, { max: false })
+const detailsWindow = await application.getWindow(1)
 const all = await application.getWindows()
 ```
 

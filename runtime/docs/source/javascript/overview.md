@@ -29,9 +29,11 @@ import * as secureStorage from 'oro:secure-storage'
 
 If you need an exhaustive list of every `oro:*` specifier (including subpaths), see: [All module specifiers](?p=javascript/all-modules).
 
-## Runtime detection
+## Runtime boundary
 
-Inside Oro Runtime, `globalThis.isOroRuntime === true`.
+Most application code does not need a special runtime-detection branch. Import
+the `oro:*` modules you actually use and treat those imports as the explicit
+native-capability boundary.
 
 ## Configuration in JavaScript
 
