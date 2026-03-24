@@ -1,18 +1,18 @@
 # Getting Started
 
-This guide gets you from source checkout to a useful first scan.
+This guide gets you from an installed Virtnosis CLI to a useful first scan.
 
 ## Requirements
 
-- Silk toolchain (`silk`)
-- access to the repository
+- `virtnosis-agent` and `vnactl` installed on your `PATH`
 - access to a target libvirt UNIX socket if you want to scan a real host
 
 Virtnosis does not require external libvirt spec files at runtime.
 
-## Build
+## Install
 
-Build the shipped binaries:
+Install `virtnosis-agent` and `vnactl` by package or from source. If you are
+building from source, the reference flow is:
 
 ```bash
 cd virtnosis
@@ -20,20 +20,17 @@ make build
 make verify
 ```
 
-Built binaries:
+Then install them into your preferred prefix so the commands are available on
+your `PATH`.
 
-- `build/bin/virtnosis-agent`
-- `build/bin/vnactl`
-
-For build internals, packaging, and extended verification lanes, use
-[Development](?p=reference/development).
+For packaging details, install targets, and extended verification lanes, use
+[Install and Package](?p=guides/install-and-package).
 
 ## First scan through the agent
 
 ```bash
-cd virtnosis
-./build/bin/virtnosis-agent --verbose
-./build/bin/vnactl scan \
+virtnosis-agent --verbose
+vnactl scan \
   --socket /var/run/libvirt/libvirt-sock \
   --uri qemu:///system \
   --deep --confirm-xml --redact
@@ -46,10 +43,9 @@ Use `--connect unix:///run/virtnosis/agent.sock` when talking to a shared system
 For non-root users:
 
 ```bash
-cd virtnosis
-./build/bin/virtnosis-agent --verbose
-./build/bin/vnactl status
-./build/bin/vnactl scan --deep --redact
+virtnosis-agent --verbose
+vnactl status
+vnactl scan --deep --redact
 ```
 
 What this gives you:
@@ -65,8 +61,7 @@ Important: the scan still depends on the agent process having access to the targ
 Start a system-visible socket:
 
 ```bash
-cd virtnosis
-sudo ./build/bin/virtnosis-agent \
+sudo virtnosis-agent \
   --listen /run/virtnosis/agent.sock \
   --listen-mode 0660 \
   --listen-gid 123
@@ -75,8 +70,7 @@ sudo ./build/bin/virtnosis-agent \
 Then connect:
 
 ```bash
-cd virtnosis
-./build/bin/vnactl status --connect unix:///run/virtnosis/agent.sock
+vnactl status --connect unix:///run/virtnosis/agent.sock
 ```
 
 Replace `123` with the numeric gid you actually want to authorize.

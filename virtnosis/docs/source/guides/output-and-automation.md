@@ -72,7 +72,7 @@ Common exit behavior:
 Example:
 
 ```bash
-./build/bin/vnactl scan \
+vnactl scan \
   --connect unix:///run/virtnosis/agent.sock \
   --socket /var/run/libvirt/libvirt-sock \
   --uri qemu:///system \

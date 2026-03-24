@@ -18,8 +18,7 @@ Important defaults:
 Recommended for a single local operator or CI user:
 
 ```bash
-cd virtnosis
-./build/bin/virtnosis-agent --verbose
+virtnosis-agent --verbose
 ```
 
 This keeps the control plane local to the user account and avoids `sudo` for `vnactl`.
@@ -29,8 +28,7 @@ This keeps the control plane local to the user account and avoids `sudo` for `vn
 Recommended when multiple trusted local users need access:
 
 ```bash
-cd virtnosis
-sudo ./build/bin/virtnosis-agent \
+sudo virtnosis-agent \
   --listen /run/virtnosis/agent.sock \
   --listen-mode 0660 \
   --listen-gid 123

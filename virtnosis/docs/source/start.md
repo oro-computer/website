@@ -26,14 +26,12 @@ the public product surface.
 
 ## Quick start
 
-```bash
-cd virtnosis
-make build
-make verify
+Assume `virtnosis-agent` and `vnactl` are installed and available on your `PATH`.
 
-./build/bin/virtnosis-agent --verbose
-./build/bin/vnactl status
-./build/bin/vnactl scan --deep --confirm-xml --redact
+```bash
+virtnosis-agent --verbose
+vnactl status
+vnactl scan --deep --confirm-xml --redact
 ```
 
 ## Recommended reading path

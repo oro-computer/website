@@ -82,10 +82,9 @@
                 <a class="button button-quiet" href="./docs/?p=guides/getting-started">Start</a>
               </div>
               <div class="panel-body">
-                <pre><code class="language-bash">make build
-./build/bin/virtnosis-agent --verbose
-./build/bin/vnactl status
-./build/bin/vnactl scan --deep --confirm-xml --redact -f json</code></pre>
+                <pre><code class="language-bash">virtnosis-agent --verbose
+vnactl status
+vnactl scan --deep --confirm-xml --redact -f json</code></pre>
                 <p>Control-plane transport is local UNIX sockets only.</p>
               </div>
             </div>

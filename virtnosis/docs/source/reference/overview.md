@@ -49,9 +49,9 @@ Virtnosis is intended for authorized defensive use. It should only be used on sy
 ## Example workflow
 
 ```bash
-./build/bin/virtnosis-agent --verbose
-./build/bin/vnactl status
-./build/bin/vnactl scan --deep --confirm-xml --redact -f json
+virtnosis-agent --verbose
+vnactl status
+vnactl scan --deep --confirm-xml --redact -f json
 ```
 
 That flow gives you:

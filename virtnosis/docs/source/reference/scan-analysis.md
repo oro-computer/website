@@ -93,7 +93,7 @@ For most environments:
 ### Deep scan with confirmation
 
 ```bash
-./build/bin/vnactl scan \
+vnactl scan \
   --deep \
   --confirm-xml \
   --redact \

@@ -7,14 +7,14 @@ This guide focuses on day-to-day use of Virtnosis as an operator, responder, or 
 Check the control plane:
 
 ```bash
-./build/bin/vnactl status
-./build/bin/vnactl version
+vnactl status
+vnactl version
 ```
 
 Run a scan through the agent:
 
 ```bash
-./build/bin/vnactl scan \
+vnactl scan \
   --connect unix:///run/virtnosis/agent.sock \
   --socket /var/run/libvirt/libvirt-sock \
   --uri qemu:///system \
@@ -70,8 +70,8 @@ For automation:
 Example:
 
 ```bash
-./build/bin/vnactl scan --deep -f json
-./build/bin/vnactl scan --deep -f xml
+vnactl scan --deep -f json
+vnactl scan --deep -f xml
 ```
 
 The JSON/XML wrappers preserve the same logical report as the default dotted-key output.
@@ -91,7 +91,7 @@ first:
 - check `result.exe_path` and `result.build_identity_status` to confirm which agent binary is actually serving the socket
 - run `virtnosis-agent agent --verbose` and watch the accept / handler / response / reap sequence
 - if the daemon is at `--max-clients`, expect a prompt `TOO_MANY_CLIENTS` error rather than a long timeout
-- do not mix a stale installed `virtnosis-agent` from `$PATH` with a freshly rebuilt `./build/bin/vnactl`; use matching binaries or reinstall first
+- do not mix `virtnosis-agent` and `vnactl` from different installs or build generations; align `PATH` or reinstall so they match
 
 For the detailed status/build-identity field contract, use
 [Output and Automation](?p=guides/output-and-automation). For deployment and

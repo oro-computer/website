@@ -15,11 +15,8 @@ make verify
 
 `make build` always goes through `build.slk`, builds both shipped executables,
 verifies the declared output surface, and writes `build/build-manifest.json`.
-
-Built binaries:
-
-- `build/bin/virtnosis-agent`
-- `build/bin/vnactl`
+The resulting install surface is the `virtnosis-agent` and `vnactl` command
+pair.
 
 ## Install
 

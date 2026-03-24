@@ -4,7 +4,7 @@ Virtnosis · LLMS Pack
 This file concatenates the full Virtnosis documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-03-24T14:49:01+00:00
+Generated: 2026-03-24T17:00:15+00:00
 
 How to link:
 - Docs: /virtnosis/docs/?p=<id>
@@ -71,14 +71,12 @@ the public product surface.
 
 ## Quick start
 
-```bash
-cd virtnosis
-make build
-make verify
+Assume `virtnosis-agent` and `vnactl` are installed and available on your `PATH`.
 
-./build/bin/virtnosis-agent --verbose
-./build/bin/vnactl status
-./build/bin/vnactl scan --deep --confirm-xml --redact
+```bash
+virtnosis-agent --verbose
+vnactl status
+vnactl scan --deep --confirm-xml --redact
 ```
 
 ## Recommended reading path
@@ -112,19 +110,19 @@ URL: /virtnosis/docs/?p=guides/getting-started
 
 # Getting Started
 
-This guide gets you from source checkout to a useful first scan.
+This guide gets you from an installed Virtnosis CLI to a useful first scan.
 
 ## Requirements
 
-- Silk toolchain (`silk`)
-- access to the repository
+- `virtnosis-agent` and `vnactl` installed on your `PATH`
 - access to a target libvirt UNIX socket if you want to scan a real host
 
 Virtnosis does not require external libvirt spec files at runtime.
 
-## Build
+## Install
 
-Build the shipped binaries:
+Install `virtnosis-agent` and `vnactl` by package or from source. If you are
+building from source, the reference flow is:
 
 ```bash
 cd virtnosis
@@ -132,20 +130,17 @@ make build
 make verify
 ```
 
-Built binaries:
+Then install them into your preferred prefix so the commands are available on
+your `PATH`.
 
-- `build/bin/virtnosis-agent`
-- `build/bin/vnactl`
-
-For build internals, packaging, and extended verification lanes, use
-[Development](?p=reference/development).
+For packaging details, install targets, and extended verification lanes, use
+[Install and Package](?p=guides/install-and-package).
 
 ## First scan through the agent
 
 ```bash
-cd virtnosis
-./build/bin/virtnosis-agent --verbose
-./build/bin/vnactl scan \
+virtnosis-agent --verbose
+vnactl scan \
   --socket /var/run/libvirt/libvirt-sock \
   --uri qemu:///system \
   --deep --confirm-xml --redact
@@ -158,10 +153,9 @@ Use `--connect unix:///run/virtnosis/agent.sock` when talking to a shared system
 For non-root users:
 
 ```bash
-cd virtnosis
-./build/bin/virtnosis-agent --verbose
-./build/bin/vnactl status
-./build/bin/vnactl scan --deep --redact
+virtnosis-agent --verbose
+vnactl status
+vnactl scan --deep --redact
 ```
 
 What this gives you:
@@ -177,8 +171,7 @@ Important: the scan still depends on the agent process having access to the targ
 Start a system-visible socket:
 
 ```bash
-cd virtnosis
-sudo ./build/bin/virtnosis-agent \
+sudo virtnosis-agent \
   --listen /run/virtnosis/agent.sock \
   --listen-mode 0660 \
   --listen-gid 123
@@ -187,8 +180,7 @@ sudo ./build/bin/virtnosis-agent \
 Then connect:
 
 ```bash
-cd virtnosis
-./build/bin/vnactl status --connect unix:///run/virtnosis/agent.sock
+vnactl status --connect unix:///run/virtnosis/agent.sock
 ```
 
 Replace `123` with the numeric gid you actually want to authorize.
@@ -224,11 +216,8 @@ make verify
 
 `make build` always goes through `build.slk`, builds both shipped executables,
 verifies the declared output surface, and writes `build/build-manifest.json`.
-
-Built binaries:
-
-- `build/bin/virtnosis-agent`
-- `build/bin/vnactl`
+The resulting install surface is the `virtnosis-agent` and `vnactl` command
+pair.
 
 ## Install
 
@@ -338,14 +327,14 @@ This guide focuses on day-to-day use of Virtnosis as an operator, responder, or 
 Check the control plane:
 
 ```bash
-./build/bin/vnactl status
-./build/bin/vnactl version
+vnactl status
+vnactl version
 ```
 
 Run a scan through the agent:
 
 ```bash
-./build/bin/vnactl scan \
+vnactl scan \
   --connect unix:///run/virtnosis/agent.sock \
   --socket /var/run/libvirt/libvirt-sock \
   --uri qemu:///system \
@@ -401,8 +390,8 @@ For automation:
 Example:
 
 ```bash
-./build/bin/vnactl scan --deep -f json
-./build/bin/vnactl scan --deep -f xml
+vnactl scan --deep -f json
+vnactl scan --deep -f xml
 ```
 
 The JSON/XML wrappers preserve the same logical report as the default dotted-key output.
@@ -422,7 +411,7 @@ first:
 - check `result.exe_path` and `result.build_identity_status` to confirm which agent binary is actually serving the socket
 - run `virtnosis-agent agent --verbose` and watch the accept / handler / response / reap sequence
 - if the daemon is at `--max-clients`, expect a prompt `TOO_MANY_CLIENTS` error rather than a long timeout
-- do not mix a stale installed `virtnosis-agent` from `$PATH` with a freshly rebuilt `./build/bin/vnactl`; use matching binaries or reinstall first
+- do not mix `virtnosis-agent` and `vnactl` from different installs or build generations; align `PATH` or reinstall so they match
 
 For the detailed status/build-identity field contract, use
 [Output and Automation](?p=guides/output-and-automation). For deployment and
@@ -470,8 +459,7 @@ Important defaults:
 Recommended for a single local operator or CI user:
 
 ```bash
-cd virtnosis
-./build/bin/virtnosis-agent --verbose
+virtnosis-agent --verbose
 ```
 
 This keeps the control plane local to the user account and avoids `sudo` for `vnactl`.
@@ -481,8 +469,7 @@ This keeps the control plane local to the user account and avoids `sudo` for `vn
 Recommended when multiple trusted local users need access:
 
 ```bash
-cd virtnosis
-sudo ./build/bin/virtnosis-agent \
+sudo virtnosis-agent \
   --listen /run/virtnosis/agent.sock \
   --listen-mode 0660 \
   --listen-gid 123
@@ -837,7 +824,7 @@ Common exit behavior:
 Example:
 
 ```bash
-./build/bin/vnactl scan \
+vnactl scan \
   --connect unix:///run/virtnosis/agent.sock \
   --socket /var/run/libvirt/libvirt-sock \
   --uri qemu:///system \
@@ -1264,9 +1251,9 @@ Virtnosis is intended for authorized defensive use. It should only be used on sy
 ## Example workflow
 
 ```bash
-./build/bin/virtnosis-agent --verbose
-./build/bin/vnactl status
-./build/bin/vnactl scan --deep --confirm-xml --redact -f json
+virtnosis-agent --verbose
+vnactl status
+vnactl scan --deep --confirm-xml --redact -f json
 ```
 
 That flow gives you:
@@ -1382,7 +1369,7 @@ For most environments:
 ### Deep scan with confirmation
 
 ```bash
-./build/bin/vnactl scan \
+vnactl scan \
   --deep \
   --confirm-xml \
   --redact \
