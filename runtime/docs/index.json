@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-03-24T15:24:53+00:00",
+  "generatedAt": "2026-03-25T00:10:25+00:00",
   "kind": "docs",
-  "count": 106,
+  "count": 116,
   "sections": [
     {
       "name": "overview",
@@ -47,6 +47,11 @@
           "file": "cli/oroc.md"
         },
         {
+          "id": "cli/help",
+          "title": "`oroc help`",
+          "file": "cli/help.md"
+        },
+        {
           "id": "cli/run",
           "title": "`oroc run`",
           "file": "cli/run.md"
@@ -77,19 +82,14 @@
           "file": "cli/env.md"
         },
         {
-          "id": "cli/install-app",
-          "title": "`oroc install-app`",
-          "file": "cli/install-app.md"
-        },
-        {
           "id": "cli/list-devices",
           "title": "`oroc list-devices`",
           "file": "cli/list-devices.md"
         },
         {
-          "id": "cli/mcp",
-          "title": "`oroc mcp`",
-          "file": "cli/mcp.md"
+          "id": "cli/install-app",
+          "title": "`oroc install-app`",
+          "file": "cli/install-app.md"
         },
         {
           "id": "cli/print-build-dir",
@@ -97,9 +97,59 @@
           "file": "cli/print-build-dir.md"
         },
         {
+          "id": "cli/mcp",
+          "title": "`oroc mcp`",
+          "file": "cli/mcp.md"
+        },
+        {
           "id": "cli/update",
           "title": "`oroc update`",
           "file": "cli/update.md"
+        },
+        {
+          "id": "cli/update/init",
+          "title": "`oroc update init`",
+          "file": "cli/update/init.md"
+        },
+        {
+          "id": "cli/update/server",
+          "title": "`oroc update server`",
+          "file": "cli/update/server.md"
+        },
+        {
+          "id": "cli/update/info",
+          "title": "`oroc update info`",
+          "file": "cli/update/info.md"
+        },
+        {
+          "id": "cli/update/keygen",
+          "title": "`oroc update keygen`",
+          "file": "cli/update/keygen.md"
+        },
+        {
+          "id": "cli/update/sign",
+          "title": "`oroc update sign`",
+          "file": "cli/update/sign.md"
+        },
+        {
+          "id": "cli/update/verify",
+          "title": "`oroc update verify`",
+          "file": "cli/update/verify.md"
+        },
+        {
+          "id": "cli/update/validate",
+          "title": "`oroc update validate`",
+          "file": "cli/update/validate.md"
+        },
+        {
+          "id": "cli/update/bundle",
+          "title": "`oroc update bundle`",
+          "file": "cli/update/bundle.md"
+        },
+        {
+          "id": "cli/update/extract",
+          "title": "`oroc update extract`",
+          "file": "cli/update/extract.md"
         },
         {
           "id": "cli/version",

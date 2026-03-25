@@ -11,6 +11,7 @@ oroc [SUBCOMMAND] -h
 
 ## Subcommands
 
+- `help` — [Search help and command pages](?p=cli/help)
 - `build` — [Build](?p=cli/build)
 - `run` — [Run](?p=cli/run)
 - `init` — [Create a project](?p=cli/init)
@@ -57,4 +58,3 @@ Most commands accept a project directory. `build` and `run` can also take a sing
 When no `oro.toml` is found, `oroc` infers a minimal configuration automatically.
 
 See: [Config overview](?p=config/overview).
-

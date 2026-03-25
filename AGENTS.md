@@ -28,5 +28,5 @@ Collaboration Tips
 
 - Document rationale for significant changes in PR descriptions so downstream contributors can trace decisions.
 - When unsure about brand alignment, reference the docs above and surface questions early rather than guessing.
-- Use the public repos at `https://github.com/oro-computer` and `https://github.com/oro-computer/oro-runtime` to track issues and share work.
+- Use the public repos at `https://github.com/oro-computer` and `https://github.com/oro-computer/runtime` to track issues and share work.
 - Reach out via `info@oro.computer` for general inquiries, `contributors@oro.computer` for community coordination, and `runtime@oro.computer` for runtime-specific conversations.

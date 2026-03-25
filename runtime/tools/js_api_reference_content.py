@@ -329,7 +329,7 @@ EXAMPLES_BY_FAMILY: dict[str, str] = {
         const digest = await createDigest('sha256', nonce)
 
         console.log(digest.toString('hex'))
-        console.log(murmur3('oro-runtime'))
+        console.log(murmur3('hello-runtime'))
         ```
         """
     ),

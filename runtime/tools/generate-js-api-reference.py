@@ -222,7 +222,7 @@ def render_generated_page(path: Path, family: str, specs: list[str], blocks: dic
 
 def main() -> None:
     root = repo_root()
-    index_path = root / "legacy-runtime" / "api" / "index.d.ts"
+    index_path = root / "runtime" / "api" / "index.d.ts"
     if not index_path.exists():
         raise SystemExit(f"Missing {index_path}")
 

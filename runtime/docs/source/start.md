@@ -23,12 +23,7 @@ The CLI accepts three common inputs:
 
 That means you can start with a full project or point `oroc run` / `oroc build` at one source file while the CLI infers a minimal configuration.
 
-## Ask AI / `llms.txt`
-
-For AI assistants and LLM tooling:
-
-- Whole-site pack: [`llms.txt`](../../llms.txt)
-- Runtime docs pack: [`runtime/llms.txt`](../llms.txt)
+For command discovery, start with `oroc help <query>`.
 
 ## A native “hello world”
 
@@ -151,6 +146,6 @@ oroc build .
 1. Guides: [Hello world](?p=guides/hello-world)
 2. Guides: [Project layout](?p=guides/project-layout)
 3. Guides: [Build and package](?p=guides/build-and-package)
-4. CLI: [oroc](?p=cli/oroc) → [run](?p=cli/run) → [build](?p=cli/build) → [update](?p=cli/update)
+4. CLI: [oroc](?p=cli/oroc) → [help](?p=cli/help) → [run](?p=cli/run) → [build](?p=cli/build) → [update](?p=cli/update)
 5. Config: [Overview](?p=config/overview) → [copy_map](?p=config/copy-map) → [reference](?p=config/reference)
 6. JavaScript APIs: [Overview](?p=javascript/overview) → [module index](?p=javascript/module-index) → [all module specifiers](?p=javascript/all-modules) → [application](?p=javascript/application) → [window](?p=javascript/window) → [hooks](?p=javascript/hooks)

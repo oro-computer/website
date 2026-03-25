@@ -13,7 +13,7 @@ const nonce = randomBytes(16)
 const digest = await createDigest('sha256', nonce)
 
 console.log(digest.toString('hex'))
-console.log(murmur3('oro-runtime'))
+console.log(murmur3('hello-runtime'))
 ```
 
 ## See also
