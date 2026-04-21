@@ -4,11 +4,11 @@ Silk’s operators cover arithmetic, comparisons, logical operators, assignment,
 casts, ranges, optionals (`?.`, `??`), and typed-error propagation (`?`).
 
 This wiki page is a learning-oriented companion to the canonical reference:
-`docs/language/operators.md`.
+[operators](?p=language/operators).
 
 ## Notes
 
-- Full reference: `docs/language/operators.md`
+- Full operator set + precedence: [operators](?p=language/operators)
 
 ## Syntax
 ```silk
@@ -52,6 +52,6 @@ fn main () -> int {
 
 ## See also
 
-- Canonical reference: `docs/language/operators.md`
-- Optionals: `docs/language/optional.md`
-- Typed errors and `?`: `docs/language/typed-errors.md`
+- Canonical reference: [operators](?p=language/operators)
+- Optionals: [optional](?p=language/optional)
+- Typed errors and `?`: [typed errors](?p=language/typed-errors)

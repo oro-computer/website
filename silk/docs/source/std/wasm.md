@@ -4,22 +4,9 @@
 modules** from Silk.
 
 This module is about *running* wasm. It is not the Silk compiler’s wasm output
-backend (see `docs/compiler/backend-wasm.md`).
+backend (see [backend wasm](?p=compiler/backend-wasm)).
 
-## Goals
-
-- Provide a portable API for:
-  - loading/validating wasm bytes,
-  - instantiating modules (including imports),
-  - calling exported functions,
-  - interacting with exported linear memory.
-- Keep the module swappable, like the rest of `std::`: embedders may provide an
-  alternate implementation (for example a wasm engine binding) while preserving
-  the same public API.
-- Record a clear path to a full native runtime and JIT in later phases (no
-  dependency on external language toolchains).
-
-## High-Level API
+## Exported API
 
 The public Silk surface is centered around:
 
@@ -30,7 +17,7 @@ The public Silk surface is centered around:
 - `Imports` — host-provided imports used during instantiation.
 - linear memory access via `Instance.memory_bytes()` (returns `None` when the module has no memory; otherwise `Some(ByteSlice)`, possibly length 0).
 - `Val` / `ValType` — a small tagged value representation for wasm values
-  (currently used for results).
+ (currently used for results).
 
 ## Host Imports
 `Module.instantiate_with_imports(imports: Imports)` uses `Imports` to resolve
@@ -43,7 +30,7 @@ Imported functions are dispatched through a single host callback:
 - `Imports.func_call: HostCall`
 
 `HostCall` uses a scalar-only calling convention so it can be stored as a
-first-class value and passed around in the current compiler:
+first-class value and passed around in Silk currently:
 
 ```silk
 type fn HostCall = fn (import_index: i64,
@@ -56,15 +43,15 @@ Semantics:
 
 - `import_index` is 0-based in the order declared by the wasm module.
 - `(args_ptr, args_len)` describes a `u64` slice of raw argument bits (i32 uses
-  the low 32 bits; f32 also uses the low 32 bits).
+ the low 32 bits; f32 also uses the low 32 bits).
 - `(mem_ptr, mem_len)` describes the instance linear memory as a raw byte view
-  (or `(0, 0)` when the module has no memory).
+ (or `(0, 0)` when the module has no memory).
 - When the imported function returns `i32`, `i64`, `f32`, or `f64`, the host
-  writes the raw result bits to `out_bits_ptr` (at offset 0, as a `u64`).
-  - `i32`/`f32` use the low 32 bits.
-  - `i64`/`f64` use the full 64 bits.
+ writes the raw result bits to `out_bits_ptr` (at offset 0, as a `u64`).
+ - `i32`/`f32` use the low 32 bits.
+ - `i64`/`f64` use the full 64 bits.
 - The return value is 0 on success; non-zero values are treated as
-  `WASMError.code` (with `offset = -1`).
+ `WASMError.code` (with `offset = -1`).
 
 ### Named Imported Functions
 
@@ -80,10 +67,10 @@ functions by `(module_name, import_name)` using `std::map`:
 Semantics:
 
 - Every imported function in the module must have a corresponding entry in
-  `func_imports`, otherwise instantiation fails with `LinkError`.
+ `func_imports`, otherwise instantiation fails with `LinkError`.
 - Extra entries in `func_imports` are ignored.
 - The linked callbacks are stored in a per-instance dispatch table so the map
-  itself does not need to outlive instantiation.
+ itself does not need to outlive instantiation.
 
 Example:
 
@@ -174,24 +161,24 @@ Supported:
 
 - custom sections are ignored,
 - core sections: `type`, `import`, `function`, `table`, `memory`, `global`,
-  `export`, `start`, `element`, `code`, `data`.
+ `export`, `start`, `element`, `code`, `data`.
 
 Notes / current constraints (baseline):
 
 - At most one table and one memory are supported (baseline constraint).
 - `start` is executed automatically during `Module.instantiate` after
-  instantiation initialization.
-  - the start function must have signature `[] -> []` (no parameters, no results).
+ instantiation initialization.
+ - the start function must have signature `[] -> []` (no parameters, no results).
 - `data_count` and all non-baseline extensions are rejected as `Unsupported`.
 
 ### Values and Function Calls
 
 - Supported `ValType`: `I32`, `I64`, `F32`, `F64`.
 - Supported function signatures: any number of `i32`/`i64`/`f32`/`f64`
-  parameters and 0–1 `i32`/`i64`/`f32`/`f64` results.
+ parameters and 0–1 `i32`/`i64`/`f32`/`f64` results.
 - Calls pass arguments as raw bits (`std::arrays::Slice(u64)`):
-  - for `i32`/`f32` parameters, only the low 32 bits are used,
-  - for `i64`/`f64` parameters, the full 64 bits are used.
+ - for `i32`/`f32` parameters, only the low 32 bits are used,
+ - for `i64`/`f64` parameters, the full 64 bits are used.
 - Calls return 0–1 results as `Val?`.
 
 ### Instructions
@@ -200,14 +187,14 @@ The interpreter supports a practical wasm32 subset sufficient for “real” was
 code (including `f32`/`f64`):
 
 - control/parametric/variable: `unreachable`, `nop`, `block`, `loop`, `if`,
-  `else`, `end`, `br`, `br_if`, `br_table`, `return`, `call`, `call_indirect`,
-  `drop`, `select` (with block results for `i32`/`i64`/`f32`/`f64`)
+ `else`, `end`, `br`, `br_if`, `br_table`, `return`, `call`, `call_indirect`,
+ `drop`, `select` (with block results for `i32`/`i64`/`f32`/`f64`)
 - memory: all baseline loads/stores (including sign/zero-ext forms), `memory.size`,
-  `memory.grow`
+ `memory.grow`
 - numerics: `i32`/`i64`/`f32`/`f64` operators and conversions (including
-  float↔int conversions and bit reinterpret ops).
-  - Float→int truncation traps on `NaN` and out-of-range inputs
-    (`WASMTrapKind::InvalidConversionToInteger`).
+ float↔int conversions and bit reinterpret ops).
+ - Float→int truncation traps on `NaN` and out-of-range inputs
+ (`WASMTrapKind::InvalidConversionToInteger`).
 
 Unsupported opcodes/extensions are rejected as `Unsupported` with an `offset`
 pointing at the opcode.
@@ -216,15 +203,15 @@ pointing at the opcode.
 
 - A `Module` owns the wasm bytes and parsed metadata.
 - An `Instance` owns its own runtime state and takes ownership of the module’s
-  owned allocations during instantiation.
-  - `Module.instantiate(mut self: &Module)` consumes the module by moving its
-    owned allocations into the returned `Instance`.
-  - after a successful call, the original `Module` is left in an empty, inert
-    state.
-  - if instantiation fails (including start traps), no instance is produced and
-    the original `Module` remains intact.
+ owned allocations during instantiation.
+ - `Module.instantiate(mut self: &Module)` consumes the module by moving its
+ owned allocations into the returned `Instance`.
+ - after a successful call, the original `Module` is left in an empty, inert
+ state.
+ - if instantiation fails (including start traps), no instance is produced and
+ the original `Module` remains intact.
 - `Func` is a lightweight view into an `Instance`, and memory is accessed by
-  calling `Instance.memory_bytes()` when present.
+ calling `Instance.memory_bytes()` when present.
 
 ## Example
 
@@ -334,3 +321,16 @@ fn main () -> int {
 - WASI bindings and host library shims.
 - Post-baseline proposals: bulk memory, reference types, SIMD (`v128`), threads, multi-value.
 - A native runtime/JIT implementation for performance.
+
+## Design goals
+
+- Provide a portable API for:
+ - loading/validating wasm bytes,
+ - instantiating modules (including imports),
+ - calling exported functions,
+ - interacting with exported linear memory.
+- Keep the module swappable, like the rest of `std::`: embedders may provide an
+ alternate implementation (for example a wasm engine binding) while preserving
+ the same public API.
+- Record a clear path to a full native runtime and JIT in later phases (no
+ dependency on external language toolchains).

@@ -1,10 +1,24 @@
 # Async Runtime (Hosted)
 
-This document serves two roles:
+
+
+Current host-build note:
+
+- The shipped hosted async runtime implementation in `src/silk_rt_async.c` and
+ `src/silk_rt_task_pool.c` is supported on the current hosted POSIX compiler
+ targets (`linux/*` and Apple Silicon `macos/aarch64`).
+- `macos/aarch64` toolchain builds now compile and stage those real runtime
+ objects too; they no longer select the older stub runtime objects for this
+ surface.
+- Linux may use `io_uring` acceleration for timers, fd polling, and
+ completion-based I/O. Other supported POSIX hosts use the runtime poll
+ fallback for the same public async surface.
+
+This document now serves two roles:
 
 - Describe the **current shipped hosted async runtime** used by the compiler today.
 - Specify the longer-term architecture (compiler coroutine transform + richer event loop)
-  that the current implementation is expected to evolve toward.
+ that the current implementation is expected to evolve toward.
 
 The current hosted async runtime is implemented in C in `src/silk_rt_async.c` and wired
 into lowering in `src/lower_ir.zig`. It provides:
@@ -14,7 +28,7 @@ into lowering in `src/lower_ir.zig`. It provides:
 - `await` as a true suspension point (parks the current fiber instead of blocking the OS thread),
 - basic async timers, fd readiness wait, and async `read`/`write`,
 - task-pipe waits used by `yield` / `yield *` and task-handle cleanup routed
-  through async fd readiness when running under the executor,
+ through async fd readiness when running under the executor,
 - opportunistic Linux `io_uring` usage for timeouts, fd polling, and completion-based I/O when available.
 
 Structured concurrency blocks (`async { ... }` / `task { ... }`) now establish
@@ -24,10 +38,10 @@ cancellation tokens or nested executors.
 
 See also:
 
-- language model and current subset: `docs/language/concurrency.md`
-- function disciplines: `docs/language/function-disciplines.md`
-- runtime layering: `docs/std/runtime.md`
-- current blocking hosted utilities: `docs/std/task.md`, `docs/std/io.md`, `docs/std/networking.md`
+- language model and Supported forms: [concurrency](?p=language/concurrency)
+- function disciplines: [function disciplines](?p=language/function-disciplines)
+- runtime layering: [runtime](?p=std/runtime)
+- current blocking hosted utilities: [task](?p=std/task), [io](?p=std/io), [networking](?p=std/networking)
 
 ## Current Implementation (Shipped)
 
@@ -39,44 +53,44 @@ that points at heap-allocated handle storage with this layout:
 - `[0] u64 kind`
 - `[8] u64 impl_ptr`
 - `[16..]` payload scalars (8 bytes each) for the result slots of `T`,
-  followed by the argument scalars captured for the spawned async entry.
+ followed by the argument scalars captured for the spawned async entry.
 
 When a promise is pending, `impl_ptr` is non-zero and points at runtime-owned state
 (a coroutine/future). When resolved, `impl_ptr` is zero and the payload contains the result.
 
-### Runtime entrypoints (current)
+### Runtime entrypoints
 
 The compiler lowering currently uses these runtime functions (all bundled into the
 runtime C objects linked into hosted outputs):
 
 - `silk_rt_async_spawn(entry_ptr: u64, promise_handle: u64) -> i32`
-  - schedules a coroutine when an executor is active on the current OS thread (the
-    executor owner thread); otherwise runs it synchronously on the calling thread and
-    resolves the promise immediately.
+ - schedules a coroutine when an executor is active on the current OS thread (the
+ executor owner thread); otherwise runs it synchronously on the calling thread and
+ resolves the promise immediately.
 - `silk_rt_async_await(promise_handle: u64) -> void`
-  - if the promise is pending:
-    - on the executor owner thread: parks the current coroutine (when inside a coroutine)
-      or drives the executor until completion (when called from non-coroutine code),
-    - on other OS threads: blocks the OS thread until the promise is resolved.
+ - if the promise is pending:
+ - on the executor owner thread: parks the current coroutine (when inside a coroutine)
+ or drives the executor until completion (when called from non-coroutine code),
+ - on other OS threads: blocks the OS thread until the promise is resolved.
 - `silk_rt_async_destroy(promise_handle: u64) -> void`
-  - destroys a promise handle; if it is still pending, it awaits it first.
+ - destroys a promise handle; if it is still pending, it awaits it first.
 - `silk_rt_async_block_on_main0/2(entry_ptr: u64, [argc: i64, argv: u64]) -> i64`
-  - creates an executor/event loop, spawns the async `main` promise, and drives it to completion.
+ - creates an executor/event loop, spawns the async `main` promise, and drives it to completion.
 
 The runtime also exposes an explicit executor/event-loop surface (used by
 `std::runtime::event_loop`):
 
 - `silk_rt_async_event_loop_init() -> u64`
-  - creates a single global executor/event loop instance and returns its handle,
-    or returns `0` when initialization fails or an executor is already active.
+ - creates a single global executor/event loop instance and returns its handle,
+ or returns `0` when initialization fails or an executor is already active.
 - `silk_rt_async_event_loop_deinit(handle: u64) -> void`
-  - shuts down the global executor/event loop instance.
+ - shuts down the global executor/event loop instance.
 - `silk_rt_async_event_loop_wake(handle: u64) -> i64`
-  - wakes a blocked poll (for example from another OS thread); returns `0` on
-    success, otherwise a positive error code.
+ - wakes a blocked poll (for example from another OS thread); returns `0` on
+ success, otherwise a positive error code.
 - `silk_rt_async_event_loop_poll(handle: u64, timeout_ms: i64) -> i64`
-  - polls the executor/event loop for up to `timeout_ms` milliseconds and
-    returns a backend-defined progress count, or returns `-<code>` on failure.
+ - polls the executor/event loop for up to `timeout_ms` milliseconds and
+ returns a backend-defined progress count, or returns `-<code>` on failure.
 
 The runtime also exposes low-level awaitable building blocks:
 
@@ -103,11 +117,11 @@ current hosted runtime snapshot, `silk_rt_async_io_{read,write}` return
 The socket helpers follow the same convention:
 
 - `silk_rt_async_net_accept` payload:
-  - `>= 0` is the accepted connection fd,
-  - `< 0` is `-errno`.
+ - `>= 0` is the accepted connection fd,
+ - `< 0` is `-errno`.
 - `silk_rt_async_net_connect_*` payload:
-  - `0` is success,
-  - `< 0` is `-errno`.
+ - `0` is success,
+ - `< 0` is `-errno`.
 
 For `silk_rt_async_fd_wait_readable2`, the promise payload is:
 
@@ -122,23 +136,26 @@ For `silk_rt_async_fd_wait_readable_any`, the promise payload is:
 
 `fds_ptr` must point to `i64[fds_len]` values (each element is a file descriptor).
 
-### Executor/event loop (current)
+### Executor/event loop
 
 The current executor is single-threaded and cooperative:
 
 - runnable coroutines are queued and resumed one at a time,
 - timers are managed with a deadline min-heap,
 - fd readiness is managed via `poll(2)` watchers,
-- cross-thread wake uses `eventfd`.
-  - the executor is thread-affine: only the thread that created the executor may drive it.
+- cross-thread wake uses a non-blocking pipe wake pair integrated into the same
+ readiness polling loop.
+ - on Linux this replaces the older `eventfd`-only wake path, and on macOS it
+ provides the same executor wake behavior without relying on Linux-only APIs.
+ - the executor is thread-affine: only the thread that created the executor may drive it.
 
 Note on signal masks:
 
 - `ucontext` saves/restores the thread signal mask as part of the context.
 - The runtime syncs coroutine and executor contexts to the current thread mask before
-  swapping contexts, so `await`/executor polling does not restore a stale mask.
-  This is required for thread-level signal masking patterns like `std::signal`
-  (`signalfd(2)` on Linux).
+ swapping contexts, so `await`/executor polling does not restore a stale mask.
+ This is required for thread-level signal masking patterns like `std::signal`
+ (`signalfd(2)` on Linux).
 
 On Linux, the runtime attempts to initialize an `io_uring` instance. When available, it
 uses:
@@ -151,15 +168,15 @@ falling back to `poll(2)` when `io_uring` is unavailable.
 Limitations (current):
 
 - The `std::runtime::event_loop` handle surface is still limited:
-  - only one global executor/event loop instance may be active at a time,
-  - `std::runtime::event_loop::init()` fails when an executor is already active
-    (for example inside `async fn main`).
+ - only one global executor/event loop instance may be active at a time,
+ - `std::runtime::event_loop::init()` fails when an executor is already active
+ (for example inside `async fn main`).
 - Structured blocks do not yet inject implicit cancellation into arbitrary
-  child operations; current scope semantics are deterministic live-handle
-  cleanup, not a general child-registry cancellation system.
+ child operations; current scope semantics are deterministic live-handle
+ cleanup, not a general child-registry cancellation system.
 - Completion-based I/O is implemented for `read`/`write`/`accept`/`connect` when `io_uring` is available.
-  - Explicit completion cancellation is not yet exposed as part of the shipped
-    std/runtime surface.
+ - Explicit completion cancellation is not yet exposed as part of the shipped
+ std/runtime surface.
 
 ## Current Hosted Runtime Status
 
@@ -167,14 +184,14 @@ The runtime-backlog items for the current hosted concurrency subset are now
 implemented:
 
 - plain `task fn` / `async task fn` calls now default to the global task pool,
-  with `attr(task=thread)` as the explicit dedicated-thread opt-out,
+ with `attr(task=thread)` as the explicit dedicated-thread opt-out,
 - the global task pool now supports explicit queued-work backpressure via
-  `SILK_TASK_POOL_MAX_QUEUED` in addition to `SILK_TASK_POOL_THREADS`,
+ `SILK_TASK_POOL_MAX_QUEUED` in addition to `SILK_TASK_POOL_THREADS`,
 - task reads/drains used by `yield` / `yield *` and task-handle cleanup now
-  route through async fd waits when an executor is active, so these waits
-  suspend the current coroutine instead of blocking the executor owner thread,
+ route through async fd waits when an executor is active, so these waits
+ suspend the current coroutine instead of blocking the executor owner thread,
 - and structured blocks/loops now provide deterministic runtime-backed cleanup
-  of live `Task(T)` / `Promise(T)` bindings on normal exit and early exit.
+ of live `Task(T)` / `Promise(T)` bindings on normal exit and early exit.
 
 Remaining future work in this file is longer-term architecture evolution for
 the hosted runtime, not backlog for the shipped subset. Task-boundary safety
@@ -183,20 +200,20 @@ model expansion is tracked in the language/checker docs rather than here.
 ## Goals
 
 - Make `await` a **non-blocking suspension point** in hosted builds:
-  - awaiting a pending operation suspends the current async function and returns control to
-    the executor,
-  - the executor resumes it when the awaited operation completes.
+ - awaiting a pending operation suspends the current async function and returns control to
+ the executor,
+ - the executor resumes it when the awaited operation completes.
 - Provide a high-performance hosted I/O backend:
-  - use **Linux `io_uring`** for completion-based I/O where available,
-  - provide a **portable POSIX fallback** (readiness-based) for non-Linux hosted targets.
+ - use **Linux `io_uring`** for completion-based I/O where available,
+ - provide a **portable POSIX fallback** (readiness-based) for non-Linux hosted targets.
 - Keep the runtime **pluggable** via the `std::runtime::...` layering:
-  - higher-level `std::...` modules should rely on stable `std::runtime::...` interfaces,
-  - alternative stdlib roots may provide alternate runtime backends.
+ - higher-level `std::...` modules should rely on stable `std::runtime::...` interfaces,
+ - alternative stdlib roots may provide alternate runtime backends.
 - Preserve **structured concurrency** as the default model:
-  - `async { ... }` / `task { ... }` scopes must ensure spawned work completes (or is cancelled)
-    before the scope exits.
+ - `async { ... }` / `task { ... }` scopes must ensure spawned work completes (or is cancelled)
+ before the scope exits.
 
-## Non-Goals (Initial Phases)
+## Non-Goals
 
 - Preemptive scheduling of async functions (async is cooperative).
 - A fully general “async everywhere” rewrite of the standard library in one step.
@@ -205,14 +222,14 @@ model expansion is tracked in the language/checker docs rather than here.
 ## Terminology
 
 - **Coroutine lowering / transform**: compiler rewriting of `async fn` bodies into explicit
-  state machines that can be paused and resumed.
+ state machines that can be paused and resumed.
 - **Executor / event loop**: runtime component that drives async state machines and I/O
-  completion events.
+ completion events.
 - **Promise(T)**: the surface handle returned by calling an `async fn` (already present in the
-  language model). In the full design it becomes a handle to a suspended/resumable coroutine
-  or an in-flight I/O operation.
+ language model). In the full design it becomes a handle to a suspended/resumable coroutine
+ or an in-flight I/O operation.
 - **Waker**: an opaque handle used by awaited operations to request that a suspended coroutine
-  be resumed by the executor.
+ be resumed by the executor.
 
 ## High-Level Model
 
@@ -221,12 +238,12 @@ model expansion is tracked in the language/checker docs rather than here.
 Conceptually, each `async fn` lowers to:
 
 - a heap-allocated **frame** that stores:
-  - the current resume state (a small integer state id),
-  - live locals that must survive across suspension points,
-  - bookkeeping for completion (result storage, completion flag, waker link).
+ - the current resume state (a small integer state id),
+ - live locals that must survive across suspension points,
+ - bookkeeping for completion (result storage, completion flag, waker link).
 - a `resume(frame, waker) -> Poll(T)` function:
-  - `Poll::Ready(value)` when complete,
-  - `Poll::Pending` when it must suspend (because it has awaited a pending operation).
+ - `Poll::Ready(value)` when complete,
+ - `Poll::Pending` when it must suspend (because it has awaited a pending operation).
 
 The compiler is responsible for:
 
@@ -253,7 +270,7 @@ The key requirement is that `await` must not block an OS thread in hosted builds
 ### `async fn main`
 
 The CLI already permits `async fn main () -> int` as an executable entrypoint
-(`docs/compiler/cli-silk.md`). With a real executor, the entry stub for executables will:
+([cli silk](?p=compiler/cli-silk)). With a real executor, the entry stub for executables will:
 
 - create a default executor/event loop,
 - create the `Promise(int)` for `main`,
@@ -269,18 +286,18 @@ Current shipped guarantees:
 
 - live `Promise(T)` bindings are awaited/destroyed on scope exit,
 - live `Task(T)` bindings are drained/destroyed on scope exit (joining
-  dedicated-thread tasks; pooled/default tasks skip the join),
+ dedicated-thread tasks; pooled/default tasks skip the join),
 - the same cleanup runs on overwrite and on early control-flow exits after
-  lowering rewrites the scope exit path,
+ lowering rewrites the scope exit path,
 - and when that cleanup waits on task output under the hosted executor, the
-  current coroutine is suspended instead of blocking the executor owner thread.
+ current coroutine is suspended instead of blocking the executor owner thread.
 
 Current non-goals:
 
 - no implicit nested executor creation,
 - no automatic `std::abort_controller` injection,
 - and no general cancellation registry for arbitrary child operations beyond
-  the explicit handles that are currently live in scope.
+ the explicit handles that are currently live in scope.
 
 ## Runtime Layering (`std::runtime`)
 
@@ -289,12 +306,12 @@ The async executor and event loop will be exposed under `std::runtime` as a new 
 ### Proposed new runtime area
 
 - `std::runtime::event_loop` — stable interface used by the compiler-generated coroutine
-  runtime and by async-aware stdlib code.
+ runtime and by async-aware stdlib code.
 - Backends:
-  - `std::runtime::linux::event_loop` — Linux `io_uring` implementation (preferred).
-  - `std::runtime::posix::event_loop` — portable readiness-based fallback (poll/epoll).
-  - `std::runtime::wasi::event_loop` — WASI implementation (likely limited; may be timers +
-    host-provided polling when available).
+ - `std::runtime::linux::event_loop` — Linux `io_uring` implementation (preferred).
+ - `std::runtime::posix::event_loop` — portable readiness-based fallback (poll/epoll).
+ - `std::runtime::wasi::event_loop` — WASI implementation (likely limited; may be timers +
+ host-provided polling when available).
 
 The interface must support:
 
@@ -334,9 +351,9 @@ Important implementation notes for later phases:
 - use `eventfd` (or `IORING_SETUP_SQPOLL` where appropriate) for cross-thread wakeups,
 - support operation timeouts and cancellation without leaking resources,
 - consider optional performance features only after correctness:
-  - fixed-file registration,
-  - buffer registration / buffer rings,
-  - multishot accept/recv where supported.
+ - fixed-file registration,
+ - buffer registration / buffer rings,
+ - multishot accept/recv where supported.
 
 ## Fallback Backend: readiness-based POSIX loop
 
@@ -354,13 +371,13 @@ same language-level semantics.
 Bringing up the async runtime requires:
 
 - end-to-end correctness tests:
-  - `async fn main` driving timers and I/O,
-  - cancellation behavior in structured scopes,
-  - concurrency + typed errors interaction (`-> T | Error...` + `await` + propagation).
+ - `async fn main` driving timers and I/O,
+ - cancellation behavior in structured scopes,
+ - concurrency + typed errors interaction (`-> T | Error...` + `await` + propagation).
 - performance regression guardrails:
-  - microbench-style fixtures that exercise “many concurrent sockets/timers” scenarios,
-  - optional hosted assembly/codegen comparisons (separate from correctness) to detect obvious
-    regressions in the `async` lowering and runtime calls.
+ - microbench-style fixtures that exercise “many concurrent sockets/timers” scenarios,
+ - optional hosted assembly/codegen comparisons (separate from correctness) to detect obvious
+ regressions in the `async` lowering and runtime calls.
 
 Performance tests must be designed so that they do not rely on unstable wall-clock timing in
 CI; prefer structural checks (operation counts, allocations, syscalls) where feasible.
@@ -368,19 +385,19 @@ CI; prefer structural checks (operation counts, allocations, syscalls) where fea
 ## Longer-Term Architecture Evolution (Summary)
 
 1. **Coroutine transform (no I/O)**:
-   - implement state machine lowering for `async fn` with `await` suspension,
-   - implement a minimal single-threaded executor that can drive `async fn main`,
-   - implement async timers (`sleep_ms`, `sleep_until`) on the event loop.
+ - implement state machine lowering for `async fn` with `await` suspension,
+ - implement a minimal single-threaded executor that can drive `async fn main`,
+ - implement async timers (`sleep_ms`, `sleep_until`) on the event loop.
 2. **Portable I/O readiness backend**:
-   - expose async fd readiness in `std::runtime::event_loop`,
-   - add async wrappers in `std::io` / `std::net` (opt-in, minimal initial surface).
+ - expose async fd readiness in `std::runtime::event_loop`,
+ - add async wrappers in `std::io` / `std::net` (opt-in, minimal initial surface).
 3. **Linux `io_uring` backend**:
-   - implement submission/completion for core ops (read/write/accept/connect/timeout),
-   - wire completions to coroutine wakeups,
-   - add `io_uring`-specific tests and stress fixtures.
+ - implement submission/completion for core ops (read/write/accept/connect/timeout),
+ - wire completions to coroutine wakeups,
+ - add `io_uring`-specific tests and stress fixtures.
 4. **Broader structured cancellation semantics**:
-   - extend the current live-handle cleanup model to richer explicit
-     cancellation-aware child registries if the language/std surface grows to
-     require them,
-   - ensure any future cancellation behavior stays consistent across the
-     checker, lowering, runtime, and `std::...` APIs.
+ - extend the current live-handle cleanup model to richer explicit
+ cancellation-aware child registries if the language/std surface grows to
+ require them,
+ - ensure any future cancellation behavior stays consistent across the
+ checker, lowering, runtime, and `std::...` APIs.

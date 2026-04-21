@@ -145,10 +145,9 @@ Two patterns pay off quickly:
 
 1. **Use small local aliases for verbose types.** For example, alias a `Result` instantiation to a short name.
 2. **Prefer `match` at boundaries.** Convert errors into your own types at module boundaries, so the rest of your program
-   doesn’t become a chain of “plumbing”.
+ doesn’t become a chain of “plumbing”.
 
 ## Next
 
 - [CLI and toolchain](?p=guides/cli)
 - [Testing](?p=guides/testing)
-

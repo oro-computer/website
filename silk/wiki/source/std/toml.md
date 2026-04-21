@@ -1,12 +1,13 @@
 # `std::toml`
 
-`std::toml` provides TOML parsing.
+`std::toml` provides TOML parsing (implementation + expanded subset).
 
-Full reference: `docs/std/toml.md`.
+Canonical doc: [toml](?p=std/toml).
 
 ## Notes
 
-- Full reference: `docs/std/toml.md`
+- Supported forms + design: parsing is implemented; serialization is planned.
+- Details: [toml](?p=std/toml)
 
 ## Importing
 
@@ -86,4 +87,5 @@ answer = 42
 
 ## See also
 
-- Full reference: `docs/std/toml.md`
+- Canonical doc: [toml](?p=std/toml)
+- End-to-end fixture: `tests/silk/pass_std_toml_basic.slk`

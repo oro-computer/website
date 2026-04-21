@@ -6,13 +6,13 @@ with an ECMAScript engine from Silk.
 Scope constraints:
 
 - **ECMAScript only**: this module intentionally exposes **no** DOM/Web APIs, no
-  Node.js APIs, and no host-environment globals beyond what ECMAScript itself
-  requires to exist on the global object.
+ Node.js APIs, and no host-environment globals beyond what ECMAScript itself
+ requires to exist on the global object.
 - It is intended as a shared substrate for future tooling such as `silk bindgen`
-  (for example: **Web IDL → Silk** bindings when targeting WASM and calling out
-  to a JavaScript host).
+ (for example: **Web IDL → Silk** bindings when targeting WASM and calling out
+ to a JavaScript host).
 
-## High-Level API
+## Exported API
 
 The public Silk surface is centered around:
 
@@ -46,10 +46,10 @@ names for common ECMAScript-standard globals (modeled after Rust’s `js_sys`).
 Important constraints:
 
 - **No environment APIs**: no DOM/Web APIs, no Node.js APIs, and no other
-  host-specific globals.
+ host-specific globals.
 - These bindings are intentionally shallow: they define stable names and small
-  helpers; most behavior is accessed via `get`/`call` against the underlying JS
-  values.
+ helpers; most behavior is accessed via `get`/`call` against the underlying JS
+ values.
 
 ### Provided Names
 
@@ -69,14 +69,14 @@ Struct-style JS value wrappers:
 - `Map`, `Set`, `WeakMap`, `WeakSet`, `WeakRef`
 - `RegExp`, `Date`
 - `Error`, `EvalError`, `RangeError`, `ReferenceError`, `SyntaxError`,
-  `TypeError`, `UriError`
+ `TypeError`, `UriError`
 - `ArrayBuffer`, `SharedArrayBuffer`, `DataView`
 - Typed arrays: `Int8Array`, `Int16Array`, `Int32Array`, `Uint8Array`,
-  `Uint8ClampedArray`, `Uint16Array`, `Uint32Array`, `Float32Array`,
-  `Float64Array`, `BigInt64Array`, `BigUint64Array`
+ `Uint8ClampedArray`, `Uint16Array`, `Uint32Array`, `Float32Array`,
+ `Float64Array`, `BigInt64Array`, `BigUint64Array`
 - BigInt: `BigInt`
 - Iteration protocol: `Iterator`, `IteratorNext`, `Iter`, `IntoIter`,
-  `ArrayIter`, `ArrayIntoIter`, `AsyncIterator`, `Generator`
+ `ArrayIter`, `ArrayIntoIter`, `AsyncIterator`, `Generator`
 - Conversion placeholder: `TryFromIntError`
 
 Global functions (snake_case):
@@ -98,9 +98,9 @@ must be provided by the embedding environment.
 Two common implementation strategies:
 
 - **WASM host**: provide the symbols as imported wasm functions (the compiler
-  maps `ext foo = ...;` to `env.foo`).
+ maps `ext foo = ...;` to `env.foo`).
 - **Native embedder**: provide the symbols in a linked library that uses an
-  engine such as JavaScriptCore, QuickJS, or V8.
+ engine such as JavaScriptCore, QuickJS, or V8.
 
 ### Handle Model
 
@@ -137,8 +137,8 @@ Error codes are stable integers:
 Notes:
 
 - For iterator helpers (e.g. `try_iter`), implementations SHOULD return a
-  canonical, stable handle for `undefined` and `null` per-context so equality
-  checks against `silk_js_undefined` / `silk_js_null` work as expected.
+ canonical, stable handle for `undefined` and `null` per-context so equality
+ checks against `silk_js_undefined` / `silk_js_null` work as expected.
 
 ### Required External Symbols (v0)
 
@@ -180,17 +180,17 @@ ext silk_js_string_utf8_write = fn (u64, u64, u64, i64) -> i64;
 
 Notes:
 
-- Passing a Silk `string` to `ext` lowers as a
-  NUL-terminated `const char *`. Therefore `silk_js_string_utf8` expects UTF‑8
-  without embedded NUL bytes.
+- In Silk currently, passing a Silk `string` to `ext` lowers as a
+ NUL-terminated `const char *`. Therefore `silk_js_string_utf8` expects UTF‑8
+ without embedded NUL bytes.
 - The `*_write` function copies **raw UTF‑8 bytes** (no NUL terminator) into the
-  destination buffer and returns the number of bytes written.
+ destination buffer and returns the number of bytes written.
 
 ## Considerations
 Expected follow-ups as `silk bindgen` becomes concrete:
 
 - richer conversions (arrays, maps, typed arrays / `ArrayBuffer` via a separate
-  environment-specific layer),
+ environment-specific layer),
 - promise integration (job queue hooks),
 - structured cloning / JSON convenience helpers on top of ECMAScript intrinsics,
 - a codegen layer that maps Web IDL types onto `std::js::ecma` calls.

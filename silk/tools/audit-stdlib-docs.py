@@ -21,12 +21,21 @@ ORDER = [
 ]
 
 BANNED_HEADINGS = (
+    "API",
     "Current API",
     "Implemented API",
     "Public API",
+    "High-Level API",
+    "Intended Surface",
+    "Current Surface",
+    "Current Grammar Coverage",
+    "Goals",
+    "Design Goals",
     "Future Work",
     "Future work",
     "Follow-ups",
+    "Remaining Follow-Ups",
+    "Important Limitations",
     "Current Limitations",
     "Notes and Limitations",
 )

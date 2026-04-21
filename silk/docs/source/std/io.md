@@ -1,20 +1,30 @@
 # `std::io`
 
-`std::io` provides console and basic stream I/O on the hosted baseline through
-`std::runtime::io`.
+Basic stdin reads, stdout/stderr
+writes, and a minimal `std::io::async` subset are implemented in `std/io.slk`
+via `std::runtime::io`; buffered I/O remains future work.
+
+`std::io` provides console and basic stream I/O.
+
+Hosted baseline: POSIX file descriptors and blocking I/O, with a minimal async
+subset (`std::io::async`) backed by the hosted runtime on supported POSIX
+hosts (`linux/*` and Apple Silicon `macos/aarch64` today). Linux may use
+`io_uring` acceleration where available; other supported POSIX hosts use the
+runtime poll fallback.
 
 See also:
 
-- `docs/std/strings.md` (formatting targets and string building)
-- `docs/std/fmt.md` (format string syntax)
-- `docs/std/conventions.md` (error conventions)
+- [strings](?p=std/strings) (formatting targets and string building)
+- [fmt](?p=std/fmt) (format string syntax)
+- [conventions](?p=std/conventions) (error conventions)
 
 ## Exported API
 
-The stdlib provides basic unbuffered stdio primitives (stdin reads and
-stdout/stderr writes), plus a small formatting surface
+The current stdlib provides basic unbuffered stdio primitives
+(stdin reads and stdout/stderr writes), a small formatting surface
 (implemented without libc varargs; formatted bytes are written via
-`std::runtime::io::write`):
+`std::runtime::io::write`), and a minimal async wrapper layer in
+`std::io::async`:
 
 ```silk
 module std::io;
@@ -65,49 +75,67 @@ export fn eprint (fmt: string, ...args: std::fmt::Arg) -> PrintFailed?;
 export fn eprintln (fmt: string, ...args: std::fmt::Arg) -> PrintFailed?;
 ```
 
+The shipped async subset lives in a sibling module:
+
+```silk
+module std::io::async;
+
+export async fn read (fd: int, buf: std::arrays::ByteSlice) -> std::io::IOResult;
+export async fn write (fd: int, buf: std::arrays::ByteSlice) -> std::io::IOResult;
+export async fn read_abortable (fd: int, buf: std::arrays::ByteSlice, sig: std::abort_controller::AbortSignalBorrow?) -> std::io::IOResult;
+export async fn write_abortable (fd: int, buf: std::arrays::ByteSlice, sig: std::abort_controller::AbortSignalBorrow?) -> std::io::IOResult;
+```
+
 Notes:
 
 - `print`/`println` accept Zig-`std.fmt`-style format strings (see
-  `docs/std/fmt.md`) and a variable number of `std::fmt::Arg` arguments (within
-  the current compiler’s varargs limit).
+ [fmt](?p=std/fmt)) and a variable number of `std::fmt::Arg` arguments (within
+ the current compiler’s varargs limit).
 - `eprint`/`eprintln` are the stderr equivalents of `print`/`println`.
 - `IOFailed.code` is a stable stdlib error code; callers should prefer `IOFailed.kind()`.
 - Invalid buffer arguments report `IOErrorKind::InvalidInput`.
 - `read_to_end` returns `IOErrorIntResult` (`Ok(total_bytes)` or `Err(IOFailed)`), where allocation failure is reported as `IOErrorKind::OutOfMemory` and `IOFailed.requested`.
 - `isatty(fd)` returns `true` when `fd` refers to a TTY, otherwise `false`.
 - `tty_size(fd)` returns `Some(TTYSize)` when the window size is available (TTY
-  mode), otherwise `None`.
+ mode), otherwise `None`.
 - `tty_open()` opens `/dev/tty` for interactive programs and returns `Ok(fd)` or
-  `Err(IOFailed)`.
+ `Err(IOFailed)`.
 - `tty_raw_mode(fd)` enables termios raw mode and returns a `TTYRawMode` guard
-  that restores the previous state on drop.
+ that restores the previous state on drop.
 - For ergonomics, `std::fmt::Arg` opts into the compiler’s implicit
-  call-argument coercion mechanism (see `docs/language/types.md`). This allows
-  passing primitive values (`int`/fixed-width ints, `usize`/`size`, `f32`/`f64`,
-  `bool`, `char`, `string`, `regexp`, `Region`) directly when calling functions
-  that expect `Arg` parameters (including varargs), so you can write
-  `println("hello {}", "world")` without explicit `Arg.*` wrappers.
+ call-argument coercion mechanism (see [types](?p=language/types)). This allows
+ passing primitive values (`int`/fixed-width ints, `usize`/`size`, `f32`/`f64`,
+ `bool`, `char`, `string`, `regexp`, `Region`) directly when calling functions
+ that expect `Arg` parameters (including varargs), so you can write
+ `println("hello {}", "world")` without explicit `Arg.*` wrappers. Values
+ implementing `std::interfaces::Serialize(string)` also participate in this
+ ergonomic path: when `Arg` is expected, the compiler may lower the value via
+ `serialize()` and then feed the resulting string into `Arg.string(...)`.
+- `std::strings::String` also satisfies ordinary borrowed `string`
+ expectations in bindings and plain `string` parameters, so explicit
+ `.as_string()` is no longer required solely to call helpers that take
+ `string`.
 - Executable outputs import external libc symbols. On `linux/x86_64` with the
-  glibc dynamic loader (`ld-linux`), `silk` automatically adds `libc.so.6` as a
-  `DT_NEEDED` dependency when external symbols are present, so `--needed libc.so.6`
-  is not required for typical hosted `std::io` use.
+ glibc dynamic loader (`ld-linux`), `silk` automatically adds `libc.so.6` as a
+ `DT_NEEDED` dependency when external symbols are present, so `--needed libc.so.6`
+ is not required for typical hosted `std::io` use.
 - `string` parameters in `ext` calls are lowered as C-string pointers in the
-  current backend subset (the backing bytes include a trailing NUL terminator;
-  Silk `string` length excludes it).
+ current backend subset (the backing bytes include a trailing NUL terminator;
+ Silk `string` length excludes it).
 - `std::io::async` provides small async wrappers (`read`/`write`) on top of
-  `std::runtime::io::{read_async,write_async}`. On `linux/*` these are backed
-  by the hosted async runtime (`io_uring` when available, `poll(2)` fallback).
-  On other targets they complete immediately by issuing a blocking `read`/`write`.
-  Abortable variants (`read_abortable` / `write_abortable`) accept an optional
-  `std::abort_controller::AbortSignalBorrow` and return `IOErrorKind::Aborted`
-  when cancelled.
-  Note: in the current subset, aborts are observed before starting an I/O
-  attempt; they do not interrupt an in-flight operation.
+ `std::runtime::io::{read_async,write_async}`. On `linux/*` these are backed
+ by the hosted async runtime (`io_uring` when available, `poll(2)` fallback).
+ On other targets they complete immediately by issuing a blocking `read`/`write`.
+ Abortable variants (`read_abortable` / `write_abortable`) accept an optional
+ `std::abort_controller::AbortSignalBorrow` and return `IOErrorKind::Aborted`
+ when cancelled.
+ Note: in the Supported forms, aborts are observed before starting an I/O
+ attempt; they do not interrupt an in-flight operation.
 - `std::io::stream` provides task-based adapters that connect POSIX/WASI file
-  descriptors (`fd`) with `std::stream` (`ReadableStream` / `WritableStream`):
-  - `std::io::stream::pipe_fd_to_stream` / `pipe_fd_to_stream_abortable`
-  - `std::io::stream::pipe_stream_to_fd` / `pipe_stream_to_fd_abortable`
-  These adapters take ownership of the `fd` and close it before returning.
+ descriptors (`fd`) with `std::stream` (`ReadableStream` / `WritableStream`):
+ - `std::io::stream::pipe_fd_to_stream` / `pipe_fd_to_stream_abortable`
+ - `std::io::stream::pipe_stream_to_fd` / `pipe_stream_to_fd_abortable`
+ These adapters take ownership of the `fd` and close it before returning.
 
 Example (formatted printing):
 
@@ -165,6 +193,7 @@ fn main () -> int {
 
 - Standard input, output, and error streams.
 - Simple printing and formatted output APIs.
+- Minimal fd-based async wrappers in `std::io::async`.
 
 ## Core Interfaces
 The stdlib should standardize reader/writer interfaces:
@@ -200,15 +229,12 @@ key point is that `std::fs` and `std::net` can reuse the same I/O traits.
 - stdout/stderr: `print`/`println` and `eprint`/`eprintln` (formatted output).
 - unbuffered primitives: `read_stdin`, `write_stdout`, `write_stderr`.
 - future (design): `stdout()` / `stderr()` / `stdin()` handle-returning helpers
-  built on a stable reader/writer interface.
+ built on a stable reader/writer interface.
 
 ## Considerations
 - Buffered I/O wrappers (`BufReader`, `BufWriter`).
-- Async-aware adapters:
-  - the hosted `linux/x86_64` toolchain now ships a bring-up async executor and
-    exposes timers + fd readiness via `std::runtime::event_loop`,
-  - `std::task` includes awaitable sleep helpers (`sleep_ms_async`, `sleep_async`),
-  - `std::io::async` provides minimal `async fn` wrappers over fd-based
-    `read`/`write` using the hosted async runtime I/O ops.
-  Broader async I/O surface (buffered async I/O, sockets, filesystem streams,
-  cancellation, and `select`-style waiting) remains future work.
+- Broader async I/O surface beyond the shipped `std::io::async` wrappers:
+ - buffered async I/O,
+ - richer socket and filesystem stream adapters,
+ - stronger cancellation of in-flight operations,
+ - and `select`-style waiting over mixed sources.

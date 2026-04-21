@@ -3,7 +3,7 @@
 Silk supports “varargs” parameters to accept a variable number of trailing
 arguments, used by `std::io::print` / `std::io::println`.
 
-Canonical doc: `docs/language/varargs.md`.
+Canonical doc: [varargs](?p=language/varargs).
 
 ## Syntax
 
@@ -25,5 +25,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/language/varargs.md`
-- `std::fmt`: `docs/wiki/std/fmt.md`
+- Canonical doc: [varargs](?p=language/varargs)
+- `std::fmt`: [fmt](?p=std/fmt)

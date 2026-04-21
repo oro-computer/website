@@ -20,24 +20,24 @@ The empty block `{}` is permitted.
 
 ## Statements
 
-The current compiler supports these statement forms (see
-`docs/language/grammar.md` for exact syntax):
+Silk currently supports these statement forms (see
+[grammar](?p=language/grammar) for exact syntax):
 
 - Local bindings:
-  - `const` (compile-time constant binding; initializer must be const-evaluable),
-  - `let` and `let mut` (and `var` as an alias for `let mut`).
+ - `const` (compile-time constant binding; initializer must be const-evaluable),
+ - `let` and `let mut` (and `var` as an alias for `let mut`).
 - Specification-only declarations: `#const` (Formal Silk; not usable in runtime expressions).
-- Structured blocks: `async { ... }` / `task { ... }` (see `docs/language/concurrency.md`).
+- Structured blocks: `async { ... }` / `task { ... }` (see [concurrency](?p=language/concurrency)).
 - Expression statements: limited to calls, assignments, and increment/decrement
-  in the current subset (`docs/language/flow-expression-statements.md`).
+ in the Supported forms ([flow expression statements](?p=language/flow-expression-statements)).
 - Flow control:
-  - `if` / `else` statements (including `if let` pattern destructuring),
-  - `while` loops,
-  - `break`, `continue`,
-  - `return`,
-  - `assert`,
-  - `panic` (typed errors),
-  - `match` statement (typed errors; see `docs/language/typed-errors.md`).
+ - `if` / `else` statements (including `if let` pattern destructuring),
+ - `while` loops,
+ - `break`, `continue`,
+ - `return`,
+ - `assert`,
+ - `panic` (typed errors),
+ - `match` statement (typed errors; see [typed errors](?p=language/typed-errors)).
 
 ## Semantics
 
@@ -52,18 +52,21 @@ the remainder of the block is not executed on that path.
 A block introduces a lexical scope:
 
 - Names declared by `const`/`let`/`var` are visible only after their
-  declaration within the same block, and within any nested blocks.
+ declaration within the same block, and within any nested blocks.
 - Inner blocks may shadow outer bindings by reusing a name (this is a normal
-  lexical-shadowing rule; the checker should reject only when a specific
-  feature imposes stricter rules).
+ lexical-shadowing rule; the checker should reject only when a specific
+ feature imposes stricter rules).
 - The special name `_` is a discard binding:
-  - `let _ = expr;` and `let _: T = expr;` evaluate the initializer but do not
-    introduce a binding into scope.
-  - `_` may be used repeatedly in the same scope without conflicts.
-  - Any produced runtime value is cleaned up at end-of-statement (not at scope
-    exit).
+ - `let _ = expr;` and `let _: T = expr;` evaluate the initializer but do not
+ introduce a binding into scope.
+ - `_` may be used repeatedly in the same scope without conflicts.
+ - Any produced runtime value is cleaned up at end-of-statement (not at scope
+ exit).
+ - `Task(T)` and `Promise(T)` handles are rejected in discard bindings:
+ bind the handle to a real name if you want structured scope-exit cleanup,
+ or consume it explicitly with `yield *`, `await`, or `await *`.
 
-Destructuring `let` bindings bind multiple locals from a
+Destructuring `let` bindings (Supported forms) bind multiple locals from a
 single struct value:
 
 - Positional (field order):
@@ -90,24 +93,24 @@ let records: Record[] = [{ id: 123, data: "a" }, { id: 456, data: "b" }];
 let [a, b] = records;
 ```
 
-Rules (current subset):
+Rules (Supported forms):
 
 - Only flat patterns are supported (no nested destructuring).
 - The initializer is required.
 - The initializer must have a non-opaque `struct` value type.
 - The pattern must account for every field exactly once:
-  - positional patterns must have exactly one binder per declared field (in
-    field order),
-  - named patterns must list each field exactly once (in any order),
-  - use `_` to discard a field (`let (_, name) = ...;` or `let { data as _ } = ...;`).
+ - positional patterns must have exactly one binder per declared field (in
+ field order),
+ - named patterns must list each field exactly once (in any order),
+ - use `_` to discard a field (`let (_, name) = ...;` or `let { data as _ } = ...;`).
 
 For array/slice destructuring:
 
 - The initializer must have an array type (`T[N]`) or slice type (`T[]`).
 - Each binder is positional (index order).
 - The pattern binds exactly the number of listed binders:
-  - fixed arrays require an exact arity match (`[a, b]` requires `T[2]`),
-  - slices trap at runtime if too short (as if indexing each element).
+ - fixed arrays require an exact arity match (`[a, b]` requires `T[2]`),
+ - slices trap at runtime if too short (as if indexing each element).
 
 Enum destructuring binds payload elements from a single enum variant:
 
@@ -131,15 +134,15 @@ fn main () -> int {
 }
 ```
 
-Rules (current subset):
+Rules (Supported forms):
 
 - The initializer is required.
 - The initializer must have an enum type `E` (including a monomorphized generic enum).
 - The initializer value is consumed (moved); the original binding may not be
-  used after destructuring.
+ used after destructuring.
 - The pattern must be an enum variant pattern:
-  - `Variant(...)` (shorthand), or
-  - `E::Variant(...)` / `pkg::E::Variant(...)` / `::pkg::E::Variant(...)`.
+ - `Variant(...)` (shorthand), or
+ - `E::Variant(...)` / `pkg::E::Variant(...)` / `::pkg::E::Variant(...)`.
 - Binder arity must match the variant payload arity (use `_` to discard payload elements).
 - If the runtime value is not the matched variant, execution traps.
 
@@ -154,14 +157,14 @@ let <pattern> = <expr> else {
 };
 ```
 
-Semantics (current subset):
+Semantics (Supported forms):
 
 - The initializer expression is evaluated exactly once.
 - If the pattern matches, the pattern binders are introduced into the **current
-  scope** for the remainder of the block (like a normal `let` binding).
+ scope** for the remainder of the block (like a normal `let` binding).
 - If the pattern does not match, the `else` block executes.
 - The `else` block must be **terminal** (it must not fall through), so the
-  binders are always available after the statement on any path that continues.
+ binders are always available after the statement on any path that continues.
 - The binders are **not** in scope inside the `else` block.
 
 Examples:
@@ -193,28 +196,28 @@ fn main () -> int {
 `const` bindings are compile-time constants:
 
 - their initializer expression must be compile-time evaluable (otherwise the
-  compiler reports an error),
+ compiler reports an error),
 - the binding is immutable (there is no `const mut`),
 - a `const` binding is a normal runtime value (unlike `#const`), but its value
-  is computed by the compiler at compile time and does not incur runtime
-  computation cost in the current compiler.
+ is computed by the compiler at compile time and does not incur runtime
+ computation cost in Silk currently.
 
-Compile-time evaluation for runtime `const`
+In Silk currently, compile-time evaluation for runtime `const`
 bindings is restricted to:
 
 - scalar primitive types (`bool`, integer/float scalars, `char`, `Instant`, `Duration`),
 - compile-time POD `struct` types whose fields are compile-time scalar value types and that do not require `Drop`, and
 - compile-time evaluable expressions composed of:
-  - literals,
-  - other `const` bindings,
-  - calls to `const fn` functions where all arguments are themselves compile-time evaluable, and
-  - struct literals and field access when the struct type is a supported compile-time POD `struct`, and
-  - `as` casts between supported scalar types, and
-  - a small operator subset (notably `+`, `-`, `*`, bitwise ops, shifts; `/` and `%` are currently rejected for `const`).
+ - literals,
+ - other `const` bindings,
+ - calls to `const fn` functions where all arguments are themselves compile-time evaluable, and
+ - struct literals and field access when the struct type is a supported compile-time POD `struct`, and
+ - `as` casts between supported scalar types, and
+ - a small operator subset (notably `+`, `-`, `*`, bitwise ops, shifts; `/` and `%` are currently rejected for `const`).
 
 - `string` bindings whose initializer is either:
-  - a string literal (`"..."` or `` `...` ``), or
-  - another `const` string binding.
+ - a string literal (`"..."` or `` `...` ``), or
+ - another `const` string binding.
 
 Example:
 
@@ -227,18 +230,18 @@ const ox: int = origin.x;
 
 Formal Silk declarations (`#const`) are compile-time-only names intended for specifications
 (`#require`, `#assure`, `#assert`, `#invariant`, `#variant`, `#monovariant`). They must not be referenced
-in runtime expressions (see `docs/language/formal-verification.md` and
-`docs/compiler/diagnostics.md`, `E2014`).
+in runtime expressions (see [formal verification](?p=language/formal-verification) and
+[diagnostics](?p=compiler/diagnostics), `E2014`).
 
 ### Blocks as Expressions
 
 The broader language design includes expression-oriented flow constructs (for
 example `match` expressions today and `if` expressions).
 
-Current compiler behavior:
+In Silk currently:
 
 - a block is not an expression and does not produce a value; it is purely a
-  statement list used as the body of constructs.
+ statement list used as the body of constructs.
 
 The `if` expression form is a special-case expression-oriented construct; it
 does not make `{ ... }` a general expression form.
@@ -246,7 +249,7 @@ does not make `{ ... }` a general expression form.
 If/when general block expressions are introduced, the spec will define:
 
 - which contexts accept them (and how ambiguity with `{ ... }` struct literals
-  is resolved), and
+ is resolved), and
 - how their result values are computed.
 
 ## Examples
@@ -287,6 +290,12 @@ fn main () -> int {
 
 ## Notes
 
-- Blocks create scopes for runtime `let` / `var` bindings and nested blocks.
-- Formal Silk `#const` declarations are parsed and type-checked, and are
-  rejected when used as runtime statements.
+Implemented end-to-end:
+
+- Block scoping for runtime `let`/`var` bindings and nested blocks.
+- Formal Silk `#const` declarations (parsed, type-checked, and rejected if used at runtime).
+
+examples:
+
+- `tests/silk/pass_let_locals.slk`
+- `tests/silk/pass_spec_const_while.slk`

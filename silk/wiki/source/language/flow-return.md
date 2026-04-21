@@ -2,11 +2,11 @@
 
 Use `return` to exit the current function.
 
-Full reference: `docs/language/flow-return.md`.
+Canonical spec: [flow return](?p=language/flow-return).
 
 ## Notes
 
-- Full reference: `docs/language/flow-return.md`
+- Supported forms + diagnostics: [flow return](?p=language/flow-return)
 
 ## Syntax
 
@@ -28,5 +28,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/flow-return.md`
-- `test` blocks allow `return;`: `docs/wiki/language/testing.md`
+- Canonical spec: [flow return](?p=language/flow-return)
+- `test` blocks allow `return;`: [testing](?p=language/testing)

@@ -8,9 +8,9 @@ It sits at the bottom of most other std modules.
 
 See also:
 
-- `docs/language/regions.md` (`region`, `with`, and region-backed `new`)
-- `docs/language/buffers.md` (`Buffer(T)` intrinsic)
-- `docs/std/conventions.md` (allocation conventions)
+- [regions](?p=language/regions) (`region`, `with`, and region-backed `new`)
+- [buffers](?p=language/buffers) (`Buffer(T)` intrinsic)
+- [conventions](?p=std/conventions) (allocation conventions)
 
 ## Exported API
 A small subset is implemented in `std/memory.slk` for early compiler bring-up.
@@ -21,7 +21,7 @@ allocation-failure error type used across `std::`.
 module std::memory;
 
 export error OutOfMemory {
-  requested: i64
+  requested: i64 = 0
 }
 
 enum AllocErrorKind {
@@ -52,18 +52,20 @@ Notes:
 
 - `align_*` functions require `alignment` to be a power of two.
 - `OutOfMemory` is the shared error type returned by allocation-backed
-  containers and builders (for example `std::vector::Vector` and
-  `std::strings::StringBuilder`) when capacity growth cannot allocate.
+ containers and builders (for example `std::vector::Vector` and
+ `std::strings::StringBuilder`) when capacity growth cannot allocate.
+- `OutOfMemory{}` is the canonical form when the requested byte count is not
+ known at the call site; `requested` defaults to `0` in that case.
 - `AllocFailed` is a small, stable “constructor failed” error used by APIs
-  like `BufferU8.init` / `Vector(T).init` where invalid inputs (negative
-  capacities, overflow) must be distinguished from out-of-memory.
+ like `BufferU8.init` / `Vector(T).init` where invalid inputs (negative
+ capacities, overflow) must be distinguished from out-of-memory.
 ## Scope
 
 `std::memory` is responsible for:
 
 - Defining allocator interfaces used by other `std::` modules.
 - Providing safe wrappers around region allocation and the intrinsic `Buffer(T)` type
-  (where possible).
+ (where possible).
 - Providing low-level memory operations (`memcpy`, `memcmp`, zeroing, etc.).
 - Defining common allocation error conventions (`OutOfMemory`, etc.).
 
@@ -71,14 +73,14 @@ Non-goals (initially):
 
 - A full garbage collector (explicit allocation is the design baseline).
 - Region inference beyond the region model already described in the language
-  docs.
+ docs.
 
 ## Intrinsics and Their Std Surface
 
 The language defines:
 
-- regions (`docs/language/regions.md`) as an allocation context for `new`,
-- `Buffer(T)` as an intrinsic “fat pointer” (`docs/language/buffers.md`).
+- regions ([regions](?p=language/regions)) as an allocation context for `new`,
+- `Buffer(T)` as an intrinsic “fat pointer” ([buffers](?p=language/buffers)).
 
 The buffer document enumerates intrinsic operations under the `std::buffer::`
 namespace (allocation, read/write, drop, view/slice). The `std::memory` design

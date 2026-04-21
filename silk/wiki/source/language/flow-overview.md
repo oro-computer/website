@@ -7,11 +7,11 @@ Silk has familiar structured control flow:
 - structured matching: `match`
 - early exit: `break`, `continue`, `return`
 
-Full reference: `docs/language/flow-overview.md`.
+Canonical spec: [flow overview](?p=language/flow-overview).
 
 ## Notes
 
-- Full reference: `docs/language/flow-*.md`
+- Reference details: `docs/language/flow-*.md`
 
 ## Example
 ```silk
@@ -34,6 +34,6 @@ fn main () -> int {
 
 ## See also
 
-- `if` / `else`: `docs/wiki/language/flow-if-else.md`
-- `for`: `docs/wiki/language/flow-for.md`
-- `match`: `docs/wiki/language/flow-match.md`
+- `if` / `else`: [flow if else](?p=language/flow-if-else)
+- `for`: [flow for](?p=language/flow-for)
+- `match`: [flow match](?p=language/flow-match)

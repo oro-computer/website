@@ -25,8 +25,8 @@ silk build my_program.slk -o my_program
 Notes:
 
 - `--nostd` disables auto-loading of `import std::...;` modules, but it does not
-  prevent `from "std/..."` file imports from resolving relative to the selected
-  std root. See: [CLI and toolchain](?p=guides/cli).
+ prevent `from "std/..."` file imports from resolving relative to the selected
+ std root. See: [CLI and toolchain](?p=guides/cli).
 
 ## Provide a Prebuilt Std Archive
 
@@ -54,7 +54,7 @@ Example (hosted POSIX baseline):
 
 - `std/runtime/fs.slk` delegates to `std/runtime/posix/fs.slk`,
 - `std/runtime/posix/fs.slk` implements primitives using `ext` (e.g. `open`,
-  `read`, `close`).
+ `read`, `close`).
 
 For a new environment (for example Windows), the intent is to provide
 `std/runtime/windows/fs.slk` and have `std/runtime/fs.slk` delegate to it in that

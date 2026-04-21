@@ -4,14 +4,48 @@ This module defines small,
 non-generic standard-library interfaces (“protocols”) that can be used today to
 express common capabilities across `std::` types.
 
-Dynamic interface dispatch (trait objects / vtables) is part of the language
-design, but is not implemented yet. In the current compiler/backend subset,
-interfaces are used for:
+The current compiler supports a closed-world runtime interface subset. Runtime
+interface values are compiled as unions of the known concrete conformers in the
+current build, and interface method calls on those values are rewritten into
+ordinary union dispatch. The compiler still does not expose a separate boxed
+trait-object / vtable ABI. In the current compiler/backend subset, interfaces
+are used for:
 
 - declaring interface contracts, and
 - compile-time conformance checking via `impl Type as Interface { ... }`.
+- closed-world runtime interface values such as `Interface[]` when the
+ conformer set is known to the compiler.
+- empty-method-set interface values in those same runtime positions when the
+ conformer set is known to the compiler.
 - one compiler-backed convention: `std::interfaces::Drop` is used for automatic
-  cleanup of values at well-defined points (see “Drop semantics” below).
+ cleanup of values at well-defined points (see “Drop semantics” below).
+
+## Closed-world runtime model and ABI boundaries
+
+`std::interfaces` participates in the same interface model described by
+[interfaces](?p=language/interfaces):
+
+- inside one compiler invocation, an interface-typed runtime value is lowered
+ to a union of the concrete conformers known in that build,
+- method calls on that value are rewritten into ordinary `match` dispatch over
+ that union,
+- there is no general boxed trait object or stable vtable object layout behind
+ `std::interfaces` today.
+
+Implications:
+
+- `std::interfaces` is appropriate for source-level contracts and for
+ closed-world runtime polymorphism inside one build.
+- `std::interfaces` is not, by itself, a public binary extension mechanism for
+ separately compiled libraries, plugins, or the C embedding ABI.
+- Do not design a public `libsilk.a` or FFI-facing boundary around “pass me any
+ `Drop`/`Len`/`Serialize` object” and assume the compiler defines one stable
+ runtime object shape for that.
+- If you need open-world binary polymorphism, design it explicitly:
+ - use concrete enums/unions when the set of cases belongs to the API author,
+ - use concrete structs when a shared data layout is enough,
+ - or use an explicit function-table ABI when you need dynamic dispatch across
+ separate build products.
 
 When the standard library is enabled (the default), all interfaces in
 `std::interfaces` are available without explicit imports via the std prelude
@@ -19,8 +53,8 @@ module `std::runtime::globals`, so you can write `impl T as Drop { ... }`.
 
 See also:
 
-- `docs/language/interfaces.md` (syntax, conformance, dispatch status)
-- `docs/language/structs-impls-layout.md` (method + `export` rules)
+- [interfaces](?p=language/interfaces) (syntax, conformance, closed-world runtime dispatch status)
+- [structs impls layout](?p=language/structs-impls-layout) (method + `export` rules)
 
 ## Exported API
 `std/interfaces.slk` currently defines the following interfaces:
@@ -92,122 +126,149 @@ interface Builder {
 Notes:
 
 - Most of these interfaces intentionally avoid generics; they are meant to be
-  usable within the current subset. `Serialize`, `TrySerialize`, `Parse`, and
-  `Deserialize` are generic, but default their representation type parameter to
-  the common textual case so most callers do not need explicit type arguments.
+ usable within the Supported forms. `Serialize`, `TrySerialize`, `Parse`, and
+ `Deserialize` are generic, but default their representation type parameter to
+ the common textual case so most callers do not need explicit type arguments.
 - `ReserveAdditional` and `WriteU8` return `std::memory::OutOfMemory?` so
-  allocation-backed types can report allocation failure as a recoverable value
-  instead of trapping.
+ allocation-backed types can report allocation failure as a recoverable value
+ instead of trapping.
 - `Iterator(T)` is modeled after Rust’s `Iterator` and represents a sequential
-  producer of values. Implementations typically use a receiver of the form
-  `public fn next (mut self: &Type) -> T?`, so calling `next` requires an
-  explicit mutable borrow at the call site: `it.next()`.
-  - `for x in it { ... }` can also be used when `it.next() -> T?`; the loop
-    evaluates the iterator expression once and calls `next()` repeatedly until
-    `None` (see `docs/language/flow-for.md`).
+ producer of values. Implementations typically use a receiver of the form
+ `public fn next (mut self: &Type) -> T?`, so calling `next` requires an
+ explicit mutable borrow at the call site: `it.next()`.
+ - `for x in it { ... }` can also be used when `it.next() -> T?`; the loop
+ evaluates the iterator expression once and calls `next()` repeatedly until
+ `None` (see [flow for](?p=language/flow-for)).
 - Most interfaces use an implicit receiver: the interface method signature
-  omits `self`, and the corresponding `impl` method includes `self` as its
-  first parameter (see `docs/language/interfaces.md`).
+ omits `self`, and the corresponding `impl` method includes `self` as its
+ first parameter (see [interfaces](?p=language/interfaces)).
 - Exception: `Deserialize(S)` is a static protocol used by `as` casts; its
-  `impl` method does **not** take a `self` receiver and is called as
-  `Type.deserialize(value)`.
+ `impl` method does **not** take a `self` receiver and is called as
+ `Type.deserialize(value)`.
 - `Parse(E, S)` is also a static protocol:
-  - `impl T as Parse(E, S)` provides `fn parse(value: S) -> Result(Self, E)`
-    with no `self` receiver,
-  - calls use `T.parse(value)`,
-  - unlike `Deserialize`, `Parse` is **not** used by `as` casts.
+ - `impl T as Parse(E, S)` provides `fn parse(value: S) -> Result(Self, E)`
+ with no `self` receiver,
+ - calls use `T.parse(value)`,
+ - unlike `Deserialize`, `Parse` is **not** used by `as` casts.
 - Implemented (partial): `sizeof <string value>` yields the string byte length
-  (see `docs/language/operators.md`).
+ (see [operators](?p=language/operators)).
 - Planned (general): `Sized` will be used by the `sizeof` operator for other
-  value operands: when a concrete type provides `fn size(self: &T) -> usize`,
-  `sizeof value` will lower to that method call.
+ value operands: when a concrete type provides `fn size(self: &T) -> usize`,
+ `sizeof value` will lower to that method call.
 - `Serialize` is also recognized by the `as` cast operator:
-  - when a type provides `serialize(self: &T) -> S`, an explicit cast
-    `value as S` lowers to `value.serialize()` (see `docs/language/operators.md`).
+ - when a type provides `serialize(self: &T) -> S`, an explicit cast
+ `value as S` lowers to `value.serialize()` (see [operators](?p=language/operators)).
 - Current stdlib adopters of `Serialize(string)` include:
-  - `std::strings::String`
-  - `std::path::PathBuf`
-  - `std::url::URLSearchParams`
-  - `std::ffi::c_owned::OwnedCStr`
-  These types already own stable byte storage and can return an allocation-free
-  borrowed `string` view.
+ - `std::strings::String`
+ - `std::path::PathBuf`
+ - `std::url::URLSearchParams`
+ - `std::ffi::c_owned::OwnedCStr`
+ These types already own stable byte storage and can return an allocation-free
+ borrowed `string` view.
 - `TrySerialize(E, S)` is the fallible output-side companion to `Serialize`:
-  - `impl T as TrySerialize(E, S)` provides
-    `fn try_serialize(self: &T) -> Result(S, E)`,
-  - calls use `value.try_serialize()`,
-  - unlike `Serialize`, `TrySerialize` is not used by `as` casts.
+ - `impl T as TrySerialize(E, S)` provides
+ `fn try_serialize(self: &T) -> Result(S, E)`,
+ - calls use `value.try_serialize()`,
+ - unlike `Serialize`, `TrySerialize` is not used by `as` casts.
 - Current stdlib adopters of `TrySerialize(std::memory::OutOfMemory)` include:
-  - `std::strings::String`
-  - `std::path::PathBuf`
-  - `std::url::URL`
-  - `std::url::URLSearchParams`
-  - `std::semver::Version`
-  - `std::uuid::UUID`
-  - `std::ffi::c_owned::OwnedCStr`
-  These types expose a canonical owned textual rendering, but that rendering
-  may allocate and therefore must remain recoverably fallible.
+ - `std::strings::String`
+ - `std::path::PathBuf`
+ - `std::url::URL`
+ - `std::url::URLSearchParams`
+ - `std::semver::Version`
+ - `std::uuid::UUID`
+ - `std::ffi::c_owned::OwnedCStr`
+ These types expose a canonical owned textual rendering, but that rendering
+ may allocate and therefore must remain recoverably fallible.
 - `Deserialize` is also recognized by the `as` cast operator:
-  - when a type provides `deserialize(value: S) -> Self`, an explicit cast
-    `value as T` lowers to `T.deserialize(value)` (see `docs/language/operators.md`).
-  - `Deserialize` must remain infallible. Fallible parsing or allocation-backed
-    constructors should use `Parse(E, S)` or explicit `Result(...)`-returning
-    APIs rather than forcing a trap-heavy `Deserialize` impl.
+ - when a type provides `deserialize(value: S) -> Self`, an explicit cast
+ `value as T` lowers to `T.deserialize(value)` (see [operators](?p=language/operators)).
+ - `Deserialize` must remain infallible. Fallible parsing or allocation-backed
+ constructors should use `Parse(E, S)` or explicit `Result(...)`-returning
+ APIs rather than forcing a trap-heavy `Deserialize` impl.
 - Current stdlib adopters of `Parse` include:
-  - `std::strings::String`
-  - `std::path::PathBuf`
-  - `std::url::URL`
-  - `std::url::URLSearchParams`
-  - `std::semver::Version`
-  - `std::uuid::UUID`
-  These types can now expose a consistent receiverless parse surface without
-  overloading the cast operator.
+ - `std::strings::String`
+ - `std::path::PathBuf`
+ - `std::url::URL`
+ - `std::url::URLSearchParams`
+ - `std::semver::Version`
+ - `std::uuid::UUID`
+ These types can now expose a consistent receiverless parse surface without
+ overloading the cast operator.
 - Current stdlib adopters of the core container/view protocols include:
-  - `std::arrays::Slice(T)` and `std::arrays::ByteSlice` implement `Len` and
-    `IsEmpty`, while `SliceIter(T)` and `ByteSliceIter` implement `Iterator(...)`.
-  - `std::buffer::BufferU8` implements `Len`, `Capacity`, `IsEmpty`, `Clear`,
-    `ReserveAdditional`, `WriteU8`, and `Drop`; the lower-level
-    `std::buffer::Buffer(T)` implements `Capacity` and `Drop`.
-  - `std::vector::Vector(T)` implements `Len`, `Capacity`, `IsEmpty`, `Clear`,
-    `ReserveAdditional`, and `Drop`. Its `iter()` method returns the shared
-    `std::arrays::SliceIter(T)` iterator instead of introducing a vector-only
-    iterator protocol surface.
-  - `std::map::HashMap(K, V)` implements `Len`, `Capacity`, `IsEmpty`, `Clear`,
-    `ReserveAdditional`, and `Drop`; `TreeMap(K, V)` implements `Len`,
-    `IsEmpty`, `Clear`, and `Drop`; both iterator types implement
-    `Iterator(Entry(K, V))`.
-  - `std::set::SetMap(T)` implements `Len`, `Capacity`, `IsEmpty`, `Clear`,
-    `ReserveAdditional`, and `Drop`; `TreeSet(T)` implements `Len`,
-    `IsEmpty`, `Clear`, and `Drop`; both iterator types implement
-    `Iterator(...)`.
-  - `std::fs::File` implements `Drop`, `std::fs::Dir` implements
-    `Iterator(DirEntryResult)` and `Drop`, and `std::fs::MMap` implements
-    `Len`, `IsEmpty`, and `Drop`.
-- Regression coverage for that protocol story is split between focused
-  in-memory/container coverage and end-to-end filesystem coverage, including
-  explicit checks for `Drop` cleanup, post-drop invalidation, and real
-  directory iteration.
+ - `std::arrays::Slice(T)` and `std::arrays::ByteSlice` implement `Len` and
+ `IsEmpty`, while `SliceIter(T)` and `ByteSliceIter` implement `Iterator(...)`.
+ - `std::buffer::BufferU8` implements `Len`, `Capacity`, `IsEmpty`, `Clear`,
+ `ReserveAdditional`, `WriteU8`, and `Drop`; the lower-level
+ `std::buffer::Buffer(T)` implements `Capacity` and `Drop`.
+ - `std::vector::Vector(T)` implements `Len`, `Capacity`, `IsEmpty`, `Clear`,
+ `ReserveAdditional`, and `Drop`. Its `iter()` method returns the shared
+ `std::arrays::SliceIter(T)` iterator instead of introducing a vector-only
+ iterator protocol surface.
+ - `std::queue::{FIFOQueue(T), FixedFIFOQueue(T), LIFOQueue(T),
+ FixedLIFOQueue(T)}` implement `std::queue::Queue(T)` plus the shared
+ container protocols `Len`, `Capacity`, `IsEmpty`, `Sized`, `Clear`,
+ `ReserveAdditional`, and `Drop`; they also provide both direct destructive
+ `Iterator(T)` conformance and non-destructive `iter()` snapshots via
+ `std::queue::QueueIter(T)`.
+ - `std::stack::{Stack(T), FixedStack(T)}` and
+ `std::list::{List(T), FixedList(T)}` build on that same queue core and
+ implement the same shared container protocols while adding their
+ stack/list-specific alias methods (`top` / `bottom`, `first` / `last`).
+ - `std::map::HashMap(K, V)` implements `Len`, `Capacity`, `IsEmpty`, `Clear`,
+ `ReserveAdditional`, and `Drop`; `TreeMap(K, V)` implements `Len`,
+ `IsEmpty`, `Clear`, and `Drop`; both iterator types implement
+ `Iterator(Entry(K, V))`.
+ - `std::set::SetMap(T)` implements `Len`, `Capacity`, `IsEmpty`, `Clear`,
+ `ReserveAdditional`, and `Drop`; `TreeSet(T)` implements `Len`,
+ `IsEmpty`, `Clear`, and `Drop`; both iterator types implement
+ `Iterator(...)`.
+ - `std::fs::File` implements `Drop`, `std::fs::Dir` implements
+ `Iterator(DirEntryResult)` and `Drop`, and `std::fs::MMap` implements
+ `Len`, `IsEmpty`, and `Drop`.
+- Current regression coverage for that protocol story is intentionally split:
+ - `tests/silk/pass_std_interfaces_core_containers.slk` is the focused shared
+ smoke test for in-memory/container protocol surfaces, including
+ representative `for`-loop iterator consumption for both empty and populated
+ slices, bytes, vectors, maps, sets, and the empty `MMap` byte view. Each
+ representative iterator family in that fixture is exercised through both
+ iterator call expressions and iterator value bindings, with the empty and
+ populated checks split across the in-memory/container set.
+ - `tests/silk/pass_std_fs_file_drop_and_helpers.slk` is the stronger
+ end-to-end regression for `std::fs::File as Drop`, including proof that
+ `drop()` actually closes the saved OS file descriptor.
+ - `tests/silk/pass_std_fs_file_drop_basic.slk` is the narrower companion pin
+ for post-drop invalidation and idempotent cleanup on invalid handles.
+ - Compiler-inserted `Drop` glue for `std::fs::File` is covered separately by
+ `tests/silk/pass_drop_scope_exit_file_close.slk`,
+ `tests/silk/pass_drop_overwrite_file_close.slk`,
+ `tests/silk/pass_drop_heap_ref_file_close.slk`, and
+ `tests/silk/pass_drop_overwrite_heap_ref_file_close.slk`.
+ - `tests/silk/pass_std_fs_read_dir_basic.slk` remains the dedicated
+ end-to-end regression for `std::fs::Dir.next()` and real directory-handle
+ iteration.
 - Stdlib conversion convention:
-  - `Serialize(string)` is reserved for infallible textual views of the
-    current value. In practice that means stable, allocation-free borrows such
-    as `String`, `PathBuf`, `URLSearchParams`, and `OwnedCStr`.
-  - `TrySerialize(E, std::strings::String)` is the canonical fallible owned-text
-    rendering path for values whose string form may allocate.
-  - `Parse(E, string)` is reserved for self-contained values that can be
-    constructed from a single textual representation without extra ownership or
-    mode choices.
-  - Structured text formats that need explicit parse modes or format-specific
-    emission stay on explicit APIs instead of forcing those semantics into the
-    builtin interfaces. Current examples are `std::json::Document` and
-    `std::toml::Document`, which use `parse(...)` / `parse_owned(...)` and
-    JSON-specific `stringify(...)` APIs rather than `Serialize(string)` or a
-    blanket `Parse(...)` impl.
+ - `Serialize(string)` is reserved for infallible textual views of the
+ current value. In practice that means stable, allocation-free borrows such
+ as `String`, `PathBuf`, `URLSearchParams`, and `OwnedCStr`.
+ - `TrySerialize(E, std::strings::String)` is the canonical fallible owned-text
+ rendering path for values whose string form may allocate.
+ - `Parse(E, string)` is reserved for self-contained values that can be
+ constructed from a single textual representation without extra ownership or
+ mode choices.
+ - Structured text formats that need explicit parse modes or format-specific
+ emission stay on explicit APIs instead of forcing those semantics into the
+ builtin interfaces. Current examples are `std::json::Document` and
+ `std::toml::Document`, which use `parse(...)` / `parse_owned(...)` and
+ JSON-specific `stringify(...)` APIs rather than `Serialize(string)` or a
+ blanket `Parse(...)` impl.
 - `Builder` is the standard interface for `build.slk` build modules used by the
-  `silk` CLI (see `docs/compiler/build-scripts.md`). It is a module-level
-  interface (used via `module ... as ...`) and defines a single `run` entrypoint
-  that may be implemented as `async` and `await`ed by the driver wrapper.
-  - Recommended build-module header style:
-    - `module my_pkg::build as Builder;` (preferred; `Builder` is in the std prelude)
-    - or `module my_pkg::build as std::interfaces::Builder;` (fully qualified)
+ `silk` CLI (see [build scripts](?p=compiler/build-scripts)). It is a module-level
+ interface (used via `module ... as ...`) and defines a single `run` entrypoint
+ that may be implemented as `async` and `await`ed by the driver wrapper.
+ - Recommended build-module header style:
+ - `module my_pkg::build as Builder;` (preferred; `Builder` is in the std prelude)
+ - or `module my_pkg::build as std::interfaces::Builder;` (fully qualified)
 
 ## Drop semantics
 
@@ -225,26 +286,26 @@ impl T as Drop {
 Automatic invocation (current compiler):
 
 - **Scope exit:** when a `struct` *value* binding goes out of scope (including
-  via fallthrough, `break`, and `continue`), the compiler calls `drop` before
-  the storage is discarded.
+ via fallthrough, `break`, and `continue`), the compiler calls `drop` before
+ the storage is discarded.
 - **Return:** on `return`, the compiler drops all in-scope droppable bindings
-  except any value moved into the return result (for example `return value;`
-  and `return Some(value);` treat `value` as moved in the current subset).
+ except any value moved into the return result (for example `return value;`
+ and `return Some(value);` treat `value` as moved in the Supported forms).
 - **Overwrite:** when a `struct` *value* binding is overwritten via assignment,
-  the compiler calls `drop` on the old value before copying in the new value.
+ the compiler calls `drop` on the old value before copying in the new value.
 - **Heap last-release:** for compiler-managed `new` allocations (`&T` with RC),
-  the compiler calls `drop` before freeing the backing allocation when the
-  refcount reaches zero.
+ the compiler calls `drop` before freeing the backing allocation when the
+ refcount reaches zero.
 
-Notes and limitations (current subset):
+Notes and limitations (Supported forms):
 
 - `drop` is resolved statically (no dynamic dispatch).
 - `drop` should invalidate the value so calling it multiple times is safe.
 - The language does not yet implement a general move/ownership model; **do not
-  rely on copying `Drop` types** to be safe until move/copy semantics are
-  specified and enforced.
-- See `docs/language/memory-model.md` for the current `new` + RC rules and how
-  cleanup is performed.
+ rely on copying `Drop` types** to be safe until move/copy semantics are
+ specified and enforced.
+- See [memory model](?p=language/memory-model) for the current `new` + RC rules and how
+ cleanup is performed.
 
 ## Example (Conformance)
 

@@ -1,4 +1,4 @@
-# `silk-doc` (1) — Generate Documentation (Markdown or Manpages)
+# [`silk-doc(1)`](?p=man/silk-doc.1) — Generate Documentation (Markdown or Manpages)
 
 > NOTE: This is the Markdown source for the eventual man 1 page for `silk doc`. The roff-formatted manpage should be generated from this content.
 
@@ -32,7 +32,7 @@ In manpage mode, the rendered manpage section is derived from doc tags:
 - `@misc` → section 7
 - otherwise API docs → section 3
 
-Doc tag semantics are specified in [Doc comments](?p=language/doc-comments).
+Doc tag semantics are specified in [doc comments](?p=language/doc-comments).
 
 ## Options
 
@@ -77,6 +77,6 @@ silk doc --man --package . readme -o pkg_readme.7
 
 ## See Also
 
-- [silk (1)](?p=man/silk.1)
-- [silk-man (1)](?p=man/silk-man.1)
-- [CLI reference](?p=compiler/cli-silk)
+- [`silk(1)`](?p=man/silk.1)
+- [`silk-man(1)`](?p=man/silk-man.1)
+- [cli silk](?p=compiler/cli-silk)

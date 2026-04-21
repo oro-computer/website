@@ -4,11 +4,11 @@ Silk is a statically typed language with a small set of built-in primitive
 types and first-class user-defined types (`struct`, `enum`, `interface`).
 
 This wiki page is a learning-oriented companion to the canonical spec:
-`docs/language/types.md`.
+[types](?p=language/types).
 
 ## Notes
 
-- Full reference: `docs/language/types.md`
+- Reference details and current limitations: [types](?p=language/types)
 
 ## Common Type Forms
 
@@ -24,7 +24,7 @@ let s: string = "hello";
 let maybe: int? = None;
 
 // References (borrows)
-// (Receiver/borrow rules are in `docs/language/mutability.md`.)
+// (Receiver/borrow rules are in the mutability docs.)
 // let r: &MyStruct = ...;
 
 // Arrays and slices
@@ -61,6 +61,6 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/types.md`
-- Type modifiers and borrow rules: `docs/language/mutability.md`
-- Generics (monomorphized): `docs/language/generics.md`
+- Canonical spec: [types](?p=language/types)
+- Type modifiers and borrow rules: [mutability](?p=language/mutability)
+- Generics (monomorphized): [generics](?p=language/generics)

@@ -5,7 +5,7 @@ This module provides practical Unicode helpers focused on:
 - code point classification (whitespace, identifier rules, casing metadata),
 - surfaces that are easy to support in the current compiler/backend subset.
 
-The core `char` type in Silk is a Unicode scalar value (see `docs/language/types.md`).
+The core `char` type in Silk is a Unicode scalar value (see [types](?p=language/types)).
 
 ## Exported API
 
@@ -24,9 +24,9 @@ Notes:
 
 - These helpers classify a single Unicode scalar value (`char`).
 - String-level Unicode features (normalization, grapheme segmentation, etc.)
-  are future work and require UTF-8 decoding APIs.
+ are future work and require UTF-8 decoding APIs.
 
 ## Related Documents
 
-- `docs/language/types.md` (`char`)
-- `docs/std/regex.md` (regex literals and matching)
+- [types](?p=language/types) (`char`)
+- [regex](?p=std/regex) (regex literals and matching)

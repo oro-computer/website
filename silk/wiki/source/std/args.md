@@ -3,7 +3,7 @@
 `std::args` provides helpers for working with the hosted
 `main(argc, argv)` entrypoint shape.
 
-Canonical doc: `docs/std/args.md`.
+Canonical doc: [args](?p=std/args).
 
 ## Example
 ```silk
@@ -24,5 +24,5 @@ fn main (argc: int, argv: u64) -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/args.md`
-- CLI entrypoint rules: `docs/compiler/cli-silk.md`
+- Canonical doc: [args](?p=std/args)
+- CLI entrypoint rules: [cli silk](../docs/?p=compiler/cli-silk)

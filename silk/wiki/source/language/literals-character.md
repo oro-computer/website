@@ -3,7 +3,7 @@
 `char` represents a Unicode scalar value. Character literals write a `char`
 value directly in source code.
 
-Canonical doc: `docs/language/literals-character.md`.
+Canonical doc: [literals character](?p=language/literals-character).
 
 ## Example
 ```silk
@@ -18,4 +18,4 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/language/literals-character.md`
+- Canonical doc: [literals character](?p=language/literals-character)

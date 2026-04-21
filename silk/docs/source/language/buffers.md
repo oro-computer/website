@@ -5,21 +5,21 @@
 Key points:
 
 - `Buffer(T)` is a “fat pointer” with:
-  - a raw pointer to the start of the memory block,
-  - a capacity (number of elements that can be stored).
+ - a raw pointer to the start of the memory block,
+ - a capacity (number of elements that can be stored).
 - `Buffer(T)` does **not** track the number of initialized elements (length).
 - The intrinsic API includes operations such as:
-  - `std::buffer::alloc`
-  - `std::buffer::write`
-  - `std::buffer::read`
-  - `std::buffer::capacity`
-  - `std::buffer::drop`
-  - `std::buffer::view`
-  - `std::buffer::slice`
+ - `std::buffer::alloc`
+ - `std::buffer::write`
+ - `std::buffer::read`
+ - `std::buffer::capacity`
+ - `std::buffer::drop`
+ - `std::buffer::view`
+ - `std::buffer::slice`
 - The safety model is layered:
-  - Layer 1: unsafe `Buffer(T)` primitive.
-  - Layer 2: compile-time safety via the verifier.
-  - Layer 3: provable safety via Formal Silk (contracts, invariants, and struct requirements).
+ - Layer 1: unsafe `Buffer(T)` primitive.
+ - Layer 2: compile-time safety via the verifier.
+ - Layer 3: provable safety via Formal Silk (contracts, invariants, and struct requirements).
 
 ## Role in the language
 
@@ -34,14 +34,14 @@ memory. In practice, downstream code currently uses the concrete `std::buffer`
 and `std::vector` surfaces below:
 
 - `std::vector::Vector(T)` provides growable, contiguous storage for scalar
-  element types.
+ element types.
 - `std::buffer` provides width-oriented buffer helpers:
-  - `BufferU8` is an owning packed byte buffer (byte-addressed `ptr`, with
-    `len`/`cap` in bytes),
-  - the remaining width buffers are `std::vector::Vector(T)`-backed aliases in
-    the current subset.
+ - `BufferU8` is an owning packed byte buffer (byte-addressed `ptr`, with
+ `len`/`cap` in bytes),
+ - the remaining width buffers are `std::vector::Vector(T)`-backed aliases in
+ the Supported forms.
 - Raw allocation and low-level memory intrinsics remain confined to
-  `std::runtime::mem`.
+ `std::runtime::mem`.
 
 This keeps raw allocation details in runtime helpers while higher-level
 collections remain explicit in the standard library.
@@ -76,4 +76,4 @@ fn main () -> int {
 - Use `std::buffer::BufferU8` when you need explicit packed-byte ownership.
 - Use `std::vector::Vector(T)` for typed, growable storage.
 - Keep raw allocation details inside `std::runtime::mem` and stdlib helpers
-  rather than open-coding them in application code.
+ rather than open-coding them in application code.

@@ -1,12 +1,14 @@
 # `std::json`
 
-`std::json` provides JSON parsing and stringifying.
+`std::json` provides JSON parsing and stringifying (implementation + expanded
+subset).
 
-Full reference: `docs/std/json.md`.
+Canonical doc: [json](?p=std/json).
 
 ## Notes
 
-- Full reference: `docs/std/json.md`
+- Supported forms + design: parsing and stringify are implemented; the DOM/query surface is still evolving.
+- Details: [json](?p=std/json)
 
 ## Importing
 
@@ -110,4 +112,5 @@ fn main () -> int {
 
 ## See also
 
-- Full reference: `docs/std/json.md`
+- Canonical doc: [json](?p=std/json)
+- End-to-end fixture: `tests/silk/pass_std_json_basic.slk`

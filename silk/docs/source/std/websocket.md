@@ -6,10 +6,10 @@ handshake, framing, ping/pong, close, fragmentation).
 
 See also:
 
-- `docs/std/networking.md` (`std::net` sockets)
+- [networking](?p=std/networking) (`std::net` sockets)
 - RFC 6455: The WebSocket Protocol (wire format + handshake)
 
-## Description
+## Overview
 
 `std::websocket` is a protocol layer that upgrades an HTTP/1.1 connection to a
 WebSocket and then sends/receives WebSocket frames.
@@ -18,12 +18,12 @@ Design goals:
 
 - Work for hosted POSIX builds using `std::net`.
 - Be fully interoperable with other WebSocket implementations (browsers,
-  Node.js, etc.) for the supported feature set:
-  - version 13 handshake,
-  - masked client→server frames,
-  - unmasked server→client frames,
-  - fragmentation and continuation frames,
-  - ping/pong, close.
+ Node.js, etc.) for the supported feature set:
+ - version 13 handshake,
+ - masked client→server frames,
+ - unmasked server→client frames,
+ - fragmentation and continuation frames,
+ - ping/pong, close.
 - Provide a small, blocking server that accepts one connection at a time.
 
 Non-goals (for now):
@@ -120,7 +120,7 @@ Notes:
 
 - This API is currently **blocking**.
 - Handle types wrap OS resources; avoid copying `WebSocket` / `WebSocketServer`
-  values until the language has move-only handles.
+ values until the language has move-only handles.
 
 ## Protocol Rules Enforced
 
@@ -129,7 +129,7 @@ The implementation enforces the following RFC 6455 requirements:
 - Client→server frames **must** be masked; server→client frames **must not** be masked.
 - Reserved bits (RSV1/2/3) must be zero (compression/extensions are not supported).
 - Control frames (ping/pong/close):
-  - are not allowed to be fragmented (`FIN = 1`),
-  - must have payload length ≤ 125.
+ - are not allowed to be fragmented (`FIN = 1`),
+ - must have payload length ≤ 125.
 - Close frames trigger an attempted close reply and then the connection is
-  treated as closed from the API’s perspective.
+ treated as closed from the API’s perspective.

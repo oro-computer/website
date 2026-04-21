@@ -143,9 +143,13 @@ oroc build .
 
 ## Recommended reading path
 
-1. Guides: [Hello world](?p=guides/hello-world)
-2. Guides: [Project layout](?p=guides/project-layout)
-3. Guides: [Build and package](?p=guides/build-and-package)
-4. CLI: [oroc](?p=cli/oroc) → [help](?p=cli/help) → [run](?p=cli/run) → [build](?p=cli/build) → [update](?p=cli/update)
-5. Config: [Overview](?p=config/overview) → [copy_map](?p=config/copy-map) → [reference](?p=config/reference)
-6. JavaScript APIs: [Overview](?p=javascript/overview) → [module index](?p=javascript/module-index) → [all module specifiers](?p=javascript/all-modules) → [application](?p=javascript/application) → [window](?p=javascript/window) → [hooks](?p=javascript/hooks)
+1. **Start from nothing** — [From zero to first run](?p=guides/from-zero-to-first-run) → [Hello world](?p=guides/hello-world) → [Project layout](?p=guides/project-layout)
+2. **Shape the app** — [Configure your runtime project](?p=guides/configure-your-runtime-project) → [Files and sandboxing](?p=guides/files-and-sandboxing) → [Desktop integrations](?p=guides/desktop-integrations)
+3. **Add real app value** — [Local data with SQLite](?p=guides/local-data-with-sqlite) → [Secure storage and sessions](?p=guides/secure-storage-and-sessions) → [Calling HTTP APIs](?p=guides/calling-http-apis)
+4. **Scale the runtime model** — [Windows and messaging](?p=guides/windows-and-messaging) → [Worker threads for heavy work](?p=guides/worker-threads-for-heavy-work) → [Shared workers across windows](?p=guides/shared-workers-across-windows)
+5. **Ship a resilient app** — [Offline-first with service workers](?p=guides/offline-first-with-service-workers) → [Custom protocols and routing](?p=guides/custom-protocols-and-routing) → [Lifecycle hooks and deep links](?p=guides/lifecycle-hooks-and-deep-links)
+6. **Production workflows** — [Frontend build pipeline](?p=guides/frontend-build-pipeline) → [Build and package](?p=guides/build-and-package) → [Mobile targets and device installs](?p=guides/mobile-targets-and-device-installs)
+7. **Operate and automate** — [Release packaging and signed updates](?p=guides/release-packaging-and-signed-updates) → [Testing and diagnostics](?p=guides/testing-and-diagnostics) → [MCP and agent automation](?p=guides/mcp-and-agent-automation)
+8. **Reference** — [oroc](?p=cli/oroc) → [help](?p=cli/help) → [run](?p=cli/run) → [build](?p=cli/build) → [update](?p=cli/update)
+9. **Configuration** — [Overview](?p=config/overview) → [copy_map](?p=config/copy-map) → [reference](?p=config/reference)
+10. **JavaScript APIs** — [Overview](?p=javascript/overview) → [module index](?p=javascript/module-index) → [all module specifiers](?p=javascript/all-modules) → [application](?p=javascript/application) → [window](?p=javascript/window) → [hooks](?p=javascript/hooks)

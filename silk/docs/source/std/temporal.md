@@ -5,7 +5,7 @@ is implemented in `std/temporal.slk`:
 
 - `Instant`/`Duration` convenience helpers, plus
 - pure calendar/time utilities (`Date`, `TimeOfDay`, `DateTime`) that do not
-  depend on OS clocks.
+ depend on OS clocks.
 
 A hosted monotonic clock source (`now_monotonic`) is implemented via
 `std::runtime::time`. The runtime also exposes Unix wall-clock timestamps via
@@ -13,13 +13,13 @@ A hosted monotonic clock source (`now_monotonic`) is implemented via
 remain future work.
 
 `std::temporal` provides utilities built around the `Instant` and `Duration`
-types (`docs/language/duration-instant.md`) and a proleptic Gregorian calendar
+types ([duration instant](?p=language/duration-instant)) and a proleptic Gregorian calendar
 model for date/time computations.
 
 See also:
 
-- `docs/language/duration-instant.md`
-- `docs/std/conventions.md`
+- [duration instant](?p=language/duration-instant)
+- [conventions](?p=std/conventions)
 
 ## Exported API
 The following helpers exist today in `std/temporal.slk` and are available to
@@ -98,13 +98,13 @@ export fn parse_datetime_iso (s: string) -> DateTimeParseResult;
 `std::temporal` is responsible for:
 
 - Access to time sources:
-  - a monotonic clock for measuring durations (`Instant`),
-  - a wall-clock time source (UTC/local timestamps) for `DateTime` (future work).
+ - a monotonic clock for measuring durations (`Instant`),
+ - a wall-clock time source (UTC/local timestamps) for `DateTime` (future work).
 - Conversions between units and convenience helpers for `Duration`.
 - Pure calendar/time computations that do not require OS services:
-  - validation and construction of `Date`, `TimeOfDay`, and `DateTime`,
-  - Unix epoch conversions (days/seconds/nanoseconds),
-  - strict ISO formatting/parsing helpers.
+ - validation and construction of `Date`, `TimeOfDay`, and `DateTime`,
+ - Unix epoch conversions (days/seconds/nanoseconds),
+ - strict ISO formatting/parsing helpers.
 
 ## Clock APIs
 The language examples use `std::now()`; the stdlib should make the clock source
@@ -116,7 +116,7 @@ Notes:
 
 - `now_monotonic()` must be monotonic (not subject to wall-clock adjustments).
 - Sleeping is exposed via `std::task` (`sleep` / `sleep_until`) in the current
-  stdlib.
+ stdlib.
 
 ## Duration Helpers
 
@@ -125,10 +125,10 @@ as:
 
 - `to_millis(d)`, `to_secs(d)`
 - checked arithmetic (`checked_add`, `checked_mul`) where overflow behavior
-  needs to be explicit.
+ needs to be explicit.
 
 ## Considerations
 - Wall-clock time (`now_utc`, `now_local`) via higher-level wrappers on top of
-  `std::runtime::time::unix_now_ns` / `unix_now_ms`.
+ `std::runtime::time::unix_now_ns` / `unix_now_ms`.
 - Time zones and DST rules (separate module layered on top of `DateTime`).
 - Richer formatting/parsing (locale-aware, RFCs) layered on top of `std::fmt`.

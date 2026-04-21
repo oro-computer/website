@@ -17,19 +17,23 @@ expr;
 
 ## Current implementation restrictions
 
-An expression statement is currently valid only when
+For Silk currently, an expression statement is only valid when
 the expression is either:
 
 - a call expression (a function call), or
 - an assignment / compound assignment expression.
 - an increment/decrement expression (`++x`, `x++`, `--x`, `x--`).
+- `await p;` where `p: Promise(void)`.
+- `await * ps;` where `ps: Promise(T)[]` (the collected results are discarded).
+- `yield ...;` statement forms inside `task fn` as described in
+ [concurrency](?p=language/concurrency).
 
 All other expression statements are rejected.
 
 This restriction will be relaxed as more of the expression language is lowered
 and code-generated.
 
-Examples (accepted in the current subset):
+Examples (accepted in the Supported forms):
 
 ```silk
 fn main () -> int {
@@ -44,7 +48,17 @@ fn main () -> int {
 }
 ```
 
-Examples (rejected in the current subset):
+```silk
+async fn pause () -> void {}
+
+async fn main () -> int {
+  await pause();
+  await * [pause()];
+  return 0;
+}
+```
+
+Examples (rejected in the Supported forms):
 
 ```silk
 fn main () -> int {
@@ -65,7 +79,7 @@ fn main () -> int {
 ```
 
 If you want a value for control flow, prefer an expression form that produces a
-value (for example `match` expressions; see `docs/language/flow-match.md`).
+value (for example `match` expressions; see [flow match](?p=language/flow-match)).
 
 ## Compiler requirements
 

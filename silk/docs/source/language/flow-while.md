@@ -36,9 +36,9 @@ Notes:
 
 - The scrutinee expression is evaluated once per iteration.
 - The pattern binders (for example `Some(v)` binds `v`) are in scope only in
-  the loop body.
+ the loop body.
 - The loop exits when the scrutinee does not match the pattern.
-- Supported patterns are the same as `if let` (see `docs/language/flow-if-else.md`).
+- Supported patterns are the same as `if let` (see [flow if else](?p=language/flow-if-else)).
 
 ### `while let` chains (`&& let`)
 
@@ -63,13 +63,13 @@ Semantics:
 
 - Clauses are evaluated left-to-right and short-circuit like `&&`.
 - `let` clause binders are in scope for subsequent clauses and for the loop
-  body, but they do not escape the loop.
+ body, but they do not escape the loop.
 - The loop exits when any clause fails (pattern mismatch or boolean `false`).
 
-Parsing note (current subset):
+Parsing note (Supported forms):
 
 - `&&` at the top level is parsed as a clause separator. Use parentheses if a
-  clause needs its own `&&` / `||` / `??` expression at the top level.
+ clause needs its own `&&` / `||` / `??` expression at the top level.
 
 Example (optional countdown):
 
@@ -95,7 +95,7 @@ fn main () -> int {
 ### Loop Specifications (`#invariant` / `#variant` / `#monovariant`)
 
 The language supports attaching loop specifications immediately before a
-`while`. This is part of Formal Silk (see `docs/language/formal-verification.md`).
+`while`. This is part of Formal Silk (see [formal verification](?p=language/formal-verification)).
 When Formal Silk syntax is present, the compiler proves these obligations with
 Z3 at compile time.
 
@@ -116,14 +116,14 @@ Evaluation rules:
 - If the condition evaluates to `true`, the body block executes.
 - After the body completes normally, control returns to the condition.
 - If the condition evaluates to `false`, the loop terminates and execution
-  continues after the loop statement.
+ continues after the loop statement.
 
 Control-flow statements inside the body follow their own definitions:
 
-- `break` exits the nearest enclosing loop (`docs/language/flow-break.md`).
-- `continue` skips to the next iteration (`docs/language/flow-continue.md`).
-- `return` exits the function (`docs/language/flow-return.md`).
-- `panic` exits the function via the typed error system (`docs/language/typed-errors.md`).
+- `break` exits the nearest enclosing loop ([flow break](?p=language/flow-break)).
+- `continue` skips to the next iteration ([flow continue](?p=language/flow-continue)).
+- `return` exits the function ([flow return](?p=language/flow-return)).
+- `panic` exits the function via the typed error system ([typed errors](?p=language/typed-errors)).
 
 Blocks create scopes. A `let` declared inside the body is not visible outside
 the loop’s body block.
@@ -135,9 +135,9 @@ The checker enforces:
 - The loop condition must have type `bool` (otherwise `E2001`).
 - Each `#invariant` expression must have type `bool` (otherwise `E2001`).
 - If present, the `#variant` expression must have an integer type (`int` or a
-  fixed-width integer; otherwise `E2001`).
+ fixed-width integer; otherwise `E2001`).
 - Each `#monovariant` expression must have an integer type (`int` or a
-  fixed-width integer; otherwise `E2001`).
+ fixed-width integer; otherwise `E2001`).
 
 `#invariant`, `#variant`, and `#monovariant` expressions are compile-time-only
 (erased from runtime code). When Formal Silk verification is enabled by syntax,
@@ -177,8 +177,20 @@ fn main () -> int {
 
 ## Notes
 
-- Silk supports `while` loops with boolean conditions.
-- `while let <pattern> = <expr> { ... }` and `&&` let-chains are part of the
-  loop surface.
-- `break`, `continue`, `#invariant`, `#variant`, and `#monovariant` are all
-  valid inside `while` loops.
+Implemented end-to-end:
+
+- `while` loops with boolean conditions.
+- `while let <pattern> = <expr> { ... }` pattern-destructuring loops.
+- `&&` let-chains in `while let` loop conditions.
+- `break` / `continue` inside `while` bodies.
+- `#invariant` (type-checked as `bool`), `#variant` (type-checked as an
+ integer), and `#monovariant` (type-checked as an integer) attached to `while`.
+
+examples:
+
+- `tests/silk/pass_while_bool.slk`
+- `tests/silk/pass_invariant_while.slk`
+- `tests/silk/pass_spec_const_while.slk`
+- `tests/silk/pass_nested_if_while.slk`
+- `tests/silk/pass_while_let_optional_countdown.slk`
+- `tests/silk/pass_while_let_chain_optional_basic.slk`

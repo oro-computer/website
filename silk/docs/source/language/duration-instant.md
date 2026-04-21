@@ -6,18 +6,18 @@ Key ideas:
 
 - `Duration` represents a signed time span.
 - `Instant` represents a signed point-in-time on a monotonic timeline (an opaque
-  epoch chosen by the runtime).
+ epoch chosen by the runtime).
 - Duration literals represent time spans with unit suffixes and are converted into
-  integral ticks.
+ integral ticks.
 - Operators cover arithmetic, comparisons, and construction from scalars.
 
-## Representation (Implemented)
+## Representation
 
 In the current compiler/backend subset:
 
 - `Duration` is represented as a signed 64-bit integer count of **nanoseconds**.
 - `Instant` is represented as a signed 64-bit integer count of **nanoseconds**
-  since a monotonic, runtime-defined origin.
+ since a monotonic, runtime-defined origin.
 
 These are distinct Silk types in the type system, but share the same underlying
 scalar representation (`i64`) at the IR and native ABI layers.
@@ -36,18 +36,18 @@ Supported operator subset:
 - `Instant - Instant -> Duration`
 
 - Comparisons (`==`, `!=`, `<`, `<=`, `>`, `>=`) are supported for:
-  - `Duration` vs `Duration`
-  - `Instant` vs `Instant`
+ - `Duration` vs `Duration`
+ - `Instant` vs `Instant`
 
 Other arithmetic (`*`, `/`, `%`) and bitwise operators are not defined for time
-types in this section.
+types in the Supported forms.
 
-## Overflow (Implemented)
+## Overflow
 
 Arithmetic uses the same deterministic wrapping behavior as the underlying
 `i64` operations in the current back-end subset (two’s complement wraparound).
 
-## Remaining Boundaries
+## Notes
 
 At maturity, this document will be expanded to fully specify:
 
@@ -59,5 +59,5 @@ At maturity, this document will be expanded to fully specify:
 Compiler requirements:
 
 - Implement type-checking and lowering for the operator subset above.
-- Implement duration literal parsing as specified in `docs/language/literals-duration.md`.
+- Implement duration literal parsing as specified in [literals duration](?p=language/literals-duration).
 - Integrate with `std::temporal` in the standard library.

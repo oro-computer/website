@@ -7,7 +7,7 @@ implemented on top of the pluggable `std::runtime::env` interface. WASI support
 is Implemented: `get` works, while `set` remains unsupported (see
 “Platform notes”).
 
-## API
+## Exported API
 
 ```silk
 module std::env;
@@ -91,16 +91,16 @@ fn main () -> int {
 ## Platform notes
 
 - **POSIX (default shipped stdlib)**: implemented via `getenv(3)` and
-  `setenv(3)`.
+ `setenv(3)`.
 - **WASI**:
-  - `get` is implemented via WASI Preview 1 `environ_sizes_get` /
-    `environ_get` and caches the returned environment buffer for the process
-    lifetime,
-  - `set` is not supported on WASI Preview 1 and always fails (returns
-    `Some(SetVarFailed{ code: ... })` with `kind() == Unknown`).
-  - `get_current_dir` / `set_current_dir` are implemented via the virtual cwd
-    layer backing `std::process::getcwd` / `std::process::chdir` (they do not
-    mutate `$PWD`).
+ - `get` is implemented via WASI Preview 1 `environ_sizes_get` /
+ `environ_get` and caches the returned environment buffer for the process
+ lifetime,
+ - `set` is not supported on WASI Preview 1 and always fails (returns
+ `Some(SetVarFailed{ code: ... })` with `kind() == Unknown`).
+ - `get_current_dir` / `set_current_dir` are implemented via the virtual cwd
+ layer backing `std::process::getcwd` / `std::process::chdir` (they do not
+ mutate `$PWD`).
 
 ## Directory helpers
 

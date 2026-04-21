@@ -3,7 +3,7 @@
 `std::env` provides access to process environment variables and common
 directory helpers.
 
-Canonical doc: `docs/std/env.md`.
+Canonical doc: [env](?p=std/env).
 
 ## Example: `get`
 ```silk
@@ -22,5 +22,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/env.md`
-- Typed errors: `docs/wiki/language/typed-errors.md`
+- Canonical doc: [env](?p=std/env)
+- Typed errors: [typed errors](?p=language/typed-errors)

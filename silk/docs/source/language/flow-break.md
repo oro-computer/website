@@ -12,7 +12,7 @@ Notes:
 
 - `break` is a statement, terminated by a semicolon.
 - `break` does not carry a value in the current language design; there is no
-  `break <expr>` form.
+ `break <expr>` form.
 
 ## Semantics
 
@@ -40,13 +40,24 @@ fn main () -> int {
 ## Type Checking Rules
 
 - `break` is only permitted inside a loop body.
-- A `break` outside a loop is a type-check error (`docs/compiler/diagnostics.md`,
-  `E2007`).
+- A `break` outside a loop is a type-check error ([diagnostics](?p=compiler/diagnostics),
+ `E2007`).
 
 ## Notes
 
-- `break;` is valid inside `loop`, `while`, and `for`.
-- `break;` outside of a loop is rejected with `E2007`.
+Implemented:
+
+- `break;` is accepted inside loops (`loop`, `while`, and `for`) and lowered
+ end-to-end.
+- `break;` outside of a loop is rejected (`E2007`).
+
+examples:
+
+- `tests/silk/pass_loop_basic.slk`
+- `tests/silk/pass_while_bool.slk`
+- `tests/silk/pass_for_continue_break.slk`
+- `tests/silk/fail_break_outside.slk`
+- `tests/silk/pass_invariant_while.slk` (shows `break` in a loop with specs)
 
 ## Common Pitfalls
 

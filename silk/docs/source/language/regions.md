@@ -8,36 +8,38 @@ Regions are represented at runtime as a first-class `Region` handle value. A
 
 ## Notes
 
+
+
 Supported forms:
 
 - Parsing and type-checking of:
-  - `const region <name>: u8[N];`
-  - `with <name> { ... }`
-  - `with <bytes> { ... }` / `with(<bytes>) { ... }` (anonymous region for the block)
-  - `with <bytes> from <region> { ... }`
-  - `with <bytes> from <region>[<start>..] { ... }`
-  - `with <bytes> from <region>[<start>..<end>] { ... }`
+ - `const region <name>: u8[N];`
+ - `with <name> { ... }`
+ - `with <bytes> { ... }` / `with(<bytes>) { ... }` (anonymous region for the block)
+ - `with <bytes> from <region> { ... }`
+ - `with <bytes> from <region>[<start>..] { ... }`
+ - `with <bytes> from <region>[<start>..<end>] { ... }`
 - `Region` is a primitive handle type:
-  - `const region name: u8[N];` binds `name` as a `Region` value,
-  - `Region` values may be passed and stored (including in struct fields),
-  - `with <name> { ... }` accepts any `Region`-typed binding (including function parameters and locals).
+ - `const region name: u8[N];` binds `name` as a `Region` value,
+ - `Region` values may be passed and stored (including in struct fields),
+ - `with <name> { ... }` accepts any `Region`-typed binding (including function parameters and locals).
 - Inside a `with <region> { ... }` block, `new` allocations for non-opaque
-  `struct` values allocate from the active region instead of the heap.
+ `struct` values allocate from the active region instead of the heap.
 - Within the dynamic extent of a `with <region> { ... }` block (including calls
-  performed while the block is active), raw allocations via
-  `std::runtime::mem::alloc` allocate from the active region (8-byte aligned).
+ performed while the block is active), raw allocations via
+ `std::runtime::mem::alloc` allocate from the active region (8-byte aligned).
 - Region allocation overflow traps at runtime.
 
-Limitations:
+Limitations (Supported forms):
 
 - The region backing store is currently restricted to `u8[N]` (a fixed-size
-  byte array type annotation).
+ byte array type annotation).
 - Only the existing `new` subset is affected (non-opaque `struct` allocations
-  that produce `&Struct`).
+ that produce `&Struct`).
 - Region-backed `new` allocations are still reference-counted:
-  - last-release runs `drop` (when defined),
-  - but the backing bytes are not freed (region memory is reclaimed only by
-    reusing the region cursor, as described below).
+ - last-release runs `drop` (when defined),
+ - but the backing bytes are not freed (region memory is reclaimed only by
+ reusing the region cursor, as described below).
 
 ## Syntax
 
@@ -67,7 +69,7 @@ Rules:
 - `const region` is a declaration form (it is not a type).
 - A region declaration has no initializer.
 - The type annotation specifies the region backing size and must be a fixed
-  byte array type: `u8[N]`.
+ byte array type: `u8[N]`.
 - The declared name is bound as a `Region` value.
 
 ### Using a region: `with`
@@ -124,7 +126,7 @@ fn main () -> int {
 }
 ```
 
-Rules (current subset):
+Rules (Supported forms):
 
 - `<bytes>` must be a positive integer literal.
 
@@ -160,18 +162,18 @@ with 1024 from region_buf[64..1088] {
 }
 ```
 
-Rules (current subset):
+Rules (Supported forms):
 
 - `<bytes>` must be a positive integer literal.
 - `<region>` must name a `Region` value that has a compile-time-known backing size
-  in the current subset (for example a `const region` declaration).
+ in the Supported forms (for example a `const region` declaration).
 - Slice bounds use **byte offsets** (the region backing store is `u8[N]`).
 - `<start>` / `<end>` must be non-negative integer literals.
 - When an explicit `<end>` is present, it is exclusive (`[start..end]`).
 - The `from` slice must contain at least `<bytes>` writable bytes:
-  - `with <bytes> from r { ... }` requires `<bytes> <= sizeof(r)`.
-  - `with <bytes> from r[start..end] { ... }` requires `<bytes> <= end - start`.
-  - `with <bytes> from r[start..] { ... }` requires `<bytes> <= sizeof(r) - start`.
+ - `with <bytes> from r { ... }` requires `<bytes> <= sizeof(r)`.
+ - `with <bytes> from r[start..end] { ... }` requires `<bytes> <= end - start`.
+ - `with <bytes> from r[start..] { ... }` requires `<bytes> <= sizeof(r) - start`.
 
 ## Semantics
 
@@ -180,12 +182,12 @@ Rules (current subset):
 Within a `with <region> { ... }` block:
 
 - any `new` allocation performed by the compiler’s `new` lowering uses the
-  active region as its backing store,
-- allocations are **8-byte aligned** in the current subset,
+ active region as its backing store,
+- allocations are **8-byte aligned** in the Supported forms,
 - if the region does not have enough remaining space, the program traps.
 
 Outside of a `with` block, `new` uses the current heap model described in
-`docs/language/memory-model.md`.
+[memory model](?p=language/memory-model).
 
 ### Region-backed raw allocation (`std::runtime::mem::alloc`)
 
@@ -193,9 +195,9 @@ Within the dynamic extent of a `with <region> { ... }` block (including calls
 performed while the block is active):
 
 - `std::runtime::mem::alloc(n)` allocates an `n`-byte payload from the active
-  region (8-byte aligned) and reserves an additional 8-byte header immediately
-  before the returned pointer (used by the runtime to distinguish region-backed
-  and heap-backed pointers and to record the allocation size),
+ region (8-byte aligned) and reserves an additional 8-byte header immediately
+ before the returned pointer (used by the runtime to distinguish region-backed
+ and heap-backed pointers and to record the allocation size),
 - if the region does not have enough remaining space, the program traps.
 
 Implication for `with <bytes>` limits: each `alloc(n)` consumes at least
@@ -206,7 +208,7 @@ Region-backed raw allocations are bump-allocated. In the current runtime model:
 
 - `std::runtime::mem::free` is a no-op for region-backed pointers,
 - `std::runtime::mem::realloc` reallocates by allocating a new region block and
-  copying bytes (it never calls libc `realloc` on a region-backed pointer).
+ copying bytes (it never calls libc `realloc` on a region-backed pointer).
 
 ### Nested `with`
 
@@ -232,19 +234,19 @@ requires resetting the region cursor so the backing bytes can be reused.
 Current behavior:
 
 - `with <region> { ... }` activates the region but does **not** reset its cursor.
-  - allocations across multiple `with <region>` blocks accumulate and can
-    eventually overflow and trap.
+ - allocations across multiple `with <region>` blocks accumulate and can
+ eventually overflow and trap.
 - `with <bytes> { ... }` creates an anonymous region and resets its cursor to `0`
-  on entry so repeated execution of the block starts from an empty region.
+ on entry so repeated execution of the block starts from an empty region.
 - `with <bytes> from <region>[...] { ... }` creates an anonymous region backed by
-  a subrange of `<region>` and resets its cursor to the slice start on entry.
+ a subrange of `<region>` and resets its cursor to the slice start on entry.
 
 Important limitation:
 
 - The compiler does not yet enforce “region allocations must not escape the
-  `with` block”. Because anonymous-region cursors are reset on entry, code must
-  treat pointers/`&Struct` values allocated inside `with <bytes> { ... }` and
-  `with <bytes> from ... { ... }` as block-scoped.
+ `with` block”. Because anonymous-region cursors are reset on entry, code must
+ treat pointers/`&Struct` values allocated inside `with <bytes> { ... }` and
+ `with <bytes> from ... { ... }` as block-scoped.
 
 ## Exports
 

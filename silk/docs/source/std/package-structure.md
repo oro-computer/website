@@ -12,54 +12,61 @@ available to user programs.
 
 - `std::` is a **reserved namespace root**.
 - The standard library is a **distribution of modules** whose module names begin
-  with `std::...`:
-  - `std::buffer` (currently implemented as a module; long-term `Buffer(T)` intrinsic; see `docs/std/buffer.md` and `docs/language/buffers.md`)
-  - `std::strings`
-  - `std::memory`
-  - `std::arrays`
-  - `std::bits`
-  - `std::interfaces`
-  - `std::map`
-  - `std::set`
-  - `std::graphics` (low-level graphics API bindings; see `docs/std/graphics.md`)
-  - `std::graphics::opengl`
-  - `std::graphics::opengles`
-  - `std::graphics::vulkan`
-  - `std::image` (image codecs + color utilities; see `docs/std/image.md`)
-  - `std::image::color`
-  - `std::image::png`
-  - `std::image::jpeg`
-  - `std::algorithms`
-  - `std::temporal`
-  - `std::semver`
-  - `std::url`
-  - `std::tar` (tar archives; see `docs/std/tar.md`)
-  - `std::xml` (XML parsing; see `docs/std/xml.md`)
-  - `std::idl::web` (current Web IDL parser; see `docs/std/idl-web.md`)
-  - `std::js::ecma` (current ECMAScript FFI surface; see `docs/std/js-ecma.md`)
-  - `std::wasm` (WebAssembly runtime API; see `docs/std/wasm.md`)
-  - `std::io`
-  - `std::stream` (Web Streams-inspired byte streams; see `docs/std/stream.md`)
-  - `std::env`
-  - `std::process`
-  - `std::os`
-  - `std::path`
-  - `std::fs`
-  - `std::net`
-  - `std::tls`
-  - `std::http`
-  - `std::https`
-  - `std::websocket`
-  - `std::runtime` (runtime interface layer used by OS-facing `std::...` modules; see `docs/std/runtime.md`)
+ with `std::...`:
+ - `std::buffer` (currently implemented as a module; long-term `Buffer(T)` intrinsic; see [buffer](?p=std/buffer) and [buffers](?p=language/buffers))
+ - `std::strings`
+ - `std::memory`
+ - `std::arrays`
+ - `std::bits`
+ - `std::interfaces`
+ - `std::queue`
+ - `std::stack`
+ - `std::list`
+ - `std::map`
+ - `std::set`
+ - `std::graphics` (low-level graphics API bindings; see [graphics](?p=std/graphics))
+ - `std::graphics::opengl`
+ - `std::graphics::opengles`
+ - `std::graphics::vulkan`
+ - `std::image` (image codecs + color utilities; see [image](?p=std/image))
+ - `std::image::color`
+ - `std::image::png`
+ - `std::image::jpeg`
+ - `std::algorithms`
+ - `std::temporal`
+ - `std::boolean`
+ - `std::optional`
+ - `std::range`
+ - `std::function`
+ - `std::semver`
+ - `std::url`
+ - `std::tar` (tar archives; see [tar](?p=std/tar))
+ - `std::xml` (XML parsing; see [xml](?p=std/xml))
+ - `std::idl::web` (current Web IDL parser; see [idl web](?p=std/idl-web))
+ - `std::js::ecma` (current ECMAScript FFI surface; see [js ecma](?p=std/js-ecma))
+ - `std::wasm` (WebAssembly runtime API; see [wasm](?p=std/wasm))
+ - `std::io`
+ - `std::stream` (Web Streams-inspired byte streams; see [stream](?p=std/stream))
+ - `std::env`
+ - `std::process`
+ - `std::os`
+ - `std::path`
+ - `std::fs`
+ - `std::net`
+ - `std::tls`
+ - `std::http`
+ - `std::https`
+ - `std::websocket`
+ - `std::runtime` (runtime interface layer used by OS-facing `std::...` modules; see [runtime](?p=std/runtime))
 - Each source file in the stdlib declares which module it defines using a
-  `module` declaration:
+ `module` declaration:
 
   ```silk
   module std::strings;
   ```
 
 The compiler treats module/package names (including `std::...`) as part of the
-module set dependency graph, as specified in `docs/language/packages-imports-exports.md`.
+module set dependency graph, as specified in [packages imports exports](?p=language/packages-imports-exports).
 
 ## `std::runtime` (Runtime Interface Layer)
 
@@ -69,120 +76,120 @@ platform/environment primitives in a **pluggable** way.
 Design intent:
 
 - Higher-level `std::...` modules (like `std::fs`, `std::task`, `std::sync`) are
-  written against `std::runtime::...` interfaces.
+ written against `std::runtime::...` interfaces.
 - The shipped stdlib provides a default hosted POSIX backend under
-  `std::runtime::posix::...` and the corresponding `std::runtime::...` modules
-  delegate to it.
+ `std::runtime::posix::...` and the corresponding `std::runtime::...` modules
+ delegate to it.
 - Alternative stdlib roots can provide different runtime implementations (for
-  example Windows or embedded) without changing the public `std::...` surface.
+ example Windows or embedded) without changing the public `std::...` surface.
 
-This layering is specified in `docs/std/runtime.md`.
+This layering is specified in [runtime](?p=std/runtime).
 
 ## Linking by Default (Requirement)
 
 `std::` must be **linked by default** for normal `silk build` workflows:
 
 - The compiler provides a default stdlib *root* (an implementation-defined
-  directory shipped with the compiler distribution).
+ directory shipped with the compiler distribution).
 - That root is automatically included in the compiler’s package/module search
-  path during builds, so that:
+ path during builds, so that:
 
   ```silk
   import std::strings;
   ```
 
-  resolves without the user having to explicitly pass the stdlib source files
-  on the command line.
+ resolves without the user having to explicitly pass the stdlib source files
+ on the command line.
 
 Notes:
 
 - This does **not** imply an implicit `import std::...;` of all std modules;
-  importing remains explicit. Linking-by-default means “`std::` is available to
-  import”.
+ importing remains explicit. Linking-by-default means “`std::` is available to
+ import”.
 - When the standard library is enabled (the default), the compiler provides a
-  small implicit std prelude of selected symbols (for example `Result` and the
-  `std::interfaces` interface names) as specified by `std::runtime::globals`.
-  Use `--nostd` to disable this behavior.
+ small implicit std prelude of selected symbols (for example `Result` and the
+ `std::interfaces` interface names) as specified by `std::runtime::globals`.
+ Use `--nostd` to disable this behavior.
 - The compiler should only compile/link the std modules that are reachable from
-  the user’s imports (and any internal dependencies), rather than eagerly
-  compiling all of `std::`.
+ the user’s imports (and any internal dependencies), rather than eagerly
+ compiling all of `std::`.
 
 ## Swappability (Requirement)
 
 The default stdlib must be replaceable by an alternate implementation:
 
 - The build configuration may override the stdlib root used for resolving
-  `std::...` imports.
+ `std::...` imports.
 - A replacement stdlib is expected to provide compatible packages and exported
-  APIs under the same `std::...` names.
+ APIs under the same `std::...` names.
 - The language and C ABI remain stable regardless of stdlib choice; `std::` is
-  ordinary Silk code and does not change core semantics.
+ ordinary Silk code and does not change core semantics.
 
 The concrete selection mechanism is a compiler/driver responsibility and must
-be documented in the CLI (`docs/compiler/cli-silk.md`) and embedding ABI
-(`docs/compiler/abi-libsilk.md`) once implemented.
+be documented in the CLI ([cli silk](?p=compiler/cli-silk)) and embedding ABI
+([abi libsilk](?p=compiler/abi-libsilk)) once implemented.
 
 Current toolchain behavior (first slice):
 
 - Both the `silk` CLI and the `libsilk.a` embedding build path resolve
-  `std::...` imports from a stdlib root selected by:
-  - an explicit override (`--std-root` for `silk`, or `silk_compiler_set_std_root` for embedders), otherwise
-  - `SILK_STD_ROOT` (environment variable) when set, otherwise
-  - a `std/` directory in the current working directory (development default), otherwise
-  - `../share/silk/std` relative to the current executable (installed default).
+ `std::...` imports from a stdlib root selected by:
+ - an explicit override (`--std-root` for `silk`, or `silk_compiler_set_std_root` for embedders), otherwise
+ - `SILK_STD_ROOT` (environment variable) when set, otherwise
+ - a `std/` directory in the current working directory (development default), otherwise
+ - `../share/silk/std` relative to the current executable (installed default).
 - Mapping is deterministic: `std::foo::bar` resolves to `<std_root>/foo/bar.slk`.
 
-## Static Archive Distribution (Current Toolchain)
+## Static Archive Distribution
 
 For distribution and incremental development, the stdlib can be built into a
 static archive for a specific target ABI:
 
 - `make stdlib` compiles each `std/**/*.slk` module (including `std/runtime/...`)
-  to an ELF object via
-  `silk build --kind object` and archives them into `build/lib/silk/std/libsilk_std.a`.
+ to an ELF object via
+ `silk build --kind object` and archives them into `build/lib/silk/std/libsilk_std.a`.
 - This archive is target-specific (e.g. `linux/x86_64` ELF objects) and should
-  be treated as one artifact per supported target triple/ABI, not as a
-  universally portable library.
+ be treated as one artifact per supported target triple/ABI, not as a
+ universally portable library.
 
 Current toolchain behavior (`linux/x86_64`):
 
 - The compiler still loads stdlib Silk sources from the configured stdlib root
-  for parsing/type-checking (so the language-level package graph is validated),
-  but executable code generation treats *auto-loaded* `std::...` modules as
-  **external** and resolves their exported functions from the prebuilt archive
-  when one is available.
+ for parsing/type-checking (so the language-level package graph is validated),
+ but executable code generation treats *auto-loaded* `std::...` modules as
+ **external** and resolves their exported functions from the prebuilt archive
+ when one is available.
 - Archive discovery (in order):
-  - `--std-lib <path>` (or `--std <path>.a` / `-std <path>.a`) when provided, otherwise
-  - `SILK_STD_LIB` (environment variable) when set,
-  - `build/lib/silk/std/libsilk_std.a` when using the in-repo `std/` root (development),
-  - `../lib/silk/std/libsilk_std.a` relative to the installed `silk` executable,
-  - `../lib/libsilk_std.a` relative to the installed `silk` executable (legacy installed layout),
-  - common installed-layout heuristics derived from the selected stdlib root.
+ - `--std-lib <path>` (or `--std <path>.a` / `-std <path>.a`) when provided, otherwise
+ - `SILK_STD_LIB` (environment variable) when set,
+ - `build/lib/silk/std/libsilk_std.a` when using the in-repo `std/` root (development),
+ - `../lib/silk/std/libsilk_std.a` relative to the installed `silk` executable,
+ - `../lib/libsilk_std.a` relative to the installed `silk` executable (legacy installed layout),
+ - common installed-layout heuristics derived from the selected stdlib root.
 
 Archive member naming (scheme):
 
 - to avoid basename collisions (for example `std/task.slk` and
-  `std/runtime/posix/task.slk`), archive member names are based on the std-root
-  relative path with `/` replaced by `_`, and `.slk` replaced by `.o`,
+ `std/runtime/posix/task.slk`), archive member names are based on the std-root
+ relative path with `/` replaced by `_`, and `.slk` replaced by `.o`,
 - for example: `std/runtime/posix/task.slk` → `runtime_posix_task.o`.
 - When no suitable archive is found (or on unsupported targets), the compiler
-  falls back to compiling the reachable std sources into the build as part of
-  module-set code generation.
+ falls back to compiling the reachable std sources into the build as part of
+ module-set code generation.
 - `--nostd` disables stdlib auto-loading and therefore also avoids linking the
-  default std archive; users may still explicitly provide their own `std::...`
-  modules as ordinary inputs when desired.
+ default std archive; users may still explicitly provide their own `std::...`
+ modules as ordinary inputs when desired.
 - `--std-root <path>` (or `--std <path>` / `-std <path>` when `<path>` does **not** end in `.a`) selects an alternate stdlib root, and
-  the corresponding archive is discovered via the same `--std-lib` / `SILK_STD_LIB` and
-  installed-layout rules.
+ the corresponding archive is discovered via the same `--std-lib` / `SILK_STD_LIB` and
+ installed-layout rules.
 
 ## Hosted vs Freestanding
 
 The stdlib should be layered:
 
 - A “core” subset that does not require OS services (collections, algorithms,
-  string utilities, formatting, etc.).
+ string utilities, formatting, etc.).
 - Hosted modules (`std::fs`, `std::net`, parts of `std::temporal` and
-  `std::io`) that rely on POSIX syscalls or POSIX-like APIs.
+ `std::io`) that rely on POSIX syscalls or POSIX-like APIs.
 
 This layering allows `std::` to be used in freestanding environments while
 still offering a full POSIX-oriented API when available.
@@ -193,4 +200,4 @@ The standard library is shipped with the compiler and should be versioned:
 
 - Public, exported APIs under `std::...` should follow semantic versioning.
 - A compiler may require a minimum stdlib version, and should report a clear
-  error when an incompatible stdlib root is selected.
+ error when an incompatible stdlib root is selected.

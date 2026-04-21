@@ -9,32 +9,32 @@ precise semantics, diagnostics, and edge cases.
 
 Important boundaries:
 
-- Regions cover the shipped `with` + `new` allocation model; see `docs/language/regions.md`.
-- Concurrency covers the shipped `Task(T)` / `Promise(T)` plus `yield` / `await` surface; see `docs/language/concurrency.md`.
+- Regions cover the shipped `with` + `new` allocation model; see [regions](?p=language/regions).
+- Concurrency covers the shipped `Task(T)` / `Promise(T)` plus `yield` / `await` surface; see [concurrency](?p=language/concurrency).
 - Value constraints are expressed via Formal Silk (`#require` / `#assure`, including `#require` on `struct` declarations), not refinement types.
 
 Key notes:
 
-- Runtime `let`/`var` bindings and compile-time `const` bindings must have an initializer (`docs/compiler/diagnostics.md`, `E2015`).
+- Runtime `let`/`var` bindings and compile-time `const` bindings must have an initializer ([diagnostics](?p=compiler/diagnostics), `E2015`).
 - Destructuring `let` bindings from structs are supported:
-  - positional: `let (id, name) = User{ ... };`
-  - named + aliasing: `let { data as d, id as i } = Record{ ... };`
+ - positional: `let (id, name) = User{ ... };`
+ - named + aliasing: `let { data as d, id as i } = Record{ ... };`
 - Array destructuring is supported:
-  - arrays/slices: `let [a, b] = xs;`
+ - arrays/slices: `let [a, b] = xs;`
 - Enum destructuring is supported:
-  - variants: `let Ok(v) = expr;`, `let Pair(a, b) = expr;`, `let E::Variant(x) = expr;` (traps on non-matching variants)
-- `const` initializers must be compile-time evaluable (`docs/compiler/diagnostics.md`, `E2041`); in the current subset this is restricted to scalar expressions and calls to `const fn` functions (still no `/` or `%`), plus string literals / `const` string aliases.
+ - variants: `let Ok(v) = expr;`, `let Pair(a, b) = expr;`, `let E::Variant(x) = expr;` (traps on non-matching variants)
+- `const` initializers must be compile-time evaluable ([diagnostics](?p=compiler/diagnostics), `E2041`); in the Supported forms this is restricted to scalar expressions and calls to `const fn` functions (still no `/` or `%`), plus string literals / `const` string aliases.
 - Monomorphized generics are supported for `struct`/`interface`/`enum`/`impl`,
-  applied types (`Name(args...)`, including const arguments), and generic
-  functions / methods.
-  - inference failures report `E2091`; unsupported generic forms outside the
-    shipped subset still report `E2016`,
-- A small concurrency subset is implemented (`Task(T)` / `Promise(T)` plus `yield`/`await`; see `docs/language/concurrency.md`).
+ applied types (`Name(args...)`, including const arguments), and generic
+ functions / methods.
+ - inference failures report `E2091`; unsupported generic forms outside the
+ shipped subset still report `E2016`,
+- A small concurrency subset is implemented (`Task(T)` / `Promise(T)` plus `yield`/`await`; see [concurrency](?p=language/concurrency)).
 - The builtin `map(K, V)` type form is removed; use `std::map::{HashMap, TreeMap}` instead (`E2017`).
 - Function expressions are implemented as first-class function values:
-  - non-capturing: inferred `pure` — `let add = fn (x: int, y: int) -> x + y;`
-  - capturing closures: may capture immutable scalar locals/parameters by value;
-    capturing closures are not `pure` in the current subset.
+ - non-capturing: inferred `pure` — `let add = fn (x: int, y: int) -> x + y;`
+ - capturing closures: may capture immutable scalar locals/parameters by value;
+ capturing closures are not `pure` in the Supported forms.
 
 ## Types (Surface Forms)
 
@@ -49,15 +49,15 @@ Key notes:
 - Arrays / slices: `T[]`, `T[N]`.
 - Maps / dictionaries: `std::map::{HashMap, TreeMap}` (standard library).
 - Function types: `fn(params) -> R` (discipline modifiers apply to function
-  declarations; function types are unmodified in the current subset).
+ declarations; function types are unmodified in the Supported forms).
 - Function expressions (non-capturing, inferred `pure`):
-  - expression body: `fn (x: int, y: int) -> x + y`
-  - block body: `fn (x: int, y: int) -> int { return x + y; }`
-  - capturing closures are supported as a subset; see `docs/language/types.md`.
+ - expression body: `fn (x: int, y: int) -> x + y`
+ - block body: `fn (x: int, y: int) -> int { return x + y; }`
+ - capturing closures are supported as a subset; see [types](?p=language/types).
 - Structs / enums / interfaces:
-  - `struct Name { ... }`, `struct Name extends Base { ... }`
-  - `enum Name { ... }`
-  - `interface Name { ... }`, `interface Name extends Base { ... }`
+ - `struct Name { ... }`, `struct Name extends Base { ... }`
+ - `enum Name { ... }`
+ - `interface Name { ... }`, `interface Name extends Base { ... }`
 
 ## Literals
 
@@ -66,14 +66,14 @@ Key notes:
 - Booleans: `true`, `false`.
 - Chars: `'A'`, escape sequences.
 - Strings:
-  - single-line: `"hello"`,
-  - multi-line: multi-line quoted forms.
+ - single-line: `"hello"`,
+ - multi-line: multi-line quoted forms.
 - Durations: numeric + unit, e.g. `10ms`, `2s`, `5min`.
 - Aggregates:
-  - arrays: `[1, 2, 3]`,
-  - structs: `Point { x: 1, y: 2 }`.
+ - arrays: `[1, 2, 3]`,
+ - structs: `Point { x: 1, y: 2 }`.
 
-## Operators (Selected)
+## Operators
 
 - Arithmetic: `+`, `-`, `*`, `/`, `%`.
 - Bitwise: `&`, `|`, `^`, `~`, `<<`, `>>`.
@@ -82,13 +82,13 @@ Key notes:
 - Assignment: `=`, `+=`, `-=`, `*=`, `/=`.
 - Increment/decrement: `++`, `--` (statement-like `void`).
 - Optional / nullability:
-  - optional chaining: `?.`,
-  - coalescing: `??`.
+ - optional chaining: `?.`,
+ - coalescing: `??`.
 - Member/scope: `.`, `::`.
 - Ranges: `..`, `..=`, `...`.
 - Other punctuation: `,`, `;`, `:`, `->`, `=>`.
 
-Operator precedence and associativity follow the rules in `docs/language/operators.md`.
+Operator precedence and associativity follow the rules in [operators](?p=language/operators).
 
 ## Flow Control
 
@@ -120,35 +120,35 @@ Executable entrypoint (current rule):
   ```
 
 - This `main` function takes no parameters and returns `int`. The front-end
-  enforces this shape for executable builds before code generation.
+ enforces this shape for executable builds before code generation.
 
 ## Attributes & Conditional Compilation
 
 - Annotate declarations: `attr(os="linux") fn platform () -> string { ... }`
 - Compile-time branching: `if attr(target="wasm32-wasi") { ... } else { ... }`
-- Built-in keys (current subset): `arch`, `os`, `target`, `feature` (+ `abi=c` in type positions)
+- Built-in keys (Supported forms): `arch`, `os`, `target`, `feature` (+ `abi=c` in type positions)
 
-See `docs/language/attributes.md` for the full reference and examples.
+See [attributes](?p=language/attributes) for the full reference and examples.
 
 ## Optionals & Mutability
 
 - Declare optionals: `let x: T? = None;` or `let x: Option(T) = None;`.
 - Create values: `None`, `Some(value)`.
 - Use:
-  - `user.profile?.email` — optional chaining.
-  - `email ?? "default@example.com"` — coalescing.
+ - `user.profile?.email` — optional chaining.
+ - `email ?? "default@example.com"` — coalescing.
 
 Mutability:
 
 - Parameters and references are immutable by default.
 - Grant mutation via `mut`:
-  - in function definition: `fn reset(mut r: &Runner) { ... }`,
-  - at call site (syntax per spec).
+ - in function definition: `fn reset(mut r: &Runner) { ... }`,
+ - at call site (syntax per spec).
 
 ## Structs, Impl Blocks, Interfaces
 
 - Structs: `struct Frame { seq: u32, size: u16, flag: u8 }`
-  - pure data, well-defined layout.
+ - pure data, well-defined layout.
 - Impl blocks: `impl Frame { fn size_bits(self: &Frame) -> u32 { ... } }`
 - Interfaces:
 
@@ -167,22 +167,22 @@ See `structs-impls-layout.md` and `interfaces.md` for details.
 ## Regions & Buffers
 
 - Regions (fixed-size allocation context):
-  - declare: `const region scratch: u8[1024];`
-  - use: `with scratch { let p: &Frame = new Frame{ ... }; }`
-  - anonymous: `with 1024 { let p: &Frame = new Frame{ ... }; }`
+ - declare: `const region scratch: u8[1024];`
+ - use: `with scratch { let p: &Frame = new Frame{ ... }; }`
+ - anonymous: `with 1024 { let p: &Frame = new Frame{ ... }; }`
 - Buffers:
-  - intrinsic `Buffer(T)` with `(ptr, capacity)`,
-  - unsafe primitive underpinning higher-level collections.
+ - intrinsic `Buffer(T)` with `(ptr, capacity)`,
+ - unsafe primitive underpinning higher-level collections.
 - Allocation:
-  - `new` uses the active region inside `with` (see `regions.md`).
+ - `new` uses the active region inside `with` (see `regions.md`).
 
 ## Concurrency
 
 - Function modifiers:
-  - `fn` — normal.
-  - `async fn` — `await`-able; calling yields `Promise(T)`.
-  - `task fn` — runs in parallel on a worker thread; calling yields `Task(T)`.
-  - `async task fn` — `async` + `task`; calling yields `Promise(Task(T))`.
+ - `fn` — normal.
+ - `async fn` — `await`-able; calling yields `Promise(T)`.
+ - `task fn` — runs in parallel on a worker thread; calling yields `Task(T)`.
+ - `async task fn` — `async` + `task`; calling yields `Promise(Task(T))`.
 - Structured block:
 
 	  ```silk
@@ -203,7 +203,7 @@ See `structs-impls-layout.md` and `interfaces.md` for details.
 	  }
 	  ```
 
-  To receive task values, use `yield` inside a task context (`task { ... }` or `task fn`):
+ To receive task values, use `yield` inside a task context (`task { ... }` or `task fn`):
 
   ```silk
   task fn worker () -> int { return 42; }
@@ -242,8 +242,8 @@ See `concurrency.md` for deeper semantics.
   ```
 
 - Strings:
-  - Silk `string` is internally `{ ptr, len }`,
-  - C side uses `SilkString { char *ptr; int64_t len; }` for embedding,
-  - `ext` calls to typical C APIs may pass `const char *` derived from `string` where appropriate.
+ - Silk `string` is internally `{ ptr, len }`,
+ - C side uses `SilkString { char *ptr; int64_t len; }` for embedding,
+ - `ext` calls to typical C APIs may pass `const char *` derived from `string` where appropriate.
 
-See `ext.md` and `docs/compiler/abi-libsilk.md` for full details.
+See `ext.md` and [abi libsilk](?p=compiler/abi-libsilk) for full details.

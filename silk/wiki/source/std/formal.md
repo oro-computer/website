@@ -3,11 +3,12 @@
 `std::formal` provides reusable Formal Silk theories (“standard lemmas”) used
 by stdlib code and downstream verified code.
 
-Full reference: `docs/std/formal.md`.
+Canonical doc: [formal](?p=std/formal).
 
 ## Notes
 
-- Full reference: `docs/std/formal.md`
+- Supported forms is available (initial theory set).
+- Details: [formal](?p=std/formal)
 
 ## Importing
 
@@ -32,5 +33,5 @@ fn get_at (index: i64, len: i64) -> i64 {
 
 ## See also
 
-- Canonical doc: `docs/std/formal.md`
-- Formal verification: `docs/wiki/language/formal-verification.md`
+- Canonical doc: [formal](?p=std/formal)
+- Formal verification: [formal verification](?p=language/formal-verification)

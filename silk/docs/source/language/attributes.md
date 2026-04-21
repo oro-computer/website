@@ -17,36 +17,38 @@ Values may be:
 
 ## Notes
 
-Supported forms:
+
+
+Implemented in Silk currently:
 
 - `attr(...)` as a prefix annotation on declarations and statements.
 - `attr(...)` as a compile-time query expression of type `bool`.
 - Comparison operators in `attr(...)` items for numeric toolchain keys:
-  - examples: `attr(silk_major>=0)`, `attr(silk_minor>=2)`, `attr(silk_patch=0)`
-  - and: `attr(silk_abi_major>=0)`, `attr(silk_abi_minor>=2)`, `attr(silk_abi_patch=0)`
-  where `<op>` is one of `=`, `<`, `<=`, `>`, `>=` and `<n>` is an integer literal.
+ - examples: `attr(silk_major>=0)`, `attr(silk_minor>=2)`, `attr(silk_patch=0)`
+ - and: `attr(silk_abi_major>=0)`, `attr(silk_abi_minor>=2)`, `attr(silk_abi_patch=0)`
+ where `<op>` is one of `=`, `<`, `<=`, `>`, `>=` and `<n>` is an integer literal.
 - Declaration gating:
-  - when an `attr(...)` annotation contains `arch` / `os` / `target` / `feature`,
-    the annotated declaration is included only when the key/value constraints
-    match the current build target.
+ - when an `attr(...)` annotation contains `arch` / `os` / `target` / `feature`,
+ the annotated declaration is included only when the key/value constraints
+ match the current build target.
 - Conditional compilation:
-  - `if <cond> { ... } else { ... }` prunes branches at compile time when
-    `<cond>` is an attribute-query boolean expression (built from `attr(...)`,
-    `!`, `&&`, `||`, and parentheses).
-  - The pruned branch is not type-checked and is not lowered/code-generated.
+ - `if <cond> { ... } else { ... }` prunes branches at compile time when
+ `<cond>` is an attribute-query boolean expression (built from `attr(...)`,
+ `!`, `&&`, `||`, and parentheses).
+ - The pruned branch is not type-checked and is not lowered/code-generated.
 - `attr(abi=c) fn (...) -> ...` in type positions is accepted as a synonym for
-  `c_fn (...) -> ...` (C ABI callback pointer types).
+ `c_fn (...) -> ...` (C ABI callback pointer types).
 - Task scheduling hints on `task` functions:
-  - `attr(task=pool)` / `attr(task="pool")` schedules the task on the global
-    task pool (see “Task scheduling” below),
-  - `attr(task_pool)` is accepted as a tag-form synonym for `attr(task=pool)`.
-  - `attr(task=thread)` / `attr(task="thread")` forces a dedicated OS thread
-    for each call instead of the default task-pool schedule.
+ - `attr(task=pool)` / `attr(task="pool")` schedules the task on the global
+ task pool (see “Task scheduling” below),
+ - `attr(task_pool)` is accepted as a tag-form synonym for `attr(task=pool)`.
+ - `attr(task=thread)` / `attr(task="thread")` forces a dedicated OS thread
+ for each call instead of the default task-pool schedule.
 
-Limitations:
+Not yet fully implemented:
 
 - Objective-C / FFM / WASI-component / other ABI selectors beyond the initial
-  `abi=c` support.
+ `abi=c` support.
 
 ## Syntax
 
@@ -66,11 +68,11 @@ An attribute item may be either:
 - a tag: `attr(one)`, or
 - a key/value item: `attr(arch="x86_64")`.
 
-In the current subset, key/value items use one of:
+In the Supported forms, key/value items use one of:
 
 - `=` for string/identifier/bool keys (for example `arch="x86_64"`, `abi=c`),
 - `=`, `<`, `<=`, `>`, `>=` for numeric toolchain keys (for example
-  `silk_minor>=2`).
+ `silk_minor>=2`).
 
 ### Annotation form (prefix)
 
@@ -94,7 +96,7 @@ fn main () -> int {
 Notes:
 
 - Statement-level attributes are metadata only; use `if attr(...) { ... }` for
-  compile-time selection inside blocks.
+ compile-time selection inside blocks.
 
 ### Query form (expression)
 
@@ -119,24 +121,26 @@ if attr(os="linux") && (attr(arch="x86_64") || attr(arch="wasm32")) {
 `attr(...)` queries are compile-time only; they are evaluated by the compiler
 and do not exist as runtime calls.
 
-## Built-in attribute keys (current subset)
+## Built-in attribute keys
 
-The current compiler recognizes the following keys in queries and
+Silk currently recognizes the following keys in queries and
 conditional compilation contexts:
 
 - `arch`: `"x86_64"`, `"aarch64"`, or `"wasm32"`
+ - The ARM64 family accepts `"aarch64"` as the canonical spelling, plus the aliases `"arm64"` and `"aarch"` in any letter case.
 - `os`: `"linux"`, `"macos"`, `"ios"`, `"android"`, `"windows"`, `"wasi"`, or `"unknown"`
+ - `os` comparisons accept those names in any letter case.
 - `target`:
-  - `"linux-x86_64"` or `"linux-aarch64"`
-  - `"macos-x86_64"` or `"macos-aarch64"`
-  - `"ios-aarch64"`
-  - `"android-aarch64"`
-  - `"windows-x86_64"` or `"windows-aarch64"`
-  - `"wasm32-unknown-unknown"` or `"wasm32-wasi"`
+ - `"linux-x86_64"` or `"linux-aarch64"`
+ - `"macos-x86_64"` or `"macos-aarch64"`
+ - `"ios-aarch64"`
+ - `"android-aarch64"`
+ - `"windows-x86_64"` or `"windows-aarch64"`
+ - `"wasm32-unknown-unknown"` or `"wasm32-wasi"`
 - `feature`: an enabled feature name (see “Features” below)
 - Toolchain version keys (numeric; compare against an integer literal using `=`, `<`, `<=`, `>`, `>=`):
-  - `silk_major`, `silk_minor`, `silk_patch`
-  - `silk_abi_major`, `silk_abi_minor`, `silk_abi_patch`
+ - `silk_major`, `silk_minor`, `silk_patch`
+ - `silk_abi_major`, `silk_abi_minor`, `silk_abi_patch`
 
 ## ABI selection (`abi=c`) and `c_fn`
 
@@ -171,8 +175,8 @@ The task pool is:
 
 - created lazily on the first pooled task submission,
 - backed by OS worker threads,
-- implemented as a queue-based pool with simple work stealing between workers
-  (see `src/silk_rt_task_pool.c`).
+- implemented as a shared queue-based worker pool (see
+ `src/silk_rt_task_pool.c`).
 
 ### Configuration
 
@@ -199,19 +203,19 @@ the pool does not deadlock itself.
 
 Features are named build-time toggles intended for conditional compilation.
 
-Features may be enabled from:
+In Silk currently, features may be enabled from:
 
 - the CLI (`--feature` / `-F`), and
 - package manifests (`silk.toml`):
-  - the root package via `[build].features`, and
-  - dependency packages via `[dependencies].<dep>.features`.
+ - the root package via `[build].features`, and
+ - dependency packages via `[dependencies].<dep>.features`.
 
 In `silk.toml`, `[build].features` may be either:
 
 - an array of strings (`["NAME", "NAME=VALUE", ...]`), or
 - an inline table (`{ NAME = <bool|int|string>, ... }`).
-  - `NAME = true` is equivalent to `NAME` (boolean enabled),
-  - any other value is equivalent to `NAME=VALUE`.
+ - `NAME = true` is equivalent to `NAME` (boolean enabled),
+ - any other value is equivalent to `NAME=VALUE`.
 
 Use `attr(feature="name")` in queries and conditional compilation:
 
@@ -227,7 +231,7 @@ When building a package graph (via `silk build/check/test --package ...`),
 features are **scoped per package**:
 
 - `attr(feature="...")` queries observe only the enabled features for the
-  current module’s package.
+ current module’s package.
 - Root package features do not implicitly affect dependency packages.
 
 Dependency-scoped features are enabled via the root package manifest’s
@@ -253,34 +257,34 @@ if attr(feature=enable_this_feature) {
 }
 ```
 
-Rules (current subset):
+Rules (Supported forms):
 
 - Feature specs are of the form `NAME` or `NAME=VALUE`.
-  - When `VALUE` is omitted, the feature is treated as boolean `true`.
-  - When `VALUE` is present:
-    - `true` / `false` are parsed as booleans,
-    - integer literals (including `0x...` / `0b...` / digit separators) are
-      parsed as integers,
-    - all other values are treated as strings.
+ - When `VALUE` is omitted, the feature is treated as boolean `true`.
+ - When `VALUE` is present:
+ - `true` / `false` are parsed as booleans,
+ - integer literals (including `0x...` / `0b...` / digit separators) are
+ parsed as integers,
+ - all other values are treated as strings.
 - `attr(feature="NAME")` is `true` when the feature is enabled:
-  - boolean features are enabled only when they are `true`,
-  - non-boolean-valued features are enabled when present.
+ - boolean features are enabled only when they are `true`,
+ - non-boolean-valued features are enabled when present.
 - `attr(feature="NAME=VALUE")` is `true` only when the named feature exists and
-  its value equals `VALUE` after parsing.
+ its value equals `VALUE` after parsing.
 
 Precedence:
 
 - CLI `--feature` / `-F` entries override manifest-provided feature values of
-  the same name.
-  - For package builds, unscoped `--feature NAME[=VALUE]` entries target the
-    **root package**.
-  - You may target a specific package with a namespaced spec:
-    `--feature <package>/<spec>` (for example `--feature ui/tui` or
-    `--feature ui/tui=false`).
-  - Namespaced feature specs are accepted only for package builds (those that
-    use `--package`).
+ the same name.
+ - For package builds, unscoped `--feature NAME[=VALUE]` entries target the
+ **root package**.
+ - You may target a specific package with a namespaced spec:
+ `--feature <package>/<spec>` (for example `--feature ui/tui` or
+ `--feature ui/tui=false`).
+ - Namespaced feature specs are accepted only for package builds (those that
+ use `--package`).
 
 - For package builds, multiple manifests in the package graph may request
-  features for the same dependency package. If the same feature name is
-  assigned multiple different values for a single package, the build fails
-  unless a CLI `--feature <package>/<spec>` entry overrides it.
+ features for the same dependency package. If the same feature name is
+ assigned multiple different values for a single package, the build fails
+ unless a CLI `--feature <package>/<spec>` entry overrides it.

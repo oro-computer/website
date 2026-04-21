@@ -31,21 +31,21 @@ test {
 Rules:
 
 - `test` declarations MAY appear:
-  - at top level (like `fn` and `let`), and
-  - nested inside another `test` block (scoped subtests).
+ - at top level (like `fn` and `let`), and
+ - nested inside another `test` block (scoped subtests).
 - A `test` block introduces its own scope (like a function body).
 - Nested `test` blocks are executed inline, in source order, as part of the
-  enclosing test’s execution. They may be used for hierarchical grouping and
-  shared setup.
+ enclosing test’s execution. They may be used for hierarchical grouping and
+ shared setup.
 - `test` blocks may use `let`, `var`, control flow, and call functions/methods
-  using the same expression subset as normal code.
+ using the same expression subset as normal code.
 - `return;` is allowed inside a `test` block (equivalent to ending the test
-  early). `return <expr>;` is not allowed.
+ early). `return <expr>;` is not allowed.
 
 Doc comments:
 
 - Doc comments (`/** ... */` and `/// ...`) attach to a `test` declaration the
-  same way they attach to other top-level declarations.
+ same way they attach to other top-level declarations.
 
 ## Running tests (`silk test`)
 
@@ -82,17 +82,17 @@ In `silk test` builds, failed assertions do not abort the process. Instead:
 
 - A failed `assert` records a test failure and execution continues.
 - If the assertion has no explicit message, the compiler uses the assertion
-  condition text as the message (e.g. `assert value != 123;` uses `value != 123`).
+ condition text as the message (e.g. `assert value != 123;` uses `value != 123`).
 - Failed assertions also emit a one-line detail message to stderr so failures are
-  visible in `silk test` output without requiring `--debug`, formatted like:
-  - `assertion failed: <message>` when not inside any `test` block, or
-  - `assertion failed [test: a]: <message>` when inside a `test` block, or
-  - `assertion failed [test: a/b]: <message>` when inside nested `test` blocks.
+ visible in `silk test` output without requiring `--debug`, formatted like:
+ - `assertion failed: <message>` when not inside any `test` block, or
+ - `assertion failed [test: a]: <message>` when inside a `test` block, or
+ - `assertion failed [test: a/b]: <message>` when inside nested `test` blocks.
 
-    The `a/b` path reflects the active nested test name stack (including the
-    outermost `test` declaration name).
+ The `a/b` path reflects the active nested test name stack (including the
+ outermost `test` declaration name).
 - The test executable exits non-zero if any failures were recorded so TAP output
-  reflects failures.
+ reflects failures.
 
 The current runner still isolates top-level tests in separate processes, but a
 single test case may now accumulate multiple failures.
@@ -106,7 +106,7 @@ record failures without aborting:
 - `expect_equal(expected: X, actual: Y) -> bool;`
 - `expect_error(err: E?) -> bool;`
 
-See `docs/std/test.md` for the detailed API.
+See [test](?p=std/test) for the detailed API.
 
 Note: `std::test` helpers carry a Formal Silk contract requiring
 `BUILD_MODE == "test"` via `std::test::requires_test_mode()` so downstream
@@ -115,5 +115,5 @@ verification can model them as test-only APIs.
 ## Notes
 
 - Implemented: parsing of `test` declarations and `silk test` runner with TAP
-  output.
+ output.
 - Implemented: `std::test` helpers and non-aborting assertions in test builds.

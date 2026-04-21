@@ -2,7 +2,7 @@
 
 `std::memory` provides low-level helpers and the long-term allocator design.
 
-Canonical doc: `docs/std/memory.md`.
+Canonical doc: [memory](?p=std/memory).
 
 ## Importing
 
@@ -23,5 +23,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/memory.md`
-- Regions: `docs/wiki/language/regions.md`
+- Canonical doc: [memory](?p=std/memory)
+- Regions: [regions](?p=language/regions)

@@ -8,19 +8,19 @@ spec (`docs/language/`).
 
 Where a language feature has an implementation cap that affects user code, the
 cap is also documented in the relevant language document (for example
-`docs/language/varargs.md`).
+[varargs](?p=language/varargs)).
 
 ## Source and Manifest Size Limits
 
 - **Silk source file max size (per file)**: **64 MiB**
-  - Applies to:
-    - the `silk` CLI (`src/driver.zig`),
-    - the Zig wrapper API that loads sources from disk (`src/silk.zig`),
-    - the C ABI entrypoints that load sources from disk (`src/abi.zig`),
-    - the LSP server file loader (`src/lsp_main.zig`).
-  - Rationale: avoid unbounded allocations while still allowing large modules.
+ - Applies to:
+ - the `silk` CLI (`src/driver.zig`),
+ - the Zig wrapper API that loads sources from disk (`src/silk.zig`),
+ - the C ABI entrypoints that load sources from disk (`src/abi.zig`),
+ - the LSP server file loader (`src/lsp_main.zig`).
+ - Rationale: avoid unbounded allocations while still allowing large modules.
 - **Package manifest max size**: **1 MiB**
-  - Applies to reading `silk.toml` (`src/package_manifest.zig`).
+ - Applies to reading `silk.toml` (`src/package_manifest.zig`).
 
 ## Front-End (Type Checker) Structural Limits
 
@@ -30,7 +30,7 @@ when compiling large module sets, while some per-function scratch state is
 still stack-backed.
 
 When these limits are exceeded, the compiler typically reports
-`E2002` (“unsupported expression in the current subset”) because the checker
+`E2002` (“unsupported expression in the Supported forms”) because the checker
 uses `CheckError.UnsupportedExpression` as a shared “not supported yet” / “hit
 an internal cap” path. This will be refined into dedicated “limit exceeded”
 diagnostics as the compiler matures.
@@ -40,7 +40,7 @@ Current caps (`src/checker.zig`):
 - **Top-level bindings per module**: **16384**
 - **Local bindings per function**: **1024**
 - **Function-like bindings tracked in a module set** (functions, externs,
-  imported callables, etc.): **16384**
+ imported callables, etc.): **16384**
 - **Struct declarations tracked in a module set**: **16384**
 - **Enum declarations tracked in a module set**: **16384**
 - **Interface declarations tracked in a module set**: **16384**
@@ -55,18 +55,18 @@ a flattened scalar-slot struct value.
 
 - **Varargs pack capacity** (`N`): **128**
 
-See `docs/language/varargs.md` for the surface rules and current representation.
+See [varargs](?p=language/varargs) for the surface rules and current representation.
 
 ## Lowering / IR Limits
 
 Current caps (`src/lower_ir.zig`):
 
 - **Lowering binding environment size (per function)**: **1024**
-  - This is the maximum number of simultaneously in-scope bindings that the IR
-    lowerer can track.
+ - This is the maximum number of simultaneously in-scope bindings that the IR
+ lowerer can track.
 - **Type-alias resolution depth**: **256**
-  - This bounds recursive/chain alias resolution during lowering to avoid
-    runaway recursion in pathological cases.
+ - This bounds recursive/chain alias resolution during lowering to avoid
+ runaway recursion in pathological cases.
 - **Varargs pack capacity** (`N`): **128**
 
 ## Const Evaluator Limits
@@ -93,28 +93,28 @@ the regex free/drop path ignores borrowed/literal/foreign `regexp` views
 instead of releasing arbitrary pointers.
 
 - **Regexp compile stack budget**: **128 KiB**
-  - Applies to:
-    - compile-time regexp literals during type checking (`src/checker.zig`),
-    - runtime `std::regex::RegExp.compile(...)` via `silk_rt_regexp_compile`
-      (`src/silk_rt_api.c`).
-  - Effect:
-    - overly deep regexp nesting is rejected as an invalid regexp rather than
-      recursing without a bound in the embedder.
+ - Applies to:
+ - compile-time regexp literals during type checking (`src/checker.zig`),
+ - runtime `std::regex::RegExp.compile(...)` via `silk_rt_regexp_compile`
+ (`src/silk_rt_api.c`).
+ - Effect:
+ - overly deep regexp nesting is rejected as an invalid regexp rather than
+ recursing without a bound in the embedder.
 - **Regexp execution timeout poll budget**: **256 polls**
-  - Applies to runtime `std::regex::exec(...)` / `search(...)` / iterator-based
-    matching via `silk_rt_regexp_exec` (`src/silk_rt_api.c`).
-  - Boundary guard:
-    - `silk_rt_regexp_exec(...)` first validates the regex header, declared
-      bytecode extent, reachable control-flow targets, and stack discipline of
-      the supplied bytecode view,
-    - malformed foreign `regexp` buffers are rejected with
-      `std::regex::EXEC_ERR_INVALID_INPUT` (`-3`) before the bundled engine is
-      entered.
-  - Engine behavior:
-    - the bundled QuickJS regexp engine consults the timeout hook once every
-      **10000** internal execution steps,
-    - so the current shipped execution budget is approximately **2.56 million**
-      hook-accounted steps before the runtime returns `EXEC_ERR_TIMEOUT`.
-  - Effect:
-    - pathological backtracking is bounded and reported as a timeout instead of
-      running indefinitely.
+ - Applies to runtime `std::regex::exec(...)` / `search(...)` / iterator-based
+ matching via `silk_rt_regexp_exec` (`src/silk_rt_api.c`).
+ - Boundary guard:
+ - `silk_rt_regexp_exec(...)` first validates the regex header, declared
+ bytecode extent, reachable control-flow targets, and stack discipline of
+ the supplied bytecode view,
+ - malformed foreign `regexp` buffers are rejected with
+ `std::regex::EXEC_ERR_INVALID_INPUT` (`-3`) before the bundled engine is
+ entered.
+ - Engine behavior:
+ - the bundled QuickJS regexp engine consults the timeout hook once every
+ **10000** internal execution steps,
+ - so the current shipped execution budget is approximately **2.56 million**
+ hook-accounted steps before the runtime returns `EXEC_ERR_TIMEOUT`.
+ - Effect:
+ - pathological backtracking is bounded and reported as a timeout instead of
+ running indefinitely.

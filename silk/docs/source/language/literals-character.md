@@ -1,7 +1,7 @@
 # Character Literals
 
 Character literals represent Unicode scalar values (code points) and have type
-`char` (`docs/language/types.md`).
+`char` ([types](?p=language/types)).
 
 Use `char` for:
 
@@ -9,27 +9,27 @@ Use `char` for:
 - working with code points when interfacing with parsing/lexing logic,
 - representing control characters (`'\n'`, `'\t'`, `'\0'`).
 
-If you need multiple characters, use `string` literals (`docs/language/literals-string.md`).
+If you need multiple characters, use `string` literals ([literals string](?p=language/literals-string)).
 
-## Supported forms
+## Notes
 
-Includes:
+What works end-to-end today (lexer → parser → checker → lowering → codegen):
 
 - UTF-8 character literals like `'x'`, `'é'`, and `'😀'` (exactly one Unicode
-  scalar, encoded in UTF-8 in the source file).
+ scalar, encoded in UTF-8 in the source file).
 - Escape sequences:
-  - `\n`, `\r`, `\t`, `\0`
-  - `\\`, `\'`, `\"`
-  - `\xNN` (exactly two hex digits)
-  - `\u{...}` (1–6 hex digits)
+ - `\n`, `\r`, `\t`, `\0`
+ - `\\`, `\'`, `\"`
+ - `\xNN` (exactly two hex digits)
+ - `\u{...}` (1–6 hex digits)
 - Equality and inequality comparisons (`==`, `!=`) over `char` values.
 - `char` values are lowered as a `u32` scalar in the current IR backend subset.
 
-Limitations:
+Not implemented yet (or not specified as stable):
 
 - A dedicated diagnostic for invalid character literal spellings (most invalid
-  forms currently surface as generic “unsupported expression” errors in the
-  current subset).
+ forms currently surface as generic “unsupported expression” errors in the
+ Supported forms).
 
 ## Surface Syntax
 
@@ -64,8 +64,8 @@ Supported escapes:
 Unicode rules:
 
 - The decoded code point must be a Unicode scalar value:
-  - range `0x0000..=0x10FFFF`, excluding the surrogate range
-    `0xD800..=0xDFFF`.
+ - range `0x0000..=0x10FFFF`, excluding the surrogate range
+ `0xD800..=0xDFFF`.
 - For `\u{...}`, values outside that range are rejected.
 
 ## Semantics
@@ -124,13 +124,13 @@ fn main () -> int {
 - **Using double quotes**: `"x"` is a `string`, not a `char`. Use `'x'`.
 - **Writing more than one character**: `'ab'` is invalid; use `"ab"`.
 - **Source encoding surprises**: prefer `\u{...}` for non-ASCII characters when
-  you want the source spelling to be stable across editors/fonts.
+ you want the source spelling to be stable across editors/fonts.
 - **Confusing `\xNN` between `char` and `string`**:
-  - for `char`, `\xNN` denotes a code point value,
-  - for `string`, `\xNN` denotes a raw byte (`docs/language/literals-string.md`).
+ - for `char`, `\xNN` denotes a code point value,
+ - for `string`, `\xNN` denotes a raw byte ([literals string](?p=language/literals-string)).
 
 ## Related Documents
 
-- `docs/language/types.md` (primitive `char` and `string`)
-- `docs/language/literals-string.md` (string literals and escape sequences)
-- `docs/language/operators.md` (`as` casts for int-like types, including `char`)
+- [types](?p=language/types) (primitive `char` and `string`)
+- [literals string](?p=language/literals-string) (string literals and escape sequences)
+- [operators](?p=language/operators) (`as` casts for int-like types, including `char`)

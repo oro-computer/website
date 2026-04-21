@@ -4,7 +4,7 @@ In the in-tree stdlib, `std::buffer` provides a packed byte buffer
 (`BufferU8`) plus width-oriented scalar buffer aliases built on
 `std::vector::Vector(T)` (for example `BufferI32`).
 
-Canonical doc: `docs/std/buffer.md`.
+Canonical doc: [buffer](?p=std/buffer).
 
 ## Importing
 
@@ -38,5 +38,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/buffer.md`
-- Intrinsic buffer design: `docs/language/buffers.md`
+- Canonical doc: [buffer](?p=std/buffer)
+- Intrinsic buffer design: [buffers](?p=language/buffers)

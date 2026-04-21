@@ -3,13 +3,13 @@
 ## Notes
 
 - Parser: **implemented**
-- Checker rules: **implemented** (current subset)
-- Compile-time evaluation: **implemented** (current subset)
+- Checker rules: **implemented** (Supported forms)
+- Compile-time evaluation: **implemented** (Supported forms)
 
 This document defines the surface syntax and semantics for compile-time
 functions.
 
-`const fn` (and `const pure fn`) can be called
+In Silk currently, `const fn` (and `const pure fn`) can be called
 from `const` binding initializers when all arguments and the result are
 compile-time values (scalar values and eligible POD `struct` values).
 
@@ -37,39 +37,39 @@ const pure fn add2 (a: int, b: int) -> int {
 Notes:
 
 - `const pure fn` is simply a `const fn` that also opts into the `pure` rules
-  (see `function-disciplines.md`).
+ (see `function-disciplines.md`).
 - `const fn` is a **compile-time-only** function:
-  - it may be called only from compile-time contexts (for example `const`
-    initializers and Formal Silk specifications),
-  - it is not emitted as a runtime/linkable symbol in executable, object, or
-    library outputs.
+ - it may be called only from compile-time contexts (for example `const`
+ initializers and Formal Silk specifications),
+ - it is not emitted as a runtime/linkable symbol in executable, object, or
+ library outputs.
 
 ## Compile-Time Values
 
 In this document, a “compile-time value” is a value that the compiler can
 produce and manipulate during compile-time evaluation.
 
-Current support:
+Supported forms (Implementation target):
 
 - scalar primitives:
-  - `bool`
-  - fixed-width integers (`i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `i64`, `u64`)
-  - `int`
-  - `f32`, `f64`
-  - `char`
-  - `Instant`, `Duration`
+ - `bool`
+ - fixed-width integers (`i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `i64`, `u64`)
+ - `int`
+ - `f32`, `f64`
+ - `char`
+ - `Instant`, `Duration`
 
 - compile-time structures (POD `struct` values):
-  - a non-opaque `struct` type,
-  - with 1+ fields,
-  - where every field type is a compile-time scalar value type, and
-  - the struct does not require ownership tracking (`Drop`).
+ - a non-opaque `struct` type,
+ - with 1+ fields,
+ - where every field type is a compile-time scalar value type, and
+ - the struct does not require ownership tracking (`Drop`).
 
-  These values are lowered as a flattened sequence of scalar slots in
-  declaration order. They may be returned from and passed to `const fn`, and
-  used in `const` initializers.
+ These values are lowered as a flattened sequence of scalar slots in
+ declaration order. They may be returned from and passed to `const fn`, and
+ used in `const` initializers.
 
-Planned (not yet supported for `const fn` in the current subset):
+Planned (not yet supported for `const fn` in the Supported forms):
 
 - `string` values (string literals are supported directly in `const` bindings),
 - aggregate values beyond compile-time POD structs (enum/optional/slice/array),
@@ -77,12 +77,12 @@ Planned (not yet supported for `const fn` in the current subset):
 
 ## Rules
 
-The current subset defines a deliberately small “const-eval VM” surface. A
+The Supported forms defines a deliberately small “const-eval VM” surface. A
 `const fn` must fit within this surface.
 
 ### Signature rules
 
-In the current subset, a `const fn`:
+In the Supported forms, a `const fn`:
 
 - must not be `task` or `async`,
 - must not declare a typed-error contract (`-> T | ErrorType...`),
@@ -91,28 +91,28 @@ In the current subset, a `const fn`:
 
 ### Body rules
 
-In the current subset, a `const fn`:
+In the Supported forms, a `const fn`:
 
 - must not allocate (`new`) and must not use regions/`with`,
 - must not contain `panic` statements,
 - must not declare `const` local bindings,
 - may call only other `const fn` declarations,
 - is restricted to a small expression subset over scalar values:
-  - literals and local names (parameters and `let` bindings; no global `const` reads in the current subset),
-  - `as` casts between supported scalar types,
-  - unary operators: `-`, `~`, `!`,
-  - binary operators:
-    - arithmetic: `+`, `-`, `*` (division/modulo are currently not part of the const-eval subset),
-    - bitwise: `&`, `|`, `^`, `<<`, `>>`,
-    - comparisons: `==`, `!=`, `<`, `<=`, `>`, `>=`,
-  - `if` expressions (`if cond { a } else { b }`).
-  - assignments to local names: `=`, `+=`, `-=`, `*=`, plus `++`/`--`.
+ - literals and local names (parameters and `let` bindings; no global `const` reads in the Supported forms),
+ - `as` casts between supported scalar types,
+ - unary operators: `-`, `~`, `!`,
+ - binary operators:
+ - arithmetic: `+`, `-`, `*` (division/modulo are currently not part of the const-eval subset),
+ - bitwise: `&`, `|`, `^`, `<<`, `>>`,
+ - comparisons: `==`, `!=`, `<`, `<=`, `>`, `>=`,
+ - `if` expressions (`if cond { a } else { b }`).
+ - assignments to local names: `=`, `+=`, `-=`, `*=`, plus `++`/`--`.
 
 Additionally, `const fn` bodies may construct and use compile-time POD `struct`
 values:
 
 - struct literals (`T{ field: expr, ... }`) when `T` is a compile-time structure
-  and every field expression is compile-time evaluable,
+ and every field expression is compile-time evaluable,
 - field access (`value.field`) on compile-time structures, and
 - assignment to local struct-typed names (copies the flattened scalar slots).
 
@@ -150,7 +150,7 @@ Const functions do not create new static storage. In particular:
 - compile-time execution may compute scalar values and fold them into constants,
 - compile-time execution must not allocate heap memory,
 - compile-time execution must not synthesize new global read-only data (for
-  example, it cannot build a new string at compile time in the current subset).
+ example, it cannot build a new string at compile time in the Supported forms).
 
 String literals are still backed by read-only static storage, but they are
 introduced by the literal syntax itself (see `literals-string.md`), not by the

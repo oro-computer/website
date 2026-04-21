@@ -6,12 +6,14 @@ value that is exactly one of several **member types**.
 This feature exists to model small, explicit “one-of-these-types” outcomes
 without requiring a dedicated nominal `enum` declaration for every case.
 
+
+
 See also:
 
-- `docs/language/typed-errors.md` (unparenthesized `|` in function *signatures*
-  is reserved for typed-error contracts),
-- `docs/language/enums.md` (general tagged unions with named variants),
-- `docs/language/flow-match.md` (`match` over union values).
+- [typed errors](?p=language/typed-errors) (unparenthesized `|` in function *signatures*
+ is reserved for typed-error contracts),
+- [enums](?p=language/enums) (general tagged unions with named variants),
+- [flow match](?p=language/flow-match) (`match` over union values).
 
 ## Surface Syntax
 
@@ -39,7 +41,7 @@ contracts as authoritative.
 
 ## Rules
 
-The current implementation supports only unions whose member
+The implementation intentionally supports only unions whose member
 types have a safe, well-defined representation in the current compiler/backend
 subset.
 
@@ -47,11 +49,11 @@ A union type `T1 | T2 | ... | Tn` is permitted when all member types are in the
 supported union-member set:
 
 - **Primitive scalar** types in `{ bool, char, i8, u8, i16, u16, i32, u32, i64,
-  u64, int, usize, size, Instant, Duration }` (`isize` is accepted as an alias
-  for `size`), and/or
+ u64, int, usize, size, Instant, Duration }` (`isize` is accepted as an alias
+ for `size`), and/or
 - **Nominal POD structs** (including `error` types) and **nominal POD enums**
-  that lower to a scalar-slot representation in the current backend subset (no
-  opaque structs).
+ that lower to a scalar-slot representation in the current backend subset (no
+ opaque structs).
 
 Unions may freely **mix** primitive and nominal members in this subset.
 
@@ -74,9 +76,9 @@ A value of a union type is a **tagged** value:
 
 - It stores a runtime tag identifying which member type is active.
 - It stores the payload value in a uniform representation compatible with all
-  members in the current backend subset.
+ members in the current backend subset.
 
-### Representation (current backend subset)
+### Representation
 
 In the current native backend subset, unions are lowered as:
 
@@ -133,10 +135,10 @@ let out: int = match u {
 };
 ```
 
-Rules (current subset):
+Rules (Supported forms):
 
 - The scrutinee must have a union type.
 - Patterns are restricted to `name: Type` (or `_: Type`) where `Type` is one of
-  the union member types.
+ the union member types.
 - Matches must be exhaustive: exactly one arm per member type (order does not
-  matter).
+ matter).

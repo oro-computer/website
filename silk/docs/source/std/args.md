@@ -14,8 +14,8 @@ Where `argv` is a raw pointer to the process `argv` pointer list (`char**` in C)
 
 See also:
 
-- `docs/compiler/cli-silk.md` (entrypoint selection rules)
-- `docs/language/ext.md` (string ABI `{ ptr, len }` and C-string lowering rules)
+- [cli silk](?p=compiler/cli-silk) (entrypoint selection rules)
+- [ext](?p=language/ext) (string ABI `{ ptr, len }` and C-string lowering rules)
 
 ## Exported API
 The following items are implemented in `std/args.slk`:
@@ -52,12 +52,12 @@ impl Args {
 ### Safety notes
 
 - `cstr_len` scans memory until it finds a `0` byte. If the pointer is invalid
-  or the string is not NUL-terminated, behavior is undefined.
+ or the string is not NUL-terminated, behavior is undefined.
 - `cstr_string` / `argv_string` return `string` **views** into existing memory.
-  They do not copy or allocate, and therefore do not provide ownership. The
-  caller must ensure the pointed-to bytes remain valid for the lifetime of the
-  returned `string`. For process `argv` strings this is typically valid for the
-  lifetime of the process.
+ They do not copy or allocate, and therefore do not provide ownership. The
+ caller must ensure the pointed-to bytes remain valid for the lifetime of the
+ returned `string`. For process `argv` strings this is typically valid for the
+ lifetime of the process.
 
 ## String construction intrinsic
 

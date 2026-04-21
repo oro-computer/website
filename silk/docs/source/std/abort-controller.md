@@ -8,17 +8,17 @@ The goal is to make cancellation **obvious and uniform** across the standard
 library:
 
 - APIs that can be aborted accept an `AbortSignalBorrow` (usually as an optional
-  parameter).
+ parameter).
 - Callers create and own an `AbortController`, and pass `controller.signal()`
-  to the operations they want to be able to abort.
+ to the operations they want to be able to abort.
 - When a signal is aborted, operations stop early and return an `Aborted`
-  error-kind in their module’s native error type.
+ error-kind in their module’s native error type.
 
 Thread-safety:
 
 - `AbortSignal` state is protected by a mutex + condition variable.
 - `AbortSignalBorrow` is a non-owning, copyable handle intended for sharing
-  across OS threads and `task` boundaries.
+ across OS threads and `task` boundaries.
 
 ## Exported API
 ```silk
@@ -86,27 +86,27 @@ impl AbortSignalBorrow {
 
 - `AbortController.init()` creates an un-aborted signal.
 - `AbortController.signal()` returns an `AbortSignalBorrow` that points to the
-  controller’s underlying signal state.
+ controller’s underlying signal state.
 - `AbortSignalBorrow` is non-owning:
-  - it is safe to copy and pass across tasks/threads,
-  - it becomes invalid once the owning `AbortController`/`AbortSignal` is
-    destroyed or dropped.
+ - it is safe to copy and pass across tasks/threads,
+ - it becomes invalid once the owning `AbortController`/`AbortSignal` is
+ destroyed or dropped.
 - `AbortController.abort()` is idempotent: aborting an already-aborted signal
-  is a no-op (the original reason is preserved).
+ is a no-op (the original reason is preserved).
 - `abort_with_message` aborts with a user-provided message. If the message
-  cannot be copied due to allocation failure, the signal is still aborted, and
-  the method returns `Some(OutOfMemory{...})`.
+ cannot be copied due to allocation failure, the signal is still aborted, and
+ the method returns `Some(OutOfMemory{...})`.
 - `AbortSignal.reason()` returns an `AbortReason` whose `message: string` view
-  is backed by memory owned by the signal. Do not use the returned `message`
-  after the signal/controller has been destroyed or dropped.
+ is backed by memory owned by the signal. Do not use the returned `message`
+ after the signal/controller has been destroyed or dropped.
 - `AbortSignalBorrow.wait_fd()` returns a file descriptor that becomes readable
-  when the signal is aborted. This is intended for `poll(2)`/`select(2)` style
-  waiting (for example to wait on both a TTY fd and an abort signal at the same
-  time). Do not read from or close the returned fd; it is owned by the signal
-  and used as an internal wake mechanism.
+ when the signal is aborted. This is intended for `poll(2)`/`select(2)` style
+ waiting (for example to wait on both a TTY fd and an abort signal at the same
+ time). Do not read from or close the returned fd; it is owned by the signal
+ and used as an internal wake mechanism.
 - `AbortSignal.wait()` blocks the current OS thread until the signal is aborted.
-  In the current subset, this is a blocking synchronization primitive. For
-  select-style waiting, use `wait_fd()` instead.
+ In the Supported forms, this is a blocking synchronization primitive. For
+ select-style waiting, use `wait_fd()` instead.
 
 ## Using `AbortSignalBorrow` Across Tasks
 

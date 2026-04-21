@@ -3,19 +3,19 @@
 `std::buffer` provides:
 
 - `Buffer(T)`: an owning, fixed-capacity **scalar-slot** buffer (cap measured in
-  elements), with view/slice helpers returning `std::arrays::Slice(T)`.
+ elements), with view/slice helpers returning `std::arrays::Slice(T)`.
 - `BufferU8`: an owning, growable **packed byte buffer** (byte-addressed `ptr`,
-  with `len`/`cap` measured in bytes).
+ with `len`/`cap` measured in bytes).
 
 In the long-term design, the compiler may treat `Buffer(T)` as a special
 primitive, but the shipped stdlib surface is already usable end-to-end (see
-`docs/language/buffers.md`).
+[buffers](?p=language/buffers)).
 
 See also:
 
-- `docs/std/vector.md` (`Vector(T)`)
-- `docs/language/buffers.md` (intrinsic `Buffer(T)` design)
-- `docs/std/io.md` and `docs/std/strings.md` (byte-oriented APIs)
+- [vector](?p=std/vector) (`Vector(T)`)
+- [buffers](?p=language/buffers) (intrinsic `Buffer(T)` design)
+- [io](?p=std/io) and [strings](?p=std/strings) (byte-oriented APIs)
 
 ## Exported API
 
@@ -23,9 +23,9 @@ See also:
 
 - `Buffer(T)`: an owning, fixed-capacity scalar-slot buffer for `T` values.
 - `BufferU8`: an owning, growable **packed byte buffer** (byte-addressed `ptr`,
-  with `len` and `cap` measured in bytes).
+ with `len` and `cap` measured in bytes).
 - width-oriented scalar buffer aliases built on `std::vector::Vector(T)` for
-  convenience in the current subset.
+ convenience in the Supported forms.
 
 ### `Buffer(T)`
 
@@ -118,35 +118,35 @@ export type BufferF64 = std::vector::Vector(f64);
 Notes:
 
 - `Buffer(T)` is a scalar-slot buffer: `cap` is in elements, and the allocation
-  size is `cap * sizeof(T)` bytes (in the current backend subset, `sizeof(u8) == 8`).
-  For packed bytes suitable for OS/FFI byte APIs, use `BufferU8`.
+ size is `cap * sizeof(T)` bytes (in the current backend subset, `sizeof(u8) == 8`).
+ For packed bytes suitable for OS/FFI byte APIs, use `BufferU8`.
 - `BufferU8` is a packed byte buffer. Its `ptr` can be passed directly to
-  byte-oriented OS/FFI APIs alongside `len`.
+ byte-oriented OS/FFI APIs alongside `len`.
 - `BufferU8.init(cap)` returns `Err(AllocFailed)` rather than silently
-  returning an empty buffer when allocation fails. Use `BufferU8.empty()` for
-  infallible construction.
+ returning an empty buffer when allocation fails. Use `BufferU8.empty()` for
+ infallible construction.
 - growth paths (`reserve_additional`, `push`, `push_bytes`) surface allocation
-  failure as `std::memory::OutOfMemory?` (including internal size arithmetic
-  overflow; leaves the buffer unchanged on failure).
+ failure as `std::memory::OutOfMemory?` (including internal size arithmetic
+ overflow; leaves the buffer unchanged on failure).
 - The width-oriented aliases are still backed by `std::vector::Vector(T)` in
-  the current subset, so their underlying storage follows the
-  scalar-slot model described in `docs/std/vector.md`.
+ the Supported forms, so their underlying storage follows the
+ scalar-slot model described in [vector](?p=std/vector).
 
-## Implemented `std::interfaces` surface
+## `std::interfaces` surface
 
 `std::buffer` exposes two different protocol profiles:
 
 - `Buffer(T)` is the low-level fixed-capacity owner:
-  - it implements `std::interfaces::Capacity`,
-  - and `std::interfaces::Drop`.
+ - it implements `std::interfaces::Capacity`,
+ - and `std::interfaces::Drop`.
 - `BufferU8` is the byte-oriented growable buffer:
-  - it implements `std::interfaces::Len`,
-  - `std::interfaces::Capacity`,
-  - `std::interfaces::IsEmpty`,
-  - `std::interfaces::Clear`,
-  - `std::interfaces::ReserveAdditional`,
-  - `std::interfaces::WriteU8`,
-  - and `std::interfaces::Drop`.
+ - it implements `std::interfaces::Len`,
+ - `std::interfaces::Capacity`,
+ - `std::interfaces::IsEmpty`,
+ - `std::interfaces::Clear`,
+ - `std::interfaces::ReserveAdditional`,
+ - `std::interfaces::WriteU8`,
+ - and `std::interfaces::Drop`.
 
 That split is intentional. `Buffer(T)` models raw scalar-slot storage where a
 logical initialized length is not tracked, while `BufferU8` is the ergonomic

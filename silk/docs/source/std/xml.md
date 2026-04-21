@@ -18,14 +18,14 @@ zig build deps
 
 When the vendored archives are present, `silk build` auto-links:
 
-- `vendor/lib/x64-linux/libxml2.a`
-- `vendor/lib/x64-linux/libsilk_xml_shims.a`
+- `vendor/lib/<host-layout>/libxml2.a`
+- `vendor/lib/<host-layout>/libsilk_xml_shims.a`
 
 In staged/installed toolchains, these archives are expected under the compiler
 prefix:
 
-- `build/lib/silk/vendor/lib/x64-linux/` (repo build prefix)
-- `<prefix>/lib/silk/vendor/lib/x64-linux/` (installed)
+- `build/lib/silk/vendor/lib/<host-layout>/` (repo build prefix)
+- `<prefix>/lib/silk/vendor/lib/<host-layout>/` (installed)
 
 when `std::xml` is present in the module set, and also when linking `.o`/`.a`
 inputs that reference the shim symbols.

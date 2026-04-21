@@ -8,9 +8,9 @@ test builds”, “this feature requires a minimum version”, and similar polic
 ## Notes
 
 - Implemented: build metadata is available to runtime code via `std::runtime::build`
-  (`docs/std/runtime.md`).
+ ([runtime](?p=std/runtime)).
 - Implemented: build metadata is available as built-in compile-time constants:
-  `BUILD_KIND`, `BUILD_MODE`, `BUILD_VERSION`.
+ `BUILD_KIND`, `BUILD_MODE`, `BUILD_VERSION`.
 
 ## Built-In Constants
 
@@ -28,7 +28,7 @@ These behave like normal `const` string values:
 - They do not require an import.
 - They may be used anywhere a `string` expression is allowed.
 - They are compile-time constants (their values are fixed at compile time and
-  are embedded into the output artifact).
+ are embedded into the output artifact).
 
 ### `BUILD_KIND`
 
@@ -51,14 +51,14 @@ Notes:
 
 - `"test"` is the mode used by `silk test`.
 - Debug stack traces and debug assertion behavior are controlled separately by
-  `std::runtime::build::is_debug()` (see `docs/std/runtime.md`).
+ `std::runtime::build::is_debug()` (see [runtime](?p=std/runtime)).
 
 ### `BUILD_VERSION`
 
 The semantic version of the current package when building from a manifest.
 
 - When building from a package manifest (`silk.toml`), `BUILD_VERSION` is the
-  manifest `version`.
+ manifest `version`.
 - When not building from a manifest, `BUILD_VERSION` is `"0.0.0"`.
 
 ### `BUILD_VERSION_MAJOR` / `BUILD_VERSION_MINOR` / `BUILD_VERSION_PATCH`

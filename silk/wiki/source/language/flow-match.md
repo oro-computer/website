@@ -8,11 +8,11 @@ Currently:
 - `match <enum> { E::V => expr, ... }` is supported in a restricted exhaustive subset,
 - typed-error handling uses a separate `match (expr) { ... }` statement form (see typed errors).
 
-Full reference: `docs/language/flow-match.md`.
+Canonical spec: [flow match](?p=language/flow-match).
 
 ## Notes
 
-- Full reference: `docs/language/flow-match.md`
+- Supported forms + tests: [flow match](?p=language/flow-match)
 
 ## Syntax
 
@@ -55,6 +55,6 @@ fn main () -> int {
 
 ## See also
 
-- Full reference: `docs/language/flow-match.md`
-- Enums: `docs/language/enums.md`
-- Typed errors (match statement): `docs/language/typed-errors.md`
+- Canonical spec: [flow match](?p=language/flow-match)
+- Enums: [enums](?p=language/enums)
+- Typed errors (match statement): [typed errors](?p=language/typed-errors)

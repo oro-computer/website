@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-03-22T15:21:45+00:00",
+  "generatedAt": "2026-04-20T20:13:17+00:00",
   "kind": "docs",
-  "count": 182,
+  "count": 265,
   "sections": [
     {
       "name": "overview",
@@ -660,6 +660,396 @@
           "id": "std/limits",
           "title": "`std::limits`",
           "file": "std/limits.md"
+        },
+        {
+          "id": "std/module-catalog",
+          "title": "`std::` Module Catalog",
+          "file": "std/module-catalog.md"
+        },
+        {
+          "id": "std/abort_controller",
+          "title": "`std::abort_controller`",
+          "file": "std/abort_controller.md"
+        },
+        {
+          "id": "std/boolean",
+          "title": "`std::boolean`",
+          "file": "std/boolean.md"
+        },
+        {
+          "id": "std/crypto-aead",
+          "title": "`std::crypto::aead`",
+          "file": "std/crypto-aead.md"
+        },
+        {
+          "id": "std/crypto-box",
+          "title": "`std::crypto::box`",
+          "file": "std/crypto-box.md"
+        },
+        {
+          "id": "std/crypto-hash",
+          "title": "`std::crypto::hash`",
+          "file": "std/crypto-hash.md"
+        },
+        {
+          "id": "std/crypto-random",
+          "title": "`std::crypto::random`",
+          "file": "std/crypto-random.md"
+        },
+        {
+          "id": "std/crypto-secretbox",
+          "title": "`std::crypto::secretbox`",
+          "file": "std/crypto-secretbox.md"
+        },
+        {
+          "id": "std/crypto-sign",
+          "title": "`std::crypto::sign`",
+          "file": "std/crypto-sign.md"
+        },
+        {
+          "id": "std/ffi-c_owned",
+          "title": "`std::ffi::c_owned`",
+          "file": "std/ffi-c_owned.md"
+        },
+        {
+          "id": "std/fs-stream",
+          "title": "`std::fs::stream`",
+          "file": "std/fs-stream.md"
+        },
+        {
+          "id": "std/fs",
+          "title": "`std::fs`",
+          "file": "std/fs.md"
+        },
+        {
+          "id": "std/function",
+          "title": "`std::function`",
+          "file": "std/function.md"
+        },
+        {
+          "id": "std/graphics-opengl",
+          "title": "`std::graphics::opengl`",
+          "file": "std/graphics-opengl.md"
+        },
+        {
+          "id": "std/graphics-opengles",
+          "title": "`std::graphics::opengles`",
+          "file": "std/graphics-opengles.md"
+        },
+        {
+          "id": "std/graphics-vulkan",
+          "title": "`std::graphics::vulkan`",
+          "file": "std/graphics-vulkan.md"
+        },
+        {
+          "id": "std/image-color",
+          "title": "`std::image::color`",
+          "file": "std/image-color.md"
+        },
+        {
+          "id": "std/image-jpeg",
+          "title": "`std::image::jpeg`",
+          "file": "std/image-jpeg.md"
+        },
+        {
+          "id": "std/image-png",
+          "title": "`std::image::png`",
+          "file": "std/image-png.md"
+        },
+        {
+          "id": "std/io-async",
+          "title": "`std::io::async`",
+          "file": "std/io-async.md"
+        },
+        {
+          "id": "std/io-stream",
+          "title": "`std::io::stream`",
+          "file": "std/io-stream.md"
+        },
+        {
+          "id": "std/list",
+          "title": "`std::list`",
+          "file": "std/list.md"
+        },
+        {
+          "id": "std/math-matrix",
+          "title": "`std::math::matrix`",
+          "file": "std/math-matrix.md"
+        },
+        {
+          "id": "std/math-vector",
+          "title": "`std::math::vector`",
+          "file": "std/math-vector.md"
+        },
+        {
+          "id": "std/net-stream",
+          "title": "`std::net::stream`",
+          "file": "std/net-stream.md"
+        },
+        {
+          "id": "std/net",
+          "title": "`std::net`",
+          "file": "std/net.md"
+        },
+        {
+          "id": "std/optional",
+          "title": "`std::optional`",
+          "file": "std/optional.md"
+        },
+        {
+          "id": "std/process-child",
+          "title": "`std::process::child`",
+          "file": "std/process-child.md"
+        },
+        {
+          "id": "std/queue",
+          "title": "`std::queue`",
+          "file": "std/queue.md"
+        },
+        {
+          "id": "std/range",
+          "title": "`std::range`",
+          "file": "std/range.md"
+        },
+        {
+          "id": "std/runtime-build",
+          "title": "`std::runtime::build`",
+          "file": "std/runtime-build.md"
+        },
+        {
+          "id": "std/runtime-env",
+          "title": "`std::runtime::env`",
+          "file": "std/runtime-env.md"
+        },
+        {
+          "id": "std/runtime-event_loop",
+          "title": "`std::runtime::event_loop`",
+          "file": "std/runtime-event_loop.md"
+        },
+        {
+          "id": "std/runtime-fs",
+          "title": "`std::runtime::fs`",
+          "file": "std/runtime-fs.md"
+        },
+        {
+          "id": "std/runtime-globals",
+          "title": "`std::runtime::globals`",
+          "file": "std/runtime-globals.md"
+        },
+        {
+          "id": "std/runtime-io",
+          "title": "`std::runtime::io`",
+          "file": "std/runtime-io.md"
+        },
+        {
+          "id": "std/runtime-linux-event_loop",
+          "title": "`std::runtime::linux::event_loop`",
+          "file": "std/runtime-linux-event_loop.md"
+        },
+        {
+          "id": "std/runtime-mem",
+          "title": "`std::runtime::mem`",
+          "file": "std/runtime-mem.md"
+        },
+        {
+          "id": "std/runtime-net",
+          "title": "`std::runtime::net`",
+          "file": "std/runtime-net.md"
+        },
+        {
+          "id": "std/runtime-number",
+          "title": "`std::runtime::number`",
+          "file": "std/runtime-number.md"
+        },
+        {
+          "id": "std/runtime-posix-env",
+          "title": "`std::runtime::posix::env`",
+          "file": "std/runtime-posix-env.md"
+        },
+        {
+          "id": "std/runtime-posix-event_loop",
+          "title": "`std::runtime::posix::event_loop`",
+          "file": "std/runtime-posix-event_loop.md"
+        },
+        {
+          "id": "std/runtime-posix-fs",
+          "title": "`std::runtime::posix::fs`",
+          "file": "std/runtime-posix-fs.md"
+        },
+        {
+          "id": "std/runtime-posix-io",
+          "title": "`std::runtime::posix::io`",
+          "file": "std/runtime-posix-io.md"
+        },
+        {
+          "id": "std/runtime-posix-mem",
+          "title": "`std::runtime::posix::mem`",
+          "file": "std/runtime-posix-mem.md"
+        },
+        {
+          "id": "std/runtime-posix-net",
+          "title": "`std::runtime::posix::net`",
+          "file": "std/runtime-posix-net.md"
+        },
+        {
+          "id": "std/runtime-posix-process",
+          "title": "`std::runtime::posix::process`",
+          "file": "std/runtime-posix-process.md"
+        },
+        {
+          "id": "std/runtime-posix-signal",
+          "title": "`std::runtime::posix::signal`",
+          "file": "std/runtime-posix-signal.md"
+        },
+        {
+          "id": "std/runtime-posix-sync",
+          "title": "`std::runtime::posix::sync`",
+          "file": "std/runtime-posix-sync.md"
+        },
+        {
+          "id": "std/runtime-posix-task",
+          "title": "`std::runtime::posix::task`",
+          "file": "std/runtime-posix-task.md"
+        },
+        {
+          "id": "std/runtime-posix-time",
+          "title": "`std::runtime::posix::time`",
+          "file": "std/runtime-posix-time.md"
+        },
+        {
+          "id": "std/runtime-process",
+          "title": "`std::runtime::process`",
+          "file": "std/runtime-process.md"
+        },
+        {
+          "id": "std/runtime-readline",
+          "title": "`std::runtime::readline`",
+          "file": "std/runtime-readline.md"
+        },
+        {
+          "id": "std/runtime-regex",
+          "title": "`std::runtime::regex`",
+          "file": "std/runtime-regex.md"
+        },
+        {
+          "id": "std/runtime-signal",
+          "title": "`std::runtime::signal`",
+          "file": "std/runtime-signal.md"
+        },
+        {
+          "id": "std/runtime-sync",
+          "title": "`std::runtime::sync`",
+          "file": "std/runtime-sync.md"
+        },
+        {
+          "id": "std/runtime-task",
+          "title": "`std::runtime::task`",
+          "file": "std/runtime-task.md"
+        },
+        {
+          "id": "std/runtime-time",
+          "title": "`std::runtime::time`",
+          "file": "std/runtime-time.md"
+        },
+        {
+          "id": "std/runtime-unicode",
+          "title": "`std::runtime::unicode`",
+          "file": "std/runtime-unicode.md"
+        },
+        {
+          "id": "std/runtime-wasi-cwd",
+          "title": "`std::runtime::wasi::cwd`",
+          "file": "std/runtime-wasi-cwd.md"
+        },
+        {
+          "id": "std/runtime-wasi-env",
+          "title": "`std::runtime::wasi::env`",
+          "file": "std/runtime-wasi-env.md"
+        },
+        {
+          "id": "std/runtime-wasi-event_loop",
+          "title": "`std::runtime::wasi::event_loop`",
+          "file": "std/runtime-wasi-event_loop.md"
+        },
+        {
+          "id": "std/runtime-wasi-fs",
+          "title": "`std::runtime::wasi::fs`",
+          "file": "std/runtime-wasi-fs.md"
+        },
+        {
+          "id": "std/runtime-wasi-io",
+          "title": "`std::runtime::wasi::io`",
+          "file": "std/runtime-wasi-io.md"
+        },
+        {
+          "id": "std/runtime-wasi-mem",
+          "title": "`std::runtime::wasi::mem`",
+          "file": "std/runtime-wasi-mem.md"
+        },
+        {
+          "id": "std/runtime-wasi-net",
+          "title": "`std::runtime::wasi::net`",
+          "file": "std/runtime-wasi-net.md"
+        },
+        {
+          "id": "std/runtime-wasi-preopen",
+          "title": "`std::runtime::wasi::preopen`",
+          "file": "std/runtime-wasi-preopen.md"
+        },
+        {
+          "id": "std/runtime-wasi-process",
+          "title": "`std::runtime::wasi::process`",
+          "file": "std/runtime-wasi-process.md"
+        },
+        {
+          "id": "std/runtime-wasi-signal",
+          "title": "`std::runtime::wasi::signal`",
+          "file": "std/runtime-wasi-signal.md"
+        },
+        {
+          "id": "std/runtime-wasi-sync",
+          "title": "`std::runtime::wasi::sync`",
+          "file": "std/runtime-wasi-sync.md"
+        },
+        {
+          "id": "std/runtime-wasi-task",
+          "title": "`std::runtime::wasi::task`",
+          "file": "std/runtime-wasi-task.md"
+        },
+        {
+          "id": "std/runtime-wasi-time",
+          "title": "`std::runtime::wasi::time`",
+          "file": "std/runtime-wasi-time.md"
+        },
+        {
+          "id": "std/runtime-z3",
+          "title": "`std::runtime::z3`",
+          "file": "std/runtime-z3.md"
+        },
+        {
+          "id": "std/ssh",
+          "title": "`std::ssh`",
+          "file": "std/ssh.md"
+        },
+        {
+          "id": "std/stack",
+          "title": "`std::stack`",
+          "file": "std/stack.md"
+        },
+        {
+          "id": "std/tar-async",
+          "title": "`std::tar::async`",
+          "file": "std/tar-async.md"
+        },
+        {
+          "id": "std/uuid-random",
+          "title": "`std::uuid::random`",
+          "file": "std/uuid-random.md"
+        },
+        {
+          "id": "std/boxed-values",
+          "title": "Boxed Value Types",
+          "file": "std/boxed-values.md"
         }
       ]
     },
@@ -745,6 +1135,16 @@
           "id": "usage/editor-textmate",
           "title": "TextMate Grammar (tmLanguage)",
           "file": "usage/editor-textmate.md"
+        },
+        {
+          "id": "usage/guide-examples",
+          "title": "`silk guide`",
+          "file": "usage/guide-examples.md"
+        },
+        {
+          "id": "usage/github-actions",
+          "title": "GitHub Actions: Install Released `silk`",
+          "file": "usage/github-actions.md"
         }
       ]
     },
@@ -758,7 +1158,7 @@
         },
         {
           "id": "compiler/implementation-status",
-          "title": "Implementation Status",
+          "title": "Notes",
           "file": "compiler/implementation-status.md"
         },
         {
@@ -840,6 +1240,11 @@
           "id": "compiler/vendored-deps",
           "title": "Vendored Dependencies",
           "file": "compiler/vendored-deps.md"
+        },
+        {
+          "id": "compiler/cache-silk",
+          "title": "`silk` Cache Management",
+          "file": "compiler/cache-silk.md"
         }
       ]
     },
@@ -848,98 +1253,108 @@
       "items": [
         {
           "id": "man/silk.1",
-          "title": "`silk` (1) \u2014 Silk Language Compiler",
+          "title": "[`silk(1)`](?p=man/silk.1) \u2014 Silk Language Compiler",
           "file": "man/silk.1.md"
         },
         {
           "id": "man/slc.1",
-          "title": "`slc` (1) \u2014 Alias of `silk build`",
+          "title": "[`slc(1)`](?p=man/slc.1) \u2014 Alias of `silk build`",
           "file": "man/slc.1.md"
         },
         {
           "id": "man/slcc.1",
-          "title": "`slcc` (1) \u2014 Alias of `silk cc`",
+          "title": "[`slcc(1)`](?p=man/slcc.1) \u2014 Alias of `silk cc`",
           "file": "man/slcc.1.md"
         },
         {
           "id": "man/silk-build.1",
-          "title": "`silk-build` (1) \u2014 Build Silk Artifacts",
+          "title": "[`silk-build(1)`](?p=man/silk-build.1) \u2014 Build Silk Artifacts",
           "file": "man/silk-build.1.md"
         },
         {
           "id": "man/silk-package.1",
-          "title": "`silk-package` (1) \u2014 Inspect And Lint Silk Packages",
+          "title": "[`silk-package(1)`](?p=man/silk-package.1) \u2014 Inspect And Lint Silk Packages",
           "file": "man/silk-package.1.md"
         },
         {
           "id": "man/silk-check.1",
-          "title": "`silk-check` (1) \u2014 Parse and Type-Check",
+          "title": "[`silk-check(1)`](?p=man/silk-check.1) \u2014 Parse and Type-Check",
           "file": "man/silk-check.1.md"
         },
         {
           "id": "man/silk-test.1",
-          "title": "`silk-test` (1) \u2014 Run Language-Level Tests",
+          "title": "[`silk-test(1)`](?p=man/silk-test.1) \u2014 Run Language-Level Tests",
           "file": "man/silk-test.1.md"
         },
         {
           "id": "man/silk-doc.1",
-          "title": "`silk-doc` (1) \u2014 Generate Documentation (Markdown or Manpages)",
+          "title": "[`silk-doc(1)`](?p=man/silk-doc.1) \u2014 Generate Documentation (Markdown or Manpages)",
           "file": "man/silk-doc.1.md"
         },
         {
           "id": "man/silk-format.1",
-          "title": "`silk-format` (1) \u2014 Format Silk Source Files",
+          "title": "[`silk-format(1)`](?p=man/silk-format.1) \u2014 Format Silk Source Files",
           "file": "man/silk-format.1.md"
         },
         {
           "id": "man/silk-lsp.1",
-          "title": "`silk-lsp` (1) \u2014 Language Server Protocol (LSP) Server",
+          "title": "[`silk-lsp(1)`](?p=man/silk-lsp.1) \u2014 Language Server Protocol (LSP) Server",
           "file": "man/silk-lsp.1.md"
         },
         {
           "id": "man/silk-env.1",
-          "title": "`silk-env` (1) \u2014 Print `silk` CLI Environment",
+          "title": "[`silk-env(1)`](?p=man/silk-env.1) \u2014 Print `silk` CLI Environment",
           "file": "man/silk-env.1.md"
         },
         {
           "id": "man/silk-man.1",
-          "title": "`silk-man` (1) \u2014 View Manpages Derived from Source Docs",
+          "title": "[`silk-man(1)`](?p=man/silk-man.1) \u2014 View Manpages Derived from Source Docs",
           "file": "man/silk-man.1.md"
         },
         {
           "id": "man/silk-cc.1",
-          "title": "`silk-cc` (1) \u2014 C Compiler Wrapper for `libsilk`",
+          "title": "[`silk-cc(1)`](?p=man/silk-cc.1) \u2014 C Compiler Wrapper for `libsilk`",
           "file": "man/silk-cc.1.md"
         },
         {
           "id": "man/silk.7",
-          "title": "`silk` (7) \u2014 Silk Toolchain Overview",
+          "title": "[`silk(7)`](?p=man/silk.7) \u2014 Silk Toolchain Overview",
           "file": "man/silk.7.md"
         },
         {
           "id": "man/libsilk.7",
-          "title": "`libsilk` (7) \u2014 C99 ABI for the Silk Compiler",
+          "title": "[`libsilk(7)`](?p=man/libsilk.7) \u2014 C99 ABI for the Silk Compiler",
           "file": "man/libsilk.7.md"
         },
         {
           "id": "man/silk_error.3",
-          "title": "`silk_error` (3) \u2014 Retrieve and Format Compiler Errors",
+          "title": "[`silk_error(3)`](?p=man/silk_error.3) \u2014 Retrieve and Format Compiler Errors",
           "file": "man/silk_error.3.md"
         },
         {
           "id": "man/silk_bytes.3",
-          "title": "`silk_bytes` (3) \u2014 Manage Owned Build Output Buffers",
+          "title": "[`silk_bytes(3)`](?p=man/silk_bytes.3) \u2014 Manage Owned Build Output Buffers",
           "file": "man/silk_bytes.3.md"
         },
         {
           "id": "man/silk_compiler.3",
-          "title": "`silk_compiler` (3) \u2014 Embed the Silk Compiler",
+          "title": "[`silk_compiler(3)`](?p=man/silk_compiler.3) \u2014 Embed the Silk Compiler",
           "file": "man/silk_compiler.3.md"
         },
         {
           "id": "man/silk_abi_get_version.3",
-          "title": "`silk_abi_get_version` (3) \u2014 Query the `libsilk` ABI Version",
+          "title": "[`silk_abi_get_version(3)`](?p=man/silk_abi_get_version.3) \u2014 Query the `libsilk` ABI Version",
           "file": "man/silk_abi_get_version.3.md"
+        },
+        {
+          "id": "man/silk-cache.1",
+          "title": "[`silk-cache(1)`](?p=man/silk-cache.1) \u2014 Inspect and Maintain the Managed Silk Cache",
+          "file": "man/silk-cache.1.md"
+        },
+        {
+          "id": "man/silk-guide.1",
+          "title": "[`silk-guide(1)`](?p=man/silk-guide.1) \u2014 Search Curated Silk Example Guides",
+          "file": "man/silk-guide.1.md"
         }
       ]
     },

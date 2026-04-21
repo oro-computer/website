@@ -7,31 +7,31 @@ synchronization primitives used by the current `task` lowering on
 This is an intentionally narrow subset intended for early bring-up:
 
 - It is intentionally small and conservative (a hosted baseline, not a final
-  async runtime).
+ async runtime).
 - It uses a simple **handle-based** representation backed by heap-allocated
-  state and runtime-provided synchronization primitives (`std::runtime::sync`,
-  which defaults to a POSIX/pthread backend in the shipped stdlib).
+ state and runtime-provided synchronization primitives (`std::runtime::sync`,
+ which defaults to a POSIX/pthread backend in the shipped stdlib).
 - All blocking operations block the **current OS thread**.
 
 See also:
 
-- `docs/language/concurrency.md` (language-level `task`/`yield`/`await`)
-- `docs/std/task.md` (task/runtime utilities)
+- [concurrency](?p=language/concurrency) (language-level `task`/`yield`/`await`)
+- [task](?p=std/task) (task/runtime utilities)
 
 ## Thread Safety
 
 `std::sync` is used from OS-thread-backed `task` code. The core pattern is:
 
 - Owning handle types (`Mutex`, `Condvar`, `Channel(T)`, `CancellationToken`)
-  implement `Drop` and are **move-only** in safe code (ownership transfers by
-  value; they are not copyable).
+ implement `Drop` and are **move-only** in safe code (ownership transfers by
+ value; they are not copyable).
 - To share a handle across tasks without transferring ownership, prefer the
-  `*Borrow` view types (for example `ChannelBorrow(T)`, `MutexBorrow`).
-  `*Borrow` values are non-owning, copyable views; the owner must keep the
-  backing handle alive for the duration of all borrows.
+ `*Borrow` view types (for example `ChannelBorrow(T)`, `MutexBorrow`).
+ `*Borrow` values are non-owning, copyable views; the owner must keep the
+ backing handle alive for the duration of all borrows.
 - For multi-producer patterns, pass `ChannelSender(T)` to worker tasks and
-  clone it explicitly with `sender.clone()`; the channel auto-closes when the
-  last sender is dropped.
+ clone it explicitly with `sender.clone()`; the channel auto-closes when the
+ last sender is dropped.
 
 ## Exported API
 ```silk
@@ -167,42 +167,42 @@ impl CancellationTokenBorrow {
 Notes:
 
 - `Mutex.init`, `Condvar.init`, and `CancellationToken.init` return
-  `Result(...)`. `Channel(T).init` / `init_default` return `Result(...)`.
+ `Result(...)`. `Channel(T).init` / `init_default` return `Result(...)`.
 - `Channel(T).invalid()` returns an inert handle (`handle == 0`); operations treat it as closed/empty and return `InvalidInput` for sends.
 - `CancellationToken.invalid()` returns an inert handle; it is treated as already cancelled so waits do not block.
 - Owning handle types implement `Drop` and are moved by value (non-copyable).
-  `*Borrow` view types are copyable and may be passed across tasks/threads, but
-  do not manage lifetime.
+ `*Borrow` view types are copyable and may be passed across tasks/threads, but
+ do not manage lifetime.
 - When sending a channel handle across a `task` boundary, prefer passing a
-  non-owning view (`ChannelBorrow(T)`) obtained via `c.borrow()` so ownership
-  stays with the original `Channel(T)`.
+ non-owning view (`ChannelBorrow(T)`) obtained via `c.borrow()` so ownership
+ stays with the original `Channel(T)`.
 - For producer tasks, prefer using `ChannelSender(T)` created via
-  `c.sender()` and cloned explicitly via `sender.clone()`:
-  - `ChannelSender(T)` auto-closes the channel when the last sender is dropped,
-    which prevents a common class of “receiver blocks forever” bugs.
-  - `ChannelSender(T)` is non-copyable; cloning is explicit so the sender count
-    stays correct for multi-producer patterns.
+ `c.sender()` and cloned explicitly via `sender.clone()`:
+ - `ChannelSender(T)` auto-closes the channel when the last sender is dropped,
+ which prevents a common class of “receiver blocks forever” bugs.
+ - `ChannelSender(T)` is non-copyable; cloning is explicit so the sender count
+ stays correct for multi-producer patterns.
 - When sending a cancellation token across a `task` boundary, prefer passing a
-  non-owning view (`CancellationTokenBorrow`) obtained via `tok.borrow()` so
-  ownership stays with the original `CancellationToken`.
+ non-owning view (`CancellationTokenBorrow`) obtained via `tok.borrow()` so
+ ownership stays with the original `CancellationToken`.
 - `Condvar.wait(self: &Condvar, m: &Mutex)` is called as `cv.wait(m)` — the
-  compiler implicitly borrows the `m` binding for `&T` parameters (there is no
-  general `&expr` operator in the current subset).
+ compiler implicitly borrows the `m` binding for `&T` parameters (there is no
+ general `&expr` operator in the Supported forms).
 - `Channel(T).recv()` returns `None` once the channel is closed *and* empty.
 - `Channel(T).try_send()` returns `Some(SyncFailed)` when the channel is closed
-  or full.
+ or full.
 - `Channel(T).try_recv()` returns `None` when the channel is empty. Use
-  `is_closed()` to distinguish between “empty” and “closed and empty” when
-  needed.
+ `is_closed()` to distinguish between “empty” and “closed and empty” when
+ needed.
 - `ChannelBorrow(T).wait_fd()` returns a file descriptor that becomes readable
-  when the channel transitions from empty to non-empty, or when the channel is
-  closed. This is intended for `poll(2)`/`select(2)`/`epoll(7)` style waiting
-  (for example: wait on both a TTY fd and a channel at the same time).
-  - `wait_fd()` returns `None` when the current runtime cannot provide a pollable
-    channel handle.
-  - Do not read from or close the returned fd. It is owned by the channel and
-    is used as an internal wake mechanism; consuming bytes from it can
-    desynchronize the readiness signal.
+ when the channel transitions from empty to non-empty, or when the channel is
+ closed. This is intended for `poll(2)`/`select(2)`/`epoll(7)` style waiting
+ (for example: wait on both a TTY fd and a channel at the same time).
+ - `wait_fd()` returns `None` when the current runtime cannot provide a pollable
+ channel handle.
+ - Do not read from or close the returned fd. It is owned by the channel and
+ is used as an internal wake mechanism; consuming bytes from it can
+ desynchronize the readiness signal.
 
 Example (wait on `/dev/tty` *or* a channel):
 

@@ -4,11 +4,11 @@ Interfaces declare method signatures that types (or modules) can conform to via
 `impl ... as ...` (or `module ... as ...`). This is the basis for protocol-like
 surfaces such as iterators and Drop.
 
-Full reference: `docs/language/interfaces.md`.
+Canonical spec: [interfaces](?p=language/interfaces).
 
 ## Notes
 
-- Full reference: `docs/language/interfaces.md`
+- Syntax + conformance checking: [interfaces](?p=language/interfaces)
 - Dynamic dispatch (trait objects/vtables): not implemented yet
 
 ## Syntax
@@ -50,5 +50,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/interfaces.md`
-- Std protocols: `docs/std/interfaces.md`
+- Canonical spec: [interfaces](?p=language/interfaces)
+- Std protocols: [interfaces](?p=std/interfaces)

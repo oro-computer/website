@@ -4,11 +4,12 @@
 primitives (I/O, filesystem, time, threads, allocation) from higher-level
 `std::...` modules.
 
-Full reference: `docs/std/runtime.md`.
+Canonical doc: [runtime](?p=std/runtime).
 
 ## Notes
 
-- Full reference: `docs/std/runtime.md`
+- Design + partial implementation.
+- Details: [runtime](?p=std/runtime)
 
 ## Importing
 
@@ -49,5 +50,6 @@ fn main () -> int {
 
 ## See also
 
-- Full reference: `docs/std/runtime.md`
-- Std package structure and swappability: `docs/std/package-structure.md`
+- Canonical doc: [runtime](?p=std/runtime)
+- Std package structure and swappability: [package structure](?p=std/package-structure)
+- End-to-end fixture (build metadata): `tests/silk/pass_std_runtime_build_is_debug.slk`

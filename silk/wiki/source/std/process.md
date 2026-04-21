@@ -2,11 +2,12 @@
 
 `std::process` provides process-oriented primitives (hosted baseline).
 
-Full reference: `docs/std/process.md`.
+Canonical doc: [process](?p=std/process).
 
 ## Notes
 
-- Full reference: `docs/std/process.md`
+- Supported forms is available for the hosted POSIX baseline.
+- Details: [process](?p=std/process)
 
 ## Importing
 
@@ -51,5 +52,6 @@ fn main () -> int {
 
 ## See also
 
-- Full reference: `docs/std/process.md`
-- Environment helpers: `docs/wiki/std/env.md`
+- Canonical doc: [process](?p=std/process)
+- Environment helpers: [env](?p=std/env)
+- End-to-end fixture: `tests/silk/pass_std_process_getcwd_chdir.slk`

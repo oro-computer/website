@@ -1,4 +1,4 @@
-# `silk-cc` (1) — C Compiler Wrapper for `libsilk`
+# [`silk-cc(1)`](?p=man/silk-cc.1) — C Compiler Wrapper for `libsilk`
 
 > NOTE: This is the Markdown source for the eventual man 1 page for `silk cc`. The roff-formatted manpage should be generated from this content.
 
@@ -39,6 +39,6 @@ silk cc -std=c99 -Wall -Wextra your_app.c -o your_app
 
 ## See Also
 
-- [silk (1)](?p=man/silk.1)
-- [libsilk (7)](?p=man/libsilk.7)
+- [`silk(1)`](?p=man/silk.1)
+- [`libsilk(7)`](?p=man/libsilk.7)
 - `include/silk/silk.h`

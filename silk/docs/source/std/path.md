@@ -1,15 +1,16 @@
 # `std::path`
 
-`std::path` provides path manipulation utilities.
+`std::path` provides path manipulation utilities, a borrowed boxed `Path`
+wrapper, and the owned `PathBuf` builder/buffer.
 
 Design goals (modeled after Rust `std::path` and Node.js `path`):
 
 - **Borrowed vs owned**: `string` values are non-owning views; `std::path::PathBuf`
-  is an owned, growable path buffer for building paths incrementally.
+ is an owned, growable path buffer for building paths incrementally.
 - **POSIX-first**: the initial shipped implementation uses `/` as the separator
-  and does not implement Windows drive/UNC path rules yet.
+ and does not implement Windows drive/UNC path rules yet.
 - **Allocation-aware**: functions that produce new paths return owned
-  `std::strings::String` values (callers must drop them).
+ `std::strings::String` values (callers must drop them).
 
 ## Exported API
 
@@ -20,6 +21,24 @@ import std::strings;
 
 export let SEP: string = "/";
 export let DELIMITER: string = ":";
+
+export struct Path {
+  value: string,
+}
+
+impl Path {
+  public fn from_string (value: string) -> Path;
+  public fn as_string (self: &Path) -> string;
+  public fn is_absolute (self: &Path) -> bool;
+  public fn dirname (self: &Path) -> string;
+  public fn basename (self: &Path) -> string;
+  public fn extname (self: &Path) -> string;
+  public fn stem (self: &Path) -> string;
+  public fn parent (self: &Path) -> string;
+  public fn join (self: &Path, part: string) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+  public fn normalize (self: &Path) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+  public fn to_path_buf (self: &Path) -> std::result::Result(PathBuf, std::memory::OutOfMemory);
+}
 
 // Owned path buffer (like Rust `PathBuf`).
 struct PathBuf {
@@ -60,6 +79,7 @@ export fn is_absolute (path: string) -> bool;
 // Building and normalization.
 export fn join (a: string, b: string) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
 export fn normalize (path: string) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+export fn realpath (path: string) -> std::fs::FSStringResult;
 
 // Inspection helpers (views into the input string).
 export fn dirname (path: string) -> string;
@@ -72,21 +92,21 @@ Notes:
 
 - On POSIX, the root path `"/"` has no basename, so `basename("/") == ""`.
 - `PathBuf` uses the same zero-capacity-empty / trailing-NUL invariant as
-  `std::strings::String`, captured by
-  `std::strings::string_storage_well_formed`.
+ `std::strings::String`, captured by
+ `std::strings::string_storage_well_formed`.
 - `PathBuf` implements `std::interfaces::{Len,Capacity,IsEmpty,ReserveAdditional,Serialize(string),TrySerialize(std::memory::OutOfMemory),Drop}` for ergonomic use in generic code.
 - `PathBuf.parse(s)` is the standardized receiverless parse surface and
-  forwards to `PathBuf.from_string(s)`.
+ forwards to `PathBuf.from_string(s)`.
 - `let s: string = pb as string;` is the allocation-free way to borrow the
-  current path contents.
+ current path contents.
 - `pb.try_serialize()` is the canonical fallible owned-string rendering path
-  when the caller needs an independent `std::strings::String` copy.
+ when the caller needs an independent `std::strings::String` copy.
 
 ## Separator and delimiter
 
 - `SEP` is the path component separator. On POSIX it is `"/"`.
 - `DELIMITER` is the environment-variable path list delimiter. On POSIX it is
-  `":"` (for example `PATH=/bin:/usr/bin`).
+ `":"` (for example `PATH=/bin:/usr/bin`).
 
 ## Ownership and allocation
 
@@ -163,7 +183,10 @@ hosted POSIX subset:
 Notes:
 
 - This is a lexical normalization. It does not access the filesystem and does
-  not resolve symlinks.
+ not resolve symlinks.
+- Use `std::fs::realpath(path)` or the convenience wrapper
+ `std::path::realpath(path)` when you need filesystem-backed canonicalization
+ of an existing local path.
 
 ## Platform notes
 

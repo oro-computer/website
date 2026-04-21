@@ -15,9 +15,9 @@ This module focuses on:
 ### Parsing
 
 - `parse(input: string) -> URLResult`
-  - Parses an absolute URL (requires a scheme).
+ - Parses an absolute URL (requires a scheme).
 - `parse_with_base(input: string, base: &URL) -> URLResult`
-  - Parses `input` as a URL relative to `base` using WHATWG relative resolution rules.
+ - Parses `input` as a URL relative to `base` using WHATWG relative resolution rules.
 
 `URLResult` is `std::result::Result(URL, ParseError)`:
 
@@ -43,8 +43,8 @@ which forwards to `std::url::parse`.
 `URL` is an owned URL record with accessor methods:
 
 - `URL` owns heap allocations and implements `std::interfaces::Drop`; it is
-  released automatically at scope exit and may also be dropped explicitly via
-  `(mut url).drop()`.
+ released automatically at scope exit and may also be dropped explicitly via
+ `(mut url).drop()`.
 - `href() -> std::result::Result(std::strings::String, std::memory::OutOfMemory)` — canonical serialization of the full URL.
 - `origin() -> std::result::Result(std::strings::String, std::memory::OutOfMemory)` — serialized origin (opaque origins serialize as `"null"`).
 - `scheme() -> string`
@@ -63,7 +63,7 @@ which forwards to `std::url::parse`.
 - `URLSearchParams` owns its query buffer and implements `std::interfaces::Drop`.
 - `URLSearchParams.empty() -> URLSearchParams`
 - `URLSearchParams.from_string(s: string) -> std::result::Result(URLSearchParams, std::memory::OutOfMemory)`
-  - Accepts either `"a=b&c=d"` or `"?a=b&c=d"`.
+ - Accepts either `"a=b&c=d"` or `"?a=b&c=d"`.
 - `to_string() -> std::result::Result(std::strings::String, std::memory::OutOfMemory)` — the encoded query string (no leading `?`).
 - `len() -> i64` — number of fields.
 - `has(name: string) -> std::result::Result(bool, std::memory::OutOfMemory)`

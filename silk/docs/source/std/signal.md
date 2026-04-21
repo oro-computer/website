@@ -15,8 +15,8 @@ pending signals as a readable file descriptor. This integrates naturally with:
 The main type is `SignalFD`:
 
 - `SignalFD.open(signo)` blocks `signo` in the calling thread, then returns a
-  `SignalFD` whose `.wait_fd()` becomes readable when the signal is pending for
-  the process.
+ `SignalFD` whose `.wait_fd()` becomes readable when the signal is pending for
+ the process.
 - `SignalFD.read_signo()` reads one pending signal number from the fd.
 
 ### Important: thread signal masks
@@ -30,9 +30,9 @@ receive them.
 In practice:
 
 - call `SignalFD.open(...)` early in your program (before spawning `task fn`
-  threads), and
+ threads), and
 - keep the returned `SignalFD` alive for as long as you want to observe the
-  signal.
+ signal.
 
 Newly-created threads inherit the parent thread’s signal mask, so blocking
 signals early keeps delivery consistent.

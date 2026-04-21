@@ -3,7 +3,7 @@
 `std::task` provides hosted task/runtime helpers, including sleep/yield
 operations.
 
-Canonical doc: `docs/std/task.md`.
+Canonical doc: [task](?p=std/task).
 
 ## Example
 ```silk
@@ -20,5 +20,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/task.md`
-- Concurrency model: `docs/wiki/language/concurrency.md`
+- Canonical doc: [task](?p=std/task)
+- Concurrency model: [concurrency](?p=language/concurrency)

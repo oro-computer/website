@@ -6,7 +6,7 @@ Silk includes syntax for writing contracts and verification metadata:
 - `#assert` for local assertions
 - `#invariant` / `#variant` / `#monovariant` for loops
 
-Canonical doc: `docs/language/formal-verification.md`.
+Canonical doc: [formal verification](?p=language/formal-verification).
 
 ## Example (Design / verifier-oriented)
 
@@ -20,4 +20,4 @@ fn inc (x: int) -> int {
 
 ## See also
 
-- Canonical doc: `docs/language/formal-verification.md`
+- Canonical doc: [formal verification](?p=language/formal-verification)

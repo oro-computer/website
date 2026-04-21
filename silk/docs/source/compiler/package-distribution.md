@@ -1,9 +1,10 @@
 # Silk Package Distribution
 
-This document describes the package authoring, publication, and consumption
-model Silk uses today. The manifest, CLI, install, inspection/linting, and
-binary-dependency consumption behavior described here are implemented in the
-current toolchain.
+The manifest, CLI,
+install, inspection/linting, and binary-dependency consumption behavior
+described here are implemented in the current toolchain. This document
+describes the package authoring, publication, and consumption model Silk uses
+today.
 
 ## Summary
 
@@ -20,37 +21,37 @@ move through ordinary distribution systems.
 ## Goals
 
 - Keep `silk.toml` as the canonical package manifest for authoring, packaging,
-  and consumption.
+ and consumption.
 - Make the package unit portable across:
-  - local source checkouts,
-  - vendored directories in a repo,
-  - unpacked GitHub release/source archives,
-  - filesystem trees populated by third-party package managers,
-  - and system package manager installs.
+ - local source checkouts,
+ - vendored directories in a repo,
+ - unpacked GitHub release/source archives,
+ - filesystem trees populated by third-party package managers,
+ - and system package manager installs.
 - Support four first-class package shapes:
-  - source packages,
-  - interface-only packages,
-  - binary-only packages,
-  - hybrid packages that ship both source and prebuilt artifacts.
+ - source packages,
+ - interface-only packages,
+ - binary-only packages,
+ - hybrid packages that ship both source and prebuilt artifacts.
 - Keep package identity independent of any external registry or package manager.
 - Preserve ergonomic modularity inspired by successful package ecosystems:
-  - one manifest at package root,
-  - explicit public package metadata,
-  - explicit packaged file set,
-  - clear executable/library exposure,
-  - and predictable install/lookup rules.
+ - one manifest at package root,
+ - explicit public package metadata,
+ - explicit packaged file set,
+ - clear executable/library exposure,
+ - and predictable install/lookup rules.
 
 ## Non-Goals
 
 - A Silk-owned central registry.
 - Requiring the `silk` compiler to fetch packages from the network during an
-  ordinary build.
+ ordinary build.
 - Generating distro-native packaging recipes for every ecosystem in the first
-  iteration.
+ iteration.
 - Replacing distro package managers, npm, or GitHub releases with Silk-specific
-  infrastructure.
+ infrastructure.
 - Adding manager-specific manifest sections or resolver rules for each external
-  ecosystem.
+ ecosystem.
 
 ## Design Principles
 
@@ -156,7 +157,7 @@ Typical use:
 
 - libraries that want both source portability and fast-path prebuilt binaries,
 - packages that support source builds on unsupported targets and artifact reuse
-  on common targets,
+ on common targets,
 - system packages and GitHub releases that want one canonical payload.
 
 ## Recommended Package Root Layout
@@ -181,40 +182,70 @@ payloads, and installed system packages all look similar:
     linux-x86_64/
   share/
     man/
+    silk/
+      formal/
 ```
 
 Notes:
 
 - `src/` is for distributable Silk implementation sources.
 - `defs/` is for definition/prototype modules that describe the importable
-  public API.
+ public API.
 - `include/` is for C headers, generated or hand-authored.
 - `lib/<target>/` and `bin/<target>/` keep target-specific artifacts together
-  inside the package root.
+ inside the package root.
 - `share/man/` mirrors ordinary system packaging practice for optional manual
-  pages.
-  - `[[target]] kind = "man"` installs built package manpages there under
-    `share/man/man{1,3,7}/...` and mirrors them to the prefix-level
-    `<prefix>/share/man/...` tree.
-  - source checkouts may also keep Markdown man sources under `docs/man/` or
-    `man/`; `silk man` discovers those roots alongside `share/man/` once the
-    package root is known from `silk.toml`.
+ pages.
+ - `[[target]] kind = "man"` installs built package manpages there under
+ `share/man/man{1,3,7}/...` and mirrors them to the prefix-level
+ `<prefix>/share/man/...` tree.
+ - source checkouts may also keep Markdown man sources under `docs/man/` or
+ `man/`; `silk man` discovers those roots alongside `share/man/` once the
+ package root is known from `silk.toml`.
+- `share/silk/formal/` stores installed Formal Silk export bundles keyed by the
+ packaged artifact-relative path.
+ - each bundle currently contains:
+ - `manifest.json` with entry-to-symbol metadata,
+ - and `bundle.smt2` with normalized Z3 SMT-LIB2 source sections for the
+ exported theories / contracted functions / contracted methods carried by
+ that artifact.
+ - the payload is intentionally source-oriented (`smt2` text), not a
+ solver-private binary blob.
 - `[package].readme` and `[package].documentation` identify the package’s
-  overview/docs landing pages for `silk man` when they name local files or
-  local directories (URLs remain valid metadata and are surfaced as references).
-  Absolute paths and relative paths that escape the package root are invalid
-  for these local landing pages.
-  - `silk build install` copies local landing pages into
-    `share/silk/docs/readme/...` or `share/silk/docs/documentation/...` inside
-    the installed package root and rewrites the installed manifest to those
-    packaged paths.
-  - when `[package].documentation` points at a static `[[target]] kind = "man"`
-    source that is also installed, the installed manifest instead rewrites it
-    to `share/man/man{1,3,7}/...`, and the install skips any redundant
-    `share/silk/docs/documentation/...` copy for the same page.
+ overview/docs landing pages for `silk man` when they name local files or
+ local directories (URLs remain valid metadata and are surfaced as references).
+ Absolute paths and relative paths that escape the package root are invalid
+ for these local landing pages.
+ - `silk build install` copies local landing pages into
+ `share/silk/docs/readme/...` or `share/silk/docs/documentation/...` inside
+ the installed package root and rewrites the installed manifest to those
+ packaged paths.
+ - when `[package].documentation` points at a static `[[target]] kind = "man"`
+ source that is also installed, the installed manifest instead rewrites it
+ to `share/man/man{1,3,7}/...`, and the install skips any redundant
+ `share/silk/docs/documentation/...` copy for the same page.
 
 The manifest should continue to describe actual paths; the layout above is a
 convention, not a hardcoded requirement.
+
+## Formal Silk distribution payload
+
+Formal Silk metadata is a first-class distributable package payload when the
+compiled module set exposes reusable verification surface.
+
+Current contract:
+
+- source-visible `export theory` declarations and exported/public
+ contract-bearing functions/methods remain the authoritative import-time
+ verification surface,
+- successful builds additionally emit a machine-readable export bundle for
+ tooling and package distribution,
+- and `silk build install` copies that bundle into the installed package root
+ under `share/silk/formal/<artifact-relative-path>/...`.
+
+This allows binary/interface-only packages to carry inspectable verification
+artifacts alongside definitions, headers, and native libraries without
+requiring the original implementation body.
 
 ## `silk.toml` Responsibilities
 
@@ -318,17 +349,17 @@ ecosystems at once.
 The dependency model should separate package identity from transport:
 
 - identity:
-  - Silk package name,
-  - version requirement,
-  - features,
-  - optionality,
-  - target conditions,
+ - Silk package name,
+ - version requirement,
+ - features,
+ - optionality,
+ - target conditions,
 - transport/materialization:
-  - local path,
-  - vendored checkout,
-  - unpacked tarball,
-  - third-party-managed install tree,
-  - system-installed package.
+ - local path,
+ - vendored checkout,
+ - unpacked tarball,
+ - third-party-managed install tree,
+ - system-installed package.
 
 This keeps a dependency on `oro::http` stable regardless of where the package
 came from.
@@ -399,10 +430,10 @@ package server.
 GitHub should be treated as a normal distribution channel:
 
 - source distribution:
-  - release source tarball containing the package root,
+ - release source tarball containing the package root,
 - binary distribution:
-  - release assets containing target-specific artifacts inside the package root
-    layout.
+ - release assets containing target-specific artifacts inside the package root
+ layout.
 
 Users should be able to:
 
@@ -420,7 +451,7 @@ The contract is simpler:
 
 - the author or consumer ensures a real Silk package root exists on disk,
 - the compiler resolves it via an explicit `path` dependency or a directory
-  listed in `SILK_PACKAGE_PATH`,
+ listed in `SILK_PACKAGE_PATH`,
 - and `package.name` inside `silk.toml` remains authoritative.
 
 If an ecosystem requires its own metadata files, manifests, or release
@@ -460,9 +491,9 @@ To keep packages ergonomic and safe to consume:
 - the manifest should explicitly declare the package’s public definition files,
 - binary artifacts must name the definition files they pair with,
 - private implementation sources should not become part of the import surface
-  merely because they are present in the tarball,
+ merely because they are present in the tarball,
 - and publication tooling should package only the declared distribution file
-  set.
+ set.
 
 `[package].definitions` is the canonical package-wide public-surface
 declaration, with optional per-artifact narrowing via
@@ -477,12 +508,12 @@ The intended authoring flow for a reusable package is:
 3. Keep public prototype/interface modules under `defs/`.
 4. Use `[[target]]` to define how artifacts are built.
 5. When distributing prebuilt libraries, record them as explicit package
-   artifacts with target metadata.
+ artifacts with target metadata.
 6. Publish the same package root through one or more channels:
-   - GitHub release archive,
-   - third-party package manager publication managed by the author,
-   - distro package source or binary package,
-   - or direct vendoring.
+ - GitHub release archive,
+ - third-party package manager publication managed by the author,
+ - distro package source or binary package,
+ - or direct vendoring.
 
 ## Built-In Tooling
 
@@ -490,22 +521,23 @@ Silk’s built-in package-distribution surface is intentionally small and
 channel-agnostic:
 
 - staging-aware install
-  - `silk build install --destdir <path>` stages installs under
-    `<destdir><prefix>/...`,
+ - `silk build install --destdir <path>` stages installs under
+ `<destdir><prefix>/...`,
 - dependency artifact consumption
-  - `silk build` and `silk test --package` auto-consume compatible
-    dependency `[[artifact]]` entries for packages that expose definitions but
-    no implementation sources,
-  - current selection is deterministic and package-manager-agnostic:
-    object first, then static library, then shared library,
-  - ambiguous compatible artifacts currently fail with a diagnostic rather than
-    guessing,
+ - `silk build` and `silk test --package` auto-consume compatible
+ dependency `[[artifact]]` entries for packages that expose definitions but
+ no implementation sources,
+ - current selection is deterministic and package-manager-agnostic:
+ object first, then static library, then shared library,
+ - ambiguous compatible artifacts currently fail with a diagnostic rather than
+ guessing,
 - package inspection
-  - `silk package inspect` prints resolved package metadata, artifacts,
-    dependency constraints, and the current package hash,
+ - `silk package inspect` prints resolved package metadata, artifacts,
+ dependency constraints, the current package hash, and any installed Formal
+ Silk bundles discovered under `share/silk/formal/<artifact-relative-path>/...`,
 - manifest linting
-  - `silk package lint` validates that `silk.toml`, `[dist]`, `[[artifact]]`,
-    and `[package].definitions` describe a coherent distributable package.
+ - `silk package lint` validates that `silk.toml`, `[dist]`, `[[artifact]]`,
+ and `[package].definitions` describe a coherent distributable package.
 
 Archive creation and publication are intentionally external concerns. Because
 the package root is the canonical unit of distribution, authors may use
@@ -522,28 +554,28 @@ Out of scope for the package model itself:
 ## Resolved Decisions
 
 - Version requirements for non-path dependencies should use a small SemVer range
-  string in the dependency spec.
+ string in the dependency spec.
 - Package search roots should stay directory-based and deterministic; manifest
-  indexes or caches may exist as implementation details, but not as part of the
-  package format.
+ indexes or caches may exist as implementation details, but not as part of the
+ package format.
 - Installed package artifacts should live inside the canonical package root.
-  Mirrored top-level files may exist for compatibility, but package resolution
-  should not depend on them.
+ Mirrored top-level files may exist for compatibility, but package resolution
+ should not depend on them.
 - Binary artifact compatibility should be expressed with structured artifact
-  fields such as `target`, `libc`, `libc_min`, and similar package-owned
-  metadata, rather than overloading one manager- or platform-specific string.
+ fields such as `target`, `libc`, `libc_min`, and similar package-owned
+ metadata, rather than overloading one manager- or platform-specific string.
 - `[package].definitions` should remain the canonical package-wide public
-  surface field. Per-artifact `definitions` may narrow that surface when
-  needed, but Silk does not currently need a separate `[exports]` table.
+ surface field. Per-artifact `definitions` may narrow that surface when
+ needed, but Silk does not currently need a separate `[exports]` table.
 
 ## Current Operational Limits
 
 - Dependency artifact auto-consumption is currently implemented for
-  `linux/x86_64` outputs.
+ `linux/x86_64` outputs.
 - Artifact selection is intentionally strict: for a given package, target, and
-  output kind, authors must ship one unambiguous compatible artifact. Multiple
-  equally compatible artifacts are treated as an authoring error rather than
-  being guessed at runtime.
+ output kind, authors must ship one unambiguous compatible artifact. Multiple
+ equally compatible artifacts are treated as an authoring error rather than
+ being guessed at runtime.
 - For `silk test --package`, manifest native inputs that start as C sources must
-  currently be precompiled to `.o` files before they are listed in
-  `[[target]].inputs`.
+ currently be precompiled to `.o` files before they are listed in
+ `[[target]].inputs`.

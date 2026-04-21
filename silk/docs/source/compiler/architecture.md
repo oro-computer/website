@@ -3,47 +3,66 @@
 This document describes the intended architecture of the Silk compiler implemented in Zig.
 
 Current hard implementation limits (file size caps, current maxima, etc.)
-are documented in `docs/compiler/limits.md`.
+are documented in [limits](?p=compiler/limits).
 
 ## High-Level Structure
 
 The compiler is implemented in Zig and organized into three major layers:
 
 - Front-end:
-  - Lexer: implements the token set and literals from `docs/language/operators.md` and the literal docs.
-  - Parser: implements the grammar from `docs/language/grammar.md`.
-  - Type checker: enforces the type rules from `docs/language/types.md` and related concept docs.
-  - Verifier: handles Formal Silk constructs from `docs/language/formal-verification.md`.
+ - Lexer: implements the token set and literals from [operators](?p=language/operators) and the literal docs.
+ - Parser: implements the grammar from [grammar](?p=language/grammar).
+ - Type checker: enforces the type rules from [types](?p=language/types) and related concept docs.
+ - Verifier: handles Formal Silk constructs from [formal verification](?p=language/formal-verification).
 - Middle-end:
-  - IR representation for Silk programs, including regions, buffers, concurrency, and FFI constructs (see `docs/compiler/ir-overview.md` for the current IR design and roadmap).
-  - Optimizations that respect the language’s safety guarantees.
+ - IR representation for Silk programs, including regions, buffers, concurrency, and FFI constructs (see [ir overview](?p=compiler/ir-overview) for the current IR design and roadmap).
+ - Optimizations that respect the language’s safety guarantees.
 - Back-end:
-  - Code generation for executables, static libraries, and shared libraries using a Silk-owned backend (IR + codegen), not by “transpiling to C”.
-  - Emission of object files and archives that can be linked into executables and libraries.
-  - C99 ABI mappings for interop with `libsilk.a`.
+ - Code generation for executables, static libraries, and shared libraries using a Silk-owned backend (IR + codegen), not by “transpiling to C”.
+ - Emission of object files and archives that can be linked into executables and libraries.
+ - C99 ABI mappings for interop with `libsilk.a`.
 
 In terms of concrete targets and file formats, the back-end MUST eventually support:
 
 - ELF for Unix-like systems:
-  - `linux/x86_64` is the initial full IR-backed target (executables, objects, static libraries, and shared libraries).
-  - `linux/aarch64` (ARM64) is a required future IR-backed target (beyond const-only executables).
-  - position-independent code and shared objects (`.so`) for dynamic libraries.
+ - `linux/x86_64` is the initial full IR-backed target (executables, objects, static libraries, and shared libraries).
+ - `linux/aarch64` (ARM64) is a required future IR-backed target (beyond const-only executables).
+ - position-independent code and shared objects (`.so`) for dynamic libraries.
 - Mach-O for macOS:
-  - both Intel (`x86_64`) and Apple Silicon (`arm64`) MUST be supported,
-  - dynamic libraries (`.dylib`) for loading Silk packages at runtime.
+ - both Intel (`x86_64`) and Apple Silicon (`arm64`) MUST be supported,
+ - dynamic libraries (`.dylib`) for loading Silk packages at runtime.
 - PE/COFF for Windows:
-  - initially `x86_64`, with other architectures considered later as needed,
-  - DLLs for dynamic loading.
+ - initially `x86_64`, with other architectures considered later as needed,
+ - DLLs for dynamic loading.
 
-Current snapshot (Silk (ABI) 0.2.0):
+Current snapshot (Silk (ABI) 0.1.0):
 
 - `src/backend_const.zig` provides a **target-aware const-main stub backend** that emits minimal executables for a fully-constant executable entrypoint (`main` reduces to a constant integer; supports `fn main () -> int` and the standard `fn main(argc: int, argv: u64) -> int` form when arguments are unused):
-  - ELF64: `linux-x86_64`, `linux-aarch64`, `android-aarch64`
-  - Mach-O 64-bit: `macos-x86_64`, `macos-aarch64`, `ios-aarch64`
-  - PE32+: `windows-x86_64`, `windows-aarch64`
-  This backend does not link the full runtime/stdlib; it only encodes “exit with this integer”.
+ - ELF64: `linux-x86_64`, `linux-aarch64`, `android-aarch64`
+ - Mach-O 64-bit: `macos-x86_64`, `macos-aarch64`, `ios-aarch64`
+ - PE32+: `windows-x86_64`, `windows-aarch64`
+ This backend does not link the full runtime/stdlib; it only encodes “exit with this integer”.
+ macOS host note:
+ - `macos-aarch64` const-main executables are now emitted directly by the
+ Silk-owned Mach-O byte backend,
+ - when the host is macOS and the output target is `macos-x86_64` or
+ `macos-aarch64`, the driver still performs an ad hoc host `codesign -s -`
+ pass so the generated executable is runnable immediately on macOS hosts.
+- `src/backend_macho_aarch64_host.zig` provides a **temporary Apple Silicon
+ host-assembled Mach-O executable backend** for `macos-aarch64`:
+ - it currently covers the integer/bool scalar IR executable subset on
+ `macos/aarch64` hosts,
+ - emits arm64 assembly and links it with host `as` / `ld`,
+ - expands bundled `libsilk_rt*.a` archives into temporary object members
+ before host linking so runtime-backed scalar executables also build on
+ Apple Silicon,
+ - and this host-backed subset is now wired through both the `silk` CLI and
+ the `libsilk.a` filesystem-output executable build path (with the same
+ host `codesign -s -` post-pass on macOS),
+ - and is an explicit bring-up step until the non-const Mach-O executable path
+ is emitted fully by Silk-owned codegen.
 - `src/backend_ir_elf.zig` provides an **IR→ELF backend** for `linux-x86_64` outputs (a growing subset of the language, including multi-function programs, rodata, and link-input builds).
-  This backend is host-agnostic for `linux-x86_64` outputs: it can emit Linux ELF artifacts even when the compiler itself is running on a non-`linux/x86_64` host.
+ This backend is host-agnostic for `linux-x86_64` outputs: it can emit Linux ELF artifacts even when the compiler itself is running on a non-`linux/x86_64` host.
 - `src/backend_wasm_ir.zig` provides the IR-backed backend for `wasm32-unknown-unknown` and `wasm32-wasi` outputs.
 
 Mach-O and PE/COFF IR-backed object/static/shared library emission, and additional IR-backed architectures (notably AArch64) are explicit future requirements and MUST be planned and implemented as the back-end matures.
@@ -63,18 +82,18 @@ Silk programs are organized into **packages** and **modules**:
 - A *module* is a single source file and the natural unit of parsing and type checking.
 - A *package* is a collection of modules that share a namespace and build configuration (e.g. the main package, `std::`, and third-party packages).
 - Packages may:
-  - **export** symbols (types, functions, constants) that are visible to importers,
-  - **import** symbols from other packages via explicit imports.
+ - **export** symbols (types, functions, constants) that are visible to importers,
+ - **import** symbols from other packages via explicit imports.
 
 The compiler MUST:
 
 - represent packages and their dependency graph explicitly in the middle-end,
 - implement an import resolver that:
-  - maps import paths to source modules/packages,
-  - enforces acyclic and well-formed package graphs,
+ - maps import paths to source modules/packages,
+ - enforces acyclic and well-formed package graphs,
 - implement symbol visibility rules:
-  - distinguish exported vs internal symbols within a package,
-  - ensure only exported symbols are visible across package boundaries.
+ - distinguish exported vs internal symbols within a package,
+ - ensure only exported symbols are visible across package boundaries.
 
 Front-end work (parser, checker, resolver) and back-end work (linkage, symbol emission) MUST be designed so that:
 
@@ -82,13 +101,13 @@ Front-end work (parser, checker, resolver) and back-end work (linkage, symbol em
 - building advanced programs that span multiple modules and packages (including `std::` and user packages) is supported by both the CLI (`silk`) and the C ABI (`libsilk.a`).
 
 The concrete surface syntax for packages, imports, and exports is specified in
-`docs/language/packages-imports-exports.md` and is being implemented
+[packages imports exports](?p=language/packages-imports-exports) and is being implemented
 incrementally in the front-end. Resolver and back-end integration will follow
 that spec.
 
 The implementation must remain spec-driven: any architectural decision should be traceable back to a document in `docs/`.
 
-### Executable Entrypoint (Initial Rule)
+### Executable Entrypoint
 
 For executable builds driven via the C ABI (`SILK_OUTPUT_EXECUTABLE`) and,
 eventually, the `silk` CLI, the compiler enforces a simple, explicit entrypoint:
@@ -100,9 +119,9 @@ eventually, the `silk` CLI, the compiler enforces a simple, explicit entrypoint:
   ```
 
 - this function:
-  - takes no parameters,
-  - returns `int`,
-  - serves as the process entrypoint when an executable is produced.
+ - takes no parameters,
+ - returns `int`,
+ - serves as the process entrypoint when an executable is produced.
 
 In the initial bring-up, this requirement is enforced by the front-end (via
 `silk_compiler_build`) and a minimal back-end that supports only constant
@@ -114,23 +133,23 @@ is a true Silk code generator, not a C transpiler.
 This is a draft module layout for the Zig implementation. Exact file names may change, but the layering should be preserved.
 
 - `src/` (compiler implementation):
-  - `src/driver.zig` — CLI entry points and high-level orchestration.
-  - `src/lexer.zig` — tokenization and trivia handling.
-  - `src/parser.zig` — AST construction.
-  - `src/ast.zig` — AST node definitions.
-  - `src/types.zig` — type system representation and operations.
-  - `src/checker.zig` — type checking and semantic analysis.
-  - `src/formal_silk.zig` — Formal Silk VC generation and verification (Z3-backed).
-  - `src/z3_api.zig` — Z3 C API shim (static-by-default, optional dynamic override).
-  - `src/ir.zig` — core intermediate representation.
-  - `src/codegen.zig` — target-independent code generation logic.
-  - `src/abi.zig` — C99 ABI and FFI glue for `libsilk.a`.
-  - `src/std_integration.zig` — integration with the `std::` package and stdlib selection.
-  - `src/cli/` (optional breakdown):
-  - `src/cli/options.zig` — option parsing.
-  - `src/cli/commands.zig` — `build`, `check`, `abi` subcommands.
+ - `src/driver.zig` — CLI entry points and high-level orchestration.
+ - `src/lexer.zig` — tokenization and trivia handling.
+ - `src/parser.zig` — AST construction.
+ - `src/ast.zig` — AST node definitions.
+ - `src/types.zig` — type system representation and operations.
+ - `src/checker.zig` — type checking and semantic analysis.
+ - `src/formal_silk.zig` — Formal Silk VC generation and verification (Z3-backed).
+ - `src/z3_api.zig` — Z3 C API shim (static-by-default, optional dynamic override).
+ - `src/ir.zig` — core intermediate representation.
+ - `src/codegen.zig` — target-independent code generation logic.
+ - `src/abi.zig` — C99 ABI and FFI glue for `libsilk.a`.
+ - `src/std_integration.zig` — integration with the `std::` package and stdlib selection.
+ - `src/cli/` (optional breakdown):
+ - `src/cli/options.zig` — option parsing.
+ - `src/cli/commands.zig` — `build`, `check`, `abi` subcommands.
 
-In addition to the core compiler, a separate language server executable (`silk-lsp`) is provided for editor and IDE integrations. It is implemented in Zig, reuses the front-end modules above (lexer, parser, type checker), and speaks the Language Server Protocol as specified in `docs/compiler/lsp-silk.md`. The language server does not introduce new language features; it is a tooling layer over the existing compiler.
+In addition to the core compiler, a separate language server executable (`silk-lsp`) is provided for editor and IDE integrations. It is implemented in Zig, reuses the front-end modules above (lexer, parser, type checker), and speaks the Language Server Protocol as specified in [lsp silk](?p=compiler/lsp-silk). The language server does not introduce new language features; it is a tooling layer over the existing compiler.
 
 Test code is expected to live alongside these modules (via Zig `test` blocks) and/or under dedicated test drivers.
 
@@ -139,13 +158,13 @@ Test code is expected to live alongside these modules (via Zig `test` blocks) an
 Testing is incremental and must be developed alongside the implementation:
 
 - Zig unit tests:
-  - Each core module (`lexer.zig`, `parser.zig`, `checker.zig`, etc.) contains Zig `test` blocks that exercise its behavior.
-  - Additional integration tests may live in dedicated files (e.g. `src/tests_frontend.zig`) that compile sample Silk programs drawn from `docs/language/`.
+ - Each core module (`lexer.zig`, `parser.zig`, `checker.zig`, etc.) contains Zig `test` blocks that exercise its behavior.
+ - Additional integration tests may live in dedicated files (e.g. `src/tests_frontend.zig`) that compile sample Silk programs drawn from `docs/language/`.
 - C99 tests:
-  - A separate directory (e.g. `c-tests/`) will contain C test programs and harnesses that:
-    - link against `libsilk.a`,
-    - use the C ABI (`silk/silk.h`) to drive compilation/execution,
-    - validate FFI and ABI behavior.
+ - A separate directory (e.g. `c-tests/`) will contain C test programs and harnesses that:
+ - link against `libsilk.a`,
+ - use the C ABI (`silk/silk.h`) to drive compilation/execution,
+ - validate FFI and ABI behavior.
 
 The build system (Zig build file and any supporting scripts) must be wired so that:
 

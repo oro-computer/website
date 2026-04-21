@@ -11,10 +11,10 @@ blocks into practical I/O pipelines:
 
 For full language semantics and limitations, see:
 
-- `docs/language/concurrency.md`
-- `docs/std/abort-controller.md`
-- `docs/std/stream.md`
-- `docs/std/io.md` (`std::io::async` and `std::io::stream`)
+- [concurrency](?p=language/concurrency)
+- [abort controller](?p=std/abort-controller)
+- [stream](?p=std/stream)
+- [io](?p=std/io) (`std::io::async` and `std::io::stream`)
 
 ## 1) AbortController: a single cancellation story
 
@@ -79,18 +79,18 @@ async fn wait_readable_or_abort (fd: int, sig: std::abort_controller::AbortSigna
 }
 ```
 
-Notes (current subset):
+Notes (Supported forms):
 
 - Aborts are cooperative, but the details depend on the layer:
-  - `std::runtime::event_loop::fd_wait_readable_abortable` can interrupt an
-    in-flight readiness wait when `AbortSignalBorrow.wait_fd()` is available.
-  - `std::io::async::{read_abortable,write_abortable}` still observe aborts
-    conservatively around each I/O attempt.
+ - `std::runtime::event_loop::fd_wait_readable_abortable` can interrupt an
+ in-flight readiness wait when `AbortSignalBorrow.wait_fd()` is available.
+ - `std::io::async::{read_abortable,write_abortable}` still observe aborts
+ conservatively around each I/O attempt.
 - This example intentionally avoids `task fn` threads. In the current hosted
-  runtime, spawning stackful async coroutines in a multi-threaded process is
-  not reliable yet. Keep `std::io::async`-based I/O pipelines single-threaded
-  for now, and use `task fn` for thread-based parallelism in separate examples
-  (see section 1).
+ runtime, spawning stackful async coroutines in a multi-threaded process is
+ not reliable yet. Keep `std::io::async`-based I/O pipelines single-threaded
+ for now, and use `task fn` for thread-based parallelism in separate examples
+ (see section 1).
 
 ## 3) Stream pipelines (`std::stream`) + fd adapters
 
@@ -98,9 +98,9 @@ Notes (current subset):
 
 - `PassThroughStream` gives you a paired in-memory pipe (`WritableStream` → `ReadableStream`).
 - `TransformStream` gives you a paired transform stage:
-  - producers write to `writable`,
-  - a transformer task reads from `transform_readable` and writes to `transform_writable`,
-  - consumers read from `readable`.
+ - producers write to `writable`,
+ - a transformer task reads from `transform_readable` and writes to `transform_writable`,
+ - consumers read from `readable`.
 
 To connect OS resources to streams:
 
@@ -137,9 +137,9 @@ async fn main () -> int {
 
 ## Next steps
 
-- For network I/O, start with `docs/std/networking.md`
-  (`std::net::stream` provides `TcpStream` ↔ stream adapters).
+- For network I/O, start with [networking](?p=std/networking)
+ (`std::net::stream` provides `TcpStream` ↔ stream adapters).
 - For low-level readiness waits and manual executor driving, read
-  `docs/std/runtime-event-loop.md`.
+ [runtime event loop](?p=std/runtime).
 - For compile-time proofs around bounds, invariants, and contracts, continue to
-  [Tutorial 7: Formal Silk in real code](?p=usage/tutorials/07-formal-silk).
+ [Tutorial 7: Formal Silk in real code](?p=usage/tutorials/07-formal-silk).

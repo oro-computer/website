@@ -6,24 +6,28 @@ API on top of `std::net::TCPStream`.
 
 See also:
 
-- `docs/std/networking.md` (`std::net`)
-- `docs/std/https.md` (`std::https` layered on `std::tls`)
+- [networking](?p=std/networking) (`std::net`)
+- [https](?p=std/https) (`std::https` layered on `std::tls`)
 - RFC 7230 / RFC 7231 (HTTP/1.1 message syntax and semantics)
 
-## Description
-
+## Scope
 Implemented:
 
 - HTTP/1.1 request line and response status line parsing.
 - Case-insensitive header scanning (`header(name)`).
 - Body handling via `Content-Length` and `Transfer-Encoding: chunked` (parse/read).
 - Blocking I/O over `std::net::TCPStream`.
+- One-shot client helpers:
+ - blocking: `request(...)`, `request_v6(...)`
+ - async-friendly: `request_async(...)`, `request_v6_async(...)`
 
 Not implemented (yet):
 
 - HTTP/2 or HTTP/3.
 - Streaming bodies (incremental read/write APIs).
 - Automatic decompression, redirects, cookies, proxies, etc.
+- Fully nonblocking connect/write/read integration. The async-friendly helpers
+ currently offload the blocking one-shot request path to a task worker.
 
 ## Exported API
 
@@ -70,6 +74,7 @@ impl Response {
   public fn reason (self: &Response) -> string;
   public fn header (self: &Response, name: string) -> string?;
   public fn body (self: &Response) -> string;
+  public fn into_string (mut self: &Response) -> std::strings::String;
 }
 
 // A blocking connection wrapper that can read/write one message at a time.
@@ -87,13 +92,26 @@ impl Connection {
   public fn read_request (mut self: &Connection) -> RequestResult;
   public fn write_response (self: &Connection, status: int, reason: string, body: string) -> Error?;
 }
+
+// One-shot client helpers.
+export fn request (addr: std::net::SocketAddrV4, method: string, target: string, host: string, body: string) -> ResponseResult;
+export fn request_v6 (addr: std::net::SocketAddrV6, method: string, target: string, host: string, body: string) -> ResponseResult;
+export async fn request_async (addr: std::net::SocketAddrV4, method: string, target: string, host: string, body: string) -> ResponseResult;
+export async fn request_v6_async (addr: std::net::SocketAddrV6, method: string, target: string, host: string, body: string) -> ResponseResult;
 ```
 
 Notes:
 
 - This API is currently blocking and uses `Connection: close` by default.
+- `request_async(...)` / `request_v6_async(...)` are async-friendly wrappers,
+ not a fully nonblocking HTTP transport. They run the blocking one-shot
+ request path on a task worker so async code can `await` the result without
+ blocking its executor owner thread.
 - Parsed messages own their backing bytes and return borrowed `string` views into
-  those bytes; the returned views are valid until the message is dropped.
+ those bytes; the returned views are valid until the message is dropped.
+- `Response.into_string()` transfers ownership of the raw HTTP response bytes
+ out of the parsed response object. After the transfer, the response handle is
+ invalidated and should not be used again.
 
 ## Example (Client)
 
@@ -136,6 +154,6 @@ export fn main () -> int {
 
 - `Content-Length` must parse as a non-negative decimal value.
 - When `Transfer-Encoding` is present, only `"identity"` and `"chunked"` are
-  accepted; other encodings fail with `ERR_UNSUPPORTED_TRANSFER_ENCODING`.
+ accepted; other encodings fail with `ERR_UNSUPPORTED_TRANSFER_ENCODING`.
 - Request/response header blocks are limited by `DEFAULT_MAX_HEADER_BYTES`
-  (and per-connection configuration where applicable).
+ (and per-connection configuration where applicable).

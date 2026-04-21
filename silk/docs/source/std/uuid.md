@@ -11,20 +11,20 @@ family).
 The current API supports:
 
 - parsing:
-  - canonical hyphenated form (`8-4-4-4-12` hex digits),
-  - optional surrounding braces (`{...}`),
-  - optional `urn:uuid:` prefix,
+ - canonical hyphenated form (`8-4-4-4-12` hex digits),
+ - optional surrounding braces (`{...}`),
+ - optional `urn:uuid:` prefix,
 - formatting:
-  - canonical hyphenated lowercase string form.
+ - canonical hyphenated lowercase string form.
 
 API notes:
 
 - `std::uuid::parse(s: string) -> std::uuid::ParseResult` returns
-  `Ok(UUID)` on success, otherwise `Err(ParseError)`.
-  - `ParseError.kind()` reports a stable error kind.
-  - `ParseError.offset` reports the byte offset into the original input string.
+ `Ok(UUID)` on success, otherwise `Err(ParseError)`.
+ - `ParseError.kind()` reports a stable error kind.
+ - `ParseError.offset` reports the byte offset into the original input string.
 - `UUID.to_string_lower() -> Result(String, OutOfMemory)` allocates an owned
-  string.
+ string.
 
 ## Examples
 
@@ -79,19 +79,19 @@ where the leftmost hex pairs correspond to lower byte indices.
 
 - `UUID.version()` returns the 4-bit version field (0..15).
 - `UUID.is_rfc4122()` checks the RFC 4122/RFC 9562 variant (`10xx` in the
-  variant field).
+ variant field).
 
 ### Supported versions
 
 The std surface provides constructors for:
 
 - **v1**: time-based (Gregorian epoch, 100ns ticks) with `{ timestamp_100ns,
-  clock_seq, node }` inputs.
+ clock_seq, node }` inputs.
 - **v3**: name-based (MD5 over `namespace || name`).
 - **v4**: random-based (122 random bits + version/variant bits).
 - **v5**: name-based (SHA-1 over `namespace || name`).
 - **v6**: reordered time-based (same inputs as v1; timestamp bits reordered for
-  lexical sorting).
+ lexical sorting).
 - **v7**: Unix-epoch time-based (48-bit milliseconds + 74 random bits).
 - **v8**: custom (caller-provided 128-bit value with version/variant applied).
 
@@ -99,9 +99,9 @@ Fallibility:
 
 - `std::uuid::{v1,v3,v5,v6,v7}` return `std::uuid::UUIDResult` (`Result(UUID, UUIDFailed)`).
 - `std::uuid::timestamp_100ns_from_unix_ns` returns `Result(u64, UUIDFailed)` and
-  may fail with `Overflow`.
+ may fail with `Overflow`.
 - `std::uuid::random::*` returns `std::uuid::UUIDResult` and may fail due to
-  `InitFailed` (libsodium) or `NoTime` (missing clock).
+ `InitFailed` (libsodium) or `NoTime` (missing clock).
 
 `std::uuid::random` also provides `v1_now` / `v6_now` / `v7_now` using
 `std::runtime::time::unix_now_ns` / `unix_now_ms` so callers can generate UUIDs
@@ -116,10 +116,10 @@ without passing explicit timestamps.
 ## Design goals
 
 - Keep the implementation small and auditable, without external dependencies
-  for parsing/formatting and name-based UUIDs.
+ for parsing/formatting and name-based UUIDs.
 - Provide explicit constructors for each UUID version.
 - Keep parse, format, and inspection helpers straightforward to embed into
-  application code and tooling.
+ application code and tooling.
 - Attach Formal Silk contracts to buffer and shape preconditions where useful.
 
 ### Additional planned surface

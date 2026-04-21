@@ -2,11 +2,12 @@
 
 `std::uuid` provides UUID primitives (parsing, formatting, and variants).
 
-Full reference: `docs/std/uuid.md`.
+Canonical doc: [uuid](?p=std/uuid).
 
 ## Notes
 
-- Full reference: `docs/std/uuid.md`
+- Implemented (v1/v3/v4/v5/v6/v7/v8 parsing + formatting + constructors).
+- Details: [uuid](?p=std/uuid)
 
 ## Importing
 
@@ -70,4 +71,5 @@ fn main () -> int {
 
 ## See also
 
-- Full reference: `docs/std/uuid.md`
+- Canonical doc: [uuid](?p=std/uuid)
+- End-to-end fixture: `tests/silk/pass_std_uuid_basic.slk`

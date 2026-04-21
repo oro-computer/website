@@ -6,37 +6,37 @@ Numeric literals produce integer (`int`, `u8`, `i128`, …) and floating-point
 In Silk, the sign is an operator: `-1` is a unary `-` expression applied to the
 integer literal token `1`, not a distinct “negative literal” token.
 
-## Supported forms
+## Notes
 
-Includes:
+What works end-to-end today (lexer → parser → checker → lowering → codegen):
 
 - Decimal integer literals: `0`, `42`, `255`.
 - Digit separators (`_`) within numeric literal digits: `1_000_000`,
-  `0b0000_1111_0000`, `0xFFFF_FFFF`, `1_000.25`, `1_000ms`.
+ `0b0000_1111_0000`, `0xFFFF_FFFF`, `1_000.25`, `1_000ms`.
 - Integer base prefixes:
-  - binary: `0b1010` / `0B1010`,
-  - octal: `0o17` / `0O17`,
-  - hex: `0xFF` / `0Xff`,
-  - legacy octal: `017` (value 15).
+ - binary: `0b1010` / `0B1010`,
+ - octal: `0o17` / `0O17`,
+ - hex: `0xFF` / `0Xff`,
+ - legacy octal: `017` (value 15).
 - Decimal float literals with a fractional part: `0.0`, `1.5`, `10.25`.
 - Unary `-` over numeric literals: `-1`, `-1.5`.
 - Contextual typing:
-  - integer literals default to `int`, but adopt an expected integer type
-    (`u8`, `i128`, …) or time type (`Duration`, `Instant`) when a context
-    provides one,
-  - float literals default to `f64`, but adopt `f32`/`f64`/`f128` from context.
+ - integer literals default to `int`, but adopt an expected integer type
+ (`u8`, `i128`, …) or time type (`Duration`, `Instant`) when a context
+ provides one,
+ - float literals default to `f64`, but adopt `f32`/`f64`/`f128` from context.
 - Duration literal tokens of the form `<number><unit>` (no whitespace) such as
-  `500ms` and `1.5s` (specified in `docs/language/literals-duration.md`).
+ `500ms` and `1.5s` (specified in [literals duration](?p=language/literals-duration)).
 - Lowering note (current IR backend subset): unannotated local `let` bindings
-  participate only in the integer subset. Prefer explicit type annotations for
-  `bool` and float locals when you intend to build an executable/library.
+ participate only in the integer subset. Prefer explicit type annotations for
+ `bool` and float locals when you intend to build an executable/library.
 
-Limitations:
+Not implemented yet:
 
 - Exponent notation (`1e6`, `1.0e-3`).
 - Numeric type suffixes (`42u8`, `1.5f32`).
 - Numeric suffixes for 128-bit types (`1u128`, `1.0f128`) are not implemented;
-  use annotations or `as` casts.
+ use annotations or `as` casts.
 
 ## Quick Reference
 
@@ -55,55 +55,55 @@ fn main () -> int {
 }
 ```
 
-## Surface Syntax (Current Lexer)
+## Surface Syntax
 
 Numeric literal tokens are recognized as:
 
 - **Integer literal**:
-  - decimal digits (`[0-9]+`),
-  - binary prefix: `0b` / `0B` followed by binary digits (`[01]+`),
-  - octal prefix: `0o` / `0O` followed by octal digits (`[0-7]+`),
-  - hex prefix: `0x` / `0X` followed by hex digits (`[0-9a-fA-F]+`),
-  - legacy octal: `0[0-7]+` (for example `017`).
+ - decimal digits (`[0-9]+`),
+ - binary prefix: `0b` / `0B` followed by binary digits (`[01]+`),
+ - octal prefix: `0o` / `0O` followed by octal digits (`[0-7]+`),
+ - hex prefix: `0x` / `0X` followed by hex digits (`[0-9a-fA-F]+`),
+ - legacy octal: `0[0-7]+` (for example `017`).
 - **Float literal**: digits, `.`, digits (`[0-9]+ '.' [0-9]+`).
 
 Notes:
 
 - Integer and float literals may use `_` as a digit separator. Separators are
-  ignored when parsing the numeric value, but must appear **between** digits.
-  For example:
-  - valid: `1_000`, `0xFFFF_FFFF`, `0b0000_1111_0000`, `1_000.2_5`,
-  - invalid: `_1`, `1_`, `1__0`, `0x_FF`.
+ ignored when parsing the numeric value, but must appear **between** digits.
+ For example:
+ - valid: `1_000`, `0xFFFF_FFFF`, `0b0000_1111_0000`, `1_000.2_5`,
+ - invalid: `_1`, `1_`, `1__0`, `0x_FF`.
 - A float literal must have digits on both sides of the `.`:
-  - `1.0` is a float literal.
-  - `1.` is not a float literal in the current lexer.
-  - `.5` is not a float literal; write `0.5`.
+ - `1.0` is a float literal.
+ - `1.` is not a float literal in the current lexer.
+ - `.5` is not a float literal; write `0.5`.
 - Numeric literals must start with a digit in the current lexer.
 - The `-` sign is not part of the literal token:
-  - `-1` parses as unary `-` applied to the integer literal `1`.
-  - `-1.5` parses as unary `-` applied to the float literal `1.5`.
+ - `-1` parses as unary `-` applied to the integer literal `1`.
+ - `-1.5` parses as unary `-` applied to the float literal `1.5`.
 - A numeric token immediately followed by a duration unit suffix (e.g. `1s`,
-  `500ms`, `1.5s`) is a single `Duration` literal token, not a number token
-  followed by an identifier.
+ `500ms`, `1.5s`) is a single `Duration` literal token, not a number token
+ followed by an identifier.
 - A numeric literal token may not be immediately followed by an identifier
-  start character or an ASCII digit (unless the identifier characters are part
-  of a duration unit suffix). For example:
-  - `3in` is a lexical error (write `3 in` or `3 * in` as intended),
-  - `0b102` is a lexical error (invalid binary digit),
-  - `08` is a lexical error in Silk because multi-digit literals starting with
-    `0` are legacy octal (use `0o10` for octal 8, or write `8` for decimal).
+ start character or an ASCII digit (unless the identifier characters are part
+ of a duration unit suffix). For example:
+ - `3in` is a lexical error (write `3 in` or `3 * in` as intended),
+ - `0b102` is a lexical error (invalid binary digit),
+ - `08` is a lexical error in Silk because multi-digit literals starting with
+ `0` are legacy octal (use `0o10` for octal 8, or write `8` for decimal).
 
 ## Type Rules
 
-See `docs/language/types.md` for the primitive type names used below.
+See [types](?p=language/types) for the primitive type names used below.
 
 ### Integer literals
 
 - Without an expected type, an integer literal has type `int`.
 - When a context provides an expected type that is:
-  - an integer type (`u8`, `i64`, `int`, …), or
-  - a time type (`Duration`, `Instant`),
-  then the integer literal adopts that expected type.
+ - an integer type (`u8`, `i64`, `int`, …), or
+ - a time type (`Duration`, `Instant`),
+ then the integer literal adopts that expected type.
 
 Example: parameter context and “adopt the expected type”
 
@@ -122,8 +122,8 @@ fn main () -> int {
 }
 ```
 
-Example: time types share an `i64`-based representation in the current subset
-(`docs/language/duration-instant.md`), so integer literals can be used as
+Example: time types share an `i64`-based representation in the Supported forms
+([duration instant](?p=language/duration-instant)), so integer literals can be used as
 `Instant`/`Duration` values via context:
 
 ```silk
@@ -144,7 +144,7 @@ fn main () -> int {
 
 - Without an expected type, a float literal has type `f64`.
 - When a context provides an expected float type (`f32` or `f64`), the literal
-  adopts that expected type.
+ adopts that expected type.
 
 ```silk
 fn id_f32 (x: f32) -> f32 {
@@ -164,15 +164,15 @@ fn main () -> int {
 ## Common Pitfalls
 
 - **Trying to use suffixes**: `42u8` / `1.5f32` are not supported. Use type
-  annotations (`let x: u8 = 42;`) or casts (`42 as u8`).
+ annotations (`let x: u8 = 42;`) or casts (`42 as u8`).
 - **Using exponent notation**: `1e6` is not supported yet.
 - **Writing incomplete floats**: write `1.0` (not `1.`) and `0.5` (not `.5`).
-- **Mixing integers and floats implicitly**: use `as` casts (`docs/language/operators.md`)
-  to convert explicitly when you need to combine integer and float values.
+- **Mixing integers and floats implicitly**: use `as` casts ([operators](?p=language/operators))
+ to convert explicitly when you need to combine integer and float values.
 
 ## Related Documents
 
-- `docs/language/literals-duration.md` (duration literals like `5ms`, `1.5s`)
-- `docs/language/duration-instant.md` (time types and operators)
-- `docs/language/operators.md` (unary `-`, arithmetic, and `as` casts)
-- `docs/language/types.md` (primitive numeric type names)
+- [literals duration](?p=language/literals-duration) (duration literals like `5ms`, `1.5s`)
+- [duration instant](?p=language/duration-instant) (time types and operators)
+- [operators](?p=language/operators) (unary `-`, arithmetic, and `as` casts)
+- [types](?p=language/types) (primitive numeric type names)

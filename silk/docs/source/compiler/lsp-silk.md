@@ -3,7 +3,11 @@
 This document specifies the current Language Server Protocol (LSP)
 implementation for Silk.
 
-The goal of the language server is to provide editor and IDE integrations (diagnostics, and eventually features like completion and hover) while remaining a thin, spec-driven wrapper around the existing compiler front-end.
+The goal of the language server is to provide editor and IDE integrations
+(diagnostics, hover, go-to-definition, references, rename, completion,
+signature help, semantic tokens, inlay hints, document symbols, and future
+tooling extensions) while remaining a thin, spec-driven wrapper around the
+existing compiler front-end.
 
 ## Overview
 
@@ -13,14 +17,14 @@ The Silk language server:
 - speaks the Language Server Protocol over stdin/stdout using JSON-RPC 2.0 and `Content-Length` framing,
 - reuses the existing lexer, parser, and type checker for semantics,
 - builds a workspace cache from open documents, nearest-package
-  `silk.toml` roots, dependency package graphs, manifest definition files, and
-  standard library modules when enabled,
+ `silk.toml` roots, dependency package graphs, manifest definition files, and
+ standard library modules when enabled,
 - maintains a lightweight native C symbol index for manifest-owned `.c` / `.h`
-  sources so `ext` declarations can resolve to local native definitions when
-  those sources are available,
+ sources so `ext` declarations can resolve to local native definitions when
+ those sources are available,
 - does not change the language surface or ABI; it is a tooling layer on top of the existing compiler.
 
-No language features or CLI options are introduced by the LSP itself. Any future extensions that affect language semantics or user-facing flags must still be documented in the appropriate `docs/language/` or `docs/compiler/cli-silk.md` files first.
+No language features or CLI options are introduced by the LSP itself. Any future extensions that affect language semantics or user-facing flags must still be documented in the appropriate `docs/language/` or [cli silk](?p=compiler/cli-silk) files first.
 
 ## Running the Server
 
@@ -30,14 +34,16 @@ The `silk-lsp` binary is built and installed alongside the `silk` CLI:
 - Editor and IDE integrations should launch `silk-lsp` as a stdio-based LSP server, without extra arguments, and then speak JSON-RPC 2.0 over its stdin/stdout.
 - The server writes protocol messages to stdout and may emit diagnostic logs to stderr; LSP clients must not treat stderr as protocol traffic.
 - Optional flags:
-  - `--std-root <path>` overrides the stdlib root used for resolving `import std::...;`.
-  - `--nostd` disables stdlib auto-loading entirely.
+ - `--std-root <path>` overrides the stdlib root used for resolving `import std::...;`.
+ - `--std <path>` is an accepted alias of `--std-root <path>`.
+ - `--nostd` disables stdlib auto-loading entirely.
+ - `-h` / `--help` prints the current usage text.
 
 Typical client configurations (e.g., Vim/Neovim LSP, VS Code, or other LSP frontends) should:
 
 - set the command to `["silk-lsp"]`,
 - enable standard LSP text document synchronization,
-- refrain from sending requests beyond the capabilities advertised in `initialize` (hover, diagnostics, shutdown/exit).
+- rely on the capabilities advertised in `initialize`; the current request/notification surface includes diagnostics, hover, definition, references, rename, completion, signature help, semantic tokens, inlay hints, document symbols, shutdown, and exit.
 
 ## Transport and Protocol
 
@@ -61,31 +67,36 @@ Position handling note:
 The server supports the standard LSP initialization sequence:
 
 - `initialize` (request):
-  - Advertised capabilities (initial version):
-    - `positionEncoding`: `"utf-16"` (the server currently operates in UTF-16 positions for maximum client compatibility).
-    - `textDocumentSync`:
-      - `openClose: true`,
-      - `change: 1` (Full document sync),
-      - `save: { includeText: false }`.
-    - `hoverProvider: true` (minimal lexical hover on literals and identifiers as described below).
-    - `definitionProvider: true` (definition lookups backed by the module-set symbol index; see below).
-    - `documentSymbolProvider: true` (top-level `fn`/`let`/`struct`/`enum`/`error`/`interface`/`ext`/`impl` symbols as described below).
-    - `completionProvider`: a minimal completion provider that:
-      - does not support resolve,
-      - advertises trigger characters `.`, `:`, `{`, `,`, `"`, `` ` ``, and `/`,
-      - offers keyword, identifier, and symbol-aware suggestions as described below.
-    - `signatureHelpProvider`:
-      - trigger characters `(` and `,`,
-      - provides function and method signatures for the current call.
-    - No references/rename, semantic tokens, or other advanced features are claimed here.
+ - Advertised capabilities:
+ - `positionEncoding`: `"utf-16"` (the server currently operates in UTF-16 positions for maximum client compatibility).
+ - `textDocumentSync`:
+ - `openClose: true`,
+ - `change: 1` (Full document sync),
+ - `save: { includeText: false }`.
+ - `hoverProvider: true` (semantic hover on literals, declarations, imports, and native `ext` targets as described below).
+ - `definitionProvider: true` (definition lookups backed by the module-set symbol index; see below).
+ - `referencesProvider: true` (reference queries across the current cached module set; see below).
+ - `renameProvider: true` (identifier renames across the current cached module set; see below).
+ - `documentSymbolProvider: true` (hierarchical document symbols for declarations and nested bodies as described below).
+ - `semanticTokensProvider`:
+ - legend-driven `full` semantic token responses,
+ - token types include namespaces, types, enums, interfaces, structs, parameters, variables, properties, enum members, functions, methods, keywords, comments, strings, numbers, and operators.
+ - `inlayHintProvider: true` (type inlay hints for currently supported local bindings; see below).
+ - `completionProvider`:
+ - does not support resolve,
+ - advertises trigger characters `.`, `:`, `{`, `,`, `"`, `` ` ``, and `/`,
+ - offers keyword, identifier, import-specifier, and symbol-aware suggestions as described below.
+ - `signatureHelpProvider`:
+ - trigger characters `(` and `,`,
+ - provides function and method signatures for the current call.
 - The server uses `rootUri` (or `rootPath`) to help locate a stdlib root when no explicit `--std-root` or `SILK_STD_ROOT` is set.
 - `initialized` (notification):
-  - Accepted but does not currently trigger additional behavior.
+ - Accepted but does not currently trigger additional behavior.
 - `shutdown` (request) and `exit` (notification) are honored as in the LSP spec.
 - Requests received after `shutdown` (other than `exit`) are treated as invalid and answered with an error response.
 - `$\/cancelRequest` notifications are accepted and ignored; the initial server does not track per-request cancellation state.
 
-Any future capabilities (completion, hover, goto definition, etc.) must be documented here before being implemented.
+Any additional capabilities beyond this documented set must be documented here before being implemented.
 
 ## Hover
 
@@ -94,27 +105,27 @@ workspace module set.
 
 - Hover requests are handled for the current contents of an open document (as tracked in the server’s in-memory document table).
 - The server computes hover information lexically, based on the token at the given position:
-  - integer literals are reported as “int literal”,
-  - floating-point literals as “float literal”,
-  - boolean literals (`true`/`false`) as “bool literal”,
-  - string and character literals as “string literal” and “char literal”,
-  - identifiers are reported as `identifier 'name'`.
+ - integer literals are reported as “int literal”,
+ - floating-point literals as “float literal”,
+ - boolean literals (`true`/`false`) as “bool literal”,
+ - string and character literals as “string literal” and “char literal”,
+ - identifiers are reported as `identifier 'name'`.
 - Hover now includes lightweight semantic hints:
-  - function identifiers show their `fn name (...) -> result` signature when available,
-  - `let` bindings show the declared (or literal-inferred) type when available,
-  - struct / enum / interface / error identifiers report `struct Name` / `enum Name` / `interface Name` / `error Name`,
-  - `ext` declarations report `ext name: <type>` when available,
-  - field and method accesses (`value.field`, `value.method`) report the field type or method signature when the receiver is a known struct,
-  - imported names are resolved across the module set:
-    - package imports (`import ns::pkg;`, `import ns::pkg as alias;`),
-    - qualified symbol imports (`import ns::pkg::name;`, `import ns::pkg::name as alias;`, `import ::malloc;`),
-    - JS-style imports (`import { name } from "ns/pkg";`, `import { name as alias } from "ns/pkg";`, `import alias from "ns/pkg";`),
-    - and module-scope `using` aliases for imported or local names,
-  - when an `ext` declaration resolves to a locally indexed native C symbol, hover includes the native C declaration/prototype in an additional `c` code block,
-  - native C lookup is filtered by the `ext` shape (`fn` / `c_fn` externs prefer C functions; non-function externs prefer C variables), so common C tag/function collisions like `struct stat` vs `stat(...)` do not override the callable symbol.
+ - function identifiers show their `fn name (...) -> result` signature when available,
+ - `let` bindings show the declared (or literal-inferred) type when available,
+ - struct / enum / interface / error identifiers report `struct Name` / `enum Name` / `interface Name` / `error Name`,
+ - `ext` declarations report `ext name: <type>` when available,
+ - field and method accesses (`value.field`, `value.method`) report the field type or method signature when the receiver is a known struct,
+ - imported names are resolved across the module set:
+ - package imports (`import ns::pkg;`, `import ns::pkg as alias;`),
+ - qualified symbol imports (`import ns::pkg::name;`, `import ns::pkg::name as alias;`, `import ::malloc;`),
+ - JS-style imports (`import { name } from "ns/pkg";`, `import { name as alias } from "ns/pkg";`, `import alias from "ns/pkg";`),
+ - and module-scope `using` aliases for imported or local names,
+ - when an `ext` declaration resolves to a locally indexed native C symbol, hover includes the native C declaration/prototype in an additional `c` code block,
+ - native C lookup is filtered by the `ext` shape (`fn` / `c_fn` externs prefer C functions; non-function externs prefer C variables), so common C tag/function collisions like `struct stat` vs `stat(...)` do not override the callable symbol.
 - When the resolved declaration has a doc comment, hover renders it as Markdown:
-  - the first block is a `silk` code block containing the signature/header,
-  - followed by the rendered doc comment body.
+ - the first block is a `silk` code block containing the signature/header,
+ - followed by the rendered doc comment body.
 - The hover `range` returned to the client corresponds to the token span (same token line/column/length used for diagnostics); when no suitable token is found at the requested position, the server returns `null` as the hover result.
 
 The native C index is intentionally lexical and top-level only; it is not a
@@ -129,31 +140,31 @@ The server provides `textDocument/definition` for open documents.
 
 - Definition requests are handled for the current contents of an open document.
 - The server first consults the module-set symbol index (open docs + manifest
-  package graphs + definition files + std modules when enabled) to resolve:
-  - exported or package-local `fn`, `let`, `ext`, `struct`, `enum`, `interface`, and `error` declarations,
-  - methods declared in `impl` blocks when invoked as `value.method(...)`,
-  - qualified names such as `std::pkg::name` and namespace-qualified names like `alias::name` when `alias` is introduced by:
-    - a package import,
-    - a default/namespace import,
-    - or a module-scope `using` alias.
+ package graphs + definition files + std modules when enabled) to resolve:
+ - exported or package-local `fn`, `let`, `ext`, `struct`, `enum`, `interface`, and `error` declarations,
+ - methods declared in `impl` blocks when invoked as `value.method(...)`,
+ - qualified names such as `std::pkg::name` and namespace-qualified names like `alias::name` when `alias` is introduced by:
+ - a package import,
+ - a default/namespace import,
+ - or a module-scope `using` alias.
 - Package and import resolution covers:
-  - package imports (`import ns::pkg;`, `import ns::pkg as alias;`),
-  - qualified symbol imports (`import ns::pkg::name;`, `import ns::pkg::name as alias;`, `import ::name;`),
-  - JS-style imports from package specifiers and file specifiers,
-  - and `using` aliases for both value names and namespace aliases.
+ - package imports (`import ns::pkg;`, `import ns::pkg as alias;`),
+ - qualified symbol imports (`import ns::pkg::name;`, `import ns::pkg::name as alias;`, `import ::name;`),
+ - JS-style imports from package specifiers and file specifiers,
+ - and `using` aliases for both value names and namespace aliases.
 - Local scopes are then consulted to resolve:
-  - function parameters,
-  - block-scoped `let` bindings,
-  - `match`-statement binders within the selected arm body.
+ - function parameters,
+ - block-scoped `let` bindings,
+ - `match`-statement binders within the selected arm body.
 - Member access (`value.field` / `value.method`) uses the heuristic receiver-type resolver:
-  - when a method is found, the definition points at the `impl` method declaration,
-  - when a struct field is found, the definition points at that field declaration,
-  - otherwise the definition falls back to the receiver struct declaration.
+ - when a method is found, the definition points at the `impl` method declaration,
+ - when a struct field is found, the definition points at that field declaration,
+ - otherwise the definition falls back to the receiver struct declaration.
 - Constructor calls (`new Type(...)`) resolve to the `fn constructor` declaration when the constructor overload set is unambiguous; otherwise the server falls back to the `struct Type` declaration.
 - When a resolved `ext` declaration has a matching native C symbol in a
-  manifest-owned source/header file, go-to-definition prefers the C definition
-  (or declaration if no definition is present locally) over the Silk `ext`
-  declaration, using the same function-vs-variable matching rule as hover.
+ manifest-owned source/header file, go-to-definition prefers the C definition
+ (or declaration if no definition is present locally) over the Silk `ext`
+ declaration, using the same function-vs-variable matching rule as hover.
 - If symbol resolution fails, the server falls back to a lexical scan of the current file for the first matching `let`/`fn`/`ext`/`struct`/`enum`/`interface`/`error` declaration.
 
 Known limitations in this initial support:
@@ -161,16 +172,16 @@ Known limitations in this initial support:
 - local block scopes and shadowing are only modeled for `let`-style bindings (not for match-expression binders),
 - ambiguous names across multiple imports are not disambiguated; the first match wins,
 - cross-file results are limited to declarations present in the current module
-  set (open docs, manifest-discovered package files, and std modules when
-  enabled).
+ set (open docs, manifest-discovered package files, and std modules when
+ enabled).
 
 Manifest-aware cache rebuild note:
 
 - When a nearest-package graph cannot be loaded (for example because a
-  dependency is missing or a manifest hash/version check fails), `silk-lsp`
-  emits a concise stderr warning describing the failed package root and the
-  manifest diagnostic it received, rather than silently dropping package
-  indexing.
+ dependency is missing or a manifest hash/version check fails), `silk-lsp`
+ emits a concise stderr warning describing the failed package root and the
+ manifest diagnostic it received, rather than silently dropping package
+ indexing.
 
 ## Completion
 
@@ -178,28 +189,28 @@ The server provides `textDocument/completion` using the same cached workspace
 module set.
 
 - Completion items are offered for:
-  - all language keywords defined in `src/token.zig` (via `keywordTable()`),
-  - all distinct identifiers lexed from the current document (names that are not recognized as keywords),
-  - symbol-aware suggestions from the current package and imported packages (functions, lets, ext, structs, enums, interfaces, errors),
-  - imported names from:
-    - package imports and qualified symbol imports,
-    - JS-style named/default imports from file or package specifiers,
-    - and module-scope `using` aliases,
-  - import specifier path completion inside `from "..."` strings:
-    - file specifiers (`"./..."`, `"../..."`, and absolute paths) suggest `.slk` files and subdirectories,
-    - std-root file specifiers (`"std/..."`) suggest stdlib paths (omitting the `.slk` extension),
-  - namespace completions after `::` for known packages, package-import aliases, default/namespace imports, and `using`-introduced namespace aliases,
-  - member completions for struct fields and methods after `.` when the receiver type is known (including locals with type annotations or struct-literal/cast inference),
-  - struct-literal field suggestions in `Type { ... }` expressions when the cursor is in a field-name position (before the `:`).
+ - all language keywords defined in `src/token.zig` (via `keywordTable()`),
+ - all distinct identifiers lexed from the current document (names that are not recognized as keywords),
+ - symbol-aware suggestions from the current package and imported packages (functions, lets, ext, structs, enums, interfaces, errors),
+ - imported names from:
+ - package imports and qualified symbol imports,
+ - JS-style named/default imports from file or package specifiers,
+ - and module-scope `using` aliases,
+ - import specifier path completion inside `from "..."` strings:
+ - file specifiers (`"./..."`, `"../..."`, and absolute paths) suggest `.slk` files and subdirectories,
+ - std-root file specifiers (`"std/..."`) suggest stdlib paths (omitting the `.slk` extension),
+ - namespace completions after `::` for known packages, package-import aliases, default/namespace imports, and `using`-introduced namespace aliases,
+ - member completions for struct fields and methods after `.` when the receiver type is known (including locals with type annotations or struct-literal/cast inference),
+ - struct-literal field suggestions in `Type { ... }` expressions when the cursor is in a field-name position (before the `:`).
 - Currently:
-  - returns completion items with `label`, `kind`, and `detail` populated when symbol data is available,
-  - attaches a plaintext signature preview for functions and methods in completion documentation,
-  - filters results by the identifier prefix immediately preceding the cursor position,
-  - uses a heuristic symbol index built from the module set (open docs + imports + std modules).
+ - returns completion items with `label`, `kind`, and `detail` populated when symbol data is available,
+ - attaches a plaintext signature preview for functions and methods in completion documentation,
+ - filters results by the identifier prefix immediately preceding the cursor position,
+ - uses a heuristic symbol index built from the module set (open docs + imports + std modules).
 - Scope precision is still limited:
-  - receiver type inference is heuristic (it is not a full typechecker),
-  - local scopes are only partially modeled for completion (not all binder forms and control-flow refinements are represented),
-  - cross-file results are limited to declarations present in the current module set (open docs + manifest/package import closure + std modules when enabled).
+ - receiver type inference is heuristic (it is not a full typechecker),
+ - local scopes are only partially modeled for completion (not all binder forms and control-flow refinements are represented),
+ - cross-file results are limited to declarations present in the current module set (open docs + manifest/package import closure + std modules when enabled).
 
 As richer front-end support becomes available, completion may be extended to:
 
@@ -207,76 +218,118 @@ As richer front-end support becomes available, completion may be extended to:
 - distinguish between functions, types, variables, and other symbol kinds,
 - surface standard library symbols by consulting the resolver.
 
-## Signature Help (Initial Support)
+## Signature Help
 
 The server provides a minimal implementation of `textDocument/signatureHelp`:
 
 - Signature help is computed for the innermost call expression at the cursor.
 - The server supports:
-  - direct calls to named functions (`foo(...)`),
-  - qualified calls (`std::pkg::foo(...)` and `alias::foo(...)` for namespace imports),
-  - method calls (`value.method(...)`) when the receiver resolves to a known struct type.
+ - direct calls to named functions (`foo(...)`),
+ - qualified calls (`std::pkg::foo(...)` and `alias::foo(...)` for namespace imports),
+ - method calls (`value.method(...)`) when the receiver resolves to a known struct type.
 - constructor calls via heap allocation syntax (`new Type(...)`), which resolves to the `constructor` overload set defined in `impl Type { ... }`.
 - calls via named imports and default-imported default exports (`import { f as g } from "..."; g(...)`, `import g from "./mod.slk"; g(...)`) when resolvable.
 - Active parameter selection is based on comma counting in the current call.
 - Signature labels follow the Silk surface syntax (e.g. `fn foo (a: int, b: int) -> int`).
 - When doc comments are available:
-  - `SignatureInformation.documentation` is populated with rendered Markdown from the doc comment,
-  - `SignatureParameter.documentation` is populated from `@param` entries when present.
+ - `SignatureInformation.documentation` is populated with rendered Markdown from the doc comment,
+ - `SignatureParameter.documentation` is populated from `@param` entries when present.
 
 For constructor overload sets, the server returns multiple signatures and selects an active signature using argument-count heuristics. The implicit receiver parameter (`mut self: &Type`) is not shown in the signature parameters for `new Type(...)`.
 
 Signature help is heuristic and will become richer as the front-end’s symbol tables evolve. Some clients may request signature help even before `(` is typed; the server will attempt to resolve the identifier under the cursor as a callee in that case.
 
-## Document Symbols (Initial Support)
+## Document Symbols
 
-The server provides a minimal implementation of `textDocument/documentSymbol`:
+The server provides `textDocument/documentSymbol` for open documents.
 
-- Document symbols are derived lexically from the source text:
-  - top-level `fn` declarations are reported as function symbols,
-  - top-level `let` bindings are reported as variable symbols.
-  - top-level `struct`, `enum`, `error`, `interface`, `ext`, and `impl` declarations are also reported.
+- Document symbols are produced hierarchically from the parsed AST:
+ - top-level `fn`, `let`, `struct`, `enum`, `error`, `interface`, `ext`, `impl`, `test`, `using`, and inline-module declarations are reported,
+ - struct / enum / error / interface children include fields, variants, and methods where applicable,
+ - `impl` declarations nest their methods,
+ - functions, tests, loops, `match` arms, and similar nested bodies surface supported local declarations and binders beneath their containing symbol.
 - Implementation details:
-  - symbols are inferred from `fn name`, `let name`, `struct Name`, `enum Name`, `error Name`, `interface Name`, `ext name`, and `impl Name` patterns in the token stream,
-  - the implementation tracks `{ ... }` brace depth and only reports declarations at brace depth 0,
-  - the symbol `range` and `selectionRange` both correspond to the identifier token span,
-  - nested or block-local declarations are not yet surfaced.
+ - ranges are token- or body-based spans derived from the parsed declaration/block structure,
+ - `selectionRange` tracks the declaration identifier token,
+ - nested coverage is intentionally selective: supported locals and binders are surfaced, but this is not yet a perfect semantic scope tree for every binder form.
 - Symbol kinds:
-  - functions are reported using the LSP `Function` kind (numeric value `12`),
-  - `let` bindings are reported using the `Variable` kind (numeric value `13`),
-  - `struct` declarations use `Struct` (numeric value `23`),
-  - `enum` declarations use `Enum` (numeric value `10`),
-  - `error` declarations use `Struct` (numeric value `23`),
-  - `interface` declarations use `Interface` (numeric value `11`),
-  - `ext` declarations use `Function` (numeric value `12`),
-  - `impl` declarations use `Namespace` (numeric value `3`).
+ - functions are reported using the LSP `Function` kind (numeric value `12`),
+ - `let` bindings are reported using the `Variable` kind (numeric value `13`),
+ - `struct` declarations use `Struct` (numeric value `23`),
+ - `enum` declarations use `Enum` (numeric value `10`),
+ - `error` declarations use `Struct` (numeric value `23`),
+ - `interface` declarations use `Interface` (numeric value `11`),
+ - `ext` declarations use `Function` (numeric value `12`),
+ - `impl` declarations use `Namespace` (numeric value `3`).
 
-Future extensions may:
+## References and Rename
 
-- organize symbols hierarchically (for example nesting methods under an `impl`),
-- add additional declaration kinds (imports and interface members).
+The server provides `textDocument/references` and `textDocument/rename` for
+identifiers that resolve within the current cached module set.
+
+- Reference lookups:
+ - resolve the identifier under the cursor to its declaration using the same module-set-aware navigation used by go-to-definition,
+ - scan the cached module set for matching identifier occurrences that resolve back to that same declaration,
+ - optionally include the declaration itself when the client sets `context.includeDeclaration`.
+- Rename:
+ - uses the same declaration-resolution and reference collection path,
+ - returns a `WorkspaceEdit.documentChanges` payload with per-document text edits,
+ - rejects invalid Silk identifier spellings (`newName` must be a valid identifier).
+
+Current boundaries:
+
+- results are limited to the cached module set (open docs, manifest/package/file-import closure, and std modules when enabled),
+- rename is identifier-based and does not yet attempt broader semantic refactors outside that cached symbol graph.
+
+## Semantic Tokens
+
+The server provides `textDocument/semanticTokens/full`.
+
+- The current implementation combines:
+ - lexical token classification for keywords, comments, strings, numbers, and operators,
+ - AST-backed semantic marking for declaration and binder tokens such as namespaces, types, structs, enums, interfaces, functions, methods, parameters, variables, properties, and enum members.
+- This gives editors a stronger semantic surface than plain TextMate tokenization while still reusing the existing parser/module cache.
+
+Current limitations:
+
+- token classification is still declaration/binder-oriented rather than a full resolver/type-driven classification for every identifier use,
+- token modifiers are not yet emitted.
+
+## Inlay Hints
+
+The server provides `textDocument/inlayHint`.
+
+- The current implementation emits type hints for:
+ - unannotated `let` bindings when the initializer’s type is inferable from the current tooling subset,
+ - unannotated C-style `for` initializer bindings with the same inferable-type rule.
+- Hints are range-aware: the server only returns hints whose insertion positions fall inside the requested LSP range.
+
+Current limitations:
+
+- only a narrow type-hint subset is emitted today,
+- parameter-name hints and broader expression/result hints are not yet implemented.
 
 ## Text Document Lifetime and Diagnostics
 
 The server maintains an in-memory table of open documents, keyed by URI:
 
 - `textDocument/didOpen`:
-  - stores the full text of the document,
-  - rebuilds a lightweight workspace cache (module set + symbol index + export table) used for hover/definition/completion/signature help,
-  - publishes diagnostics via `textDocument/publishDiagnostics` for the opened URI by parsing the opened document and type-checking it against the cached module set (imports + std modules).
+ - stores the full text of the document,
+ - rebuilds a lightweight workspace cache (module set + symbol index + export table) used for hover/definition/completion/signature help,
+ - publishes diagnostics via `textDocument/publishDiagnostics` for the opened URI by parsing the opened document and type-checking it against the cached module set (imports + std modules).
 - `textDocument/didChange` (full sync):
-  - replaces the stored text with the new full contents,
-  - parses the changed document and type-checks it against the cached module set (imports + std modules),
-  - publishes updated diagnostics for the changed URI.
+ - replaces the stored text with the new full contents,
+ - parses the changed document and type-checks it against the cached module set (imports + std modules),
+ - publishes updated diagnostics for the changed URI.
 - `textDocument/didSave`:
-  - rebuilds the module set from all open documents,
-  - resolves imports across the module set (packages + file imports) and loads standard library modules when configured,
-  - type-checks the module set,
-  - publishes diagnostics via `textDocument/publishDiagnostics` for any affected module URI (including imports).
+ - rebuilds the module set from all open documents,
+ - resolves imports across the module set (packages + file imports) and loads standard library modules when configured,
+ - type-checks the module set,
+ - publishes diagnostics via `textDocument/publishDiagnostics` for any affected module URI (including imports).
 - `textDocument/didClose`:
-  - removes the document entry,
-  - publishes an empty diagnostics list for the closed URI,
-  - rebuilds the workspace cache for the remaining open documents.
+ - removes the document entry,
+ - publishes an empty diagnostics list for the closed URI,
+ - rebuilds the workspace cache for the remaining open documents.
 
 For responsiveness, the server caches parsed modules (AST + lightweight module info) per open document revision and reuses them across hover/definition/completion/signatureHelp requests until the document changes.
 
@@ -285,17 +338,25 @@ For responsiveness, the server caches parsed modules (AST + lightweight module i
 The workspace cache is manifest-aware:
 
 - for each open document with a filesystem path, the server walks upward to the
-  nearest owning `silk.toml`,
+ nearest owning `silk.toml`,
 - it loads the full package graph rooted there, including dependency packages,
 - it adds manifest-declared definition files to the indexed module set,
 - it applies the manifest package name as the default package for source or
-  definition files that omit an explicit `package ...;` / `module ...;`
-  declaration,
+ definition files that omit an explicit `package ...;` / `module ...;`
+ declaration,
 - and it collects manifest-owned `.c` / `.h` sources from target inputs and
-  shipped C headers for the native symbol index.
+ shipped C headers for the native symbol index.
 
 This keeps position-time queries on precomputed module/package/native symbol
 data rather than rescanning manifests or package graphs for each request.
+
+File-backed URI handling note:
+
+- open-document URIs and file-backed cache entries are normalized to the same
+ `file://` form before lookup,
+- normalization canonicalizes percent-encoding, `file://localhost/...` versus
+ `file:///...`, Windows drive-letter URIs, and UNC host casing so path
+ spelling differences do not fragment the cache.
 
 ### Standard Library Integration
 
@@ -310,42 +371,44 @@ By default, the language server will load standard library packages referenced b
 
 You can disable stdlib integration entirely with `--nostd`, which is useful for sandboxed editor setups or custom stdlib forks.
 
-### Diagnostics Source and Limitations (Initial)
+### Diagnostics Source and Current Limits
 
 Diagnostics are derived from the existing compiler front-end:
 
-- Parsing uses `parser.Parser` and the existing grammar in `docs/language/grammar.md`.
-- Type checking uses `checker.checkModule` and the rules from `docs/language/types.md` and related concept docs.
+- Parsing uses `parser.Parser` and the existing grammar in [grammar](?p=language/grammar).
+- Type checking uses `checker.checkModule` and the rules from [types](?p=language/types) and related concept docs.
 
 For responsiveness while typing:
 
 - `didChange` diagnostics are computed for the changed document by parsing it and type-checking it against the cached module set (imports + std modules). The cache is not rebuilt on every change.
 - A full module-set parse + resolve + type-check (including imports) is performed on `didSave`, and diagnostics are published for all affected modules.
 
-The current front-end exposes errors as simple error codes (e.g. `UnexpectedToken`, `TypeMismatch`) without rich spans. The initial LSP implementation therefore follows these rules:
+The current LSP diagnostic surface follows these rules:
 
 - Parse errors:
-  - reported at the location of the unexpected token using the token’s line/column and length,
-  - message text describes the unexpected token and that parsing failed.
-- Type-checking errors:
-  - reported at an approximate source location associated with the expression or statement that triggered the error (for example, the initializer expression for a mismatched `let` binding or the `break` / `continue` / `return` keyword),
-  - message text distinguishes between known error kinds (e.g. `TypeMismatch`, `InvalidReturn`) and carries the span reported by the type checker when available; if no span is available, diagnostics fall back to a coarse location.
+ - reported at the location of the unexpected token using the token’s line/column and length,
+ - message text describes the unexpected token and that parsing failed.
+- Resolve/type-check diagnostics:
+ - use the compiler’s existing structured failure data (stable code, message, source span, and any available detail),
+ - map that span/code directly onto the LSP diagnostic when the compiler reports one,
+ - flatten available note/help guidance inline into the LSP `message` field because the current payload shape does not expose separate rich note/help arrays.
 - Conditional compilation (`if attr(...)`):
-  - the server evaluates `attr(...)` query conditions using the host target (`arch`, `os`, `target`) and the enabled feature set (empty in the current compiler),
-  - when an `if` / `else if` condition is an attribute-query boolean expression that resolves to a constant `true`/`false`, the inactive branch body is published as a `Hint` diagnostic tagged `Unnecessary` so editors may render it faded (similar to inactive `#if` blocks in C/C++).
+ - the server evaluates `attr(...)` query conditions using the host target (`arch`, `os`, `target`) and the enabled feature set (empty in Silk currently),
+ - when an `if` / `else if` condition is an attribute-query boolean expression that resolves to a constant `true`/`false`, the inactive branch body is published as a `Hint` diagnostic tagged `Unnecessary` so editors may render it faded (similar to inactive `#if` blocks in C/C++).
 
-As the compiler evolves to carry richer diagnostic information (spans, notes, labels), this document and the LSP implementation must be updated so that:
+Current limits:
 
-- diagnostics map directly to the front-end’s structured error data,
-- positions and ranges reflect the exact source spans of the underlying errors.
+- parse and attribute-pass diagnostics are still built locally from the parser / attr pass because those subsystems do not yet surface the same reusable diagnostic struct as the later resolve/type-check stages,
+- when an internal error path still lacks an exact span, the server falls back to the owning module with a coarse range rather than dropping the diagnostic entirely.
 
-## Non-Goals (Initial Version)
+## Non-Goals
 
-The initial `silk-lsp` implementation explicitly does **not** provide:
+`silk-lsp` still intentionally does **not** provide:
 
-- full semantic completions with scope-precise filtering and type inference (beyond the current heuristic symbol index),
-- cross-file go-to-definition / references,
-- semantic tokens or inlay hints,
+- full semantic completions with perfect scope/type filtering across every binder/control-flow form,
+- project-wide navigation or rename outside the current cached module set,
+- fully semantic token classification for every identifier use,
+- richer inlay-hint categories beyond the current local type hints,
 - code actions or formatting.
 
 These features are intended as future extensions and must be:
@@ -358,8 +421,8 @@ These features are intended as future extensions and must be:
 
 The language server is part of the broader tooling story described in:
 
-- `docs/compiler/architecture.md` (compiler and tool layout),
-- `docs/compiler/cli-silk.md` (CLI behavior for `silk`),
+- [architecture](?p=compiler/architecture) (compiler and tool layout),
+- [cli silk](?p=compiler/cli-silk) (CLI behavior for `silk`),
 - `docs/usage/` (editor integrations, including Vim and LSP-based workflows).
 
 The `tmp/zls/` directory in the Silk compiler repository contains a vendored copy of the Zig Language Server (ZLS) for inspiration and experimentation only:

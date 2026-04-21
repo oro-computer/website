@@ -19,12 +19,12 @@ Rules:
 - A function may declare **at most one** varargs parameter.
 - The varargs parameter must be **the final** parameter in the list.
 - The varargs parameter must have an explicit **type annotation**.
-- Varargs parameters are **not** permitted to be `mut` in the current subset.
+- Varargs parameters are **not** permitted to be `mut` in the Supported forms.
 - Varargs parameters may not have a default expression (`= ...`) in the current
-  subset.
+ subset.
 - The same trailing-varargs form may be used in interface method signatures,
-  and `impl ... as ...` / `module ... as ...` conformance compares the varargs
-  marker as part of the required signature.
+ and `impl ... as ...` / `module ... as ...` conformance compares the varargs
+ marker as part of the required signature.
 
 ## Call Semantics
 
@@ -90,7 +90,7 @@ fixed-size **pack value** with:
 
 - `len: int` — the number of provided varargs arguments.
 - `a0 .. a(N-1)` — storage for up to `N` arguments (implementation-defined,
-  currently `N = 32`).
+ currently `N = 32`).
 
 The pack is passed by value using the same “flattened scalar slot” ABI as other
 POD structs.
@@ -99,12 +99,12 @@ Notes:
 
 - `args[i]` performs bounds checks against `len` and traps on out-of-bounds.
 - Directly reading `aK` is not bounds-checked; when `K >= len`, the value is
-  unspecified. Prefer `args[i]` unless you are working with the raw
-  representation intentionally.
+ unspecified. Prefer `args[i]` unless you are working with the raw
+ representation intentionally.
 - Calls supplying more than `N` varargs arguments are rejected.
 
 ## FFI (C Variadics)
 
 This document is about Silk varargs. C variadic functions declared via `ext`
 (`printf`-style `...`) are a separate concern and are **not** implemented yet
-in the current subset.
+in the Supported forms.

@@ -8,10 +8,10 @@ implemented yet.
 
 See also:
 
-- `docs/std/arrays.md`
-- `docs/std/conventions.md`
+- [arrays](?p=std/arrays)
+- [conventions](?p=std/conventions)
 
-## Exported API
+## Notes
 
 A tiny, non-generic subset is implemented in `std/algorithms.slk` for early
 bring-up. These helpers operate on concrete scalar types and are intended to be
@@ -73,7 +73,7 @@ Notes:
 
 - Sorting should be in-place where possible.
 - Stable sorting may require temporary allocations; this should be explicit
-  (accept an allocator) or clearly documented.
+ (accept an allocator) or clearly documented.
 
 ## Considerations
 - `dedup`, `partition`, `reverse`, `rotate`, `shuffle`.

@@ -73,7 +73,7 @@ Expected output:
 ## Troubleshooting
 
 - If you see missing-import errors mentioning `wasi_snapshot_preview1`, confirm
-  you built with `--target wasm32-wasi` (not `wasm32-unknown-unknown`).
+ you built with `--target wasm32-wasi` (not `wasm32-unknown-unknown`).
 - If your program relies on OS-specific APIs (filesystem, processes): WASI is a constrained environment. Prefer
-  stdlib APIs that are designed for WASI, or build for a hosted target.
+ stdlib APIs that are designed for WASI, or build for a hosted target.
 - For deeper backend details and entrypoint behavior, see: [WASM backend](?p=compiler/backend-wasm).

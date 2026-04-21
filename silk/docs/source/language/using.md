@@ -51,13 +51,13 @@ interface ReadAndPeek {
 ```
 
 - `using Other::name;` is equivalent to copying the corresponding `fn name(...);`
-  signature from `Other`.
+ signature from `Other`.
 - `using Other::name as alias;` imports it under the new name `alias`.
 - Name conflicts (including conflicts with inherited `extends` members) are
-  errors.
+ errors.
 
 Note: interface method signatures omit the receiver parameter. The receiver is
-introduced only in `impl` method declarations (see `docs/language/interfaces.md`).
+introduced only in `impl` method declarations (see [interfaces](?p=language/interfaces)).
 
 ## `impl` Scope
 
@@ -84,7 +84,7 @@ Imported methods inherit the source method’s visibility:
 - importing a `public fn` method produces a `public` method in the target impl,
 - importing a private method produces a private method in the target impl.
 
-Since `using` does not accept visibility modifiers in the current subset, this
+Since `using` does not accept visibility modifiers in the Supported forms, this
 inheritance rule is the only way to control whether an imported method is
 callable outside the target `impl { ... }` block.
 
@@ -95,7 +95,7 @@ When the imported method’s signature depends on `Self` (for example
 across distinct struct types requires that the underlying layouts are
 compatible.
 
-In the current compiler, a pair of non-opaque, non-`error` structs are
+In Silk currently, a pair of non-opaque, non-`error` structs are
 considered compatible when they have the same number of fields and the same
 field types in the same order (field names do not matter).
 
@@ -106,8 +106,8 @@ This layout rule applies equally to immutable and mutable borrows: importing
 methods with `mut self: &Self` (or other `mut &Self` parameters) is permitted
 when the source and target layouts are compatible.
 
-## Current Boundaries
+## Supported forms Limitations
 
 - `using` does not accept `public` / `private` modifiers yet (imported methods
-  inherit the source method’s visibility).
+ inherit the source method’s visibility).
 - Constructor reuse (`constructor`) via `using` is not supported yet.

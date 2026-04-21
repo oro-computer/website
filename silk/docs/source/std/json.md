@@ -8,7 +8,7 @@ pretty JSON stringification for Silk programs.
 ### Value ids and tags
 
 - `ValueId = i64` — stable node id used to refer to a parsed JSON value inside
-  a `Document`.
+ a `Document`.
 - `TAG_NULL`
 - `TAG_BOOL`
 - `TAG_NUMBER`
@@ -178,17 +178,17 @@ fn main () -> int {
 ## Considerations
 
 - `parse` is the fast path when the input buffer already outlives the document.
-  Use `parse_owned` when you need the parsed strings and number lexemes to stay
-  valid independently of the original input.
+ Use `parse_owned` when you need the parsed strings and number lexemes to stay
+ valid independently of the original input.
 - `ValueId` is meaningful only for the `Document` that produced it. Do not mix
-  ids across documents.
+ ids across documents.
 - `doc.clear()` and `doc.drop()` invalidate all previously returned `ValueId`
-  handles and all borrowed `string` views obtained from the document.
+ handles and all borrowed `string` views obtained from the document.
 - Numbers are preserved as source lexemes. Use `number_as_i64` or
-  `number_as_f64` only when you need numeric interpretation.
+ `number_as_f64` only when you need numeric interpretation.
 - The DOM uses index tables rather than nested reference fields. That is an
-  implementation detail, but it explains why traversal is done with `ValueId`
-  and sibling/member helpers instead of borrowed node references.
+ implementation detail, but it explains why traversal is done with `ValueId`
+ and sibling/member helpers instead of borrowed node references.
 
 ## See also
 

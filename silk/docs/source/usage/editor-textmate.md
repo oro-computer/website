@@ -11,7 +11,7 @@ highlighting for editors that consume tmLanguage grammars (TextMate, VS Code, Su
 ## TextMate (macOS)
 
 1. Copy `textmate/silk.tmLanguage.json` to:
-   - `~/Library/Application Support/TextMate/Bundles/Silk.tmbundle/Syntaxes/silk.tmLanguage.json`
+ - `~/Library/Application Support/TextMate/Bundles/Silk.tmbundle/Syntaxes/silk.tmLanguage.json`
 2. Restart TextMate.
 3. Open an `.slk` (or `.silk`) file and confirm it is recognized as `Silk`.
 

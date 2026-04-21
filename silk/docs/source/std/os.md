@@ -3,7 +3,7 @@
 `std::os` provides:
 
 - compiler-provided **target metadata** (platform/OS, architecture, and a small
-  set of booleans),
+ set of booleans),
 - small hosted runtime helpers (uptime and CPU information).
 
 This module is POSIX-first for hosted behavior, but its target-metadata surface
@@ -11,9 +11,9 @@ is available on every target.
 
 See also:
 
-- `docs/language/target-metadata.md` (the built-in target metadata constants).
+- [target metadata](?p=language/target-metadata) (the built-in target metadata constants).
 
-## API
+## Exported API
 
 ```silk
 module std::os;

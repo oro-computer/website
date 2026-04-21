@@ -7,12 +7,14 @@ are implemented in `std/net.slk`.
 Async integration (current implementation):
 
 - `std::net` exposes async TCP `connect` and `accept` via:
-  - `std::net::TCPStream.{connect_async,connect_v6_async}`
-  - `std::net::TCPListener.accept_async`
-- On `linux/*`, these are backed by the hosted async runtime (`docs/compiler/async-runtime.md`)
-  with a `poll(2)` fallback backend and optional `io_uring` acceleration.
-- On other targets, these `async fn` wrappers complete immediately by performing the
-  blocking socket operation.
+ - `std::net::TCPStream.{connect_async,connect_v6_async}`
+ - `std::net::TCPListener.accept_async`
+- On supported hosted POSIX targets (`linux/*` and Apple Silicon `macos/aarch64`
+ today), these are backed by the hosted async runtime
+ ([async runtime](?p=compiler/async-runtime)) with a `poll(2)` fallback backend and
+ optional Linux `io_uring` acceleration.
+- On other targets, these `async fn` wrappers complete immediately by performing
+ the blocking socket operation.
 - Cancellation of in-flight socket operations is still follow-up work.
 
 `std::net` provides networking primitives on POSIX systems.
@@ -20,21 +22,21 @@ Async integration (current implementation):
 Hostname resolution (DNS) integration (current implementation):
 
 - `std::net` provides `resolve_host(...)` and `TCPStream.connect_host(...)` helpers
-  built on a small hosted POSIX `getaddrinfo(3)` shim.
+ built on a small hosted POSIX `getaddrinfo(3)` shim.
 - This is intended for common client-side use cases (HTTP/HTTPS/SSH) where
-  code wants to connect to `host:port` without binding libc directly.
+ code wants to connect to `host:port` without binding libc directly.
 - The current implementation supports:
-  - IPv4 (`A`) and IPv6 (`AAAA`) results, and
-  - caller-controlled selection/order via `ResolveIpMode`.
+ - IPv4 (`A`) and IPv6 (`AAAA`) results, and
+ - caller-controlled selection/order via `ResolveIpMode`.
 
 See also:
 
-- `docs/std/io.md` (shared I/O traits and error conventions)
-- `docs/language/concurrency.md` (async/task model)
-- `docs/std/conventions.md`
-- `docs/std/http.md` (`std::http` on top of `std::net`)
-- `docs/std/https.md` (`std::https` on top of `std::tls` + `std::net`)
-- `docs/std/websocket.md` (`std::websocket` on top of `std::net`)
+- [io](?p=std/io) (shared I/O traits and error conventions)
+- [concurrency](?p=language/concurrency) (async/task model)
+- [conventions](?p=std/conventions)
+- [http](?p=std/http) (`std::http` on top of `std::net`)
+- [https](?p=std/https) (`std::https` on top of `std::tls` + `std::net`)
+- [websocket](?p=std/websocket) (`std::websocket` on top of `std::net`)
 
 ## Exported API
 A small, non-socket subset exists in `std/net.slk` for early bring-up:
@@ -79,10 +81,10 @@ export fn ipv4_is_loopback (addr: Ipv4Addr) -> bool;
 
 Notes:
 
-- This is currently implemented as a byte-swap for the `linux/x86_64`
-  little-endian hosted baseline.
+- This is currently implemented as a byte-swap for the supported little-endian
+ hosted baseline.
 
-## Hosted TCP API (Implemented)
+## Hosted TCP API
 
 `std::net` exposes a small TCP API for hosted targets via the
 pluggable runtime interface `std::runtime::net`:
@@ -210,7 +212,7 @@ impl TCPListener {
   public fn listen (addr: SocketAddrV4, backlog: int) -> TCPListenerResult;
   public fn listen_v6 (addr: SocketAddrV6, backlog: int) -> TCPListenerResult;
   public fn accept (self: &TCPListener) -> TCPStreamResult;
-  public async fn accept_async (self: &TCPListener) -> TCPStreamResult;
+  public fn accept_async (self: &TCPListener) -> Promise(TCPStreamResult);
   public fn local_port (self: &TCPListener) -> NetIntResult;
   public fn local_port_v6 (self: &TCPListener) -> NetIntResult;
   public fn close (mut self: &TCPListener) -> NetFailed?;
@@ -220,22 +222,28 @@ impl TCPListener {
 Notes:
 
 - This API is currently **mostly blocking** (only `connect_async` and
-  `accept_async` are integrated with the hosted event loop today).
+ `accept_async` are integrated with the hosted event loop today).
 - This module targets hosted `linux/x86_64` via `std::runtime::net`
-  (POSIX sockets); `wasm32-wasi` has no Preview 1 sockets, so the runtime
-  stubs return error values.
+ (POSIX sockets); `wasm32-wasi` has no Preview 1 sockets, so the runtime
+ stubs return error values.
 - `TCPStream`/`TCPListener` wrap raw file descriptors; avoid copying these
-  values until the language has move-only handle types.
+ values until the language has move-only handle types.
+- `TCPListener.accept_async()` duplicates the listener fd and returns
+ `Promise(TCPStreamResult)`. That keeps stack-local listeners usable with
+ stored promise handles in the current async lowering model.
+- After `accept_async()` returns, the original listener may be closed or
+ dropped immediately. The outstanding promise owns its duplicated listener
+ fd and closes that duplicate when the accept completes.
 - If you want to discard error details, prefer `match (r)` when the `Result`
-  payload may implement `Drop` (for example `TCPStream` / `TCPListener`), since
-  `ResultType.ok_value(r)` copies the `Result` payload in the current subset.
+ payload may implement `Drop` (for example `TCPStream` / `TCPListener`), since
+ `ResultType.ok_value(r)` copies the `Result` payload in the Supported forms.
 - `std::net::stream` provides task-based adapters that connect `TCPStream` with
-  `std::stream` using producer/consumer loops:
-  - `std::net::stream::pipe_tcpstream_to_stream` / `pipe_tcpstream_to_stream_abortable`
-  - `std::net::stream::pipe_stream_to_tcpstream` / `pipe_stream_to_tcpstream_abortable`
-  These adapters take ownership of the `TCPStream` and close it before returning.
+ `std::stream` using producer/consumer loops:
+ - `std::net::stream::pipe_tcpstream_to_stream` / `pipe_tcpstream_to_stream_abortable`
+ - `std::net::stream::pipe_stream_to_tcpstream` / `pipe_stream_to_tcpstream_abortable`
+ These adapters take ownership of the `TCPStream` and close it before returning.
 
-## Hosted UDP API (Implemented)
+## Hosted UDP API
 
 `std::net` also exposes a small UDP API for hosted targets. The API is
 datagram-oriented but remains blocking.
@@ -303,7 +311,7 @@ impl UDPSocket {
 Notes:
 
 - `send_to` / `recv_from` require the socket domain to match `addr.domain`
-  (`AF_INET` for IPv4, `AF_INET6` for IPv6).
+ (`AF_INET` for IPv4, `AF_INET6` for IPv6).
 
 ## Scope
 
@@ -342,8 +350,8 @@ model is implemented, `std::net` should provide:
 - non-blocking sockets + integration with an event loop,
 - `async fn` wrappers for common operations,
 - integration with task offloading for blocking adapters (design target:
-  `std::task::run_blocking()`; until that exists, users can explicitly use a
-  `task fn` wrapper around blocking calls).
+ `std::task::run_blocking()`; until that exists, users can explicitly use a
+ `task fn` wrapper around blocking calls).
 
 ## Considerations
 - DNS resolution, TLS integration (as optional packages).

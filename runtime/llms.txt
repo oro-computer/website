@@ -4,7 +4,7 @@ Oro Runtime · LLMS Pack
 This file concatenates the full Oro Runtime documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-03-25T00:15:15+00:00
+Generated: 2026-03-25T00:52:07+00:00
 
 How to link:
 - Docs: /runtime/docs/?p=<id>
@@ -16,10 +16,27 @@ Runtime Docs
 - Start
   - start — Oro Runtime Docs — /runtime/docs/?p=start
 - Guides
+  - guides/from-zero-to-first-run — From zero to first run — /runtime/docs/?p=guides/from-zero-to-first-run
   - guides/hello-world — Hello world — /runtime/docs/?p=guides/hello-world
   - guides/project-layout — Project layout — /runtime/docs/?p=guides/project-layout
+  - guides/configure-your-runtime-project — Configure your runtime project — /runtime/docs/?p=guides/configure-your-runtime-project
+  - guides/files-and-sandboxing — Files and sandboxing — /runtime/docs/?p=guides/files-and-sandboxing
+  - guides/desktop-integrations — Desktop integrations — /runtime/docs/?p=guides/desktop-integrations
   - guides/build-and-package — Build and package — /runtime/docs/?p=guides/build-and-package
   - guides/windows-and-messaging — Windows and messaging — /runtime/docs/?p=guides/windows-and-messaging
+  - guides/local-data-with-sqlite — Local data with SQLite — /runtime/docs/?p=guides/local-data-with-sqlite
+  - guides/secure-storage-and-sessions — Secure storage and sessions — /runtime/docs/?p=guides/secure-storage-and-sessions
+  - guides/calling-http-apis — Calling HTTP APIs — /runtime/docs/?p=guides/calling-http-apis
+  - guides/worker-threads-for-heavy-work — Worker threads for heavy work — /runtime/docs/?p=guides/worker-threads-for-heavy-work
+  - guides/shared-workers-across-windows — Shared workers across windows — /runtime/docs/?p=guides/shared-workers-across-windows
+  - guides/offline-first-with-service-workers — Offline-first with service workers — /runtime/docs/?p=guides/offline-first-with-service-workers
+  - guides/custom-protocols-and-routing — Custom protocols and routing — /runtime/docs/?p=guides/custom-protocols-and-routing
+  - guides/lifecycle-hooks-and-deep-links — Lifecycle hooks and deep links — /runtime/docs/?p=guides/lifecycle-hooks-and-deep-links
+  - guides/frontend-build-pipeline — Frontend build pipeline — /runtime/docs/?p=guides/frontend-build-pipeline
+  - guides/mobile-targets-and-device-installs — Mobile targets and device installs — /runtime/docs/?p=guides/mobile-targets-and-device-installs
+  - guides/release-packaging-and-signed-updates — Release packaging and signed updates — /runtime/docs/?p=guides/release-packaging-and-signed-updates
+  - guides/testing-and-diagnostics — Testing and diagnostics — /runtime/docs/?p=guides/testing-and-diagnostics
+  - guides/mcp-and-agent-automation — MCP and agent automation — /runtime/docs/?p=guides/mcp-and-agent-automation
 - CLI
   - cli/oroc — `oroc` — /runtime/docs/?p=cli/oroc
   - cli/help — `oroc help` — /runtime/docs/?p=cli/help
@@ -285,12 +302,146 @@ oroc build .
 
 ## Recommended reading path
 
-1. Guides: [Hello world](?p=guides/hello-world)
-2. Guides: [Project layout](?p=guides/project-layout)
-3. Guides: [Build and package](?p=guides/build-and-package)
-4. CLI: [oroc](?p=cli/oroc) → [help](?p=cli/help) → [run](?p=cli/run) → [build](?p=cli/build) → [update](?p=cli/update)
-5. Config: [Overview](?p=config/overview) → [copy_map](?p=config/copy-map) → [reference](?p=config/reference)
-6. JavaScript APIs: [Overview](?p=javascript/overview) → [module index](?p=javascript/module-index) → [all module specifiers](?p=javascript/all-modules) → [application](?p=javascript/application) → [window](?p=javascript/window) → [hooks](?p=javascript/hooks)
+1. **Start from nothing** — [From zero to first run](?p=guides/from-zero-to-first-run) → [Hello world](?p=guides/hello-world) → [Project layout](?p=guides/project-layout)
+2. **Shape the app** — [Configure your runtime project](?p=guides/configure-your-runtime-project) → [Files and sandboxing](?p=guides/files-and-sandboxing) → [Desktop integrations](?p=guides/desktop-integrations)
+3. **Add real app value** — [Local data with SQLite](?p=guides/local-data-with-sqlite) → [Secure storage and sessions](?p=guides/secure-storage-and-sessions) → [Calling HTTP APIs](?p=guides/calling-http-apis)
+4. **Scale the runtime model** — [Windows and messaging](?p=guides/windows-and-messaging) → [Worker threads for heavy work](?p=guides/worker-threads-for-heavy-work) → [Shared workers across windows](?p=guides/shared-workers-across-windows)
+5. **Ship a resilient app** — [Offline-first with service workers](?p=guides/offline-first-with-service-workers) → [Custom protocols and routing](?p=guides/custom-protocols-and-routing) → [Lifecycle hooks and deep links](?p=guides/lifecycle-hooks-and-deep-links)
+6. **Production workflows** — [Frontend build pipeline](?p=guides/frontend-build-pipeline) → [Build and package](?p=guides/build-and-package) → [Mobile targets and device installs](?p=guides/mobile-targets-and-device-installs)
+7. **Operate and automate** — [Release packaging and signed updates](?p=guides/release-packaging-and-signed-updates) → [Testing and diagnostics](?p=guides/testing-and-diagnostics) → [MCP and agent automation](?p=guides/mcp-and-agent-automation)
+8. **Reference** — [oroc](?p=cli/oroc) → [help](?p=cli/help) → [run](?p=cli/run) → [build](?p=cli/build) → [update](?p=cli/update)
+9. **Configuration** — [Overview](?p=config/overview) → [copy_map](?p=config/copy-map) → [reference](?p=config/reference)
+10. **JavaScript APIs** — [Overview](?p=javascript/overview) → [module index](?p=javascript/module-index) → [all module specifiers](?p=javascript/all-modules) → [application](?p=javascript/application) → [window](?p=javascript/window) → [hooks](?p=javascript/hooks)
+
+==============================================================================
+DOCS: From zero to first run (guides/from-zero-to-first-run)
+URL: /runtime/docs/?p=guides/from-zero-to-first-run
+==============================================================================
+
+# From zero to first run
+
+This guide starts from an empty directory and gets you to a runnable Oro Runtime application using the installed
+toolchain. The goal is not just to boot a page, but to end with a project that already looks like something you can keep.
+
+## 1) Create a project with `oroc init`
+
+Start from any workspace where you want the app directory to live:
+
+```bash
+oroc init field-notes
+cd field-notes
+```
+
+This gives you a project with an `oro.toml`, a default web root, and the minimum bundle metadata the runtime needs.
+
+## 2) Inspect the scaffold
+
+The first files to look at are:
+
+- `oro.toml` — project configuration
+- `src/index.html` — your initial page
+- `src/main.js` — your entry module
+
+Use the CLI to confirm what the runtime thinks your configuration is:
+
+```bash
+oroc config --format toml
+oroc config --describe meta.bundle_identifier
+oroc config --describe build.copy_map
+```
+
+That gives you the effective config, not just the file on disk.
+
+## 3) Give the app a real identity
+
+Update `oro.toml` so the bundle metadata already looks production-ready:
+
+```toml
+[meta]
+bundle_identifier = "com.example.field-notes"
+title = "Field Notes"
+version = "0.1.0"
+description = "A small local-first notes app built on Oro Runtime."
+
+[build]
+name = "field-notes"
+```
+
+This metadata is reused by packaging, installation, and updates later. Setting it early avoids churn.
+
+## 4) Replace the starter page with something useful
+
+`src/index.html`:
+
+```html
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Field Notes</title>
+
+  <main>
+    <h1>Field Notes</h1>
+    <p id="status">Booting…</p>
+    <button id="capture" type="button">Capture note</button>
+  </main>
+
+  <script type="module" src="./main.js"></script>
+</html>
+```
+
+`src/main.js`:
+
+```js
+import application from 'oro:application'
+
+const status = document.getElementById('status')
+const capture = document.getElementById('capture')
+const currentWindow = await application.getCurrentWindow()
+
+await currentWindow.setTitle('Field Notes')
+status.textContent = `Runtime ${application.runtimeVersion}`
+
+capture.addEventListener('click', () => {
+  status.textContent = `Captured at ${new Date().toLocaleTimeString()}`
+})
+```
+
+That already proves three things:
+
+- the runtime is serving ordinary HTML and ES modules,
+- `oro:application` is available from the main window,
+- the project is ready to grow into a real app instead of a demo snippet.
+
+## 5) Run it locally
+
+```bash
+oroc run .
+```
+
+Use these when you need more visibility during development:
+
+```bash
+oroc run . -D
+oroc run . -V --log-file runtime-log.json
+```
+
+## 6) Confirm the build path
+
+Before you add more files, learn where the runtime writes outputs:
+
+```bash
+oroc print-build-dir .
+oroc build .
+```
+
+At this point you have a working app, a stable bundle identifier, and a buildable project model.
+
+## Next
+
+- [Hello world](?p=guides/hello-world)
+- [Configure your runtime project](?p=guides/configure-your-runtime-project)
+- [Project layout](?p=guides/project-layout)
 
 ==============================================================================
 DOCS: Hello world (guides/hello-world)
@@ -514,6 +665,356 @@ See: [Config overview](?p=config/overview).
 - CLI: [oroc](?p=cli/oroc)
 
 ==============================================================================
+DOCS: Configure your runtime project (guides/configure-your-runtime-project)
+URL: /runtime/docs/?p=guides/configure-your-runtime-project
+==============================================================================
+
+# Configure your runtime project
+
+Oro Runtime projects are controlled by `oro.toml`, with optional machine-local overrides in `.ororc`. Treat those files as
+part of the app contract: they define what ships, how the window behaves, which permissions are enabled, and how builds run.
+
+## 1) Start with a deliberate `oro.toml`
+
+This is a strong baseline for a multi-window desktop/mobile app:
+
+```toml
+[meta]
+bundle_identifier = "com.example.field-notes"
+title = "Field Notes"
+version = "0.2.0"
+description = "Local-first note capture for field teams."
+lang = "en-US"
+
+[build]
+name = "field-notes"
+copy_map = "copy-map.toml"
+output = "build"
+script = "./scripts/build-web.sh"
+env = "API_BASE_URL SENTRY_DSN"
+
+[webview]
+root = "/"
+default_index = "/index.html"
+allow_any_route = true
+watch = true
+watch_reload = true
+
+[window]
+width = "70%"
+height = "80%"
+resizable = true
+
+[permissions]
+allow_notifications = true
+allow_clipboard = true
+allow_service_worker = true
+```
+
+Use `oro.toml` for values that belong in source control and should be shared by every developer and every CI build.
+
+## 2) Put machine-local values in `.ororc`
+
+`.ororc` is the right place for per-developer values and signing details:
+
+```ini
+[build]
+platform = ios-simulator
+
+[ios]
+simulator_device = "iPhone 15"
+provisioning_profile = "/Users/alex/profiles/field-notes.mobileprovision"
+
+[env]
+API_BASE_URL = "https://staging.example.com"
+```
+
+Keep `.ororc` out of version control. It should describe the local machine, not the product.
+
+## 3) Understand precedence
+
+The effective configuration comes from three places:
+
+1. `oro.toml`
+2. `.ororc`
+3. explicit CLI flags such as `oroc build --platform=android`
+
+When something behaves unexpectedly, inspect the merged result instead of guessing:
+
+```bash
+oroc config --format toml
+oroc config --describe webview.root
+oroc config --describe permissions.allow_notifications
+```
+
+## 4) Use `copy_map` to define your bundle
+
+`copy_map` is where you decide what becomes part of the application bundle:
+
+```toml
+"./dist/index.html" = "index.html"
+"./dist/main.js" = "main.js"
+"./dist/styles.css" = "styles.css"
+"./assets/icon.png" = "assets/icon.png"
+```
+
+This keeps builds reproducible. If a file is not in the map, it does not ship.
+
+## 5) Use CLI flags only for temporary overrides
+
+These are good for experiments:
+
+```bash
+oroc run . --headless
+oroc build . --platform=android
+oroc build . --prod --package
+```
+
+If you need the same behavior every day, move it into config instead of relying on shell memory.
+
+## 6) Validate your mental model with the CLI
+
+Two commands pay for themselves quickly:
+
+```bash
+oroc config --list
+oroc env
+```
+
+The first tells you what keys the current runtime understands. The second shows the environment input the runtime sees.
+
+## Next
+
+- [Files and sandboxing](?p=guides/files-and-sandboxing)
+- [Build and package](?p=guides/build-and-package)
+- [Configuration reference](?p=config/reference)
+
+==============================================================================
+DOCS: Files and sandboxing (guides/files-and-sandboxing)
+URL: /runtime/docs/?p=guides/files-and-sandboxing
+==============================================================================
+
+# Files and sandboxing
+
+Most serious applications need two kinds of file access:
+
+- bundled resources that ship with the app,
+- mutable user data created at runtime.
+
+Oro Runtime supports both, but you should treat the filesystem sandbox as a feature, not an obstacle.
+
+## 1) Start with a dedicated app-data directory
+
+Create a directory for mutable data inside your working tree or chosen output location:
+
+```js
+import * as fs from 'oro:fs/promises'
+
+await fs.mkdir('./data', { recursive: true })
+await fs.writeFile('./data/state.json', JSON.stringify({ notes: [] }, null, 2), 'utf8')
+```
+
+Use ordinary JSON for early iterations. Move to SQLite once the model is stable.
+
+## 2) Read and write structured files
+
+```js
+import * as fs from 'oro:fs/promises'
+
+async function loadState() {
+  try {
+    const text = await fs.readFile('./data/state.json', 'utf8')
+    return JSON.parse(text)
+  } catch {
+    return { notes: [] }
+  }
+}
+
+async function saveState(state) {
+  await fs.writeFile('./data/state.json', JSON.stringify(state, null, 2), 'utf8')
+}
+```
+
+This is enough for preferences, cached drafts, import history, and lightweight app state.
+
+## 3) Keep the sandbox enabled by default
+
+The sandbox exists to prevent accidental or unsafe file access:
+
+```toml
+[filesystem]
+sandbox_enabled = true
+no_follow_symlinks = true
+```
+
+Keep both on unless you have a concrete reason not to. They make your app’s file behavior easier to reason about.
+
+## 4) Use native pickers for external files
+
+When users need to import or inspect files outside your app’s controlled data directory, use a picker:
+
+```js
+import application from 'oro:application'
+import * as fs from 'oro:fs/promises'
+
+const currentWindow = await application.getCurrentWindow()
+const [path] = await currentWindow.showOpenFilePicker({ multiple: false })
+
+if (path) {
+  const text = await fs.readFile(path, 'utf8')
+  console.log(text)
+}
+```
+
+That keeps explicit user intent in the loop.
+
+## 5) Bundle only what the app needs
+
+Your bundle inputs should stay separate from mutable user data:
+
+```toml
+"./dist/index.html" = "index.html"
+"./dist/main.js" = "main.js"
+"./assets/icon.png" = "assets/icon.png"
+```
+
+Do not write back into the bundled resource tree at runtime. Treat it as read-only application content.
+
+## 6) A practical rule of thumb
+
+- **Bundle**: HTML, CSS, JS, icons, offline shell assets.
+- **Runtime data**: user notes, caches, imported files, session state.
+- **Secure storage**: secrets such as refresh tokens or encryption keys.
+
+Keeping those boundaries clean makes packaging, updates, and debugging simpler.
+
+## Next
+
+- [Secure storage and sessions](?p=guides/secure-storage-and-sessions)
+- [Local data with SQLite](?p=guides/local-data-with-sqlite)
+- [`oro:fs`](?p=javascript/fs)
+
+==============================================================================
+DOCS: Desktop integrations (guides/desktop-integrations)
+URL: /runtime/docs/?p=guides/desktop-integrations
+==============================================================================
+
+# Desktop integrations
+
+Oro Runtime applications stay web-first, but the point of the runtime is that you do not stop at the browser boundary.
+This guide shows how to add four integrations users actually notice: notifications, clipboard, file pickers, and native menus.
+
+## 1) Request and use notifications
+
+`src/main.js`:
+
+```js
+import Notification, { showNotification } from 'oro:notification'
+import { onNotificationResponse } from 'oro:hooks'
+
+const permission = await Notification.requestPermission()
+
+if (permission === 'granted') {
+  await showNotification('Field Notes ready', {
+    body: 'Capture notes even when the main window is not focused.',
+  })
+}
+
+onNotificationResponse((event) => {
+  console.log('notification response', event)
+})
+```
+
+Make sure your project enables notifications:
+
+```toml
+[permissions]
+allow_notifications = true
+```
+
+## 2) Copy useful content to the clipboard
+
+Clipboard integration is one of the fastest ways to make a utility app feel native:
+
+```js
+import { writeText, readText, canWriteText } from 'oro:clipboard'
+
+async function copyCurrentNote(note) {
+  if (!canWriteText()) return
+  await writeText(`${note.title}\n\n${note.body}`)
+}
+
+console.log(await readText())
+```
+
+## 3) Let the user choose files with the native picker
+
+Use the current window to open platform file pickers:
+
+```js
+import application from 'oro:application'
+
+const currentWindow = await application.getCurrentWindow()
+const paths = await currentWindow.showOpenFilePicker({ multiple: true })
+
+console.log(paths)
+```
+
+This is the right path when the user is selecting files outside the application bundle or filesystem sandbox.
+
+## 4) Add a native application menu
+
+Menus matter on desktop. They make the app feel intentional instead of embedded:
+
+```js
+import application from 'oro:application'
+
+await application.setSystemMenu({
+  index: 0,
+  value: `
+    File:
+      New Note: n + Meta;
+      Sync Now: s + Meta;
+      Quit: q + Meta;
+    Edit:
+      Copy Summary: c + Meta;
+  `,
+})
+```
+
+Use menu items for high-frequency actions, not every control in the UI.
+
+## 5) Pull the integrations together
+
+Here is a realistic pattern for a note-taking app:
+
+```js
+import { writeText } from 'oro:clipboard'
+import { showNotification } from 'oro:notification'
+
+async function exportNoteSummary(note) {
+  await writeText(`${note.title}\n${note.updatedAt}`)
+  await showNotification('Copied summary', {
+    body: `Copied "${note.title}" to the clipboard.`,
+  })
+}
+```
+
+That one flow crosses UI, clipboard, and notifications without dropping into native platform code.
+
+## Considerations
+
+- Gate integrations behind permissions where the runtime requires them.
+- Use notifications for user value, not background noise.
+- Keep menu labels and button labels aligned so keyboard and UI navigation tell the same story.
+
+## Next
+
+- [Windows and messaging](?p=guides/windows-and-messaging)
+- [Files and sandboxing](?p=guides/files-and-sandboxing)
+- [`oro:notification`](?p=javascript/notification)
+
+==============================================================================
 DOCS: Build and package (guides/build-and-package)
 URL: /runtime/docs/?p=guides/build-and-package
 ==============================================================================
@@ -689,6 +1190,1410 @@ await current.send({ window: 1, event: 'message', value: { hello: 'world' } })
 ## Next
 
 - JavaScript APIs: [`oro:application`](?p=javascript/application) · [`oro:window`](?p=javascript/window)
+
+==============================================================================
+DOCS: Local data with SQLite (guides/local-data-with-sqlite)
+URL: /runtime/docs/?p=guides/local-data-with-sqlite
+==============================================================================
+
+# Local data with SQLite
+
+Once an app moves beyond a few JSON files, SQLite is the right default. It gives you transactions, indexes, and queryable
+data without adding another service to your deployment story.
+
+This guide turns the `Field Notes` example into a local-first app with a real database.
+
+## 1) Create the database directory
+
+```js
+import * as fs from 'oro:fs/promises'
+
+await fs.mkdir('./data', { recursive: true })
+```
+
+## 2) Open a database
+
+```js
+import {
+  open,
+  OPEN_CREATE,
+  OPEN_READWRITE,
+} from 'oro:sqlite'
+
+const db = open('./data/field-notes.db', {
+  flags: OPEN_CREATE | OPEN_READWRITE,
+})
+```
+
+Use a real on-disk path for app data. Reserve `:memory:` for tests and experiments.
+
+## 3) Create a schema on startup
+
+```js
+db.exec(`
+  create table if not exists notes (
+    id integer primary key,
+    title text not null,
+    body text not null,
+    created_at text not null,
+    updated_at text not null
+  )
+`)
+```
+
+Putting schema creation in startup code is fine for early versions. Move to explicit migrations when the schema starts changing often.
+
+## 4) Insert and query notes
+
+```js
+const now = new Date().toISOString()
+
+db.exec(`
+  insert into notes (title, body, created_at, updated_at)
+  values ('First note', 'Built with oro:sqlite', '${now}', '${now}')
+`)
+
+const rows = db.query(`
+  select id, title, updated_at
+  from notes
+  order by updated_at desc
+`)
+
+console.log(rows)
+```
+
+## 5) Wrap database work in application functions
+
+```js
+export function createNote(db, title, body) {
+  const now = new Date().toISOString()
+  db.exec(`
+    insert into notes (title, body, created_at, updated_at)
+    values (${JSON.stringify(title)}, ${JSON.stringify(body)}, '${now}', '${now}')
+  `)
+}
+
+export function listNotes(db) {
+  return db.query(`
+    select id, title, updated_at
+    from notes
+    order by updated_at desc
+  `)
+}
+```
+
+Even if you later swap this for prepared statements or a repository layer, the app should still talk in terms of note operations, not raw SQL from button handlers.
+
+## 6) Why this is better than ad-hoc JSON
+
+With SQLite you get:
+
+- predictable writes,
+- fast filtering and sorting,
+- transactions when sync or import gets more complex,
+- one file that is easy to inspect and back up.
+
+That is the right shape for notes, drafts, cached API data, and sync metadata.
+
+## Next
+
+- [Secure storage and sessions](?p=guides/secure-storage-and-sessions)
+- [Calling HTTP APIs](?p=guides/calling-http-apis)
+- [`oro:sqlite`](?p=javascript/sqlite)
+
+==============================================================================
+DOCS: Secure storage and sessions (guides/secure-storage-and-sessions)
+URL: /runtime/docs/?p=guides/secure-storage-and-sessions
+==============================================================================
+
+# Secure storage and sessions
+
+Application data and application secrets are not the same thing. Put notes, caches, and drafts in the filesystem or
+SQLite. Put refresh tokens, client secrets, and other credentials in `oro:secure-storage`.
+
+## 1) Store a session token after sign-in
+
+```js
+import * as secureStorage from 'oro:secure-storage'
+
+export async function storeSession(session) {
+  await secureStorage.setItem('refresh-token', session.refreshToken)
+  await secureStorage.setItem('api-base-url', session.apiBaseUrl)
+}
+```
+
+By default the runtime scopes storage to the current app origin, which is usually what you want.
+
+## 2) Restore the session on startup
+
+```js
+import * as secureStorage from 'oro:secure-storage'
+
+export async function loadSession() {
+  const refreshToken = await secureStorage.getItem('refresh-token')
+  const apiBaseUrl = await secureStorage.getItem('api-base-url')
+
+  if (!refreshToken || !apiBaseUrl) return null
+  return { refreshToken, apiBaseUrl }
+}
+```
+
+This lets the app recover cleanly after restart without leaking secrets into source-controlled config.
+
+## 3) Use explicit scopes when you need separation
+
+If the app talks to multiple environments, isolate them:
+
+```js
+await secureStorage.setItem('refresh-token', token, {
+  scope: 'https://staging.example.com',
+})
+```
+
+That prevents staging and production credentials from clobbering each other.
+
+## 4) Enumerate and clear keys during sign-out
+
+```js
+import * as secureStorage from 'oro:secure-storage'
+
+const keys = await secureStorage.keys()
+console.log(keys)
+
+await secureStorage.removeItem('refresh-token')
+await secureStorage.removeItem('api-base-url')
+```
+
+If your app stores a full session namespace, `clear()` is also available.
+
+## 5) Keep binary secrets binary
+
+If you are storing keys or opaque encrypted values, do not base64 them unless you need portability:
+
+```js
+const bytes = crypto.getRandomValues(new Uint8Array(32))
+await secureStorage.setItem('device-key', bytes)
+
+const restored = await secureStorage.getItem('device-key', {
+  encoding: 'buffer',
+})
+```
+
+That avoids unnecessary conversions and accidental text encoding bugs.
+
+## Considerations
+
+- Do not put secrets in `oro.toml`, `.ororc`, or bundled JSON files.
+- Prefer one storage key per concern (`refresh-token`, `device-key`, `signing-state`) instead of one opaque bag of JSON.
+- Pair secure storage with ordinary application state. The secret unlocks the session; SQLite and files hold the user-visible data.
+
+## Next
+
+- [Calling HTTP APIs](?p=guides/calling-http-apis)
+- [Local data with SQLite](?p=guides/local-data-with-sqlite)
+- [`oro:secure-storage`](?p=javascript/secure-storage)
+
+==============================================================================
+DOCS: Calling HTTP APIs (guides/calling-http-apis)
+URL: /runtime/docs/?p=guides/calling-http-apis
+==============================================================================
+
+# Calling HTTP APIs
+
+Most production applications spend their time moving between three layers:
+
+- local state,
+- remote APIs,
+- UI that reflects sync state honestly.
+
+Oro Runtime gives you the standard `fetch` path plus lower-level `oro:http` and `oro:https` surfaces when you need them.
+
+## 1) Start with `oro:fetch`
+
+Use `oro:fetch` exactly the way you would use the web platform `fetch` API:
+
+```js
+import fetch from 'oro:fetch'
+
+const response = await fetch('https://api.example.com/notes')
+const notes = await response.json()
+```
+
+That keeps most application code portable and familiar.
+
+## 2) Attach stored credentials
+
+Pair API calls with `oro:secure-storage` so session state survives restarts:
+
+```js
+import fetch from 'oro:fetch'
+import * as secureStorage from 'oro:secure-storage'
+
+export async function fetchNotes() {
+  const token = await secureStorage.getItem('refresh-token')
+
+  const response = await fetch('https://api.example.com/notes', {
+    headers: {
+      authorization: `Bearer ${token}`,
+      accept: 'application/json',
+    },
+  })
+
+  if (!response.ok) throw new Error(`sync failed: ${response.status}`)
+  return await response.json()
+}
+```
+
+## 3) Use explicit sync functions
+
+Keep network behavior out of click handlers:
+
+```js
+export async function syncNotes(db) {
+  const remoteNotes = await fetchNotes()
+
+  db.exec('delete from notes')
+  for (const note of remoteNotes) {
+    db.exec(`
+      insert into notes (id, title, body, created_at, updated_at)
+      values (
+        ${Number(note.id)},
+        ${JSON.stringify(note.title)},
+        ${JSON.stringify(note.body)},
+        ${JSON.stringify(note.created_at)},
+        ${JSON.stringify(note.updated_at)}
+      )
+    `)
+  }
+}
+```
+
+The runtime is not the place to hide network state. Make sync operations explicit and observable.
+
+## 4) Use `oro:https` when you need stream-style control
+
+For simple downloads, `fetch` is enough. For Node-style request handling or low-level streaming, drop to `oro:https`:
+
+```js
+import { get } from 'oro:https'
+import process from 'oro:process'
+
+get('https://example.com/health', (res) => {
+  res.on('data', (chunk) => process.stdout.write(chunk))
+})
+```
+
+That is useful for long-lived connections, custom headers, or stream-oriented integrations.
+
+## 5) Debug TLS issues without guessing
+
+When a remote API handshake is failing and you need to inspect TLS behavior:
+
+```bash
+oroc run . --tls-keylog=./tls-keys.log
+```
+
+That gives you a deterministic artifact you can use during debugging instead of blindly retrying requests.
+
+## Considerations
+
+- Use `fetch` by default. Drop to `oro:http` or `oro:https` only when you need stream-level control.
+- Store durable remote data in SQLite, not only in memory.
+- Treat sync as a feature with its own state: pending, success, stale, failed.
+
+## Next
+
+- [Local data with SQLite](?p=guides/local-data-with-sqlite)
+- [Offline-first with service workers](?p=guides/offline-first-with-service-workers)
+- [`oro:fetch`](?p=javascript/fetch)
+
+==============================================================================
+DOCS: Worker threads for heavy work (guides/worker-threads-for-heavy-work)
+URL: /runtime/docs/?p=guides/worker-threads-for-heavy-work
+==============================================================================
+
+# Worker threads for heavy work
+
+The main window should stay responsive. If a task is CPU-heavy or processes large blobs of text or binary data, move it to
+`oro:worker_threads`.
+
+This pattern is useful for markdown indexing, import parsing, thumbnailing, encryption, and other work that should not
+block user interaction.
+
+## 1) Start a worker from the main window
+
+`src/main.js`:
+
+```js
+import { Worker } from 'oro:worker_threads'
+
+const worker = new Worker(new URL('./analysis-worker.js', import.meta.url).toString(), {
+  workerData: {
+    note: 'The runtime should stay responsive even while long text is being processed.',
+  },
+})
+
+worker.on('message', (message) => {
+  console.log('analysis result', message)
+})
+```
+
+## 2) Read `workerData` inside the worker
+
+`src/analysis-worker.js`:
+
+```js
+import { parentPort, workerData } from 'oro:worker_threads'
+
+const words = String(workerData.note)
+  .split(/\s+/)
+  .filter(Boolean)
+  .length
+
+parentPort?.postMessage({ words })
+```
+
+This keeps startup simple: pass the initial job in `workerData`, send later updates with `postMessage`.
+
+## 3) Use workers for bounded jobs
+
+Good worker jobs:
+
+- parse and validate imported data,
+- build a search index,
+- hash or encrypt large payloads,
+- generate derived artifacts like previews or summaries.
+
+Bad worker jobs:
+
+- ordinary button click handlers,
+- short UI state updates,
+- tasks that mostly wait on network or filesystem I/O.
+
+## 4) Use environment data for shared process context
+
+If every worker needs the same process-wide value, use environment data:
+
+```js
+import {
+  setEnvironmentData,
+  getEnvironmentData,
+} from 'oro:worker_threads'
+
+setEnvironmentData('apiBaseUrl', 'https://api.example.com')
+
+console.log(getEnvironmentData('apiBaseUrl'))
+```
+
+That is cleaner than hand-threading the same config through every constructor.
+
+## 5) Shut workers down when the job is done
+
+Workers are not fire-and-forget:
+
+```js
+worker.on('message', (message) => {
+  console.log(message)
+  worker.terminate()
+})
+```
+
+If a job can be reused across windows, use a shared worker instead.
+
+## Next
+
+- [Shared workers across windows](?p=guides/shared-workers-across-windows)
+- [Testing and diagnostics](?p=guides/testing-and-diagnostics)
+- [`oro:worker_threads`](?p=javascript/worker_threads)
+
+==============================================================================
+DOCS: Shared workers across windows (guides/shared-workers-across-windows)
+URL: /runtime/docs/?p=guides/shared-workers-across-windows
+==============================================================================
+
+# Shared workers across windows
+
+If one background coordinator should serve multiple windows at the same time, use a shared worker instead of one worker
+per window. This is a strong fit for search indexing, presence state, websocket multiplexing, and single-writer sync loops.
+
+## 1) Launch one shared worker from every window
+
+`src/main.js`:
+
+```js
+import { SharedWorker } from 'oro:shared-worker'
+
+const syncWorker = new SharedWorker(new URL('./sync-worker.js', import.meta.url))
+
+syncWorker.port.start()
+syncWorker.port.onmessage = (event) => {
+  console.log('sync update', event.data)
+}
+
+syncWorker.port.postMessage({ type: 'subscribe', window: 'main' })
+```
+
+Every window that constructs the same shared worker URL connects to the same coordinator.
+
+## 2) Handle connections once inside the worker
+
+`src/sync-worker.js`:
+
+```js
+self.onconnect = (event) => {
+  const port = event.ports[0]
+
+  port.onmessage = (messageEvent) => {
+    if (messageEvent.data?.type === 'subscribe') {
+      port.postMessage({
+        type: 'status',
+        value: 'connected',
+        window: messageEvent.data.window,
+      })
+    }
+  }
+
+  port.start()
+}
+```
+
+That one worker can now coordinate multiple windows without duplicating state.
+
+## 3) Use shared workers for single-owner resources
+
+Examples:
+
+- one websocket connection faned out to several windows,
+- one sync scheduler controlling remote pushes,
+- one in-memory search index reused by the whole app.
+
+This is a better shape than letting each window create its own independent background loop.
+
+## 4) Pair shared workers with multi-window apps
+
+`oro:application` handles window creation. The shared worker keeps those windows consistent:
+
+```js
+import application from 'oro:application'
+
+await application.createWindow({
+  index: 1,
+  path: 'details.html',
+  title: 'Details',
+})
+```
+
+Now both windows can talk to the same worker and see the same sync status.
+
+## 5) Know when not to use them
+
+Do not choose a shared worker just because it sounds more advanced.
+
+Use it when:
+
+- the state truly belongs to the whole app,
+- more than one window needs it,
+- duplication would create correctness or resource problems.
+
+If the work is local to one window, a dedicated worker is simpler.
+
+## Next
+
+- [Windows and messaging](?p=guides/windows-and-messaging)
+- [Worker threads for heavy work](?p=guides/worker-threads-for-heavy-work)
+- [`oro:shared-worker`](?p=javascript/shared-worker)
+
+==============================================================================
+DOCS: Offline-first with service workers (guides/offline-first-with-service-workers)
+URL: /runtime/docs/?p=guides/offline-first-with-service-workers
+==============================================================================
+
+# Offline-first with service workers
+
+For applications that need to keep working without reliable connectivity, service workers are the right boundary. Use
+them to cache the application shell, serve known assets, and provide controlled fallback behavior when the network is gone.
+
+## 1) Enable service workers in project config
+
+```toml
+[permissions]
+allow_service_worker = true
+
+[webview]
+allow_any_route = true
+```
+
+The first line enables the runtime permission gate. The second is useful for SPA-style routing when the app shell should
+handle deep routes.
+
+## 2) Add the service worker to your bundle
+
+`copy-map.toml`:
+
+```toml
+"./src/index.html" = "index.html"
+"./src/main.js" = "main.js"
+"./src/sw.js" = "sw.js"
+```
+
+If `sw.js` does not ship in the bundle, registration will fail.
+
+## 3) Register the worker from the app
+
+`src/main.js`:
+
+```js
+if (navigator.serviceWorker) {
+  await navigator.serviceWorker.register('/sw.js')
+  await navigator.serviceWorker.ready
+}
+```
+
+That is the same mental model as the web platform, which is exactly what you want.
+
+## 4) Cache the application shell
+
+`src/sw.js`:
+
+```js
+const SHELL_CACHE = 'field-notes-shell-v1'
+const SHELL_FILES = ['/', '/index.html', '/main.js']
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(SHELL_CACHE).then((cache) => cache.addAll(SHELL_FILES))
+  )
+})
+
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      return cached || fetch(event.request)
+    })
+  )
+})
+```
+
+This is enough to keep the app shell bootable even when the network is unavailable.
+
+## 5) Keep local state authoritative
+
+Offline support works best when:
+
+- the UI can boot from bundled assets,
+- user data lives in SQLite or files,
+- sync is an explicit process that can be retried later.
+
+Do not design the app so that every meaningful screen requires a live fetch before anything can render.
+
+## Considerations
+
+- Version cache names when the shell changes.
+- Keep cached resources small and intentional.
+- Pair service workers with a local data store so offline mode is actually useful, not just decorative.
+
+## Next
+
+- [Calling HTTP APIs](?p=guides/calling-http-apis)
+- [Custom protocols and routing](?p=guides/custom-protocols-and-routing)
+- [`oro:service-worker`](?p=javascript/service-worker)
+
+==============================================================================
+DOCS: Custom protocols and routing (guides/custom-protocols-and-routing)
+URL: /runtime/docs/?p=guides/custom-protocols-and-routing
+==============================================================================
+
+# Custom protocols and routing
+
+Some apps need more than a single `https://`-style origin. Custom protocols let you give internal resources a stable
+shape and route them through service-worker logic instead of hard-coding filesystem paths or special-case branches in UI code.
+
+## 1) Declare the protocols you want the runtime to treat as app-safe
+
+```toml
+[webview]
+url_protocols = "notes"
+protocol_handlers = "notes"
+```
+
+This tells the runtime that `notes:` is part of the app’s URL model rather than an arbitrary external scheme.
+
+## 2) Route the protocol in a service worker
+
+`src/sw.js`:
+
+```js
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url)
+
+  if (url.protocol !== 'notes:') return
+
+  const noteId = url.pathname.replace(/^\\//, '')
+  event.respondWith(
+    new Response(JSON.stringify({ noteId }), {
+      headers: { 'content-type': 'application/json' },
+    })
+  )
+})
+```
+
+Now any request for `notes://123` can be handled in a controlled, testable place.
+
+## 3) Inspect the registered handler from app code
+
+`oro:protocol-handlers` lets you ask the runtime which service worker is currently bound to a scheme:
+
+```js
+import { getServiceWorker } from 'oro:protocol-handlers'
+
+const worker = await getServiceWorker({ scheme: 'notes' })
+console.log(worker)
+```
+
+That is useful when debugging route ownership and protocol bootstrapping.
+
+## 4) Use protocol handlers for clarity, not novelty
+
+Good uses:
+
+- internal document references,
+- app-scoped asset URLs,
+- virtual endpoints that should never hit the network.
+
+Bad uses:
+
+- replacing every normal relative path,
+- hiding business logic behind clever URL tricks,
+- inventing new schemes when a normal route would do.
+
+## 5) Pair protocols with explicit window creation
+
+If a secondary window needs the same protocol support, create it with the matching handler list:
+
+```js
+import application from 'oro:application'
+
+await application.createWindow({
+  index: 1,
+  path: 'details.html',
+  title: 'Details',
+  protocolHandlers: ['notes'],
+})
+```
+
+That keeps the routing model consistent across windows instead of only working in the primary one.
+
+## Next
+
+- [Offline-first with service workers](?p=guides/offline-first-with-service-workers)
+- [Lifecycle hooks and deep links](?p=guides/lifecycle-hooks-and-deep-links)
+- [`oro:protocol-handlers`](?p=javascript/protocol-handlers)
+
+==============================================================================
+DOCS: Lifecycle hooks and deep links (guides/lifecycle-hooks-and-deep-links)
+URL: /runtime/docs/?p=guides/lifecycle-hooks-and-deep-links
+==============================================================================
+
+# Lifecycle hooks and deep links
+
+Lifecycle hooks are where the application stops being a generic page and starts reacting like a native application. Use
+them for readiness, connectivity, backgrounding, and OS-delivered URLs.
+
+## 1) Centralize lifecycle subscriptions
+
+`src/main.js`:
+
+```js
+import {
+  onReady,
+  onOnline,
+  onOffline,
+  onApplicationPause,
+  onApplicationResume,
+  onApplicationURL,
+} from 'oro:hooks'
+
+onReady(() => {
+  console.log('runtime ready')
+})
+
+onOnline(() => console.log('back online'))
+onOffline(() => console.log('offline'))
+onApplicationPause(() => console.log('app paused'))
+onApplicationResume(() => console.log('app resumed'))
+```
+
+This keeps environment events separate from view rendering logic.
+
+## 2) Handle deep links through one routing function
+
+```js
+function openRoute(route) {
+  history.pushState({}, '', route)
+  console.log('navigated to', route)
+}
+
+onApplicationURL((event) => {
+  if (!event.isValid) return
+
+  const route = `${event.url.pathname}${event.url.search}`
+  openRoute(route)
+})
+```
+
+If the OS launches the app with a URL, that route now flows through the same navigation path the UI uses internally.
+
+## 3) Use hooks to protect app state
+
+When the app pauses, snapshot important in-memory state:
+
+```js
+import { onApplicationPause } from 'oro:hooks'
+
+onApplicationPause(async () => {
+  localStorage.setItem('draft-open-note-id', '42')
+})
+```
+
+When it resumes, restore or refresh as needed:
+
+```js
+import { onApplicationResume } from 'oro:hooks'
+
+onApplicationResume(() => {
+  console.log('resume sync')
+})
+```
+
+## 4) Treat connectivity as a UI input
+
+Offline is not an edge case:
+
+```js
+import { onOnline, onOffline } from 'oro:hooks'
+
+onOffline(() => document.body.dataset.online = 'false')
+onOnline(() => document.body.dataset.online = 'true')
+```
+
+That is the difference between a graceful offline app and one that just throws fetch errors.
+
+## Considerations
+
+- Subscribe once near startup, not in every component.
+- Keep hook handlers small and route them into app services or state containers.
+- Deep links should reuse normal navigation and data-loading paths instead of inventing a second entry path.
+
+## Next
+
+- [Custom protocols and routing](?p=guides/custom-protocols-and-routing)
+- [Desktop integrations](?p=guides/desktop-integrations)
+- [`oro:hooks`](?p=javascript/hooks)
+
+==============================================================================
+DOCS: Frontend build pipeline (guides/frontend-build-pipeline)
+URL: /runtime/docs/?p=guides/frontend-build-pipeline
+==============================================================================
+
+# Frontend build pipeline
+
+Most production Oro Runtime applications do not ship raw source files. They run a web build first, then copy the built
+artifacts into the runtime bundle. This guide shows a clean pipeline that works for Vite, Rollup, esbuild, or a custom
+script without hiding the actual build contract.
+
+## 1) Treat `dist/` as the bundle boundary
+
+Keep source and shipped files separate:
+
+```text
+field-notes/
+  oro.toml
+  copy-map.toml
+  package.json
+  scripts/
+    build-web.sh
+  src/
+    index.html
+    main.js
+    styles.css
+  dist/
+```
+
+Your frontend tooling writes `dist/`. Oro Runtime copies from `dist/` into the application bundle.
+
+## 2) Make the web build explicit in `oro.toml`
+
+```toml
+[build]
+name = "field-notes"
+script = "./scripts/build-web.sh"
+copy_map = "copy-map.toml"
+env = "API_BASE_URL SENTRY_DSN"
+```
+
+`build.script` is the hand-off point between your frontend toolchain and the runtime bundle step.
+
+## 3) Copy only built artifacts
+
+`copy-map.toml`:
+
+```toml
+"./dist/index.html" = "index.html"
+"./dist/main.js" = "main.js"
+"./dist/styles.css" = "styles.css"
+"./dist/assets/logo.svg" = "assets/logo.svg"
+```
+
+That keeps shipping deterministic. If the build did not produce a file, it does not end up in the app.
+
+## 4) Keep the build script boring
+
+`scripts/build-web.sh`:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+npm ci
+npm run build
+```
+
+The runtime should not guess how your web build works. A small shell wrapper makes the contract obvious and easy to
+reproduce in CI.
+
+## 5) Pass environment intentionally
+
+If your frontend build needs environment variables, declare them instead of relying on everything from the shell:
+
+```toml
+[build]
+env = "API_BASE_URL SENTRY_DSN RELEASE_CHANNEL"
+```
+
+That keeps local machines and CI builds aligned.
+
+## 6) Use the same project model in dev and prod
+
+During development:
+
+```bash
+oroc run .
+```
+
+For a production build:
+
+```bash
+oroc build . --prod
+```
+
+The point is not to maintain two different application shapes. The same `oro.toml` and `copy_map` should describe both.
+
+## 7) A practical Vite-style mental model
+
+If your frontend stack already outputs a web app, Oro Runtime is just the native bundling and integration layer:
+
+- Vite/Rollup/esbuild produce `dist/`
+- `copy_map` defines what ships
+- `oroc run .` and `oroc build .` turn that output into a native application
+
+That keeps your web tooling choice independent from the runtime.
+
+## Considerations
+
+- Do not copy `src/` directly once you have a real build step.
+- Keep generated filenames stable unless you also update `copy_map`.
+- Put machine-local build secrets in `.ororc` or the CI environment, not in `oro.toml`.
+
+## Next
+
+- [Configure your runtime project](?p=guides/configure-your-runtime-project)
+- [Build and package](?p=guides/build-and-package)
+- [Configuration reference](?p=config/reference)
+
+==============================================================================
+DOCS: Mobile targets and device installs (guides/mobile-targets-and-device-installs)
+URL: /runtime/docs/?p=guides/mobile-targets-and-device-installs
+==============================================================================
+
+# Mobile targets and device installs
+
+Oro Runtime can target Android and Apple devices from the same project model. The key is to separate three concerns:
+
+- installing toolchains,
+- choosing a target device,
+- building and installing the app artifact.
+
+## 1) Install the platform toolchains first
+
+For Android:
+
+```bash
+oroc setup --platform=android
+```
+
+For Apple targets:
+
+```bash
+oroc setup --platform=ios
+```
+
+Run this before you debug device issues. Most "build is broken" reports are really missing SDK state.
+
+## 2) Keep machine-local target choices in `.ororc`
+
+`.ororc`:
+
+```ini
+[build]
+platform = ios-simulator
+
+[ios]
+simulator_device = "iPhone 15"
+
+[android]
+sdk = "/Users/alex/Library/Android/sdk"
+```
+
+This keeps developer-specific device and SDK details out of the shared project config.
+
+## 3) Inspect available devices before you install
+
+For Android:
+
+```bash
+oroc list-devices --platform=android
+```
+
+For Apple devices and simulators:
+
+```bash
+oroc list-devices --platform=ios
+```
+
+Choose the exact identifier you intend to target. Do not rely on whatever happens to be connected first.
+
+## 4) Build for the target you actually want
+
+Android:
+
+```bash
+oroc build . --platform=android --prod
+```
+
+Apple simulator or device:
+
+```bash
+oroc build . --platform=ios --prod
+```
+
+If you are iterating on simulator flows, `oroc run . --platform=ios-simulator` is useful. For actual deployment,
+produce a real build artifact first.
+
+## 5) Install onto the selected device
+
+Android:
+
+```bash
+oroc install-app --platform=android --device emulator-5554
+```
+
+Apple:
+
+```bash
+oroc install-app --platform=ios --device <device-or-simulator-id>
+```
+
+That makes installation an explicit step instead of a side effect of development.
+
+## 6) Keep the project portable across desktop and mobile
+
+The same app code can still use platform-specific configuration where needed:
+
+```toml
+[android]
+permissions = "INTERNET"
+
+[ios]
+development_team = "ABCDE12345"
+```
+
+Use platform sections for packaging and deployment differences, not to fork the whole application model.
+
+## 7) Make device deployment repeatable in CI and support workflows
+
+The useful commands for support and automation are:
+
+```bash
+oroc env
+oroc list-devices --platform=android
+oroc list-devices --platform=ios
+```
+
+Those give you a concrete picture of the environment instead of guessing from failed installs.
+
+## Considerations
+
+- Keep provisioning, signing, and SDK paths in `.ororc` or CI secrets.
+- Use `oroc list-devices` before `oroc install-app` on shared lab machines.
+- Treat simulator convenience separately from production packaging.
+
+## Next
+
+- [Build and package](?p=guides/build-and-package)
+- [Release packaging and signed updates](?p=guides/release-packaging-and-signed-updates)
+- [`oroc setup`](?p=cli/setup) · [`oroc list-devices`](?p=cli/list-devices) · [`oroc install-app`](?p=cli/install-app)
+
+==============================================================================
+DOCS: Release packaging and signed updates (guides/release-packaging-and-signed-updates)
+URL: /runtime/docs/?p=guides/release-packaging-and-signed-updates
+==============================================================================
+
+# Release packaging and signed updates
+
+Shipping the app is only half of the release story. The other half is producing update artifacts that can be verified,
+served, and diagnosed later without improvisation.
+
+This guide walks through a practical release flow for one runtime app.
+
+## 1) Build a production package
+
+From the project root:
+
+```bash
+oroc build . --prod --package
+```
+
+That gives you the packaged application artifact for the current target. Use this as the release candidate, not a debug
+bundle from a development run.
+
+## 2) Scaffold the update manifest
+
+```bash
+oroc update init
+```
+
+This creates the manifest file you will validate, sign, and publish with the release.
+
+## 3) Generate signing keys once and store them outside the repo
+
+```bash
+oroc update keygen > update-key.json
+```
+
+Treat this as release infrastructure, not app source. The private key should never live in the project tree or be copied
+between laptops casually.
+
+## 4) Bundle the release artifact for update delivery
+
+```bash
+oroc update bundle --input ./dist --output ./updates/field-notes-1.2.0.tar --manifest manifest.json
+```
+
+This creates the update tarball and records it in the manifest.
+
+## 5) Validate, sign, and verify before publishing
+
+```bash
+oroc update validate --manifest manifest.json --strict
+oroc update sign --keys update-key.json --manifest manifest.json
+oroc update verify --keys update-key.json --manifest manifest.json
+```
+
+If you skip validation and verification, you are pushing risk downstream to deployment and support.
+
+## 6) Serve the update set from a bounded root
+
+```bash
+oroc update server --root ./updates
+```
+
+For smoke tests or alternate transports:
+
+```bash
+oroc update server --root ./updates --tcp --port 9090
+oroc update server --root ./updates --udp --port 9090
+```
+
+Keep the server root narrow and predictable.
+
+## 7) Inspect what clients will actually see
+
+```bash
+oroc update info --manifest-url https://updates.example.com/field-notes/manifest.json
+```
+
+If you are verifying signatures at inspection time:
+
+```bash
+oroc update info \
+  --manifest-url https://updates.example.com/field-notes/manifest.json \
+  --keys update-key.json
+```
+
+That closes the loop between packaging, signing, and distribution.
+
+## 8) A release operator checklist
+
+- build the production package
+- generate or load the signing key material
+- bundle the published update artifact
+- validate the manifest
+- sign and verify the manifest
+- serve or upload the release root
+- inspect the published manifest endpoint
+
+That is the minimum professional release posture for a signed-update workflow.
+
+## Considerations
+
+- Keep private keys outside the repository and outside packaged app outputs.
+- Version your update root contents deliberately; do not overwrite old release artifacts blindly.
+- Use `--log-file` on update commands when you need a durable audit trail for release operations.
+
+## Next
+
+- [Build and package](?p=guides/build-and-package)
+- [Mobile targets and device installs](?p=guides/mobile-targets-and-device-installs)
+- [`oroc update`](?p=cli/update)
+
+==============================================================================
+DOCS: Testing and diagnostics (guides/testing-and-diagnostics)
+URL: /runtime/docs/?p=guides/testing-and-diagnostics
+==============================================================================
+
+# Testing and diagnostics
+
+If the runtime app is real, it needs two things early:
+
+- tests that can run with the app’s actual runtime modules,
+- diagnostics that explain behavior without attaching a debugger every time.
+
+This guide sets up both.
+
+## 1) Add a runtime test file
+
+`src/main.test.js`:
+
+```js
+import test from 'oro:test'
+
+function summarizeNote(title, body) {
+  return `${title}: ${body.slice(0, 20)}`
+}
+
+test('summarizeNote truncates the body', (t) => {
+  t.equal(
+    summarizeNote('Field Report', 'Long text from an inspection run.'),
+    'Field Report: Long text from an in'
+  )
+})
+```
+
+The point is not just unit testing in the abstract. The test runs inside the same runtime surface your app uses.
+
+## 2) Run the tests through `oroc`
+
+```bash
+oroc run . --test=src/main.test.js
+```
+
+If you want more detail while a failure is being diagnosed:
+
+```bash
+oroc run . --test=src/main.test.js -V --log-file ./logs/test-run.json
+```
+
+Now you have both console output and a durable log artifact.
+
+## 3) Add diagnostics channels for application events
+
+`src/diagnostics.js`:
+
+```js
+import { channel } from 'oro:diagnostics'
+
+export const syncChannel = channel('sync')
+
+syncChannel.subscribe('step', (message) => {
+  console.log(`[sync] ${message.stage}`, message)
+})
+```
+
+Publish into that channel from app code:
+
+```js
+import { syncChannel } from './diagnostics.js'
+
+await syncChannel.publish('step', {
+  stage: 'download-complete',
+  count: 42,
+})
+```
+
+That gives you structured app-level tracing without polluting every module with ad-hoc `console.log` calls.
+
+## 4) Treat logs as a product support artifact
+
+When a user or CI run hits a problem, these commands matter:
+
+```bash
+oroc run . -V --log-file ./logs/runtime.json
+oroc help json logs
+```
+
+The first captures what happened. The second helps discover related CLI logging flags when the support workflow changes.
+
+## 5) Test behavior at the right layer
+
+Use plain `oro:test` assertions for:
+
+- formatting logic,
+- reducers and state transforms,
+- sync decision logic,
+- configuration parsing helpers.
+
+Use runtime runs plus diagnostics for:
+
+- window lifecycle behavior,
+- service worker registration,
+- packaging or startup failures,
+- integration issues with SQLite, notifications, or secure storage.
+
+That keeps tests fast and diagnostics targeted.
+
+## Considerations
+
+- Keep test files close to the code they verify.
+- Use diagnostic channels for structured events, not for every line of code.
+- Always capture `--log-file` output for flaky or CI-only failures.
+
+## Next
+
+- [Worker threads for heavy work](?p=guides/worker-threads-for-heavy-work)
+- [MCP and agent automation](?p=guides/mcp-and-agent-automation)
+- [`oro:test`](?p=javascript/test) · [`oro:diagnostics`](?p=javascript/diagnostics)
+
+==============================================================================
+DOCS: MCP and agent automation (guides/mcp-and-agent-automation)
+URL: /runtime/docs/?p=guides/mcp-and-agent-automation
+==============================================================================
+
+# MCP and agent automation
+
+Oro Runtime supports MCP in two complementary ways:
+
+- the CLI can expose a workspace-oriented MCP server with `oroc mcp`,
+- the app can expose runtime tools and resources through `oro:mcp`.
+
+Use the CLI server when the agent needs project context and command execution. Use the in-app server when the agent needs
+live application state.
+
+## 1) Start with the CLI-hosted server
+
+For local editor and agent integrations, stdio is the clean default:
+
+```bash
+oroc mcp --stdio .
+```
+
+For a loopback HTTP server:
+
+```bash
+oroc mcp --http --host 127.0.0.1 --port 0 --endpoint /mcp .
+```
+
+That gives an agent a structured view of the workspace, configuration, and selected CLI workflows.
+
+## 2) Register app-native tools with `oro:mcp`
+
+`src/main.js`:
+
+```js
+import * as mcp from 'oro:mcp'
+
+await mcp.registerTool({
+  name: 'list_notes',
+  description: 'Return note titles for the current workspace.',
+  inputSchema: {
+    type: 'object',
+    properties: {},
+  },
+  handler: async () => ({
+    notes: [
+      { id: 1, title: 'Inspect libvirt host' },
+      { id: 2, title: 'Ship signed update' },
+    ],
+  }),
+})
+```
+
+This is where the app can expose live, high-value operations instead of generic command execution.
+
+## 3) Register resources for read-oriented context
+
+```js
+await mcp.registerResource({
+  uri: 'oro://field-notes/open-note',
+  name: 'Open note',
+  description: 'The note currently selected in the UI.',
+  handler: async () => ({
+    contents: [
+      {
+        type: 'text',
+        text: 'Current note: Release checklist for version 1.2.0',
+      },
+    ],
+  }),
+})
+```
+
+Use tools for actions. Use resources for durable context.
+
+## 4) Start the embedded MCP bridge with an explicit policy
+
+```js
+await mcp.setAuthorizationHandler(({ authorization }) => {
+  return authorization === 'Bearer local-dev-token'
+})
+
+const status = await mcp.startServer({
+  host: '127.0.0.1',
+  port: 0,
+  endpoint: '/mcp',
+})
+
+console.log(status)
+```
+
+If you expose an HTTP bridge, be explicit about authorization. Do not leave that to convention.
+
+## 5) Choose the right boundary
+
+Use `oroc mcp` when you want:
+
+- workspace inspection,
+- config and docs discovery,
+- controlled CLI execution.
+
+Use `oro:mcp` when you want:
+
+- app state,
+- in-memory note/search/session context,
+- application-owned tools that do not make sense at the workspace level.
+
+Most serious automation stacks use both.
+
+## Considerations
+
+- Keep tool names stable and descriptive.
+- Treat MCP exposure as part of your security model.
+- Prefer narrow, auditable tools over one generic “run anything” endpoint.
+
+## Next
+
+- [Testing and diagnostics](?p=guides/testing-and-diagnostics)
+- [`oroc mcp`](?p=cli/mcp)
+- [`oro:mcp`](?p=javascript/mcp)
 
 ==============================================================================
 DOCS: `oroc` (cli/oroc)

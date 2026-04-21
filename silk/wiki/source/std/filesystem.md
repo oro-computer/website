@@ -1,9 +1,9 @@
 # `std::fs`
 
-`std::fs` provides a small hosted POSIX-oriented filesystem API (current subset
+`std::fs` provides a small hosted POSIX-oriented filesystem API (Supported forms
 subset).
 
-Canonical doc: `docs/std/filesystem.md`.
+Canonical doc: [filesystem](?p=std/filesystem).
 
 ## Example: existence checks
 ```silk
@@ -19,5 +19,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/filesystem.md`
-- Paths: `docs/std/path.md`
+- Canonical doc: [filesystem](?p=std/filesystem)
+- Paths: [path](?p=std/path)

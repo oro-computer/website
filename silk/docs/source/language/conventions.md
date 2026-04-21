@@ -6,7 +6,7 @@ keep the language specification consistent and easy to navigate for both:
 - first-time readers learning Silk, and
 - returning readers looking up precise rules.
 
-See also: `docs/guides/language-tour.md` for a recommended reading path.
+See also: [language tour](?p=guides/language-tour) for a recommended reading path.
 
 ## Document Structure (Recommended)
 
@@ -25,8 +25,8 @@ Recommended sections:
 4. **Semantics** (evaluation order, scoping, control-flow behavior)
 5. **Type checking rules** (static requirements and diagnostics)
 6. **Examples**
-   - minimal examples (smallest correct usage)
-   - realistic examples (how the feature is used in real code)
+ - minimal examples (smallest correct usage)
+ - realistic examples (how the feature is used in real code)
 7. **Common pitfalls**
 8. **Related documents**
 9. **References** (cross-links to the most relevant docs and, when available, runnable examples)
@@ -48,7 +48,7 @@ these layers:
 - C ABI / FFI: whether the feature is permitted at exported boundaries.
 
 When something is rejected by the compiler, include the diagnostic code
-from `docs/compiler/diagnostics.md` when one exists.
+from [diagnostics](?p=compiler/diagnostics) when one exists.
 
 ## Examples
 
@@ -71,7 +71,7 @@ Examples in language docs should follow these rules:
   ```
 
 - When an example is intentionally invalid (to show a rule), label it and
-  mention the expected diagnostic.
+ mention the expected diagnostic.
 
 ## Terminology
 
@@ -80,18 +80,18 @@ These terms are used consistently across the spec:
 - **Expression**: a construct that produces a value and has a type.
 - **Statement**: a construct evaluated for its effects and sequencing.
 - **Block**: `{ stmt* }`, a scope boundary and the unit of structured control
-  flow. (Whether blocks are also expressions depends on the concept; docs must
-  be explicit.)
+ flow. (Whether blocks are also expressions depends on the concept; docs must
+ be explicit.)
 - **Supported surface**: the set of features that parse, type-check, and
-  code-generate end-to-end in the compiler.
+ code-generate end-to-end in the compiler.
 
 ## Cross-References
 
 When describing a rule, link to the most relevant concept doc rather than
 restating it everywhere. Common cross-links include:
 
-- `docs/language/grammar.md` for the exact accepted syntax,
-- `docs/language/types.md` for type-system rules and special cases,
-- `docs/language/mutability.md` for `mut` and borrowing rules,
-- `docs/compiler/diagnostics.md` for error codes,
-- “Implementation status” sections near the top of concept docs.
+- [grammar](?p=language/grammar) for the exact accepted syntax,
+- [types](?p=language/types) for type-system rules and special cases,
+- [mutability](?p=language/mutability) for `mut` and borrowing rules,
+- [diagnostics](?p=compiler/diagnostics) for error codes,
+- “notes sections near the top of concept docs.

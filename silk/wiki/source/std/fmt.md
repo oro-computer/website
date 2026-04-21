@@ -4,11 +4,12 @@
 by string-building helpers. It follows a Zig-`std.fmt`-style format-string
 syntax.
 
-Full reference: `docs/std/fmt.md`.
+Canonical doc: [fmt](?p=std/fmt).
 
 ## Notes
 
-- Full reference: `docs/std/fmt.md`
+- Supported forms is available to support `std::io` printing.
+- Details: [fmt](?p=std/fmt)
 
 ## Examples
 
@@ -24,5 +25,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/fmt.md`
-- Printing: `docs/std/io.md`
+- Canonical doc: [fmt](?p=std/fmt)
+- Printing: [io](?p=std/io)

@@ -5,19 +5,19 @@ Boolean literals are the two built-in logical values:
 - `true`
 - `false`
 
-They have type `bool` (`docs/language/types.md`).
+They have type `bool` ([types](?p=language/types)).
 
-## Supported forms
+## Notes
 
-Includes:
+What works end-to-end today (lexer → parser → checker → lowering → codegen):
 
 - `true` / `false` literal tokens.
 - `bool` variables, parameters, and return values.
 - `if` / `while` conditions must have type `bool`.
 - Boolean operators:
-  - unary `!`,
-  - short-circuit `&&` and `||` (left-to-right, skip evaluation of the right
-    operand when the result is already determined).
+ - unary `!`,
+ - short-circuit `&&` and `||` (left-to-right, skip evaluation of the right
+ operand when the result is already determined).
 
 ## Examples
 
@@ -61,13 +61,13 @@ fn main () -> int {
 ## Common Pitfalls
 
 - **Assuming “truthy” values**: `bool` is a distinct type. Use comparisons to
-  produce a `bool` (for example `x != 0`) rather than writing `if x { ... }`.
+ produce a `bool` (for example `x != 0`) rather than writing `if x { ... }`.
 - **Forgetting short-circuiting**: `&&` and `||` may skip evaluating the right
-  operand; do not rely on side effects in the skipped operand.
+ operand; do not rely on side effects in the skipped operand.
 
 ## Related Documents
 
-- `docs/language/types.md` (the `bool` type)
-- `docs/language/operators.md` (`!`, `&&`, `||`)
-- `docs/language/flow-if-else.md` (`if` statement semantics)
-- `docs/language/flow-while.md` (`while` statement semantics)
+- [types](?p=language/types) (the `bool` type)
+- [operators](?p=language/operators) (`!`, `&&`, `||`)
+- [flow if else](?p=language/flow-if-else) (`if` statement semantics)
+- [flow while](?p=language/flow-while) (`while` statement semantics)

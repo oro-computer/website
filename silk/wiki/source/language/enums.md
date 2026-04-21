@@ -9,11 +9,11 @@ Currently, enums support:
 - exhaustive `match` expressions over enum values (restricted subset; no guards),
 - and statement-form ordinary enum `match` with qualified variant arms.
 
-Full reference: `docs/language/enums.md`.
+Canonical spec: [enums](?p=language/enums).
 
 ## Notes
 
-- Full reference: `docs/language/enums.md`
+- Supported forms + representation: [enums](?p=language/enums)
 
 ## Syntax
 ```silk
@@ -43,5 +43,6 @@ fn main () -> int {
 
 ## See also
 
-- Full reference: `docs/language/enums.md`
-- `match` expressions: `docs/language/flow-match.md`
+- Canonical spec: [enums](?p=language/enums)
+- `match` expressions: [flow match](?p=language/flow-match)
+- Enum fixtures: `tests/silk/pass_enum_*`

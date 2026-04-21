@@ -1,13 +1,17 @@
 # `std::fmt`
 
+The initial formatting engine is implemented
+in `std/fmt.slk` and is intentionally scoped to the current compiler/backend
+subset (no generics, no runtime interface dispatch).
+
 `std::fmt` provides a shared, Zig-`std.fmt`-style format-string syntax and a
 small formatting engine used by `std::io::print` / `std::io::println`.
 
 See also:
 
-- `docs/std/io.md` (stdout printing)
-- `docs/language/literals-string.md` (string literal semantics)
-- `docs/language/ext.md` (current string ABI and null-termination rule)
+- [io](?p=std/io) (stdout printing)
+- [literals string](?p=language/literals-string) (string literal semantics)
+- [ext](?p=language/ext) (current string ABI and null-termination rule)
 
 ## Format String Syntax (Zig-compatible subset)
 
@@ -43,21 +47,21 @@ Precision is written after a dot:
 Within `{ ... }`:
 
 - optional **argument selector**:
-  - digits: `0`, `1`, `2`, ...
-  - bracketed index: `[0]`, `[1]`, ... (reserved for future named arguments; currently only numeric indices are accepted)
+ - digits: `0`, `1`, `2`, ...
+ - bracketed index: `[0]`, `[1]`, ... (reserved for future named arguments; currently only numeric indices are accepted)
 - optional **specifier string** (examples: `d`, `x`, `s`, `c`, `e`)
 - optional `:` followed by:
-  - optional `fill` + `alignment`:
-    - `<` left, `^` center, `>` right
-    - `fill` is any single byte placed immediately before the alignment character (example: `*^`)
-  - optional `width`:
-    - digits (`10`), or bracketed index (`[1]`) to take the width from another argument
-  - optional `.` and optional `precision`:
-    - digits (`.3`), or bracketed index (`.[1]`) to take the precision from another argument
+ - optional `fill` + `alignment`:
+ - `<` left, `^` center, `>` right
+ - `fill` is any single byte placed immediately before the alignment character (example: `*^`)
+ - optional `width`:
+ - digits (`10`), or bracketed index (`[1]`) to take the width from another argument
+ - optional `.` and optional `precision`:
+ - digits (`.3`), or bracketed index (`.[1]`) to take the precision from another argument
 
 ## Exported API
 
-Because the language does not yet have generics, the API uses an
+Because the language does not yet have generics, the current API uses an
 explicit argument carrier type (`Arg`). With language-level varargs, the
 formatter now accepts a variable number of arguments (up to the current
 compiler’s varargs limit).
@@ -84,10 +88,16 @@ call-argument coercion mechanism for struct types that provide exported static
 ctor methods (`int`/`i128`/`u64`/`u128`/`f64`/`f128`/`bool`/`char`/`string`/`regexp`/`Region`).
 `std::fmt::Arg` implements these ctors, so callers can pass primitives directly
 to `std::io::print` / `std::io::println` without explicit `Arg.*` wrappers.
+Values implementing `std::interfaces::Serialize(string)` are also accepted in
+that path: the compiler may first lower the value through `serialize()` and
+then call `Arg.string(...)` automatically when `Arg` is expected.
+`std::strings::String` also satisfies ordinary borrowed plain-`string`
+expectations in `string` parameters and bindings, so those sites no longer
+require mandatory `.as_string()`.
 
-See `docs/language/types.md` for the full rule.
+See [types](?p=language/types) for the full rule.
 
-### Supported specifiers (current subset)
+### Supported specifiers
 
 The current formatter supports:
 
@@ -100,7 +110,7 @@ The current formatter supports:
 - `e` — scientific `f64`/`f128`
 - `c` — Unicode scalar (`char`) rendered as UTF-8 bytes
 - `u` — Unicode scalar (`char`) rendered as UTF-8 bytes
-- `any` — alias for default formatting in the current subset
+- `any` — alias for default formatting in the Supported forms
 
 When the specifier is empty (`{}`), a default is chosen based on the argument
 kind.
@@ -109,24 +119,24 @@ Zig-compat note: when a width is specified (and non-zero), signed integers
 include an explicit sign for non-negative values (for example `"{:4}"` formats
 `123` as `"+123"`).
 
-Current subset limitation: formatting signed integers (`int`/`i128`) in
+Supported forms limitation: formatting signed integers (`int`/`i128`) in
 non-decimal bases (`b`/`o`/`x`/`X`) requires non-negative values.
 
-Float formatting is implemented for `f64` in the current subset:
+Float formatting is implemented for `f64` in the Supported forms:
 
 - `{}` / `{d}` format as decimal by default, with an automatic scientific fallback
-  for very small / very large magnitudes.
+ for very small / very large magnitudes.
 - `{e}` formats in scientific notation.
 - precision (`.{N}`) controls the number of digits after the decimal point
-  (default: 6), and width/alignment apply like other formatting kinds.
+ (default: 6), and width/alignment apply like other formatting kinds.
 
 Hex float formatting (`{x}` on floats) and full debug formatting (`{any}`
 recursing through arbitrary types) remain future work.
 
 `f128` formatting is implemented by converting values to `f64` for formatting,
-so output precision is limited to `f64` precision in the current subset.
+so output precision is limited to `f64` precision in the Supported forms.
 
-## High-Level Formatting (`format`) (Implemented)
+## High-Level Formatting (`format`)
 
 `std::fmt` provides a high-level convenience for producing formatted strings:
 
@@ -174,11 +184,11 @@ Signature:
 export default fn format (fmt: string, ...args: Arg) -> std::result::Result(std::strings::String, std::fmt::Error);
 ```
 
-Notes (current subset):
+Notes (Supported forms):
 
 - `format` is also available as a named export (`import { format } from "std/fmt";`).
 - The returned `std::strings::String` is an owned, NUL-terminated string buffer.
-  - When heap-backed, it is freed on Drop (calls `std::runtime::mem::free`).
-  - When region-backed (inside `with <region>` / `with <bytes>`), Drop calls `free` but `free` is a no-op for region pointers (see `docs/language/regions.md`), and region-allocated values must not outlive the region.
+ - When heap-backed, it is freed on Drop (calls `std::runtime::mem::free`).
+ - When region-backed (inside `with <region>` / `with <bytes>`), Drop calls `free` but `free` is a no-op for region pointers (see [regions](?p=language/regions)), and region-allocated values must not outlive the region.
 - Use `String.as_string()` to obtain a borrowed `string` view.
 - For bounded allocations, format into caller-owned storage with `format_to_buffer_u8`.

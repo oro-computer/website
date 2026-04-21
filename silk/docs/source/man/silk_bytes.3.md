@@ -1,4 +1,4 @@
-# `silk_bytes` (3) — Manage Owned Build Output Buffers
+# [`silk_bytes(3)`](?p=man/silk_bytes.3) — Manage Owned Build Output Buffers
 
 > NOTE: This is the Markdown source for the eventual man 3 page for `SilkBytes` output buffers. The roff-formatted manpage should be generated from this content.
 
@@ -39,6 +39,6 @@ The buffer memory is owned by `libsilk.a` and must be released with `silk_bytes_
 
 ## See Also
 
-- [silk_compiler (3)](?p=man/silk_compiler.3)
-- [libsilk (7)](?p=man/libsilk.7)
-- [libsilk ABI reference](?p=compiler/abi-libsilk)
+- [`silk_compiler(3)`](?p=man/silk_compiler.3)
+- [`libsilk(7)`](?p=man/libsilk.7)
+- [abi libsilk](?p=compiler/abi-libsilk)

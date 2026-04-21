@@ -7,7 +7,7 @@ unrecoverable logic bugs and contract violations.
 This page focuses on assertions and the high-level model; see typed errors for
 the full rules.
 
-Canonical doc: `docs/language/errors.md`.
+Canonical doc: [errors](?p=language/errors).
 
 ## Example: `assert`
 ```silk
@@ -19,6 +19,6 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/language/errors.md`
-- Typed errors: `docs/wiki/language/typed-errors.md`
-- `Result(T, E)`: `docs/wiki/std/result.md`
+- Canonical doc: [errors](?p=language/errors)
+- Typed errors: [typed errors](?p=language/typed-errors)
+- `Result(T, E)`: [result](?p=std/result)

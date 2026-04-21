@@ -13,12 +13,50 @@ The goal is to provide diagnostics that are:
 - consumable by humans (caret snippets, notes/help where appropriate),
 - easy to test (deterministic formatting; the canonical text contains no ANSI escapes).
 
+## Diagnostic Policy
+
+The compiler should diagnose the *actual class of failure*, not hide it behind
+bring-up terminology.
+
+User-facing diagnostics should distinguish at least these categories:
+
+- **Spec/type-check failure**: the program violates the documented Silk
+ language or standard-library contract.
+- **Unimplemented language feature**: the program uses a language feature that
+ is not yet implemented in the compiler and is not part of the shipped
+ documented language contract.
+- **Backend/target limitation**: the program parses and type-checks, but a
+ target-specific lowering/codegen path cannot yet emit the requested output.
+- **Stdlib/module availability gap**: the program refers to a standard-library
+ or package surface that is absent or unavailable for the current build/host.
+- **Internal compiler error**: the compiler lost required context or reached an
+ unexpected internal failure.
+
+The term **subset** should not be the primary explanation in new diagnostics.
+It may still appear in historical notes or implementation-status prose, but
+user-facing errors should say what is actually wrong: for example "unimplemented
+language feature", "unsupported backend target path", or a specific contract
+violation.
+
+Rule for feature-vs-rejection wording:
+
+- If a construct is part of the documented language/spec surface, a compiler
+ rejection must be described as an implementation gap, not as a language-level
+ rejection.
+- In particular:
+ - `u128` / `f128` are language features, so `E2114` / `E2115` describe
+ missing implementation work in some compiler paths rather than forbidden
+ types.
+ - monomorphized generics are language features, so `E2016` is for generic
+ forms the current compiler has not implemented yet, not for generic syntax
+ that is outside the language.
+
 ## Terminology
 
 - **Source span**: a byte range in the UTF‑8 source buffer (`offset`, `length`).
-  - Displayed **line** and **column** numbers are **1-based**.
-  - Columns are measured in **UTF‑8 bytes** (matching the lexer’s current `Token.column` behavior).
-- **Primary label**: the main span where the error is reported (single span today).
+ - Displayed **line** and **column** numbers are **1-based**.
+ - Columns are measured in **UTF‑8 bytes** (matching the lexer’s current `Token.column` behavior).
+- **Primary label**: the main span where the error is reported (single span in the implementation).
 - **Note / Help**: supplemental lines that explain context or suggest a fix.
 
 ## Text Format (CLI and ABI)
@@ -41,8 +79,8 @@ Rules:
 - For diagnostics with no usable location, the `--> ...` and snippet block may be omitted.
 - The snippet block uses the 1-based line number and includes the full line text as it appears in the source.
 - The caret underline is placed under the primary span:
-  - for a zero-length span, print a single `^`,
-  - otherwise print `^` repeated for the span length, clipped to the line end if needed.
+ - for a zero-length span, print a single `^`,
+ - otherwise print `^` repeated for the span length, clipped to the line end if needed.
 - The canonical text format contains no ANSI color escapes.
 
 ## Manifest and Config Errors
@@ -87,11 +125,11 @@ Examples of help/suggestion content the compiler may emit:
 - for unknown imports, a `"did you mean ...?"` suggestion based on nearby names,
 - for file imports, a note about the *resolved* import path,
 - reminders about enabling or configuring the standard library (`--nostd`,
-  `--std-root`, `SILK_STD_ROOT`) when importing `std::...`,
+ `--std-root`, `SILK_STD_ROOT`) when importing `std::...`,
 - guidance to include additional modules in the build/module set when an import
-  refers to a package or file that is not present.
+ refers to a package or file that is not present.
 
-## Error Codes (Initial Set)
+## Error Codes
 
 The compiler assigns a stable code to each currently supported error kind.
 
@@ -111,10 +149,23 @@ The compiler assigns a stable code to each currently supported error kind.
 ### Type Checking
 
 - `E2001` — type mismatch.
-- `E2002` — unsupported construct in the current subset (the diagnostic detail
-  may identify the rejected statement/expression form, and notes may clarify
-  construct-specific rules such as statement-form `match` treating bare
-  identifier arms as binders).
+ - The primary message stays stable, but the diagnostic detail should explain
+ the exact failed contract when available, for example:
+ - `in IntFlag.usage param fs: expected ..., found ...`,
+ - `while initializing binding count: expected ..., found ...`,
+ - `in assignment to queue.reader: expected ..., found ...`,
+ - `in return statement: expected ..., found ...`.
+- `E2002` — language feature is not implemented yet.
+ - The diagnostic detail should identify the exact rejected construct
+ (statement / expression / declaration / type) and why it failed.
+ - The public wording should describe an unimplemented feature, not a vague
+ "subset" category.
+ - Common examples of the required detail quality:
+ - field access on an optional value should explain that `opt.field` must be
+ rewritten as `opt?.field` or preceded by an unwrap,
+ - `yield <task_handle>;` in statement position should explain that statement
+ `yield` is the send form and that receiving from a task handle requires
+ value position (`let x = yield h`) or `yield * h;` for drain/forward.
 - `E2003` — unknown imported name.
 - `E2004` — duplicate imported name.
 - `E2005` — invalid assignment.
@@ -127,8 +178,8 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2012` — cannot instantiate opaque struct.
 - `E2013` — cannot access fields on opaque struct.
 - `E2014` — formal Silk declaration used in runtime expression.
-- `E2015` — `let` requires an initializer.
-- `E2016` — unsupported generic form in the current subset (for example const parameters / const type arguments).
+- `E2015` — binding requires an initializer.
+- `E2016` — generic form is not implemented yet (for example const parameters / const type arguments / generic `impl` methods).
 - `E2017` — builtin `map(K, V)` type form was removed (use `std::map::{HashMap, TreeMap}` instead).
 - `E2018` — namespace import is not callable.
 - `E2019` — duplicate default export in a module.
@@ -180,12 +231,14 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2065` — opaque structs may not use `extends`.
 - `E2066` — prototype and implementation signatures do not match.
 - `E2067` — capturing closure is not allowed in `pure` code.
-- `E2068` — capturing closure capture type is not supported in the current subset.
-- `E2069` — capturing closure may not capture a mutable binding in the current subset.
+- `E2068` — capturing closure uses a capture type that is not implemented yet.
+- `E2069` — capturing closure may not capture a mutable binding yet.
 - `E2070` — `yield` requires a `task` context.
 - `E2071` — `yield` in value position requires a Task operand.
 - `E2072` — `yield *` requires a Task operand.
 - `E2073` — `yield` as a statement requires an enclosing task function.
+ - `yield <value>;` is the send form.
+ - Receiving from a `Task(T)` handle is a value-position form: `let x = yield h`.
 - `E2074` — `await *` requires a Promise-array operand.
 - `E2075` — duplicate type name.
 - `E2076` — generic type arguments must be fully specified at the use site (missing a required, non-default type argument).
@@ -211,8 +264,8 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2096` — unknown `using` target.
 - `E2097` — `using` alias conflicts with an existing name.
 - `E2098` — `using` target is ambiguous.
-- `E2099` — `using` cannot import `constructor` in the current subset.
-- `E2100` — reserved (previously: `using` may not import methods that require mutable `Self` borrows in the current subset).
+- `E2099` — `using` cannot import `constructor` yet.
+- `E2100` — `using` cannot import methods that require mutable `Self` borrows yet.
 - `E2101` — `using` method reuse requires compatible struct layouts.
 - `E2102` — cannot move value while it is borrowed.
 - `E2103` — invalid regexp flags (unknown or duplicate).
@@ -226,16 +279,21 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2111` — array destructuring pattern does not match the array type (wrong arity for fixed arrays, or duplicate binder).
 - `E2112` — enum destructuring requires an enum value.
 - `E2113` — enum destructuring pattern does not match the enum type (unknown variant or wrong arity).
-- `E2114` — reserved (previously: `u128` not supported in the subset).
-- `E2115` — reserved (previously: `f128` not supported in the subset).
+- `E2114` — `u128` is not implemented yet in all compiler paths.
+- `E2115` — `f128` is not implemented yet in all compiler paths.
 - `E2116` — invalid inline assembly (inline asm failed to assemble, or uses unsupported features in the current implementation).
 - `E2117` — `let ... else { ... };` requires the `else` block to end with a terminal statement.
 - `E2118` — borrowed-view type may not appear in an `async fn` result.
 - `E2119` — borrowed-view type may not cross an `ext` / unnamed/global-package `export fn` boundary.
 - `E2120` — local borrow may not remain live across `await`.
 - `E2121` — cannot mutate local storage while it is borrowed.
-- `E2122` — borrowed control-flow expression is ambiguous in the current subset.
+- `E2122` — borrowed control-flow expression is ambiguous.
 - `E2123` — local borrow may not escape through an async call.
+- `E2124` — type does not satisfy the declared interface (missing required method).
+- `E2125` — type does not satisfy the declared interface (signature mismatch).
+- `E2126` — interface method must omit an explicit receiver parameter; ordinary
+ interface methods already have an implicit receiver and must not spell
+ `self: &Self` in the interface declaration.
 
 ### Formal Silk Verification
 
@@ -251,22 +309,48 @@ The compiler assigns a stable code to each currently supported error kind.
 Notes:
 
 - When `silk build --debug` or `silk test --debug` is used, failed Formal Silk
-  checks emit additional Z3 debug output and write an SMT-LIB2 reproduction
-  script under `.silk/z3/` in the current working directory (or `$SILK_WORK_DIR/z3`).
+ checks emit additional Z3 debug output and write an SMT-LIB2 reproduction
+ script under `.silk/z3/` in the current working directory (or `$SILK_WORK_DIR/z3`).
 
 ### Code Generation / Backend Lowering
 
-- `E4001` — unsupported construct in the current backend subset.
+- `E4001` — backend/target limitation prevented code generation for the
+ requested program/output.
 - `E4002` — code generation failed in the backend (unexpected backend error).
 
 Notes:
 
 - This error is reported when a program successfully parses and type-checks, but
-  IR lowering or native code generation cannot yet handle a construct.
+ IR lowering or native code generation cannot yet handle a construct.
+- The detail should identify the actual backend-stage blocker:
+ - rejected statement/expression/function shape,
+ - missing target/output support,
+ - or a specific collector/layout/codegen stage failure.
 - The diagnostic detail names the rejected construct kind (statement /
-  expression / function) and its surface form tag when available.
+ expression / function / declaration) and its surface form tag when
+ available.
+- Executable entrypoint shape failures should name the rejected form directly
+ (for example ``unsupported executable entrypoint form: `async task fn main``` )
+ and say which executable entrypoint forms are currently supported.
+- When executable lowering fails during runtime-support setup before ordinary
+ function-body lowering begins, `E4001` should name the blocked runtime stage
+ directly (for example
+ ``unsupported executable runtime support: `debug panic runtime support``` )
+ instead of falling back to a misleading `unsupported function: main`.
+- When lowering cannot isolate a narrower statement / expression site, `E4001`
+ falls back to the offending function or declaration collector stage and names
+ that function / declaration directly.
+- For declaration-stage layout collection failures, the note should carry the
+ collector context and, when available, the rejected field or payload type
+ shape so users do not have to infer it from a generic carrier such as
+ `Result`.
 
 ## Tooling Integration Notes
 
 - `silk-lsp` should map the compiler’s primary source span to the LSP diagnostic range directly.
+- `silk-lsp` should preserve structured compiler guidance in the published LSP payload:
+ - keep the primary `message` short and stable,
+ - surface compiler `detail`, `notes`, and `helps` as structured diagnostic metadata,
+ - and avoid collapsing all follow-up guidance into one opaque message blob when
+ the protocol surface can carry structured fields.
 - When the compiler grows multi-span diagnostics (labels and secondary spans), the LSP implementation must be updated to surface them.

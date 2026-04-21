@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-03-25T00:10:25+00:00",
+  "generatedAt": "2026-03-25T00:52:07+00:00",
   "kind": "docs",
-  "count": 116,
+  "count": 133,
   "sections": [
     {
       "name": "overview",
@@ -17,6 +17,11 @@
       "name": "guides",
       "items": [
         {
+          "id": "guides/from-zero-to-first-run",
+          "title": "From zero to first run",
+          "file": "guides/from-zero-to-first-run.md"
+        },
+        {
           "id": "guides/hello-world",
           "title": "Hello world",
           "file": "guides/hello-world.md"
@@ -27,6 +32,21 @@
           "file": "guides/project-layout.md"
         },
         {
+          "id": "guides/configure-your-runtime-project",
+          "title": "Configure your runtime project",
+          "file": "guides/configure-your-runtime-project.md"
+        },
+        {
+          "id": "guides/files-and-sandboxing",
+          "title": "Files and sandboxing",
+          "file": "guides/files-and-sandboxing.md"
+        },
+        {
+          "id": "guides/desktop-integrations",
+          "title": "Desktop integrations",
+          "file": "guides/desktop-integrations.md"
+        },
+        {
           "id": "guides/build-and-package",
           "title": "Build and package",
           "file": "guides/build-and-package.md"
@@ -35,6 +55,71 @@
           "id": "guides/windows-and-messaging",
           "title": "Windows and messaging",
           "file": "guides/windows-and-messaging.md"
+        },
+        {
+          "id": "guides/local-data-with-sqlite",
+          "title": "Local data with SQLite",
+          "file": "guides/local-data-with-sqlite.md"
+        },
+        {
+          "id": "guides/secure-storage-and-sessions",
+          "title": "Secure storage and sessions",
+          "file": "guides/secure-storage-and-sessions.md"
+        },
+        {
+          "id": "guides/calling-http-apis",
+          "title": "Calling HTTP APIs",
+          "file": "guides/calling-http-apis.md"
+        },
+        {
+          "id": "guides/worker-threads-for-heavy-work",
+          "title": "Worker threads for heavy work",
+          "file": "guides/worker-threads-for-heavy-work.md"
+        },
+        {
+          "id": "guides/shared-workers-across-windows",
+          "title": "Shared workers across windows",
+          "file": "guides/shared-workers-across-windows.md"
+        },
+        {
+          "id": "guides/offline-first-with-service-workers",
+          "title": "Offline-first with service workers",
+          "file": "guides/offline-first-with-service-workers.md"
+        },
+        {
+          "id": "guides/custom-protocols-and-routing",
+          "title": "Custom protocols and routing",
+          "file": "guides/custom-protocols-and-routing.md"
+        },
+        {
+          "id": "guides/lifecycle-hooks-and-deep-links",
+          "title": "Lifecycle hooks and deep links",
+          "file": "guides/lifecycle-hooks-and-deep-links.md"
+        },
+        {
+          "id": "guides/frontend-build-pipeline",
+          "title": "Frontend build pipeline",
+          "file": "guides/frontend-build-pipeline.md"
+        },
+        {
+          "id": "guides/mobile-targets-and-device-installs",
+          "title": "Mobile targets and device installs",
+          "file": "guides/mobile-targets-and-device-installs.md"
+        },
+        {
+          "id": "guides/release-packaging-and-signed-updates",
+          "title": "Release packaging and signed updates",
+          "file": "guides/release-packaging-and-signed-updates.md"
+        },
+        {
+          "id": "guides/testing-and-diagnostics",
+          "title": "Testing and diagnostics",
+          "file": "guides/testing-and-diagnostics.md"
+        },
+        {
+          "id": "guides/mcp-and-agent-automation",
+          "title": "MCP and agent automation",
+          "file": "guides/mcp-and-agent-automation.md"
         }
       ]
     },

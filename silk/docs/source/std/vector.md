@@ -12,11 +12,11 @@ vector type `Vector(T)` used broadly across `std::`.
 The current compiler/backend subset uses a conservative scalar-slot memory model
 for most scalar values; `std::vector` is specified in terms of the logical
 element type `T`, not a stable packed byte layout. In particular, in the
-current subset `Vector(T)` stores elements using the scalar-slot
+Supported forms `Vector(T)` stores elements using the scalar-slot
 layout of `T` (each slot is 8 bytes). Each element occupies `sizeof(T)` bytes
-(a multiple of 8 in the current subset), so multi-slot values like `string` and
+(a multiple of 8 in the Supported forms), so multi-slot values like `string` and
 non-opaque structs/enums are supported. This is still not a packed byte
-representation: for example `sizeof(u8) == 8` in the current subset, so
+representation: for example `sizeof(u8) == 8` in the Supported forms, so
 `Vector(u8)` stores one byte per 8-byte slot. Use `std::buffer::BufferU8` when
 packed bytes matter.
 
@@ -26,9 +26,9 @@ byte-addressed memory and whose `len`/`cap` are in bytes.
 
 See also:
 
-- `docs/std/arrays.md` (`std::arrays::Slice(T)` views)
-- `docs/std/buffer.md` (width-oriented buffer helpers built on vectors)
-- `docs/language/generics.md` (generic syntax and rules)
+- [arrays](?p=std/arrays) (`std::arrays::Slice(T)` views)
+- [buffer](?p=std/buffer) (width-oriented buffer helpers built on vectors)
+- [generics](?p=language/generics) (generic syntax and rules)
 
 ## Example (Struct Elements)
 
@@ -75,12 +75,12 @@ fn tabs_collect (paths: std::arrays::Slice(string)) -> Tabs? {
 
 - `push` moves a value into the vector.
 - `pop` / `swap_remove` move a value out of the vector (the caller owns the
-  returned value).
+ returned value).
 - `set` overwrites an element and runs `Drop` for the overwritten element when
-  `T` requires drop.
+ `T` requires drop.
 - `clear` runs `Drop` for all live elements and then sets `len = 0`.
 - `drop` runs `Drop` for all live elements, frees the backing allocation, and
-  resets the vector to an empty state.
+ resets the vector to an empty state.
 
 ### Copy accessors (`get`, `iter`)
 
@@ -92,7 +92,7 @@ and small POD structs). For `Drop`-managed element types, copying an element out
 creates duplicate ownership; use move-out operations like `pop` / `swap_remove`
 instead of `get`/`iter`.
 
-## Implemented `std::interfaces` surface
+## `std::interfaces` surface
 
 `Vector(T)` is one of the stdlib’s canonical owning container types, so its
 interface surface is intentionally aligned with the rest of `std::`:
@@ -104,15 +104,15 @@ interface surface is intentionally aligned with the rest of `std::`:
 - `Vector(T)` implements `std::interfaces::ReserveAdditional`.
 - `Vector(T)` implements `std::interfaces::Drop`.
 - `Vector.iter()` returns `std::arrays::SliceIter(T)`, so iteration reuses the
-  shared `std::interfaces::Iterator(T)` surface documented by `std::arrays`
-  instead of inventing a vector-specific iterator type.
+ shared `std::interfaces::Iterator(T)` surface documented by `std::arrays`
+ instead of inventing a vector-specific iterator type.
 
 That split is the intended reader-facing style:
 
 - `Vector(T)` is the owning growable container that exposes the standard
-  container-management protocols.
+ container-management protocols.
 - `std::arrays::Slice(T)` / `SliceIter(T)` provide the non-owning view and
-  iteration vocabulary layered on top of that storage.
+ iteration vocabulary layered on top of that storage.
 
 This makes the stdlib easier to learn by reading: vectors, slices, maps, sets,
 and buffers all participate in a shared interface story instead of presenting a
@@ -175,18 +175,18 @@ impl Vector(T) as std::interfaces::Drop {
 
 Notes:
 
-- `Vector(T)` is intentionally low-level in the current subset:
-  - `init(cap)` returns `Err(AllocFailed)` when allocation fails or when `cap`
-    is invalid.
-  - `try_init(cap)` returns `None` on any allocation/validation failure.
-  - prefer `Vector.empty()` over `Vector.init(0)` for a clear “default” constructor.
-  - growth paths (`reserve_additional`, `push`, `extend_from_slice`) surface
-    allocation failure as `std::memory::OutOfMemory?` (including internal size
-    arithmetic overflow; leaves the vector unchanged on failure).
+- `Vector(T)` is intentionally low-level in the Supported forms:
+ - `init(cap)` returns `Err(AllocFailed)` when allocation fails or when `cap`
+ is invalid.
+ - `try_init(cap)` returns `None` on any allocation/validation failure.
+ - prefer `Vector.empty()` over `Vector.init(0)` for a clear “default” constructor.
+ - growth paths (`reserve_additional`, `push`, `extend_from_slice`) surface
+ allocation failure as `std::memory::OutOfMemory?` (including internal size
+ arithmetic overflow; leaves the vector unchanged on failure).
 - Bounds checks are expressed as `#require` contracts (and reusable `std::formal`
-  theories) for verifier tooling; they are not runtime checks in the current
-  compiler subset.
+ theories) for verifier tooling; they are not runtime checks in the current
+ compiler subset.
 - `at` / `try_set` are “checked” accessors:
-  - `at` returns `None` when `index` is out of bounds,
-  - `try_set` returns `false` when `index` is out of bounds.
+ - `at` returns `None` when `index` is out of bounds,
+ - `try_set` returns `false` when `index` is out of bounds.
 - `swap_remove` removes an element by swapping in the last element (O(1), order not preserved).

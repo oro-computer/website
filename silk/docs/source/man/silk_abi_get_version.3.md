@@ -1,4 +1,4 @@
-# `silk_abi_get_version` (3) — Query the `libsilk` ABI Version
+# [`silk_abi_get_version(3)`](?p=man/silk_abi_get_version.3) — Query the `libsilk` ABI Version
 
 > NOTE: This is the Markdown source for the eventual man 3 page for `silk_abi_get_version`. The roff-formatted manpage should be generated from this content.
 
@@ -38,5 +38,5 @@ None.
 
 ## See Also
 
-- [libsilk (7)](?p=man/libsilk.7)
-- [libsilk ABI reference](?p=compiler/abi-libsilk)
+- [`libsilk(7)`](?p=man/libsilk.7)
+- [abi libsilk](?p=compiler/abi-libsilk)

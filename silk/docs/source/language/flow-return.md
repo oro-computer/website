@@ -32,11 +32,11 @@ The checker enforces:
 
 - `return` is only valid inside a function body (otherwise `E2009`).
 - In a function with non-`void` result type `R`, `return` must provide an
-  expression whose type is `R` (otherwise `E2009`).
+ expression whose type is `R` (otherwise `E2009`).
 - In a `void` function, `return;` is permitted and `return <expr>;` is rejected
-  (`E2009`).
+ (`E2009`).
 - In a function with non-`void` result, falling off the end of the function
-  body is a compile-time error (`docs/compiler/diagnostics.md`, `E2010`).
+ body is a compile-time error ([diagnostics](?p=compiler/diagnostics), `E2010`).
 
 ## Examples
 
@@ -77,6 +77,14 @@ impl Counter {
 
 ## Notes
 
-- `return <expr>;` is type-checked in non-`void` functions.
-- `return;` is valid in `void` functions.
-- A missing return in a non-`void` function is rejected with `E2010`.
+Implemented end-to-end:
+
+- `return <expr>;` from non-`void` functions, with type checking.
+- `return;` from `void` functions.
+- Missing return in a non-`void` function is rejected (`E2010`).
+
+examples:
+
+- `tests/silk/fail_return_type.slk` (wrong type, rejected)
+- `tests/silk/fail_missing_return.slk` (missing return, rejected)
+- `tests/silk/pass_impl_methods.slk` (uses `return;` in a `-> void` method)

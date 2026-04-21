@@ -4,7 +4,7 @@ This module provides test-only helpers that
 record test failures without aborting the process.
 
 These helpers are intended to be used under `silk test` and integrate with the
-language-level `assert` behavior in test builds (`docs/language/testing.md`).
+language-level `assert` behavior in test builds ([testing](?p=language/testing)).
 
 Each helper also carries a Formal Silk contract requiring `BUILD_MODE == "test"`
 via `std::test::requires_test_mode()` so downstream verification can model
@@ -21,8 +21,8 @@ Semantics:
 
 - When `ok` is `true`, `expect` does nothing.
 - When `ok` is `false`, `expect` records a test failure.
-  - When `message` is `Some(...)`, it is used as the failure message.
-  - When `message` is `None`, the default message is `"expect failed"`.
+ - When `message` is `Some(...)`, it is used as the failure message.
+ - When `message` is `None`, the default message is `"expect failed"`.
 
 ### `expect_equal`
 
@@ -35,7 +35,7 @@ Semantics:
 - Returns `true` when `expected == (actual as X)` and records no failure.
 - Returns `false` when `expected != (actual as X)` and records a failure.
 
-Note: equality must be supported for the
+Note: in Silk currently, equality must be supported for the
 concrete instantiated types used at the call site.
 
 ### `expect_error`

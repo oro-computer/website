@@ -14,9 +14,9 @@ These values let downstream code:
 ## Notes
 
 - Implemented: the toolchain metadata constants listed below are available as
-  built-in compile-time constants in every module.
+ built-in compile-time constants in every module.
 - Implemented: `silk --version` reports the same toolchain version, ABI version,
-  and git commit.
+ and git commit.
 
 ## Built-In Constants
 
@@ -39,7 +39,7 @@ These behave like normal `const` values:
 - They do not require an import.
 - They may be used anywhere an expression of the corresponding type is allowed.
 - They are compile-time constants (their values are fixed at compile time and
-  are embedded into the output artifact).
+ are embedded into the output artifact).
 
 ### `SILK_VERSION`
 
@@ -71,9 +71,9 @@ The git commit hash of the Silk toolchain used to compile the current module.
 Rules:
 
 - When the toolchain build can determine a git commit, this is set to a stable
-  hash string.
+ hash string.
 - When the toolchain build cannot determine a commit (for example when building
-  from a source snapshot without git metadata), this is set to `"unknown"`.
+ from a source snapshot without git metadata), this is set to `"unknown"`.
 
 ## Examples
 
@@ -96,5 +96,5 @@ fn main () -> int {
 
 ## Related
 
-- CLI output: `docs/compiler/cli-silk.md` and `docs/man/silk.1.md` (`silk --version`)
-- Conditional compilation: `docs/language/attributes.md` (`if attr(...) { ... }`)
+- CLI output: [cli silk](?p=compiler/cli-silk) and [silk.1](?p=man/silk.1) (`silk --version`)
+- Conditional compilation: [attributes](?p=language/attributes) (`if attr(...) { ... }`)

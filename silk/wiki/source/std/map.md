@@ -5,11 +5,12 @@
 - `HashMap(K, V)` (unordered, hash table),
 - `TreeMap(K, V)` (ordered, red-black tree).
 
-Full reference: `docs/std/map.md`.
+Canonical doc: [map](?p=std/map).
 
 ## Notes
 
-- Full reference: `docs/std/map.md`
+- Supported forms: usable in Silk currently with documented limits.
+- Details: [map](?p=std/map)
 
 ## Importing
 
@@ -46,5 +47,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/map.md`
-- Removed builtin `map(K, V)`: `docs/language/types.md`
+- Canonical doc: [map](?p=std/map)
+- Removed builtin `map(K, V)`: [types](?p=language/types)

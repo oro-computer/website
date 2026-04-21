@@ -2,11 +2,12 @@
 
 `std::tls` provides TLS client/server primitives (hosted baseline via mbedTLS).
 
-Full reference: `docs/std/tls.md`.
+Canonical doc: [tls](?p=std/tls).
 
 ## Notes
 
-- Full reference: `docs/std/tls.md`
+- Supported forms + design: `Session` + `MemPipe` are implemented for hosted targets.
+- Details: [tls](?p=std/tls)
 
 ## Importing
 
@@ -17,7 +18,8 @@ import std::tls;
 ## Examples
 
 ### Example: in-memory client/server handshake (MemPipe)
-This example uses `MemPipe` so it does not require sockets.
+This example uses `MemPipe` so it does not require sockets. It is kept runnable
+as `tests/silk/pass_std_tls_mem_handshake.slk`.
 
 ```silk
 import mem from "std/runtime/mem.slk";
@@ -231,4 +233,5 @@ fn main () -> int {
 
 ## See also
 
-- Full reference: `docs/std/tls.md`
+- Canonical doc: [tls](?p=std/tls)
+- End-to-end fixture: `tests/silk/pass_std_tls_mem_handshake.slk`

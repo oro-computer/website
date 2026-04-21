@@ -7,11 +7,11 @@
 - iterator values (`for x in it { ... }` when `it.next() -> T?`),
 - and C-style headers (`for (init; cond; step) { ... }`).
 
-Full reference: `docs/language/flow-for.md`.
+Canonical spec: [flow for](?p=language/flow-for).
 
 ## Notes
 
-- Full reference: `docs/language/flow-for.md`
+- Supported forms + current limitations: [flow for](?p=language/flow-for)
 
 ## Syntax
 ```silk
@@ -51,5 +51,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/flow-for.md`
-- Iterator protocol (current subset): `docs/std/interfaces.md`
+- Canonical spec: [flow for](?p=language/flow-for)
+- Iterator protocol (Supported forms): [interfaces](?p=std/interfaces)

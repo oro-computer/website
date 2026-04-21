@@ -3,7 +3,7 @@
 This page covers Silk’s intended support for types that mention compile-time
 values (especially integers), such as dependent-length collections.
 
-Canonical design doc: `docs/language/dependent-types.md`.
+Canonical design doc: [dependent types](?p=language/dependent-types).
 
 ## Example (Design)
 
@@ -14,5 +14,5 @@ struct VectorN(T, N: int) { /* ... */ }
 
 ## See also
 
-- Canonical design doc: `docs/language/dependent-types.md`
-- Generics: `docs/wiki/language/generics.md`
+- Canonical design doc: [dependent types](?p=language/dependent-types)
+- Generics: [generics](?p=language/generics)

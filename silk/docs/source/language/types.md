@@ -2,160 +2,165 @@
 
 This document specifies the Silk type system used by the compiler front-end and type checker.
 
-Current support:
+
 
 - Supported end-to-end: primitives, nominal `struct` types, optionals (`T?`),
-  `&Struct` references (in function parameter types and as local values
-  produced by `new` / calls that return `&Struct`), and array/slice types
-  (`T[N]`, `T[]`) over element types that lower to a fixed scalar-slot sequence
-  in the current backend subset (including array literals, indexing reads, and
-  iterable `for` loops). Indexed assignment targets (`xs[i] = v`) are supported
-  for these element types; compound index ops require numeric scalar element
-  types.
-  - Parameterized nominal types (monomorphized): generic `struct` and
-    `interface` declarations with **type parameters**, plus applied types in
-    type positions (`Name(u8)`, `Name(string)`) for those declarations.
+ `&Struct` references (in function parameter types and as local values
+ produced by `new` / calls that return `&Struct`), and array/slice types
+ (`T[N]`, `T[]`) over element types that lower to a fixed scalar-slot sequence
+ in the current backend subset (including array literals, indexing reads, and
+ iterable `for` loops). Indexed assignment targets (`xs[i] = v`) are supported
+ for these element types; compound index ops require numeric scalar element
+ types in the Supported forms.
+ - Parameterized nominal types (monomorphized): generic `struct` and
+ `interface` declarations with **type parameters**, plus applied types in
+ type positions (`Name(u8)`, `Name(string)`) for those declarations.
 - Reserved intrinsics: the compiler currently exposes reserved, stdlib
-  bring-up intrinsics for working with the `string` ABI (`__silk_string_ptr`,
-  `__silk_string_len`, and `__silk_string_from_ptr_len`). User code should
-  generally prefer the language sugar:
-  - `s as raw u64` (extract the underlying byte pointer), and
-  - `p as raw u64` (extract the underlying address for `p: &T`), and
-  - `ptr as string(len)` (construct a `string` view from a raw pointer plus an
-    explicit byte length), and
-  - `sizeof s` (string byte length as `usize`)
-  over calling these helpers directly. The intrinsic names remain reserved and
-  are not a stable user API.
+ bring-up intrinsics for working with the `string` ABI (`__silk_string_ptr`,
+ `__silk_string_len`, and `__silk_string_from_ptr_len`). User code should
+ generally prefer the language sugar:
+ - `s as raw u64` (extract the underlying byte pointer), and
+ - `p as raw u64` (extract the underlying address for `p: &T`), and
+ - `ptr as string(len)` (construct a `string` view from a raw pointer plus an
+ explicit byte length), and
+ - `sizeof s` (string byte length as `usize`)
+ over calling these helpers directly. The intrinsic names remain reserved and
+ are not a stable user API.
 - Special-case: the nominal optional form `Option(T)` is accepted and desugared
-  to `T?` in type annotations (it is not a general generics feature).
+ to `T?` in type annotations (it is not a general generics feature).
 - Parsed but rejected by the current checker: const parameters and integer
-  literal type arguments (`Foo(N: int)`, `Foo(u8, 1024)`) (`docs/compiler/diagnostics.md`, `E2016`),
-  and the removed builtin map type form (`map(K, V)`) (`E2017`; use
-  `std::map::{HashMap, TreeMap}` instead).
+ literal type arguments (`Foo(N: int)`, `Foo(u8, 1024)`) ([diagnostics](?p=compiler/diagnostics), `E2016`).
+- Removed builtin map type form: `map(K, V)` (`E2017`; use
+ `std::map::{HashMap, TreeMap}` instead).
 - Implemented in the native backend subset: 128-bit scalar primitives
-  (`i128`, `u128`, `f128`).
-  - In the current scalar-slot model (`docs/language/structs-impls-layout.md`),
-    these primitives lower to **two 8-byte slots** (`lo: u64`, `hi: u64`).
-  - `f128` uses the IEEE‑754 binary128 bit pattern stored across those slots.
-  - In the current backend implementation, `f128` arithmetic and some `as`
-    casts lower to bundled runtime helper calls:
-    - on `linux/x86_64`, the helpers use `__float128` and rely on libgcc
-      symbols (for example `__addtf3`),
-    - on targets where `long double` is an IEEE‑754 binary128 value (for
-      example `linux/aarch64`), the helpers use `long double`,
-    - on other targets, the helper calls are currently stubbed and will trap
-      if executed.
+ (`i128`, `u128`, `f128`).
+ - In the current scalar-slot model ([structs impls layout](?p=language/structs-impls-layout)),
+ these primitives lower to **two 8-byte slots** (`lo: u64`, `hi: u64`).
+ - `f128` uses the IEEE‑754 binary128 bit pattern stored across those slots.
+ - In the current backend implementation, `f128` arithmetic and some `as`
+ casts lower to bundled runtime helper calls:
+ - on `linux/x86_64`, the helpers use `__float128` and rely on libgcc
+ symbols (for example `__addtf3`),
+ - on targets where `long double` is an IEEE‑754 binary128 value (for
+ example `linux/aarch64`), the helpers use `long double`,
+ - on other targets, the helper calls are currently stubbed and will trap
+ if executed.
+ - Diagnostics rule: `u128` / `f128` are language features, so any compiler
+ rejection is an implementation gap in a specific compiler path, not a
+ language-contract rejection.
 - Typed errors (`error`, `panic`, and `T | ErrorType...`) are specified in
-  `docs/language/typed-errors.md`. The current compiler models typed error
-  contracts as an effect on function return types and expressions.
-  - Separately, type unions (`T1 | T2 | ...`) are supported in type annotations
-    as described in `docs/language/type-unions.md`. In function declaration
-    return types, union returns must be parenthesized (`-> (A | B)`) because
-    unparenthesized `|` after `->` is reserved for typed-error contracts.
+ [typed errors](?p=language/typed-errors). The current compiler models typed error
+ contracts as an effect on function return types and expressions.
+ - Separately, type unions (`T1 | T2 | ...`) are supported in type annotations
+ as described in [type unions](?p=language/type-unions). In function declaration
+ return types, union returns must be parenthesized (`-> (A | B)`) because
+ unparenthesized `|` after `->` is reserved for typed-error contracts.
 
 ## Quick Reference
 
 The core categories are:
 
 - Booleans: `bool`
-  - Examples: `true`, `false`.
-  - Notes: logical values.
+ - Examples: `true`, `false`.
+ - Notes: logical values.
 - Integers (fixed width): `u8`, `i8`, `u16`, `i16`, `u32`, `i32`, `u64`, `i64`, `u128`, `i128`
-  - Examples: `let n: i32 = 42;`.
-  - Notes: signed/unsigned bit-widths.
+ - Examples: `let n: i32 = 42;`.
+ - Notes: signed/unsigned bit-widths.
 - Integer (platform): `int`
-  - Examples: `let n: int = 1;`.
-  - Notes: implementation/default integer.
+ - Examples: `let n: int = 1;`.
+ - Notes: implementation/default integer.
 - Pointer-width integers: `usize`, `size`
-  - Examples: `let n: usize = 1;`, `let n: size = -1;`.
-  - Notes: unsigned/signed integer types whose width matches the target
-    architecture pointer width (for example 64-bit on `linux/x86_64`).
-  - Compatibility: `isize` is accepted as an alias for `size`.
+ - Examples: `let n: usize = 1;`, `let n: size = -1;`.
+ - Notes: unsigned/signed integer types whose width matches the target
+ architecture pointer width (for example 64-bit on `linux/x86_64`).
+ - Compatibility: `isize` is accepted as an alias for `size`.
 - Floats: `f32`, `f64`, `f128`
-  - Examples: `let x: f64 = 3.14;`.
-  - Notes: IEEE‑754.
+ - Examples: `let x: f64 = 3.14;`.
+ - Notes: IEEE‑754.
 - Char: `char`
-  - Examples: `'A'`.
-  - Notes: Unicode scalar.
+ - Examples: `'A'`.
+ - Notes: Unicode scalar.
 - String: `string`
-  - Examples: `"hello"`.
-  - Notes: immutable text; multi‑line strings supported.
+ - Examples: `"hello"`.
+ - Notes: immutable text; multi‑line strings supported.
 - Regexp: `regexp`
-  - Examples: `/hello/i`.
-  - Notes: compiled regular expression bytecode; a non-owning `{ ptr, len }`
-    view analogous to `string`. Regex literals compile at compile time; runtime
-    compilation and matching helpers live in `std::regex` (see `docs/std/regex.md`).
+ - Examples: `/hello/i`.
+ - Notes: compiled regular expression bytecode; a non-owning `{ ptr, len }`
+ view analogous to `string`. Regex literals compile at compile time; runtime
+ compilation and matching helpers live in `std::regex` (see [regex](?p=std/regex)).
 - Region handle: `Region`
-  - Examples: `fn f (r: Region) -> int { with r { ... } }`.
-  - Notes: a first-class region allocation context handle; see `docs/language/regions.md`.
+ - Examples: `fn f (r: Region) -> int { with r { ... } }`.
+ - Notes: a first-class region allocation context handle; see [regions](?p=language/regions).
 - Void / Unit: `void`
-  - Examples: `fn foo () -> void {}`.
-  - Notes: functions that return nothing.
+ - Examples: `fn foo () -> void {}`.
+ - Notes: functions that return nothing.
 - Time Types: `Instant`, `Duration`
-  - Examples: `let i: Instant = std::now();`.
-  - Notes: specialized `i64`-based types for time measurement.
+ - Examples: `let i: Instant = std::now();`.
+ - Notes: specialized `i64`-based types for time measurement.
 - Optional: `T?`
-  - Examples: `User?`, `i32?`.
-  - Notes: `None` / `none` is the canonical empty value; `null` may also be
-    used when an optional type is expected and coerces to `None`. Use `match`,
-    `?.`, `??`.
+ - Examples: `User?`, `i32?`.
+ - Notes: `None` / `none` is the canonical empty value; `null` may also be
+ used when an optional type is expected and coerces to `None`. Use `match`,
+ `?.`, `??`.
 - None (value):
-  - Examples: `None` / `none` (represented as `None` in code samples).
-  - Notes: the distinguished empty value; typed as `T?`. The `null` literal is
-    a distinct literal that can coerce to `None` when an optional type is
-    expected (see `docs/language/optional.md`).
+ - Examples: `None` / `none` (represented as `None` in code samples).
+ - Notes: the distinguished empty value; typed as `T?`. The `null` literal is
+ a distinct literal that can coerce to `None` when an optional type is
+ expected (see [optional](?p=language/optional)).
 - Reference (borrow): `&T`
-  - Examples: `&User`.
-  - Notes: reference type; `&Struct` may appear in
-    parameter types and as local values when produced by `new` or by calls that
-    return `&Struct`. Mutability follows the `mut` borrow contract and per-call
-    aliasing rules described in `docs/language/mutability.md`.
+ - Examples: `&User`.
+ - Notes: reference type; in the Supported forms, `&Struct` may appear in
+ parameter types and as local values when produced by `new` or by calls that
+ return `&Struct`. Mutability follows the `mut` borrow contract and per-call
+ aliasing rules described in [mutability](?p=language/mutability).
 - Arrays / Slices: `T[]`, `T[N]`
-  - Examples: `i32[]`, `byte[32]`.
-  - Notes: dynamic slice vs fixed length (compile‑time `N`). In the current
-    compiler/backend subset, arrays/slices are supported only when the element
-    type lowers to a fixed scalar slot sequence in the current scalar-slot
-    memory model (for example primitive scalars, `string`, and supported
-    `regexp`, supported non-opaque structs, and enums). See `docs/language/structs-impls-layout.md` for the
-    current scalar-slot memory model. Fixed array lengths are limited to
-    `N <= 4096`. Indexing `xs[i]` traps when `i` is out of bounds.
+ - Examples: `i32[]`, `byte[32]`.
+ - Notes: dynamic slice vs fixed length (compile‑time `N`). In the current
+ compiler/backend subset, arrays/slices are supported only when the element
+ type lowers to a fixed scalar slot sequence in the current scalar-slot
+ memory model (for example primitive scalars, `string`, and supported
+ `regexp`, supported non-opaque structs, and enums). See [structs impls layout](?p=language/structs-impls-layout) for the
+ current scalar-slot memory model. In the Supported forms, fixed array
+ lengths are limited to `N <= 4096`. Indexing `xs[i]` traps when `i` is out
+ of bounds in the Supported forms.
 - Range: `range`
-  - Examples: `let r: range = 0..4;`, `let r2: range = (1..) + 2;`.
-  - Notes: an `int`-indexed range value used for slicing and other index-based
-    operations. Range literal bounds are `int` values; in range literals, bound
-    expressions must have type `int` (integer literals may be coerced to
-    `int`). Range literal expressions support:
-    - `start..end` (end-exclusive) and `start..=end` (end-inclusive),
-    - `start..` (open-ended),
-    - `..end` (implicit start `0`),
-    - `..` (full range).
-    The inclusive (`..=`) form requires an explicit end bound.
-    In index/slice contexts, open-ended ranges use the container’s length as
-    the effective end bound.
-    A `range` value can be used for slicing via `&xs[r]` / `mut &xs[r]`, enabling
-    composed ranges (including inclusive ranges) to drive slicing.
+ - Examples: `let r: range = 0..4;`, `let r2: range = (1..) + 2;`.
+ - Notes: an `int`-indexed range value used for slicing and other index-based
+ operations. Range literal bounds are `int` values; in range literals, bound
+ expressions must have type `int` (integer literals may be coerced to
+ `int`). Range literal expressions support:
+ - `start..end` (end-exclusive) and `start..=end` (end-inclusive),
+ - `start..` (open-ended),
+ - `..end` (implicit start `0`),
+ - `..` (full range).
+ The inclusive (`..=`) form requires an explicit end bound.
+ In index/slice contexts, open-ended ranges use the container’s length as
+ the effective end bound.
+ A `range` value can be used for slicing via `&xs[r]` / `mut &xs[r]`, enabling
+ composed ranges (including inclusive ranges) to drive slicing.
 - Function Types: `fn(params) -> R`
-  - Examples: `fn(i32) -> i32`.
-  - Notes: function types are part of the type grammar and function-typed
-    values are supported as function values (including capturing closures).
-    Concurrency disciplines (`task` / `async`) are implemented on function
-    *declarations* (see `docs/language/concurrency.md`); function types in type
-    positions do not currently include discipline modifiers.
+ - Examples: `fn(i32) -> i32`.
+ - Notes: function types are part of the type grammar and function-typed
+ values are supported as function values (including capturing closures) in
+ Silk currently.
+ Concurrency disciplines (`task` / `async`) are implemented on function
+ *declarations* (see [concurrency](?p=language/concurrency)); function types in type
+ positions do not currently include discipline modifiers.
 - Capturing Closures:
-  - Notes: capturing closures are supported as function values with an
-    environment; see “Function Types and Closures” below for current subset
-    restrictions.
+ - Notes: capturing closures are supported as function values with an
+ environment; see “Function Types and Closures” below for Supported forms
+ restrictions.
 - Structs (nominal):
-  - Surface: `struct Name { ... }` then `Name(...)`.
-  - Examples: `Point`, `Option(T)`.
-  - Notes: user‑defined records; may be parameterized.
+ - Surface: `struct Name { ... }` then `Name(...)`.
+ - Examples: `Point`, `Option(T)`.
+ - Notes: user‑defined records; may be parameterized.
 - Enums (sum types):
-  - Surface: `enum Name { ... }`.
-  - Notes: nominal tagged unions as described in the spec.
+ - Surface: `enum Name { ... }`.
+ - Notes: nominal tagged unions as described in the spec.
 - Type unions:
-  - Surface: `T1 | T2 | ...` (type annotations).
-  - Notes: a tagged “one-of-these-types” type for a small, explicitly defined
-    subset; see `docs/language/type-unions.md`.
+ - Surface: `T1 | T2 | ...` (type annotations).
+ - Notes: a tagged “one-of-these-types” type for a small, explicitly defined
+ subset; see [type unions](?p=language/type-unions).
 
 The compiler must represent these types faithfully in its internal type system and in the C99 ABI mappings, and it must follow the exact surface syntaxes indicated above when parsing and printing types.
 
@@ -173,49 +178,51 @@ type pure fn PureIntAdder = fn(int, int) -> int;
 export type struct PublicBar = Foo;
 ```
 
-Semantics:
+Semantics (current implementation):
 
 - A type alias introduces a new name for an existing type; it does **not**
-  introduce a distinct nominal type.
+ introduce a distinct nominal type.
 - The type checker MUST treat uses of the alias name as equivalent to the alias
-  target type (the alias is transparent).
+ target type (the alias is transparent).
 - Type aliases may be used anywhere a type is expected (parameter/result types,
-  local annotations, struct fields, `as` casts, etc.).
+ local annotations, struct fields, `as` casts, etc.).
 - Cycles in type aliases are rejected (`E2058`).
 
 Kind tags:
 
 - A `type` declaration may optionally specify a kind tag, for example
-  `type struct Name = Foo;` or `type pure fn Name = fn(...) -> ...;`.
+ `type struct Name = Foo;` or `type pure fn Name = fn(...) -> ...;`.
 - When present, the compiler MUST validate that the resolved alias target
-  matches the declared kind (`E2059`).
+ matches the declared kind (`E2059`).
 
 Import/export:
 
 - `type` aliases may be exported (`export type ...;`) and imported as type names
-  via named file imports (see `docs/language/packages-imports-exports.md`).
+ via named file imports (see [packages imports exports](?p=language/packages-imports-exports)).
 
 ## Implicit Call-Argument Coercions
 
-Silk supports a small, **opt-in** implicit
+In Silk currently, Silk supports a small, **opt-in** implicit
 coercion mechanism for function call arguments. This exists to keep the
 current standard library ergonomic while generics and richer overload
 systems are still evolving.
 
-There are two related mechanisms:
+There are three related mechanisms:
 
 1. **Coercion to a nominal `struct` value** `T` (by-value parameters and
-   varargs elements) via exported static ctor-like methods.
+ varargs elements) via exported static ctor-like methods.
 2. **Coercion to a borrowed reference** `&T` (read-only `&T` parameters) via a
-   `constructor` method that initializes a compiler-generated stack temporary.
+ `constructor` method that initializes a compiler-generated stack temporary.
+3. **Contextual string compatibility** for values implementing
+ `std::interfaces::Serialize(string)`.
 
 ### 1) Coercion to `T` via exported static ctor-like methods
 
 Rule (informal):
 
 - When a function call argument type does not match a parameter type, and the
-  parameter is a nominal `struct` type `T`, the compiler may rewrite the
-  argument to a call of an exported, static ctor-like method on `T`.
+ parameter is a nominal `struct` type `T`, the compiler may rewrite the
+ argument to a call of an exported, static ctor-like method on `T`.
 - This also applies to varargs elements (`...args: T`).
 
 Supported ctor-like method names (destination type opts in by defining these):
@@ -249,11 +256,11 @@ Selection (source type → constructor):
 Integer width:
 
 - When the source argument is a fixed-width integer, the compiler inserts an
-  implicit integer cast to match the ctor parameter type before calling the
-  ctor.
+ implicit integer cast to match the ctor parameter type before calling the
+ ctor.
 - When the source argument is `f32` and the selected ctor parameter type is
-  `f64`, the compiler inserts an implicit float cast (`f32 -> f64`) before
-  calling the ctor.
+ `f64`, the compiler inserts an implicit float cast (`f32 -> f64`) before
+ calling the ctor.
 
 Example:
 
@@ -281,38 +288,38 @@ fn main () -> int {
 Notes:
 
 - Coercions are only attempted when the destination type provides the matching
-  exported static ctor method.
+ exported static ctor method.
 - Today this primarily exists to support `std::fmt::Arg` and ergonomic
-  `std::io::print/println` calls without requiring explicit `Arg.*`
-  wrappers everywhere.
+ `std::io::print/println` calls without requiring explicit `Arg.*`
+ wrappers everywhere.
 
 ### 2) Coercion to `&T` via `constructor` (stack temporary)
 
 Rule (informal):
 
 - When a call argument does not match a parameter type, and the parameter is a
-  **read-only borrowed reference** `&T` to a nominal `struct` type `T`, the
-  compiler may create an implicit stack temporary `tmp: T`, initialize it by
-  invoking `tmp.constructor(...)`, and pass `&tmp` to the callee.
+ **read-only borrowed reference** `&T` to a nominal `struct` type `T`, the
+ compiler may create an implicit stack temporary `tmp: T`, initialize it by
+ invoking `tmp.constructor(...)`, and pass `&tmp` to the callee.
 
 This is intentionally a *stack* construction mechanism:
 
 - it does **not** allocate on the heap,
 - it is compatible with `silk build --noheap`,
 - and the temporary’s lifetime is the duration of the call (similar to how C++
-  binds temporaries to `const&` parameters).
+ binds temporaries to `const&` parameters).
 
-Eligibility requirements:
+Eligibility requirements (Supported forms):
 
 - The parameter must be `&T` (not `mut &T`).
 - The destination type `T` must provide a visible `constructor` overload with:
-  - receiver `mut self: &T`,
-  - exactly **one** non-receiver parameter (`value: U`),
-  - return type `void`.
+ - receiver `mut self: &T`,
+ - exactly **one** non-receiver parameter (`value: U`),
+ - return type `void`.
 - The call argument type must match the selected overload’s `U` parameter type.
 - If multiple overloads are viable for a given argument, the coercion is
-  ambiguous and rejected (the call must be written with an explicit
-  construction).
+ ambiguous and rejected (the call must be written with an explicit
+ construction).
 
 Example:
 
@@ -342,12 +349,39 @@ Notes:
 
 - This is an opt-in mechanism: types must provide the matching `constructor`.
 - If the coercion is ambiguous (multiple viable conversion paths), the compiler
-  rejects the call and requires an explicit construction.
+ rejects the call and requires an explicit construction.
 - Because this coercion participates in ordinary call argument checking, it can
-  make additional overloads applicable (for example a copy-constructor
-  `constructor(mut self: &Self, other: &Self)` can accept a `string` argument by
-  first constructing a temporary `Self` from `string`). Overload resolution
-  prefers overloads that match without requiring such coercions.
+ make additional overloads applicable (for example a copy-constructor
+ `constructor(mut self: &Self, other: &Self)` can accept a `string` argument by
+ first constructing a temporary `Self` from `string`). Overload resolution
+ prefers overloads that match without requiring such coercions.
+
+### 3) Contextual `std::strings::String` compatibility for plain `string`
+
+Rule (informal):
+
+- When an expression is checked in a context that explicitly expects `string`,
+ and the expression’s type is `std::strings::String`, the compiler may accept
+ that expression as satisfying the expected `string`.
+
+Supported contexts include:
+
+- `let x: string = expr`
+- `x = expr` when `x: string`
+- ordinary function arguments where the parameter type is `string`
+
+Notes:
+
+- This is contextual; it does not change the expression’s nominal type outside
+ a `string`-expecting site.
+- This rule is currently specialized to `std::strings::String`.
+- `String.serialize()` / `String.as_string()` still describe the borrowed view
+ that is being exposed, so explicit `.as_string()` is no longer required
+ solely to satisfy these ordinary borrowed `string` contexts.
+- Returning a borrowed `string` view derived from a local owned `String`
+ remains a lifetime-sensitive case and is rejected by the compiler; use
+ `.as_string()` explicitly when you need to spell that borrow locally, or
+ return an owned `std::strings::String` instead.
 
 ## Explicit Casts (`as`)
 
@@ -359,21 +393,21 @@ let n: int = x as int;
 ```
 
 This operator is intended for explicit, potentially lossy primitive numeric
-conversions. In the current subset it also supports explicit conversions via
+conversions. In the Supported forms it also supports explicit conversions via
 `std::interfaces::Serialize(T)` by lowering `expr as T` to `expr.serialize()`
 when the operand type provides a matching `serialize` method.
 For structured conversions, it also supports `std::interfaces::Deserialize(S)`
 by lowering `expr as T` to `T.deserialize(expr)` when the target type provides
 a matching static `deserialize` method.
 
-The supported conversions and semantics are
-specified in `docs/language/operators.md` (“Casts (`as`)”).
+The supported conversions and semantics for Silk currently are
+specified in [operators](?p=language/operators) (“Casts (`as`)”).
 
 Notes:
 
 - `as` is explicit. It does not introduce new implicit coercions.
 - For call-argument ergonomics, see the separate opt-in coercion mechanism
-  described above (“Implicit Call-Argument Coercions”).
+ described above (“Implicit Call-Argument Coercions”).
 
 ## Nominal & Parameterized Types
 
@@ -383,15 +417,15 @@ The compiler must:
 
 - Treat nominal types as distinct even if their field layout is identical.
 - In the full language design, support parameterized types in all contexts
-  where the spec permits them. In the current compiler, **type-parameter**
-  generics are supported for nominal declarations (`struct` / `interface`) and
-  for applied types in type positions (`Name(u8)`).
-  - Const parameters and integer-literal type arguments (`Name(N: int)`,
-    `Name(u8, 1024)`) remain tracked work and are rejected (`E2016`).
-  - The `Option(T)` optional sugar described above remains supported for
-    the current subset.
+ where the spec permits them. In Silk currently, **type-parameter**
+ generics are supported for nominal declarations (`struct` / `interface`) and
+ for applied types in type positions (`Name(u8)`).
+ - Const parameters and integer-literal type arguments (`Name(N: int)`,
+ `Name(u8, 1024)`) remain tracked work and are rejected (`E2016`).
+ - The `Option(T)` optional sugar described above remains supported for
+ the Supported forms.
 
-### Parameterized type syntax (initial surface form)
+### Parameterized type syntax
 
 The initial surface syntax for applying type arguments is:
 
@@ -412,11 +446,11 @@ Result(int, string)
 Notes:
 
 - A `TypeArg` may be a type (e.g. `int`, `&Foo`, `Option(string)`) or a
-  compile-time integer literal for const-parameter-style arguments.
+ compile-time integer literal for const-parameter-style arguments.
 - The full semantics (declaring generic parameters, constraint checking, and
-  monomorphization) are still evolving; the key requirement is that the
-  compiler preserves the argument structure in the AST/type system so later
-  stages can enforce and lower it.
+ monomorphization) are still evolving; the key requirement is that the
+ compiler preserves the argument structure in the AST/type system so later
+ stages can enforce and lower it.
 
 ## Reference Types
 
@@ -430,58 +464,58 @@ Key requirements:
 Current implementation notes:
 
 - `&Struct` is supported in function parameter types and as local values when
-  produced by heap allocation (`new`) or by calls that return `&Struct`.
+ produced by heap allocation (`new`) or by calls that return `&Struct`.
 - `&T` where `T` is a **single-slot scalar primitive** (for example `&bool`,
-  `&int`, `&u64`, `&f64`) is supported in function parameter types and as local
-  values when produced by the borrow operator `&expr`.
+ `&int`, `&u64`, `&f64`) is supported in function parameter types and as local
+ values when produced by the borrow operator `&expr`.
 - Borrowed `&Struct` references may also be created from stack values:
-  - via the borrow operator `&expr` on borrowable lvalues, and
-  - via implicit borrow coercions in contexts that expect `&T`
-    (for example `let r: &Pair = pair;`).
-  These borrows are checked with conservative lexical lifetime rules (they may
-  not escape the scope of the borrowed stack storage).
+ - via the borrow operator `&expr` on borrowable lvalues, and
+ - via implicit borrow coercions in contexts that expect `&T`
+ (for example `let r: &Pair = pair;`).
+ These borrows are checked with conservative lexical lifetime rules (they may
+ not escape the scope of the borrowed stack storage).
 - Mutable reference parameters use the two-part `mut` contract and conservative
-  per-call aliasing rules; see `docs/language/mutability.md`.
+ per-call aliasing rules; see [mutability](?p=language/mutability).
 
-## Function Types and Closures (Implementation Status)
+## Function Types and Closures
 
-Current behavior:
+Silk currently:
 
 - Parses function types in type positions (most notably for `ext` declarations).
 - Implements function expressions (lambdas) in expression positions:
-  - expression body form: `fn (x: int, y: int) -> x + y`
-  - block body form: `fn (x: int, y: int) -> int { return x + y; }`
-  - block body `void` shorthand: `fn (x: int, y: int) { ... }` (implicit `void`)
+ - expression body form: `fn (x: int, y: int) -> x + y`
+ - block body form: `fn (x: int, y: int) -> int { return x + y; }`
+ - block body `void` shorthand: `fn (x: int, y: int) { ... }` (implicit `void`)
 - Function expressions may declare `&T` parameters only when `T` is a
-  single-slot scalar primitive (for example `&int` / `&bool`).
+ single-slot scalar primitive (for example `&int` / `&bool`).
 - Function expression bodies are checked under the `pure` rules in the current
-  subset. Non-capturing function expressions are inferred as `pure` function
-  types and are permitted in `pure` code:
-  - they may call only `pure` functions,
-  - they may not mutate (`let mut`/`var`, assignment),
-  - they may not allocate (`new`),
-  - they may not use typed error contracts or `panic`.
+ subset. Non-capturing function expressions are inferred as `pure` function
+ types and are permitted in `pure` code:
+ - they may call only `pure` functions,
+ - they may not mutate (`let mut`/`var`, assignment),
+ - they may not allocate (`new`),
+ - they may not use typed error contracts or `panic`.
 - The checker also supports purity inference (“auto-pure”) for ordinary function
-  declarations and `impl` methods. When inferred, these functions/methods are
-  treated as `pure` for call checking and are callable from `pure` code.
+ declarations and `impl` methods. When inferred, these functions/methods are
+ treated as `pure` for call checking and are callable from `pure` code.
 - Capturing closures are implemented as a subset of function values:
-  - a function expression body may reference **immutable** locals/parameters
-    from an enclosing scope; those values are captured by value into a heap
-    environment,
-  - in the current subset, only **scalar** captures are supported (`int`, fixed
-    width ints, `bool`, `char`, `f32`, `f64`, `Instant`, `Duration`),
-  - forming captures inside `pure` code is rejected (capture environments
-    allocate), but closure *values* are still checked under the `pure` rules and
-    remain callable from `pure` code once constructed.
+ - a function expression body may reference **immutable** locals/parameters
+ from an enclosing scope; those values are captured by value into a heap
+ environment,
+ - in the Supported forms, only **scalar** captures are supported (`int`, fixed
+ width ints, `bool`, `char`, `f32`, `f64`, `Instant`, `Duration`),
+ - forming captures inside `pure` code is rejected (capture environments
+ allocate), but closure *values* are still checked under the `pure` rules and
+ remain callable from `pure` code once constructed.
 - Function values are supported end-to-end for this subset (non-capturing and
-  capturing):
-  - they may be passed as arguments, returned from functions, stored in
-    structs/arrays, and called indirectly.
-  - the runtime representation is a pair `{ func_ptr, env_ptr }` as specified
-    in `docs/language/memory-model.md`.
+ capturing):
+ - they may be passed as arguments, returned from functions, stored in
+ structs/arrays, and called indirectly.
+ - the runtime representation is a pair `{ func_ptr, env_ptr }` as specified
+ in [memory model](?p=language/memory-model).
 - Discipline modifiers for function declarations (`pure` / `task` / `async`) are
-  implemented. Function types in type positions do not currently include
-  discipline modifiers.
+ implemented. Function types in type positions do not currently include
+ discipline modifiers.
 
 ### C Function Pointers (`c_fn`)
 
@@ -493,10 +527,10 @@ Silk distinguishes between:
 `c_fn` is intended for FFI: it is a safe, storable representation for passing
 callbacks to foreign code.
 
-Rules:
+Rules (Supported forms):
 
 - A `c_fn` value may be formed only from:
-  - a top-level function name, or
-  - a non-capturing `fn (...) -> ...` expression.
+ - a top-level function name, or
+ - a non-capturing `fn (...) -> ...` expression.
 - Capturing closures are rejected when a `c_fn` is required.
 - `c_fn` values are ABI-lowered as a single `u64` code pointer.

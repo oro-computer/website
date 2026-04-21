@@ -6,7 +6,7 @@ The goal of the Vim plugin is to provide a lightweight, spec-aligned editing exp
 
 - recognizes Silk source files by extension,
 - highlights the core language constructs described in `docs/language/`,
-- matches the indentation and comment style used throughout the Silk docs (see `docs/language/conventions.md`).
+- matches the indentation and comment style used throughout the Silk docs (see [conventions](?p=language/conventions)).
 
 ## Files and Layout
 
@@ -23,16 +23,16 @@ used directly from the Silk repository via the `runtimepath`.
 
 ## Filetype Detection
 
-- Silk source files use the `.slk` extension (as shown in `docs/usage/cli-examples.md`).
-- Build modules use `build.slk` (see `docs/compiler/build-scripts.md`).
+- Silk source files use the `.slk` extension (as shown in [cli examples](?p=usage/cli-examples)).
+- Build modules use `build.slk` (see [build scripts](?p=compiler/build-scripts)).
 - The plugin defines `filetype=silk` for `*.slk` and `*.silk` buffers (including `build.slk`).
 
 ## Syntax Highlighting
 
 The `vim/syntax/silk.vim` file is derived from:
 
-- the lexical and grammar documentation in `docs/language/grammar.md`,
-- the operator set in `docs/language/operators.md`,
+- the lexical and grammar documentation in [grammar](?p=language/grammar),
+- the operator set in [operators](?p=language/operators),
 - the literals, types, flow-control, optional/mutability, concurrency, FFI, and verification docs under `docs/language/`,
 - the current token and keyword tables in `src/token.zig`.
 
@@ -46,9 +46,9 @@ It currently highlights:
 - compiler/runtime intrinsics: identifiers matching `__silk_*` (internal ABI surface);
 - special method names: `constructor` and `drop` (both have language-defined meaning in the current compiler);
 - well-known package prefixes such as `std::`, so that standard library imports and qualified names stand out from ordinary identifiers;
-- operators and punctuation, including `++`, `--`, `?.`, `??`, `::`, `..`, `..=`, `...`, `->`, `=>` as described in `docs/language/operators.md`;
-- Formal Silk annotations: `#const`, `#require`, `#assure`, `#assert`, `#invariant`, `#variant`, `#monovariant`, `#theory` (including whitespace forms like `#  require`) are treated as preprocessor-style constructs;
-- doc comments: `///` and `/** ... */`, including common doc tags like `@param` / `@returns` / `@throws` / `@example` / `@since` / `@deprecated` / `@remarks` / `@see` (see `docs/language/doc-comments.md`);
+- operators and punctuation, including `++`, `--`, `?.`, `??`, `::`, `..`, `..=`, `...`, `->`, `=>` as described in [operators](?p=language/operators);
+- Formal Silk annotations: `#const`, `#require`, `#assure`, `#assert`, `#invariant`, `#variant`, `#monovariant`, `#theory` (including whitespace forms like `# require`) are treated as preprocessor-style constructs;
+- doc comments: `///` and `/** ... */`, including common doc tags like `@param` / `@returns` / `@throws` / `@example` / `@since` / `@deprecated` / `@remarks` / `@see` (see [doc comments](?p=language/doc-comments));
 - comments: both `//` line comments and `/* ... */` block comments (excluding doc-comment forms), consistent with the current lexer behavior in `src/lexer.zig`.
 
 As the language evolves (new keywords, operators, or constructs), both this document and `vim/syntax/silk.vim` must be updated in lockstep with `docs/language/` and `src/token.zig`.
@@ -58,12 +58,12 @@ As the language evolves (new keywords, operators, or constructs), both this docu
 The `vim/ftplugin/silk.vim` file configures:
 
 - indentation defaults:
-  - by default, Silk buffers inherit your Vim tab settings,
-  - if Vim is using its built-in defaults (`tabstop=8`, `shiftwidth=8`, `softtabstop=0`, `noexpandtab`), Silk buffers will use Silk’s preferred indentation (2 spaces with `expandtab`; see `docs/language/conventions.md`),
-  - override via `g:silk_indent_style` (`'auto'`, `'inherit'`, `'repo'`),
+ - by default, Silk buffers inherit your Vim tab settings,
+ - if Vim is using its built-in defaults (`tabstop=8`, `shiftwidth=8`, `softtabstop=0`, `noexpandtab`), Silk buffers will use Silk’s preferred indentation (2 spaces with `expandtab`; see [conventions](?p=language/conventions)),
+ - override via `g:silk_indent_style` (`'auto'`, `'inherit'`, `'repo'`),
 - a line comment style of `//` via `commentstring=// %s`,
 - C-style block comment metadata via `'comments'` / `'formatoptions'` so that
-  doc-style comments like:
+ doc-style comments like:
 
   ```silk
   /**
@@ -71,8 +71,8 @@ The `vim/ftplugin/silk.vim` file configures:
    */
   ```
 
-  are indented and continued automatically when you press `<CR>` on a comment
-  line (mirroring typical C-style comment editing behavior in Vim).
+ are indented and continued automatically when you press `<CR>` on a comment
+ line (mirroring typical C-style comment editing behavior in Vim).
 
 The `vim/indent/silk.vim` file provides a simple, block-oriented indent
 expression that:
@@ -82,7 +82,7 @@ expression that:
 - outdents lines that begin with closing `}`, `)`, or `]`.
 
 These settings match the style used throughout the Silk examples (2-space indentation;
-see `docs/language/conventions.md`) and align the editor experience with the language’s
+see [conventions](?p=language/conventions)) and align the editor experience with the language’s
 comment syntax.
 
 Additional Silk-specific editor behaviors (such as formatting commands or motion/textobject helpers) can be layered on in future iterations once the language and CLI stabilize further.
@@ -142,17 +142,17 @@ For Neovim, use the equivalent `~/.config/nvim/` directories or a plugin manager
 
 For a richer editing experience (on top of syntax highlighting), you can pair the Vim/Neovim plugin with the `silk-lsp` language server:
 
-- If you are using coc.nvim, see `docs/usage/editor-coc-nvim.md` for a dedicated configuration guide.
+- If you are using coc.nvim, see [editor coc nvim](?p=usage/editor-coc-nvim) for a dedicated configuration guide.
 - `silk-lsp` implements the Language Server Protocol over stdin/stdout.
 - It currently supports:
-  - full-document text synchronization,
-  - diagnostics driven by the parser and type checker,
-  - hover with approximate type hints for identifiers and struct fields,
-  - heuristic go-to-definition across the module set (functions, lets, structs, struct fields, and impl methods), including local `let` bindings and parameters,
-  - keyword/identifier completion with symbol-aware details and struct member suggestions,
-  - struct-literal field suggestions in `Type { ... }` expressions,
-  - signature help while typing function and method calls,
-  - top-level document symbols for `fn`, `let`, `struct`, `enum`, `error`, `interface`, `ext`, and `impl`.
+ - full-document text synchronization,
+ - diagnostics driven by the parser and type checker,
+ - hover with approximate type hints for identifiers and struct fields,
+ - heuristic go-to-definition across the module set (functions, lets, structs, struct fields, and impl methods), including local `let` bindings and parameters,
+ - keyword/identifier completion with symbol-aware details and struct member suggestions,
+ - struct-literal field suggestions in `Type { ... }` expressions,
+ - signature help while typing function and method calls,
+ - top-level document symbols for `fn`, `let`, `struct`, `enum`, `error`, `interface`, `ext`, and `impl`.
 - It does **not yet** provide semantic tokens, code actions, or full scope-aware navigation for match-expression binders or references; these will be added later as the compiler and LSP spec evolve.
 
 ### Example: Neovim Built-in LSP
@@ -186,4 +186,4 @@ For other editors or LSP frontends, the configuration is conceptually similar:
 - **filetypes / selectors**: Silk source files (typically `*.slk`)
 - **capabilities**: no need to advertise advanced features; the server’s `initialize` response drives what is supported.
 
-Refer to `docs/compiler/lsp-silk.md` for the authoritative description of the server’s capabilities and any future extensions. As the language server grows (completion, goto-definition, semantic hover, etc.), this document and example configurations should be updated to match.
+Refer to [lsp silk](?p=compiler/lsp-silk) for the authoritative description of the server’s capabilities and any future extensions. As the language server grows (completion, goto-definition, semantic hover, etc.), this document and example configurations should be updated to match.

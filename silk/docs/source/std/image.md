@@ -13,7 +13,7 @@ work with the current `ext` / C ABI subset.
 
 - `std::image` — shared image types.
 - `std::image::color` — Go-inspired color model helpers and common color value
-  types.
+ types.
 - `std::image::png` — PNG decode/encode (`RGBA8`) via libpng.
 - `std::image::jpeg` — JPEG decode/encode (`RGBA8`) via libjpeg-turbo.
 
@@ -42,14 +42,14 @@ toolchain builds shim archives that provide scalar-ABI-friendly functions.
 Notes:
 
 - The PNG path requires zlib and libm at link/runtime (typically `libz.so.1`
-  and `libm.so.6`).
+ and `libm.so.6`).
 - The JPEG path requires libm at link/runtime (typically `libm.so.6`).
 
 ## Ownership + Safety
 
 - Decoders return owned pixel buffers; callers must `drop` them when finished.
 - Inputs are treated as borrowed byte slices; they must remain valid for the
-  duration of a call.
+ duration of a call.
 - These modules do not provide sandboxing: decoding untrusted data can be
-  expensive and should be bounded by caller policy (size limits, timeouts,
-  etc.).
+ expensive and should be bounded by caller policy (size limits, timeouts,
+ etc.).

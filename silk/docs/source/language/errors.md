@@ -4,22 +4,22 @@ This document summarizes the Silk error-handling model at a level suitable for c
 
 For unrecoverable logic bugs and contract violations, Silk uses **typed
 errors** (`error`, `panic`, and `T | ErrorType...`), specified in
-`docs/language/typed-errors.md`.
+[typed errors](?p=language/typed-errors).
 
 ## Notes
 
 - Typed errors are implemented end-to-end for the current front-end and the
-  `linux/x86_64` backends (see `docs/language/typed-errors.md`).
+ `linux/x86_64` backends (see [typed errors](?p=language/typed-errors)).
 - `assert` is implemented:
-  - in release builds, a failed assertion traps immediately,
-  - in debug builds on `linux/x86_64` (`silk build --debug` / `-g`), a failed
-    assertion prints a panic header, an optional message, and a stack trace
-    before aborting.
+ - in release builds, a failed assertion traps immediately,
+ - in debug builds on `linux/x86_64` (`silk build --debug` / `-g`), a failed
+ assertion prints a panic header, an optional message, and a stack trace
+ before aborting.
 - In `silk test` builds, failed assertions record a test failure and execution
-  continues (the test process exits non-zero when failures were recorded). See
-  `docs/language/testing.md`.
+ continues (the test process exits non-zero when failures were recorded). See
+ [testing](?p=language/testing).
 
-## Principles
+## Model
 
 - Error signaling is explicit and typed (no hidden global error state).
 - Error paths are part of normal control flow, not out-of-band exceptions.
@@ -31,11 +31,11 @@ errors** (`error`, `panic`, and `T | ErrorType...`), specified in
 Silk distinguishes between:
 
 - **Recoverable errors** (invalid user input, I/O failures, parse failures): model
-  these as normal values, typically using `std::result::Result(T, E)` or an
-  optional (`T?`).
+ these as normal values, typically using `std::result::Result(T, E)` or an
+ optional (`T?`).
 - **Typed errors** (`T | ErrorType...` + `panic`): reserved for unrecoverable
-  contract violations and logic bugs that should not be silently ignored (see
-  `docs/language/typed-errors.md`).
+ contract violations and logic bugs that should not be silently ignored (see
+ [typed errors](?p=language/typed-errors)).
 
 ### Example: Recovering from URL parse errors
 
@@ -53,11 +53,11 @@ all command-line arguments is in:
 From the overall language design:
 
 - Silk favors explicit types such as:
-  - optionals (`T?` / `Option(T)`) for “may be present / may be absent” values.
-  - domain-specific error types (enums or structs) for richer error reporting.
+ - optionals (`T?` / `Option(T)`) for “may be present / may be absent” values.
+ - domain-specific error types (enums or structs) for richer error reporting.
 - Functions that can fail should surface that in their type signatures:
-  - either by returning a value that encodes both success and error (e.g. an optional or a nominal error-aware type),
-  - or by returning an error-only type where success is absence of error.
+ - either by returning a value that encodes both success and error (e.g. an optional or a nominal error-aware type),
+ - or by returning an error-only type where success is absence of error.
 
 The naming and shapes of error-carrying types are defined by this language spec and by standard library APIs, but the compiler must:
 
@@ -94,7 +94,7 @@ The verifier should be able to:
 
 On the C99 side:
 
-- Error values exposed through `libsilk.a` should use well-defined C types (e.g. enums or structs) documented in `docs/compiler/abi-libsilk.md`.
+- Error values exposed through `libsilk.a` should use well-defined C types (e.g. enums or structs) documented in [abi libsilk](?p=compiler/abi-libsilk).
 - For external functions declared via `ext`, any error behavior must be captured in the Silk-side function type and corresponding C signature (e.g. error-return codes, nullable pointers, or explicit error structs).
 
 The compiler must:
@@ -118,20 +118,20 @@ Rules:
 - The condition expression must type-check as `bool`.
 - The optional message, when present, must type-check as `string`.
 
-Runtime behavior:
+Runtime behavior (current implementation):
 
 - By default (release builds), if the condition evaluates to `false`, execution
-  traps immediately (a panic-like abort). In the current `linux/x86_64` backend
-  this is implemented as an invalid-instruction trap.
+ traps immediately (a panic-like abort). In the current `linux/x86_64` backend
+ this is implemented as an invalid-instruction trap.
 - In debug builds (`silk build --debug` / `-g`) on `linux/x86_64`, a failed
-  assertion prints a panic header, the optional message (when present), and a
-  stack trace to stderr when available (via glibc `backtrace_symbols_fd`)
-  before aborting.
+ assertion prints a panic header, the optional message (when present), and a
+ stack trace to stderr when available (via glibc `backtrace_symbols_fd`)
+ before aborting.
 
 Notes:
 
 - Failed assertions are currently isolated by the `silk test` runner (each
-  test runs in its own process). Future work may allow reporting failed
-  assertions without process isolation (for example by lowering `assert` to a
-  typed error in test contexts).
-- See also: `docs/language/testing.md`.
+ test runs in its own process). Future work may allow reporting failed
+ assertions without process isolation (for example by lowering `assert` to a
+ typed error in test contexts).
+- See also: [testing](?p=language/testing).

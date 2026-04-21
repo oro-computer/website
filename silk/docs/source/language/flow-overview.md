@@ -23,31 +23,31 @@ Each construct has defined syntax, typing, and evaluation semantics.
 
 Includes:
 
-- `if` / `else` as statement forms (`docs/language/flow-if-else.md`)
-- `loop` loops (`docs/language/flow-loop.md`)
-- `while` loops (`docs/language/flow-while.md`)
-- `for` loops (ranges, builtin arrays/slices, and C-style `for (init; cond; step)`; `docs/language/flow-for.md`)
-- `break` / `continue` inside loops (`docs/language/flow-break.md`,
-  `docs/language/flow-continue.md`)
+- `if` / `else` as statement forms ([flow if else](?p=language/flow-if-else))
+- `loop` loops ([flow loop](?p=language/flow-loop))
+- `while` loops ([flow while](?p=language/flow-while))
+- `for` loops (ranges, builtin arrays/slices, and C-style `for (init; cond; step)`; [flow for](?p=language/flow-for))
+- `break` / `continue` inside loops ([flow break](?p=language/flow-break),
+ [flow continue](?p=language/flow-continue))
 - `return` statements, including “all paths must return” checking for non-`void`
-  functions (`docs/language/flow-return.md`)
+ functions ([flow return](?p=language/flow-return))
 - `match` as an expression for optionals, primitive integers, enums, type
-  unions, and recoverable `Result`-style values
-  (`docs/language/flow-match.md`)
+ unions, and recoverable `Result`-style values
+ ([flow match](?p=language/flow-match))
 - `match` as a statement for ordinary values in the supported subset and for
-  typed errors (`docs/language/flow-match.md`,
-  `docs/language/typed-errors.md`)
+ typed errors ([flow match](?p=language/flow-match),
+ [typed errors](?p=language/typed-errors))
 - Expression statements for calls and assignments only
-  (`docs/language/flow-expression-statements.md`)
+ ([flow expression statements](?p=language/flow-expression-statements))
 
 Additional notes:
 
 - `if` as a value-producing expression form is implemented for the documented
-  subset; see `docs/language/flow-if-else.md`.
+ subset; see [flow if else](?p=language/flow-if-else).
 
 When in doubt, consult:
 
-- `docs/compiler/diagnostics.md` (error codes)
+- [diagnostics](?p=compiler/diagnostics) (error codes)
 - the runnable examples embedded throughout `docs/language/`
 
 ## Principles
@@ -55,11 +55,11 @@ When in doubt, consult:
 These rules help keep control flow explicit and statically checkable:
 
 - Conditions are boolean: `if` and `while` require a `bool` condition (no
-  integer “truthiness”).
+ integer “truthiness”).
 - Bodies are blocks: flow constructs use `{ ... }` blocks as their bodies.
 - Statements are terminated: most statement forms end with `;` (for example
-  `let`, `return`, `break`, `continue`, `panic`, `assert`, and expression
-  statements).
+ `let`, `return`, `break`, `continue`, `panic`, `assert`, and expression
+ statements).
 
 ## Quick Examples
 

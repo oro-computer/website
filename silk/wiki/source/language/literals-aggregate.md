@@ -5,7 +5,7 @@ Aggregate literals build compound values directly in source code:
 - array literals: `[a, b, c]`
 - struct literals: `Type{ field: value, ... }`
 
-Canonical doc: `docs/language/literals-aggregate.md`.
+Canonical doc: [literals aggregate](?p=language/literals-aggregate).
 
 ## Example
 ```silk
@@ -23,5 +23,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/language/literals-aggregate.md`
-- Types: `docs/wiki/language/types.md`
+- Canonical doc: [literals aggregate](?p=language/literals-aggregate)
+- Types: [types](?p=language/types)

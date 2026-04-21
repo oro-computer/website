@@ -2,7 +2,7 @@
 
 Silk has the boolean type `bool` with literals `true` and `false`.
 
-Canonical doc: `docs/language/literals-boolean.md`.
+Canonical doc: [literals boolean](?p=language/literals-boolean).
 
 ## Example
 ```silk

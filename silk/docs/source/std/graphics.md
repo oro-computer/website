@@ -28,17 +28,17 @@ upstream commits so the surface area is stable and reviewable.
 Pinned registry inputs:
 
 - OpenGL / OpenGL ES: `gl.xml` from `KhronosGroup/OpenGL-Registry` commit
-  `0b449b97cdf1043eef5e1f0e235cbbab6ec10c86`.
+ `0b449b97cdf1043eef5e1f0e235cbbab6ec10c86`.
 - Vulkan: `vk.xml` from `KhronosGroup/Vulkan-Docs` commit
-  `fb8116669f76e26bdab4c7ad0bf1cafdeff484dc`.
+ `fb8116669f76e26bdab4c7ad0bf1cafdeff484dc`.
 
 Regeneration:
 
 - Run `python3 docs/tools/gen_graphics_bindings.py`.
 - The generated outputs are:
-  - `std/graphics/opengl.slk`
-  - `std/graphics/opengles.slk`
-  - `std/graphics/vulkan.slk`
+ - `std/graphics/opengl.slk`
+ - `std/graphics/opengles.slk`
+ - `std/graphics/vulkan.slk`
 
 ## Linking (Hosted `linux/x86_64` Baseline)
 
@@ -64,11 +64,11 @@ These APIs are inherently low-level:
 
 - Many functions are unsafe without an active context/device.
 - Most pointer parameters are represented as `std::graphics::Ptr` (`u64`)
-  addresses and must be valid for the duration of the call.
+ addresses and must be valid for the duration of the call.
 - Some `const char *` inputs are represented as Silk `string` values for
-  convenience (lowered as C-string pointers by the current `ext` ABI mapping).
+ convenience (lowered as C-string pointers by the current `ext` ABI mapping).
 - Returned pointers (for example from `glGetString`) are borrowed views into
-  driver-managed memory and must not be freed.
+ driver-managed memory and must not be freed.
 
 The `std::graphics` bindings focus on mechanical ABI mapping and leave
 ownership/lifetime management to higher layers.
@@ -76,5 +76,5 @@ ownership/lifetime management to higher layers.
 Important current limitation (compiler subset):
 
 - The compiler does not yet implement packed C struct layout. As a result,
-  these bindings use `u64` pointers for C pointer parameters and do not rely on
-  passing user-defined structs by value to C.
+ these bindings use `u64` pointers for C pointer parameters and do not rely on
+ passing user-defined structs by value to C.

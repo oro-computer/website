@@ -4,8 +4,8 @@ Silk’s external declaration feature lets Silk code call foreign functions and
 access foreign variables.
 
 - The core construct is the `ext` definition, which declares:
-  - external C functions and their Silk function types, or
-  - external C variables and their Silk types.
+ - external C functions and their Silk function types, or
+ - external C variables and their Silk types.
 - The compiler and runtime perform marshalling between Silk’s internal representations and the C ABI, following a documented mapping.
 
 ## Declaring an External Binding
@@ -39,11 +39,11 @@ ext c_free "free" = fn (u64) -> void;
 Rules:
 
 - The identifier after `ext` is the **Silk binding name** (used for imports and
-  calls from Silk code).
+ calls from Silk code).
 - The optional string literal is the **external symbol name** used for linking
-  (native) or as the import name (wasm).
+ (native) or as the import name (wasm).
 - If the string literal is omitted, the external symbol name is the same as the
-  binding name.
+ binding name.
 
 ## Avoiding Shadowing (Global `::...`)
 
@@ -69,74 +69,77 @@ Therefore:
 
 - It is a compile-time error to attempt to verify an `ext` declaration.
 - It is a compile-time error for verified code (code whose compilation requires
-  proofs) to call an `ext` function or read an `ext` variable.
+ proofs) to call an `ext` function or read an `ext` variable.
 
 This intentionally limits verification across the `ext` boundary.
 
 ## Notes
 
-Supported forms:
+Silk currently implements this feature under the `ext`
+keyword. The docs treat `ext` as canonical.
+
+Currently supported:
 
 - parsing `ext` external declarations and representing them in the AST,
 - optional external symbol aliases (`ext local "extern" = ...;`),
 - `ext` **functions** with fixed parameter lists (`ext name = fn (T0, T1) -> R;`)
-  as callable symbols in Silk (C variadic `...` is not implemented yet),
+ as callable symbols in Silk (C variadic `...` is not implemented yet),
 - `ext` function parameters of **function type** (`fn(...) -> R`) as C-compatible
-  function pointers:
-  - at the ABI level, these are passed as a single `u64` code pointer (no closure
-    environment),
-  - arguments must be either:
-    - a top-level function name, or
-    - a non-capturing `fn (...) -> ...` expression,
-  - capturing closures (and arbitrary function-typed locals) are rejected for
-    `ext` function-pointer parameters in the current subset,
-- `c_fn (...) -> R` types as explicit C callback pointers:
-  - `c_fn` is a code-pointer-only function pointer type intended for FFI,
-  - unlike `fn (...) -> R` function values, `c_fn (...) -> R` values do not carry a
-    closure environment and are safe to store in locals/struct fields and pass
-    through APIs,
-  - a `c_fn` value may be formed only from:
-    - a top-level function name, or
-    - a non-capturing `fn (...) -> ...` expression,
-  - capturing closures are rejected when a `c_fn` is required.
+ function pointers:
+ - at the ABI level, these are passed as a single `u64` code pointer (no closure
+ environment),
+ - arguments must be either:
+ - a top-level function name, or
+ - a non-capturing `fn (...) -> ...` expression,
+ - capturing closures (and arbitrary function-typed locals) are rejected for
+ `ext` function-pointer parameters in the Supported forms,
+- `c_fn (...) -> R` types as explicit C callback pointers (Supported forms):
+ - `c_fn` is a code-pointer-only function pointer type intended for FFI,
+ - unlike `fn (...) -> R` function values, `c_fn (...) -> R` values do not carry a
+ closure environment and are safe to store in locals/struct fields and pass
+ through APIs,
+ - a `c_fn` value may be formed only from:
+ - a top-level function name, or
+ - a non-capturing `fn (...) -> ...` expression,
+ - capturing closures are rejected when a `c_fn` is required.
 - `ext` **variables** of scalar type (`ext name = T;` where `T` is a supported
-  scalar such as `int`, fixed-width ints, `bool`, `char`, or `f32`/`f64`) as
-  readable values in Silk,
+ scalar such as `int`, fixed-width ints, `bool`, `char`, or `f32`/`f64`) as
+ readable values in Silk,
 - `string` parameters in `ext` function calls are lowered as C-string pointers (`const char *`) in the current backend subset; the compiler-emitted backing bytes include a trailing NUL terminator, while the Silk `string` length excludes it.
 - borrowed-view types are restricted at the external boundary:
-  - opaque handle types declared via `struct Name;` may be used behind a
-    reference (`&Name`) in `ext` function parameters and results,
-  - ordinary references (`&T`) and slices (`T[]`) are rejected at `ext`
-    boundaries,
-  - and the same ordinary-borrow restriction also applies to global-package
-    `export fn` signatures because they participate in the same external ABI
-    surface.
+ - opaque handle types declared via `struct Name;` may be used behind a
+ reference (`&Name`) in `ext` function parameters and results,
+ - ordinary references (`&T`) and slices (`T[]`) are rejected at `ext`
+ boundaries,
+ - and the same ordinary-borrow restriction also applies to global-package
+ `export fn` signatures because they participate in the same external ABI
+ surface.
 - lowering calls to `ext` functions when building:
-  - `silk build --kind object`, and
-  - `silk build --kind static`,
-  - `silk build --kind shared`,
-  - `silk build --kind executable`,
-  producing relocations against undefined external symbols in the generated
-  `.o` / `.a`, dynamic imports in the generated `.so`, or dynamic imports in
-  the generated dynamically-linked executable (linux/x86_64).
-  - for shared libraries and dynamically-linked executables, external calls are
-    routed through a GOT slot that is filled by the dynamic loader.
-  - `ext` variable reads are supported for the same outputs, producing
-    relocations against undefined external data symbols (`.o` / `.a`) or dynamic
-    imports (`.so` / dynamically-linked executable) routed through the GOT.
-  - for wasm targets (`wasm32-unknown-unknown`, `wasm32-wasi`), `ext` declarations map to wasm imports:
-    - `ext foo = fn (...) -> ...;` becomes an imported wasm function `env.foo`,
-    - `ext bar = T;` becomes an imported wasm global `env.bar` (for scalar `T`),
-    - parameter/result types follow the compiler’s current scalar lowering (for example `int` → wasm `i64`).
+ - `silk build --kind object`, and
+ - `silk build --kind static`,
+ - `silk build --kind shared`,
+ - `silk build --kind executable`,
+ producing relocations against undefined external symbols in the generated
+ `.o` / `.a`, dynamic imports in the generated `.so`, or dynamic imports in
+ the generated dynamically-linked executable (linux/x86_64).
+ - for shared libraries and dynamically-linked executables, external calls are
+ routed through a GOT slot that is filled by the dynamic loader.
+ - `ext` variable reads are supported for the same outputs, producing
+ relocations against undefined external data symbols (`.o` / `.a`) or dynamic
+ imports (`.so` / dynamically-linked executable) routed through the GOT.
+ - for wasm targets (`wasm32-unknown-unknown`, `wasm32-wasi`), `ext` declarations map to wasm imports:
+ - `ext foo = fn (...) -> ...;` becomes an imported wasm function `env.foo`,
+ - `ext bar = T;` becomes an imported wasm global `env.bar` (for scalar `T`),
+ - parameter/result types follow the compiler’s current scalar lowering (for example `int` → wasm `i64`).
 
 Not implemented yet (documented design, future work):
 
-- writing to `ext` variables (they are read-only in the current subset),
+- writing to `ext` variables (they are read-only in the Supported forms),
 - `ext` variables of non-scalar types (strings, structs, optionals, arrays),
 - richer string and aggregate marshalling (for example: returning `string` from `ext` calls as an owned Silk value, passing/returning user-defined structs by value beyond the current ABI-safe POD subset, and array/slice bridging).
 - calling back into Silk from foreign code with capturing closures or richer
-  closure environments (only plain non-capturing function pointers are
-  supported as `ext` parameters in the current subset).
+ closure environments (only plain non-capturing function pointers are
+ supported as `ext` parameters in the Supported forms).
 
 ## Passing Callbacks to C (`c_fn`)
 
@@ -167,8 +170,8 @@ Notes:
 
 - `c_fn` values are code pointers only; they cannot capture local variables.
 - If a C API needs context, pass an explicit context pointer (e.g. a `u64` that
-  is a `void *` in C) alongside the callback and include that context parameter
-  in the callback signature.
+ is a `void *` in C) alongside the callback and include that context parameter
+ in the callback signature.
 
 ## Opaque Struct Handles
 
@@ -211,28 +214,28 @@ Rules (implemented):
 Safety:
 
 - You are responsible for managing the lifetime of foreign handles. Most C APIs
-  provide explicit create/destroy functions; always call the destruction
-  function when you are done.
+ provide explicit create/destroy functions; always call the destruction
+ function when you are done.
 - Using a handle after destruction is undefined behavior; the compiler does not
-  currently enforce this at compile time.
+ currently enforce this at compile time.
 
 Notes on executable `ext` calls (current linux/x86_64 implementation):
 
 - When an executable uses `ext` calls or `ext` variable reads, the compiler
-  emits a **dynamically-linked** ELF64 executable (PIE-style `ET_DYN` with
-  `PT_INTERP`, `.dynamic`, `.rela.dyn`, and a `.got`).
+ emits a **dynamically-linked** ELF64 executable (PIE-style `ET_DYN` with
+ `PT_INTERP`, `.dynamic`, `.rela.dyn`, and a `.got`).
 - External symbols are resolved by the platform dynamic loader. Dependencies
-  can be declared via the CLI (`silk build --needed <soname> ...`) or via the
-  C99 embedding API (`silk_compiler_add_needed_library`), and runtime search
-  paths can be declared via `--runpath` / `silk_compiler_add_runpath`.
+ can be declared via the CLI (`silk build --needed <soname> ...`) or via the
+ C99 embedding API (`silk_compiler_add_needed_library`), and runtime search
+ paths can be declared via `--runpath` / `silk_compiler_add_runpath`.
 
 ## ABI Contract (Overview)
 
 The language defines two closely related views of the ABI:
 
 - A “fat pointer” internal representation for `string` and `regexp`:
-  - conceptually: `struct string { ptr: ptr, len: i64 }` where `ptr` is a UTF‑8 pointer.
-  - conceptually: `struct regexp { ptr: ptr, len: i64 }` where `ptr` is an engine-owned bytecode pointer.
+ - conceptually: `struct string { ptr: ptr, len: i64 }` where `ptr` is a UTF‑8 pointer.
+ - conceptually: `struct regexp { ptr: ptr, len: i64 }` where `ptr` is an engine-owned bytecode pointer.
 - A C ABI contract (e.g. via `silk/silk.h`) using an explicit struct:
 
   ```c
@@ -253,7 +256,7 @@ When calling conventional C APIs, the compiler may pass a `const char *` derived
 - Internal/runtime ABI: operates on `{ ptr, len }` structs (`SilkString`).
 - Compatibility calls to typical C libraries: may expose `const char *` for parameters declared as `string` in Silk `ext` declarations, with the compiler extracting the `ptr`.
 
-Our embedding ABI for `libsilk.a` will treat `SilkString` as the canonical C representation; details are further specified in `docs/compiler/abi-libsilk.md`.
+Our embedding ABI for `libsilk.a` will treat `SilkString` as the canonical C representation; details are further specified in [abi libsilk](?p=compiler/abi-libsilk).
 
 ## Primitive Type Mapping
 
@@ -263,12 +266,12 @@ The spec includes a table mapping Silk primitive types to C types, for example:
 - `i16`, `u16` → `int16_t`, `uint16_t`
 - `i32`, `u32` → `int32_t`, `uint32_t`
 - `i64`, `u64` → `int64_t`, `uint64_t`
-- `i128` → `SilkI128` (see `docs/compiler/abi-libsilk.md`; `{ lo, hi }` lanes)
-- `u128` → `SilkU128` (see `docs/compiler/abi-libsilk.md`; `{ lo, hi }` lanes)
+- `i128` → `SilkI128` (see [abi libsilk](?p=compiler/abi-libsilk); `{ lo, hi }` lanes)
+- `u128` → `SilkU128` (see [abi libsilk](?p=compiler/abi-libsilk); `{ lo, hi }` lanes)
 - `int` → `int64_t` (current `linux/x86_64` baseline; do not assume C `int`)
 - `f32` → `float`
 - `f64` → `double`
-- `f128` → `SilkF128` (see `docs/compiler/abi-libsilk.md`; IEEE binary128 bits in `{ lo, hi }`)
+- `f128` → `SilkF128` (see [abi libsilk](?p=compiler/abi-libsilk); IEEE binary128 bits in `{ lo, hi }`)
 - `bool` → `bool` (or `_Bool`)
 - `char` → `uint32_t` (UTF‑32)
 - `string` → `SilkString` (`{ char *ptr; int64_t len; }`)
@@ -278,10 +281,10 @@ The spec includes a table mapping Silk primitive types to C types, for example:
 Notes:
 
 - For FFI with APIs that use a C `int` (for example many POSIX syscalls),
-  prefer `i32`/`u32` in your `ext` declarations rather than `int`.
+ prefer `i32`/`u32` in your `ext` declarations rather than `int`.
 - The stable C99 ABI does **not** use compiler-specific `__int128` or
-  `__float128` types for these primitives; it uses explicit `{ lo, hi }`
-  structs so the ABI is portable and can be expressed in strict C99.
+ `__float128` types for these primitives; it uses explicit `{ lo, hi }`
+ structs so the ABI is portable and can be expressed in strict C99.
 
 These mappings must be reflected exactly in the C99 ABI.
 
@@ -291,23 +294,23 @@ For strings, the spec makes the following points:
 
 - Silk’s `string` is represented internally as a `{ ptr, len }` pair.
 - For `ext` calls to typical C APIs:
-  - the compiler can extract `ptr` and pass it as a `const char *`,
-  - the data is guaranteed to be null‑terminated so standard C string functions are safe.
+ - the compiler can extract `ptr` and pass it as a `const char *`,
+ - the data is guaranteed to be null‑terminated so standard C string functions are safe.
 
 For regex bytecode values (`regexp`):
 
 - Silk’s `regexp` is represented internally as a `{ ptr, len }` pair with the
-  same slot layout as `string`, but the bytes are *not text* and are not
-  required to be null‑terminated.
+ same slot layout as `string`, but the bytes are *not text* and are not
+ required to be null‑terminated.
 - At ABI boundaries, `regexp` uses the same C shape as `SilkString`, but C code
-  must treat it as an opaque `(ptr, len)` byte span (not a C string).
+ must treat it as an opaque `(ptr, len)` byte span (not a C string).
 - Runtime regex helpers validate malformed or undersized foreign `regexp`
-  payloads before execution and report them as invalid input, but C code must
-  still not fabricate regex bytecode as if it were a stable public format.
+ payloads before execution and report them as invalid input, but C code must
+ still not fabricate regex bytecode as if it were a stable public format.
 - Runtime regex helpers also track which bytecode buffers they actually
-  allocated: only `std::regex::RegExp.compile(...)` produces an owned regex
-  allocation, while borrowed/literal/foreign `regexp` views are ignored by the
-  regex free/drop path instead of being freed as if they were runtime-owned.
+ allocated: only `std::regex::RegExp.compile(...)` produces an owned regex
+ allocation, while borrowed/literal/foreign `regexp` views are ignored by the
+ regex free/drop path instead of being freed as if they were runtime-owned.
 
 For the embedding ABI (`libsilk.a`):
 
@@ -335,13 +338,13 @@ Rules:
 
 - `ext` function types must not use `|` in their return types.
 - Silk-to-C ABI surfaces must not expose `|` in exported function signatures.
-  Shims should convert typed errors into explicit error codes, optionals, or
-  domain-specific error types, or terminate in a platform-appropriate way.
+ Shims should convert typed errors into explicit error codes, optionals, or
+ domain-specific error types, or terminate in a platform-appropriate way.
 
-Implementation status:
+Implementation
 
 - The current compiler rejects `ext` declarations that include `|`, and rejects
-  exporting error-producing functions to C ABI outputs.
+ exporting error-producing functions to C ABI outputs.
 
 The spec also includes a “Structs, Arrays, and Closures (Complex Types)” subsection for FFI. As the implementation proceeds, this document must be extended to:
 
@@ -349,46 +352,46 @@ The spec also includes a “Structs, Arrays, and Closures (Complex Types)” sub
 - define how arrays and slices are represented across the boundary,
 - document any stable closure representation, if exposed in the C ABI.
 
-## Structs (Initial ABI Subset)
+## Structs
 
 The full language design includes rich user-defined structs and nested
 aggregates. The current compiler implementation supports only a small subset of
 structs in code generation:
 
 - structs with 0+ fields of supported value types (scalar primitives, `string`,
-  nested structs, and supported optionals) in function bodies and internal helper calls,
+ nested structs, and supported optionals) in function bodies and internal helper calls,
 - on `linux/x86_64`, passing and returning these structs by value at ABI boundaries
-  using a scalar-slot lowering model:
-  - a struct value lowers to N scalar “eightbyte” slots in field order, and
-    each slot is classified as INTEGER (integer-like scalars such as `int`,
-    fixed-width integers, `bool`, `char`, `Instant`, `Duration`) or SSE (`f32`/`f64`),
-  - exported function *parameters* accept these slots as separate parameters;
-    for 1–2 slot structs this is ABI-compatible with a by-value C struct
-    parameter for the 8-byte-field subset, while for packed structs with
-    smaller fields ABI compatibility with an equivalent C struct layout is not
-    yet implemented/validated; for 3+ slot structs downstream C callers should
-    declare separate parameters for the slots,
-  - exported function *returns* support 1+ slot structs; 1–2 slot results
-    return in `rax`/`rdx` and/or `xmm0`/`xmm1` accordingly, while 3+ slot
-    results return indirectly via a hidden sret pointer.
+ using a scalar-slot lowering model:
+ - a struct value lowers to N scalar “eightbyte” slots in field order, and
+ each slot is classified as INTEGER (integer-like scalars such as `int`,
+ fixed-width integers, `bool`, `char`, `Instant`, `Duration`) or SSE (`f32`/`f64`),
+ - exported function *parameters* accept these slots as separate parameters;
+ for 1–2 slot structs this is ABI-compatible with a by-value C struct
+ parameter for the 8-byte-field subset, while for packed structs with
+ smaller fields ABI compatibility with an equivalent C struct layout is not
+ yet implemented/validated; for 3+ slot structs downstream C callers should
+ declare separate parameters for the slots,
+ - exported function *returns* support 1+ slot structs; 1–2 slot results
+ return in `rax`/`rdx` and/or `xmm0`/`xmm1` accordingly, while 3+ slot
+ results return indirectly via a hidden sret pointer.
 
 This subset is intended as a stepping stone toward fully general struct layout
 and SysV ABI classification (including packed layout for smaller fields such
 as `f32` and small integers, nested structs, and larger aggregates returned via
 hidden sret pointers).
 
-## Optionals (Initial ABI Subset)
+## Optionals
 
 The full language design includes rich optional patterns (`?.`, `match`, nested
 optionals, etc.). The current compiler implementation supports only a limited
 optional subset in code generation:
 
 - optionals whose payload type is a supported scalar, `string`, or a supported
-  ABI-safe `struct` (i.e. after slot-flattening, all scalar slots are `i64`/`u64`/`f64`),
+ ABI-safe `struct` (i.e. after slot-flattening, all scalar slots are `i64`/`u64`/`f64`),
 - construction via `None` and `Some(value)`,
 - unwrapping via `??` with short-circuit fallback evaluation,
 - and nested optionals (`T??`) for the same supported payload subset, including
-  unwrapping `T??` to `T?` via `??`.
+ unwrapping `T??` to `T?` via `??`.
 
 At ABI boundaries in the current `linux/x86_64` subset, optionals are lowered
 as a `Bool` tag followed by the payload scalar slots in order:
@@ -410,4 +413,4 @@ Compiler requirements:
 - Implement `ext` declarations as specified.
 - Map Silk types to C types per the ABI document.
 - Enforce the documented passing conventions and ownership rules for external-call strings and other bridged types.
-- Keep this document and `docs/compiler/abi-libsilk.md` in sync with the actual codegen strategy.
+- Keep this document and [abi libsilk](?p=compiler/abi-libsilk) in sync with the actual codegen strategy.

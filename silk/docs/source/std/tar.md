@@ -9,24 +9,24 @@ Key goals:
 - **Streaming**: iterate headers and stream entry data.
 - **Multiple backends**: in-memory bytes, `std::fs::File`, and `std::stream`.
 - **Portability**: tar format logic is pure Silk; the file/IO backends are
-  implemented in terms of `std::fs`, `std::io`, and `std::stream`.
+ implemented in terms of `std::fs`, `std::io`, and `std::stream`.
 - **Large archives**: byte-slice inputs can be backed by an mmap mapping created
-  by the embedding program (or a future stdlib mmap API).
+ by the embedding program (or a future stdlib mmap API).
 - **Async-friendly**: fd-backed adapters are provided under `std::tar::async`
-  (built on the hosted event loop and non-blocking `std::io`).
+ (built on the hosted event loop and non-blocking `std::io`).
 
 ## Supported tar formats
 
-Supported tar formats:
+Supported forms (reader + writer):
 
 - POSIX ustar headers (`ustar` magic).
 - Pax extended headers (`x` and `g`) for:
-  - long `path` / `linkpath`,
-  - large numeric fields (`size`, `uid`, `gid`, `mtime`) when needed.
+ - long `path` / `linkpath`,
+ - large numeric fields (`size`, `uid`, `gid`, `mtime`) when needed.
 - GNU long name / long linkname entries (`L` and `K`) for compatibility with
-  archives that use those extensions.
+ archives that use those extensions.
 - Base-256 (binary) numeric field decoding/encoding for large values when pax
-  is not used.
+ is not used.
 
 Entry kinds:
 

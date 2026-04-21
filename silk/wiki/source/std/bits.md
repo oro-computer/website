@@ -2,21 +2,21 @@
 
 `std::bits` is the standard bit-manipulation and byte-order helper module.
 
-Canonical doc: `docs/std/bits.md`.
+Canonical doc: [bits](?p=std/bits).
 
-## Current subset
+## Supported forms
 Implemented in `std/bits.slk`:
 
 - Byte swaps:
-  - `std::bits::bswap_u16`
-  - `std::bits::bswap_u32`
-  - `std::bits::bswap_u64`
+ - `std::bits::bswap_u16`
+ - `std::bits::bswap_u32`
+ - `std::bits::bswap_u64`
 - Rotations:
-  - `std::bits::rotl_u32`, `std::bits::rotr_u32`
-  - `std::bits::rotl_u64`, `std::bits::rotr_u64`
+ - `std::bits::rotl_u32`, `std::bits::rotr_u32`
+ - `std::bits::rotl_u64`, `std::bits::rotr_u64`
 - Bit counts:
-  - `std::bits::popcount_u32`, `std::bits::clz_u32`, `std::bits::ctz_u32`
-  - `std::bits::popcount_u64`, `std::bits::clz_u64`, `std::bits::ctz_u64`
+ - `std::bits::popcount_u32`, `std::bits::clz_u32`, `std::bits::ctz_u32`
+ - `std::bits::popcount_u64`, `std::bits::clz_u64`, `std::bits::ctz_u64`
 
 ## Example
 

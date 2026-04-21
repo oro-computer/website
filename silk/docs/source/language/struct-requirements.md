@@ -25,13 +25,13 @@ fn main () -> int {
 }
 ```
 
-Rules (current subset):
+Rules (Supported forms):
 
 - `#require` expressions on a `struct` may reference that struct's fields by
-  name.
+ name.
 - When Formal Silk syntax is present in the compiled module set, the verifier
-  proves these requirements at struct literal construction sites (`Type{ ... }`
-  and `new Type{ ... }`). If any requirement cannot be proven, compilation
-  fails.
+ proves these requirements at struct literal construction sites (`Type{ ... }`
+ and `new Type{ ... }`). If any requirement cannot be proven, compilation
+ fails.
 
-See `docs/language/formal-verification.md`.
+See [formal verification](?p=language/formal-verification).

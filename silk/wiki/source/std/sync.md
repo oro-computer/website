@@ -2,11 +2,12 @@
 
 `std::sync` provides synchronization primitives (hosted baseline).
 
-Full reference: `docs/std/sync.md`.
+Canonical doc: [sync](?p=std/sync).
 
 ## Notes
 
-- Full reference: `docs/std/sync.md`
+- Supported forms is available (mutex/condvar/channel/cancellation token).
+- Details: [sync](?p=std/sync)
 
 ## Importing
 
@@ -59,5 +60,9 @@ async fn main () -> int {
 
 ## See also
 
-- Full reference: `docs/std/sync.md`
-- Concurrency: `docs/wiki/language/concurrency.md`
+- Canonical doc: [sync](?p=std/sync)
+- Concurrency: [concurrency](?p=language/concurrency)
+- End-to-end fixtures:
+ - `tests/silk/pass_std_sync_channel_u64.slk`
+ - `tests/silk/pass_std_sync_mutex_condvar.slk`
+ - `tests/silk/pass_std_sync_cancellation_token.slk`

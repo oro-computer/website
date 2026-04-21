@@ -3,11 +3,12 @@
 `std::io` provides basic stdin/stdout/stderr I/O and a small formatting surface
 (`print`/`println`).
 
-Full reference: `docs/std/io.md`.
+Canonical doc: [io](?p=std/io).
 
 ## Notes
 
-- Full reference: `docs/std/io.md`
+- Design + implementation: basic reads/writes are implemented via `std::runtime::io`.
+- Details: [io](?p=std/io)
 
 ## Importing
 
@@ -29,6 +30,6 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/io.md`
-- Format strings: `docs/std/fmt.md`
-- Runtime backend: `docs/std/runtime.md`
+- Canonical doc: [io](?p=std/io)
+- Format strings: [fmt](?p=std/fmt)
+- Runtime backend: [runtime](?p=std/runtime)

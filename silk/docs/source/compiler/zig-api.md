@@ -207,54 +207,54 @@ Create a compiler, configure it, add sources, build, then destroy it.
 ### Stdlib and verification configuration
 
 - `setStdlib(stdlib_name: []const u8)`
-  - Selects the stdlib package name, usually `"std"`.
+ - Selects the stdlib package name, usually `"std"`.
 - `setStdRoot(std_root: []const u8)`
-  - Points the compiler at the stdlib source root for `import std::...;`.
+ - Points the compiler at the stdlib source root for `import std::...;`.
 - `setNoStd(nostd: bool)`
-  - Disables filesystem-based stdlib auto-loading.
+ - Disables filesystem-based stdlib auto-loading.
 - `setDebug(debug: bool)`
-  - Enables debug-mode behavior, including runtime assert traces on supported native targets and Z3 debug output when verification fails.
+ - Enables debug-mode behavior, including runtime assert traces on supported native targets and Z3 debug output when verification fails.
 - `setNoHeap(no_heap: bool)`
-  - Enables the same no-heap mode as `silk --noheap`.
+ - Enables the same no-heap mode as `silk --noheap`.
 - `setZ3Lib(path: []const u8)`
-  - Overrides the Z3 dynamic library path used for Formal Silk verification.
+ - Overrides the Z3 dynamic library path used for Formal Silk verification.
 - `setStdArchive(path: []const u8)`
-  - Overrides the stdlib archive path used for prebuilt stdlib linkage.
+ - Overrides the stdlib archive path used for prebuilt stdlib linkage.
 
 These correspond directly to the CLI and C ABI surfaces documented in [CLI reference](?p=compiler/cli-silk), [Standard library integration](?p=compiler/stdlib-integration), and [C ABI (`libsilk`)](?p=compiler/abi-libsilk).
 
 ### Target and output configuration
 
 - `setTargetTriple(target_triple: []const u8)`
-  - Examples: `"linux-x86_64"`, `"x86_64-linux-gnu"`, `"wasm32-unknown-unknown"`, `"wasm32-wasi"`.
+ - Examples: `"linux-x86_64"`, `"x86_64-linux-gnu"`, `"wasm32-unknown-unknown"`, `"wasm32-wasi"`.
 - `setOptimizationLevel(level: u8)`
-  - Valid levels are `0` through `3`.
+ - Valid levels are `0` through `3`.
 - `setCHeader(path: []const u8)`
-  - Configures generated C header output for non-executable builds.
+ - Configures generated C header output for non-executable builds.
 - `addNeededLibrary(soname: []const u8)`
-  - Adds a `DT_NEEDED` entry for executable/shared outputs.
+ - Adds a `DT_NEEDED` entry for executable/shared outputs.
 - `addRunpath(path: []const u8)`
-  - Adds one runpath element for executable/shared outputs.
+ - Adds one runpath element for executable/shared outputs.
 - `setSoname(soname: []const u8)`
-  - Sets `DT_SONAME` for shared outputs.
+ - Sets `DT_SONAME` for shared outputs.
 
 These knobs matter only for the output kinds that support them. The detailed native-output rules are defined in [C ABI (`libsilk`)](?p=compiler/abi-libsilk).
 
 ### Adding sources
 
 - `addSourceBuffer(name: []const u8, contents: []const u8)`
-  - Adds an in-memory UTF-8 source buffer.
+ - Adds an in-memory UTF-8 source buffer.
 - `addSourceFile(allocator: std.mem.Allocator, path: []const u8)`
-  - Reads a `.slk` file from disk and then adds it as a source buffer.
+ - Reads a `.slk` file from disk and then adds it as a source buffer.
 
 Use `addSourceBuffer` when the host already owns the text. Use `addSourceFile` when the host wants the wrapper to read from the filesystem.
 
 ### Building
 
 - `build(kind: silk.OutputKind, output_path: []const u8)`
-  - Writes the artifact to the filesystem.
+ - Writes the artifact to the filesystem.
 - `buildToBytes(kind: silk.OutputKind) -> silk.Error!silk.OwnedBytes`
-  - Returns the artifact in an owned memory buffer.
+ - Returns the artifact in an owned memory buffer.
 
 `build` does not create parent directories. Create them before calling the compiler.
 

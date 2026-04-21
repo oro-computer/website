@@ -3,22 +3,22 @@
 This module provides a Web Streams-inspired API
 for **byte streams** designed to work well with Silk’s `async`/`task` model.
 
-The core goals of the current subset are:
+The core goals of the Supported forms are:
 
 - **Ergonomic piping** between producers and consumers.
 - **Backpressure** via bounded buffering.
 - **Safe chunk ownership** across tasks using an owned `Bytes` type (no borrowed
-  slice lifetime hazards).
+ slice lifetime hazards).
 
-Runtime note (current subset):
+Runtime note (Supported forms):
 
 - `ReadableStream.read()` / `WritableStream.write()` are **blocking OS-thread**
-  operations implemented with mutex/condvar primitives.
+ operations implemented with mutex/condvar primitives.
 
 See also:
 
-- `docs/language/concurrency.md` (tasks, `yield`, structured blocks)
-- `docs/std/sync.md` (mutex/condvar/channel; same blocking baseline)
+- [concurrency](?p=language/concurrency) (tasks, `yield`, structured blocks)
+- [sync](?p=std/sync) (mutex/condvar/channel; same blocking baseline)
 
 ## Exported API
 ```silk
@@ -179,36 +179,36 @@ Each stream has a bounded in-memory queue. The `cap` is expressed in **chunks**
 (`Bytes` values), not bytes:
 
 - `PassThroughStream.init(cap)` / `TransformStream.init(cap)` require `cap > 0`
-  (otherwise they return `Err(StreamFailed)` with `kind() == InvalidInput`).
+ (otherwise they return `Err(StreamFailed)` with `kind() == InvalidInput`).
 - `WritableStream.write()` blocks while the queue is full.
 - `ReadableStream.read()` blocks while the queue is empty (until closed or errored).
 
 ### Close vs cancel vs abort
 
 - `WritableStream.close()`:
-  - graceful end-of-stream,
-  - readers drain remaining buffered chunks and then observe `Read::Done`.
+ - graceful end-of-stream,
+ - readers drain remaining buffered chunks and then observe `Read::Done`.
 - `ReadableStream.cancel()`:
-  - marks the stream cancelled,
-  - discards buffered chunks,
-  - causes writers to fail with a `Cancelled` error.
+ - marks the stream cancelled,
+ - discards buffered chunks,
+ - causes writers to fail with a `Cancelled` error.
 - `WritableStream.abort(err)`:
-  - marks the stream aborted with `err`,
-  - discards buffered chunks,
-  - causes readers to return `Err(err)` from `read` / `try_read`.
+ - marks the stream aborted with `err`,
+ - discards buffered chunks,
+ - causes readers to return `Err(err)` from `read` / `try_read`.
 
 ### Transform streams
 
 `TransformStream` models a Web Streams-style transform stage.
 
-`std::stream` does **not** attach a transformer
+In Silk currently, `std::stream` does **not** attach a transformer
 callback internally. Instead, `TransformStream` exposes two bounded pipes and
 expects you to run the transform loop in a task:
 
 - input pipe: producers write to `writable`, transformer reads from
-  `transform_readable`,
+ `transform_readable`,
 - output pipe: transformer writes to `transform_writable`, consumers read from
-  `readable`.
+ `readable`.
 
 This design composes naturally with task-based structured concurrency: run the
 transform loop in a `task` and rely on backpressure to bound memory.
@@ -255,7 +255,7 @@ Typical wiring:
 
 - producer writes to `take_writable()`,
 - transformer reads from `take_transform_readable()` and writes to
-  `take_transform_writable()`,
+ `take_transform_writable()`,
 - consumer reads from `take_readable()`.
 
 ### File I/O adapters (`std::fs`)
@@ -304,7 +304,7 @@ async fn main () -> int {
 - aborts/cancels on error.
 
 To make piping cooperatively cancellable, use `pipe_to_abortable` with an
-`std::abort_controller::AbortSignalBorrow`. In the current subset, aborts are
+`std::abort_controller::AbortSignalBorrow`. In the Supported forms, aborts are
 observed between read/write steps; they do not yet interrupt a blocking
 `ReadableStream.read()` call.
 
@@ -322,12 +322,12 @@ fn run_pipeline (src: std::stream::ReadableStream, dst: std::stream::WritableStr
 
 ## Notes
 
-- The current subset uses blocking primitives; it is intended to become
-  suspension-friendly once the async runtime exists.
+- The Supported forms uses blocking primitives; it is intended to become
+ suspension-friendly once the async runtime exists.
 - Drop semantics are designed to avoid leaked pipes:
-  - dropping `ReadableStream` cancels the stream (writers start failing),
-  - dropping `WritableStream` closes the stream
-    (readers observe `Read::Done` after draining).
+ - dropping `ReadableStream` cancels the stream (writers start failing),
+ - dropping `WritableStream` closes the stream
+ (readers observe `Read::Done` after draining).
 - `PassThroughStream.take_readable` / `take_writable` exist to make ownership
-  transfer ergonomic in the current subset (moving out of struct fields is
-  limited).
+ transfer ergonomic in the Supported forms (moving out of struct fields is
+ limited).

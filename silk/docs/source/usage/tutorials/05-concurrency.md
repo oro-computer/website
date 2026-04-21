@@ -78,4 +78,3 @@ Silk’s concurrency keywords are intentionally explicit because they communicat
 ## Next
 
 - Reference: `std::task` and `std::sync` (sidebar → standard library)
-

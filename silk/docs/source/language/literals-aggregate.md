@@ -27,26 +27,26 @@ let empty_slice: i32[] = [];
 ### Typing
 
 - A non-empty array literal has type `T[N]` where `N` is the number of
-  elements and `T` is inferred from the elements (or from an expected type
-  when present).
+ elements and `T` is inferred from the elements (or from an expected type
+ when present).
 - When an expected type is present and it is `T[N]`, the literal must contain
-  exactly `N` elements.
+ exactly `N` elements.
 - When an expected type is present and it is `T[]`, the literal’s elements are
-  type-checked against `T` and the resulting value has type `T[]`.
-  - In the current compiler, this slice form is lowered as a non-owning
-    view over a compiler-generated backing array.
-  - Lifetime rules are not yet enforced for such
-    slices; do not allow a slice derived from a stack-backed array literal to
-    outlive the scope where it was created.
+ type-checked against `T` and the resulting value has type `T[]`.
+ - In Silk currently, this slice form is lowered as a non-owning
+ view over a compiler-generated backing array.
+ - Lifetime rules are not yet enforced for such
+ slices; do not allow a slice derived from a stack-backed array literal to
+ outlive the scope where it was created.
 
 Compiler requirements:
 
 - Infer element type when possible, or require explicit annotation where
-  ambiguity exists.
+ ambiguity exists.
 - Validate that all elements are convertible to the target element type.
 - Enforce current-subset restrictions on which element types are supported for
-  array lowering/codegen (see `docs/language/types.md` and
-  `docs/language/structs-impls-layout.md`).
+ array lowering/codegen (see [types](?p=language/types) and
+ [structs impls layout](?p=language/structs-impls-layout)).
 
 ## Struct Literals
 
@@ -57,11 +57,11 @@ Struct literals construct values of `struct` types by specifying field names and
 A struct literal may be written in two forms:
 
 - An **explicit** struct literal begins with a struct type name followed by a
-  brace-enclosed field initializer list.
+ brace-enclosed field initializer list.
 - A **contextual (inferred)** struct literal omits the type name and consists
-  only of the brace-enclosed field initializer list. This form is only valid
-  when an expected struct type is available from context (for example a
-  function argument position or an explicit type annotation).
+ only of the brace-enclosed field initializer list. This form is only valid
+ when an expected struct type is available from context (for example a
+ function argument position or an explicit type annotation).
 
 An explicit struct literal looks like:
 
@@ -139,12 +139,12 @@ let b = Beep {};
 Important notes:
 
 - Inferred struct literals are a **value** construction mechanism. They do not
-  imply heap allocation. The compiler will not infer `&T` from `{ ... }`; use
-  `new` for heap allocation explicitly.
+ imply heap allocation. The compiler will not infer `&T` from `{ ... }`; use
+ `new` for heap allocation explicitly.
 - The parser only treats `{ ... }` as an inferred struct literal when it
-  contains a struct-style initializer list (or is `{}`); blocks (`{ Stmt* }`)
-  remain statement syntax (there is no general “block expression” in the current
-  subset).
+ contains a struct-style initializer list (or is `{}`); blocks (`{ Stmt* }`)
+ remain statement syntax (there is no general “block expression” in the current
+ subset).
 
 ### Default constructors (empty struct literals)
 
@@ -168,32 +168,32 @@ Construction order:
 Visibility rule:
 
 - The default constructor is invoked only when it is visible from the current
-  package (constructors are `public` by default; an explicitly `private`
-  constructor is not invoked implicitly).
+ package (constructors are `public` by default; an explicitly `private`
+ constructor is not invoked implicitly).
 
-Note:
+Supported forms note:
 
 - Non-empty struct literals (for example `Type{ x: 1 }`) do **not** invoke
-  constructors implicitly.
+ constructors implicitly.
 
 Compiler requirements:
 
 - Enforce that field names are valid and that each field is initialized at most once.
-- Define the behavior for omitted fields (in the current subset, omitted fields
-  are default-initialized).
+- Define the behavior for omitted fields (in the Supported forms, omitted fields
+ are default-initialized).
 - Respect struct lowering/layout rules from `structs-impls-layout.md`.
 
-### Supported forms
+### Notes
 
-Struct literals follow the struct subset described in
-`structs-impls-layout.md`:
+The current compiler implementation supports struct literals only for the
+limited struct subset described in `structs-impls-layout.md`:
 
 - structs with 0+ fields of supported value types (scalar primitives, `string`,
-  nested structs, and supported optionals),
+ nested structs, and supported optionals),
 - literals may omit fields:
-  - omitted fields that have a field default (`field: T = <expr>`) use that
-    default expression,
-  - otherwise, omitted fields are **zero-initialized** in the current backend
-    subset,
+ - omitted fields that have a field default (`field: T = <expr>`) use that
+ default expression,
+ - otherwise, omitted fields are **zero-initialized** in the current backend
+ subset,
 - no duplicate field initializers are permitted,
 - field order is not semantically significant.

@@ -3,11 +3,12 @@
 `std::vector` provides a generic, growable owning container `Vector(T)` used
 widely throughout `std::`.
 
-Full reference: `docs/std/vector.md`.
+Canonical doc: [vector](?p=std/vector).
 
 ## Notes
 
-- Full reference: `docs/std/vector.md`
+- Supported forms + design: a usable subset is implemented in `std/vector.slk`.
+- Details: [vector](?p=std/vector)
 
 ## Importing
 
@@ -42,5 +43,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/vector.md`
-- Slices and iterators: `docs/std/arrays.md`, `docs/std/interfaces.md`
+- Canonical doc: [vector](?p=std/vector)
+- Slices and iterators: [arrays](?p=std/arrays), [interfaces](?p=std/interfaces)

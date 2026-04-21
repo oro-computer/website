@@ -12,8 +12,8 @@ backend subset.
 
 See also:
 
-- `docs/language/operators.md` (bitwise operators and shift semantics)
-- `docs/std/networking.md` (`std::net` byte-order helpers built on the hosted baseline)
+- [operators](?p=language/operators) (bitwise operators and shift semantics)
+- [networking](?p=std/networking) (`std::net` byte-order helpers built on the hosted baseline)
 
 ## Exported API
 ```silk

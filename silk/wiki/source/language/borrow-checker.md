@@ -1,10 +1,10 @@
 # Borrow checker (design)
 
 Silk’s long-term design includes a borrow-checker-style static safety layer
-over references and mutation. The current compiler enforces a simpler,
+over references and mutation. Silk currently enforces a simpler,
 explicit `mut` borrow contract (see mutability).
 
-Canonical design doc: `docs/language/borrow-checker.md`.
+Canonical design doc: [borrow checker](?p=language/borrow-checker).
 
 ## Example: explicit mutable borrow
 ```silk
@@ -25,5 +25,5 @@ fn main () -> int {
 
 ## See also
 
-- Mutability rules: `docs/wiki/language/mutability.md`
-- Canonical design doc: `docs/language/borrow-checker.md`
+- Mutability rules: [mutability](?p=language/mutability)
+- Canonical design doc: [borrow checker](?p=language/borrow-checker)

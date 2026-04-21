@@ -1,4 +1,4 @@
-# `silk_error` (3) — Retrieve and Format Compiler Errors
+# [`silk_error(3)`](?p=man/silk_error.3) — Retrieve and Format Compiler Errors
 
 > NOTE: This is the Markdown source for the eventual man 3 page for `SilkError` formatting and retrieval. The roff-formatted manpage should be generated from this content.
 
@@ -44,6 +44,6 @@ Embedders must not free or dereference the `SilkError` object directly.
 
 ## See Also
 
-- [silk_compiler (3)](?p=man/silk_compiler.3)
-- [libsilk (7)](?p=man/libsilk.7)
-- [libsilk ABI reference](?p=compiler/abi-libsilk)
+- [`silk_compiler(3)`](?p=man/silk_compiler.3)
+- [`libsilk(7)`](?p=man/libsilk.7)
+- [abi libsilk](?p=compiler/abi-libsilk)

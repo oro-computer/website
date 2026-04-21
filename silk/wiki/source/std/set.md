@@ -5,11 +5,12 @@
 - `SetMap(T)` (unordered set, open addressing),
 - `TreeSet(T)` (ordered set, red-black tree).
 
-Full reference: `docs/std/set.md`.
+Canonical doc: [set](?p=std/set).
 
 ## Notes
 
-- Full reference: `docs/std/set.md`
+- Supported forms: usable in Silk currently with documented limits.
+- Details: [set](?p=std/set)
 
 ## Importing
 
@@ -50,5 +51,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/set.md`
-- Iterator protocol: `docs/std/interfaces.md`
+- Canonical doc: [set](?p=std/set)
+- Iterator protocol: [interfaces](?p=std/interfaces)

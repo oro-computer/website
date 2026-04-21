@@ -11,43 +11,43 @@ Use strings for:
 - and general “text” data.
 
 If you need a single Unicode scalar value, use `char` literals
-(`docs/language/literals-character.md`).
+([literals character](?p=language/literals-character)).
 
-## Supported forms
+## Notes
 
-Includes:
+What works end-to-end today (lexer → parser → checker → lowering → codegen):
 
 - Double-quote delimited string literals: `"hello"`.
 - Backtick-delimited raw string literals: `` `hello` ``.
 - Multi-line string literals: newlines may appear inside `"..."` and become part
-  of the string value.
+ of the string value.
 - Multi-line raw string literals: newlines may appear inside `` `...` `` and
-  become part of the string value.
+ become part of the string value.
 - Escape sequences:
-  - `\\`, `\"`, `\'`
-  - `\n`, `\r`, `\t`, `\0`
-  - `\xNN` (exactly two hex digits, inserts a single byte)
-  - `\u{...}` (1–6 hex digits, inserts UTF-8 bytes for a Unicode scalar)
+ - `\\`, `\"`, `\'`
+ - `\n`, `\r`, `\t`, `\0`
+ - `\xNN` (exactly two hex digits, inserts a single byte)
+ - `\u{...}` (1–6 hex digits, inserts UTF-8 bytes for a Unicode scalar)
 - Line ending normalization:
-  - embedded `\r\n` and `\r` in the literal source are normalized to `\n`,
-  - `\r` escapes are normalized to `\n`.
+ - embedded `\r\n` and `\r` in the literal source are normalized to `\n`,
+ - `\r` escapes are normalized to `\n`.
 - Equality and ordering comparisons (`==`, `!=`, `<`, `<=`, `>`, `>=`) over
-  `string` values in the current subset.
+ `string` values in the Supported forms.
 
-Limitations:
+Not implemented yet (or not specified as stable):
 
 - A stable, fully-specified string ABI story across the C boundary beyond what
-  is documented in `docs/compiler/abi-libsilk.md`.
+ is documented in [abi libsilk](?p=compiler/abi-libsilk).
 
 ## Semantics
 
 - The value of a string literal is a sequence of bytes.
 - By convention and by intent, `string` values represent UTF-8 text, but some
-  escape forms (notably `\xNN`) can construct byte sequences that are not valid
-  UTF-8. Avoid this unless you are intentionally working with raw bytes.
+ escape forms (notably `\xNN`) can construct byte sequences that are not valid
+ UTF-8. Avoid this unless you are intentionally working with raw bytes.
 - String literals are immutable.
 - Unless otherwise specified for a particular FFI surface, string literals do
-  not implicitly include a trailing `\0` byte; length is carried explicitly.
+ not implicitly include a trailing `\0` byte; length is carried explicitly.
 
 ## Single-Line Strings
 
@@ -177,14 +177,14 @@ b`;
 ## Common Pitfalls
 
 - **Expecting NUL termination**: `"hi"` does not include an implicit `\0`.
-  Use `\0` explicitly when you need it, and prefer APIs that are length-aware.
+ Use `\0` explicitly when you need it, and prefer APIs that are length-aware.
 - **Using `\xNN` for non-ASCII characters**: `\xNN` inserts a raw byte, not a
-  Unicode scalar. Use `\u{...}` for text.
+ Unicode scalar. Use `\u{...}` for text.
 - **Assuming multi-line indentation stripping**: multi-line strings include all
-  bytes between the quotes, including indentation spaces.
+ bytes between the quotes, including indentation spaces.
 
 ## Related Documents
 
-- `docs/language/types.md` (primitive `string` and `char`)
-- `docs/language/literals-character.md` (shared escape spellings)
-- `docs/compiler/abi-libsilk.md` (C ABI string representation)
+- [types](?p=language/types) (primitive `string` and `char`)
+- [literals character](?p=language/literals-character) (shared escape spellings)
+- [abi libsilk](?p=compiler/abi-libsilk) (C ABI string representation)

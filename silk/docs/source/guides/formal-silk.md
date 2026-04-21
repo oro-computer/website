@@ -261,7 +261,7 @@ Reference: [`Formal Silk`](?p=language/formal-verification)
 
 ### Values and operators (what you can write in specs)
 
-Formal Silk expressions are normal Silk expressions, but the verifier accepts a restricted subset. The current subset
+Formal Silk expressions are normal Silk expressions, but the verifier accepts a restricted subset. The Supported forms
 includes:
 
 - `bool` expressions (`!`, `&&`, `||`, comparisons, equality),
@@ -430,15 +430,15 @@ that wants a consistent verified vocabulary.
 ## Choosing the right directive
 
 - Use `#require` when a caller must establish a fact before entering a
-  function.
+ function.
 - Use `#assure` when a callee guarantees something about its return value.
 - Use `#assert` when a fact matters only at one point inside a block.
 - Use `#require` on a `struct` when the invariant belongs to the data type
-  itself.
+ itself.
 - Use `#invariant` / `#variant` / `#monovariant` when a property spans loop
-  iterations.
+ iterations.
 - Use `theory` / `#theory` when the same proof shape appears in more than one
-  place or more than one module.
+ place or more than one module.
 
 ## Why it’s valuable
 

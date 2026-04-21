@@ -5,7 +5,7 @@ module named `build.slk` that can generate a package build plan at build time.
 
 Build modules are intentionally *outside* the core language semantics (they are
 a tooling/build feature). The language-level `package` / `import` / `export`
-semantics remain defined in `docs/language/packages-imports-exports.md`.
+semantics remain defined in [packages imports exports](?p=language/packages-imports-exports).
 
 ## Overview
 
@@ -15,7 +15,7 @@ A build module is an optional file:
 
 When enabled, `silk` executes the build module and consumes the manifest it
 produces as a TOML v1.0 package manifest in the same format as `silk.toml`
-(see `docs/compiler/package-manifests.md`).
+(see [package manifests](?p=compiler/package-manifests)).
 
 This allows packages to compute targets, outputs, and dependency paths
 dynamically (for example from environment variables, host information, or local
@@ -58,32 +58,32 @@ Legacy aliases (accepted for compatibility):
 Rules:
 
 - The build module is executed when either:
-  - the CLI enables it (`--build-module` / `--build-module-path`), or
-  - the root manifest sets `[build].build_module = true`.
+ - the CLI enables it (`--build-module` / `--build-module-path`), or
+ - the root manifest sets `[build].build_module = true`.
 - `silk check --package ...` and `silk test --package ...` do not currently
-  accept dedicated build-module CLI flags, but they still honor
-  `[build].build_module = true` and `[build].build_module_path`.
+ accept dedicated build-module CLI flags, but they still honor
+ `[build].build_module = true` and `[build].build_module_path`.
 - Precedence (highest to lowest):
-  - `--build-module-path <path>` wins (and implies build module execution),
-  - otherwise `--build-module` wins,
-  - otherwise `[build].build_module = true` enables execution.
+ - `--build-module-path <path>` wins (and implies build module execution),
+ - otherwise `--build-module` wins,
+ - otherwise `[build].build_module = true` enables execution.
 - When the build module is executed and `--build-module-path` is omitted, the
-  compiler resolves the build module path as:
-  - `[build].build_module_path` when set, otherwise
-  - `<package_root>/build.slk`.
+ compiler resolves the build module path as:
+ - `[build].build_module_path` when set, otherwise
+ - `<package_root>/build.slk`.
 - When `--build-module-path <path>` is provided, that exact path is used.
-  - If `<path>` is relative, it is resolved relative to `<package_root>`.
-  - The file must exist, otherwise the build fails.
+ - If `<path>` is relative, it is resolved relative to `<package_root>`.
+ - The file must exist, otherwise the build fails.
 - The build module is executed as a hosted native program on the build host.
-  This is currently supported only on `linux/x86_64`.
+ This is currently supported only on `linux/x86_64`.
 - The emitted manifest is parsed and used for the remainder of the build in
-  place of reading `<package_root>/silk.toml`.
+ place of reading `<package_root>/silk.toml`.
 - The emitted manifest’s `[build].build_module` / `[build].build_module_path`
-  values are ignored for the current invocation to prevent recursive build
-  module execution.
+ values are ignored for the current invocation to prevent recursive build
+ module execution.
 - The build module source file itself is not treated as part of the package’s
-  source set for subsequent compilation steps (even when the manifest omits
-  `[sources]`).
+ source set for subsequent compilation steps (even when the manifest omits
+ `[sources]`).
 - The build module may write logs to stderr; they are forwarded by the driver.
 
 ## Module Contract
@@ -94,11 +94,11 @@ The required contract is exporting an entrypoint matching the `Builder`
 interface:
 
 - The build module MUST export:
-  - `export fn run (package_root: string, action: string) -> Promise(int);`
-  - In practice, most build modules implement this as:
-    - `export async fn run (package_root: string, action: string) -> int { ... }`
-    - Note: for module interface conformance, an `async fn` is treated as
-      returning `Promise(T)` at the call site (see `docs/language/interfaces.md`).
+ - `export fn run (package_root: string, action: string) -> Promise(int);`
+ - In practice, most build modules implement this as:
+ - `export async fn run (package_root: string, action: string) -> int { ... }`
+ - Note: for module interface conformance, an `async fn` is treated as
+ returning `Promise(T)` at the call site (see [interfaces](?p=language/interfaces)).
 
 For clearer diagnostics and tooling, build modules SHOULD also declare module
 conformance to `std::interfaces::Builder`. The interface name is resolved after
@@ -117,18 +117,18 @@ Build module requirements:
 - The `run` entrypoint MUST return `0` on success.
 - The build module MUST emit a valid TOML v1.0 manifest.
 - The build module SHOULD avoid emitting non-manifest text as part of the
-  manifest output (use stderr for logs).
+ manifest output (use stderr for logs).
 - The build module output is subject to the same size cap as manifests:
-  **1 MiB** (see `docs/compiler/limits.md`).
+ **1 MiB** (see [limits](?p=compiler/limits)).
 
 Parameters:
 
 - `package_root` — the absolute package root directory.
 - `action` — the package action.
-  - `silk build --package ...` passes `build`, `install`, or `uninstall`.
-  - `silk check --package ...` and `silk test --package ...` currently pass
-    `build` for compatibility with existing build modules.
-  - When omitted by the driver, the action is treated as `build`.
+ - `silk build --package ...` passes `build`, `install`, or `uninstall`.
+ - `silk check --package ...` and `silk test --package ...` currently pass
+ `build` for compatibility with existing build modules.
+ - When omitted by the driver, the action is treated as `build`.
 
 ## Security Model
 
@@ -137,10 +137,10 @@ Build modules are arbitrary code execution.
 For this reason:
 
 - package builds, package checks, and package tests execute code on the build
-  host when build modules are enabled (via `--build-module` /
-  `--build-module-path` or `[build].build_module = true`),
+ host when build modules are enabled (via `--build-module` /
+ `--build-module-path` or `[build].build_module = true`),
 - downstream tooling (package managers, CI, editor integrations) MUST treat
-  build modules as untrusted inputs unless they are pinned and reviewed.
+ build modules as untrusted inputs unless they are pinned and reviewed.
 
 ## Example
 
@@ -169,7 +169,7 @@ export async fn run (package_root: string, action: string) -> int {
 Printing TOML directly is valid, but most build modules should use `std::build`
 to construct a manifest programmatically.
 
-The canonical spec for the build-module helper API is `docs/std/build.md`.
+The canonical spec for the build-module helper API is [build](?p=std/build).
 
 Typical pattern:
 
@@ -194,8 +194,9 @@ export async fn run (package_root: string, action: string) -> int {
 ## Vendored C deps (headers + archives)
 
 When a build module emits a manifest target with native `.c`/`.h` inputs, the
-`silk` driver compiles those inputs with the toolchain’s vendored C headers on
-`linux/x86_64`. This keeps build modules portable across:
+`silk` driver compiles those inputs with the host C toolchain for the native
+host executable target (`linux/x86_64` on Linux hosts, `macos/aarch64` on Apple
+Silicon macOS hosts). This keeps build modules portable across:
 
 - a repo checkout (vendored headers under `vendor/include/`), and
 - an installed prefix (canonical vendored headers under `<prefix>/include/silk/`).
@@ -205,11 +206,27 @@ an embedded C source that writes `#include <mbedtls/error.h>` is expected to
 find that file via `-I<prefix>/include/silk`, not via a nested `silk/vendor/`
 directory.
 
-For linking against vendored static archives from a build module (for example
-when your project has its own `ext` bindings to mbedTLS), prefer manifest input
-entries of the form:
+On supported native hosts (`linux/x86_64`, `macos/aarch64`), Silk also
+auto-links the hosted vendored crypto/TLS/SSH archives for build-module targets
+when either:
+
+- the Silk module set imports `std::crypto`, `std::tls`, `std::ssh`, or
+ `std::ssh2`, or
+- linked native `.c` / `.h` / `.o` / `.a` inputs reference the corresponding
+ vendored symbol families (for example `sodium_*`, `randombytes_*`,
+ `mbedtls_*`, `psa_*`, or `libssh2_*`).
+
+On `linux/x86_64`, the same native-input symbol scan auto-links the vendored
+SQLite archive when inputs reference `sqlite3_*` symbols.
+
+That means downstream build modules should not hard-code repo-relative paths
+such as `../silk/vendor/lib/...` for those hosted deps. Explicit
+`@vendored/...` manifest input entries remain available when a package needs to
+pin a specific vendored archive, for example:
 
 - `@vendored/libmbedtls.a`
 
-See `docs/compiler/package-manifests.md` for the full `inputs` rules and the
-`@vendored/...` syntax.
+See [package manifests](?p=compiler/package-manifests) for the full `inputs` rules and the
+`@vendored/...` syntax. Explicit vendored archive references resolve from the
+active compiler host layout under `vendor/lib/<host-layout>/` or the installed
+prefix equivalent.

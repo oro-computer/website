@@ -1,11 +1,13 @@
 # `std::process`
 
+(hosted POSIX baseline).
+
 `std::process` provides access to process-level operations that are not tied to
 environment variables, such as the current working directory.
 
 This module targets a hosted POSIX baseline (Linux/glibc) and is
 implemented on top of the pluggable `std::runtime::process` interface. WASI
-support is documented in the platform notes below.
+support is Implemented (see “Platform notes”).
 
 ## Exported API
 
@@ -46,7 +48,54 @@ let out_r = cmd.output();
 ```
 
 See the `std::process::child` source (`std/process/child.slk`) for the exact,
-current API surface.
+exported API surface.
+
+The current high-level child-process surface includes:
+
+```silk
+module std::process::child;
+
+export enum Stdio { Inherit, Null, Pipe }
+
+export error Failed { code: int, stage: int, detail: int }
+
+export struct ExitStatus { /* opaque */ }
+export type WaitResult = std::result::Result(ExitStatus, Failed);
+
+export struct Child { /* opaque */ }
+export type ChildResult = std::result::Result(Child, Failed);
+
+export struct PtyChild { /* opaque */ }
+export type PtyChildResult = std::result::Result(PtyChild, Failed);
+
+export struct Command { /* opaque */ }
+impl Command {
+  public fn init (program: string) -> Command;
+  public fn arg (mut self: &Command, value: string) -> std::memory::OutOfMemory?;
+  public fn env (mut self: &Command, kv: string) -> std::memory::OutOfMemory?;
+  public fn current_dir (mut self: &Command, dir: string) -> void;
+  public fn stdin (mut self: &Command, cfg: Stdio) -> void;
+  public fn stdout (mut self: &Command, cfg: Stdio) -> void;
+  public fn stderr (mut self: &Command, cfg: Stdio) -> void;
+  public fn spawn (self: &Command) -> ChildResult;
+  public fn spawn_pty (self: &Command) -> PtyChildResult;
+  public fn output (self: &Command) -> OutputResult;
+}
+```
+
+### PTY-backed child processes
+
+`Command.spawn_pty()` is the friendly stdlib surface for the old Sven-facing
+"spawn child under a controlling PTY" gap. It:
+
+- opens a fresh PTY pair,
+- attaches the child stdin/stdout/stderr to the slave side,
+- prepares the child side as the controlling terminal on hosted POSIX targets,
+- returns the parent-facing master fd through `PtyChild.take_master()`.
+
+`PtyChild` owns both the child handle and the master fd. Dropping it closes the
+master fd and drops the underlying child handle. If you want to drive the PTY
+yourself, call `take_master()` and then manage that fd explicitly.
 
 ### Child stdio pipes and `std::stream`
 
@@ -97,14 +146,14 @@ to classify failures into `ChdirErrorKind` values.
 Notes:
 
 - `chdir` does not update environment variables like `PWD`. Use
-  `std::process::getcwd()` to query the real current directory.
+ `std::process::getcwd()` to query the real current directory.
 
 ## Platform notes
 
 - **POSIX (default shipped stdlib)**: implemented via `getcwd(3)` and
-  `chdir(2)`. `getpid(2)` is available.
+ `chdir(2)`. `getpid(2)` is available.
 - **Child processes (POSIX)**: implemented via `fork(2)` + `exec*` + `waitpid(2)`
-  with pipe-based stdio and poll-based output capture.
+ with pipe-based stdio, PTY-backed child spawn, and poll-based output capture.
 - **WASI (Preview 1)**: `getcwd` and `chdir` are implemented via a virtual
-  working directory. `getpid()` currently returns 0. `std::process::child`
-  operations remain unsupported.
+ working directory. `getpid()` currently returns 0. `std::process::child`
+ operations remain unsupported.

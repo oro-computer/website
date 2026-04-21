@@ -21,9 +21,9 @@ fn main () -> int {
 ### Why this looks the way it does
 
 - **Imports are explicit.** If you want `println`, you import it. This keeps dependencies obvious and makes refactors
-  safer.
+ safer.
 - **`main` is a normal function.** Executables use a conventional entrypoint. There isn’t a special “program block” that
-  behaves differently from the rest of the language.
+ behaves differently from the rest of the language.
 - **The return type is explicit.** `-> int` is the process exit code on hosted platforms. A successful run returns `0`.
 
 ## Iteration loop: check → test → build

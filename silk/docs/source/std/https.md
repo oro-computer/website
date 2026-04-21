@@ -6,18 +6,20 @@ small HTTPS client/server connection API on top of `std::tls` (mbedTLS) and
 
 See also:
 
-- `docs/std/http.md` (`std::http` message parsing/serialization)
-- `docs/std/tls.md` (`std::tls` TLS sessions and transport integration)
+- [http](?p=std/http) (`std::http` message parsing/serialization)
+- [tls](?p=std/tls) (`std::tls` TLS sessions and transport integration)
 - RFC 2818 (HTTP over TLS)
 
-## Description
-
+## Scope
 Implemented:
 
 - Blocking TLS handshake using `std::tls::Session`.
 - Authenticated HTTPS client sessions via `Connection.connect_host(...)` using a
-  system CA bundle + hostname verification.
+ system CA bundle + hostname verification.
 - HTTPS request/response I/O using the same message model as `std::http`.
+- One-shot HTTPS client helpers:
+ - blocking: `request_host(...)`, `request_host_v6(...)`
+ - async-friendly: `request_host_async(...)`, `request_host_v6_async(...)`
 
 Not implemented (yet):
 
@@ -42,6 +44,8 @@ export let ERR_OUT_OF_MEMORY: int = 5;
 export error Error {
   kind: int,
 }
+
+export type ClientResponseResult = std::result::Result(std::http::Response, Error);
 
 struct Connection { /* opaque */ }
 export type ConnectionResult = std::result::Result(Connection, Error);
@@ -74,11 +78,21 @@ impl Server {
   public fn accept (mut self: &Server) -> ConnectionResult;
   public fn close (mut self: &Server) -> Error?;
 }
+
+// One-shot client helpers.
+export fn request_host (addr: std::net::SocketAddrV4, hostname: string, method: string, target: string, body: string) -> ClientResponseResult;
+export fn request_host_v6 (addr: std::net::SocketAddrV6, hostname: string, method: string, target: string, body: string) -> ClientResponseResult;
+export async fn request_host_async (addr: std::net::SocketAddrV4, hostname: string, method: string, target: string, body: string) -> ClientResponseResult;
+export async fn request_host_v6_async (addr: std::net::SocketAddrV6, hostname: string, method: string, target: string, body: string) -> ClientResponseResult;
 ```
 
 Notes:
 
 - This API is blocking and intended for the hosted POSIX baseline.
 - `connect_host(...)` / `connect_host_v6(...)` perform certificate chain
-  verification using a system CA bundle and enable hostname verification by
-  calling `std::tls::Session.set_hostname(...)` before the handshake.
+ verification using a system CA bundle and enable hostname verification by
+ calling `std::tls::Session.set_hostname(...)` before the handshake.
+- `request_host_async(...)` / `request_host_v6_async(...)` are async-friendly
+ wrappers, not a fully nonblocking TLS transport. They run the blocking
+ one-shot HTTPS path on a task worker so async code can `await` the result
+ without blocking its executor owner thread.

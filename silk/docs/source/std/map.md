@@ -5,43 +5,36 @@
 - `HashMap(K, V)` — an unordered map backed by a hash table.
 - `TreeMap(K, V)` — an ordered map backed by a red-black tree.
 
-The API is specified here. It is designed to expand alongside richer
-borrow-aware and move-aware container ergonomics.
+The API is specified here; it
+targets the current compiler/backend subset and will grow as the language gains
+first-class container ergonomics (in particular, more borrow- and move-aware
+iteration and accessors).
 
-## Design Goals
+## Considerations
 
-- Provide a consistent, ergonomic key→value container story in `std::` without
-  relying on a builtin `map(K, V)` type form.
-- Make allocation behavior explicit and compatible with regions (`with`) and
-  `--noheap`.
-- Keep the API close in spirit to C++’s `std::unordered_map` and `std::map`
-  (operations, complexity expectations, and terminology), adapted to Silk.
-
-## Important Limitations
-
-Today:
+In the Supported forms:
 
 - `HashMap(K, V)` owns keys and values by value:
-  - `clear` / `drop` run `Drop` for all live entries,
-  - `remove` drops the removed key and returns the removed value,
-  - `put` returns the previous value when replacing an existing entry.
+ - `clear` / `drop` run `Drop` for all live entries,
+ - `remove` drops the removed key and returns the removed value,
+ - `put` returns the previous value when replacing an existing entry.
 - `TreeMap(K, V)` does not run `Drop` for stored keys/values yet; it should be
-  treated as single-slot storage in the current subset.
+ treated as single-slot storage in the Supported forms.
 - `HashMap(K, V)` stores keys and values in the compiler’s **scalar-slot**
-  layout (`sizeof(K)` / `sizeof(V)` bytes, multiples of 8 in the current
-  subset). This supports multi-slot value types such as `string` and non-opaque
-  structs/enums over supported primitives.
+ layout (`sizeof(K)` / `sizeof(V)` bytes, multiples of 8 in the current
+ subset). This supports multi-slot value types such as `string` and non-opaque
+ structs/enums over supported primitives.
 - `TreeMap(K, V)` is still limited by its current node layout and, for now,
-  should be treated as **single-slot** storage (keys/values that lower to a
-  single `u64` slot).
+ should be treated as **single-slot** storage (keys/values that lower to a
+ single `u64` slot).
 - These containers are intended for “plain” value types:
-  - primitive scalars,
-  - `string` views,
-  - and small POD structs over those primitives.
+ - primitive scalars,
+ - `string` views,
+ - and small POD structs over those primitives.
 - `get` and `iter` produce values by value (copy element bytes). For value types
-  that require `Drop`, copying out creates duplicate ownership. Prefer move-out
-  operations (`remove` and the returned previous value from `put`) for
-  `Drop`-managed values.
+ that require `Drop`, copying out creates duplicate ownership. Prefer move-out
+ operations (`remove` and the returned previous value from `put`) for
+ `Drop`-managed values.
 
 These limits are expected to be relaxed as the language gains borrow-aware
 accessors and iterators for container storage.
@@ -126,7 +119,7 @@ fn main () -> int {
 
 - `cap < 0` returns `AllocErrorKind::InvalidInput`.
 - very large `cap` values that would overflow internal sizing arithmetic return
-  `AllocErrorKind::Overflow`.
+ `AllocErrorKind::Overflow`.
 
 ### Core API
 
@@ -142,13 +135,13 @@ fn main () -> int {
 - `fn contains_key (self: &HashMap(K, V), key: K) -> bool;`
 - `fn get (self: &HashMap(K, V), key: K) -> V?;`
 - `fn put (mut self: &HashMap(K, V), key: K, value: V) -> std::result::Result(V?, std::memory::OutOfMemory);`
-  Inserts or replaces and returns the previous value, if present.
+ Inserts or replaces and returns the previous value, if present.
 - `fn remove (mut self: &HashMap(K, V), key: K) -> V?;`
 - `fn iter (self: &HashMap(K, V)) -> HashMapIter(K, V);`
 - `fn clear (mut self: &HashMap(K, V)) -> void;`
 - `fn reserve_additional (mut self: &HashMap(K, V), additional: i64) -> std::memory::OutOfMemory?;`
 - `fn drop (mut self: &HashMap(K, V)) -> void;`
-  Releases the table backing memory.
+ Releases the table backing memory.
 
 Complexity expectations:
 
@@ -164,7 +157,7 @@ Complexity expectations:
 `TreeMap(K, V)` provides:
 
 - `fn init (cmp: fn(K, K) -> int) -> TreeMap(K, V);`
-  Contract: `cmp(a, b) < 0` iff `a < b`; `cmp(a, b) == 0` iff keys are equal.
+ Contract: `cmp(a, b) < 0` iff `a < b`; `cmp(a, b) == 0` iff keys are equal.
 - `fn len (self: &TreeMap(K, V)) -> i64;`
 - `fn is_empty (self: &TreeMap(K, V)) -> bool;`
 - `fn contains_key (self: &TreeMap(K, V), key: K) -> bool;`
@@ -201,26 +194,35 @@ Notes:
 - `HashMap` iteration order is unspecified.
 - `TreeMap` iteration yields entries in ascending key order (as defined by `cmp`).
 
-## Implemented `std::interfaces` surface
+## `std::interfaces` surface
 
 The current `std::map` implementation already exposes its common container
 shape through `std::interfaces`:
 
 - `HashMap(K, V)` implements:
-  - `Len`
-  - `Capacity`
-  - `IsEmpty`
-  - `Clear`
-  - `ReserveAdditional`
-  - `Drop`
+ - `Len`
+ - `Capacity`
+ - `IsEmpty`
+ - `Clear`
+ - `ReserveAdditional`
+ - `Drop`
 - `TreeMap(K, V)` implements:
-  - `Len`
-  - `IsEmpty`
-  - `Clear`
-  - `Drop`
+ - `Len`
+ - `IsEmpty`
+ - `Clear`
+ - `Drop`
 - `HashMapIter(K, V)` and `TreeMapIter(K, V)` implement
-  `std::interfaces::Iterator(Entry(K, V))`.
+ `std::interfaces::Iterator(Entry(K, V))`.
 
 This is the intended stdlib style: even before dynamic interface dispatch
 exists, the core map types should read like canonical examples of the shared
 container protocols.
+
+## Design goals
+
+- Provide a consistent, ergonomic key→value container story in `std::` without
+ relying on a builtin `map(K, V)` type form.
+- Make allocation behavior explicit and compatible with regions (`with`) and
+ `--noheap`.
+- Keep the API close in spirit to C++’s `std::unordered_map` and `std::map`
+ (operations, complexity expectations, and terminology), adapted to Silk.

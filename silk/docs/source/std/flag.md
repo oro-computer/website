@@ -15,43 +15,33 @@ and the current `std::args::Args` view.
 
 See also:
 
-- `docs/std/args.md` (argv helpers)
-- `docs/std/conventions.md` (error/ownership conventions)
-- `docs/std/result.md` (`Result(T, E)` and `Ok(...)`/`Err(...)` match usage)
+- [args](?p=std/args) (argv helpers)
+- [conventions](?p=std/conventions) (error/ownership conventions)
+- [result](?p=std/result) (`Result(T, E)` and `Ok(...)`/`Err(...)` match usage)
 
-## Design goals
-
-- **Typed flags**: parse `bool`, `int`, `i64`, `u64`, and `string` values.
-- **Typed positionals**: declare and parse positional arguments (required and
-  optional), separate from flags.
-- **`--` rest**: support `--` to stop parsing flags and expose the remaining
-  arguments as a “rest” list for forwarding to subcommands/tools.
-- **Stable errors**: return a structured `FlagFailed` value (no `errno`, no
-  sentinel returns, no hidden error state).
-- **No hidden allocation**: the parser stores only string *views* into the
-  original argv bytes; it does not copy argument strings.
-
-## Parsing rules (current subset)
+## Parsing rules
 
 Given an argv slice `args[start..]` (typically `start = 1` to skip `argv[0]`):
 
 - `--` terminates **flag parsing**; arguments after `--` are captured as
-  **rest** and are never interpreted as flags.
-- While parsing flags:
-  - tokens beginning with `--` match **long names** (`--name`, `--name=value`),
-  - tokens beginning with `-` match **either** a long name or a declared alias
-    (`-name`, `-name=value`, `-a`, `-a=value`),
-  - a lone `-` terminates flag parsing and starts positional mode (the `-` token
-    itself is captured as the first positional),
-  - the first token that does not begin with `-` starts **positional** mode.
-- While in positional mode:
-  - tokens are captured as **positionals** (even if they begin with `-`),
-  - `--` may still appear to start **rest**.
+ **rest** and are never interpreted as flags.
+- Before `--`:
+ - tokens beginning with `--` or `-` are parsed as flags **whenever** they
+ match a declared flag name or alias (`--name`, `--name=value`, `-name`,
+ `-name=value`, `-a`, `-a=value`),
+ - a lone `-` is captured as a positional token,
+ - tokens that do not begin with `-` are captured as positional tokens,
+ - tokens that lexically look like negative integer literals (for example
+ `-7`) are captured as positional tokens when they do not match a declared
+ flag.
+- Unknown dash-prefixed tokens that are neither declared flags nor negative
+ integer literals are rejected as `UnknownFlag`.
 
-This matches the common “flags first, then args” convention and avoids
-misclassifying negative numbers once positional mode begins.
+This keeps flags usable before or after subcommands without losing typo
+checking. When a CLI needs to pass arbitrary dash-prefixed positional strings,
+use `--` to start the raw rest segment explicitly.
 
-## Public API (initial)
+## Exported API
 
 ```silk
 module std::flag;
@@ -110,17 +100,21 @@ export type PosU64Result = std::result::Result(PosU64, FlagFailed);
 Notes:
 
 - Flag/positional “handles” (`BoolFlag`, `PosString`, …) are small, copyable
-  indices into the owning `FlagSet`. This keeps the API explicit and avoids
-  exporting raw pointers.
+ indices into the owning `FlagSet`. This keeps the API explicit and avoids
+ exporting raw pointers.
 - Handle structs have safe defaults (their `index` field defaults to an invalid
-  sentinel). `FlagSet.get_*` methods treat invalid handles as “missing” and
-  return zero values (`false`, `0`, or `""`) rather than reading out of bounds.
+ sentinel). `FlagSet.get_*` methods treat invalid handles as “missing” and
+ return zero values (`false`, `0`, or `""`) rather than reading out of bounds.
 - Usage strings may be retrieved from the owning `FlagSet` via
-  `get_flag_usage(handle.index)` and `get_positional_usage(handle.index)` when
-  building usage/help output (or via `handle.usage(fs)`).
+ `get_flag_usage(handle.index)` and `get_positional_usage(handle.index)` when
+ building usage/help output (or via `handle.usage(fs)`).
 - `ParsedArgs` provides views of:
-  - all positional tokens after flags (including the `--` rest segment),
-  - and raw rest tokens (after `--`).
+ - all positional tokens before and after interspersed flags (including the
+ `--` rest segment),
+ - and raw rest tokens (after `--`).
+- `ParsedArgs` borrows its positional index bookkeeping from the owning
+ `FlagSet`; keep the `FlagSet` alive until you are done reading positional
+ tokens from `ParsedArgs`.
 - Typed values are retrieved from the `FlagSet` via the returned handles.
 - Flag declarations prefer options structs (`BoolOptions`, `IntOptions`, ...).
 - Options structs use `default_value` because `default` is a reserved keyword.
@@ -189,3 +183,18 @@ fn main (argc: int, argv: u64) -> int {
   }
 }
 ```
+
+## Design goals
+
+- **Typed flags**: parse `bool`, `int`, `i64`, `u64`, and `string` values.
+- **Typed positionals**: declare and parse positional arguments (required and
+ optional), separate from flags.
+- **`--` rest**: support `--` to stop parsing flags and expose the remaining
+ arguments as a “rest” list for forwarding to subcommands/tools.
+- **Interspersed flags**: continue recognizing declared flags before `--` even
+ after earlier positional tokens, so CLI subcommands can still accept global
+ flags after the subcommand name.
+- **Stable errors**: return a structured `FlagFailed` value (no `errno`, no
+ sentinel returns, no hidden error state).
+- **No hidden allocation**: the parser stores only string *views* into the
+ original argv bytes; it does not copy argument strings.

@@ -9,10 +9,10 @@ architecture) without requiring environment-specific runtime queries.
 ## Notes
 
 - Implemented: target metadata is available as built-in compile-time constants
-  in every module:
-  - `OS_PLATFORM`, `OS_ARCH`, `OS_IS_UNIX`, `OS_IS_POSIX`.
+ in every module:
+ - `OS_PLATFORM`, `OS_ARCH`, `OS_IS_UNIX`, `OS_IS_POSIX`.
 - Implemented: the standard library re-exports these via `std::os`
-  (`docs/std/os.md`).
+ ([os](?p=std/os)).
 
 ## Built-In Constants
 
@@ -28,7 +28,7 @@ These behave like normal `const` values:
 - They do not require an import.
 - They may be used anywhere an expression of the corresponding type is allowed.
 - They are compile-time constants (their values are fixed at compile time and
-  are embedded into the output artifact).
+ are embedded into the output artifact).
 
 ### `OS_PLATFORM`
 
@@ -37,19 +37,19 @@ A canonical target platform/OS name string.
 Current compiler target set and values:
 
 - `linux-x86_64` and `linux-aarch64`:
-  - `OS_PLATFORM == "linux"`
+ - `OS_PLATFORM == "linux"`
 - `macos-x86_64` and `macos-aarch64`:
-  - `OS_PLATFORM == "macos"`
+ - `OS_PLATFORM == "macos"`
 - `ios-aarch64`:
-  - `OS_PLATFORM == "ios"`
+ - `OS_PLATFORM == "ios"`
 - `android-aarch64`:
-  - `OS_PLATFORM == "android"`
+ - `OS_PLATFORM == "android"`
 - `windows-x86_64` and `windows-aarch64`:
-  - `OS_PLATFORM == "windows"`
+ - `OS_PLATFORM == "windows"`
 - `wasm32-unknown-unknown`:
-  - `OS_PLATFORM == "unknown"`
+ - `OS_PLATFORM == "unknown"`
 - `wasm32-wasi`:
-  - `OS_PLATFORM == "wasi"`
+ - `OS_PLATFORM == "wasi"`
 
 ### `OS_ARCH`
 
@@ -58,11 +58,12 @@ A canonical target CPU architecture name string.
 Current compiler target set and values:
 
 - `linux-x86_64`, `macos-x86_64`, and `windows-x86_64`:
-  - `OS_ARCH == "x86_64"`
+ - `OS_ARCH == "x86_64"`
 - `linux-aarch64`, `macos-aarch64`, `ios-aarch64`, `android-aarch64`, and `windows-aarch64`:
-  - `OS_ARCH == "aarch64"`
+ - `OS_ARCH == "aarch64"`
+ - Formal Silk comparisons also accept the ARM64 aliases `"arm64"` and `"aarch"` in any letter case, including through compile-time string constants, even though the canonical `OS_ARCH` value remains `"aarch64"`.
 - `wasm32-unknown-unknown` and `wasm32-wasi`:
-  - `OS_ARCH == "wasm32"`
+ - `OS_ARCH == "wasm32"`
 
 ### `OS_IS_UNIX`
 
@@ -102,7 +103,7 @@ Current compiler target set:
 
 The standard library provides `std::os` helpers that expose the same metadata
 in a namespaced form and additionally map these strings into enums for use with
-`match` (see `docs/std/os.md`; targets not covered by the current enum set map
+`match` (see [os](?p=std/os); targets not covered by the current enum set map
 to `Unknown`).
 
 ## Examples

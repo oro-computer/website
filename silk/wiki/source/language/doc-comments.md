@@ -3,7 +3,7 @@
 Silk supports both line and block doc comments. They attach to the following
 declaration (like many C/Rust-style doc systems).
 
-Canonical doc: `docs/language/doc-comments.md`.
+Canonical doc: [doc comments](?p=language/doc-comments).
 
 ## Syntax
 
@@ -22,4 +22,4 @@ fn other () -> int { return 0; }
 
 ## See also
 
-- Canonical doc: `docs/language/doc-comments.md`
+- Canonical doc: [doc comments](?p=language/doc-comments)

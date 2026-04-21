@@ -1,6 +1,6 @@
 # Grammar
 
-`docs/language/grammar.md` is the canonical “what the parser accepts” reference
+[grammar](?p=language/grammar) is the canonical “what the parser accepts” reference
 for Silk surface syntax.
 
 This wiki page is a reading guide, not a replacement for the grammar itself.
@@ -9,7 +9,7 @@ This wiki page is a reading guide, not a replacement for the grammar itself.
 
 - Use the grammar when you need the exact token-level surface form.
 - Use the concept docs (`docs/language/*.md`) for semantics and type rules.
-- Use the canonical docs for runnable examples.
+- Use `tests/silk/pass_*.slk` for runnable examples.
 
 ## Example
 ```silk
@@ -23,5 +23,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical grammar: `docs/language/grammar.md`
-- Syntax tour: `docs/wiki/language/syntax-tour.md`
+- Canonical grammar: [grammar](?p=language/grammar)
+- Syntax tour: [syntax tour](?p=language/syntax-tour)

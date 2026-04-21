@@ -1,6 +1,6 @@
 # `std::result`
 
-The language’s error model is explicit and typed (`docs/language/errors.md`).
+The language’s error model is explicit and typed ([errors](?p=language/errors)).
 `std::result` standardizes the common “success or error” return shape so that
 APIs across `std::` compose cleanly.
 
@@ -58,31 +58,31 @@ impl Result(T, E) {
 Notes:
 
 - `Result` does not provide aborting unwrap helpers; use `unwrap()` /
-  `ok_value()` / `err_value()` (or a `match`) to recover the payload.
+ `ok_value()` / `err_value()` (or a `match`) to recover the payload.
 - `unwrap()` is a non-aborting alias of `ok_value()` and returns `T?`.
 - `is_ok()` / `is_err()` borrow the `Result` and are safe for all payload types.
 - `??` is supported directly on recoverable results:
-  - `result ?? fallback` yields the `Ok(...)` payload,
-  - and evaluates `fallback` only for `Err(...)`.
+ - `result ?? fallback` yields the `Ok(...)` payload,
+ - and evaluates `fallback` only for `Err(...)`.
 - Methods that extract or transform payloads consume the `Result` by value. This
-  follows the move/cleanup model and avoids copying `Drop` payloads.
+ follows the move/cleanup model and avoids copying `Drop` payloads.
 - Callback-based combinators (`map`, `map_err`, `and_then`, `or_else`) accept
-  function-typed values. Capturing closures exist in the current subset, but
-  captures are restricted (see `docs/language/memory-model.md`).
+ function-typed values. Capturing closures exist in the Supported forms, but
+ captures are restricted (see [memory model](?p=language/memory-model)).
 - For portable backend-subset builds, prefer the block-body form with an
-  explicit result type for combinator callbacks:
-  `fn (x: T) -> U { return ...; }` or
-  `fn (x: T) -> Result(U, E) { return Ok(...); }`.
-  Anonymous expression-body callbacks still work for simple cases, but the
-  explicit block-body form is the stable documented subset for callback-heavy
-  `Result` pipelines across executable and object builds.
+ explicit result type for combinator callbacks:
+ `fn (x: T) -> U { return ...; }` or
+ `fn (x: T) -> Result(U, E) { return Ok(...); }`.
+ Anonymous expression-body callbacks still work for simple cases, but the
+ explicit block-body form is the stable documented subset for callback-heavy
+ `Result` pipelines across executable and object builds.
 - `match` supports a shorthand for `Result` destructuring:
-  - when the scrutinee type is `Result(T, E)`, patterns `Ok(v)` / `Err(e)` are
-    accepted as shorthand for `R::Ok(v)` / `R::Err(e)` where `R` is the scrutinee
-    enum type.
+ - when the scrutinee type is `Result(T, E)`, patterns `Ok(v)` / `Err(e)` are
+ accepted as shorthand for `R::Ok(v)` / `R::Err(e)` where `R` is the scrutinee
+ enum type.
 - Callers typically introduce a local alias for the instantiated enum so the
-  alias name can be used as a qualifier for constructors and patterns when a
-  type context is not available:
+ alias name can be used as a qualifier for constructors and patterns when a
+ type context is not available:
 
 ```silk
 type R = Result(int, string);

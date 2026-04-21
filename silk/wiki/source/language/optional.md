@@ -6,13 +6,13 @@ Optionals represent “maybe a value” without sentinel `null`s.
 - The idiomatic form is suffix `T?`.
 - Values are `None` (empty) or `Some(value)` (present).
 - Use `??` (coalescing), `?.` (optional field access), and `match` to consume
-  optionals.
+ optionals.
 
-Full reference: `docs/language/optional.md`.
+Canonical spec: [optional](?p=language/optional).
 
 ## Notes
 
-- Full reference: `docs/language/optional.md`
+- Supported forms + backend payload limits: [optional](?p=language/optional)
 
 ## Syntax
 ```silk
@@ -63,5 +63,6 @@ fn main () -> int {
 
 ## See also
 
-- Full reference: `docs/language/optional.md`
-- `match` expressions: `docs/language/flow-match.md`
+- Canonical spec: [optional](?p=language/optional)
+- `match` expressions: [flow match](?p=language/flow-match)
+- Optional-related fixtures: `tests/silk/pass_optional_*.slk`

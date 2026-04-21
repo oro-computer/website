@@ -3,6 +3,11 @@
 The `for` loop iterates over a range or iterable and executes a block once per
 element.
 
+Supported forms include integer range iteration (`start..end` and
+`start..=end`), array/slice iteration (`for x in xs { ... }` for `T[N]` and
+`T[]`), iterator iteration (`for x in it { ... }` when `it.next() -> T?`), and
+C-style `for (init; condition; step) { ... }` loops.
+
 ## Surface Syntax
 
 Supported surface forms:
@@ -21,13 +26,14 @@ for (<init>; <condition>; <step>) {
 
 Notes:
 
-- `<pattern>` is intended to be a pattern binder. For now it is restricted to a
-  single identifier (and `_`).
+- `<pattern>` is intended to be a pattern binder. In early implementations it
+ is restricted to a single identifier (and `_`). It will be expanded alongside
+ pattern matching.
 - `<iterable>` is an expression.
 - `<init>` is a local binding (`let` / `var` / `const`) with an initializer.
 - `<condition>` is a boolean expression.
 - `<step>` is a statement-like expression (the same restricted subset as
-  expression statements; see `docs/language/flow-expression-statements.md`).
+ expression statements; see [flow expression statements](?p=language/flow-expression-statements)).
 
 ## Semantics
 
@@ -42,7 +48,7 @@ General rules:
 When the iterable is a range expression (for example `start..end` or
 `start..=end`), the loop iterates over integer values.
 
-Rules:
+Design intent:
 
 - `start..end` iterates `start, start+1, ..., end-1` (end-exclusive).
 - `start..=end` iterates `start, start+1, ..., end` (end-inclusive).
@@ -51,21 +57,21 @@ Notes:
 
 - The range bounds are evaluated once, left-to-right (`start` then `end`).
 - If the start bound is greater than or equal to the end bound (`start >= end`)
-  for an end-exclusive range, the loop executes zero times.
+ for an end-exclusive range, the loop executes zero times.
 - If the start bound is greater than the end bound (`start > end`) for an
-  end-inclusive range, the loop executes zero times.
+ end-inclusive range, the loop executes zero times.
 - `continue` advances to the next element (it performs the increment step, then
-  re-checks the range condition).
+ re-checks the range condition).
 - The loop binder is in scope only inside the loop body block.
-- The binder is immutable (it behaves like a `let`
-  binding that is updated by the loop machinery; user code cannot assign to it).
+- The binder is immutable in the Supported forms (it behaves like a `let`
+ binding that is updated by the loop machinery; user code cannot assign to it).
 
-Type checking:
+Type checking (Supported forms):
 
 - Both range bounds must have integer type (`int`, `i8`/`u8`, `i16`/`u16`,
-  `i32`/`u32`, `i64`/`u64`).
+ `i32`/`u32`, `i64`/`u64`).
 - The two bound types must match, except that an integer literal bound may be
-  coerced to the other bound’s integer type (for example `for i in 0..n_u32`).
+ coerced to the other bound’s integer type (for example `for i in 0..n_u32`).
 - The loop binder (when not `_`) has the bound’s integer type.
 
 Example:
@@ -86,27 +92,27 @@ fn main () -> int {
 
 ### Array and slice iteration
 
-`for` also supports iterating over builtin
+In Silk currently, `for` also supports iterating over builtin
 array and slice types:
 
 - fixed arrays `T[N]`,
 - slices `T[]`.
 
-Semantics:
+Semantics (Supported forms):
 
 - The iterable expression is evaluated once.
 - The loop executes in increasing index order, starting at index `0`.
 - The loop binder (when not `_`) is bound to the element value (a copy) for the
-  current iteration.
+ current iteration.
 - The binder is in scope only inside the loop body block.
 - `break` exits the loop; `continue` advances to the next element.
 
 Current limitations:
 
 - Element types are limited to the currently-supported array/slice element
-  subset (types that lower to a fixed scalar slot sequence in the current
-  back-end, such as primitive scalars, `string`, and supported non-opaque
-  structs).
+ subset (types that lower to a fixed scalar slot sequence in the current
+ back-end, such as primitive scalars, `string`, and supported non-opaque
+ structs).
 - Iteration is by value; to mutate an element, use indexing (`xs[i] = ...`).
 
 Example:
@@ -130,13 +136,13 @@ stateful iterator value.
 An expression `it` is treated as an iterator when it has a `next() -> T?`
 instance method (typically by implementing `std::interfaces::Iterator(T)`).
 
-Semantics:
+Semantics (Supported forms):
 
 - The iterable expression is evaluated once to produce the iterator value.
 - The loop repeatedly calls `it.next()`.
-  - When the result is `None`, the loop exits.
-  - When the result is `Some(value)`, the binder (when not `_`) is bound to
-    `value` (a copy) for that iteration and the body executes.
+ - When the result is `None`, the loop exits.
+ - When the result is `Some(value)`, the binder (when not `_`) is bound to
+ `value` (a copy) for that iteration and the body executes.
 - `continue` advances by calling `next()` again; `break` exits the loop.
 
 ## C-style `for` loops
@@ -156,30 +162,30 @@ fn main () -> int {
 }
 ```
 
-Semantics:
+Semantics (Supported forms):
 
 - `<init>` executes exactly once before the first condition check.
 - `<condition>` is checked before each iteration; if it is `false`, the loop
-  exits.
+ exits.
 - The loop body executes once per iteration when `<condition>` is `true`.
 - After the body executes normally, `<step>` executes, then the loop re-checks
-  `<condition>`.
+ `<condition>`.
 - `continue;` skips the remainder of the loop body and jumps to `<step>` (then
-  re-checks `<condition>`).
+ re-checks `<condition>`).
 - `break;` exits the loop immediately without executing `<step>` for that
-  iteration.
+ iteration.
 - The init binding’s name is in scope within the entire loop (condition, step,
-  and body) but is not visible after the loop.
+ and body) but is not visible after the loop.
 
-Init binding mutability:
+Init binding mutability (Supported forms):
 
 - For ergonomics, `for (let i = 0; ...; ++i)` is accepted and the init binding
-  is treated as mutable (equivalent to `var`) within the loop.
-  - `const` init bindings remain immutable.
+ is treated as mutable (equivalent to `var`) within the loop.
+ - `const` init bindings remain immutable.
 
 ## Guidance
 
-`for` supports integer ranges and builtin
+In Silk currently, `for` supports integer ranges and builtin
 array/slice iteration. To write other loops today, use `while`:
 
 ```silk
@@ -197,9 +203,9 @@ fn main () -> int {
 
 - Recognize `for` loop syntax.
 - Resolve iteration targets (ranges, collections) according to the language’s
-  iteration model.
+ iteration model.
 - Lower `for` into explicit control flow, with correct semantics for `break`
-  and `continue`.
+ and `continue`.
 
 Compiler requirements:
 

@@ -19,10 +19,10 @@ When executed inside a loop body, `continue;`:
 
 - stops executing the remainder of the current iteration’s body, and
 - transfers control to the loop’s “next iteration” point:
-  - for `loop`, this means jumping to the start of the loop body.
-  - for `while`, this means re-evaluating the loop condition.
-  - for `for`, this means advancing to the next iteration (and for C-style `for`
-    loops, executing the loop step before re-checking the loop condition).
+ - for `loop`, this means jumping to the start of the loop body.
+ - for `while`, this means re-evaluating the loop condition.
+ - for `for`, this means advancing to the next iteration (and for C-style `for`
+ loops, executing the loop step before re-checking the loop condition).
 
 Example:
 
@@ -56,13 +56,22 @@ fn main () -> int {
 ## Type Checking Rules
 
 - `continue` is only permitted inside a loop body.
-- A `continue` outside a loop is a type-check error (`docs/compiler/diagnostics.md`,
-  `E2008`).
+- A `continue` outside a loop is a type-check error ([diagnostics](?p=compiler/diagnostics),
+ `E2008`).
 
 ## Notes
 
-- `continue;` is valid inside `loop`, `while`, and `for`.
-- `continue;` outside a loop is rejected with `E2008`.
+Implemented:
+
+- `continue;` is accepted inside loops (`loop`, `while`, and `for`) and lowered
+ end-to-end.
+- `continue;` outside a loop is rejected (`E2008`).
+
+Example that uses `continue` in the Supported forms:
+
+- `tests/silk/pass_nested_if_while.slk`
+- `tests/silk/pass_for_continue_break.slk`
+- `tests/silk/pass_loop_basic.slk`
 
 ## Common Pitfalls
 

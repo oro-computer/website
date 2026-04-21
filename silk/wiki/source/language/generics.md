@@ -4,11 +4,11 @@ Silk generics are compile-time and monomorphized: each applied type like
 `Vector(int)` produces a concrete instantiation at build time (no runtime type
 parameters).
 
-Full reference: `docs/language/generics.md`.
+Canonical spec: [generics](?p=language/generics).
 
 ## Notes
 
-- Full reference: `docs/language/generics.md`
+- supported forms and restrictions: [generics](?p=language/generics)
 
 ## Syntax
 ```silk
@@ -43,6 +43,6 @@ fn main () -> int {
 
 ## See also
 
-- Canonical spec: `docs/language/generics.md`
-- Type forms: `docs/language/types.md`
-- Std generic collections: `docs/std/vector.md`, `docs/std/map.md`, `docs/std/set.md`
+- Canonical spec: [generics](?p=language/generics)
+- Type forms: [types](?p=language/types)
+- Std generic collections: [vector](?p=std/vector), [map](?p=std/map), [set](?p=std/set)

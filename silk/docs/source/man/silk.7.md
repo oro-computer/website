@@ -1,4 +1,4 @@
-# `silk` (7) — Silk Toolchain Overview
+# [`silk(7)`](?p=man/silk.7) — Silk Toolchain Overview
 
 > NOTE: This is the Markdown source for the eventual man 7 page for Silk. The roff-formatted manpage should be generated from this content.
 
@@ -12,8 +12,8 @@ Silk is a high performance general purpose programming language with formal veri
 
 Silk is a native compiler toolchain with:
 
-- a CLI entrypoint ([silk (1)](?p=man/silk.1)),
-- an embedding API ([libsilk (7)](?p=man/libsilk.7) and the `silk_*` functions documented in section 3),
+- a CLI entrypoint ([`silk(1)`](?p=man/silk.1)),
+- an embedding API ([`libsilk(7)`](?p=man/libsilk.7) and the `silk_*` functions documented in section 3),
 - and a standard library under the `std::` namespace.
 
 Online documentation:
@@ -26,15 +26,18 @@ The toolchain is intended to be discoverable from the terminal instead of
 requiring repository spelunking:
 
 - `silk man` opens the nearest package overview when one is in scope; otherwise
-  it shows the shipped entry surface,
+ it shows the shipped entry surface,
 - `silk man --list` lists the shipped commands/concepts plus common stdlib
-  entrypoints,
+ entrypoints,
 - `silk man --search <pattern>` searches commands, concepts, stdlib modules,
-  public stdlib symbols, and package-local pages/symbols when a package root is
-  in scope,
+ public stdlib symbols, and package-local pages/symbols when a package root is
+ in scope,
 - `silk doc --man <query> -o <path>` writes the generated roff page to a file,
+- `silk cache` summarizes the managed cache root and helps prune or compact it
+ without deleting unknown files under that root; managed cache mutations are
+ lock-coordinated with normal builds,
 - and REPL users can use `.man <query>` for current-session, imported, and
-  `std::...` symbol/module docs.
+ `std::...` symbol/module docs.
 
 ## Discovery Workflow
 
@@ -62,14 +65,14 @@ construct and name its kind.
 
 The currently implemented coverage is documented in:
 
-- [silk (1)](?p=man/silk.1) (see the `build` command and its notes),
-- [CLI reference](?p=compiler/cli-silk),
-- and runnable examples in the language and standard-library docs.
+- [`silk(1)`](?p=man/silk.1) (see the `build` command and its notes),
+- [cli silk](?p=compiler/cli-silk),
+- and runnable fixtures under `tests/silk/`.
 
 ## Source Layout
 
 - Silk source files use the `.slk` extension.
-- Package builds are driven by a manifest file named `silk.toml` (see [Package manifests](?p=compiler/package-manifests)).
+- Package builds are driven by a manifest file named `silk.toml` (see [package manifests](?p=compiler/package-manifests)).
 - The default stdlib implementation is a directory tree rooted at `std/` and is imported via `import std::...;`.
 
 ## Standard Library
@@ -78,9 +81,9 @@ The `std::` package namespace is the primary stdlib surface. The compiler can au
 
 See:
 
-- [Standard library overview](?p=std/overview) for module inventory and conventions,
-- [Standard library conventions](?p=std/conventions) for ownership and error-handling patterns,
-- [CLI reference](?p=compiler/cli-silk) for stdlib root selection and archive linking behavior.
+- [overview](?p=std/overview) for module inventory and conventions,
+- [conventions](?p=std/conventions) for ownership and error-handling patterns,
+- [cli silk](?p=compiler/cli-silk) for stdlib root selection and archive linking behavior.
 
 ## Formal Silk
 
@@ -88,8 +91,8 @@ Formal Silk verification is an optional part of the toolchain. The verifier uses
 
 See:
 
-- [Formal verification](?p=language/formal-verification)
-- [Diagnostics](?p=compiler/diagnostics) (verifier diagnostics)
+- [formal verification](?p=language/formal-verification)
+- [diagnostics](?p=compiler/diagnostics) (verifier diagnostics)
 
 ## Examples
 
@@ -106,6 +109,7 @@ silk man --search String
 
 # Open a command page, a stdlib module page, and a stdlib symbol page.
 silk man build
+silk man cache
 silk man std::fs
 silk man std::strings::String
 
@@ -113,14 +117,18 @@ silk man std::strings::String
 silk man readme
 silk man docs
 
+# Inspect and preview managed cache cleanup.
+silk cache
+silk cache prune --dry-run
+
 # Write a generated manpage to a file.
 silk doc --man std::fs -o std_fs.3
 ```
 
 ## See Also
 
-- [silk (1)](?p=man/silk.1)
-- [silk-build (1)](?p=man/silk-build.1), [silk-package (1)](?p=man/silk-package.1), [silk-check (1)](?p=man/silk-check.1), [silk-test (1)](?p=man/silk-test.1), [silk-doc (1)](?p=man/silk-doc.1), [silk-man (1)](?p=man/silk-man.1), [silk-cc (1)](?p=man/silk-cc.1)
-- [silk_compiler (3)](?p=man/silk_compiler.3), [silk_error (3)](?p=man/silk_error.3), [silk_bytes (3)](?p=man/silk_bytes.3), [silk_abi_get_version (3)](?p=man/silk_abi_get_version.3)
-- [libsilk (7)](?p=man/libsilk.7)
+- [`silk(1)`](?p=man/silk.1)
+- [`silk-build(1)`](?p=man/silk-build.1), [`silk-package(1)`](?p=man/silk-package.1), [`silk-cache(1)`](?p=man/silk-cache.1), [`silk-check(1)`](?p=man/silk-check.1), [`silk-test(1)`](?p=man/silk-test.1), [`silk-doc(1)`](?p=man/silk-doc.1), [`silk-man(1)`](?p=man/silk-man.1), [`silk-cc(1)`](?p=man/silk-cc.1)
+- [`silk_compiler(3)`](?p=man/silk_compiler.3), [`silk_error(3)`](?p=man/silk_error.3), [`silk_bytes(3)`](?p=man/silk_bytes.3), [`silk_abi_get_version(3)`](?p=man/silk_abi_get_version.3)
+- [`libsilk(7)`](?p=man/libsilk.7)
 - `https://oro.computer/silk`

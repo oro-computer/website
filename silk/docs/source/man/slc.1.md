@@ -1,4 +1,4 @@
-# `slc` (1) — Alias of `silk build`
+# [`slc(1)`](?p=man/slc.1) — Alias of `silk build`
 
 > NOTE: This is the Markdown source for the eventual man 1 page for `slc`. The roff-formatted manpage should be generated from this content.
 
@@ -19,8 +19,8 @@
 silk build <args...>
 ```
 
-See [silk-build (1)](?p=man/silk-build.1) for full documentation of options, arguments, and behavior.
+See [`silk-build(1)`](?p=man/silk-build.1) for full documentation of options, arguments, and behavior.
 
 ## See Also
 
-- [silk (1)](?p=man/silk.1), [silk-build (1)](?p=man/silk-build.1)
+- [`silk(1)`](?p=man/silk.1), [`silk-build(1)`](?p=man/silk-build.1)

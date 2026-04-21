@@ -9,18 +9,18 @@ The initial goals are:
 
 - a small but usable database/statement API (`Database`, `Stmt`),
 - a non-leaking, portable error model (`SqliteFailed`) that surfaces stable
-  error kinds while retaining SQLite return codes as structured detail,
+ error kinds while retaining SQLite return codes as structured detail,
 - safe defaults (`invalid()` handles, idempotent `drop()`), so resource cleanup
-  is reliable even in early-return code.
+ is reliable even in early-return code.
 
 ## Linkage and Toolchain Integration
 
 On `linux/x86_64`, when a program imports `std::sqlite`, `silk build`
 automatically links the vendored `libsqlite3.a` archive from:
 
-- repo builds: `vendor/lib/x64-linux/libsqlite3.a`
-- staged toolchains: `build/lib/silk/vendor/lib/x64-linux/libsqlite3.a`
-- installed toolchains: `<prefix>/lib/silk/vendor/lib/x64-linux/libsqlite3.a`
+- repo builds: `vendor/lib/<host-layout>/libsqlite3.a`
+- staged toolchains: `build/lib/silk/vendor/lib/<host-layout>/libsqlite3.a`
+- installed toolchains: `<prefix>/lib/silk/vendor/lib/<host-layout>/libsqlite3.a`
 
 This keeps `std::sqlite` runnable without requiring `libsqlite3.so.*` at
 runtime.
@@ -35,9 +35,9 @@ amalgamation source:
 
 - upstream: `https://www.sqlite.org/2026/sqlite-amalgamation-3510200.zip`
 - output staging (hosted baseline):
-  - `vendor/deps/sqlite-amalgamation-3510200/` (source; ignored),
-  - `vendor/lib/x64-linux/libsqlite3.a` (static library; ignored),
-  - `vendor/include/sqlite3.h` + `vendor/include/sqlite3ext.h` (headers; ignored).
+ - `vendor/deps/sqlite-amalgamation-3510200/` (source; ignored),
+ - `vendor/lib/<host-layout>/libsqlite3.a` (static library; ignored),
+ - `vendor/include/sqlite3.h` + `vendor/include/sqlite3ext.h` (headers; ignored).
 
 ## Error Model
 
@@ -62,22 +62,30 @@ The raw SQLite return codes remain available for debugging/telemetry.
 ## Handles and Lifetimes
 
 - `Database` and `Stmt` are handle types with safe defaults:
-  - `Database.invalid()` / `Stmt.invalid()` construct invalid handles.
-  - `drop()` is idempotent and safe to call on invalid handles.
+ - `Database.invalid()` / `Stmt.invalid()` construct invalid handles.
+ - `drop()` is idempotent and safe to call on invalid handles.
 - Borrowed column accessors:
-  - `Stmt.column_text(col) -> string?` and `Stmt.column_blob(col) -> ByteSlice?`
-    return views into SQLite-owned memory.
-  - These views are valid until the next `step`/`reset`/`finalize` on the same
-    statement.
+ - `Stmt.column_text(col) -> string?` and `Stmt.column_blob(col) -> ByteSlice?`
+ return views into SQLite-owned memory.
+ - These views are valid until the next `step`/`reset`/`finalize` on the same
+ statement.
 - Copy helpers:
-  - `Stmt.column_text_copy` copies into `std::strings::String`.
-  - `Stmt.column_blob_copy` copies into `std::buffer::BufferU8`.
+ - `Stmt.column_text_copy` copies into `std::strings::String`.
+ - `Stmt.column_blob_copy` copies into `std::buffer::BufferU8`.
 
 ## Exported API
 
-The `std::sqlite` surface lives in `std/sqlite.slk` and provides:
+The current `std::sqlite` surface currently lives in `std/sqlite.slk` and
+provides:
 
 - `Database`: `open`, `open_read_only`, `open_in_memory`, `exec`, `prepare`,
-  `busy_timeout_ms`, `changes`, `last_insert_rowid`,
+ `busy_timeout_ms`, `changes`, `last_insert_rowid`,
 - `Stmt`: `bind_int`, `bind_i64`, `bind_text`, `bind_blob`, `step`, `reset`,
-  `clear_bindings`, `column_*` accessors, and `finalize`/`drop`.
+ `clear_bindings`, `column_*` accessors, and `finalize`/`drop`.
+- Async-friendly helpers:
+ - `open_async`, `open_read_only_async`, `open_in_memory_async`
+ - `exec_path_async`, `exec_in_memory_async`
+
+The async-friendly helpers are wrappers over the current blocking SQLite path.
+They run the work on a task worker so async code can `await` simple open/exec
+operations without blocking its executor owner thread.

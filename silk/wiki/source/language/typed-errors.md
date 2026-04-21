@@ -8,12 +8,14 @@ Typed errors make “this function can fail” explicit in the type system:
 - handle them with `match (expr) { ... }` (statement form + Terminal Arm Rule),
 - and propagate them with the postfix `?` operator (`call()?`).
 
-Full reference: `docs/language/typed-errors.md`.
+Canonical spec: [typed errors](?p=language/typed-errors).
 
 ## Notes
 
-- Full reference: `docs/language/typed-errors.md`
-- Error model overview: `docs/language/errors.md`
+Implemented in the reference compiler (front-end + native backend subset).
+
+- Canonical spec + rules: [typed errors](?p=language/typed-errors)
+- Error model overview: [errors](?p=language/errors)
 
 ## Syntax
 ```silk
@@ -71,4 +73,5 @@ fn main () -> int {
 
 ## See also
 
-- Full reference: `docs/language/typed-errors.md`
+- Canonical spec: [typed errors](?p=language/typed-errors)
+- Fixtures: `tests/silk/pass_typed_errors_*.slk`

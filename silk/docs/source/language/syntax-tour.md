@@ -6,9 +6,9 @@ expressions, and the Formal Silk verification directives.
 
 This guide complements (not replaces):
 
-- `docs/language/grammar.md` (the exact grammar the parser accepts),
+- [grammar](?p=language/grammar) (the exact grammar the parser accepts),
 - the concept documents under `docs/language/` (semantics and checker rules),
-- and `docs/compiler/diagnostics.md` (error codes for unsupported forms).
+- and [diagnostics](?p=compiler/diagnostics) (error codes for unsupported forms).
 
 ## How to use this guide
 
@@ -18,8 +18,8 @@ diagnostics matter.
 
 When in doubt, prefer:
 
-- `docs/language/grammar.md` for syntax,
-- `docs/compiler/diagnostics.md` for unsupported forms and error codes,
+- [grammar](?p=language/grammar) for syntax,
+- [diagnostics](?p=compiler/diagnostics) for unsupported forms and error codes,
 - the runnable examples embedded throughout `docs/language/`.
 
 ## 0. Minimal Executable Module
@@ -37,7 +37,7 @@ Notes:
 - Most statements end with `;`.
 - Blocks are `{ stmt* }`.
 - The entrypoint for an executable build is `main` returning `int` (see
-  `docs/compiler/cli-silk.md` for the CLI rules and supported targets).
+ [cli silk](?p=compiler/cli-silk) for the CLI rules and supported targets).
 
 ## 1. Lexical Basics
 
@@ -52,7 +52,7 @@ Comments:
 /* Block comment (non-nesting) */
 ```
 
-Doc comments (tooling-only; see `docs/language/doc-comments.md`):
+Doc comments (tooling-only; see [doc comments](?p=language/doc-comments)):
 
 ```silk
 /// Line doc comment
@@ -86,7 +86,7 @@ fn main () -> int {
 
 Formal Silk directives like `#require` and `#invariant` are **not comments**.
 They are real tokens and are parsed as part of the language (see
-`docs/language/formal-verification.md`).
+[formal verification](?p=language/formal-verification)).
 
 ```silk
 #require x >= 0;
@@ -115,12 +115,12 @@ fn main () -> int {
 }
 ```
 
-See `docs/language/attributes.md` for the full reference, built-in keys, and
+See [attributes](?p=language/attributes) for the full reference, built-in keys, and
 patterns for feature/target detection.
 
 ## 2. Source File Structure: `package`/`module`, `import`, then declarations
 
-Top-level ordering is enforced (see `docs/language/packages-imports-exports.md`):
+Top-level ordering is enforced (see [packages imports exports](?p=language/packages-imports-exports)):
 
 1. Optional `package ...;` **or** `module ...;`
 2. Zero or more `import ...;` declarations as a contiguous block
@@ -153,7 +153,7 @@ module drivers::uart as Device;
 
 ## 3. Imports and Exports
 
-See `docs/language/packages-imports-exports.md` for the full import/export model.
+See [packages imports exports](?p=language/packages-imports-exports) for the full import/export model.
 
 ### Package imports
 
@@ -235,7 +235,7 @@ This section shows the core top-level declaration forms:
 
 ### 4.1 Bindings: `const`, `let`, `let mut`, `var`
 
-Supported (current subset requires initializers; see `E2015`):
+Supported (Supported forms requires initializers; see `E2015`):
 
 ```silk
 fn main () -> int {
@@ -252,10 +252,10 @@ fn main () -> int {
 
 Notes:
 
-- `const` initializers must be compile-time evaluable in the current subset
-  (see `E2041`).
+- `const` initializers must be compile-time evaluable in the Supported forms
+ (see `E2041`).
 - Only `let mut`/`var` bindings are assignable lvalues (see
-  `docs/language/mutability.md` and `docs/language/operators.md`).
+ [mutability](?p=language/mutability) and [operators](?p=language/operators)).
 - Destructuring `let` bindings are supported for struct values:
 
   ```silk
@@ -266,14 +266,14 @@ Notes:
   let { data as d, id as i } = Record{ id: 456, data: "other" };
   ```
 
-  Array destructuring is also supported:
+ Array destructuring is also supported:
 
   ```silk
   let records: Record[] = [{ id: 123, data: "a" }, { id: 456, data: "b" }];
   let [a, b] = records;
   ```
 
-  Enum destructuring is also supported:
+ Enum destructuring is also supported:
 
   ```silk
   import std::result;
@@ -295,7 +295,7 @@ fn add (x: int, y: int) -> int {
 }
 ```
 
-`pure fn` (restricted subset; see `docs/language/function-disciplines.md`):
+`pure fn` (restricted subset; see [function disciplines](?p=language/function-disciplines)):
 
 ```silk
 pure fn inc (x: int) -> int {
@@ -303,7 +303,7 @@ pure fn inc (x: int) -> int {
 }
 ```
 
-`async fn` / `task fn` / `async task fn` (handles; see `docs/language/concurrency.md`):
+`async fn` / `task fn` / `async task fn` (handles; see [concurrency](?p=language/concurrency)):
 
 ```silk
 task fn worker () -> int {
@@ -322,7 +322,7 @@ async fn main () -> int {
 #### Parameters: `mut`, defaults, and varargs
 
 Mutable reference parameters require `mut` both in the signature and at the
-call site (see `docs/language/mutability.md`):
+call site (see [mutability](?p=language/mutability)):
 
 ```silk
 struct Pair { a: int, b: int }
@@ -338,7 +338,7 @@ fn main () -> int {
 }
 ```
 
-Default arguments (current subset restricts default expressions to a constant/literal subset):
+Default arguments (Supported forms restricts default expressions to a constant/literal subset):
 
 ```silk
 fn add2 (x: int, y: int = 2) -> int {
@@ -346,7 +346,7 @@ fn add2 (x: int, y: int = 2) -> int {
 }
 ```
 
-Varargs (final parameter prefixed by `...`; see `docs/language/varargs.md`):
+Varargs (final parameter prefixed by `...`; see [varargs](?p=language/varargs)):
 
 ```silk
 fn log (fmt: string, ...args: std::fmt::Arg) -> void {
@@ -386,8 +386,8 @@ fn main () -> int {
 }
 ```
 
-Capturing closures are supported as a restricted subset; see `docs/language/types.md`
-and `docs/language/memory-model.md`.
+Capturing closures are supported as a restricted subset; see [types](?p=language/types)
+and [memory model](?p=language/memory-model).
 
 ### 4.4 Type aliases: `type`
 
@@ -397,7 +397,7 @@ Basic alias:
 type I = int;
 ```
 
-Optional kind tags (validated by the checker; see `docs/language/types.md`):
+Optional kind tags (validated by the checker; see [types](?p=language/types)):
 
 ```silk
 type struct UserId = int;
@@ -440,7 +440,7 @@ fn main () -> int {
 }
 ```
 
-Heap allocation (`new`) produces a `&Struct` reference in the current subset:
+Heap allocation (`new`) produces a `&Struct` reference in the Supported forms:
 
 ```silk
 struct Boxed { value: int }
@@ -451,7 +451,7 @@ fn main () -> int {
 }
 ```
 
-Attach methods with `impl` (see `docs/language/structs-impls-layout.md`):
+Attach methods with `impl` (see [structs impls layout](?p=language/structs-impls-layout)):
 
 ```silk
 impl Point {
@@ -466,7 +466,7 @@ fn main () -> int {
 }
 ```
 
-Single inheritance (current surface is implemented; see `docs/language/structs-impls-layout.md`):
+Single inheritance (current surface is implemented; see [structs impls layout](?p=language/structs-impls-layout)):
 
 ```silk
 // Design shape (field/layout rules and current subset limits are documented).
@@ -490,7 +490,7 @@ fn to_int (c: Color) -> int {
 }
 ```
 
-See `docs/language/enums.md` and `docs/language/flow-match.md`.
+See [enums](?p=language/enums) and [flow match](?p=language/flow-match).
 
 ### 4.7 Interfaces and `impl ... as ...`
 
@@ -513,7 +513,7 @@ impl Cell as Counter {
 }
 ```
 
-See `docs/language/interfaces.md`.
+See [interfaces](?p=language/interfaces).
 
 ### 4.8 Typed errors: `error`, `panic`, `T | ErrorType...`, `match` statement, `?`
 
@@ -562,11 +562,11 @@ fn main () -> int | OutOfBounds {
 }
 ```
 
-See `docs/language/typed-errors.md`.
+See [typed errors](?p=language/typed-errors).
 
 ### 4.9 External declarations: `ext`
 
-External function binding (symbol name optional; see `docs/language/ext.md`):
+External function binding (symbol name optional; see [ext](?p=language/ext)):
 
 ```silk
 export ext puts = fn(string) -> int;
@@ -575,9 +575,9 @@ export ext errno "errno" = int;
 ```
 
 Note: C variadics (`printf`-style `...`) via `ext` are not implemented yet; see
-`docs/language/varargs.md` and `docs/language/ext.md`.
+[varargs](?p=language/varargs) and [ext](?p=language/ext).
 
-See also: `docs/compiler/abi-libsilk.md` (C ABI) and `include/silk.h`.
+See also: [abi libsilk](?p=compiler/abi-libsilk) (C ABI) and `include/silk.h`.
 
 ### 4.10 Tests: `test`
 
@@ -589,7 +589,7 @@ test "addition works" {
 }
 ```
 
-See `docs/language/testing.md` and run with `silk test`.
+See [testing](?p=language/testing) and run with `silk test`.
 
 ### 4.11 Formal Silk theories: `theory`
 
@@ -628,11 +628,11 @@ fn main (x: int, y: int) -> int {
 }
 ```
 
-See `docs/language/formal-verification.md`.
+See [formal verification](?p=language/formal-verification).
 
 ## 5. Types (Surface Forms)
 
-See `docs/language/types.md` for full details and implementation limits.
+See [types](?p=language/types) for full details and implementation limits.
 
 ### Primitive types
 
@@ -724,12 +724,12 @@ fn main () -> int {
 }
 ```
 
-See `docs/language/generics.md` for the current monomorphized subset and the
+See [generics](?p=language/generics) for the current monomorphized subset and the
 remaining unsupported generic forms that still report `E2016`.
 
 ## 6. Statements (Inside Blocks)
 
-The statement grammar is summarized in `docs/language/grammar.md` and detailed
+The statement grammar is summarized in [grammar](?p=language/grammar) and detailed
 in `docs/language/flow-*.md`.
 
 ### `if` / `else`
@@ -757,7 +757,7 @@ fn main () -> int {
 }
 ```
 
-`for` over a range form (special-cased surface; see `docs/language/flow-for.md`):
+`for` over a range form (special-cased surface; see [flow for](?p=language/flow-for)):
 
 ```silk
 fn main () -> int {
@@ -807,7 +807,7 @@ fn main () -> int {
 }
 ```
 
-`panic` is used for typed errors (see `docs/language/typed-errors.md`):
+`panic` is used for typed errors (see [typed errors](?p=language/typed-errors)):
 
 ```silk
 panic OutOfBounds { index: 1, len: 0 };
@@ -815,14 +815,14 @@ panic OutOfBounds { index: 1, len: 0 };
 
 ### `match` statement (block arms)
 
-See `docs/language/flow-match.md` for ordinary value matching and
-`docs/language/typed-errors.md` for the Terminal Arm Rule when the scrutinee
+See [flow match](?p=language/flow-match) for ordinary value matching and
+[typed errors](?p=language/typed-errors) for the Terminal Arm Rule when the scrutinee
 has a typed-error contract.
 
 ### `async { ... }` and `task { ... }`
 
-Structured blocks (implemented as lexical blocks in the current subset; see
-`docs/language/concurrency.md`):
+Structured blocks (implemented as lexical blocks in the Supported forms; see
+[concurrency](?p=language/concurrency)):
 
 ```silk
 async fn main () -> int {
@@ -866,7 +866,7 @@ async fn main () -> int {
 ```
 
 `yield` / `yield *` interact with `Task(T)` values (used inside `task` regions in
-the current subset):
+the Supported forms):
 
 ```silk
 task fn producer (n: int) -> int {
@@ -890,7 +890,7 @@ async fn main () -> int {
 ## 7. Expressions (Precedence + Demonstrations)
 
 Silk expressions follow a conventional precedence hierarchy. For the exact
-productions, see `docs/language/grammar.md`.
+productions, see [grammar](?p=language/grammar).
 
 ### Literals and other primary expressions
 
@@ -931,7 +931,7 @@ fn main () -> int {
   assert (f as int) == 3;
   assert (d as int) == (d as int);
 
-  // `d` exists to demonstrate duration literal syntax. See `docs/language/literals-duration.md`.
+  // `d` exists to demonstrate duration literal syntax. See the duration literal docs.
   return 0;
 }
 ```
@@ -953,7 +953,7 @@ fn main () -> int {
 ### `as` and `as raw`
 
 `as` performs explicit numeric/shape casts and `as raw` performs raw bit casts
-for scalar types (see `docs/language/operators.md`).
+for scalar types (see [operators](?p=language/operators)).
 
 ```silk
 fn main () -> int {
@@ -1042,7 +1042,7 @@ directive tokens that attach to functions and loops:
 - block-local proof obligations: `#assert`
 - reusable proof bundles: `theory` / `#theory`
 
-See `docs/language/formal-verification.md` for the exact verifier model and
+See [formal verification](?p=language/formal-verification) for the exact verifier model and
 current restrictions.
 
 ### Contracts on functions
@@ -1091,12 +1091,12 @@ fn add (x: int, y: int) -> int {
 
 If you want more detail on a specific construct, jump to:
 
-- Syntax: `docs/language/grammar.md`
-- Types: `docs/language/types.md`, `docs/language/generics.md`
-- Operators: `docs/language/operators.md`
-- Flow control: `docs/language/flow-overview.md` and `docs/language/flow-*.md`
-- Modules/imports/exports: `docs/language/packages-imports-exports.md`
-- Optionals: `docs/language/optional.md`
-- Typed errors: `docs/language/typed-errors.md`
-- Concurrency: `docs/language/concurrency.md`
-- Formal verification: `docs/language/formal-verification.md`
+- Syntax: [grammar](?p=language/grammar)
+- Types: [types](?p=language/types), [generics](?p=language/generics)
+- Operators: [operators](?p=language/operators)
+- Flow control: [flow overview](?p=language/flow-overview) and `docs/language/flow-*.md`
+- Modules/imports/exports: [packages imports exports](?p=language/packages-imports-exports)
+- Optionals: [optional](?p=language/optional)
+- Typed errors: [typed errors](?p=language/typed-errors)
+- Concurrency: [concurrency](?p=language/concurrency)
+- Formal verification: [formal verification](?p=language/formal-verification)

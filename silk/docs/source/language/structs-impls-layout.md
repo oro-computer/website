@@ -21,7 +21,7 @@ Key rules:
 
 - Structs contain only data members.
 - Memory layout and padding are well-defined so that FFI and ABI rules can rely on them.
-- Stack vs heap allocation is specified in `docs/language/memory-model.md`.
+- Stack vs heap allocation is specified in [memory model](?p=language/memory-model).
 
 ### Generic structs
 
@@ -37,10 +37,10 @@ Rules:
 
 - A generic `struct Name(T, ...)` introduces a **type constructor** `Name`.
 - Outside a generic context, uses of the type must be fully applied (for
-  example `Data(u8)`), not bare `Data`.
+ example `Data(u8)`), not bare `Data`.
 - A declaration name may not be reused across different generic arities (for
-  example `struct Foo { ... }` and `struct Foo(T) { ... }` cannot both exist in
-  the same namespace).
+ example `struct Foo { ... }` and `struct Foo(T) { ... }` cannot both exist in
+ the same namespace).
 
 ### Field Default Initializers
 
@@ -56,18 +56,32 @@ struct Point {
 When a struct literal omits a field, the compiler initializes the field from its
 default expression.
 
-In the current compiler, default field expressions use the same
-restriction as default function arguments:
+In Silk currently, a field default must be a compile-time
+evaluable expression. This is broader than the current default-function-argument
+rule.
 
-- no name references, and
-- no `new`.
+Supported forms currently include:
+
+- literals,
+- `const` bindings,
+- calls to `const fn`,
+- struct literals, and
+- field access over compile-time values.
+
+Current limits:
+
+- `new` is still rejected,
+- ordinary runtime helper calls are rejected, and
+- the expression still has to type-check against the field type.
 
 Example:
 
 ```silk
+const DEFAULT_Y: int = 0;
+
 struct Point {
   x: int = 0,
-  y: int = 0,
+  y: int = DEFAULT_Y,
 }
 
 fn main () -> int {
@@ -93,31 +107,31 @@ struct Derived extends Base {
 }
 ```
 
-Semantics:
+Semantics (Supported forms):
 
 - A derived struct inherits all fields of its base struct.
 - The derived struct’s field sequence is:
-  1) all base fields (in declaration order), then
-  2) all derived fields (in declaration order).
+ 1) all base fields (in declaration order), then
+ 2) all derived fields (in declaration order).
 - Field access on the derived struct can refer to inherited base fields
-  directly (`d.x`, `d.y`).
+ directly (`d.x`, `d.y`).
 - Default field initializers are inherited:
-  - a `Derived{ ... }` literal may omit inherited fields that have defaults in
-    the base struct.
+ - a `Derived{ ... }` literal may omit inherited fields that have defaults in
+ the base struct.
 
-Type checking rules:
+Type checking rules (Supported forms):
 
 - `extends` is permitted only on non-opaque `struct` declarations.
 - The base name must resolve to a `struct` type in the compiled module set.
 - Cycles in `extends` chains are rejected.
 - A derived struct may not declare a field whose name conflicts with an
-  inherited field name.
+ inherited field name.
 
 Notes:
 
-- `extends` does not imply implicit subtyping in the current compiler:
-  there is no implicit coercion from `Derived` to `Base` (or `&Derived` to
-  `&Base`) yet.
+- `extends` does not imply implicit subtyping in Silk currently:
+ there is no implicit coercion from `Derived` to `Base` (or `&Derived` to
+ `&Base`) yet.
 
 ### Opaque Structs (FFI Handles)
 
@@ -139,14 +153,14 @@ Rules (implemented):
 - Opaque structs **cannot be instantiated** (no struct literals).
 - Opaque structs **do not support field/member access** (`.` / `?.`).
 - Opaque structs **must not be used by value** in type positions (locals,
-  parameters, results). Only the reference form `&MyFFIHandle` is allowed.
+ parameters, results). Only the reference form `&MyFFIHandle` is allowed.
 
 These rules increase safety at the language boundary:
 
 - **Eliminates type confusion**: distinct handle types such as `&DatabaseHandle`
-  and `&FileHandle` are not interchangeable.
+ and `&FileHandle` are not interchangeable.
 - **Prevents invalid operations in Silk**: Silk code cannot read/write fields or
-  assume a size/layout for the foreign type.
+ assume a size/layout for the foreign type.
 
 #### Safety and Undefined Behavior (UB)
 
@@ -169,13 +183,13 @@ The long-term Silk design is for `struct` layout to match conventional C layout
 rules for the corresponding field types on the target:
 
 - **Sequential layout**: fields appear in memory in the exact order they are
-  declared in the `struct` definition.
+ declared in the `struct` definition.
 - **Alignment and padding**: each field is placed at an offset that is a
-  multiple of the field type’s required alignment. The compiler inserts padding
-  bytes where necessary.
+ multiple of the field type’s required alignment. The compiler inserts padding
+ bytes where necessary.
 - **Final padding**: the overall struct size is padded to a multiple of the
-  struct’s alignment (typically the maximum alignment of its fields), so arrays
-  of the struct keep each element correctly aligned.
+ struct’s alignment (typically the maximum alignment of its fields), so arrays
+ of the struct keep each element correctly aligned.
 
 Example (typical C layout on `linux/x86_64`):
 
@@ -196,24 +210,24 @@ Conceptually, this layout would be:
 
 Total size: 8 bytes (alignment 4).
 
-### Memory Layout (Current Implementation)
+### Memory Layout
 
 The current compiler/backend subset does **not** implement packed C-like struct
 layout yet. Instead, it uses a *scalar slot* model:
 
 - A `struct` value is lowered into a sequence of scalar “slots” in source order,
-  after recursively expanding certain composite field types:
-  - `string` contributes two slots: `(u64 ptr, i64 len)`.
-  - nested non-opaque structs contribute their slot sequence.
-  - optionals contribute `(bool tag, payload slots...)`, where payload slots
-    follow the lowering of the underlying non-optional type.
+ after recursively expanding certain composite field types:
+ - `string` contributes two slots: `(u64 ptr, i64 len)`.
+ - nested non-opaque structs contribute their slot sequence.
+ - optionals contribute `(bool tag, payload slots...)`, where payload slots
+ follow the lowering of the underlying non-optional type.
 - When a `struct` is stored in memory (stack locals and heap boxes), each slot
-  is stored in a separate **8-byte cell**.
-  - This means sub-64-bit fields (`bool`, `i8`/`u8`, `i32`/`u32`, `f32`, `char`,
-    etc.) are not packed yet.
-  - Values are still *typed* as their declared scalar kinds (the checker and IR
-    track widths/sign), but the physical in-memory representation is widened to
-    one 8-byte slot per scalar.
+ is stored in a separate **8-byte cell**.
+ - This means sub-64-bit fields (`bool`, `i8`/`u8`, `i32`/`u32`, `f32`, `char`,
+ etc.) are not packed yet.
+ - Values are still *typed* as their declared scalar kinds (the checker and IR
+ track widths/sign), but the physical in-memory representation is widened to
+ one 8-byte slot per scalar.
 
 This design keeps lowering/codegen simple and lets the compiler support nested
 aggregates without committing to a final packed layout. The trade-off is that
@@ -231,29 +245,29 @@ aggregates, and FFI-safe ABI mapping. The current compiler/backend
 implementation supports only a narrow, explicitly documented subset:
 
 - Only "plain" structs with **0+ fields** are supported by codegen.
-  - Empty structs (`struct Empty {}`) are currently represented as a single
-    placeholder `u64` slot in the scalar-slot model.
+ - Empty structs (`struct Empty {}`) are currently represented as a single
+ placeholder `u64` slot in the scalar-slot model.
 - Fields may be:
-  - scalar primitive types (`bool`, fixed-width integers, `int`, `char`,
-    `f32`/`f64`, `Instant`, `Duration`),
-  - `string` (lowered as `{ ptr: u64, len: i64 }`),
-  - nested (non-opaque) structs,
-  - and optionals (`T?`) of supported payload types.
+ - scalar primitive types (`bool`, fixed-width integers, `int`, `char`,
+ `f32`/`f64`, `Instant`, `Duration`),
+ - `string` (lowered as `{ ptr: u64, len: i64 }`),
+ - nested (non-opaque) structs,
+ - and optionals (`T?`) of supported payload types.
 - At ABI boundaries (exported functions and `ext` declarations), structs must be
-  ABI-safe: after slot-flattening, all slots must be `i64`/`u64`/`f64` (for
-  example `string` fields are ABI-safe because they lower to `(u64, i64)`, but
-  `bool`, `char`, and `f32` fields are not).
+ ABI-safe: after slot-flattening, all slots must be `i64`/`u64`/`f64` (for
+ example `string` fields are ABI-safe because they lower to `(u64, i64)`, but
+ `bool`, `char`, and `f32` fields are not).
 - Such structs are passed and returned by value by lowering them to their
-  scalar slots in order and following the System V AMD64 ABI rules for
-  those scalar slots:
-  - integer-like slots consume general-purpose argument slots (`rdi`, `rsi`,
-    `rdx`, `rcx`, `r8`, `r9`, then the stack),
-  - `f32`/`f64` slots consume XMM argument slots (`xmm0`..`xmm7`, then the stack),
-  - 1–2 slot results use `rax`/`rdx` for integer-like slots and `xmm0`/`xmm1`
-    for float slots, with mixed aggregates using both,
-  - 3+ slot results return indirectly via a hidden sret pointer passed in `rdi`
-    (caller-allocated return buffer), with the callee storing each scalar slot
-    sequentially and returning the pointer in `rax`.
+ scalar slots in order and following the System V AMD64 ABI rules for
+ those scalar slots:
+ - integer-like slots consume general-purpose argument slots (`rdi`, `rsi`,
+ `rdx`, `rcx`, `r8`, `r9`, then the stack),
+ - `f32`/`f64` slots consume XMM argument slots (`xmm0`..`xmm7`, then the stack),
+ - 1–2 slot results use `rax`/`rdx` for integer-like slots and `xmm0`/`xmm1`
+ for float slots, with mixed aggregates using both,
+ - 3+ slot results return indirectly via a hidden sret pointer passed in `rdi`
+ (caller-allocated return buffer), with the callee storing each scalar slot
+ sequentially and returning the pointer in `rax`.
 
 Note: at the C ABI surface, exported functions accept ABI-safe structs by
 flattening parameters to their scalar slots in order. For 1–2 slot structs this
@@ -272,7 +286,7 @@ behavior consistent with C for the supported cases.
 memory layout.
 
 The intent is to provide “high-level” APIs without baking behavior into `struct`
-layout. Today, `impl` blocks are *syntax and
+layout. In the implementation, `impl` blocks are *syntax and
 type-checking structure*; code generation treats methods as ordinary functions
 that follow the same calling conventions as other Silk functions.
 
@@ -303,12 +317,12 @@ impl Data(u8) {
 Specialized impl blocks are merged with any other applicable impl blocks for
 the same type specialization, subject to the usual duplicate method-name rules.
 
-Current subset limitation:
+Supported forms limitation:
 
 - Only **primitive type names** (for example `u64`, `string`, `bool`) are
-  recognized as concrete specialization arguments in `impl Name(...)`. Any
-  other identifier in an `impl` argument position is treated as a type
-  parameter name.
+ recognized as concrete specialization arguments in `impl Name(...)`. Any
+ other identifier in an `impl` argument position is treated as a type
+ parameter name.
 
 ### Syntax
 
@@ -331,56 +345,56 @@ impl List {
 Rules:
 
 - An `impl` block attaches methods to exactly one nominal type name (a `struct`
-  or an `enum`).
+ or an `enum`).
 - Multiple `impl` blocks may exist for the same type name; the compiler merges
-  their methods (subject to duplicate-name rules).
+ their methods (subject to duplicate-name rules).
 - Methods inside an `impl` block are `fn` declarations (with bodies).
 - The receiver, when present, is the first parameter named `self` and must be
-  either:
-  - a borrowed reference to the `impl` type (`self: &Type` / `mut self: &Type`),
-    or
-  - an owned value of the `impl` type (`self: Type` / `mut self: Type`).
+ either:
+ - a borrowed reference to the `impl` type (`self: &Type` / `mut self: &Type`),
+ or
+ - an owned value of the `impl` type (`self: Type` / `mut self: Type`).
 - Within an `impl` block, the special type name `Self` may be used anywhere a
-  type name is accepted, and is treated as an alias for the `impl` type.
-  For example, `self: &Self` is equivalent to `self: &Type`, and `-> Self` is
-  equivalent to `-> Type`.
+ type name is accepted, and is treated as an alias for the `impl` type.
+ For example, `self: &Self` is equivalent to `self: &Type`, and `-> Self` is
+ equivalent to `-> Type`.
 - Static methods omit the receiver parameter.
 - Method visibility:
-  - Methods are **private by default**: a method declared without an explicit
-    visibility modifier is callable only within the **defining `impl { ... }`
-    block**.
-  - `public fn` marks a method as callable from outside the defining `impl`
-    block.
-  - `private fn` is permitted to make intent explicit.
-  - `export` is reserved for static members (no `self` receiver) and is not
-    permitted on instance methods; use `public fn` instead.
-  - When an `impl` block declares conformance to an interface (`impl T as I`),
-    the interface’s required methods are **public by definition**:
-    - the corresponding impl methods may omit `public`, but
-    - they may not be explicitly marked `private`.
-    See `docs/language/interfaces.md`.
+ - Methods are **private by default**: a method declared without an explicit
+ visibility modifier is callable only within the **defining `impl { ... }`
+ block**.
+ - `public fn` marks a method as callable from outside the defining `impl`
+ block.
+ - `private fn` is permitted to make intent explicit.
+ - `export` is reserved for static members (no `self` receiver) and is not
+ permitted on instance methods; use `public fn` instead.
+ - When an `impl` block declares conformance to an interface (`impl T as I`),
+ the interface’s required methods are **public by definition**:
+ - the corresponding impl methods may omit `public`, but
+ - they may not be explicitly marked `private`.
+ See [interfaces](?p=language/interfaces).
 - The method named `constructor` is treated specially:
-  - it is only meaningful for `struct` types (it backs `new Type(...)`); enums
-    do not support `constructor` methods in the current subset,
-  - it is `public` by default,
-    - when explicitly marked `private`, it is callable only within the defining
-      `impl { ... }` block,
-  - it may be declared multiple times in a single `impl` block (an overload set),
-  - its overload set includes `constructor` declarations across all merged
-    `impl` blocks for the type,
-  - it is invoked by:
-    - heap allocation (`new Type(...)`),
-    - empty struct literals (`Type{}` and contextual `{}`) when a visible
-      default constructor exists (see `docs/language/literals-aggregate.md`),
-    - and certain call-argument coercions (see `docs/language/types.md`),
-  - `new Type(args...)` invokes the unique overload whose receiver is
-    `mut self: &Type`, whose return type is `void`, and whose non-receiver
-    parameter list matches `args...` after applying the normal call-argument
-    type-checking rules,
-  - if multiple overloads are applicable, the compiler prefers overloads that do
-    **not** rely on implicit call-argument coercions (notably the `U -> &T`
-    constructor coercion for `&T` parameters); if multiple overloads remain tied,
-    the call is rejected as ambiguous.
+ - it is only meaningful for `struct` types (it backs `new Type(...)`); enums
+ do not support `constructor` methods in the Supported forms,
+ - it is `public` by default,
+ - when explicitly marked `private`, it is callable only within the defining
+ `impl { ... }` block,
+ - it may be declared multiple times in a single `impl` block (an overload set),
+ - its overload set includes `constructor` declarations across all merged
+ `impl` blocks for the type,
+ - it is invoked by:
+ - heap allocation (`new Type(...)`),
+ - empty struct literals (`Type{}` and contextual `{}`) when a visible
+ default constructor exists (see [literals aggregate](?p=language/literals-aggregate)),
+ - and certain call-argument coercions (see [types](?p=language/types)),
+ - `new Type(args...)` invokes the unique overload whose receiver is
+ `mut self: &Type`, whose return type is `void`, and whose non-receiver
+ parameter list matches `args...` after applying the normal call-argument
+ type-checking rules,
+ - if multiple overloads are applicable, the compiler prefers overloads that do
+ **not** rely on implicit call-argument coercions (notably the `U -> &T`
+ constructor coercion for `&T` parameters); if multiple overloads remain tied,
+ the call is rejected as ambiguous.
 
 ### Call syntax
 
@@ -392,44 +406,44 @@ The surface call syntax uses field-access + call:
 Semantically, method calls behave like ordinary function calls where the
 receiver is passed as an explicit first argument.
 
-Static-method receiver sugar (current subset):
+Static-method receiver sugar (Supported forms):
 
 - If `value.method(...)` does not resolve to an instance method (a method whose
-  first parameter is a receiver `self: &Type` / `mut self: &Type`), the
-  compiler may resolve it as a call to a visible static method of the receiver
-  type by inserting the receiver as the first argument: `Type.method(value, ...)`.
+ first parameter is a receiver `self: &Type` / `mut self: &Type`), the
+ compiler may resolve it as a call to a visible static method of the receiver
+ type by inserting the receiver as the first argument: `Type.method(value, ...)`.
 - This supports fluent chaining for value-consuming helper APIs like
-  `std::result::Result.unwrap_or`:
+ `std::result::Result.unwrap_or`:
 
   ```silk
   let r: R = /* ... */;
   let x: int = r.unwrap_or(0); // sugar for `R.unwrap_or(r, 0)`
   ```
 
-Mutability rule (current subset):
+Mutability rule (Supported forms):
 
 - If the method receiver is `self: &Type`, the call site passes a read-only
-  borrow of the receiver (for example `value.method(...)`).
+ borrow of the receiver (for example `value.method(...)`).
 - If the method receiver is `mut self: &Type`, the call site must pass a
-  mutable borrow of the receiver.
-  - When the receiver is a **name binding** that is mutable (`let mut value = ...`)
-    or a mutable reference binding (for example a `mut self: &Type` receiver),
-    the compiler treats `value.method(...)` as a mutable receiver call (no
-    `(mut value)` wrapper required).
-  - The explicit `value.method(...)` form is permitted but is no longer
-    required for name receivers.
+ mutable borrow of the receiver.
+ - When the receiver is a **name binding** that is mutable (`let mut value = ...`)
+ or a mutable reference binding (for example a `mut self: &Type` receiver),
+ the compiler treats `value.method(...)` as a mutable receiver call (no
+ `(mut value)` wrapper required).
+ - The explicit `value.method(...)` form is permitted but is no longer
+ required for name receivers.
 - If the method receiver is `self: Type` or `mut self: Type`, the call site
-  passes the receiver **by value**. For ownership-tracked values (for example
-  types with `Drop`), this consumes the receiver binding (use after move is
-  rejected); for plain scalars and POD structs it behaves like a copy.
+ passes the receiver **by value**. For ownership-tracked values (for example
+ types with `Drop`), this consumes the receiver binding (use after move is
+ rejected); for plain scalars and POD structs it behaves like a copy.
 
-Current subset limitations:
+Supported forms limitations:
 
 - Mutable **borrow** receiver calls (`mut self: &Type`) must use a name receiver;
-  mutable borrows from non-name receiver expressions (for example `make().push(1)`)
-  are rejected.
+ mutable borrows from non-name receiver expressions (for example `make().push(1)`)
+ are rejected.
 - Non-`mut` receivers may be arbitrary expressions (including calls), so
-  chaining like `url.href().as_string()` is permitted.
+ chaining like `url.href().as_string()` is permitted.
 
 Compiler requirements:
 

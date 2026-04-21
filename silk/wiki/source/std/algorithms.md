@@ -1,9 +1,9 @@
 # `std::algorithms`
 
 `std::algorithms` provides common algorithms over collections. Today, a small
-current subset exists for scalar types.
+Supported forms exists for scalar types.
 
-Canonical doc: `docs/std/algorithms.md`.
+Canonical doc: [algorithms](?p=std/algorithms).
 
 ## Importing
 
@@ -24,4 +24,4 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/algorithms.md`
+- Canonical doc: [algorithms](?p=std/algorithms)

@@ -10,76 +10,76 @@ Use enums to model:
 - and any API where “exactly one of these cases” is the core invariant.
 
 If your goal is “a function can fail with one of several error shapes”, prefer
-typed errors (`docs/language/typed-errors.md`) over enums.
+typed errors ([typed errors](?p=language/typed-errors)) over enums.
 
 ## Notes
 
-Supported forms:
+What works end-to-end today (parser → checker → lowering → codegen):
 
 - **Enum declarations** with:
-  - unit variants (`A`),
-  - tuple variants (`Data(int)` and `Pair(int, int)`),
-  - and an optional trailing comma after the last variant.
+ - unit variants (`A`),
+ - tuple variants (`Data(int)` and `Pair(int, int)`),
+ - and an optional trailing comma after the last variant.
 - **Construction**:
-  - unit variants as values: `E::A`,
-  - tuple variants as calls: `E::Data(7)`.
-  - type-directed shorthand:
-    - when the expected type is an enum `E`, unit variants may be written as `A`
-      (sugar for `E::A`),
-    - when the expected type is an enum `E`, tuple variants may be written as
-      `Data(7)` (sugar for `E::Data(7)`).
+ - unit variants as values: `E::A`,
+ - tuple variants as calls: `E::Data(7)`.
+ - type-directed shorthand:
+ - when the expected type is an enum `E`, unit variants may be written as `A`
+ (sugar for `E::A`),
+ - when the expected type is an enum `E`, tuple variants may be written as
+ `Data(7)` (sugar for `E::Data(7)`).
 - **Function signatures**:
-  - enums may be used in parameter lists and return types,
-  - error-producing functions may return enums (`-> E | ErrorType...`), and `call()?` works when the success type is an enum.
+ - enums may be used in parameter lists and return types,
+ - error-producing functions may return enums (`-> E | ErrorType...`), and `call()?` works when the success type is an enum.
 - **`match` expression over enums**:
-  - patterns are restricted to enum variants (`E::A`, `E::Data(x)`) and may
-    use shorthand (`A`, `Data(x)`) when the scrutinee type is the enum,
-  - binders may be names or `_`,
-  - no guards (`if ...`) yet,
-  - and expression-form matches must still be *exhaustive* in the current
-    subset:
-    - either by explicit arm coverage for every variant,
-    - or by a single final wildcard `_` arm that covers all remaining
-      unmatched variants.
+ - patterns are restricted to enum variants (`E::A`, `E::Data(x)`) and may
+ use shorthand (`A`, `Data(x)`) when the scrutinee type is the enum,
+ - binders may be names or `_`,
+ - no guards (`if ...`) yet,
+ - and expression-form matches must still be *exhaustive* in the current
+ subset:
+ - either by explicit arm coverage for every variant,
+ - or by a single final wildcard `_` arm that covers all remaining
+ unmatched variants.
 - **`??` over ordinary two-variant enums**:
-  - for a named enum with exactly two declared variants, `value ?? fallback`
-    treats the first declared variant as the “success” arm,
-  - if that first variant is unit, the expression yields that enum value,
-  - if that first variant carries exactly one payload, the expression yields
-    that payload,
-  - and if the enum value is the second declared variant, the fallback
-    expression is evaluated.
+ - for a named enum with exactly two declared variants, `value ?? fallback`
+ treats the first declared variant as the “success” arm,
+ - if that first variant is unit, the expression yields that enum value,
+ - if that first variant carries exactly one payload, the expression yields
+ that payload,
+ - and if the enum value is the second declared variant, the fallback
+ expression is evaluated.
 - **`match` statement over ordinary enum values**:
-  - enum variant arms must use the qualified form `E::Variant(...)`,
-  - bare identifiers remain reserved for binder-style arms,
-  - and both expression-form and statement-form ordinary enum matches now allow
-    one final `_` catch-all arm, which must cover at least one remaining
-    variant.
+ - enum variant arms must use the qualified form `E::Variant(...)`,
+ - bare identifiers remain reserved for binder-style arms,
+ - and both expression-form and statement-form ordinary enum matches now allow
+ one final `_` catch-all arm, which must cover at least one remaining
+ variant.
 - **Generic enums (monomorphized)**:
-  - `enum Name(T, ...) { ... }` declarations are supported in module-set builds
-    that run monomorphization,
-  - instantiated enums behave like ordinary enums once referenced (including
-    construction and `match`),
-  - callers typically introduce a local type alias for the instantiated enum
-    (for example `type R = Result(int, string);`) and then use `R::Ok(...)` /
-    `R::Err(...)` as constructors and patterns.
+ - `enum Name(T, ...) { ... }` declarations are supported in module-set builds
+ that run monomorphization,
+ - instantiated enums behave like ordinary enums once referenced (including
+ construction and `match`),
+ - callers typically introduce a local type alias for the instantiated enum
+ (for example `type R = Result(int, string);`) and then use `R::Ok(...)` /
+ `R::Err(...)` as constructors and patterns.
 - **`impl` blocks on enums**:
-  - enums may have `impl` blocks (including generic `impl EnumName(T, ...)`),
-  - static methods are callable as `EnumName.method(...)` (including through
-    type aliases for instantiated generic enums),
-  - instance methods are callable as `value.method(...)` when the first
-    parameter is a receiver (`self: &EnumName` / `mut self: &EnumName`),
-  - the special `constructor` method used by `new Type(...)` is for `struct`
-    types; enums do not support `constructor` methods in the current subset.
+ - enums may have `impl` blocks (including generic `impl EnumName(T, ...)`),
+ - static methods are callable as `EnumName.method(...)` (including through
+ type aliases for instantiated generic enums),
+ - instance methods are callable as `value.method(...)` when the first
+ parameter is a receiver (`self: &EnumName` / `mut self: &EnumName`),
+ - the special `constructor` method used by `new Type(...)` is for `struct`
+ types; enums do not support `constructor` methods in the Supported forms.
 
-Limitations:
+Not implemented yet (or not yet stable/documented):
 
 - Guards in enum match arms (`E::A if cond => ...`).
 - A stable ABI story for passing/returning enums across the C99 boundary (do
-  not assume an enum layout until it is specified in `docs/compiler/abi-libsilk.md`).
+ not assume an enum layout until it is specified in [abi libsilk](?p=compiler/abi-libsilk)).
 
-When the compiler rejects an enum construct in the current subset, the most
-common error is `E2002` (“unsupported expression in the current subset”). Type
+When the compiler rejects an enum construct in the Supported forms, the most
+common error is `E2002` (“unsupported expression in the Supported forms”). Type
 mismatches inside enum constructors or match arms are `E2001` (“type mismatch”).
 
 ## Surface Syntax
@@ -100,9 +100,9 @@ Rules:
 - Variant names may not be the reserved optional constructors `Some` / `None`.
 - An enum must declare at least one variant.
 - A variant is either:
-  - a **unit** variant (no payload): `Cancelled`,
-  - or a **tuple** variant with one or more payload element types: `Msg(Job)`,
-    `Pair(int, int)`.
+ - a **unit** variant (no payload): `Cancelled`,
+ - or a **tuple** variant with one or more payload element types: `Msg(Job)`,
+ `Pair(int, int)`.
 - A trailing comma after the last variant is permitted.
 
 ## Construction
@@ -127,27 +127,27 @@ fn main () -> int {
 
 Notes:
 
-- `E::A()` and `A()` are invalid in the current subset (unit variants are not callable).
+- `E::A()` and `A()` are invalid in the Supported forms (unit variants are not callable).
 
 ## Two-Variant `??` Shortcut
 
 When a named enum declares exactly two variants, the `??` operator may be used
 as a compact success/fallback form.
 
-Rules in the current subset:
+Rules in the Supported forms:
 
 - declaration order matters: the first declared variant is the “success” case,
-  and the second declared variant triggers the fallback,
+ and the second declared variant triggers the fallback,
 - if the first variant is unit, `value ?? fallback` yields that enum value,
 - if the first variant carries exactly one payload, `value ?? fallback` yields
-  that payload,
+ that payload,
 - if the first variant carries more than one payload element, use `match`
-  instead,
+ instead,
 - the second variant may be unit or may carry payloads; its payload is ignored
-  by the `??` form and the fallback expression runs.
+ by the `??` form and the fallback expression runs.
 - the right-hand side is still an expression in the current grammar; terminal
-  statements such as `return`, `break`, and `continue` are not accepted there
-  yet.
+ statements such as `return`, `break`, and `continue` are not accepted there
+ yet.
 
 Examples:
 
@@ -194,11 +194,11 @@ fn main () -> int {
 
 Notes:
 
-- `E::Data` by itself is not a value in the current subset (tuple variants must
-  be constructed with `(...)`).
+- `E::Data` by itself is not a value in the Supported forms (tuple variants must
+ be constructed with `(...)`).
 - If a tuple-variant constructor argument has the wrong type, you get `E2001`.
 - If the argument count does not match the variant definition, the compiler
-  currently rejects the construct with `E2002`.
+ currently rejects the construct with `E2002`.
 
 ### Generic enums (instantiation via alias)
 
@@ -230,13 +230,13 @@ For example, if `util` defines `enum Mode { Inc, Dec }`, an importer can write:
 - `util::Mode` as the type name, and
 - `util::Mode::Inc` / `util::Mode::Dec` as the constructors and patterns.
 
-See `docs/language/packages-imports-exports.md` for module-set rules and for how
+See [packages imports exports](?p=language/packages-imports-exports) for module-set rules and for how
 package imports seed qualified type names.
 
 ## Matching
 
 Enum values are typically consumed via `match` expressions. The `match`
-expression rules are defined in `docs/language/flow-match.md`; this section
+expression rules are defined in [flow match](?p=language/flow-match); this section
 focuses on the enum-specific subset.
 
 ### Patterns
@@ -250,8 +250,8 @@ Enum patterns are variant patterns:
 Shorthand:
 
 - When the scrutinee type is the enum `E`, the qualifier may be omitted:
-  - Unit variant: `A`
-  - Tuple variant: `Data(x)`, `Pair(a, b)`
+ - Unit variant: `A`
+ - Tuple variant: `Data(x)`, `Pair(a, b)`
 
 For instantiated generic enums, the qualifier `E` may be a type alias (for
 example `type R = Result(int, string);` then `R::Ok(v)` / `R::Err(e)`).
@@ -260,28 +260,30 @@ Binders:
 
 - introduce a name scoped to that arm only, and
 - shadow outer bindings of the same name (because they create a new binding in
-  the arm’s environment).
+ the arm’s environment).
 
-### Exhaustiveness (current subset)
+### Exhaustiveness
 
-In the current subset, enum exhaustiveness is split by `match` form:
+In the Supported forms, enum exhaustiveness is split by `match` form:
 
 - Expression form:
-  - either there is exactly one arm per enum variant,
-  - or a single final wildcard arm (`_ => ...`) covers the remaining unmatched
-    variants,
-  - explicit variant arms must not repeat the same variant,
-  - and if `_` is used, it may appear at most once and must be the final arm.
+ - either there is exactly one arm per enum variant,
+ - or a single final wildcard arm (`_ => ...`) covers the remaining unmatched
+ variants,
+ - explicit variant arms must not repeat the same variant,
+ - and if `_` is used, it may appear at most once and must be the final arm.
 - Statement form over ordinary enum values:
-  - end-to-end today, there must be exactly one qualified arm per variant,
-  - and although the checker recognizes `_` as a catch-all arm, lowering still
-    rejects that form in the current backend subset.
+ - either there is exactly one arm per enum variant,
+ - or a single final wildcard arm (`_ => ...`) covers the remaining unmatched
+ variants,
+ - explicit variant arms must not repeat the same variant,
+ - and if `_` is used, it may appear at most once and must be the final arm.
 
 If a match is not exhaustive:
 
 - expression form currently reports `E2002`, and
 - statement form without full coverage uses the checker’s missing-arm path when
-  it reaches that analysis.
+ it reaches that analysis.
 
 ### Example: unit enum match
 
@@ -374,14 +376,14 @@ fn main () -> int {
 }
 ```
 
-## Representation (Current Backend Subset)
+## Representation
 
 Enums are values. In the current IR-backed lowering, an enum value is lowered to
 scalar slots as:
 
 1. a `u64` **tag** (variant index in declaration order, starting at `0`), and
 2. a **payload region** that includes a distinct slot range for each variant’s
-   payload elements, in variant declaration order.
+ payload elements, in variant declaration order.
 
 Conceptually:
 
@@ -402,18 +404,18 @@ ABI mature.
 ## Common Pitfalls
 
 - **Forgetting parentheses**: `E::Data(7)` is valid, but `E::Data` is not a value
-  in the current subset (error `E2002`).
+ in the Supported forms (error `E2002`).
 - **Calling a unit variant**: `E::A` is a value; `E::A()` is rejected (`E2002`).
 - **Wrong binder count**: `E::Pair(a)` does not match `Pair(int, int)` (`E2002`).
 - **Non-exhaustive matches**: you must list every variant (error `E2002` in the
-  current subset).
+ Supported forms).
 - **Assuming enum equality is defined**: use `match` to inspect the tag/payload;
-  the current backend subset does not define `==`/`!=` over enums yet.
+ the current backend subset does not define `==`/`!=` over enums yet.
 
 ## Related Documents
 
-- `docs/language/flow-match.md` (match expression rules)
-- `docs/language/structs-impls-layout.md` (struct payloads)
-- `docs/language/types.md` (nominal types and type annotations)
-- `docs/language/packages-imports-exports.md` (namespaces and imports)
-- `docs/language/typed-errors.md` (typed errors, not enums)
+- [flow match](?p=language/flow-match) (match expression rules)
+- [structs impls layout](?p=language/structs-impls-layout) (struct payloads)
+- [types](?p=language/types) (nominal types and type annotations)
+- [packages imports exports](?p=language/packages-imports-exports) (namespaces and imports)
+- [typed errors](?p=language/typed-errors) (typed errors, not enums)

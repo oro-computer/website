@@ -3,11 +3,12 @@
 `std::arrays` defines borrowed views like `Slice(T)` and helpers for working
 with fixed arrays and slices.
 
-Full reference: `docs/std/arrays.md`.
+Canonical doc: [arrays](?p=std/arrays).
 
 ## Notes
 
-- Full reference: `docs/std/arrays.md`
+- Supported forms + design: a usable subset is implemented.
+- Details: [arrays](?p=std/arrays)
 
 ## Importing
 
@@ -49,5 +50,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/arrays.md`
-- `for` iteration rules: `docs/language/flow-for.md`
+- Canonical doc: [arrays](?p=std/arrays)
+- `for` iteration rules: [flow for](?p=language/flow-for)

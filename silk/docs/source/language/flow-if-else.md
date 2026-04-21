@@ -2,8 +2,9 @@
 
 The `if` / `else` construct provides branching based on a boolean condition.
 
-`if` is a **statement** that selects which block of statements executes. Silk
-also supports an expression form where noted below.
+In Silk currently, `if` is a **statement** that selects which
+block of statements executes. The broader language design also includes
+expression-oriented forms; those are documented as planned where relevant.
 
 ## Surface Syntax
 
@@ -42,10 +43,10 @@ Notes:
 
 - The scrutinee expression is evaluated exactly once.
 - The pattern binders (for example `Some(v)` binds `v`) are in scope only in
-  the `then` block.
+ the `then` block.
 - `else` is optional (when omitted, a non-matching scrutinee executes no block).
 - `else if let ...` chains are supported and parse as nesting in the same way
-  as `else if ...`.
+ as `else if ...`.
 - `else let ...` is supported as shorthand for `else if let ...`.
 
 ### `if let` chains (`&& let`)
@@ -69,18 +70,18 @@ Semantics:
 
 - Clauses are evaluated left-to-right and short-circuit like `&&`.
 - A `let <pattern> = <expr>` clause evaluates `<expr>` exactly once:
-  - if the pattern matches, its binders are introduced and evaluation continues,
-  - otherwise the entire condition is `false`.
+ - if the pattern matches, its binders are introduced and evaluation continues,
+ - otherwise the entire condition is `false`.
 - A non-`let` clause must have type `bool`; `false` short-circuits.
 - Binders introduced by `let` clauses are in scope for:
-  - subsequent clauses in the chain, and
-  - the `then` block.
-  They are not in scope in the `else` block, and they do not escape the `if`.
+ - subsequent clauses in the chain, and
+ - the `then` block.
+ They are not in scope in the `else` block, and they do not escape the `if`.
 
-Parsing note:
+Parsing note (Supported forms):
 
 - `&&` at the top level is parsed as a clause separator. Use parentheses if a
-  clause needs its own `&&` / `||` / `??` expression at the top level.
+ clause needs its own `&&` / `||` / `??` expression at the top level.
 
 Example (`else let` shorthand):
 
@@ -99,8 +100,8 @@ fn main () -> int {
 }
 ```
 
-Supported patterns (same as `match` expressions; see
-`docs/language/flow-match.md`):
+Supported patterns in the Supported forms (same as `match` expressions; see
+[flow match](?p=language/flow-match)):
 
 - optionals: `None`, `Some(name)`, `Some(_)`
 - recoverable results: `Ok(name)`, `Err(name)` (and `_` binders)
@@ -137,10 +138,10 @@ fn main () -> int {
 Notes:
 
 - `<condition>` is an expression; parentheses are optional because the normal
-  expression grammar already includes parenthesized expressions.
+ expression grammar already includes parenthesized expressions.
 - Bodies are blocks. `else` may be followed by either:
-  - a block (`else { ... }`), or
-  - another `if` (`else if ... { ... }`) to form an “else-if” chain.
+ - a block (`else { ... }`), or
+ - another `if` (`else if ... { ... }`) to form an “else-if” chain.
 
 ## Surface Syntax (Expression Form)
 
@@ -153,23 +154,23 @@ let v: int = if cond { 123 } else { 456 };
 Notes:
 
 - `if` expressions require an `else` branch so the expression yields a value on
-  all paths.
+ all paths.
 - The `else if ...` chain form is supported in expression position:
 
   ```silk
   let v: int = if a { 1 } else if b { 2 } else { 3 };
   ```
 
-- In Silk, the `{ ... }` bodies of `if` expressions contain a single
-  expression, not a general statement block.
+- Restriction: the `{ ... }` bodies of `if` expressions
+ contain a single expression (not a full statement block).
 
 ## Semantics
 
 - The condition expression is evaluated exactly once.
 - If the condition is `true`, the `if` block executes and the `else` block (if
-  present) does not execute.
+ present) does not execute.
 - If the condition is `false`, the `else` block executes if present; otherwise
-  the `if` statement does nothing.
+ the `if` statement does nothing.
 
 Blocks create scopes:
 
@@ -179,13 +180,13 @@ Blocks create scopes:
 ## Type Checking Rules
 
 - The condition must have type `bool`. If it does not, the checker reports a
-  type mismatch (`docs/compiler/diagnostics.md`, `E2001`).
+ type mismatch ([diagnostics](?p=compiler/diagnostics), `E2001`).
 
 For `if` expressions:
 
 - The `then` and `else` branches must produce compatible value types.
 - The expression’s result type is the shared branch type (or the expected type
-  when the expression is type-directed).
+ when the expression is type-directed).
 
 ## `else if` Chains
 
@@ -272,10 +273,25 @@ fn main () -> int {
 
 ## Notes
 
-- Silk supports statement-form `if`, `if` / `else`, `if let`, `else if let`,
-  `else let`, and `&&` let-chains.
-- Conditions are type-checked as `bool`.
-- `if` expressions are available in the value-producing form
-  `if <cond> { <expr> } else { <expr> }`.
+Implemented end-to-end:
+
+- `if <expr> { ... }` and `if <expr> { ... } else { ... }` statement forms.
+- `if let <pattern> = <expr> { ... }` statement form:
+ - `else if let` / `else let` chains, and
+ - `&&` let-chains in the `if let` condition.
+- Boolean type-checking for conditions.
+- `if` expressions of the form `if <cond> { <expr> } else { <expr> }`.
+
+Not implemented yet:
+
 - General block expressions (`{ stmt* <expr> }`) outside the specific `if`
-  expression form are not part of this surface.
+ expression form.
+
+examples:
+
+- `tests/silk/pass_if_bool.slk`
+- `tests/silk/pass_if_logical.slk`
+- `tests/silk/pass_bool_local_if.slk`
+- `tests/silk/pass_nested_if_while.slk`
+- `tests/silk/pass_if_expr_basic.slk`
+- `tests/silk/pass_if_let_chain_optional_result_basic.slk`

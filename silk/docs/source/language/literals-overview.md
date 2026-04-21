@@ -4,11 +4,11 @@ This document provides a high-level overview of literals in Silk, with details s
 
 For first-time readers, a good path is:
 
-1. `docs/language/types.md` (primitive types like `int`, `f64`, `bool`, `string`),
+1. [types](?p=language/types) (primitive types like `int`, `f64`, `bool`, `string`),
 2. this overview (what literal categories exist),
 3. the specific literal docs below (syntax, semantics, and current implementation notes).
 
-Returning readers typically want the “Implementation Status” section near the top
+Returning readers typically want the notes near the top
 of each literal concept doc, plus the “Tests” links for runnable
 examples.
 

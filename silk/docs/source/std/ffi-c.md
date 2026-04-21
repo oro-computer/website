@@ -10,7 +10,7 @@ NUL-terminated bytes. In Silk, these pointers are represented as raw addresses
 ## Canonical C scalar aliases
 
 Silk `int` is **not** C `int` (`int` is a 64-bit scalar in the current ABI; see
-`docs/language/ext.md`). For conventional C APIs, prefer `std::ffi::c` scalar
+[ext](?p=language/ext)). For conventional C APIs, prefer `std::ffi::c` scalar
 aliases in your `ext` signatures:
 
 - `c_int` / `c_uint`
@@ -26,12 +26,12 @@ hosted targets.
 ### Borrowed vs owned
 
 - `cstr_borrow` / `cstr_string` produces a **borrowed** Silk `string` view into
-  the original C memory. It does not allocate.
+ the original C memory. It does not allocate.
 - `cstr_copy` produces an **owned** `std::strings::String` copy (heap
-  allocation, NUL-terminated).
+ allocation, NUL-terminated).
 - `std::ffi::c_owned::OwnedCStr` represents an **owned** C string pointer
-  (`char*`) paired with a user-provided release function and drops it
-  deterministically.
+ (`char*`) paired with a user-provided release function and drops it
+ deterministically.
 
 Use `cstr_copy` when the C pointer is only valid temporarily (for example, when
 it is owned by a C library object that may be freed, or when the pointer is
@@ -49,10 +49,10 @@ Choose the form that matches the C API contract you are binding.
 ### Safety notes
 
 - `cstr_len` scans memory until it finds a `0` byte. If the pointer is invalid
-  or not NUL-terminated, behavior is undefined.
+ or not NUL-terminated, behavior is undefined.
 - These helpers do not validate UTF-8. A C string may contain arbitrary bytes.
 
-## API
+## Exported API
 
 - C scalar aliases: `c_int`, `size_t`, `ssize_t`, …
 - `cstr_len(ptr: u64) -> int`
@@ -67,22 +67,22 @@ Choose the form that matches the C API contract you are binding.
 - `CFreeFn = fn (u64) -> void`
 - `cstr_copy_and_free(ptr: u64, free_fn: CFreeFn) -> Result(std::strings::String, std::memory::OutOfMemory)`
 - `OwnedCStr` (owned pointer + drop)
-  - `Drop` releases the underlying C allocation and nulls the pointer.
-  - `Len` returns the current C string length in bytes.
-  - `IsEmpty` reports whether the pointer is null or points at an empty string.
-  - `Serialize(string)` returns the borrowed Silk `string` view, so
-    `owned as string` is the canonical cast path.
-  - `TrySerialize(std::memory::OutOfMemory)` returns an owned
-    `std::strings::String` copy for callers that need the bytes to outlive the
-    underlying C allocation.
+ - `Drop` releases the underlying C allocation and nulls the pointer.
+ - `Len` returns the current C string length in bytes.
+ - `IsEmpty` reports whether the pointer is null or points at an empty string.
+ - `Serialize(string)` returns the borrowed Silk `string` view, so
+ `owned as string` is the canonical cast path.
+ - `TrySerialize(std::memory::OutOfMemory)` returns an owned
+ `std::strings::String` copy for callers that need the bytes to outlive the
+ underlying C allocation.
 
 Notes:
 
 - `OwnedCStr.len()` scans until the terminating NUL each time, just like
-  `cstr_len`.
+ `cstr_len`.
 - `OwnedCStr.serialize()` and `OwnedCStr.as_string()` borrow the C bytes; if
-  you need an owned Silk allocation, call `OwnedCStr.try_serialize()` or
-  `OwnedCStr.copy()` instead.
+ you need an owned Silk allocation, call `OwnedCStr.try_serialize()` or
+ `OwnedCStr.copy()` instead.
 
 ## Example
 

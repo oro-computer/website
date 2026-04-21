@@ -3,7 +3,7 @@
 This page describes the coc.nvim client for the `silk-lsp` language server.
 
 The Silk compiler repository includes a coc.nvim extension under `coc/`. It is a thin wrapper around `silk-lsp` and
-should stay aligned with the LSP capabilities documented in `docs/compiler/lsp-silk.md`.
+should stay aligned with the LSP capabilities documented in [lsp silk](?p=compiler/lsp-silk).
 
 ## Location and Layout
 

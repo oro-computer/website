@@ -1,8 +1,8 @@
-# Implementation status
+# Notes
 
 This page is a downstream-facing snapshot of what the **reference** Silk compiler and toolchain support end-to-end
 today. It is intentionally high-level: each language, standard-library, and compiler page carries the feature-specific
-details for its own current subset.
+details for its own supported forms.
 
 Use this page to answer:
 
@@ -22,31 +22,31 @@ silk env
 ```
 
 - `silk check` tells you whether the parser, resolver, checker, and verifier all
-  accept the current module set.
+ accept the current module set.
 - `silk build` tells you whether the selected backend can lower that checked
-  program to the target artifact you want.
+ program to the target artifact you want.
 - `silk package lint` validates package-root metadata and distribution shape.
 - `silk env` shows the resolved environment that affects stdlib and package
-  discovery.
+ discovery.
 
 ## What works end-to-end today
 
 Silk’s current toolchain surface is strongest in three places:
 
 - **Hosted native bring-up on `linux/x86_64`**
-  - `silk check`, `silk test`, `silk build`, `silk doc`, `silk man`, `silk env`, `silk format`, and `silk package`
-    are all part of the public CLI surface.
-  - Native outputs currently cover executables, object files, static archives, and shared libraries.
-  - Hosted runtime features such as async/task execution, diagnostics, and Z3-backed Formal Silk verification are
-    documented and exercised here first.
+ - `silk check`, `silk test`, `silk build`, `silk doc`, `silk man`, `silk env`, `silk format`, and `silk package`
+ are all part of the public CLI surface.
+ - Native outputs currently cover executables, object files, static archives, and shared libraries.
+ - Hosted runtime features such as async/task execution, diagnostics, and Z3-backed Formal Silk verification are
+ documented and exercised here first.
 - **WebAssembly targets**
-  - `wasm32-unknown-unknown` for embedder-facing WebAssembly modules.
-  - `wasm32-wasi` for WASI-style entrypoints.
-  - See [WebAssembly back-end](?p=compiler/backend-wasm) and [Run WASI modules in Node](?p=usage/howto-run-wasi-node).
+ - `wasm32-unknown-unknown` for embedder-facing WebAssembly modules.
+ - `wasm32-wasi` for WASI-style entrypoints.
+ - See [WebAssembly back-end](?p=compiler/backend-wasm) and [Run WASI modules in Node](?p=usage/howto-run-wasi-node).
 - **Package and distribution tooling**
-  - `silk.toml` package manifests, package-target builds, and package lint/inspection are part of the public workflow.
-  - See [Package manifests](?p=compiler/package-manifests), [Package distribution](?p=compiler/package-distribution),
-    and [`silk-package` (1)](?p=man/silk-package.1).
+ - `silk.toml` package manifests, package-target builds, and package lint/inspection are part of the public workflow.
+ - See [Package manifests](?p=compiler/package-manifests), [Package distribution](?p=compiler/package-distribution),
+ and [`silk-package` (1)](?p=man/silk-package.1).
 
 ## Broader target bring-up
 
@@ -55,9 +55,9 @@ hosted `linux/x86_64` baseline. In particular:
 
 - Silk documents additional native targets for const-main and ABI-oriented bring-up in the CLI and ABI references.
 - The exact target matrix changes faster than this high-level page, so use:
-  - [CLI reference](?p=compiler/cli-silk)
-  - [C99 ABI and `libsilk.a`](?p=compiler/abi-libsilk)
-  - [`silk` (1)](?p=man/silk.1)
+ - [CLI reference](?p=compiler/cli-silk)
+ - [C99 ABI and `libsilk.a`](?p=compiler/abi-libsilk)
+ - [`silk` (1)](?p=man/silk.1)
 
 ## Supported public surfaces
 

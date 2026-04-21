@@ -18,106 +18,127 @@ to be:
 
 - **Linked by default** for normal builds driven by `silk`.
 - **Swappable**: an alternative `std::` implementation can be selected at build
-  time, without changing the language or the C ABI.
+ time, without changing the language or the C ABI.
 - **POSIX-first** for OS interactions (initial hosted baseline), while still
-  supporting freestanding/embedded builds via a smaller “core” subset.
+ supporting freestanding/embedded builds via a smaller “core” subset.
 
 See also:
 
-- `docs/std/package-structure.md` (namespace + linkage + swappability)
-- `docs/std/conventions.md` (API conventions: errors, allocation, ownership)
-- `docs/std/result.md` (the standard `Result(T, E)` error return type)
+- [package structure](?p=std/package-structure) (namespace + linkage + swappability)
+- [conventions](?p=std/conventions) (API conventions: errors, allocation, ownership)
+- [result](?p=std/result) (the standard `Result(T, E)` error return type)
+- [module catalog](?p=std/module-catalog) (audit-oriented coverage map for the shipped
+ `std/**` tree)
 
-## Core Areas (Initial)
+Exact canonical docs exist for every shipped `std/**` module. Nested modules
+flatten `/` to `-` in `docs/std/`, for example:
+
+- `std/fs/stream.slk` -> [fs stream](?p=std/fs-stream)
+- `std/runtime/posix/io.slk` -> [runtime posix io](?p=std/runtime-posix-io)
+
+## Core Areas
 
 These are the minimum required areas for the initial standard library
 distribution:
 
 - `std::buffer` — typed, width-oriented buffer utilities built on top of
-  `std::vector` for common scalar element types (see `docs/std/buffer.md`).
+ `std::vector` for common scalar element types (see [buffer](?p=std/buffer)).
 - `std::strings` — UTF-8 text utilities and owned string building.
-- `std::regex` — regular expression literals and helpers (see `docs/std/regex.md`).
-- `std::unicode` — Unicode scalar classification helpers (see `docs/std/unicode.md`).
-- `std::number` — number parsing/formatting helpers (see `docs/std/number.md`).
+- `std::regex` — regular expression literals and helpers (see [regex](?p=std/regex)).
+- `std::unicode` — Unicode scalar classification helpers (see [unicode](?p=std/unicode)).
+- `std::number` — number parsing/formatting helpers (see [number](?p=std/number)).
+- `std::boolean` — boxed bool wrapper for method/interface-oriented APIs (see [boolean](?p=std/boolean)).
+- `std::optional` — companion free-function surface for built-in `Optional(T)` combinators (see [optional](?p=std/optional)).
+- `std::range` — boxed `range` helper surface (see [range](?p=std/range)).
+- `std::function` — boxed function-value holders (see [function](?p=std/function)).
 - `std::math` — linear algebra utilities (vectors/matrices) for graphics and
-  general computation (see `docs/std/math.md`).
+ general computation (see [math](?p=std/math)).
 - `std::graphics` — low-level graphics API bindings (OpenGL, OpenGL ES, Vulkan;
-  see `docs/std/graphics.md`).
+ see [graphics](?p=std/graphics)).
 - `std::image` — image codecs + color utilities (PNG via libpng, JPEG via
-  libjpeg-turbo; see `docs/std/image.md`).
-- `std::limits` — numeric min/max limits for primitive types (see `docs/std/limits.md`).
+ libjpeg-turbo; see [image](?p=std/image)).
+- `std::limits` — numeric min/max limits for primitive types (see [limits](?p=std/limits)).
 - `std::crypto` — cryptography primitives (hosted baseline via libsodium; see
-  `docs/std/crypto.md`).
-- `std::ggml` — ggml tensor library bindings (early bring-up; see `docs/std/ggml.md`).
+ [crypto](?p=std/crypto)).
+- `std::ggml` — ggml tensor library bindings (early bring-up; see [ggml](?p=std/ggml)).
 - `std::uuid` — UUID primitives (v1/v3/v4/v5/v6/v7/v8) with parsing/formatting
-  (see `docs/std/uuid.md`).
+ (see [uuid](?p=std/uuid)).
 - `std::semver` — Semantic Versioning (SemVer 2.0.0) parsing and precedence
-  comparison (see `docs/std/semver.md`).
-- `std::json` — JSON parsing and stringifying (borrowed and owned DOM parsing;
-  see `docs/std/json.md`).
-- `std::toml` — TOML parsing (borrowed and owned DOM parsing;
-  see `docs/std/toml.md`).
-- `std::tar` — tar archive reading and writing (ustar + pax; see `docs/std/tar.md`).
-- `std::xml` — XML parsing and traversal (via libxml2; see `docs/std/xml.md`).
-- `std::idl::web` — Web IDL parsing and query API (see `docs/std/idl-web.md`).
-- `std::js::ecma` — ECMAScript FFI surface for JS/WASM interop (see `docs/std/js-ecma.md`).
-- `std::wasm` — WebAssembly runtime API (baseline wasm32 interpreter; see `docs/std/wasm.md`).
+ comparison (see [semver](?p=std/semver)).
+- `std::json` — JSON parsing, DOM construction, and stringifying (borrowed and
+ owned DOM parsing plus explicit builder helpers; see [json](?p=std/json)).
+- `std::toml` — TOML parsing, DOM construction, and deterministic emission
+ (borrowed and owned DOM parsing plus explicit builder helpers;
+ see [toml](?p=std/toml)).
+- `std::tar` — tar archive reading and writing (ustar + pax; see [tar](?p=std/tar)).
+- `std::xml` — XML parsing and traversal (via libxml2; see [xml](?p=std/xml)).
+- `std::idl::web` — Web IDL parsing and query API (see [idl web](?p=std/idl-web)).
+- `std::js::ecma` — ECMAScript FFI surface for JS/WASM interop (see [js ecma](?p=std/js-ecma)).
+- `std::wasm` — WebAssembly runtime API (baseline wasm32 interpreter; see [wasm](?p=std/wasm)).
 - `std::memory` — allocation interfaces and low-level memory utilities.
 - `std::arrays` — slice/view types and helpers for fixed arrays.
 - `std::bits` — bit manipulation helpers (byte swaps, rotates, bit counts; see
-  `docs/std/bits.md`).
+ [bits](?p=std/bits)).
 - `std::vector` — typed growable vectors (`Vector(T)`), used broadly across
-  `std::` (see `docs/std/vector.md`).
+ `std::` (see [vector](?p=std/vector)).
 - `std::map` — associative containers (hash maps and ordered maps; see
-  `docs/std/map.md`).
+ [map](?p=std/map)).
 - `std::set` — set containers (hash sets and ordered sets; see
-  `docs/std/set.md`).
+ [set](?p=std/set)).
 - `std::algorithms` — common algorithms over slices/collections.
 - `std::temporal` — `Instant`/`Duration` utilities and calendar/time helpers.
-- `std::url` — WHATWG URL parsing/serialization and `URLSearchParams` (`application/x-www-form-urlencoded`; see `docs/std/url.md`).
-- `std::task` — task/runtime helpers (hosted baseline; see `docs/std/task.md`).
-- `std::sync` — synchronization primitives (hosted baseline; see `docs/std/sync.md`).
+- `std::url` — WHATWG URL parsing/serialization and `URLSearchParams` (`application/x-www-form-urlencoded`; see [url](?p=std/url)).
+- `std::task` — task/runtime helpers, including reusable `Task(T)` join helpers
+ for async code (hosted baseline; see [task](?p=std/task)).
+- `std::sync` — synchronization primitives (hosted baseline; see [sync](?p=std/sync)).
 - `std::abort_controller` — WHATWG-style abort signals for cancellation (see
-  `docs/std/abort-controller.md`).
+ [abort controller](?p=std/abort_controller); detailed semantics in
+ [abort controller](?p=std/abort-controller)).
 - `std::signal` — pollable signal waiting for TUI programs (Linux `signalfd(2)`
-  backend; see `docs/std/signal.md`).
-- `std::stream` — Web Streams-inspired byte streams and piping (see `docs/std/stream.md`).
-- `std::args` — native `main(argc, argv)` argument helpers (current subset; see `docs/std/args.md`).
+ backend; see [signal](?p=std/signal)).
+- `std::stream` — Web Streams-inspired byte streams and piping (see [stream](?p=std/stream)).
+- `std::args` — native `main(argc, argv)` argument helpers (Supported forms; see [args](?p=std/args)).
 - `std::readline` — interactive line editor for CLI programs (TTY mode) built on
-  the bundled `linenoise` sources (see `docs/std/readline.md`).
-- `std::flag` — command line flag + positional parsing (current subset; see `docs/std/flag.md`).
-- `std::test` — test helpers for `silk test` (current subset; see `docs/std/test.md`).
-- `std::build` — build module helpers for generating `silk.toml` manifests (see `docs/std/build.md`).
-- `std::env` — environment variable access (hosted baseline; see `docs/std/env.md`).
-- `std::process` — process primitives (hosted baseline; see `docs/std/process.md`).
-- `std::os` — target OS/arch metadata and small OS helpers (see `docs/std/os.md`).
-- `std::path` — path manipulation utilities (current subset; see `docs/std/path.md`).
+ the bundled `linenoise` sources (see [readline](?p=std/readline)).
+- `std::flag` — command line flag + positional parsing, including interspersed
+ known flags before `--` (Supported forms; see [flag](?p=std/flag)).
+- `std::test` — test helpers for `silk test` (Supported forms; see [test](?p=std/test)).
+- `std::build` — build module helpers for generating `silk.toml` manifests (see [build](?p=std/build)).
+- `std::env` — environment variable access (hosted baseline; see [env](?p=std/env)).
+- `std::process` — process primitives, including high-level child-process and
+ PTY-backed spawn support on the hosted baseline (see [process](?p=std/process)).
+- `std::os` — target OS/arch metadata and small OS helpers (see [os](?p=std/os)).
+- `std::path` — path manipulation utilities (Supported forms; see [path](?p=std/path)).
 - `std::io` — basic I/O (unbuffered fd reads/writes, formatting, stdout/stderr;
-  see `docs/std/io.md`). Stream adapters live under `std::io::stream`.
+ see [io](?p=std/io)). Stream adapters live under `std::io::stream`.
 - `std::fmt` — shared formatting layer used by `std::io` and string builders.
-- `std::fs` — filesystem access (POSIX baseline; stream adapters under
-  `std::fs::stream`).
-- `std::net` — networking primitives (POSIX baseline; stream adapters under
-  `std::net::stream`).
-- `std::http` — HTTP/1.1 parsing + blocking client/server on top of `std::net`
-  (see `docs/std/http.md`).
-- `std::https` — HTTPS (HTTP over TLS) on top of `std::tls` + `std::net`
-  (see `docs/std/https.md`).
+- `std::fs` — filesystem access (POSIX baseline; canonical module doc:
+ [fs](?p=std/fs); detailed hosted API notes in [filesystem](?p=std/filesystem);
+ stream adapters under `std::fs::stream`).
+- `std::net` — networking primitives (POSIX baseline; canonical module doc:
+ [net](?p=std/net); detailed hosted API notes in [networking](?p=std/networking);
+ stream adapters under `std::net::stream`).
+- `std::http` — HTTP/1.1 parsing + blocking client/server on top of `std::net`,
+ plus async-friendly one-shot request wrappers (see [http](?p=std/http)).
+- `std::https` — HTTPS (HTTP over TLS) on top of `std::tls` + `std::net`,
+ plus async-friendly one-shot request wrappers (see [https](?p=std/https)).
 - `std::websocket` — RFC 6455 WebSocket (handshake + framing) on top of `std::net`
-  (see `docs/std/websocket.md`).
+ (see [websocket](?p=std/websocket)).
 - `std::tls` — TLS client/server primitives (POSIX baseline via mbedTLS; see
-  `docs/std/tls.md`).
-- `std::ssh2` — SSH2 client primitives (POSIX baseline via libssh2; see
-  `docs/std/ssh2.md`).
-- `std::sqlite` — SQLite database primitives (POSIX baseline via SQLite; see
-  `docs/std/sqlite.md`).
-- `std::runtime` — runtime interface layer used by OS-facing std modules (see `docs/std/runtime.md`).
-- `std::ffi::c` — C FFI helpers (C strings and interop utilities; see `docs/std/ffi-c.md`).
+ [tls](?p=std/tls)).
+- `std::ssh` — ergonomic SSH client entrypoint (compatibility facade over the
+ current libssh2-backed implementation; see [ssh](?p=std/ssh)).
+- `std::ssh2` — concrete libssh2-backed SSH2 implementation module (see
+ [ssh2](?p=std/ssh2)).
+- `std::sqlite` — SQLite database primitives (POSIX baseline via SQLite),
+ including async-friendly open/exec helpers (see [sqlite](?p=std/sqlite)).
+- `std::runtime` — runtime interface layer used by OS-facing std modules (see [runtime](?p=std/runtime)).
+- `std::ffi::c` — C FFI helpers (C strings and interop utilities; see [ffi c](?p=std/ffi-c)).
 - `std::interfaces` — shared std interface contracts (“protocols”) such as
-  `Drop`, `Len`, `Capacity`, etc. (see `docs/std/interfaces.md`).
+ `Drop`, `Len`, `Capacity`, etc. (see [interfaces](?p=std/interfaces)).
 - `std::formal` — foundational Formal Silk theories for generic arithmetic and
-  storage reasoning; module-specific theories live with their owning std
-  modules (see `docs/std/formal.md`).
+ storage reasoning; module-specific theories live with their owning std
+ modules (see [formal](?p=std/formal)).
 
 Each area has a dedicated design document under `docs/std/` (for intrinsic
 surfaces like `std::buffer`, the design lives in both `docs/std/` and the

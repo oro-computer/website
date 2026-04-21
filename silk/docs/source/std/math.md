@@ -14,14 +14,14 @@ Longer-term, `std::math` will also grow:
 - fast SIMD implementations for hot operations,
 - trig and transcendental functions (sin/cos/exp/log),
 - higher-precision scalar support (`f128`, `u128`) for advanced numeric work and
-  future tensor integration. The primitives are part of the supported native
-  backend subset; `std::math` will add `f128`-based surfaces incrementally as
-  needed.
+ future tensor integration. The primitives are part of the supported native
+ backend subset; `std::math` will add `f128`-based surfaces incrementally as
+ needed.
 
 See also:
 
-- `docs/std/vector.md` (`std::vector::Vector(T)` used for dynamic storage)
-- `docs/std/arrays.md` (`std::arrays::Slice(T)` views)
+- [vector](?p=std/vector) (`std::vector::Vector(T)` used for dynamic storage)
+- [arrays](?p=std/arrays) (`std::arrays::Slice(T)` views)
 
 ## Module Structure
 

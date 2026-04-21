@@ -3,20 +3,21 @@
 `std::` modules follow shared conventions for naming, ownership/allocation,
 error reporting.
 
-Full reference: `docs/std/conventions.md`.
+Canonical doc: [conventions](?p=std/conventions).
 
 ## Notes
 
-- Full reference: `docs/std/conventions.md`
+- Design document: use as a guideline for new `std::` APIs.
+- Details: [conventions](?p=std/conventions)
 
-## Key conventions (selected)
+## Key conventions
 
 - **Naming**: packages are `std::area`; types are `PascalCase`; functions/methods are `snake_case`.
 - **Ownership**: allocating APIs return owned containers (for example `std::strings::String`) and callers drop them.
 - **Errors**:
-  - use `T?` for “absence” (`None`) without extra error information,
-  - use typed errors (`T | SomeError`) for recoverable runtime errors with meaning,
-  - use `std::result::Result(T, E)` when callers need to distinguish multiple error causes and propagate them cleanly.
+ - use `T?` for “absence” (`None`) without extra error information,
+ - use typed errors (`T | SomeError`) for recoverable runtime errors with meaning,
+ - use `std::result::Result(T, E)` when callers need to distinguish multiple error causes and propagate them cleanly.
 
 ## Examples
 
@@ -46,5 +47,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/conventions.md`
-- Typed errors: `docs/wiki/language/typed-errors.md`
+- Canonical doc: [conventions](?p=std/conventions)
+- Typed errors: [typed errors](?p=language/typed-errors)

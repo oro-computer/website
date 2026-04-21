@@ -16,20 +16,20 @@ Two doc-comment forms are recognized:
 In both forms, doc comments attach to the *next* declaration when they appear
 immediately before it with only whitespace/comments between them.
 
-Supported attachments:
+implementation scope:
 
 - Doc comments attach to **top-level declarations** (`package`, `module`,
-  `import`, `fn`, `theory`, `let`, `struct`, `ext`, `interface`, `impl`).
+ `import`, `fn`, `theory`, `let`, `struct`, `ext`, `interface`, `impl`).
 - Doc comments also attach to:
-  - methods inside `impl Type { ... }` blocks, and
-  - method signatures inside `interface Name { ... }` blocks.
+ - methods inside `impl Type { ... }` blocks, and
+ - method signatures inside `interface Name { ... }` blocks.
 - For function declarations, doc comments attach even when one or more formal
-  verification annotations (`#require` / `#assure`) appear between the doc
-  comment and the `fn` keyword.
+ verification annotations (`#require` / `#assure`) appear between the doc
+ comment and the `fn` keyword.
 - Doc comments inside function bodies are treated as ordinary comments (not
-  attached to anything).
+ attached to anything).
 - Attaching doc comments to struct fields, parameters, and locals is future
-  work.
+ work.
 
 ## Content Model
 
@@ -72,7 +72,7 @@ Syntax:
 @param <name> <description...>
 ```
 
-The `<Type>` uses Silk type syntax as defined in `docs/language/types.md`.
+The `<Type>` uses Silk type syntax as defined in [types](?p=language/types).
 
 Example:
 
@@ -231,11 +231,11 @@ Syntax:
 Notes:
 
 - The `<label>` is an opaque identifier used by tooling for discovery (for
-  example `silk man <label>`). It should be stable and globally unique within a
-  package (recommendation: use a `pkg::topic` label).
+ example `silk man <label>`). It should be stable and globally unique within a
+ package (recommendation: use a `pkg::topic` label).
 - The optional `<summary...>` provides a one-line description for the manpage
-  `NAME` section. When omitted, tools may derive a summary from the first line
-  of the free-form description text.
+ `NAME` section. When omitted, tools may derive a summary from the first line
+ of the free-form description text.
 
 #### `@cli`
 
@@ -303,7 +303,7 @@ The documentation generator renders doc comments to Markdown using:
 - `@returns` as a “Returns” section,
 - `@throws` as a “Throws” section,
 - `@requires`, `@assures`, `@asserts`, and `@theory` as dedicated sections (one
-  bullet per tag instance),
+ bullet per tag instance),
 - `@example` blocks as fenced code blocks.
 
 The generator must keep formatting stable (deterministic output) so that

@@ -81,16 +81,16 @@ See [`Dependent Types`](?p=language/dependent-types).
 ## Old refinement-type intent → current Silk surface
 
 - `PositiveInt where x > 0`
-  - use a function `#require x > 0`, or a `struct` requirement when it belongs
-    to a nominal type
+ - use a function `#require x > 0`, or a `struct` requirement when it belongs
+ to a nominal type
 - `Buffer where len <= cap`
-  - use `#require` on the `struct`
+ - use `#require` on the `struct`
 - `Result where predicate(result)`
-  - use `#assure`
+ - use `#assure`
 - repeated proof rule used in many functions
-  - use `theory`
+ - use `theory`
 - compile-time-sized collection
-  - use const parameters / applied types
+ - use const parameters / applied types
 
 ## Why this is better downstream
 
@@ -99,7 +99,7 @@ This split keeps the language easier to read:
 - types describe runtime representation and compile-time shape,
 - Formal Silk describes proof obligations,
 - and the verifier reasons about those obligations without inventing a second
-  predicate-bearing type language.
+ predicate-bearing type language.
 
 ## See also
 

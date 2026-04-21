@@ -2,15 +2,15 @@
 
 Use `if` / `else` for boolean branching.
 
-`if` is a statement that chooses which block
+In Silk currently, `if` is a statement that chooses which block
 executes. The broader language design includes expression-oriented forms; see
 the canonical spec for details.
 
-Full reference: `docs/language/flow-if-else.md`.
+Canonical spec: [flow if else](?p=language/flow-if-else).
 
 ## Notes
 
-- Full reference: `docs/language/flow-if-else.md`
+- Supported forms + tests: [flow if else](?p=language/flow-if-else)
 
 ## Syntax
 
@@ -54,5 +54,5 @@ fn main () -> int {
 
 ## See also
 
-- Full reference: `docs/language/flow-if-else.md`
-- `match` (expression): `docs/language/flow-match.md`
+- Canonical spec: [flow if else](?p=language/flow-if-else)
+- `match` (expression): [flow match](?p=language/flow-match)

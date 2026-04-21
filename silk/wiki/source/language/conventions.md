@@ -3,7 +3,7 @@
 This page summarizes the conventions used throughout the Silk language docs:
 notation, naming, and the “implementation status” pattern.
 
-Canonical doc: `docs/language/conventions.md`.
+Canonical doc: [conventions](?p=language/conventions).
 
 ## Example: typical formatting in Silk docs
 
@@ -19,5 +19,5 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/language/conventions.md`
-- Grammar: `docs/wiki/language/grammar.md`
+- Canonical doc: [conventions](?p=language/conventions)
+- Grammar: [grammar](?p=language/grammar)

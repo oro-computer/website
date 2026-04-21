@@ -2,13 +2,21 @@
 
 This document specifies Silk’s parameterized type and declaration syntax.
 
-Silk’s generics are **compile-time** features: parameterized declarations are
-**monomorphized** into concrete, fully specified types and functions at build
-time (there are no runtime type parameters).
+Silk’s generics are **compile-time** features:
+parameterized declarations are **monomorphized** into concrete, fully specified
+types and functions at build time (there are no runtime type parameters).
+
+Diagnostics rule:
+
+- Generics are part of the Silk language design, not an out-of-language
+ extension.
+- When the current compiler rejects a generic form with `E2016`, that means the
+ implementation is incomplete for that generic form, not that the language
+ forbids generics.
 
 Note: `Option(T)` is a special-case surface form that is treated as sugar for
-`T?` in the current subset (see `docs/language/optional.md`). This is still
-accepted in the current subset even as general-purpose type-parameter generics are
+`T?` in the Supported forms (see [optional](?p=language/optional)). This is still
+accepted in the Supported forms even as general-purpose type-parameter generics are
 implemented.
 
 ## Overview
@@ -16,13 +24,13 @@ implemented.
 Silk supports parameterized declarations by allowing a parameter list on
 `struct`, `interface`, `enum`, `impl`, and `fn` declarations.
 
-Supported forms:
+In Silk currently:
 
 - **Supported**: type parameters (`T`) and const parameters (`N: usize`) on
-  `struct`/`interface`/`enum`/`impl`, type application in type positions
-  (`Name(args...)`), and generic functions using a compile-time parameter
-  section separated by `;` in the signature (`fn id(T; x: T) -> T`) (including
-  generic methods in `impl` blocks).
+ `struct`/`interface`/`enum`/`impl`, type application in type positions
+ (`Name(args...)`), and generic functions using a compile-time parameter
+ section separated by `;` in the signature (`fn id(T; x: T) -> T`) (including
+ generic methods in `impl` blocks).
 
 ## Declaration syntax
 
@@ -40,13 +48,13 @@ Rules:
 
 - `T` is a type parameter.
 - Type parameters may provide a default type argument using `=`:
-  - `interface Serialize(S = string) { ... }`
-  - defaults must be **trailing** (once a parameter has a default, all
-    subsequent parameters must also have defaults).
+ - `interface Serialize(S = string) { ... }`
+ - defaults must be **trailing** (once a parameter has a default, all
+ subsequent parameters must also have defaults).
 - Const parameters are written with an explicit type annotation:
-  - `N: usize`
-  - const parameters are compile-time integer values and may be used in type
-    positions such as array lengths (`T[N]`) and type applications.
+ - `N: usize`
+ - const parameters are compile-time integer values and may be used in type
+ positions such as array lengths (`T[N]`) and type applications.
 - The parameter list may be empty (though it is uncommon): `struct Foo() { ... }`.
 
 Supported declaration forms:
@@ -96,9 +104,9 @@ fn main () -> int {
 Default type arguments:
 
 - When a parameterized declaration provides default type arguments, a use site
-  may omit **trailing** arguments that have defaults.
+ may omit **trailing** arguments that have defaults.
 - If all parameters have defaults, the type may be referenced as `Name` or
-  `Name()` (both are equivalent to applying the defaults).
+ `Name()` (both are equivalent to applying the defaults).
 
 Type arguments may be:
 
@@ -163,7 +171,7 @@ impl Data(T) { /* ... */ }
 This rule keeps method receiver typing unambiguous and makes monomorphization
 explicit.
 
-## Functions (initial parsed surface form)
+## Functions
 
 Generic functions require a way to declare type/const parameters distinct from
 value parameters. The initial parsed surface form is:
@@ -193,8 +201,8 @@ parameter list (`T, N: usize`) either way.
 Rules:
 
 - At most one generic parameter list may be provided:
-  - either `fn name(T; ...)`,
-  - or `fn (T) name (...)`.
+ - either `fn name(T; ...)`,
+ - or `fn (T) name (...)`.
 
 ### Call syntax for generic functions
 
@@ -208,12 +216,12 @@ Rules:
 
 - the `;` separates compile-time arguments from runtime value arguments,
 - compile-time arguments are a comma-separated list of:
-  - type arguments (`int`, `&Foo`, `Option(string)`),
-  - and integer literals for const arguments,
+ - type arguments (`int`, `&Foo`, `Option(string)`),
+ - and integer literals for const arguments,
 - runtime arguments are ordinary expressions.
 - the compile-time argument list may be empty when defaults supply all generic
-  parameters, for example `id_default(; 1)` uses the default type argument for
-  `T` in `fn id_default(T = int; x: T) -> T`.
+ parameters, for example `id_default(; 1)` uses the default type argument for
+ `T` in `fn id_default(T = int; x: T) -> T`.
 
 ### Call-site type inference (omitting `;`)
 
@@ -231,34 +239,34 @@ let a = add(1.123, 2); // infers X = f64, Y = int
 Rules:
 
 - Both **type** parameters (`T`) and **const** parameters (`N: usize`) may be
-  inferred.
+ inferred.
 - Inference is driven by the runtime argument expressions and any types that
-  are known at the call site:
-  - literals (`123`, `1.0`, `"hi"`, `'a'`, `true`),
-  - struct literals (`Point { ... }`),
-  - explicit casts (`expr as Type`),
-  - and name expressions (`x`) when the binding’s type is known (from an
-    annotation like `let x: T = ...` or from a simple initializer like a
-    literal/struct literal).
+ are known at the call site:
+ - literals (`123`, `1.0`, `"hi"`, `'a'`, `true`),
+ - struct literals (`Point { ... }`),
+ - explicit casts (`expr as Type`),
+ - and name expressions (`x`) when the binding’s type is known (from an
+ annotation like `let x: T = ...` or from a simple initializer like a
+ literal/struct literal).
 - Const parameters are inferred only from type structure:
-  - array lengths (`T[N]`),
-  - and const arguments in applied types (`Buffer(T, N)`),
-  when the corresponding runtime argument type provides a concrete value.
+ - array lengths (`T[N]`),
+ - and const arguments in applied types (`Buffer(T, N)`),
+ when the corresponding runtime argument type provides a concrete value.
 - When inference cannot determine a type argument, compilation fails with an
-  actionable diagnostic. Disambiguate by either:
-  - inserting `as` casts on runtime arguments, or
-  - using the explicit `;` form (`add(f64, int; 1.123, 2)`).
-  When inference cannot determine a const argument, disambiguate by using the
-  explicit `;` form (`take_buf(4; buf)`).
+ actionable diagnostic. Disambiguate by either:
+ - inserting `as` casts on runtime arguments, or
+ - using the explicit `;` form (`add(f64, int; 1.123, 2)`).
+ When inference cannot determine a const argument, disambiguate by using the
+ explicit `;` form (`take_buf(4; buf)`).
 
 ## Implementation notes
 
 - Monomorphization produces a concrete instance for each referenced
-  instantiation `Name(args...)`.
+ instantiation `Name(args...)`.
 - Type names share one namespace within a `package`: `struct`, `interface`,
-  `enum`, `error`, and `type` declarations may not reuse the same name.
+ `enum`, `error`, and `type` declarations may not reuse the same name.
 - Name conflicts across generic arities are rejected (for example, `struct Foo`
-  and `struct Foo(T)` cannot both exist in the same package namespace).
+ and `struct Foo(T)` cannot both exist in the same package namespace).
 - Const parameters are currently restricted to integer primitive types; const
-  values are usable in type positions (for example `T[N]`) but are not yet
-  exposed as runtime values.
+ values are usable in type positions (for example `T[N]`) but are not yet
+ exposed as runtime values.

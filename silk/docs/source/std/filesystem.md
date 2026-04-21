@@ -10,23 +10,23 @@ details live under `std::runtime`.
 
 See also:
 
-- `docs/std/io.md` (shared I/O error conventions and reader/writer traits)
-- `docs/std/path.md` (path manipulation helpers)
-- `docs/std/runtime.md` (runtime interface layer and pluggable runtimes)
-- `docs/std/conventions.md`
+- [io](?p=std/io) (shared I/O error conventions and reader/writer traits)
+- [path](?p=std/path) (path manipulation helpers)
+- [runtime](?p=std/runtime) (runtime interface layer and pluggable runtimes)
+- [conventions](?p=std/conventions)
 
 ## Platform notes
 
 - Hosted baseline (`linux/x86_64`): `std::runtime::fs` delegates to
-  `std::runtime::posix::fs` and uses POSIX syscalls.
+ `std::runtime::posix::fs` and uses POSIX syscalls.
 - `wasm32-wasi`: `std::runtime::fs` is backed by `std::runtime::wasi::fs` and
-  requires the embedder to provide at least one preopened directory. Paths are
-  interpreted as relative to the first preopened directory found via
-  `fd_prestat_get` (sandbox root):
-  - absolute paths (`/foo/bar`) are interpreted relative to the sandbox root,
-  - relative paths (`foo/bar`) are resolved against a virtual working directory
-    managed by `std::process::chdir` / `std::process::getcwd`,
-  - `.` and `..` segments are normalized; `..` cannot escape above the sandbox root.
+ requires the embedder to provide at least one preopened directory. Paths are
+ interpreted as relative to the first preopened directory found via
+ `fd_prestat_get` (sandbox root):
+ - absolute paths (`/foo/bar`) are interpreted relative to the sandbox root,
+ - relative paths (`foo/bar`) are resolved against a virtual working directory
+ managed by `std::process::chdir` / `std::process::getcwd`,
+ - `.` and `..` segments are normalized; `..` cannot escape above the sandbox root.
 
 ## Exported API
 A hosted POSIX baseline exists today in `std/fs.slk`. The low-level OS bindings
@@ -40,6 +40,9 @@ export fn exists (path: string) -> bool;
 export fn can_read (path: string) -> bool;
 export fn can_write (path: string) -> bool;
 export fn can_exec (path: string) -> bool;
+export fn path_kind (path: string) -> FSPathKindResult;
+export fn is_regular_file (path: string) -> FSBoolResult;
+export fn realpath (path: string) -> FSStringResult;
 
 enum FSErrorKind {
   OutOfMemory,
@@ -67,8 +70,17 @@ export type FSError = FSFailed;
 export type FSIntResult = std::result::Result(int, FSFailed);
 export type FSI64Result = std::result::Result(i64, FSFailed);
 export type FSErrorIntResult = std::result::Result(int, FSError);
+export type FSBoolResult = std::result::Result(bool, FSError);
 export type FSBufferU8Result = std::result::Result(std::buffer::BufferU8, FSError);
 export type FSStringResult = std::result::Result(std::strings::String, FSError);
+
+enum PathKind {
+  RegularFile,
+  Directory,
+  Other,
+}
+
+export type FSPathKindResult = std::result::Result(PathKind, FSError);
 
 struct OpenOptions {
   read: bool,
@@ -206,15 +218,15 @@ export fn rmdir (path: string) -> FSFailed?;
 export fn mkdir_all (path: string, mode: int) -> FSError?;
 ```
 
-## Implemented `std::interfaces` surface
+## `std::interfaces` surface
 
 The filesystem subset already participates in the shared stdlib protocol story:
 
 - `File` implements `std::interfaces::Drop`.
 - `MMap` implements `std::interfaces::Len`, `std::interfaces::IsEmpty`, and
-  `std::interfaces::Drop`.
+ `std::interfaces::Drop`.
 - `Dir` implements `std::interfaces::Iterator(DirEntryResult)` and
-  `std::interfaces::Drop`.
+ `std::interfaces::Drop`.
 
 These protocol impls are the standard way to think about the ownership model of
 filesystem handles and mappings in Silk: files/directories/mappings own hosted
@@ -224,39 +236,51 @@ view-like byte source with a logical length.
 Notes:
 
 - These functions call POSIX/libc `access(2)` via `ext`. Executable outputs
-  import external libc symbols. On `linux/x86_64` with the glibc dynamic loader
-  (`ld-linux`), `silk` automatically adds `libc.so.6` as a `DT_NEEDED`
-  dependency when external symbols are present, so `--needed libc.so.6` is not
-  required for typical `std::fs` use.
-  - This applies to other `std::fs` POSIX bindings as well (`open(2)`,
-    `read(2)`, `close(2)`, etc.).
-  - `std::fs` maps runtime failures into a portable `FSErrorKind` set; the raw
-    platform error mechanism (for example POSIX `errno`) is not part of the
-    public API. The mapping from the platform mechanism into stable
-    `FSFailed.code` values is performed by `std::runtime::fs`.
-  - `MMap` is a hosted baseline feature backed by `mmap(2)` / `munmap(2)` via
-    `std::runtime::fs`. On WASI, mapping returns `InvalidInput` (unsupported).
-  - `File.mmap_readonly_range(offset, len)` does not require `offset` to be
-    page-aligned; it aligns internally (note: `MMap.ptr` may not be
-    page-aligned for range mappings).
-  - `File.mmap_readonly_range(offset, len)` does not validate the range against
-    the file size. Mapping beyond EOF may trap on access (for example SIGBUS).
-  - `mkdir_all` is a convenience helper for `mkdir -p` behavior. In the current
-    hosted subset it treats `EEXIST` as success and does not distinguish an
-    existing directory from an existing non-directory at the same path.
-  - `read_dir` returns a `Dir` handle for iteration. `Dir.next()` yields
-    `Some(Ok(DirEntry))` for entries, `Some(Err(FSFailed))` on error, and
-    `None` on end-of-directory. `std::fs` skips `"."` and `".."`.
-  - `std::fs::stream` provides task-based adapters that connect `std::fs` with
-    `std::stream` using producer/consumer loops
-    (`std::fs::stream::pipe_file_to_stream` and
-    `std::fs::stream::pipe_stream_to_file`). These are blocking OS-thread
-    operations in the current runtime subset.
-  - The runtime filesystem layer (`std::runtime::fs`) also exposes
-    `mkstemp(template_ptr)` as a low-level primitive for creating unique
-    temporary files from writable NUL-terminated templates (hosted POSIX
-    baseline). `std::fs` does not yet wrap this in a higher-level temp-file
-    API.
+ import external libc symbols. On `linux/x86_64` with the glibc dynamic loader
+ (`ld-linux`), `silk` automatically adds `libc.so.6` as a `DT_NEEDED`
+ dependency when external symbols are present, so `--needed libc.so.6` is not
+ required for typical `std::fs` use.
+ - This applies to other `std::fs` POSIX bindings as well (`open(2)`,
+ `read(2)`, `close(2)`, etc.).
+ - `std::fs` maps runtime failures into a portable `FSErrorKind` set; the raw
+ platform error mechanism (for example POSIX `errno`) is not part of the
+ public API. The mapping from the platform mechanism into stable
+ `FSFailed.code` values is performed by `std::runtime::fs`.
+ - `MMap` is a hosted baseline feature backed by `mmap(2)` / `munmap(2)` via
+ `std::runtime::fs`. On WASI, mapping returns `InvalidInput` (unsupported).
+ - `File.mmap_readonly_range(offset, len)` does not require `offset` to be
+ page-aligned; it aligns internally (note: `MMap.ptr` may not be
+ page-aligned for range mappings).
+ - `File.mmap_readonly_range(offset, len)` does not validate the range against
+ the file size. Mapping beyond EOF may trap on access (for example SIGBUS).
+ - `mkdir_all` is a convenience helper for `mkdir -p` behavior. In the current
+ hosted subset it treats `EEXIST` as success and does not distinguish an
+ existing directory from an existing non-directory at the same path.
+ - `read_dir` returns a `Dir` handle for iteration. `Dir.next()` yields
+ `Some(Ok(DirEntry))` for entries, `Some(Err(FSFailed))` on error, and
+ `None` on end-of-directory. `std::fs` skips `"."` and `".."`.
+ - `path_kind(path)` classifies the resolved filesystem object as
+ `RegularFile`, `Directory`, or `Other`.
+ - on the hosted POSIX baseline this follows symlinks before classifying the
+ final target.
+ - `is_regular_file(path)` is the ergonomic probe for config/input validation.
+ - it returns `Ok(false)` for existing non-regular paths, and
+ `Err(FSFailed)` for lookup or permission failures.
+ - `realpath(path)` is the filesystem-backed canonicalization helper.
+ - unlike lexical `std::path::normalize(path)`, this consults the filesystem
+ and resolves symlinks on the hosted POSIX backend,
+ - on `wasm32-wasi` this helper is currently unsupported and reports
+ `InvalidInput`.
+ - `std::fs::stream` provides task-based adapters that connect `std::fs` with
+ `std::stream` using producer/consumer loops
+ (`std::fs::stream::pipe_file_to_stream` and
+ `std::fs::stream::pipe_stream_to_file`). These are blocking OS-thread
+ operations in the current runtime subset.
+ - The runtime filesystem layer (`std::runtime::fs`) also exposes
+ `mkstemp(template_ptr)` as a low-level primitive for creating unique
+ temporary files from writable NUL-terminated templates (hosted POSIX
+ baseline). `std::fs` does not yet wrap this in a higher-level temp-file
+ API.
 
 ## Scope
 
@@ -265,14 +289,14 @@ Notes:
 - File and directory creation, deletion, and enumeration.
 - Basic metadata operations.
 
-Path manipulation is provided by `std::path` (see `docs/std/path.md`). In the
-current subset, `std::fs` APIs still accept raw `string` paths.
+Path manipulation is provided by `std::path` (see [path](?p=std/path)). In the
+Supported forms, `std::fs` APIs still accept raw `string` paths.
 
 Hosted baseline:
 
 - POSIX paths are treated as opaque byte sequences (not necessarily UTF-8).
 - APIs that accept `string` paths must specify encoding behavior. The initial
-  baseline assumes UTF-8 on POSIX but does not require it for all operations.
+ baseline assumes UTF-8 on POSIX but does not require it for all operations.
 
 ## Core Types
 - `Path` / `PathBuf` for path manipulation (borrowed vs owned).

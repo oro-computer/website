@@ -3,7 +3,7 @@
 This document specifies Silk’s intended support for “dependent-type-like”
 patterns where types mention compile-time values (most notably integers).
 
-Today, the front-end can parse and preserve:
+The front-end can parse and preserve:
 
 - declaration parameter lists on `struct`, `impl`, and `fn`,
 - type application in type positions (for example `VectorN(int, 1024)`),
@@ -11,8 +11,8 @@ Today, the front-end can parse and preserve:
 but the compiler does not yet implement constraint checking, inference, or
 monomorphization/code generation for parameterized declarations. In the current
 compiler subset, generic parameter lists and applied types are rejected during
-type checking (`docs/compiler/diagnostics.md`, `E2016`). See
-`docs/language/generics.md`.
+type checking ([diagnostics](?p=compiler/diagnostics), `E2016`). See
+[generics](?p=language/generics).
 
 ## Const Parameters
 
@@ -47,7 +47,7 @@ This requires:
 - a notion of const expressions at the type level,
 - evaluation rules (and overflow behavior) for those expressions,
 - and a compilation strategy (typically monomorphization) that produces concrete
-  layouts and code for each instantiated type.
+ layouts and code for each instantiated type.
 
 ## Function Parameter Lists (CT/RT Split)
 
@@ -62,7 +62,7 @@ fn h(x: int) -> int { return x; } // RT-only
 
 This split is parsed and preserved by the front-end, but generic functions are
 rejected by the current checker until monomorphization is implemented
-(`docs/compiler/diagnostics.md`, `E2016`).
+([diagnostics](?p=compiler/diagnostics), `E2016`).
 
 ## Relationship to Arrays and Collections
 
@@ -73,4 +73,4 @@ Const parameters are intended to power:
 - and compile-time-checked indexing/slicing APIs.
 
 These features require additional language and runtime support beyond the
-current compiler.
+current implementation.

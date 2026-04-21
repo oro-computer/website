@@ -1,7 +1,9 @@
 # `std::build`
 
+(manifest builder + step graph).
+
 `std::build` provides helper APIs for writing Silk build modules (`build.slk`).
-Build modules are executed by the `silk` CLI (see `docs/compiler/build-scripts.md`)
+Build modules are executed by the `silk` CLI (see [build scripts](?p=compiler/build-scripts))
 and must produce a TOML v1.0 package manifest in the `silk.toml` format.
 
 This module is intentionally a *tooling* surface:
@@ -17,10 +19,10 @@ A `Context` describes the build-module invocation.
 
 - `package_root`: absolute package root directory.
 - `action`: the current package action string.
-  - `"build"` for `silk build --package`, `silk check --package`, and
-    `silk test --package`
-  - `"install"` for `silk build install --package`
-  - `"uninstall"` for `silk build uninstall --package`
+ - `"build"` for `silk build --package`, `silk check --package`, and
+ `silk test --package`
+ - `"install"` for `silk build install --package`
+ - `"uninstall"` for `silk build uninstall --package`
 
 The driver provides these values to the build module via the
 `std::interfaces::Builder` entrypoint parameters:
@@ -39,22 +41,26 @@ for setting:
 - `[package]` fields (`name`, `version`, `definitions`),
 - `[build]` fields (`default_target`),
 - and `[[target]]` entries (including native `inputs`, `cflags`, `ldflags`, and
-  dynamic linkage fields like `needed`/`runpath`/`soname`).
+ dynamic linkage fields like `needed`/`runpath`/`soname`).
 
 `std::build` emits TOML in a deterministic, canonical form.
 
 Note: for toolchain-shipped vendored static archives (for example the mbedTLS
 archives used by `std::tls` on `linux/x86_64`), `[[target]].inputs` supports
-`@vendored/<name>.a` entries (see `docs/compiler/package-manifests.md`). Build
-modules may emit these via `Build.target_add_input(...)`.
+`@vendored/<name>.a` entries (see [package manifests](?p=compiler/package-manifests)). Build
+modules may emit these via `Build.target_add_input(...)`. On supported native
+hosts, common vendored dependency families (`libsodium`, `mbedTLS`,
+`libsqlite3`, `libssh2`) are also auto-linked when native `.c` / `.h` / `.o` /
+`.a` inputs reference their symbol families, so explicit `@vendored/...`
+entries are optional for those common cases.
 
 For native header inputs, `Build.target_add_input(...)` follows the same rule
 as direct manifest/CLI builds:
 
 - if the added path ends in `.h` and a sibling `.c` exists, Silk compiles that
-  `.c`,
+ `.c`,
 - otherwise Silk falls back to compiling the header itself as a C translation
-  unit.
+ unit.
 
 ## Exported API
 
@@ -91,14 +97,14 @@ export async fn run (package_root: string, action: string) -> int {
 Notes:
 
 - Build modules may still generate the TOML manifest directly; `std::build` is
-  a convenience layer.
+ a convenience layer.
 - Build modules are allowed to be `async` so they can `await` during manifest
-  generation.
+ generation.
 - `build::context(argc, argv)` remains available for wrapper/legacy usage when
-  you are writing a standalone hosted program and want to parse `argv` into a
-  `Context`.
+ you are writing a standalone hosted program and want to parse `argv` into a
+ `Context`.
 - `build::run(argc, argv, callback)` remains available for older callback-style
-  build modules.
+ build modules.
 
 ### Step graph (`StepGraph`)
 
@@ -117,11 +123,11 @@ Concepts:
 - `StepId` — an integer handle for a created step.
 - `StepKind` — the kind of a step (`MkdirAll`, `WriteFile`, or `Run`).
 - A step graph is executed with `g.run()` which runs all steps in dependency
-  order (topological sort) and returns `0` on success.
+ order (topological sort) and returns `0` on success.
 - Dependencies are declared with `g.depends_on(step, dep)` (“run `dep` before
-  `step`”). Cycles are rejected.
+ `step`”). Cycles are rejected.
 
-API surface (current):
+API surface:
 
 - `StepGraph.init(package_root)`
 - `mkdir_all(path, mode) -> StepId`
@@ -142,10 +148,16 @@ Caching:
 
 - `WriteFile` steps are cacheable.
 - When caching is enabled for a `WriteFile` step:
-  - the step computes a content hash over the output bytes,
-  - stores a blob under `<package_root>/.silk/cache/build/<hash>.blob`,
-  - and only (re)writes the destination file when its bytes differ from the
-    desired output (to avoid unnecessary rebuild churn from timestamp changes).
+ - the step computes a content hash over the output bytes,
+ - stores a blob under `<package_root>/.silk/cache/build/<hash>.blob`,
+ - and only (re)writes the destination file when its bytes differ from the
+ desired output (to avoid unnecessary rebuild churn from timestamp changes).
+- The `silk cache` command treats these `.blob` files as recognized managed
+ cache entries, so users can inspect/prune/compact them alongside CLI
+ build-cache entries without manually spelunking the cache directory.
+- Managed cache cleanup for these blobs is coordinated with normal `silk build`
+ cache activity, so explicit cache maintenance does not race live build-cache
+ reads or writes.
 
 - `Run` steps are not cached in the current API.
 
@@ -185,6 +197,6 @@ This module is expected to grow toward a Zig-like build system:
 
 - programmatic installation/uninstallation hooks,
 - and richer native build configuration beyond the current `cflags`/`ldflags`
-  fields (additional include path kinds, link search paths, and platform selection).
+ fields (additional include path kinds, link search paths, and platform selection).
 
 When those features are introduced, they will be specified here first.

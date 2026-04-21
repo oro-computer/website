@@ -2,7 +2,7 @@
 
 `std::net` provides networking primitives (hosted POSIX baseline).
 
-Canonical doc: `docs/std/networking.md`.
+Canonical doc: [networking](?p=std/networking).
 
 ## Example: IPv4 helpers
 ```silk
@@ -17,4 +17,4 @@ fn main () -> int {
 
 ## See also
 
-- Canonical doc: `docs/std/networking.md`
+- Canonical doc: [networking](?p=std/networking)

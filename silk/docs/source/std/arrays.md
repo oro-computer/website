@@ -1,16 +1,21 @@
 # `std::arrays`
 
+A generic `Slice(T)` view type is provided
+for early FFI-friendly bridging; higher-level owning containers live in
+`std::vector`.
+
 `std::arrays` provides array and vector-like types built on top of the `Buffer(T)`
-intrinsic (`docs/language/buffers.md`).
+intrinsic ([buffers](?p=language/buffers)).
 
 See also:
 
-- `docs/std/memory.md` (allocators)
-- `docs/std/conventions.md` (allocation and error conventions)
+- [memory](?p=std/memory) (allocators)
+- [conventions](?p=std/conventions) (allocation and error conventions)
 
 ## Exported API
 
-`std/arrays.slk` provides a non-owning, FFI-friendly slice representation:
+A tiny generic subset is implemented in `std/arrays.slk` to provide a
+non-owning, FFI-friendly slice representation for early bridging:
 
 ```silk
 module std::arrays;
@@ -101,33 +106,33 @@ impl ByteSliceIter as std::interfaces::Iterator(u8) {
 Notes:
 
 - `ByteSlice` is the packed-byte view type used for OS/FFI byte APIs. For owning
-  packed-byte storage, use `std::buffer::BufferU8`. For owning scalar-slot
-  storage, use `std::buffer::Buffer(T)` or `std::vector::Vector(T)` and view it
-  as `std::arrays::Slice(T)`.
+ packed-byte storage, use `std::buffer::BufferU8`. For owning scalar-slot
+ storage, use `std::buffer::Buffer(T)` or `std::vector::Vector(T)` and view it
+ as `std::arrays::Slice(T)`.
 - In the current API, `ptr` is represented as a raw `u64`
-  address for early FFI-friendly bridging. The constructors enforce basic
-  invariants via `#require`:
-  - `len >= 0`, and
-  - `ptr != 0` when `len > 0` (a null pointer is permitted only for empty
-    slices).
-  In the shipped stdlib sources, these invariants are also packaged as
-  reusable theories in `std::formal` (for example `slice_well_formed(ptr, len)`).
-- `get` / `set` are intentionally low-level in the current subset and
-  are unchecked beyond `#require` contracts. They are implemented using
-  compiler-backed memory intrinsics routed through `std::runtime::mem` (see
-  `docs/std/runtime.md`).
-- `Slice(T)` uses the scalar-slot memory model of the current compiler:
-  elements occupy `sizeof(T)` bytes (8 bytes per scalar slot), so multi-slot
-  values like `string` and non-opaque structs/enums are supported.
-  For byte-oriented APIs that require packed bytes, use `ByteSlice`.
-- `at` / `try_set` are the “checked” accessors in the current subset:
-  - `at` returns `None` when `index` is out of bounds,
-  - `try_set` returns `false` when `index` is out of bounds.
+ address for early FFI-friendly bridging. The constructors enforce basic
+ invariants via `#require`:
+ - `len >= 0`, and
+ - `ptr != 0` when `len > 0` (a null pointer is permitted only for empty
+ slices).
+ In the shipped stdlib sources, these invariants are also packaged as
+ reusable theories in `std::formal` (for example `slice_well_formed(ptr, len)`).
+- `get` / `set` are intentionally low-level in the Supported forms and
+ are unchecked beyond `#require` contracts. They are implemented using
+ compiler-backed memory intrinsics routed through `std::runtime::mem` (see
+ [runtime](?p=std/runtime)).
+- `Slice(T)` uses the scalar-slot memory model of Silk currently:
+ elements occupy `sizeof(T)` bytes (8 bytes per scalar slot), so multi-slot
+ values like `string` and non-opaque structs/enums are supported.
+ For byte-oriented APIs that require packed bytes, use `ByteSlice`.
+- `at` / `try_set` are the “checked” accessors in the Supported forms:
+ - `at` returns `None` when `index` is out of bounds,
+ - `try_set` returns `false` when `index` is out of bounds.
 - `SliceIter(T)` provides a minimal sequential iterator for `Slice(T)` values.
-  It implements `std::interfaces::Iterator(T)`; iteration is by value (copies).
+ It implements `std::interfaces::Iterator(T)`; iteration is by value (copies).
 - `ByteSlice.find_bytes(empty)` returns `Some(0)` (matches `memmem(3)` semantics).
 
-## Implemented `std::interfaces` surface
+## `std::interfaces` surface
 
 The shipped `std::arrays` subset already participates in the shared stdlib
 protocol story:
@@ -141,7 +146,7 @@ This matters for two reasons:
 
 - it gives readers a uniform mental model for “view-like” stdlib types,
 - and it is the protocol surface used by loops and generic container-style code
-  as the compiler grows.
+ as the compiler grows.
 
 ## Scope
 
@@ -149,15 +154,15 @@ This matters for two reasons:
 
 - Slice/view types over contiguous elements.
 - Helpers for fixed-size arrays (`T[N]`) and for working with slices derived
-  from them.
+ from them.
 - Iteration utilities compatible with the `for` loop semantics (once `for` is
-  implemented as specified in `docs/language/flow-for.md`).
+ implemented as specified in [flow for](?p=language/flow-for)).
 
 ## Core Types
 - `Slice(T)` — a non-owning view over `T` elements (`ptr + len`).
 - `std::vector::Vector(T)` — the owning, growable sequence type.
 - Fixed-size arrays (`T[N]`) are part of the language design; `std::arrays`
-  provides helpers and algorithms that operate on them via `Slice(T)` views.
+ provides helpers and algorithms that operate on them via `Slice(T)` views.
 
 Illustrative sketch (non-authoritative):
 
@@ -172,4 +177,4 @@ The stdlib should provide both:
 - unchecked accessors for verified code paths.
 
 The exact behavior must be consistent across the stdlib; see
-`docs/std/conventions.md`.
+[conventions](?p=std/conventions).
