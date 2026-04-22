@@ -12,11 +12,11 @@
     <link rel="icon" type="image/png" href="docs/branding/assets/logo-icon-small.png" sizes="32x32" />
     <link rel="stylesheet" href="assets/site.css" />
   </head>
-  <body>
+  <body class="home-page">
     <a class="skip-link" href="#main">Skip to content</a>
     <header class="site-top" id="top">
-      <div class="container">
-        <div class="site-header">
+      <div class="container container-wide">
+        <div class="site-header home-header">
           <a class="brand" href="./">
             <img class="brand-mark" src="docs/branding/assets/logo-icon.png" alt="Oro Computer logo" width="32" height="32" />
             <span class="brand-name">Oro Computer</span>
@@ -29,182 +29,204 @@
             <a href="virtnosis/">Virtnosis</a>
             <a href="https://github.com/oro-computer" target="_blank" rel="noreferrer">GitHub</a>
             <a href="#contact">Contact</a>
-            <a class="button button-primary" href="#projects">Explore</a>
+            <a class="button button-primary" href="#systems">Explore</a>
           </nav>
         </div>
       </div>
     </header>
 
     <main id="main">
-      <section class="hero" aria-label="Overview">
-        <div class="container">
-          <div class="hero-grid">
-            <div class="hero-copy">
-              <div class="hero-kicker">Software R&amp;D</div>
-              <h1>High-fidelity software for far-edge environments.</h1>
-              <p class="lede">
-                Oro Computer is a software research and development firm focused on high-fidelity software used in far-edge
-                environments.
-              </p>
-              <div class="hero-actions">
-                <a class="button button-primary" href="#projects">Explore projects</a>
-                <a class="button" href="#resources">Developer resources</a>
-                <a class="button button-quiet" href="#contact">Contact</a>
-              </div>
-            </div>
+      <section class="home-hero" aria-label="Overview">
+        <div class="home-hero-grid" aria-hidden="true"></div>
+        <div class="container container-wide">
+          <div class="home-announcement">
+            <span>Field systems</span>
+            <a href="#resources">Docs, APIs, specs, and LLM packs</a>
+          </div>
 
-            <div class="panel" aria-label="Projects">
-              <div class="panel-header">
-                <div class="panel-title">Projects</div>
-                <a class="button button-quiet" href="#projects">All</a>
-              </div>
-              <div class="list">
-                <a class="list-row" href="runtime/">
-                  <div>
-                    <div class="list-title">Oro Runtime</div>
-                    <div class="list-desc">A native runtime for web applications.</div>
-                  </div>
-                  <div class="list-meta">Runtime</div>
-                </a>
-                <a class="list-row" href="silk/">
-                  <div>
-                    <div class="list-title">Silk</div>
-                    <div class="list-desc">High performance general purpose programming language with formal verification built in.</div>
-                  </div>
-                  <div class="list-meta">Language</div>
-                </a>
-                <a class="list-row" href="sage/">
-                  <div>
-                    <div class="list-title">Sage</div>
-                    <div class="list-desc">Fast, ergonomic terminal pager with syntax highlighting and a JavaScript plugin API.</div>
-                  </div>
-                  <div class="list-meta">CLI</div>
-                </a>
-                <a class="list-row" href="slg/">
-                  <div>
-                    <div class="list-title">slg</div>
-                    <div class="list-desc">Fast recursive line grep utility for files and directories, with explicit ignore and parallel controls.</div>
-                  </div>
-                  <div class="list-meta">CLI</div>
-                </a>
-                <a class="list-row" href="virtnosis/">
-                  <div>
-                    <div class="list-title">Virtnosis</div>
-                    <div class="list-desc">Read-only libvirt security analysis and diagnosis with a bounded local agent and operator CLI.</div>
-                  </div>
-                  <div class="list-meta">Security</div>
-                </a>
-              </div>
+          <div class="home-hero-copy">
+            <div class="hero-kicker">Software research &amp; development</div>
+            <h1>High-fidelity software for systems that leave the datacenter.</h1>
+            <p class="home-lede">
+              Oro Computer is a software research and development firm focused on high-fidelity software used in far-edge
+              environments. We build languages, runtimes, operator tools, and security diagnostics for constrained, local-first,
+              and reliability-sensitive software.
+            </p>
+            <div class="hero-actions home-actions">
+              <a class="button button-primary" href="#systems">Explore systems</a>
+              <a class="button" href="#resources">Read the docs</a>
+              <a class="button" href="https://github.com/oro-computer" target="_blank" rel="noreferrer">GitHub</a>
+            </div>
+          </div>
+
+          <div class="home-stage" aria-label="Oro project system overview">
+            <div class="prism-scene" aria-hidden="true">
+              <div class="prism-beam prism-beam-gold"></div>
+              <div class="prism-beam prism-beam-green"></div>
+              <div class="prism-beam prism-beam-purple"></div>
+              <div class="prism-core"></div>
+            </div>
+            <div class="stage-panel stage-panel-left">
+              <span class="stage-label">Language</span>
+              <strong>Silk</strong>
+              <p>Formal verification built into a general-purpose systems language.</p>
+            </div>
+            <div class="stage-panel stage-panel-right">
+              <span class="stage-label">Runtime</span>
+              <strong>Oro Runtime</strong>
+              <p>Native application delivery with web technology and platform APIs.</p>
+            </div>
+            <div class="stage-panel stage-panel-bottom">
+              <span class="stage-label">Operators</span>
+              <strong>Sage · slg · Virtnosis</strong>
+              <p>Terminal, search, and read-only security tooling for local workflows.</p>
+            </div>
+          </div>
+
+          <div class="signal-strip" aria-label="Oro working principles">
+            <div>
+              <span>01</span>
+              <strong>Local-first control</strong>
+              <p>Tools that keep operators in charge of the machine they are using.</p>
+            </div>
+            <div>
+              <span>02</span>
+              <strong>Explicit surfaces</strong>
+              <p>Documented CLIs, APIs, ABIs, specs, and machine-readable references.</p>
+            </div>
+            <div>
+              <span>03</span>
+              <strong>Edge posture</strong>
+              <p>Designed for degraded networks, constrained hosts, and durable operation.</p>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="section" id="projects">
-        <div class="container">
-          <div class="prose">
-            <h2>Projects</h2>
-            <p>Four open-source systems that support high-fidelity software under real constraints.</p>
-          </div>
-
-          <div class="card-grid mt-lg">
-            <div class="card col-span-4">
-              <div class="card-body">
-                <h3 class="card-title">Oro Runtime</h3>
-                <div class="card-meta">
-                  Cross-platform runtime embedding the platform WebView. Native features are imported as ES modules under
-                  <code>oro:*</code>, with a CLI (<code>oroc</code>) and TOML configuration (<code>oro.toml</code>).
-                </div>
-                <div class="card-links">
-                  <a class="button button-primary" href="runtime/docs/">Runtime docs</a>
-                  <a class="button" href="runtime/">Overview</a>
-                  <a class="button button-quiet" href="https://github.com/oro-computer/runtime" target="_blank" rel="noreferrer">GitHub</a>
-                </div>
-              </div>
+      <section class="section home-section" id="systems">
+        <div class="container container-wide">
+          <div class="section-heading section-heading-wide">
+            <div>
+              <span class="eyebrow">Systems</span>
+              <h2>Five projects, one software stack.</h2>
             </div>
-
-            <div class="card col-span-4">
-              <div class="card-body">
-                <h3 class="card-title">Silk</h3>
-                <div class="card-meta">
-                  Silk is a high performance general purpose programming language with formal verification built in. Silk targets
-                  computer systems, mobile / tablet devices, WASM / WASI runtimes, and the web. Implemented in Zig, with a C99
-                  embedding ABI (<code>libsilk</code>).
-                </div>
-                <div class="card-links">
-                  <a class="button button-primary" href="silk/docs/">Silk docs</a>
-                  <a class="button" href="silk/">Overview</a>
-                  <a class="button button-quiet" href="silk/spec/2026/">Spec (2026)</a>
-                </div>
-              </div>
-            </div>
-
-            <div class="card col-span-4">
-              <div class="card-body">
-                <h3 class="card-title">Sage</h3>
-                <div class="card-meta">
-                  Sage is a fast, ergonomic terminal pager for files, directories, stdin, and remote content. It includes
-                  syntax highlighting, cross-tab search workflows, and a robust JavaScript plugin runtime.
-                </div>
-                <div class="card-links">
-                  <a class="button button-primary" href="sage/docs/">Sage docs</a>
-                  <a class="button" href="sage/">Overview</a>
-                  <a class="button button-quiet" href="https://github.com/oro-computer/sage" target="_blank" rel="noreferrer">GitHub</a>
-                </div>
-              </div>
-            </div>
-
-            <div class="card col-span-4">
-              <div class="card-body">
-                <h3 class="card-title">slg</h3>
-                <div class="card-meta">
-                  <code>slg</code> is a fast recursive line grep utility for files and directories. It covers regex and
-                  literal search, file listing, ignore rules, and explicit parallel traversal tuning.
-                </div>
-                <div class="card-links">
-                  <a class="button button-primary" href="slg/docs/">slg docs</a>
-                  <a class="button" href="slg/">Overview</a>
-                  <a class="button button-quiet" href="https://github.com/oro-computer/slg" target="_blank" rel="noreferrer">GitHub</a>
-                </div>
-              </div>
-            </div>
-
-            <div class="card col-span-4">
-              <div class="card-body">
-                <h3 class="card-title">Virtnosis</h3>
-                <div class="card-meta">
-                  Virtnosis is a read-only libvirt security analysis and diagnosis toolset built around a bounded local
-                  control-plane daemon and an operator CLI.
-                </div>
-                <div class="card-links">
-                  <a class="button button-primary" href="virtnosis/docs/">Virtnosis docs</a>
-                  <a class="button" href="virtnosis/">Overview</a>
-                  <a class="button button-quiet" href="https://github.com/oro-computer/virtnosis" target="_blank" rel="noreferrer">GitHub</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section" id="resources" aria-label="Developer resources">
-        <div class="container">
-          <div class="prose">
-            <h2>Developer resources</h2>
             <p>
-              Guides, reference, and APIs designed to be read like a system. For AI assistants, start with
-              <a href="llms.txt"><code>llms.txt</code></a>.
+              The site is organized as product-quality documentation, not a source mirror: every project includes a clear starting
+              point, operator guides, public APIs, and links for downstream automation.
             </p>
           </div>
 
-          <form class="hero-search mt-lg" role="search" method="get" aria-label="Search developer docs">
+          <div class="project-mosaic mt-lg">
+            <article class="system-card system-card-featured system-runtime">
+              <div class="system-card-body">
+                <div class="system-card-topline">
+                  <span>Runtime</span>
+                  <span>Native apps</span>
+                </div>
+                <h3>Oro Runtime</h3>
+                <p>
+                  Build native applications with web technology, a project model, the <code>oroc</code> CLI, TOML configuration,
+                  and documented <code>oro:*</code> JavaScript APIs.
+                </p>
+                <div class="system-links">
+                  <a class="button button-primary" href="runtime/docs/">Runtime docs</a>
+                  <a class="button" href="runtime/docs/?p=guides/from-zero-to-first-run">First run</a>
+                  <a class="button button-quiet" href="https://github.com/oro-computer/runtime" target="_blank" rel="noreferrer">GitHub</a>
+                </div>
+              </div>
+              <div class="system-terminal" aria-label="Runtime example commands">
+                <div class="terminal-bar"><span></span><span></span><span></span></div>
+                <pre><code>oroc init field-console
+cd field-console
+oroc run .
+oroc build .</code></pre>
+              </div>
+            </article>
+
+            <article class="system-card system-card-featured system-silk">
+              <div class="system-card-body">
+                <div class="system-card-topline">
+                  <span>Language</span>
+                  <span>Verification</span>
+                </div>
+                <h3>Silk</h3>
+                <p>
+                  Silk is a high performance general purpose programming language with formal verification built in. Silk targets
+                  computer systems, mobile / tablet devices, WASM / WASI runtimes, and the web.
+                </p>
+                <div class="system-links">
+                  <a class="button button-primary" href="silk/docs/">Silk docs</a>
+                  <a class="button" href="silk/docs/?p=guides/formal-silk">Formal Silk</a>
+                  <a class="button button-quiet" href="silk/spec/2026/">Spec</a>
+                </div>
+              </div>
+              <div class="system-code" aria-label="Silk example">
+                <pre><code>theory Bounds {
+  axiom non_negative(n: int) -&gt; bool;
+}
+
+fn verify_window(size: int) -&gt; bool
+  #require size &gt;= 0
+{
+  return size &lt;= 4096;
+}</code></pre>
+              </div>
+            </article>
+
+            <article class="system-card system-compact">
+              <div class="system-card-topline"><span>CLI</span><span>Pager</span></div>
+              <h3>Sage</h3>
+              <p>Fast terminal paging for files, directories, stdin, remote content, syntax highlighting, and JavaScript plugins.</p>
+              <div class="system-links">
+                <a class="button button-primary" href="sage/docs/">Docs</a>
+                <a class="button button-quiet" href="sage/docs/?p=javascript/overview">API</a>
+              </div>
+            </article>
+
+            <article class="system-card system-compact">
+              <div class="system-card-topline"><span>CLI</span><span>Search</span></div>
+              <h3>slg</h3>
+              <p>A recursive line grep utility for regex, literal search, file listing, ignores, outputs, and parallel traversal.</p>
+              <div class="system-links">
+                <a class="button button-primary" href="slg/docs/">Docs</a>
+                <a class="button button-quiet" href="slg/docs/?p=cli/options-reference">Options</a>
+              </div>
+            </article>
+
+            <article class="system-card system-compact">
+              <div class="system-card-topline"><span>Security</span><span>libvirt</span></div>
+              <h3>Virtnosis</h3>
+              <p>Read-only security analysis and diagnosis for libvirt-exposed infrastructure, with bounded local transport.</p>
+              <div class="system-links">
+                <a class="button button-primary" href="virtnosis/docs/">Docs</a>
+                <a class="button button-quiet" href="virtnosis/docs/?p=guides/operator-guide">Operator guide</a>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section home-section home-resources" id="resources" aria-label="Developer resources">
+        <div class="container container-wide">
+          <div class="section-heading section-heading-wide">
+            <div>
+              <span class="eyebrow">References</span>
+              <h2>Documentation built for humans and agents.</h2>
+            </div>
+            <p>
+              Start with the docs, or point an assistant at <a href="llms.txt"><code>llms.txt</code></a>. Each project also ships its
+              own LLM pack, search index, and public API reference where applicable.
+            </p>
+          </div>
+
+          <form class="hero-search resource-search mt-lg" role="search" method="get" aria-label="Search developer docs">
             <input
               class="hero-search-input"
               type="search"
               name="q"
               inputmode="search"
               autocomplete="off"
-              placeholder='Search docs (e.g. "copy_map", "regions", or "oro:fs")'
+              placeholder='Search docs (e.g. "regions", "copy_map", "oro:fs", or "slg output")'
             />
             <div class="hero-search-actions">
               <button class="button button-quiet" type="submit" formaction="runtime/docs/">Runtime</button>
@@ -215,219 +237,51 @@
             </div>
           </form>
 
-          <div class="card-grid mt-lg">
-            <div class="col-span-4">
-              <div class="panel">
-                <div class="panel-header">
-                  <div class="panel-title">Runtime</div>
-                  <a class="button button-quiet" href="runtime/docs/">Open</a>
-                </div>
-                <div class="list">
-                  <a class="list-row" href="runtime/docs/?p=start">
-                    <div>
-                      <div class="list-title">Start</div>
-                      <div class="list-desc">Hello world, recommended reading path, and the programming model.</div>
-                    </div>
-                    <div class="list-meta">Docs</div>
-                  </a>
-                  <a class="list-row" href="runtime/docs/?p=guides/hello-world">
-                    <div>
-                      <div class="list-title">Guides</div>
-                      <div class="list-desc">Build and package, project layout, windows and messaging.</div>
-                    </div>
-                    <div class="list-meta">Guides</div>
-                  </a>
-                  <a class="list-row" href="runtime/docs/?p=cli/oroc">
-                    <div>
-                      <div class="list-title">CLI</div>
-                      <div class="list-desc"><code>oroc</code> commands, flags, and environment variables.</div>
-                    </div>
-                    <div class="list-meta">CLI</div>
-                  </a>
-                  <a class="list-row" href="runtime/docs/?p=javascript/overview">
-                    <div>
-                      <div class="list-title">JavaScript APIs</div>
-                      <div class="list-desc"><code>oro:*</code> modules with references and module index.</div>
-                    </div>
-                    <div class="list-meta">API</div>
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div class="col-span-4">
-              <div class="panel">
-                <div class="panel-header">
-                  <div class="panel-title">Silk</div>
-                  <a class="button button-quiet" href="silk/docs/">Open</a>
-                </div>
-                <div class="list">
-                  <a class="list-row" href="silk/docs/?p=usage/getting-started">
-                    <div>
-                      <div class="list-title">Getting started</div>
-                      <div class="list-desc">Install, build, and run your first program.</div>
-                    </div>
-                    <div class="list-meta">Docs</div>
-                  </a>
-                  <a class="list-row" href="silk/docs/?p=language/overview">
-                    <div>
-                      <div class="list-title">Language</div>
-                      <div class="list-desc">Types, functions, modules, memory model, regions, and more.</div>
-                    </div>
-                    <div class="list-meta">Language</div>
-                  </a>
-                  <a class="list-row" href="silk/docs/?p=guides/cli">
-                    <div>
-                      <div class="list-title">CLI</div>
-                      <div class="list-desc"><code>silk</code> commands for check, test, and build.</div>
-                    </div>
-                    <div class="list-meta">CLI</div>
-                  </a>
-                  <a class="list-row" href="silk/wiki/?p=start">
-                    <div>
-                      <div class="list-title">Wiki</div>
-                      <div class="list-desc">Learning-first explanations and design notes.</div>
-                    </div>
-                    <div class="list-meta">Wiki</div>
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div class="col-span-4">
-              <div class="panel">
-                <div class="panel-header">
-                  <div class="panel-title">Sage</div>
-                  <a class="button button-quiet" href="sage/docs/">Open</a>
-                </div>
-                <div class="list">
-                  <a class="list-row" href="sage/docs/?p=start">
-                    <div>
-                      <div class="list-title">Start</div>
-                      <div class="list-desc">Quick start, reading path, and the pager model.</div>
-                    </div>
-                    <div class="list-meta">Docs</div>
-                  </a>
-                  <a class="list-row" href="sage/docs/?p=cli/sage">
-                    <div>
-                      <div class="list-title">CLI</div>
-                      <div class="list-desc"><code>sage</code> modes, input types, flags, keys, config, and diagnostics.</div>
-                    </div>
-                    <div class="list-meta">CLI</div>
-                  </a>
-                  <a class="list-row" href="sage/docs/?p=javascript/overview">
-                    <div>
-                      <div class="list-title">JavaScript APIs</div>
-                      <div class="list-desc">Plugin runtime, built-in <code>sage:*</code> modules, events, and limits.</div>
-                    </div>
-                    <div class="list-meta">API</div>
-                  </a>
-                  <a class="list-row" href="sage/docs/?p=man/sage-1">
-                    <div>
-                      <div class="list-title">Man pages</div>
-                      <div class="list-desc"><code>sage(1)</code>, <code>sage(7)</code>, and <code>sage-plugin-api(3)</code>.</div>
-                    </div>
-                    <div class="list-meta">Man</div>
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div class="col-span-4">
-              <div class="panel">
-                <div class="panel-header">
-                  <div class="panel-title">slg</div>
-                  <a class="button button-quiet" href="slg/docs/">Open</a>
-                </div>
-                <div class="list">
-                  <a class="list-row" href="slg/docs/?p=start">
-                    <div>
-                      <div class="list-title">Start</div>
-                      <div class="list-desc">Quick start, reading path, and the exact CLI scope.</div>
-                    </div>
-                    <div class="list-meta">Docs</div>
-                  </a>
-                  <a class="list-row" href="slg/docs/?p=cli/slg">
-                    <div>
-                      <div class="list-title">CLI</div>
-                      <div class="list-desc"><code>slg</code> modes, roots, matching, output, and exit status.</div>
-                    </div>
-                    <div class="list-meta">CLI</div>
-                  </a>
-                  <a class="list-row" href="slg/docs/?p=cli/options-reference">
-                    <div>
-                      <div class="list-title">Options</div>
-                      <div class="list-desc">Every public flag, mode applicability, and parser rule.</div>
-                    </div>
-                    <div class="list-meta">Ref</div>
-                  </a>
-                  <a class="list-row" href="slg/docs/?p=man/slg-1">
-                    <div>
-                      <div class="list-title">Man pages</div>
-                      <div class="list-desc">Reader-friendly <code>slg(1)</code> with the shipped public surface.</div>
-                    </div>
-                    <div class="list-meta">Man</div>
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div class="col-span-4">
-              <div class="panel">
-                <div class="panel-header">
-                  <div class="panel-title">Virtnosis</div>
-                  <a class="button button-quiet" href="virtnosis/docs/">Open</a>
-                </div>
-                <div class="list">
-                  <a class="list-row" href="virtnosis/docs/?p=start">
-                    <div>
-                      <div class="list-title">Start</div>
-                      <div class="list-desc">Purpose, safety boundary, quick start, and the recommended reading path.</div>
-                    </div>
-                    <div class="list-meta">Docs</div>
-                  </a>
-                  <a class="list-row" href="virtnosis/docs/?p=cli/vnactl">
-                    <div>
-                      <div class="list-title">CLI</div>
-                      <div class="list-desc"><code>vnactl</code> and <code>virtnosis-agent</code> command surfaces, sockets, and transport limits.</div>
-                    </div>
-                    <div class="list-meta">CLI</div>
-                  </a>
-                  <a class="list-row" href="virtnosis/docs/?p=guides/deployment">
-                    <div>
-                      <div class="list-title">Deployment</div>
-                      <div class="list-desc">Rootless, shared local, and systemd socket-activated deployment guidance.</div>
-                    </div>
-                    <div class="list-meta">Guide</div>
-                  </a>
-                  <a class="list-row" href="virtnosis/docs/?p=man/virtnosis-7">
-                    <div>
-                      <div class="list-title">Man pages</div>
-                      <div class="list-desc"><code>virtnosis(7)</code>, <code>virtnosis-agent(1)</code>, and protocol/report references.</div>
-                    </div>
-                    <div class="list-meta">Man</div>
-                  </a>
-                </div>
-              </div>
-            </div>
+          <div class="resource-grid mt-lg">
+            <a class="resource-card" href="runtime/docs/?p=javascript/overview">
+              <span>Runtime</span>
+              <strong>JavaScript APIs</strong>
+              <p>Every public <code>oro:*</code> module, examples, config, CLI, and packaging workflow.</p>
+            </a>
+            <a class="resource-card" href="silk/docs/?p=std/overview">
+              <span>Silk</span>
+              <strong>Standard library</strong>
+              <p>Module-by-module references for stdlib functions, types, theories, examples, and considerations.</p>
+            </a>
+            <a class="resource-card" href="sage/docs/?p=javascript/overview">
+              <span>Sage</span>
+              <strong>Plugin API</strong>
+              <p>JavaScript extension points for a featureful terminal pager and document viewer.</p>
+            </a>
+            <a class="resource-card" href="virtnosis/docs/?p=reference/scan-analysis">
+              <span>Virtnosis</span>
+              <strong>Security analysis</strong>
+              <p>Read-only scan semantics, report structure, operator workflows, and deployment limits.</p>
+            </a>
           </div>
         </div>
       </section>
 
-      <section class="section" id="contact">
-        <div class="container">
-          <div class="prose">
-            <h2>Contact</h2>
-            <p><a href="mailto:info@oro.computer">info@oro.computer</a> — General inquiries.</p>
-            <p><a href="mailto:contributors@oro.computer">contributors@oro.computer</a> — Community coordination.</p>
-            <p><a href="mailto:runtime@oro.computer">runtime@oro.computer</a> — Oro Runtime questions.</p>
+      <section class="section home-section" id="contact">
+        <div class="container container-wide">
+          <div class="contact-panel">
+            <div>
+              <span class="eyebrow">Contact</span>
+              <h2>Work with Oro Computer.</h2>
+              <p>For research, product, runtime, and contributor coordination, use the dedicated inboxes below.</p>
+            </div>
+            <div class="contact-links">
+              <a href="mailto:info@oro.computer">info@oro.computer</a>
+              <a href="mailto:contributors@oro.computer">contributors@oro.computer</a>
+              <a href="mailto:runtime@oro.computer">runtime@oro.computer</a>
+            </div>
           </div>
         </div>
       </section>
     </main>
 
-    <footer class="site-footer">
-      <div class="container">
+    <footer class="site-footer home-footer">
+      <div class="container container-wide">
         <div class="footer-inner">
           <strong>Oro Computer</strong>
           <span>© <span data-year>2026</span> Oro Computer.</span>
