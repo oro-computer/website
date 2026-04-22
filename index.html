@@ -29,7 +29,6 @@
             <a href="virtnosis/">Virtnosis</a>
             <a href="https://github.com/oro-computer" target="_blank" rel="noreferrer">GitHub</a>
             <a href="#contact">Contact</a>
-            <a class="button button-primary" href="#systems">Explore</a>
           </nav>
         </div>
       </div>
@@ -39,13 +38,7 @@
       <section class="home-hero" aria-label="Overview">
         <div class="home-hero-grid" aria-hidden="true"></div>
         <div class="container container-wide">
-          <div class="home-announcement">
-            <span>Field systems</span>
-            <a href="#resources">Docs, APIs, specs, and LLM packs</a>
-          </div>
-
           <div class="home-hero-copy">
-            <div class="hero-kicker">Software research &amp; development</div>
             <h1>High-fidelity software for systems that leave the datacenter.</h1>
             <p class="home-lede">
               Oro Computer is a software research and development firm focused on high-fidelity software used in far-edge
@@ -53,223 +46,19 @@
               and reliability-sensitive software.
             </p>
             <div class="hero-actions home-actions">
-              <a class="button button-primary" href="#systems">Explore systems</a>
-              <a class="button" href="#resources">Read the docs</a>
+              <a class="button button-primary" href="runtime/docs/">Runtime docs</a>
+              <a class="button" href="silk/docs/">Silk docs</a>
               <a class="button" href="https://github.com/oro-computer" target="_blank" rel="noreferrer">GitHub</a>
             </div>
           </div>
 
-          <div class="home-stage" aria-label="Oro project system overview">
-            <div class="prism-scene" aria-hidden="true">
-              <div class="prism-beam prism-beam-gold"></div>
-              <div class="prism-beam prism-beam-green"></div>
-              <div class="prism-beam prism-beam-purple"></div>
-              <div class="prism-core"></div>
-            </div>
-            <div class="stage-panel stage-panel-left">
-              <span class="stage-label">Language</span>
-              <strong>Silk</strong>
-              <p>Formal verification built into a general-purpose systems language.</p>
-            </div>
-            <div class="stage-panel stage-panel-right">
-              <span class="stage-label">Runtime</span>
-              <strong>Oro Runtime</strong>
-              <p>Native application delivery with web technology and platform APIs.</p>
-            </div>
-            <div class="stage-panel stage-panel-bottom">
-              <span class="stage-label">Operators</span>
-              <strong>Sage · slg · Virtnosis</strong>
-              <p>Terminal, search, and read-only security tooling for local workflows.</p>
-            </div>
-          </div>
-
-          <div class="signal-strip" aria-label="Oro working principles">
-            <div>
-              <span>01</span>
-              <strong>Local-first control</strong>
-              <p>Tools that keep operators in charge of the machine they are using.</p>
-            </div>
-            <div>
-              <span>02</span>
-              <strong>Explicit surfaces</strong>
-              <p>Documented CLIs, APIs, ABIs, specs, and machine-readable references.</p>
-            </div>
-            <div>
-              <span>03</span>
-              <strong>Edge posture</strong>
-              <p>Designed for degraded networks, constrained hosts, and durable operation.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section home-section" id="systems">
-        <div class="container container-wide">
-          <div class="section-heading section-heading-wide">
-            <div>
-              <span class="eyebrow">Systems</span>
-              <h2>Five projects, one software stack.</h2>
-            </div>
-            <p>
-              The site is organized as product-quality documentation, not a source mirror: every project includes a clear starting
-              point, operator guides, public APIs, and links for downstream automation.
-            </p>
-          </div>
-
-          <div class="project-mosaic mt-lg">
-            <article class="system-card system-card-featured system-runtime">
-              <div class="system-card-body">
-                <div class="system-card-topline">
-                  <span>Runtime</span>
-                  <span>Native apps</span>
-                </div>
-                <h3>Oro Runtime</h3>
-                <p>
-                  Build native applications with web technology, a project model, the <code>oroc</code> CLI, TOML configuration,
-                  and documented <code>oro:*</code> JavaScript APIs.
-                </p>
-                <div class="system-links">
-                  <a class="button button-primary" href="runtime/docs/">Runtime docs</a>
-                  <a class="button" href="runtime/docs/?p=guides/from-zero-to-first-run">First run</a>
-                  <a class="button button-quiet" href="https://github.com/oro-computer/runtime" target="_blank" rel="noreferrer">GitHub</a>
-                </div>
-              </div>
-              <div class="system-terminal" aria-label="Runtime example commands">
-                <div class="terminal-bar"><span></span><span></span><span></span></div>
-                <pre><code>oroc init field-console
-cd field-console
-oroc run .
-oroc build .</code></pre>
-              </div>
-            </article>
-
-            <article class="system-card system-card-featured system-silk">
-              <div class="system-card-body">
-                <div class="system-card-topline">
-                  <span>Language</span>
-                  <span>Verification</span>
-                </div>
-                <h3>Silk</h3>
-                <p>
-                  Silk is a high performance general purpose programming language with formal verification built in. Silk targets
-                  computer systems, mobile / tablet devices, WASM / WASI runtimes, and the web.
-                </p>
-                <div class="system-links">
-                  <a class="button button-primary" href="silk/docs/">Silk docs</a>
-                  <a class="button" href="silk/docs/?p=guides/formal-silk">Formal Silk</a>
-                  <a class="button button-quiet" href="silk/spec/2026/">Spec</a>
-                </div>
-              </div>
-              <div class="system-code" aria-label="Silk example">
-                <pre><code>theory Bounds {
-  axiom non_negative(n: int) -&gt; bool;
-}
-
-fn verify_window(size: int) -&gt; bool
-  #require size &gt;= 0
-{
-  return size &lt;= 4096;
-}</code></pre>
-              </div>
-            </article>
-
-            <article class="system-card system-compact">
-              <div class="system-card-topline"><span>CLI</span><span>Pager</span></div>
-              <h3>Sage</h3>
-              <p>Fast terminal paging for files, directories, stdin, remote content, syntax highlighting, and JavaScript plugins.</p>
-              <div class="system-links">
-                <a class="button button-primary" href="sage/docs/">Docs</a>
-                <a class="button button-quiet" href="sage/docs/?p=javascript/overview">API</a>
-              </div>
-            </article>
-
-            <article class="system-card system-compact">
-              <div class="system-card-topline"><span>CLI</span><span>Search</span></div>
-              <h3>slg</h3>
-              <p>A recursive line grep utility for regex, literal search, file listing, ignores, outputs, and parallel traversal.</p>
-              <div class="system-links">
-                <a class="button button-primary" href="slg/docs/">Docs</a>
-                <a class="button button-quiet" href="slg/docs/?p=cli/options-reference">Options</a>
-              </div>
-            </article>
-
-            <article class="system-card system-compact">
-              <div class="system-card-topline"><span>Security</span><span>libvirt</span></div>
-              <h3>Virtnosis</h3>
-              <p>Read-only security analysis and diagnosis for libvirt-exposed infrastructure, with bounded local transport.</p>
-              <div class="system-links">
-                <a class="button button-primary" href="virtnosis/docs/">Docs</a>
-                <a class="button button-quiet" href="virtnosis/docs/?p=guides/operator-guide">Operator guide</a>
-              </div>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="section home-section home-resources" id="resources" aria-label="Developer resources">
-        <div class="container container-wide">
-          <div class="section-heading section-heading-wide">
-            <div>
-              <span class="eyebrow">References</span>
-              <h2>Documentation built for humans and agents.</h2>
-            </div>
-            <p>
-              Start with the docs, or point an assistant at <a href="llms.txt"><code>llms.txt</code></a>. Each project also ships its
-              own LLM pack, search index, and public API reference where applicable.
-            </p>
-          </div>
-
-          <form class="hero-search resource-search mt-lg" role="search" method="get" aria-label="Search developer docs">
-            <input
-              class="hero-search-input"
-              type="search"
-              name="q"
-              inputmode="search"
-              autocomplete="off"
-              placeholder='Search docs (e.g. "regions", "copy_map", "oro:fs", or "slg output")'
-            />
-            <div class="hero-search-actions">
-              <button class="button button-quiet" type="submit" formaction="runtime/docs/">Runtime</button>
-              <button class="button button-quiet" type="submit" formaction="silk/docs/">Silk</button>
-              <button class="button button-quiet" type="submit" formaction="sage/docs/">Sage</button>
-              <button class="button button-quiet" type="submit" formaction="slg/docs/">slg</button>
-              <button class="button button-quiet" type="submit" formaction="virtnosis/docs/">Virtnosis</button>
-            </div>
-          </form>
-
-          <div class="resource-grid mt-lg">
-            <a class="resource-card" href="runtime/docs/?p=javascript/overview">
-              <span>Runtime</span>
-              <strong>JavaScript APIs</strong>
-              <p>Every public <code>oro:*</code> module, examples, config, CLI, and packaging workflow.</p>
-            </a>
-            <a class="resource-card" href="silk/docs/?p=std/overview">
-              <span>Silk</span>
-              <strong>Standard library</strong>
-              <p>Module-by-module references for stdlib functions, types, theories, examples, and considerations.</p>
-            </a>
-            <a class="resource-card" href="sage/docs/?p=javascript/overview">
-              <span>Sage</span>
-              <strong>Plugin API</strong>
-              <p>JavaScript extension points for a featureful terminal pager and document viewer.</p>
-            </a>
-            <a class="resource-card" href="virtnosis/docs/?p=reference/scan-analysis">
-              <span>Virtnosis</span>
-              <strong>Security analysis</strong>
-              <p>Read-only scan semantics, report structure, operator workflows, and deployment limits.</p>
-            </a>
-          </div>
         </div>
       </section>
 
       <section class="section home-section" id="contact">
         <div class="container container-wide">
           <div class="contact-panel">
-            <div>
-              <span class="eyebrow">Contact</span>
-              <h2>Work with Oro Computer.</h2>
-              <p>For research, product, runtime, and contributor coordination, use the dedicated inboxes below.</p>
-            </div>
+            <h2>Contact</h2>
             <div class="contact-links">
               <a href="mailto:info@oro.computer">info@oro.computer</a>
               <a href="mailto:contributors@oro.computer">contributors@oro.computer</a>
