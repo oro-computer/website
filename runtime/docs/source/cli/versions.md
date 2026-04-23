@@ -10,11 +10,11 @@ oroc versions [options] [<dependency>]
 
 ## Options
 
-```text
--f, --format=<format>   text | json (default: text)
--V, --verbose           verbose output
---log-file=<path>       mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `-f, --format=<format>` | text \| json (default: text) |
+| `-V, --verbose` | verbose output |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
 

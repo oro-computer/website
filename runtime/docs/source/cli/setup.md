@@ -10,11 +10,11 @@ oroc setup [options] [--platform=<platform>] [-y|--yes]
 
 ## Options
 
-```text
---platform=<platform>   android | ios | linux | windows (default: host)
--q, --quiet             hint for less log output
--y, --yes               answer yes to prompts
-```
+| Option | Description |
+| --- | --- |
+| `--platform=<platform>` | android \| ios \| linux \| windows (default: host) |
+| `-q, --quiet` | hint for less log output |
+| `-y, --yes` | answer yes to prompts |
 
 ## Notes
 

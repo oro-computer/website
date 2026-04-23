@@ -4,9 +4,11 @@ This page documents the public exit codes plus the most important user-visible d
 
 ## Exit status
 
-- `0` — match found, or `--files` completed successfully
-- `1` — no matches found
-- `2` — parse error, pattern error, runtime error, or output failure
+| Code | Meaning |
+| --- | --- |
+| `0` | Match found, or `--files` completed successfully. |
+| `1` | No matches found. |
+| `2` | Parse error, pattern error, runtime error, or output failure. |
 
 ## Parse-time diagnostics
 

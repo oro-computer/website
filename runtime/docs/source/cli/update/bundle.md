@@ -10,19 +10,19 @@ oroc update bundle [--input=<dir>] [--output=<bundle.tar>] [options]
 
 ## Options
 
-```text
---input=<dir>                  directory whose contents will be archived (default: project directory)
---output=<bundle.tar>          path to the tar archive to write (default: <build_name>-<version>.tar)
---manifest=<path>              optional manifest path to update with a new target for this bundle
---manifest-name=<name>         manifest filename to use when --manifest is not provided
---channel=<name>               update channel to associate with this bundle (default: update_channel or "stable")
---update-id=<id>               update id to associate with this bundle (default: <channel>-<version>)
---platform=<id>                platform identifier for the bundle target (default: source)
---arch=<id>                    architecture identifier for the bundle target (default: any)
---artifact-url=<url-or-path>   artifactUrl to record in the manifest target (default: bundle filename)
---hash-algorithm=<sha256|sha1> hash algorithm to use (default: sha256 when libsodium is available, otherwise sha1)
---log-file=<path>              mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--input=<dir>` | directory whose contents will be archived (default: project directory) |
+| `--output=<bundle.tar>` | path to the tar archive to write (default: <build_name>-<version>.tar) |
+| `--manifest=<path>` | optional manifest path to update with a new target for this bundle |
+| `--manifest-name=<name>` | manifest filename to use when --manifest is not provided |
+| `--channel=<name>` | update channel to associate with this bundle (default: update_channel or "stable") |
+| `--update-id=<id>` | update id to associate with this bundle (default: <channel>-<version>) |
+| `--platform=<id>` | platform identifier for the bundle target (default: source) |
+| `--arch=<id>` | architecture identifier for the bundle target (default: any) |
+| `--artifact-url=<url-or-path>` | artifactUrl to record in the manifest target (default: bundle filename) |
+| `--hash-algorithm=<sha256\|sha1>` | hash algorithm to use (default: sha256 when libsodium is available, otherwise sha1) |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
 

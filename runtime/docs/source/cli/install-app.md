@@ -10,19 +10,19 @@ oroc install-app [--platform=<platform>] [--device=<identifier>] [options]
 
 ## Options
 
-```text
--D, --debug             debug output
---device[=identifier]   device identifier (ECID/UDID/ID)
---platform=<platform>   android | ios (default: host)
---prod                  install production build
--V, --verbose           verbose output
-```
+| Option | Description |
+| --- | --- |
+| `-D, --debug` | debug output |
+| `--device[=identifier]` | device identifier (ECID/UDID/ID) |
+| `--platform=<platform>` | android \| ios (default: host) |
+| `--prod` | install production build |
+| `-V, --verbose` | verbose output |
 
 macOS only:
 
-```text
---target=<target>       install into '$target/Applications' (default: /)
-```
+| Option | Description |
+| --- | --- |
+| `--target=<target>` | install into '$target/Applications' (default: /) |
 
 ## Common errors
 

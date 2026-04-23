@@ -130,9 +130,9 @@ guessing around concurrent cache state.
 
 Environment:
 
-- `SILK_CACHE_AUTO_HEAL`
- - default: enabled
- - set to `0`, `false`, `off`, or `no` to disable
+| Variable | Default | Details |
+| --- | --- | --- |
+| `SILK_CACHE_AUTO_HEAL` | enabled | Set to `0`, `false`, `off`, or `no` to disable automatic healing. |
 
 ### Auto-Prune
 
@@ -140,9 +140,11 @@ Auto-prune is enabled by default for recognized managed entries.
 
 The default policy is:
 
-- maximum cache size: `2 GiB`
-- maximum cache age: `30d`
-- minimum entries to preserve by recency: `64`
+| Setting | Default |
+| --- | --- |
+| Maximum cache size | `2 GiB` |
+| Maximum cache age | `30d` |
+| Preserve by recency | `64` most-recently-used entries |
 
 When the cache exceeds the configured size cap, `silk` prunes the oldest
 recognized managed entries first, while still preserving the configured
@@ -151,21 +153,12 @@ limit are eligible for removal even when the cache is not over the size cap.
 
 Environment:
 
-- `SILK_CACHE_AUTO_PRUNE`
- - default: enabled
- - set to `0`, `false`, `off`, or `no` to disable
-- `SILK_CACHE_MAX_BYTES`
- - default: `2147483648` (`2 GiB`)
- - accepts raw bytes or `K` / `M` / `G` / `T` suffixes
- - `0` disables size-based pruning
-- `SILK_CACHE_MAX_AGE`
- - default: `30d`
- - accepts `s`, `m`, `h`, `d`, or `w` suffixes
- - `0` disables age-based pruning
-- `SILK_CACHE_KEEP_RECENT`
- - default: `64`
- - preserves at least this many most-recently-used recognized managed entries
- during pruning
+| Variable | Default | Details |
+| --- | --- | --- |
+| `SILK_CACHE_AUTO_PRUNE` | enabled | Set to `0`, `false`, `off`, or `no` to disable automatic pruning. |
+| `SILK_CACHE_MAX_BYTES` | `2147483648` (`2 GiB`) | Accepts raw bytes or `K` / `M` / `G` / `T` suffixes. Set to `0` to disable size-based pruning. |
+| `SILK_CACHE_MAX_AGE` | `30d` | Accepts `s`, `m`, `h`, `d`, or `w` suffixes. Set to `0` to disable age-based pruning. |
+| `SILK_CACHE_KEEP_RECENT` | `64` | Preserves at least this many most-recently-used recognized managed entries during pruning. |
 
 ## `silk cache` Command Model
 

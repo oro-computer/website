@@ -230,17 +230,21 @@ silk build uninstall -p /tmp/silk-prefix
 
 ## Environment
 
-- `PREFIX` — installation prefix used by `silk build install` / `silk build uninstall` when `-p/--prefix` is not provided (default: `/usr/local`).
-- `SILK_PACKAGE_PATH` — PATH-like list of package root directories used to resolve bare-specifier package imports (entries separated by `:` on POSIX). The compiler appends a system library root at `PREFIX/lib/silk` as the last search path entry when it exists.
-- `SILK_ELF_INTERP` — override the ELF `PT_INTERP` dynamic loader path used for `linux-x86_64` outputs when emitting dynamically-linked executables/shared libraries.
-- `SILK_Z3_LIB` — path to a dynamic Z3 library used by the Formal Silk verifier.
-- `SILK_VERIFY_JOBS` — override the number of worker threads used for Formal Silk verification (default: auto; capped at 8).
-- `SILK_CC` — host C compiler used by `silk cc` (also used when compiling `.c` inputs passed to `silk build`).
+| Variable | Details |
+| --- | --- |
+| `PREFIX` | installation prefix used by `silk build install` / `silk build uninstall` when `-p/--prefix` is not provided (default: `/usr/local`). |
+| `SILK_PACKAGE_PATH` | PATH-like list of package root directories used to resolve bare-specifier package imports (entries separated by `:` on POSIX). The compiler appends a system library root at `PREFIX/lib/silk` as the last search path entry when it exists. |
+| `SILK_ELF_INTERP` | override the ELF `PT_INTERP` dynamic loader path used for `linux-x86_64` outputs when emitting dynamically-linked executables/shared libraries. |
+| `SILK_Z3_LIB` | path to a dynamic Z3 library used by the Formal Silk verifier. |
+| `SILK_VERIFY_JOBS` | override the number of worker threads used for Formal Silk verification (default: auto; capped at 8). |
+| `SILK_CC` | host C compiler used by `silk cc` (also used when compiling `.c` inputs passed to `silk build`). |
 
 ## Exit status
 
-- `0` on success.
-- non-zero on error.
+| Status | Meaning |
+| --- | --- |
+| `0` | Success. |
+| non-zero | Error. |
 
 ## See Also
 

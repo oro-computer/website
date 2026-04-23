@@ -4,7 +4,7 @@ Virtnosis · LLMS Pack
 This file concatenates the full Virtnosis documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-03-24T17:00:15+00:00
+Generated: 2026-04-23T14:50:16+00:00
 
 How to link:
 - Docs: /virtnosis/docs/?p=<id>
@@ -1902,9 +1902,11 @@ falls back to the older framed raw-stdout mode for older agents.
 
 ## Exit status
 
-- `0` — success
-- `2` — CLI usage or argument error
-- `3` — connection, protocol, framing, or internal runtime failure
+| Code | Meaning |
+| --- | --- |
+| `0` | Success. |
+| `2` | CLI usage or argument error. |
+| `3` | Connection, protocol, framing, or internal runtime failure. |
 
 For `scan`, the command propagates the scan exit code.
 
@@ -1918,12 +1920,16 @@ vnactl scan --connect unix:///run/virtnosis/agent.sock --deep --confirm-xml
 
 ## Files
 
-- `/run/virtnosis/agent.sock`
-- `$XDG_RUNTIME_DIR/virtnosis/agent.sock`
+| Path | Purpose |
+| --- | --- |
+| `/run/virtnosis/agent.sock` | System-wide default agent socket. |
+| `$XDG_RUNTIME_DIR/virtnosis/agent.sock` | Per-user default agent socket when a runtime directory is available. |
 
 ## Environment
 
-- `XDG_RUNTIME_DIR`
+| Variable | Details |
+| --- | --- |
+| `XDG_RUNTIME_DIR` | Supplies the per-user runtime directory used when resolving the default agent socket path. |
 
 ## See also
 
@@ -2007,9 +2013,11 @@ metadata such as:
 
 ## Exit status
 
-- `0` — normal exit
-- `2` — CLI usage error
-- `3` — listener setup, permission, or runtime failure
+| Code | Meaning |
+| --- | --- |
+| `0` | Normal exit. |
+| `2` | CLI usage error. |
+| `3` | Listener setup, permission, or runtime failure. |
 
 ## Examples
 
@@ -2021,14 +2029,18 @@ XDG_RUNTIME_DIR=/run/user/1000 virtnosis-agent --verbose
 
 ## Files
 
-- `/run/virtnosis/agent.sock`
-- `$XDG_RUNTIME_DIR/virtnosis/agent.sock`
+| Path | Purpose |
+| --- | --- |
+| `/run/virtnosis/agent.sock` | System-wide default listener path. |
+| `$XDG_RUNTIME_DIR/virtnosis/agent.sock` | Per-user default listener path when a runtime directory is available. |
 
 ## Environment
 
-- `XDG_RUNTIME_DIR`
-- `LISTEN_PID`
-- `LISTEN_FDS`
+| Variable | Details |
+| --- | --- |
+| `XDG_RUNTIME_DIR` | Supplies the per-user runtime directory used when constructing the default listener path. |
+| `LISTEN_PID` | Socket-activation metadata used when inheriting listeners from `systemd`. |
+| `LISTEN_FDS` | Socket-activation metadata used when inheriting listeners from `systemd`. |
 
 ## See also
 

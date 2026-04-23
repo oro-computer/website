@@ -10,8 +10,8 @@ oroc init [<project-dir>]
 
 ## Options
 
-```text
--C, --config    only create the config file
--n, --name      project name
-```
+| Option | Description |
+| --- | --- |
+| `-C, --config` | only create the config file |
+| `-n, --name` | project name |
 

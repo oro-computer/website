@@ -10,13 +10,13 @@ oroc update validate [--manifest=<path>] [options]
 
 ## Options
 
-```text
---manifest=<path>       path to the manifest JSON file
---manifest-name=<name>  manifest filename to use when --manifest is not provided
---strict                enable additional consistency checks
---json                  print a machine-readable JSON result object
---log-file=<path>       mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--manifest=<path>` | path to the manifest JSON file |
+| `--manifest-name=<name>` | manifest filename to use when --manifest is not provided |
+| `--strict` | enable additional consistency checks |
+| `--json` | print a machine-readable JSON result object |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
 

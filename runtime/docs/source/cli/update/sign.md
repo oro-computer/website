@@ -10,15 +10,15 @@ oroc update sign [--manifest=<path>] (--keys=<file> | --private-key=<hex>) [opti
 
 ## Options
 
-```text
---manifest=<path>       path to the manifest JSON file to sign
---manifest-name=<name>  manifest filename to use when --manifest is not provided
---keys=<file>           JSON file containing a signing key ("privateKey" or "secretKey" field)
---private-key=<hex>     Ed25519 private key as a hex string
---key-id=<id>           optional key identifier to embed in manifest.sig (default: pk-1)
---out=<path>            output path for manifest.sig (default: <manifest-without-extension>.sig)
---log-file=<path>       mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--manifest=<path>` | path to the manifest JSON file to sign |
+| `--manifest-name=<name>` | manifest filename to use when --manifest is not provided |
+| `--keys=<file>` | JSON file containing a signing key ("privateKey" or "secretKey" field) |
+| `--private-key=<hex>` | Ed25519 private key as a hex string |
+| `--key-id=<id>` | optional key identifier to embed in manifest.sig (default: pk-1) |
+| `--out=<path>` | output path for manifest.sig (default: <manifest-without-extension>.sig) |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
 

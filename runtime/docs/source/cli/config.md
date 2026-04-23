@@ -10,14 +10,14 @@ oroc config [options] [<key-or-path>]
 
 ## Options
 
-```text
---config=<path>         use an explicit oro.toml/oro.ini file
---list                  list known configuration keys with current and default values
---key=<name>            print the current value for a specific key
---describe=<name>       print help and metadata for a specific key
--f, --format=<format>   print the full configuration as toml | ini | json
---strict                treat unknown or unset keys as errors (non-zero exit)
-```
+| Option | Description |
+| --- | --- |
+| `--config=<path>` | use an explicit oro.toml/oro.ini file |
+| `--list` | list known configuration keys with current and default values |
+| `--key=<name>` | print the current value for a specific key |
+| `--describe=<name>` | print help and metadata for a specific key |
+| `-f, --format=<format>` | print the full configuration as toml \| ini \| json |
+| `--strict` | treat unknown or unset keys as errors (non-zero exit) |
 
 ## Notes
 

@@ -10,11 +10,11 @@ oroc update keygen [options]
 
 ## Options
 
-```text
---out=<path>       write keypair JSON to a file instead of stdout
---key-id=<id>      optional key identifier to embed in the keypair (default: pk-1)
---log-file=<path>  mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--out=<path>` | write keypair JSON to a file instead of stdout |
+| `--key-id=<id>` | optional key identifier to embed in the keypair (default: pk-1) |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
 

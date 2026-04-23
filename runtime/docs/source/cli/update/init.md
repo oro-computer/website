@@ -10,11 +10,11 @@ oroc update init [options]
 
 ## Options
 
-```text
---config=<path>         use an explicit oro.toml/oro.ini file when deriving defaults
---manifest-name=<name>  filename for the manifest JSON (default: manifest.json or ORO_UPDATE_MANIFEST_FILENAME)
---log-file=<path>       mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--config=<path>` | use an explicit oro.toml/oro.ini file when deriving defaults |
+| `--manifest-name=<name>` | filename for the manifest JSON (default: manifest.json or ORO_UPDATE_MANIFEST_FILENAME) |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
 

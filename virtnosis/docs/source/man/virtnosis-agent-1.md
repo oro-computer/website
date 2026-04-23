@@ -67,9 +67,11 @@ metadata such as:
 
 ## Exit status
 
-- `0` — normal exit
-- `2` — CLI usage error
-- `3` — listener setup, permission, or runtime failure
+| Code | Meaning |
+| --- | --- |
+| `0` | Normal exit. |
+| `2` | CLI usage error. |
+| `3` | Listener setup, permission, or runtime failure. |
 
 ## Examples
 
@@ -81,14 +83,18 @@ XDG_RUNTIME_DIR=/run/user/1000 virtnosis-agent --verbose
 
 ## Files
 
-- `/run/virtnosis/agent.sock`
-- `$XDG_RUNTIME_DIR/virtnosis/agent.sock`
+| Path | Purpose |
+| --- | --- |
+| `/run/virtnosis/agent.sock` | System-wide default listener path. |
+| `$XDG_RUNTIME_DIR/virtnosis/agent.sock` | Per-user default listener path when a runtime directory is available. |
 
 ## Environment
 
-- `XDG_RUNTIME_DIR`
-- `LISTEN_PID`
-- `LISTEN_FDS`
+| Variable | Details |
+| --- | --- |
+| `XDG_RUNTIME_DIR` | Supplies the per-user runtime directory used when constructing the default listener path. |
+| `LISTEN_PID` | Socket-activation metadata used when inheriting listeners from `systemd`. |
+| `LISTEN_FDS` | Socket-activation metadata used when inheriting listeners from `systemd`. |
 
 ## See also
 

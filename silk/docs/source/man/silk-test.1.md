@@ -64,18 +64,22 @@ silk test --package . --filter url
 
 ## Environment
 
-- `PREFIX` — installation prefix used for the system package search root at `PREFIX/lib/silk` (searched last when it exists). Default: `/usr/local`.
-- `SILK_PACKAGE_PATH` — primary package search path for bare-specifier imports (entries separated by `:` on POSIX, `;` on Windows). The compiler appends `PREFIX/lib/silk` as the last search path entry when it exists.
-- `SILK_Z3_LIB` — path to a dynamic Z3 library used by the Formal Silk verifier.
-- `SILK_VERIFY_JOBS` — override the number of worker threads used for Formal Silk verification (default: auto; capped at 8).
-- `SILK_TEST_TIMEOUT_MS` — per-top-level-test process timeout in milliseconds (default: `30000`).
-- `SILK_TEST_JOBS` — override the number of test processes run in parallel (default: `1`; `0` means auto; capped at 8). Overridden by `--jobs`.
-- `SILK_TEST_MAX_OUTPUT_BYTES` — maximum bytes of stdout/stderr captured per test process for diagnostics (default: `1048576`). Output beyond this limit is truncated.
+| Variable | Details |
+| --- | --- |
+| `PREFIX` | installation prefix used for the system package search root at `PREFIX/lib/silk` (searched last when it exists). Default: `/usr/local`. |
+| `SILK_PACKAGE_PATH` | primary package search path for bare-specifier imports (entries separated by `:` on POSIX, `;` on Windows). The compiler appends `PREFIX/lib/silk` as the last search path entry when it exists. |
+| `SILK_Z3_LIB` | path to a dynamic Z3 library used by the Formal Silk verifier. |
+| `SILK_VERIFY_JOBS` | override the number of worker threads used for Formal Silk verification (default: auto; capped at 8). |
+| `SILK_TEST_TIMEOUT_MS` | per-top-level-test process timeout in milliseconds (default: `30000`). |
+| `SILK_TEST_JOBS` | override the number of test processes run in parallel (default: `1`; `0` means auto; capped at 8). Overridden by `--jobs`. |
+| `SILK_TEST_MAX_OUTPUT_BYTES` | maximum bytes of stdout/stderr captured per test process for diagnostics (default: `1048576`). Output beyond this limit is truncated. |
 
 ## Exit status
 
-- `0` when all tests pass.
-- non-zero when any test fails or the module set is invalid.
+| Status | Meaning |
+| --- | --- |
+| `0` | All tests passed. |
+| non-zero | At least one test failed, or the module set is invalid. |
 
 ## See Also
 

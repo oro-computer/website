@@ -101,9 +101,11 @@ Typical workflow:
 
 ## Environment
 
-- `MANPAGER` / `PAGER` — controls the pager used to display the rendered output when the system `man` viewer is unavailable or cannot open the generated local manpage on the current host. When stdout is not a TTY, `silk man <query>` writes the resolved roff page to stdout instead of invoking the interactive viewer.
-- `PREFIX` — installation prefix used for the system package search root at `PREFIX/lib/silk` (searched last when it exists). Default: `/usr/local`.
-- `SILK_PACKAGE_PATH` — primary package search path used to resolve non-`std::` queries when no package manifest is selected or discoverable (entries separated by `:` on POSIX, `;` on Windows). The compiler appends `PREFIX/lib/silk` as the last search path entry when it exists.
+| Variable | Details |
+| --- | --- |
+| `MANPAGER` / `PAGER` | controls the pager used to display the rendered output when the system `man` viewer is unavailable or cannot open the generated local manpage on the current host. When stdout is not a TTY, `silk man <query>` writes the resolved roff page to stdout instead of invoking the interactive viewer. |
+| `PREFIX` | installation prefix used for the system package search root at `PREFIX/lib/silk` (searched last when it exists). Default: `/usr/local`. |
+| `SILK_PACKAGE_PATH` | primary package search path used to resolve non-`std::` queries when no package manifest is selected or discoverable (entries separated by `:` on POSIX, `;` on Windows). The compiler appends `PREFIX/lib/silk` as the last search path entry when it exists. |
 
 ## Examples
 
@@ -159,8 +161,10 @@ silk doc --man std::fs -o std_fs.3
 
 ## Exit status
 
-- `0` on success.
-- non-zero on error (unknown query, parse errors, or pager failures).
+| Status | Meaning |
+| --- | --- |
+| `0` | Success. |
+| non-zero | Error, including unknown query, parse failure, or pager failure. |
 
 ## See Also
 

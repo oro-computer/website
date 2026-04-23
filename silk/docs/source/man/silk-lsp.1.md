@@ -42,7 +42,9 @@ The LSP behavior and supported requests are documented at [lsp silk](?p=compiler
 
 ## Environment
 
-- `SILK_STD_ROOT` — default stdlib root (used when `--std-root` is not provided).
+| Variable | Details |
+| --- | --- |
+| `SILK_STD_ROOT` | default stdlib root (used when `--std-root` is not provided). |
 
 ## See Also
 

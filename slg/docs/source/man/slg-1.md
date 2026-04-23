@@ -105,13 +105,17 @@ Use `--` to end option parsing.
 
 ## Exit status
 
-- `0` — match found, or `--files` completed successfully
-- `1` — no matches found
-- `2` — parse error, pattern error, runtime error, or output failure
+| Code | Meaning |
+| --- | --- |
+| `0` | Match found, or `--files` completed successfully. |
+| `1` | No matches found. |
+| `2` | Parse error, pattern error, runtime error, or output failure. |
 
 ## Environment
 
-- `NO_COLOR` — disables color in `--color auto` mode
+| Variable | Details |
+| --- | --- |
+| `NO_COLOR` | Disables color in `--color auto` mode. |
 
 `slg` does not currently read a runtime config file.
 

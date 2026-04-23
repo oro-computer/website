@@ -502,47 +502,27 @@ For the implementation, the supported options are:
 
 See also: [`silk-env(1)`](?p=man/silk-env.1) for a complete list of environment variables printed by `silk env`.
 
-- `SILK_STD_ROOT` — path to the stdlib root directory used to resolve
- `import std::...;` declarations when `--std`/`--std-root` is not provided. When neither
- is set (and `--nostd` is not set), `silk` searches for:
- - a `std/` directory in the current working directory (development default), otherwise
- - `../share/silk/std` relative to the `silk` executable (installed default).
-- `SILK_WORK_DIR` — base directory for compiler-generated scratch/debug artifacts (defaults to `.silk`).
- - For example, the managed cache root is `$SILK_WORK_DIR/cache`, Formal Silk Z3 dumps are written under `$SILK_WORK_DIR/z3`, and `silk man` may write temporary roff output under `$SILK_WORK_DIR/man`.
-- `SILK_CACHE_AUTO_HEAL` — enable/disable built-in healing of recognized managed cache entries during normal builds (default: enabled).
-- `SILK_CACHE_AUTO_PRUNE` — enable/disable built-in pruning of recognized managed cache entries during normal builds (default: enabled).
-- `SILK_CACHE_MAX_BYTES` — maximum size of recognized managed cache entries before size-based pruning runs (default: `2147483648`, or `2 GiB`; `0` disables size pruning).
-- `SILK_CACHE_MAX_AGE` — maximum age of recognized managed cache entries before age-based pruning runs (default: `30d`; `0` disables age pruning).
-- `SILK_CACHE_KEEP_RECENT` — preserve at least this many most-recently-used recognized managed cache entries during pruning (default: `64`).
-- `SILK_STD_LIB` — path to a target-specific stdlib static archive (`libsilk_std.a`).
- When present, supported executable builds treat auto-loaded `std::...` modules as
- external and resolve their exported functions from this archive.
-- `SILK_GUIDE_DB` — override the installed guide database path used by
- `silk guide` when `--db <path>` is not provided.
-- `SILK_GUIDE_PRINTER` — override the source printer used by `silk guide --show`
- when `--printer <cmd>` is not provided.
-- `PREFIX` — installation prefix used for:
- - the system package search root at `PREFIX/lib/silk` (searched last when it exists), and
- - `silk build install` / `silk build uninstall` when `-p/--prefix` is not provided.
- Default: `/usr/local`.
-- `SILK_PACKAGE_PATH` — PATH-like list of package root directories used to resolve
- bare-specifier package imports (non-`std::`) in file-list workflows (when `--package`
- is not used).
- - When `SILK_PACKAGE_PATH` is set, it is the primary search path (entries separated by `:` on POSIX, `;` on Windows).
- - When `SILK_PACKAGE_PATH` is not set, `silk` uses a small default set:
- - `./packages` when it exists (development convenience),
- - `../share/silk/packages` relative to the `silk` executable (installed layout),
- - `$HOME/.local/share/silk/packages` when it exists (user-local installs).
- - Finally, `silk` appends a system library root at `PREFIX/lib/silk` as the last search path entry when it exists.
- - A package like `my_api::core` maps to the candidate manifest
- `<root>/my_api/core/silk.toml` (where `::` maps to `/`).
-- `SILK_Z3_LIB` — path to a dynamic Z3 library used by the Formal Silk verifier. When `--z3-lib` is not provided, the verifier will use this value when set.
-- `SILK_VERIFY_JOBS` — override the number of worker threads used for Formal Silk verification (default: auto; capped at 8).
-- `SILK_TEST_TIMEOUT_MS` — per-top-level-test process timeout in milliseconds (default: `30000`).
-- `SILK_TEST_JOBS` — override the number of test processes run in parallel (default: `1`; `0` means auto; capped at 8). Overridden by `silk test --jobs`.
-- `SILK_TEST_MAX_OUTPUT_BYTES` — maximum bytes of stdout/stderr captured per test process for diagnostics (default: `1048576`). Output beyond this limit is truncated.
-- `SILK_CC` — the host C compiler executable used by `silk cc` (defaults to `cc` when unset).
-- `SILK_ELF_INTERP` — override the ELF `PT_INTERP` dynamic loader path used for `linux-x86_64` outputs when emitting dynamically-linked executables/shared libraries.
+| Variable | Details |
+| --- | --- |
+| `SILK_STD_ROOT` | path to the stdlib root directory used to resolve `import std::...;` declarations when `--std`/`--std-root` is not provided. When neither is set (and `--nostd` is not set), `silk` searches for:<br>• a `std/` directory in the current working directory (development default), otherwise<br>• `../share/silk/std` relative to the `silk` executable (installed default). |
+| `SILK_WORK_DIR` | base directory for compiler-generated scratch/debug artifacts (defaults to `.silk`).<br>• For example, the managed cache root is `$SILK_WORK_DIR/cache`, Formal Silk Z3 dumps are written under `$SILK_WORK_DIR/z3`, and `silk man` may write temporary roff output under `$SILK_WORK_DIR/man`. |
+| `SILK_CACHE_AUTO_HEAL` | enable/disable built-in healing of recognized managed cache entries during normal builds (default: enabled). |
+| `SILK_CACHE_AUTO_PRUNE` | enable/disable built-in pruning of recognized managed cache entries during normal builds (default: enabled). |
+| `SILK_CACHE_MAX_BYTES` | maximum size of recognized managed cache entries before size-based pruning runs (default: `2147483648`, or `2 GiB`; `0` disables size pruning). |
+| `SILK_CACHE_MAX_AGE` | maximum age of recognized managed cache entries before age-based pruning runs (default: `30d`; `0` disables age pruning). |
+| `SILK_CACHE_KEEP_RECENT` | preserve at least this many most-recently-used recognized managed cache entries during pruning (default: `64`). |
+| `SILK_STD_LIB` | path to a target-specific stdlib static archive (`libsilk_std.a`). When present, supported executable builds treat auto-loaded `std::...` modules as external and resolve their exported functions from this archive. |
+| `SILK_GUIDE_DB` | override the installed guide database path used by `silk guide` when `--db <path>` is not provided. |
+| `SILK_GUIDE_PRINTER` | override the source printer used by `silk guide --show` when `--printer <cmd>` is not provided. |
+| `PREFIX` | installation prefix used for:<br>• the system package search root at `PREFIX/lib/silk` (searched last when it exists), and<br>• `silk build install` / `silk build uninstall` when `-p/--prefix` is not provided. Default: `/usr/local`. |
+| `SILK_PACKAGE_PATH` | PATH-like list of package root directories used to resolve bare-specifier package imports (non-`std::`) in file-list workflows (when `--package` is not used).<br>• When `SILK_PACKAGE_PATH` is set, it is the primary search path (entries separated by `:` on POSIX, `;` on Windows).<br>• When `SILK_PACKAGE_PATH` is not set, `silk` uses a small default set:<br>• `./packages` when it exists (development convenience),<br>• `../share/silk/packages` relative to the `silk` executable (installed layout),<br>• `$HOME/.local/share/silk/packages` when it exists (user-local installs).<br>• Finally, `silk` appends a system library root at `PREFIX/lib/silk` as the last search path entry when it exists.<br>• A package like `my_api::core` maps to the candidate manifest `<root>/my_api/core/silk.toml` (where `::` maps to `/`). |
+| `SILK_Z3_LIB` | path to a dynamic Z3 library used by the Formal Silk verifier. When `--z3-lib` is not provided, the verifier will use this value when set. |
+| `SILK_VERIFY_JOBS` | override the number of worker threads used for Formal Silk verification (default: auto; capped at 8). |
+| `SILK_TEST_TIMEOUT_MS` | per-top-level-test process timeout in milliseconds (default: `30000`). |
+| `SILK_TEST_JOBS` | override the number of test processes run in parallel (default: `1`; `0` means auto; capped at 8). Overridden by `silk test --jobs`. |
+| `SILK_TEST_MAX_OUTPUT_BYTES` | maximum bytes of stdout/stderr captured per test process for diagnostics (default: `1048576`). Output beyond this limit is truncated. |
+| `SILK_CC` | the host C compiler executable used by `silk cc` (defaults to `cc` when unset). |
+| `SILK_ELF_INTERP` | override the ELF `PT_INTERP` dynamic loader path used for `linux-x86_64` outputs when emitting dynamically-linked executables/shared libraries. |
 
 ## See Also
 

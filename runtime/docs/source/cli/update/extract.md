@@ -10,11 +10,11 @@ oroc update extract --bundle=<bundle.tar> --dest=<dir> [options]
 
 ## Options
 
-```text
---bundle=<bundle.tar>  path to the tar archive to extract
---dest=<dir>           destination directory to extract files into (created if missing)
---log-file=<path>      mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--bundle=<bundle.tar>` | path to the tar archive to extract |
+| `--dest=<dir>` | destination directory to extract files into (created if missing) |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
 

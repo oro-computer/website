@@ -10,15 +10,15 @@ oroc update server [options]
 
 ## Options
 
-```text
---root=<dir>           directory containing manifest trees and artifacts to serve
---host=<host>          interface to bind (default: 0.0.0.0)
---port=<port>          TCP/UDP port to bind (default: 8080)
---manifest-name=<name> manifest filename to look up under each appId (default: manifest.json or ORO_UPDATE_MANIFEST_FILENAME)
---tcp                  run in TCP mode (binary OUP CHECK/RESPONSE)
---udp                  run in UDP mode (binary OUP CHECK/RESPONSE)
---log-file=<path>      mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--root=<dir>` | directory containing manifest trees and artifacts to serve |
+| `--host=<host>` | interface to bind (default: 0.0.0.0) |
+| `--port=<port>` | TCP/UDP port to bind (default: 8080) |
+| `--manifest-name=<name>` | manifest filename to look up under each appId (default: manifest.json or ORO_UPDATE_MANIFEST_FILENAME) |
+| `--tcp` | run in TCP mode (binary OUP CHECK/RESPONSE) |
+| `--udp` | run in UDP mode (binary OUP CHECK/RESPONSE) |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
 

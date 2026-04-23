@@ -745,16 +745,12 @@ covers the full std surface.
 
 ## Environment
 
-- `SILK_STD_ROOT` — path to the stdlib root directory used to resolve
- `import std::...;` declarations when the embedder has not called
- `silk_compiler_set_std_root`.
-- `SILK_STD_LIB` — path to a target-specific stdlib static archive
- (`libsilk_std.a`). When present, supported executable builds treat auto-loaded
- `std::...` modules as external and resolve their exported functions from this
- archive.
-- `SILK_Z3_LIB` — path to a dynamic Z3 library used by the Formal Silk verifier.
- When set, it overrides the default vendored Z3 linkage for verification.
-- `SILK_VERIFY_JOBS` — override the number of worker threads used for Formal Silk verification (default: auto; capped at 8).
+| Variable | Details |
+| --- | --- |
+| `SILK_STD_ROOT` | path to the stdlib root directory used to resolve `import std::...;` declarations when the embedder has not called `silk_compiler_set_std_root`. |
+| `SILK_STD_LIB` | path to a target-specific stdlib static archive (`libsilk_std.a`). When present, supported executable builds treat auto-loaded `std::...` modules as external and resolve their exported functions from this archive. |
+| `SILK_Z3_LIB` | path to a dynamic Z3 library used by the Formal Silk verifier. When set, it overrides the default vendored Z3 linkage for verification. |
+| `SILK_VERIFY_JOBS` | override the number of worker threads used for Formal Silk verification (default: auto; capped at 8). |
 
 ## See Also
 

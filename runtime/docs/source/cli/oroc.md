@@ -28,29 +28,29 @@ oroc [SUBCOMMAND] -h
 
 ## Global options
 
-```text
--h, --help            print help
---prefix              print install path
--v, --version         print program version
--q, --quiet           hint for less log output
--V, --verbose         verbose output (can be global)
--D, --debug           debug output (can be global)
---no-color            disable colored log output
---json                structured JSON logs on stdout
---log-file=<path>     mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `-h, --help` | print help |
+| `--prefix` | print install path |
+| `-v, --version` | print program version |
+| `-q, --quiet` | hint for less log output |
+| `-V, --verbose` | verbose output (can be global) |
+| `-D, --debug` | debug output (can be global) |
+| `--no-color` | disable colored log output |
+| `--json` | structured JSON logs on stdout |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Logging and debug environment
 
-```text
-ORO_DEBUG             enable debug mode (like -D)
-ORO_VERBOSE           enable verbose logs (like -V)
-ORO_LOG_NO_COLOR      disable colored log output
-ORO_LOG_JSON          enable structured JSON logs on stdout
-ORO_LOG_FILE          mirror logs to a JSON file
-ORO_ALLOW_EXEC        allow external exec during builds
-ORO_ENABLE_SANITIZERS enable ASan/UBSan on desktop builds
-```
+| Variable | Meaning |
+| --- | --- |
+| `ORO_DEBUG` | enable debug mode (like `-D`) |
+| `ORO_VERBOSE` | enable verbose logs (like `-V`) |
+| `ORO_LOG_NO_COLOR` | disable colored log output |
+| `ORO_LOG_JSON` | enable structured JSON logs on stdout |
+| `ORO_LOG_FILE` | mirror logs to a JSON file |
+| `ORO_ALLOW_EXEC` | allow external exec during builds |
+| `ORO_ENABLE_SANITIZERS` | enable ASan/UBSan on desktop builds |
 
 ## Config discovery (project vs source)
 

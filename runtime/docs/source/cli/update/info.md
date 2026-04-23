@@ -10,28 +10,28 @@ oroc update info [--transport=<http|tcp|udp>] [options]
 
 ## Options
 
-```text
---config=<path>            use an explicit oro.toml/oro.ini file for local CHECK request defaults
---transport=<http|tcp|udp> transport to use (default: http)
---http                     shorthand for --transport=http
---tcp                      shorthand for --transport=tcp
---udp                      shorthand for --transport=udp
---follow-manifest          fetch and inspect the manifest referenced by a server RESPONSE
---timeout-ms=<ms>          optional timeout for TCP/UDP CHECK requests (0 = no timeout)
---manifest-url=<url>       HTTP(S) URL of a statically hosted manifest.json
---signature-url=<url>      HTTP(S) URL of the corresponding signature JSON
---keys=<file>              JSON file containing a public key ("publicKey" or "key" field)
---public-key=<hex>         Ed25519 public key as a hex string
---host=<host>              host for HTTP/TCP/UDP update servers (default: 127.0.0.1)
---port=<port>              port for HTTP/TCP/UDP update servers (default: 8080)
---app-id=<id>              application identifier to send in CHECK messages
---channel=<name>           update channel hint
---current-version=<version> current application version hint
---runtime-version=<version> runtime version hint advertised in CHECK
---platform=<id>            platform hint advertised in CHECK
---arch=<id>                architecture hint advertised in CHECK
---log-file=<path>          mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--config=<path>` | use an explicit oro.toml/oro.ini file for local CHECK request defaults |
+| `--transport=<http\|tcp\|udp>` | transport to use (default: http) |
+| `--http` | shorthand for --transport=http |
+| `--tcp` | shorthand for --transport=tcp |
+| `--udp` | shorthand for --transport=udp |
+| `--follow-manifest` | fetch and inspect the manifest referenced by a server RESPONSE |
+| `--timeout-ms=<ms>` | optional timeout for TCP/UDP CHECK requests (0 = no timeout) |
+| `--manifest-url=<url>` | HTTP(S) URL of a statically hosted manifest.json |
+| `--signature-url=<url>` | HTTP(S) URL of the corresponding signature JSON |
+| `--keys=<file>` | JSON file containing a public key ("publicKey" or "key" field) |
+| `--public-key=<hex>` | Ed25519 public key as a hex string |
+| `--host=<host>` | host for HTTP/TCP/UDP update servers (default: 127.0.0.1) |
+| `--port=<port>` | port for HTTP/TCP/UDP update servers (default: 8080) |
+| `--app-id=<id>` | application identifier to send in CHECK messages |
+| `--channel=<name>` | update channel hint |
+| `--current-version=<version>` | current application version hint |
+| `--runtime-version=<version>` | runtime version hint advertised in CHECK |
+| `--platform=<id>` | platform hint advertised in CHECK |
+| `--arch=<id>` | architecture hint advertised in CHECK |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
 

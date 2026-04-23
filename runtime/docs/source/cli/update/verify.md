@@ -10,14 +10,14 @@ oroc update verify [--manifest=<path>] [--signature=<path>] (--keys=<file> | --p
 
 ## Options
 
-```text
---manifest=<path>       path to the manifest JSON file
---manifest-name=<name>  manifest filename to use when --manifest is not provided
---signature=<path>      path to the manifest.sig JSON file (default: <manifest>.sig)
---keys=<file>           JSON file containing a public key ("publicKey" or "key" field)
---public-key=<hex>      Ed25519 public key as a hex string
---log-file=<path>       mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--manifest=<path>` | path to the manifest JSON file |
+| `--manifest-name=<name>` | manifest filename to use when --manifest is not provided |
+| `--signature=<path>` | path to the manifest.sig JSON file (default: <manifest>.sig) |
+| `--keys=<file>` | JSON file containing a public key ("publicKey" or "key" field) |
+| `--public-key=<hex>` | Ed25519 public key as a hex string |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
 

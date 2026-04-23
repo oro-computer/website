@@ -11,12 +11,12 @@ oroc version <new-version | release> [options]
 
 ## Options
 
-```text
---config=<path>         explicit oro.toml/oro.ini to update
---preid=<id>            pre-release tag for pre* bumps (default: rc)
--V, --verbose           verbose output
---log-file=<path>       mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--config=<path>` | explicit oro.toml/oro.ini to update |
+| `--preid=<id>` | pre-release tag for pre* bumps (default: rc) |
+| `-V, --verbose` | verbose output |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
 

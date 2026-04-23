@@ -4,7 +4,7 @@ Oro Runtime · LLMS Pack
 This file concatenates the full Oro Runtime documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-03-25T00:52:07+00:00
+Generated: 2026-04-23T14:50:15+00:00
 
 How to link:
 - Docs: /runtime/docs/?p=<id>
@@ -2630,29 +2630,29 @@ oroc [SUBCOMMAND] -h
 
 ## Global options
 
-```text
--h, --help            print help
---prefix              print install path
--v, --version         print program version
--q, --quiet           hint for less log output
--V, --verbose         verbose output (can be global)
--D, --debug           debug output (can be global)
---no-color            disable colored log output
---json                structured JSON logs on stdout
---log-file=<path>     mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `-h, --help` | print help |
+| `--prefix` | print install path |
+| `-v, --version` | print program version |
+| `-q, --quiet` | hint for less log output |
+| `-V, --verbose` | verbose output (can be global) |
+| `-D, --debug` | debug output (can be global) |
+| `--no-color` | disable colored log output |
+| `--json` | structured JSON logs on stdout |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Logging and debug environment
 
-```text
-ORO_DEBUG             enable debug mode (like -D)
-ORO_VERBOSE           enable verbose logs (like -V)
-ORO_LOG_NO_COLOR      disable colored log output
-ORO_LOG_JSON          enable structured JSON logs on stdout
-ORO_LOG_FILE          mirror logs to a JSON file
-ORO_ALLOW_EXEC        allow external exec during builds
-ORO_ENABLE_SANITIZERS enable ASan/UBSan on desktop builds
-```
+| Variable | Meaning |
+| --- | --- |
+| `ORO_DEBUG` | enable debug mode (like `-D`) |
+| `ORO_VERBOSE` | enable verbose logs (like `-V`) |
+| `ORO_LOG_NO_COLOR` | disable colored log output |
+| `ORO_LOG_JSON` | enable structured JSON logs on stdout |
+| `ORO_LOG_FILE` | mirror logs to a JSON file |
+| `ORO_ALLOW_EXEC` | allow external exec during builds |
+| `ORO_ENABLE_SANITIZERS` | enable ASan/UBSan on desktop builds |
 
 ## Config discovery (project vs source)
 
@@ -2679,10 +2679,10 @@ oroc help [query...] [--json]
 
 ## Options
 
-```text
---json             emit structured search results for automation and editor tooling
---log-file=<path>  mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--json` | emit structured search results for automation and editor tooling |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Notes
 
@@ -2734,28 +2734,28 @@ oroc run [options] [<project-or-source>]
 
 ## Options
 
-```text
---headless              run without a visible window
---platform=<platform>   android | android-emulator | ios | ios-simulator (default: host)
---config=<path>         use an explicit oro.toml/oro.ini file
---host=<host>           load index.html from host (default: 80 when port omitted)
---port=<port>           load index.html from port (default: localhost when host omitted)
---prod                  production build (disables inspector/debugging)
---test[=path]           test mode (optionally import a test file)
--D, --debug             debug mode
--E, --env               add environment variables
--V, --verbose           verbose output
---allow-exec            allow external command execution during builds
---tls-keylog=<path>     write TLS key log lines (OpenSSL provider)
---log-file=<path>       mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--headless` | run without a visible window |
+| `--platform=<platform>` | android \| android-emulator \| ios \| ios-simulator (default: host) |
+| `--config=<path>` | use an explicit oro.toml/oro.ini file |
+| `--host=<host>` | load index.html from host (default: 80 when port omitted) |
+| `--port=<port>` | load index.html from port (default: localhost when host omitted) |
+| `--prod` | production build (disables inspector/debugging) |
+| `--test[=path]` | test mode (optionally import a test file) |
+| `-D, --debug` | debug mode |
+| `-E, --env` | add environment variables |
+| `-V, --verbose` | verbose output |
+| `--allow-exec` | allow external command execution during builds |
+| `--tls-keylog=<path>` | write TLS key log lines (OpenSSL provider) |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Environment
 
-```text
-ORO_DEBUG               enable debug mode (like -D)
-ORO_VERBOSE             enable verbose logs (like -V)
-```
+| Variable | Meaning |
+| --- | --- |
+| `ORO_DEBUG` | enable debug mode (like -D) |
+| `ORO_VERBOSE` | enable verbose logs (like -V) |
 
 ## Common errors
 
@@ -2782,33 +2782,33 @@ oroc build [options] [<project-or-source>]
 
 ## Options
 
-```text
---platform=<platform>   android | android-emulator | ios | ios-simulator (default: host)
---config=<path>         use an explicit oro.toml/oro.ini file
---copy=<source:dest>    extra copy mapping (like [build] copy; can be repeated)
---host=<host>           load index.html from host (default: 80 when port omitted)
---port=<port>           load index.html from port (default: localhost when host omitted)
---test[=path]           test mode (optionally import a test file)
---headless              build to run without a visible window
---prod                  production build (disables inspector/debugging)
--D, --debug             debug mode
--E, --env               add environment variables
--o, --only-build        only run the build step
--p, --package           package the app for distribution
--r, --run               run after building
--w, --watch             watch for changes to rerun build
---allow-exec            allow external command execution during builds
---sanitizers            enable ASan/UBSan on desktop core builds
---tls-keylog=<path>     write TLS key log lines (OpenSSL provider)
---log-file=<path>       mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--platform=<platform>` | android \| android-emulator \| ios \| ios-simulator (default: host) |
+| `--config=<path>` | use an explicit oro.toml/oro.ini file |
+| `--copy=<source:dest>` | extra copy mapping (like [build] copy; can be repeated) |
+| `--host=<host>` | load index.html from host (default: 80 when port omitted) |
+| `--port=<port>` | load index.html from port (default: localhost when host omitted) |
+| `--test[=path]` | test mode (optionally import a test file) |
+| `--headless` | build to run without a visible window |
+| `--prod` | production build (disables inspector/debugging) |
+| `-D, --debug` | debug mode |
+| `-E, --env` | add environment variables |
+| `-o, --only-build` | only run the build step |
+| `-p, --package` | package the app for distribution |
+| `-r, --run` | run after building |
+| `-w, --watch` | watch for changes to rerun build |
+| `--allow-exec` | allow external command execution during builds |
+| `--sanitizers` | enable ASan/UBSan on desktop core builds |
+| `--tls-keylog=<path>` | write TLS key log lines (OpenSSL provider) |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Environment
 
-```text
-ORO_ALLOW_EXEC          allow external exec during builds
-ORO_ENABLE_SANITIZERS   enable ASan/UBSan on desktop builds
-```
+| Variable | Meaning |
+| --- | --- |
+| `ORO_ALLOW_EXEC` | allow external exec during builds |
+| `ORO_ENABLE_SANITIZERS` | enable ASan/UBSan on desktop builds |
 
 ## Common errors
 
@@ -2820,11 +2820,11 @@ ORO_ENABLE_SANITIZERS   enable ASan/UBSan on desktop builds
 
 ### Linux
 
-```text
--f, --package-format=<format>   deb | rpm | zip | aur (default: deb)
---sign                          sign Linux packages with GPG (writes .asc next to the artifact)
---sign-key=<id>                 optional GPG key ID/fingerprint for --sign
-```
+| Option | Description |
+| --- | --- |
+| `-f, --package-format=<format>` | deb \| rpm \| zip \| aur (default: deb) |
+| `--sign` | sign Linux packages with GPG (writes .asc next to the artifact) |
+| `--sign-key=<id>` | optional GPG key ID/fingerprint for --sign |
 
 Dependencies:
 
@@ -2833,11 +2833,11 @@ Dependencies:
 
 ### macOS
 
-```text
--c, --codesign                  code sign the app with codesign
--n, --notarize                  notarize with notarytool
--f, --package-format=<format>   zip (default) | pkg
-```
+| Option | Description |
+| --- | --- |
+| `-c, --codesign` | code sign the app with codesign |
+| `-n, --notarize` | notarize with notarytool |
+| `-f, --package-format=<format>` | zip (default) \| pkg |
 
 Dependencies:
 
@@ -2846,15 +2846,15 @@ Dependencies:
 
 ### iOS
 
-```text
--c, --codesign                  code sign during xcodebuild (requires ios.provisioning_profile in config)
-```
+| Option | Description |
+| --- | --- |
+| `-c, --codesign` | code sign during xcodebuild (requires ios.provisioning_profile in config) |
 
 ### Windows
 
-```text
--f, --package-format=<format>   appx (default)
-```
+| Option | Description |
+| --- | --- |
+| `-f, --package-format=<format>` | appx (default) |
 
 Dependencies:
 
@@ -2883,11 +2883,11 @@ oroc setup [options] [--platform=<platform>] [-y|--yes]
 
 ## Options
 
-```text
---platform=<platform>   android | ios | linux | windows (default: host)
--q, --quiet             hint for less log output
--y, --yes               answer yes to prompts
-```
+| Option | Description |
+| --- | --- |
+| `--platform=<platform>` | android \| ios \| linux \| windows (default: host) |
+| `-q, --quiet` | hint for less log output |
+| `-y, --yes` | answer yes to prompts |
 
 ## Notes
 
@@ -2910,10 +2910,10 @@ oroc init [<project-dir>]
 
 ## Options
 
-```text
--C, --config    only create the config file
--n, --name      project name
-```
+| Option | Description |
+| --- | --- |
+| `-C, --config` | only create the config file |
+| `-n, --name` | project name |
 
 ==============================================================================
 DOCS: `oroc config` (cli/config)
@@ -2932,14 +2932,14 @@ oroc config [options] [<key-or-path>]
 
 ## Options
 
-```text
---config=<path>         use an explicit oro.toml/oro.ini file
---list                  list known configuration keys with current and default values
---key=<name>            print the current value for a specific key
---describe=<name>       print help and metadata for a specific key
--f, --format=<format>   print the full configuration as toml | ini | json
---strict                treat unknown or unset keys as errors (non-zero exit)
-```
+| Option | Description |
+| --- | --- |
+| `--config=<path>` | use an explicit oro.toml/oro.ini file |
+| `--list` | list known configuration keys with current and default values |
+| `--key=<name>` | print the current value for a specific key |
+| `--describe=<name>` | print help and metadata for a specific key |
+| `-f, --format=<format>` | print the full configuration as toml \| ini \| json |
+| `--strict` | treat unknown or unset keys as errors (non-zero exit) |
 
 ## Notes
 
@@ -2987,12 +2987,12 @@ oroc list-devices [options] --platform=<platform>
 
 ## Options
 
-```text
---platform=<platform>   android | ios
---ecid                  show device ECID (iOS only)
---udid                  show device UDID (iOS only)
---only                  print only the first device identifier (iOS only)
-```
+| Option | Description |
+| --- | --- |
+| `--platform=<platform>` | android \| ios |
+| `--ecid` | show device ECID (iOS only) |
+| `--udid` | show device UDID (iOS only) |
+| `--only` | print only the first device identifier (iOS only) |
 
 ==============================================================================
 DOCS: `oroc install-app` (cli/install-app)
@@ -3011,19 +3011,19 @@ oroc install-app [--platform=<platform>] [--device=<identifier>] [options]
 
 ## Options
 
-```text
--D, --debug             debug output
---device[=identifier]   device identifier (ECID/UDID/ID)
---platform=<platform>   android | ios (default: host)
---prod                  install production build
--V, --verbose           verbose output
-```
+| Option | Description |
+| --- | --- |
+| `-D, --debug` | debug output |
+| `--device[=identifier]` | device identifier (ECID/UDID/ID) |
+| `--platform=<platform>` | android \| ios (default: host) |
+| `--prod` | install production build |
+| `-V, --verbose` | verbose output |
 
 macOS only:
 
-```text
---target=<target>       install into '$target/Applications' (default: /)
-```
+| Option | Description |
+| --- | --- |
+| `--target=<target>` | install into '$target/Applications' (default: /) |
 
 ## Common errors
 
@@ -3047,11 +3047,11 @@ oroc print-build-dir [--platform=<platform>] [--prod] [--root] [<project-dir>]
 
 ## Options
 
-```text
---platform=<platform>   android | android-emulator | ios | ios-simulator (default: host)
---prod                  use production build directory
---root                  print only the root build directory
-```
+| Option | Description |
+| --- | --- |
+| `--platform=<platform>` | android \| android-emulator \| ios \| ios-simulator (default: host) |
+| `--prod` | use production build directory |
+| `--root` | print only the root build directory |
 
 ==============================================================================
 DOCS: `oroc mcp` (cli/mcp)
@@ -3073,20 +3073,20 @@ oroc mcp [options] [<workspace-dir>]
 
 ## Options
 
-```text
---stdio                        stdio transport (default)
---http                         HTTP/SSE transport
---host=<host>                  bind host (default: 127.0.0.1)
---port=<port>                  bind port (default: 0 for ephemeral)
---endpoint=<path>              endpoint path (default: /mcp)
---token=<token>                require bearer token (default varies)
---no-auth                      disable token auth (loopback only)
---workspace=<path>             workspace root (default: CWD or <workspace-dir>)
---config=<path>                oro.toml path relative to workspace (default: oro.toml)
---read-workspace-only          restrict filesystem reads to workspace root
---allow-read-outside-workspace allow reading files outside workspace (default)
---replace-sse-stream           allow a new SSE connection to replace an existing one
-```
+| Option | Description |
+| --- | --- |
+| `--stdio` | stdio transport (default) |
+| `--http` | HTTP/SSE transport |
+| `--host=<host>` | bind host (default: 127.0.0.1) |
+| `--port=<port>` | bind port (default: 0 for ephemeral) |
+| `--endpoint=<path>` | endpoint path (default: /mcp) |
+| `--token=<token>` | require bearer token (default varies) |
+| `--no-auth` | disable token auth (loopback only) |
+| `--workspace=<path>` | workspace root (default: CWD or <workspace-dir>) |
+| `--config=<path>` | oro.toml path relative to workspace (default: oro.toml) |
+| `--read-workspace-only` | restrict filesystem reads to workspace root |
+| `--allow-read-outside-workspace` | allow reading files outside workspace (default) |
+| `--replace-sse-stream` | allow a new SSE connection to replace an existing one |
 
 ## Notes
 
@@ -3168,11 +3168,11 @@ oroc update init [options]
 
 ## Options
 
-```text
---config=<path>         use an explicit oro.toml/oro.ini file when deriving defaults
---manifest-name=<name>  filename for the manifest JSON (default: manifest.json or ORO_UPDATE_MANIFEST_FILENAME)
---log-file=<path>       mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--config=<path>` | use an explicit oro.toml/oro.ini file when deriving defaults |
+| `--manifest-name=<name>` | filename for the manifest JSON (default: manifest.json or ORO_UPDATE_MANIFEST_FILENAME) |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
 
@@ -3215,15 +3215,15 @@ oroc update server [options]
 
 ## Options
 
-```text
---root=<dir>           directory containing manifest trees and artifacts to serve
---host=<host>          interface to bind (default: 0.0.0.0)
---port=<port>          TCP/UDP port to bind (default: 8080)
---manifest-name=<name> manifest filename to look up under each appId (default: manifest.json or ORO_UPDATE_MANIFEST_FILENAME)
---tcp                  run in TCP mode (binary OUP CHECK/RESPONSE)
---udp                  run in UDP mode (binary OUP CHECK/RESPONSE)
---log-file=<path>      mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--root=<dir>` | directory containing manifest trees and artifacts to serve |
+| `--host=<host>` | interface to bind (default: 0.0.0.0) |
+| `--port=<port>` | TCP/UDP port to bind (default: 8080) |
+| `--manifest-name=<name>` | manifest filename to look up under each appId (default: manifest.json or ORO_UPDATE_MANIFEST_FILENAME) |
+| `--tcp` | run in TCP mode (binary OUP CHECK/RESPONSE) |
+| `--udp` | run in UDP mode (binary OUP CHECK/RESPONSE) |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
 
@@ -3267,28 +3267,28 @@ oroc update info [--transport=<http|tcp|udp>] [options]
 
 ## Options
 
-```text
---config=<path>            use an explicit oro.toml/oro.ini file for local CHECK request defaults
---transport=<http|tcp|udp> transport to use (default: http)
---http                     shorthand for --transport=http
---tcp                      shorthand for --transport=tcp
---udp                      shorthand for --transport=udp
---follow-manifest          fetch and inspect the manifest referenced by a server RESPONSE
---timeout-ms=<ms>          optional timeout for TCP/UDP CHECK requests (0 = no timeout)
---manifest-url=<url>       HTTP(S) URL of a statically hosted manifest.json
---signature-url=<url>      HTTP(S) URL of the corresponding signature JSON
---keys=<file>              JSON file containing a public key ("publicKey" or "key" field)
---public-key=<hex>         Ed25519 public key as a hex string
---host=<host>              host for HTTP/TCP/UDP update servers (default: 127.0.0.1)
---port=<port>              port for HTTP/TCP/UDP update servers (default: 8080)
---app-id=<id>              application identifier to send in CHECK messages
---channel=<name>           update channel hint
---current-version=<version> current application version hint
---runtime-version=<version> runtime version hint advertised in CHECK
---platform=<id>            platform hint advertised in CHECK
---arch=<id>                architecture hint advertised in CHECK
---log-file=<path>          mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--config=<path>` | use an explicit oro.toml/oro.ini file for local CHECK request defaults |
+| `--transport=<http\|tcp\|udp>` | transport to use (default: http) |
+| `--http` | shorthand for --transport=http |
+| `--tcp` | shorthand for --transport=tcp |
+| `--udp` | shorthand for --transport=udp |
+| `--follow-manifest` | fetch and inspect the manifest referenced by a server RESPONSE |
+| `--timeout-ms=<ms>` | optional timeout for TCP/UDP CHECK requests (0 = no timeout) |
+| `--manifest-url=<url>` | HTTP(S) URL of a statically hosted manifest.json |
+| `--signature-url=<url>` | HTTP(S) URL of the corresponding signature JSON |
+| `--keys=<file>` | JSON file containing a public key ("publicKey" or "key" field) |
+| `--public-key=<hex>` | Ed25519 public key as a hex string |
+| `--host=<host>` | host for HTTP/TCP/UDP update servers (default: 127.0.0.1) |
+| `--port=<port>` | port for HTTP/TCP/UDP update servers (default: 8080) |
+| `--app-id=<id>` | application identifier to send in CHECK messages |
+| `--channel=<name>` | update channel hint |
+| `--current-version=<version>` | current application version hint |
+| `--runtime-version=<version>` | runtime version hint advertised in CHECK |
+| `--platform=<id>` | platform hint advertised in CHECK |
+| `--arch=<id>` | architecture hint advertised in CHECK |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
 
@@ -3334,11 +3334,11 @@ oroc update keygen [options]
 
 ## Options
 
-```text
---out=<path>       write keypair JSON to a file instead of stdout
---key-id=<id>      optional key identifier to embed in the keypair (default: pk-1)
---log-file=<path>  mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--out=<path>` | write keypair JSON to a file instead of stdout |
+| `--key-id=<id>` | optional key identifier to embed in the keypair (default: pk-1) |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
 
@@ -3378,15 +3378,15 @@ oroc update sign [--manifest=<path>] (--keys=<file> | --private-key=<hex>) [opti
 
 ## Options
 
-```text
---manifest=<path>       path to the manifest JSON file to sign
---manifest-name=<name>  manifest filename to use when --manifest is not provided
---keys=<file>           JSON file containing a signing key ("privateKey" or "secretKey" field)
---private-key=<hex>     Ed25519 private key as a hex string
---key-id=<id>           optional key identifier to embed in manifest.sig (default: pk-1)
---out=<path>            output path for manifest.sig (default: <manifest-without-extension>.sig)
---log-file=<path>       mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--manifest=<path>` | path to the manifest JSON file to sign |
+| `--manifest-name=<name>` | manifest filename to use when --manifest is not provided |
+| `--keys=<file>` | JSON file containing a signing key ("privateKey" or "secretKey" field) |
+| `--private-key=<hex>` | Ed25519 private key as a hex string |
+| `--key-id=<id>` | optional key identifier to embed in manifest.sig (default: pk-1) |
+| `--out=<path>` | output path for manifest.sig (default: <manifest-without-extension>.sig) |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
 
@@ -3427,14 +3427,14 @@ oroc update verify [--manifest=<path>] [--signature=<path>] (--keys=<file> | --p
 
 ## Options
 
-```text
---manifest=<path>       path to the manifest JSON file
---manifest-name=<name>  manifest filename to use when --manifest is not provided
---signature=<path>      path to the manifest.sig JSON file (default: <manifest>.sig)
---keys=<file>           JSON file containing a public key ("publicKey" or "key" field)
---public-key=<hex>      Ed25519 public key as a hex string
---log-file=<path>       mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--manifest=<path>` | path to the manifest JSON file |
+| `--manifest-name=<name>` | manifest filename to use when --manifest is not provided |
+| `--signature=<path>` | path to the manifest.sig JSON file (default: <manifest>.sig) |
+| `--keys=<file>` | JSON file containing a public key ("publicKey" or "key" field) |
+| `--public-key=<hex>` | Ed25519 public key as a hex string |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
 
@@ -3475,13 +3475,13 @@ oroc update validate [--manifest=<path>] [options]
 
 ## Options
 
-```text
---manifest=<path>       path to the manifest JSON file
---manifest-name=<name>  manifest filename to use when --manifest is not provided
---strict                enable additional consistency checks
---json                  print a machine-readable JSON result object
---log-file=<path>       mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--manifest=<path>` | path to the manifest JSON file |
+| `--manifest-name=<name>` | manifest filename to use when --manifest is not provided |
+| `--strict` | enable additional consistency checks |
+| `--json` | print a machine-readable JSON result object |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
 
@@ -3525,19 +3525,19 @@ oroc update bundle [--input=<dir>] [--output=<bundle.tar>] [options]
 
 ## Options
 
-```text
---input=<dir>                  directory whose contents will be archived (default: project directory)
---output=<bundle.tar>          path to the tar archive to write (default: <build_name>-<version>.tar)
---manifest=<path>              optional manifest path to update with a new target for this bundle
---manifest-name=<name>         manifest filename to use when --manifest is not provided
---channel=<name>               update channel to associate with this bundle (default: update_channel or "stable")
---update-id=<id>               update id to associate with this bundle (default: <channel>-<version>)
---platform=<id>                platform identifier for the bundle target (default: source)
---arch=<id>                    architecture identifier for the bundle target (default: any)
---artifact-url=<url-or-path>   artifactUrl to record in the manifest target (default: bundle filename)
---hash-algorithm=<sha256|sha1> hash algorithm to use (default: sha256 when libsodium is available, otherwise sha1)
---log-file=<path>              mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--input=<dir>` | directory whose contents will be archived (default: project directory) |
+| `--output=<bundle.tar>` | path to the tar archive to write (default: <build_name>-<version>.tar) |
+| `--manifest=<path>` | optional manifest path to update with a new target for this bundle |
+| `--manifest-name=<name>` | manifest filename to use when --manifest is not provided |
+| `--channel=<name>` | update channel to associate with this bundle (default: update_channel or "stable") |
+| `--update-id=<id>` | update id to associate with this bundle (default: <channel>-<version>) |
+| `--platform=<id>` | platform identifier for the bundle target (default: source) |
+| `--arch=<id>` | architecture identifier for the bundle target (default: any) |
+| `--artifact-url=<url-or-path>` | artifactUrl to record in the manifest target (default: bundle filename) |
+| `--hash-algorithm=<sha256\|sha1>` | hash algorithm to use (default: sha256 when libsodium is available, otherwise sha1) |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
 
@@ -3582,11 +3582,11 @@ oroc update extract --bundle=<bundle.tar> --dest=<dir> [options]
 
 ## Options
 
-```text
---bundle=<bundle.tar>  path to the tar archive to extract
---dest=<dir>           destination directory to extract files into (created if missing)
---log-file=<path>      mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--bundle=<bundle.tar>` | path to the tar archive to extract |
+| `--dest=<dir>` | destination directory to extract files into (created if missing) |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
 
@@ -3624,12 +3624,12 @@ oroc version <new-version | release> [options]
 
 ## Options
 
-```text
---config=<path>         explicit oro.toml/oro.ini to update
---preid=<id>            pre-release tag for pre* bumps (default: rc)
--V, --verbose           verbose output
---log-file=<path>       mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--config=<path>` | explicit oro.toml/oro.ini to update |
+| `--preid=<id>` | pre-release tag for pre* bumps (default: rc) |
+| `-V, --verbose` | verbose output |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
 
@@ -3664,11 +3664,11 @@ oroc versions [options] [<dependency>]
 
 ## Options
 
-```text
--f, --format=<format>   text | json (default: text)
--V, --verbose           verbose output
---log-file=<path>       mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `-f, --format=<format>` | text \| json (default: text) |
+| `-V, --verbose` | verbose output |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
 

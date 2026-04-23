@@ -11,10 +11,10 @@ oroc help [query...] [--json]
 
 ## Options
 
-```text
---json             emit structured search results for automation and editor tooling
---log-file=<path>  mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--json` | emit structured search results for automation and editor tooling |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Notes
 

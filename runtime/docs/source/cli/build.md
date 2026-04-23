@@ -13,33 +13,33 @@ oroc build [options] [<project-or-source>]
 
 ## Options
 
-```text
---platform=<platform>   android | android-emulator | ios | ios-simulator (default: host)
---config=<path>         use an explicit oro.toml/oro.ini file
---copy=<source:dest>    extra copy mapping (like [build] copy; can be repeated)
---host=<host>           load index.html from host (default: 80 when port omitted)
---port=<port>           load index.html from port (default: localhost when host omitted)
---test[=path]           test mode (optionally import a test file)
---headless              build to run without a visible window
---prod                  production build (disables inspector/debugging)
--D, --debug             debug mode
--E, --env               add environment variables
--o, --only-build        only run the build step
--p, --package           package the app for distribution
--r, --run               run after building
--w, --watch             watch for changes to rerun build
---allow-exec            allow external command execution during builds
---sanitizers            enable ASan/UBSan on desktop core builds
---tls-keylog=<path>     write TLS key log lines (OpenSSL provider)
---log-file=<path>       mirror logs to a JSON file
-```
+| Option | Description |
+| --- | --- |
+| `--platform=<platform>` | android \| android-emulator \| ios \| ios-simulator (default: host) |
+| `--config=<path>` | use an explicit oro.toml/oro.ini file |
+| `--copy=<source:dest>` | extra copy mapping (like [build] copy; can be repeated) |
+| `--host=<host>` | load index.html from host (default: 80 when port omitted) |
+| `--port=<port>` | load index.html from port (default: localhost when host omitted) |
+| `--test[=path]` | test mode (optionally import a test file) |
+| `--headless` | build to run without a visible window |
+| `--prod` | production build (disables inspector/debugging) |
+| `-D, --debug` | debug mode |
+| `-E, --env` | add environment variables |
+| `-o, --only-build` | only run the build step |
+| `-p, --package` | package the app for distribution |
+| `-r, --run` | run after building |
+| `-w, --watch` | watch for changes to rerun build |
+| `--allow-exec` | allow external command execution during builds |
+| `--sanitizers` | enable ASan/UBSan on desktop core builds |
+| `--tls-keylog=<path>` | write TLS key log lines (OpenSSL provider) |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Environment
 
-```text
-ORO_ALLOW_EXEC          allow external exec during builds
-ORO_ENABLE_SANITIZERS   enable ASan/UBSan on desktop builds
-```
+| Variable | Meaning |
+| --- | --- |
+| `ORO_ALLOW_EXEC` | allow external exec during builds |
+| `ORO_ENABLE_SANITIZERS` | enable ASan/UBSan on desktop builds |
 
 ## Common errors
 
@@ -51,11 +51,11 @@ ORO_ENABLE_SANITIZERS   enable ASan/UBSan on desktop builds
 
 ### Linux
 
-```text
--f, --package-format=<format>   deb | rpm | zip | aur (default: deb)
---sign                          sign Linux packages with GPG (writes .asc next to the artifact)
---sign-key=<id>                 optional GPG key ID/fingerprint for --sign
-```
+| Option | Description |
+| --- | --- |
+| `-f, --package-format=<format>` | deb \| rpm \| zip \| aur (default: deb) |
+| `--sign` | sign Linux packages with GPG (writes .asc next to the artifact) |
+| `--sign-key=<id>` | optional GPG key ID/fingerprint for --sign |
 
 Dependencies:
 
@@ -64,11 +64,11 @@ Dependencies:
 
 ### macOS
 
-```text
--c, --codesign                  code sign the app with codesign
--n, --notarize                  notarize with notarytool
--f, --package-format=<format>   zip (default) | pkg
-```
+| Option | Description |
+| --- | --- |
+| `-c, --codesign` | code sign the app with codesign |
+| `-n, --notarize` | notarize with notarytool |
+| `-f, --package-format=<format>` | zip (default) \| pkg |
 
 Dependencies:
 
@@ -77,15 +77,15 @@ Dependencies:
 
 ### iOS
 
-```text
--c, --codesign                  code sign during xcodebuild (requires ios.provisioning_profile in config)
-```
+| Option | Description |
+| --- | --- |
+| `-c, --codesign` | code sign during xcodebuild (requires ios.provisioning_profile in config) |
 
 ### Windows
 
-```text
--f, --package-format=<format>   appx (default)
-```
+| Option | Description |
+| --- | --- |
+| `-f, --package-format=<format>` | appx (default) |
 
 Dependencies:
 

@@ -77,9 +77,11 @@ falls back to the older framed raw-stdout mode for older agents.
 
 ## Exit status
 
-- `0` — success
-- `2` — CLI usage or argument error
-- `3` — connection, protocol, framing, or internal runtime failure
+| Code | Meaning |
+| --- | --- |
+| `0` | Success. |
+| `2` | CLI usage or argument error. |
+| `3` | Connection, protocol, framing, or internal runtime failure. |
 
 For `scan`, the command propagates the scan exit code.
 
@@ -93,12 +95,16 @@ vnactl scan --connect unix:///run/virtnosis/agent.sock --deep --confirm-xml
 
 ## Files
 
-- `/run/virtnosis/agent.sock`
-- `$XDG_RUNTIME_DIR/virtnosis/agent.sock`
+| Path | Purpose |
+| --- | --- |
+| `/run/virtnosis/agent.sock` | System-wide default agent socket. |
+| `$XDG_RUNTIME_DIR/virtnosis/agent.sock` | Per-user default agent socket when a runtime directory is available. |
 
 ## Environment
 
-- `XDG_RUNTIME_DIR`
+| Variable | Details |
+| --- | --- |
+| `XDG_RUNTIME_DIR` | Supplies the per-user runtime directory used when resolving the default agent socket path. |
 
 ## See also
 
