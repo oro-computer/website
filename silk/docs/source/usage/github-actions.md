@@ -114,11 +114,51 @@ The action fails when:
 - the expected release assets are missing,
 - or checksum verification fails.
 
+## Producing Release Assets
+
+Run the release distribution target on each supported native host before
+uploading assets to a GitHub Release:
+
+```sh
+make dist
+```
+
+The target builds a size-optimized staged prefix with `ReleaseSmall` and
+stripped binaries, then writes upload-ready assets under `build/release/`:
+
+- `silk-v<toolchain-version>-linux-x86_64.tar.gz` on Linux x86_64,
+- `silk-v<toolchain-version>-macos-arm64.tar.gz` on Apple Silicon macOS,
+- and the matching `.sha256` checksum files.
+
+For a release tag that intentionally differs from `src/version.zig`, override
+the asset tag explicitly:
+
+```sh
+DIST_VERSION=v0.1.1 make dist
+```
+
+The archive contains the release-required installed `bin/`, `lib/`,
+`include/`, and `share/` prefix payloads, plus a dedicated release-root `Makefile`
+that supports `make install PREFIX=/usr/local`, staged
+`DESTDIR=/tmp/pkgroot` installs, and `make uninstall` for the files owned by
+that release archive. Its install path removes previously installed owned files
+from the installed receipt before copying the new payload, so upgrades can
+remove files that were owned by an older release but are no longer shipped.
+Uninstall is idempotent for missing prefixes and tolerates stale or malformed
+receipt entries, missing owned files, and unreadable installed receipts by
+falling back to the current archive's owned file list when necessary. It also
+includes curated editor/syntax files under `share/silk/editor/` for Highlight.js,
+Vim, Sublime Text, TextMate,
+VS Code, and coc.nvim. Development-only payloads such as source tests,
+intermediate object files, source-only Markdown manpage copies, editor build
+metadata, cache directories, dependency build trees, `node_modules`, and
+editor scratch files are not included.
+
 ## Relationship to This Repo’s Release CI
 
 This action does not build Silk. It consumes the same staged-prefix tarball that
 the tag release workflow already publishes to GitHub Releases. That keeps
 release CI as the single packaging path for downstream GitHub Actions usage.
-The release workflow validates this installer on both Linux and macOS runners,
+The release workflow should use `make dist` on both Linux and macOS runners,
 and macOS release packages are built from the macOS-native dependency layout
 instead of reusing Linux dependency archives.

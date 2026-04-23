@@ -1,23 +1,21 @@
 # `std::` Module Catalog
 
-This page is the canonical inventory of shipped modules under `std/`.
+This page is the canonical inventory of shipped `std::...` modules.
 
 Use it to answer two questions quickly:
 
-1. Does a given `std::...` module exist in the shipped tree?
-2. Which `docs/std/*.md` page is the canonical documentation surface for it?
+1. Does a given `std::...` module ship with the toolchain?
+2. Which page on this site is its canonical reference?
 
-Every shipped `std/**` Silk module is expected to have an exact canonical doc
-page under `docs/std/`.
+Each shipped public module has one canonical page in the standard-library section.
 
 Naming rule:
 
-- `std/foo.slk` -> `docs/std/foo.md`
-- `std/foo/bar.slk` -> `docs/std/foo-bar.md`
-- `std/runtime/posix/io.slk` -> [runtime posix io](?p=std/runtime-posix-io)
+- top-level modules keep their module name: `std::args` -> [args](?p=std/args)
+- nested modules flatten `::` to `-` in page ids: `std::fs::stream` -> [fs stream](?p=std/fs-stream)
+- runtime descendants follow the same rule: `std::runtime::posix::io` -> [runtime posix io](?p=std/runtime-posix-io)
 
-Owning family docs still exist for cross-module design/context, but they do not
-replace the exact per-module page.
+Owning-family pages still exist for cross-module design context, but they do not replace the exact per-module page.
 
 ## Top-Level Public Modules
 

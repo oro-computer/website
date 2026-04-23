@@ -24,9 +24,9 @@ language or stdlib feature.
 
 - For each compiler subsystem (lexer, parser, type checker, verifier, codegen), add Zig tests **as the subsystem is implemented**:
  - Unit tests for lexer, parser, type checker, and verifier.
- - Integration tests that compile and run programs exercising each concept from `docs/language/`.
+ - Integration tests that compile and run programs exercising each concept from the language reference on this site.
 - Prefer placing tests close to the code they exercise (e.g. Zig `test` blocks in the same modules, plus higher-level integration suites where needed).
-- Use examples and edge cases from `docs/language/*` as canonical test inputs.
+- Use examples and edge cases from the language reference as canonical test inputs.
 
 ## C99 Tests
 

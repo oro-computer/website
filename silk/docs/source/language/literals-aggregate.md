@@ -76,6 +76,15 @@ fn make () -> Pair {
 }
 ```
 
+Whitespace may appear between the type name and `{` in ordinary expression
+contexts. The parser suppresses that non-adjacent form only at the immediate
+boundary where an expression is followed by a statement block (for example the
+condition or iterable expression before `if`, `while`, `for`, or `match` block
+braces). Inside delimited subexpressions such as array literals, call
+arguments, indexes, parenthesized expressions, and accepted struct initializer
+values, `Type { ... }` remains an explicit struct literal because the brace
+cannot be the following statement block.
+
 An inferred struct literal looks like:
 
 ```silk

@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-04-20T20:16:02+00:00
+Generated: 2026-04-23T14:25:38+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -2471,7 +2471,7 @@ expressions, and the Formal Silk verification directives.
 This guide complements (not replaces):
 
 - [grammar](?p=language/grammar) (the exact grammar the parser accepts),
-- the concept documents under `docs/language/` (semantics and checker rules),
+- the linked language concept pages (semantics and checker rules),
 - and [diagnostics](?p=compiler/diagnostics) (error codes for unsupported forms).
 
 ## How to use this guide
@@ -2484,7 +2484,7 @@ When in doubt, prefer:
 
 - [grammar](?p=language/grammar) for syntax,
 - [diagnostics](?p=compiler/diagnostics) for unsupported forms and error codes,
-- the runnable examples embedded throughout `docs/language/`.
+- the runnable examples embedded throughout the linked language pages.
 
 ## 0. Minimal Executable Module
 
@@ -3194,7 +3194,7 @@ remaining unsupported generic forms that still report `E2016`.
 ## 6. Statements (Inside Blocks)
 
 The statement grammar is summarized in [grammar](?p=language/grammar) and detailed
-in `docs/language/flow-*.md`.
+in the dedicated flow-control reference pages.
 
 ### `if` / `else`
 
@@ -3358,7 +3358,7 @@ productions, see [grammar](?p=language/grammar).
 
 ### Literals and other primary expressions
 
-See the `docs/language/literals-*.md` concept documents for precise rules.
+See the dedicated literals reference pages for precise rules.
 
 ```silk
 fn main () -> int {
@@ -3558,7 +3558,7 @@ If you want more detail on a specific construct, jump to:
 - Syntax: [grammar](?p=language/grammar)
 - Types: [types](?p=language/types), [generics](?p=language/generics)
 - Operators: [operators](?p=language/operators)
-- Flow control: [flow overview](?p=language/flow-overview) and `docs/language/flow-*.md`
+- Flow control: [flow overview](?p=language/flow-overview), [flow if else](?p=language/flow-if-else), [flow for](?p=language/flow-for), [flow while](?p=language/flow-while), and [flow match](?p=language/flow-match)
 - Modules/imports/exports: [packages imports exports](?p=language/packages-imports-exports)
 - Optionals: [optional](?p=language/optional)
 - Typed errors: [typed errors](?p=language/typed-errors)
@@ -3572,7 +3572,7 @@ URL: /silk/docs/?p=language/cheat-sheet
 
 # Language Cheat Sheet
 
-This document summarizes the key syntax and concepts from the Silk language in a condensed form. It is meant as a quick reference; detailed semantics live in the other `docs/language/` files.
+This document summarizes the key syntax and concepts from the Silk language in a condensed form. It is meant as a quick reference; detailed semantics live in the linked language pages throughout this site.
 
 ## Scope
 
@@ -3679,7 +3679,7 @@ Operator precedence and associativity follow the rules in [operators](?p=languag
 - Blocks: `{ stmt* }`.
 - Expression statements: `expr;` (where allowed).
 
-See `docs/language/flow-*.md` for details.
+See the linked flow-control reference pages for details.
 
 Executable entrypoint (current rule):
 
@@ -3875,7 +3875,7 @@ Additional notes:
 When in doubt, consult:
 
 - [diagnostics](?p=compiler/diagnostics) (error codes)
-- the runnable examples embedded throughout `docs/language/`
+- the runnable examples embedded throughout the linked language pages
 
 ## Principles
 
@@ -4256,9 +4256,7 @@ The `match` expression provides structured pattern matching.
 Key ideas:
 
 - A `match` selects one of several branches based on a scrutinee expression.
-- The full language design includes richer patterns and arm guards, but the
- current shipped subset documented here does not implement `if` guards in any
- `match` form yet.
+- Arm guards of the form `pattern if cond => ...` are not part of the shipped subset documented here. Once a pattern matches, any additional boolean refinement must happen in a nested `if` / `if let`, or before the `match`.
 - `match` is an expression; all arms must be compatible in type.
 
 The compiler must:
@@ -4268,10 +4266,7 @@ The compiler must:
 
 ## Surface Syntax
 
-The full language design includes rich pattern matching, guards, and matching
-over many scrutinee types. The current compiler implementation supports only a
-narrow, explicitly documented subset so we can validate end-to-end lowering and
-code generation.
+This page documents the shipped `match` subset: the scrutinee kinds, pattern forms, and exhaustiveness rules that work end to end today. Patterns or guard forms outside the supported set are intentionally omitted here until they are implemented across parsing, checking, lowering, and code generation.
 
 In the initial subset, `match` is accepted as an *expression* of the form:
 
@@ -4305,7 +4300,7 @@ For optionals, the Supported forms is:
  - `None`
  - `Some(<name>)`
  - `Some(_)`
-- No guards (`if ...`) are implemented yet.
+- Arm guards (`pattern if cond => ...`) are not part of the shipped subset here; use a nested `if` / `if let` in the selected arm, or test the boolean condition before entering the `match`.
 - Matches must be exhaustive for the optional scrutinee: there must be exactly
  one `None` arm and exactly one `Some(...)` arm (order is not significant).
 
@@ -4337,7 +4332,7 @@ Defined initial subset:
 - The match must be exhaustive:
  - there must be exactly one wildcard `_` arm, and
  - literal arms must not repeat the same value.
-- No guards (`if ...`) are implemented yet.
+- Arm guards (`pattern if cond => ...`) are not part of the shipped subset here; use a nested `if` / `if let` in the selected arm, or test the boolean condition before entering the `match`.
 
 Example:
 
@@ -4368,7 +4363,7 @@ Defined initial subset:
  alias for the instantiation (for example `type R = Result(int, string);` then
  `R::Ok(v)` / `R::Err(e)`), or patterns may omit the qualifier and use the
  variant name directly.
-- No guards (`if ...`) are implemented yet.
+- Arm guards (`pattern if cond => ...`) are not part of the shipped subset here; use a nested `if` / `if let` in the selected arm, or test the boolean condition before entering the `match`.
 - In expression form, enum matches must still be exhaustive:
  - either there is exactly one explicit arm for each enum variant,
  - or a final wildcard `_` arm covers every remaining unmatched variant,
@@ -4385,7 +4380,7 @@ Defined initial subset:
  - `name: Ti` (binds the payload as `Ti`), or
  - `_: Ti` (matches and ignores the payload),
  where `Ti` is one of the union member types.
-- No guards (`if ...`) are implemented yet.
+- Arm guards (`pattern if cond => ...`) are not part of the shipped subset here; use a nested `if` / `if let` in the selected arm, or test the boolean condition before entering the `match`.
 - Matches must be exhaustive: there must be exactly one arm per union member
  type (order is not significant).
 
@@ -4511,8 +4506,7 @@ Implementation
  - type unions,
  - recoverable `Result`-style values,
  - and exhaustive enum matches.
-- No match arm guards (`pattern if cond => ...`) are implemented yet in either
- expression or statement form.
+- Match arm guards (`pattern if cond => ...`) are not part of the shipped subset in either expression or statement form. After a pattern matches, any extra boolean refinement must happen in a nested `if` / `if let`, or before the `match` itself.
 - The statement form is implemented for:
  - ordinary values in the supported subset (block arms), and
  - typed errors as part of the typed errors feature work ([typed errors](?p=language/typed-errors)).
@@ -10723,6 +10717,15 @@ fn make () -> Pair {
 }
 ```
 
+Whitespace may appear between the type name and `{` in ordinary expression
+contexts. The parser suppresses that non-adjacent form only at the immediate
+boundary where an expression is followed by a statement block (for example the
+condition or iterable expression before `if`, `while`, `for`, or `match` block
+braces). Inside delimited subexpressions such as array literals, call
+arguments, indexes, parenthesized expressions, and accepted struct initializer
+values, `Type { ... }` remains an explicit struct literal because the brace
+cannot be the following statement block.
+
 An inferred struct literal looks like:
 
 ```silk
@@ -11744,7 +11747,7 @@ What works end-to-end today (parser → checker → lowering → codegen):
  - patterns are restricted to enum variants (`E::A`, `E::Data(x)`) and may
  use shorthand (`A`, `Data(x)`) when the scrutinee type is the enum,
  - binders may be names or `_`,
- - no guards (`if ...`) yet,
+ - arm guards in `match` (`Variant(...) if cond => ...`) are not part of the shipped subset; use a nested `if` inside the selected arm or split the boolean test before the `match`,
  - and expression-form matches must still be *exhaustive* in the current
  subset:
  - either by explicit arm coverage for every variant,
@@ -16414,7 +16417,7 @@ URL: /silk/docs/?p=language/conventions
 
 # Language Spec Conventions
 
-This document defines conventions used across `docs/language/`. It exists to
+This document defines conventions used across the Silk language reference on this site. It exists to
 keep the language specification consistent and easy to navigate for both:
 
 - first-time readers learning Silk, and
@@ -16517,41 +16520,26 @@ URL: /silk/docs/?p=std/overview
 
 # Standard Library Overview (`std::`)
 
-The `docs/std/` directory specifies the
-intended API and structure. A minimal in-tree stdlib source tree also
-exists under `std/` (used by the toolchain to satisfy `import std::...;`).
+The Silk standard library, `std::`, is the default library surface that ships with the toolchain. It provides the modules Silk programs rely on for text, containers, filesystems, networking, concurrency, cryptography, graphics, verification support, and target-specific runtime integration.
 
-As of the compiler, the in-tree stdlib includes a
-small but functional set of utilities implemented purely in Silk (including
-monomorphized, type-parameter generics for core collection types),
-plus a tiny hosted POSIX baseline for OS-facing modules (`std::fs`, `std::task`,
-`std::sync`, `std::io`) implemented via the `std::runtime` interface layer
-(the shipped POSIX runtime backend uses `ext` and therefore requires linking
-libc for executable outputs).
+The shipped stdlib includes:
 
-The Silk standard library, `std::`, provides foundational functionality built
-on top of the language core (regions, buffers, concurrency, etc.). It is intended
-to be:
-
-- **Linked by default** for normal builds driven by `silk`.
-- **Swappable**: an alternative `std::` implementation can be selected at build
- time, without changing the language or the C ABI.
-- **POSIX-first** for OS interactions (initial hosted baseline), while still
- supporting freestanding/embedded builds via a smaller “core” subset.
+- pure-Silk modules for core values, collections, parsing, formatting, and algorithms,
+- hosted POSIX-first modules for OS-facing surfaces such as `std::fs`, `std::io`, `std::task`, and `std::sync`,
+- a runtime interface layer (`std::runtime`) so public `std::...` modules can stay stable while platform backends vary by target,
+- and a swappable build-time model: alternate `std::` implementations can be selected without changing Silk syntax or the C ABI.
 
 See also:
 
 - [package structure](?p=std/package-structure) (namespace + linkage + swappability)
 - [conventions](?p=std/conventions) (API conventions: errors, allocation, ownership)
 - [result](?p=std/result) (the standard `Result(T, E)` error return type)
-- [module catalog](?p=std/module-catalog) (audit-oriented coverage map for the shipped
- `std/**` tree)
+- [module catalog](?p=std/module-catalog) (audit-oriented coverage map for the shipped `std::...` tree)
 
-Exact canonical docs exist for every shipped `std/**` module. Nested modules
-flatten `/` to `-` in `docs/std/`, for example:
+Every shipped `std::...` module has a canonical page on this site. Nested modules flatten `::` to `-` in page ids; for example:
 
-- `std/fs/stream.slk` -> [fs stream](?p=std/fs-stream)
-- `std/runtime/posix/io.slk` -> [runtime posix io](?p=std/runtime-posix-io)
+- `std::fs::stream` -> [fs stream](?p=std/fs-stream)
+- `std::runtime::posix::io` -> [runtime posix io](?p=std/runtime-posix-io)
 
 ## Core Areas
 
@@ -16614,7 +16602,9 @@ distribution:
 - `std::signal` — pollable signal waiting for TUI programs (Linux `signalfd(2)`
  backend; see [signal](?p=std/signal)).
 - `std::stream` — Web Streams-inspired byte streams and piping (see [stream](?p=std/stream)).
-- `std::args` — native `main(argc, argv)` argument helpers (Supported forms; see [args](?p=std/args)).
+- `std::args` — executable argument helpers for native `main(argc, argv)` and
+ `wasm32-wasi` parameterless `main()` entrypoints (Supported forms; see
+ [args](?p=std/args)).
 - `std::readline` — interactive line editor for CLI programs (TTY mode) built on
  the bundled `linenoise` sources (see [readline](?p=std/readline)).
 - `std::flag` — command line flag + positional parsing, including interspersed
@@ -16657,11 +16647,7 @@ distribution:
  storage reasoning; module-specific theories live with their owning std
  modules (see [formal](?p=std/formal)).
 
-Each area has a dedicated design document under `docs/std/` (for intrinsic
-surfaces like `std::buffer`, the design lives in both `docs/std/` and the
-corresponding language doc). The exact shapes of types and functions will
-evolve as the language and backend grow; these docs are the source of truth for
-the intended `std::` surface.
+Each area above has a canonical page on this site. Intrinsic or cross-cutting surfaces may also be explained in the language reference when that gives the clearest semantics, but the linked standard-library pages remain the downstream source of truth for the shipped `std::` surface.
 
 ==============================================================================
 DOCS: `std::` Conventions (std/conventions)
@@ -16714,9 +16700,7 @@ Documentation coverage rules:
 This is enforced by the test suite so the stdlib can be fully documented via
 `silk doc` and surfaced consistently in editor tooling.
 
-The canonical narrative/spec for each module lives under `docs/std/`. The
-source-level doc comments are the machine-consumable layer used by `silk doc`,
-`silk man`, and editor tooling (hover and completion documentation).
+The canonical narrative for each module lives on this site in the standard-library section. The source-level doc comments are the machine-consumable layer used by `silk doc`, `silk man`, and editor tooling (hover and completion documentation).
 
 ## Allocation and Ownership
 
@@ -17239,7 +17223,7 @@ Caching:
  cache activity, so explicit cache maintenance does not race live build-cache
  reads or writes.
 
-- `Run` steps are not cached in the current API.
+- `Run` steps are not cached.
 
 Minimal example (generate a source file before emitting the manifest):
 
@@ -18244,10 +18228,7 @@ Within `{ ... }`:
 
 ## Exported API
 
-Because the language does not yet have generics, the current API uses an
-explicit argument carrier type (`Arg`). With language-level varargs, the
-formatter now accepts a variable number of arguments (up to the current
-compiler’s varargs limit).
+The exported surface uses an explicit argument carrier type (`Arg`) together with language-level varargs, so the formatter accepts a variable number of arguments up to the compiler’s current varargs limit.
 
 ### `Arg`
 
@@ -18282,7 +18263,7 @@ See [types](?p=language/types) for the full rule.
 
 ### Supported specifiers
 
-The current formatter supports:
+Supported specifiers:
 
 - `s` — string
 - `d` — decimal number (`int`/`u64`/`i128`/`u128` and `f64`/`f128`)
@@ -18313,8 +18294,7 @@ Float formatting is implemented for `f64` in the Supported forms:
 - precision (`.{N}`) controls the number of digits after the decimal point
  (default: 6), and width/alignment apply like other formatting kinds.
 
-Hex float formatting (`{x}` on floats) and full debug formatting (`{any}`
-recursing through arbitrary types) remain future work.
+Hex float formatting (`{x}` on floats) and full debug formatting (`{any}` recursing through arbitrary types) are not part of the shipped formatter surface.
 
 `f128` formatting is implemented by converting values to `f64` for formatting,
 so output precision is limited to `f64` precision in the Supported forms.
@@ -18767,7 +18747,7 @@ Notes:
  packed-byte storage, use `std::buffer::BufferU8`. For owning scalar-slot
  storage, use `std::buffer::Buffer(T)` or `std::vector::Vector(T)` and view it
  as `std::arrays::Slice(T)`.
-- In the current API, `ptr` is represented as a raw `u64`
+- The exported representation uses a raw `u64`
  address for early FFI-friendly bridging. The constructors enforce basic
  invariants via `#require`:
  - `len >= 0`, and
@@ -20402,17 +20382,27 @@ URL: /silk/docs/?p=std/args
 
 # `std::args`
 
-A small native-argv helper surface is implemented in
-`std/args.slk` to make early programs ergonomic while `string[]` parameters and
-richer slice/iterator features are still future work.
+`std::args` exposes the process-argument surface used by Silk entrypoints. It keeps argument handling explicit at the ABI boundary: native targets use the conventional `(argc, argv)` shape, while `wasm32-wasi` exposes helpers that reconstruct the same view from WASI process arguments.
 
-`std::args` focuses on the hosted `linux/x86_64` executable entrypoint shape:
+`std::args` currently supports two executable argument shapes:
+
+- hosted/native entrypoints that receive:
 
 ```silk
 fn main (argc: int, argv: u64) -> int { ... }
 ```
 
-Where `argv` is a raw pointer to the process `argv` pointer list (`char**` in C).
+- and `wasm32-wasi` entrypoints that remain parameterless:
+
+```silk
+fn main () -> int { ... }
+```
+
+For hosted/native entrypoints, `argv` is a raw pointer to the process `argv`
+pointer list (`char**` in C). For `wasm32-wasi`, `std::args` exposes helpers
+that read the process arguments from the WASI Preview 1 `args_sizes_get` /
+`args_get` syscalls and present the same `(argc, argv)` shape to downstream
+code.
 
 See also:
 
@@ -20437,6 +20427,11 @@ export fn cstr_len (cstr: u64) -> int;
 export fn cstr_string (cstr: u64) -> string;
 export fn argv_string (argv: u64, index: int) -> string;
 
+// WASI-only helpers for parameterless `fn main () -> int`.
+export fn argc () -> int;
+export fn argv () -> u64;
+export fn current () -> Args;
+
 // Convenience wrapper for (argc, argv).
 struct Args {
   argc: int,
@@ -20451,15 +20446,47 @@ impl Args {
 }
 ```
 
+### WASI usage
+
+On `wasm32-wasi`, build the same `Args` view from a parameterless `main`:
+
+```silk
+import args from "std/args";
+
+fn main () -> int {
+  let a = args::Args.init(args::argc(), args::argv());
+  return a.count();
+}
+```
+
+or use the convenience wrapper:
+
+```silk
+import args from "std/args";
+
+fn main () -> int {
+  let a = args::current();
+  return a.count();
+}
+```
+
 ### Safety notes
 
 - `cstr_len` scans memory until it finds a `0` byte. If the pointer is invalid
  or the string is not NUL-terminated, behavior is undefined.
+- `argv_ptr` is target-aware:
+ - on hosted/native entrypoints it reads `argv[index]` from an 8-byte pointer
+ table (`char**`),
+ - on `wasm32-wasi` it reads `argv[index]` from a cached 4-byte pointer table
+ of `u32` linear-memory offsets returned by WASI `args_get`.
 - `cstr_string` / `argv_string` return `string` **views** into existing memory.
  They do not copy or allocate, and therefore do not provide ownership. The
  caller must ensure the pointed-to bytes remain valid for the lifetime of the
  returned `string`. For process `argv` strings this is typically valid for the
  lifetime of the process.
+- On `wasm32-wasi`, `argc()` / `argv()` / `current()` cache the argv snapshot
+ for the process lifetime. When the snapshot cannot be loaded, they report an
+ empty argument view (`argc() == 0`, `argv() == 0`).
 
 ## String construction intrinsic
 
@@ -20480,10 +20507,7 @@ URL: /silk/docs/?p=std/env
 
 `std::env` provides access to process environment variables.
 
-This module targets a hosted POSIX baseline (Linux/glibc) and is
-implemented on top of the pluggable `std::runtime::env` interface. WASI support
-is Implemented: `get` works, while `set` remains unsupported (see
-“Platform notes”).
+This module targets a hosted POSIX baseline (Linux/glibc) and is implemented on top of the pluggable `std::runtime::env` interface. On `wasm32-wasi`, `get` works while `set` remains unavailable (see “Platform notes”).
 
 ## Exported API
 
@@ -20589,7 +20613,7 @@ queries.
 
 `std::env::cwd()` returns the current working directory as a `string?`.
 
-Current implementation:
+Resolution rule:
 
 - returns `std::env::get("PWD")`.
 
@@ -20622,7 +20646,7 @@ This is an alias for `std::process::chdir(path)`.
 
 `std::env::home_dir()` returns the user’s home directory as a `string?`.
 
-Current implementation:
+Resolution rule:
 
 - returns `std::env::get("HOME")`.
 
@@ -20630,7 +20654,7 @@ Current implementation:
 
 `std::env::temp_dir()` returns a temporary-directory path as a `string`.
 
-Current implementation:
+Resolution rule:
 
 1. uses `TMPDIR` when set,
 2. otherwise uses `TMP` or `TEMP` when set,
@@ -20895,7 +20919,7 @@ Ownership:
 
 - Callers must drop the returned vector when finished.
 
-Current implementation:
+Returned CPU metadata:
 
 - `CPU.model` is set to `ARCH_NAME` for each returned CPU record.
 
@@ -22347,7 +22371,7 @@ family).
 
 ### Parsing and Formatting
 
-The current API supports:
+Supported parse and format surface:
 
 - parsing:
  - canonical hyphenated form (`8-4-4-4-12` hex digits),
@@ -22460,11 +22484,6 @@ without passing explicit timestamps.
 - Keep parse, format, and inspection helpers straightforward to embed into
  application code and tooling.
 - Attach Formal Silk contracts to buffer and shape preconditions where useful.
-
-### Additional planned surface
-
-- richer formatting options (uppercase, simple hex, braced form, URN form),
-- UUIDv2 (DCE Security) if/when `std::process` exposes stable UID/GID APIs.
 
 ==============================================================================
 DOCS: `std::unicode` (std/unicode)
@@ -25613,13 +25632,19 @@ line argument parser modeled after Go’s `flag` package, but shaped to match
 `std::` conventions (explicit `Result(...)` errors, no leaky out-params, and a
 clear separation between flags, positionals, and `--` rest arguments).
 
-`std::flag` is intended for programs that use the native hosted entrypoint:
+`std::flag` is intended for programs that can build a `std::args::Args` view,
+typically from a native hosted entrypoint:
 
 ```silk
 fn main (argc: int, argv: u64) -> int { ... }
 ```
 
 and the current `std::args::Args` view.
+
+On `wasm32-wasi`, executable entrypoints remain `fn main () -> int`; use
+`std::args::current()` (or `std::args::Args.init(std::args::argc(),
+std::args::argv())`) to construct the same `Args` value before calling
+`FlagSet.parse_args(...)`.
 
 See also:
 
@@ -27251,24 +27276,22 @@ URL: /silk/docs/?p=std/module-catalog
 
 # `std::` Module Catalog
 
-This page is the canonical inventory of shipped modules under `std/`.
+This page is the canonical inventory of shipped `std::...` modules.
 
 Use it to answer two questions quickly:
 
-1. Does a given `std::...` module exist in the shipped tree?
-2. Which `docs/std/*.md` page is the canonical documentation surface for it?
+1. Does a given `std::...` module ship with the toolchain?
+2. Which page on this site is its canonical reference?
 
-Every shipped `std/**` Silk module is expected to have an exact canonical doc
-page under `docs/std/`.
+Each shipped public module has one canonical page in the standard-library section.
 
 Naming rule:
 
-- `std/foo.slk` -> `docs/std/foo.md`
-- `std/foo/bar.slk` -> `docs/std/foo-bar.md`
-- `std/runtime/posix/io.slk` -> [runtime posix io](?p=std/runtime-posix-io)
+- top-level modules keep their module name: `std::args` -> [args](?p=std/args)
+- nested modules flatten `::` to `-` in page ids: `std::fs::stream` -> [fs stream](?p=std/fs-stream)
+- runtime descendants follow the same rule: `std::runtime::posix::io` -> [runtime posix io](?p=std/runtime-posix-io)
 
-Owning family docs still exist for cross-module design/context, but they do not
-replace the exact per-module page.
+Owning-family pages still exist for cross-module design context, but they do not replace the exact per-module page.
 
 ## Top-Level Public Modules
 
@@ -31392,7 +31415,7 @@ This document describes the built-in Vim support for Silk shipped with the Silk 
 The goal of the Vim plugin is to provide a lightweight, spec-aligned editing experience that:
 
 - recognizes Silk source files by extension,
-- highlights the core language constructs described in `docs/language/`,
+- highlights the core language constructs described throughout the language reference on this site,
 - matches the indentation and comment style used throughout the Silk docs (see [conventions](?p=language/conventions)).
 
 ## Files and Layout
@@ -31420,13 +31443,13 @@ The `vim/syntax/silk.vim` file is derived from:
 
 - the lexical and grammar documentation in [grammar](?p=language/grammar),
 - the operator set in [operators](?p=language/operators),
-- the literals, types, flow-control, optional/mutability, concurrency, FFI, and verification docs under `docs/language/`,
+- the literals, types, flow-control, optional/mutability, concurrency, FFI, and verification pages in the language reference,
 - the current token and keyword tables in `src/token.zig`.
 
 It currently highlights:
 
 - lexer keywords (as currently implemented by the keyword table in `src/token.zig`): `package`, `module`, `import`, `from`, `export`, `public`, `private`, `default`, `const`, `let`, `var`, `mut`, `fn`, `test`, `theory`, `struct`, `enum`, `type`, `error`, `interface`, `impl`, `as`, `raw`, `extends`, `if`, `else`, `loop`, `while`, `for`, `in`, `match`, `return`, `panic`, `break`, `continue`, `assert`, `await`, `yield`, `pure`, `async`, `task`, `region`, `with`, `new`, `sizeof`, `ext`, `None`/`none`/`null`, `Some`, `true`/`false`;
-- spec-reserved / design-in-progress keywords used in `docs/language/` examples: `where`;
+- spec-reserved / design-in-progress keywords used in language-reference examples: `where`;
 - testing and assertion keywords: `test`, `assert`;
 - builtin types and type-like names: `bool`, integer and float types (`u8`, `i8`, …, `u64`, `i64`, `int`, `f32`, `f64`), `char`, `string`, `void`, `Instant`, `Duration`, `Task`, `Promise`, `map`, `Option`, `Buffer`, and other core names drawn from the spec;
 - literal forms: boolean literals (`true`, `false`), `None`/`Some`, numeric literals (decimal integers and floats) and duration literals with unit suffixes (e.g. `10ns`, `250us`, `5ms`, `2s`, `5min`, `1h`, `7d`), character and string literals;
@@ -31438,7 +31461,7 @@ It currently highlights:
 - doc comments: `///` and `/** ... */`, including common doc tags like `@param` / `@returns` / `@throws` / `@example` / `@since` / `@deprecated` / `@remarks` / `@see` (see [doc comments](?p=language/doc-comments));
 - comments: both `//` line comments and `/* ... */` block comments (excluding doc-comment forms), consistent with the current lexer behavior in `src/lexer.zig`.
 
-As the language evolves (new keywords, operators, or constructs), both this document and `vim/syntax/silk.vim` must be updated in lockstep with `docs/language/` and `src/token.zig`.
+As the language evolves (new keywords, operators, or constructs), both this document and `vim/syntax/silk.vim` must be updated in lockstep with the language reference on this site and `src/token.zig`.
 
 ## Editor Defaults
 
@@ -31780,9 +31803,7 @@ URL: /silk/docs/?p=usage/guide-examples
 
 `silk guide` is the curated example discovery surface for common Silk tasks.
 
-The seeded in-repo corpus is maintained at a floor of `1000` guide entries.
-It combines runnable examples with documentation-backed reference guides that
-cover every canonical page under `docs/language/` and `docs/std/`.
+The seeded corpus is maintained at a floor of `1000` guide entries. It combines runnable examples with documentation-backed reference guides that cover every canonical language and standard-library page.
 Fixture-backed guide entries are promoted to build-verified status when they
 compile cleanly; any remaining backend-limited exceptions are tracked
 explicitly in the catalog and test suite.
@@ -31793,16 +31814,11 @@ It is intended to answer questions such as:
 - how do I wait on a task?
 - how do I use `std::task`?
 - which example explains a specific diagnostic?
+- where is a public std symbol documented?
 
-## What It Uses
+## Installed corpus
 
-The command reads an installed SQLite database at:
-
-- `<prefix>/share/silk/guide.db`
-
-That database is generated from:
-
-- `examples/guide/catalog.json`
+`silk guide` reads the bundled SQLite guide database shipped with the toolchain. Use `--db <path>` or `SILK_GUIDE_DB` when you need to point at an alternate database during staging, testing, or packaging.
 
 Each guide entry carries:
 
@@ -31817,6 +31833,7 @@ Each guide entry carries:
 - linked documentation references
 - related guide ids
 - optional diagnostic-code links
+- generated public std symbol lookup terms
 - verification flags (`verified_build` / `verified_run`)
 
 ## Query Forms
@@ -31826,6 +31843,7 @@ Free-text search:
 ```sh
 silk guide monotonic sleep
 silk guide channel send receive
+silk guide http request
 ```
 
 Exact metadata filters:
@@ -31836,11 +31854,14 @@ silk guide module:std::task
 silk guide tags:reference-guide
 silk guide language types
 silk guide std io overview
+silk guide std::http::request
+silk guide ByteSlice.find_bytes
+silk guide GL_TEXTURE_2D
 silk guide diag:E2034
 silk guide E2034
 ```
 
-Exact alias matches are preferred before free-text fallback:
+Exact alias matches are preferred before free-text FTS search:
 
 ```sh
 silk guide read file
@@ -31884,15 +31905,19 @@ SILK_GUIDE_DB=/tmp/guide.db
 ## Behavior
 
 - exact tag/module/diagnostic queries use normalized SQLite metadata tables
-- exact alias matches are resolved before free-text fallback
+- exact public std symbol queries use generated metadata from shipped `std/**/*.slk` modules
+- exact alias matches are resolved before free-text FTS search
 - natural-language guide queries now go through a deterministic intent-routing
- pass before alias/FTS fallback, so task phrasing like `how to read a file`
- or `how can i open a file and read it` resolves to curated file I/O guides,
- while `read from stdin` resolves to the stdin echo guide
+ pass before FTS search, so task phrasing like `how to read a file`,
+ `how can i open a file and read it`, or `how do i make a http request`
+ resolves to curated task guides, while `read from stdin` resolves to the
+ stdin echo guide
 - free-text search uses a bundled SQLite FTS5 index over guide titles,
  summaries, source bodies, aliases, keywords, tags, modules, requirements,
  docs, and linked diagnostics
 - text search results print an explicit `matched:` reason
+- non-empty searches that do not match report an error instead of printing the
+ alphabetical `--list` results
 - exact guide ids render the full guide entry and example or reference source
 - guide text output does not print `Run:`, `Source:`, or `Verified:` summary fields
 - guide `Docs:` references are rendered as canonical docs URLs such as
@@ -31906,7 +31931,8 @@ SILK_GUIDE_DB=/tmp/guide.db
  - fixture-backed seeded entries stay promoted to `verified_build`,
  - `verified_build` entries are built,
  - `verified_run` entries are run under a bounded verifier timeout,
- - every canonical `docs/language/*.md` and `docs/std/*.md` page is covered by at least one guide entry
+ - every canonical language and standard-library page is covered by at least one guide entry,
+ - every shipped std `export` declaration and public method (`public fn` or `public async fn`) has generated symbol lookup metadata
 - high-traffic diagnostics may point directly at guide queries such as:
  - `silk guide E2030`
  - `silk guide E2034`
@@ -32032,12 +32058,52 @@ The action fails when:
 - the expected release assets are missing,
 - or checksum verification fails.
 
+## Producing Release Assets
+
+Run the release distribution target on each supported native host before
+uploading assets to a GitHub Release:
+
+```sh
+make dist
+```
+
+The target builds a size-optimized staged prefix with `ReleaseSmall` and
+stripped binaries, then writes upload-ready assets under `build/release/`:
+
+- `silk-v<toolchain-version>-linux-x86_64.tar.gz` on Linux x86_64,
+- `silk-v<toolchain-version>-macos-arm64.tar.gz` on Apple Silicon macOS,
+- and the matching `.sha256` checksum files.
+
+For a release tag that intentionally differs from `src/version.zig`, override
+the asset tag explicitly:
+
+```sh
+DIST_VERSION=v0.1.1 make dist
+```
+
+The archive contains the release-required installed `bin/`, `lib/`,
+`include/`, and `share/` prefix payloads, plus a dedicated release-root `Makefile`
+that supports `make install PREFIX=/usr/local`, staged
+`DESTDIR=/tmp/pkgroot` installs, and `make uninstall` for the files owned by
+that release archive. Its install path removes previously installed owned files
+from the installed receipt before copying the new payload, so upgrades can
+remove files that were owned by an older release but are no longer shipped.
+Uninstall is idempotent for missing prefixes and tolerates stale or malformed
+receipt entries, missing owned files, and unreadable installed receipts by
+falling back to the current archive's owned file list when necessary. It also
+includes curated editor/syntax files under `share/silk/editor/` for Highlight.js,
+Vim, Sublime Text, TextMate,
+VS Code, and coc.nvim. Development-only payloads such as source tests,
+intermediate object files, source-only Markdown manpage copies, editor build
+metadata, cache directories, dependency build trees, `node_modules`, and
+editor scratch files are not included.
+
 ## Relationship to This Repo’s Release CI
 
 This action does not build Silk. It consumes the same staged-prefix tarball that
 the tag release workflow already publishes to GitHub Releases. That keeps
 release CI as the single packaging path for downstream GitHub Actions usage.
-The release workflow validates this installer on both Linux and macOS runners,
+The release workflow should use `make dist` on both Linux and macOS runners,
 and macOS release packages are built from the macOS-native dependency layout
 instead of reusing Linux dependency archives.
 
@@ -32207,7 +32273,7 @@ Testing is incremental and must be developed alongside the implementation:
 
 - Zig unit tests:
  - Each core module (`lexer.zig`, `parser.zig`, `checker.zig`, etc.) contains Zig `test` blocks that exercise its behavior.
- - Additional integration tests may live in dedicated files (e.g. `src/tests_frontend.zig`) that compile sample Silk programs drawn from `docs/language/`.
+ - Additional integration tests may live in dedicated files (e.g. `src/tests_frontend.zig`) that compile sample Silk programs drawn from the language reference on this site.
 - C99 tests:
  - A separate directory (e.g. `c-tests/`) will contain C test programs and harnesses that:
  - link against `libsilk.a`,
@@ -32335,7 +32401,7 @@ This document describes the command-line interface of the `silk` compiler from t
 
 ## Core Responsibilities
 
-At maturity, the `silk` CLI should:
+The `silk` CLI covers these responsibilities:
 
 - Compile Silk source files into:
  - executables,
@@ -32371,6 +32437,9 @@ The implementation is intentionally smaller and focuses on:
  - stateful by replay of **state-building lines**:
  - import and top-level declaration lines are persisted and validated by
  compilation only (not executed),
+ - in the REPL only, import lines may omit the trailing semicolon; the
+ session stores the semicolon-terminated form, and ordinary source files
+ still require semicolon-terminated imports,
  - runtime lines that build state (for example `let`/`var` bindings and
  assignments) are persisted and replayed from the start on each new
  runtime line,
@@ -32496,26 +32565,28 @@ The implementation is intentionally smaller and focuses on:
  - when a package root is selected/resolved, `silk man readme`, `silk man overview`, `silk man <package-name>`, and qualified aliases such as `silk man <package-name> readme` prefer the package overview page when a local `package.readme` exists.
  - when a package root is selected/resolved, `silk man docs`, `silk man documentation`, and qualified aliases such as `silk man <package-name> documentation` open the local `package.documentation` page when present.
  - when a query cannot be resolved, `silk man` prints actionable next steps (try `--search`, `--list`, or qualify with `std::...` / `pkg::...`).
-- `silk guide [options] <query>` — search a curated installed example corpus:
- - the source-of-truth catalog lives in `examples/guide/catalog.json`,
- - install/build staging generates `share/silk/guide.db`,
- - the seeded corpus target is at least `1000` entries and is guarded by repo tests,
- - the corpus combines runnable examples with documentation-backed reference guides covering every canonical page under `docs/language/` and `docs/std/`,
+- `silk guide [options] <query>` — search the curated installed example corpus:
+ - the seeded corpus target is at least `1000` entries and is guarded by the toolchain test suite,
+ - the command reads the bundled guide database shipped with the toolchain (override with `--db` or `SILK_GUIDE_DB` when needed),
+ - the corpus combines runnable examples with documentation-backed reference guides covering every canonical language and standard-library page,
+ - generated public-symbol metadata lets `silk guide` route shipped std `export` declarations and public methods (`public fn` and `public async fn`) to the matching `std/*-api` guide,
  - fixture-backed seeded guides are promoted to `verified_build` when they compile cleanly,
  - `silk guide --list` lists seeded guide ids and titles,
  - `silk guide --show <id>` renders one guide entry with an action-first summary plus the stored Silk source,
  - `silk guide --show <prefix>` expands guide-id prefixes such as `fs` or `task` and may render multiple matching guides,
  - `silk guide --json ...` emits machine-readable search/show payloads with list-valued metadata rendered as JSON arrays,
  - `silk guide tags:<name>` queries normalized tag metadata,
- - `silk guide module:std::task` (or any `std::...` query) queries normalized std-module metadata,
+ - `silk guide module:std::task` queries normalized std-module metadata, and direct module names such as `silk guide std::task` still resolve as module lookups when they are not exact public-symbol matches,
+ - `silk guide std::http::request`, `silk guide ByteSlice.find_bytes`, and `silk guide GL_TEXTURE_2D` query generated public std symbol metadata before free-text FTS search,
  - `silk guide diag:E2034` (or `silk guide E2034`) queries normalized diagnostic-code metadata,
- - exact alias matches are resolved before free-text fallback,
- - free-text guide search first applies deterministic intent routing plus filler-word normalization for common natural-language queries such as `how to read a file`, `how can i open a file and read it`, and `read from stdin`,
+ - exact alias matches are resolved before free-text FTS search,
+ - free-text guide search first applies deterministic intent routing plus filler-word normalization for common natural-language queries such as `how to read a file`, `how can i open a file and read it`, `read from stdin`, and `how do i make a http request`,
  - free-text queries search a bundled SQLite FTS5 index over guide titles,
  summaries, stored source, aliases, keywords, tags, modules, requirements, docs, and diagnostics,
+ - non-empty guide queries that still miss after alias/FTS routing return no matches instead of falling back to the alphabetical `--list` output,
  - documentation-backed reference guides are tagged with `reference-guide` and link directly to canonical language/std docs,
  - text search results include an explicit `matched:` reason,
- - `--show` prioritizes `What`, `Why`, and other action-oriented metadata before secondary search metadata, does not print `Run:`, `Source:`, or `Verified:` summary fields, and renders `Docs:` as canonical docs links URLs,
+ - `--show` prioritizes `What`, `Why`, and other action-oriented metadata before secondary search metadata, does not print `Run:`, `Source:`, or `Verified:` summary fields, and renders `Docs:` as canonical docs links,
  - the stored Silk source is printed directly through the configured printer path instead of fenced code blocks,
  - guide `Docs:` references are rendered as canonical docs URLs rather than repo-relative markdown paths,
  - guide source output is printed through the configured printer path (or direct plain source fallback), not wrapped in fenced code blocks,
@@ -32566,7 +32637,7 @@ The implementation is intentionally smaller and focuses on:
  - `SILK_CACHE_MAX_AGE`
  - `SILK_CACHE_KEEP_RECENT`
 - `silk env` — print key environment variables consulted by the `silk` CLI (stdlib resolution, Formal Silk verification, paging, build scratch dirs, C compiler selection).
- - includes `SILK_GUIDE_DB`, which overrides the installed `share/silk/guide.db` path used by `silk guide`.
+ - includes `SILK_GUIDE_DB`, which overrides the bundled guide database path used by `silk guide`.
  - includes the cache-maintenance environment variables that control the
  managed cache policy (`SILK_CACHE_*`).
 - `silk format [--check] <path> [<path> ...]` (alias: `silk fmt`) — format Silk source files (`.slk` / `.silk`) using project configuration from `.silk/format.toml` (discovered by walking upward from each formatted file’s directory).
@@ -32577,6 +32648,9 @@ The implementation is intentionally smaller and focuses on:
  - the formatter is intentionally readability-oriented rather than indentation-only:
  - same-line statement runs are split so each statement or block body starts on its own line,
  - semicolons nested inside paren/bracket groups stay inline instead of being treated as statement boundaries (for example `join(T; h)` and `for (...; ...; ...)` remain single-line unless the source already breaks them),
+ - newline-based `if` / `else if` headers keep the opening `{` on its own
+ line and indent chained condition lines one level deeper than the
+ control keyword,
  - standalone block-closing `}` boundaries are given breathing room (for example an `if { ... }` followed by another statement becomes `}\n\nnext;` while `} else {` stays on one line),
  - formatter-emitted layout preserves the file’s detected newline style (`\n` vs `\r\n`) instead of introducing mixed line endings,
  - ordinary line/block comments are preserved instead of being deleted or reflowed away during formatting,
@@ -32818,6 +32892,9 @@ The implementation is intentionally smaller and focuses on:
  - note: Silk `int` currently lowers to wasm `i64`, so wasm exports using `int` surface as `i64`,
  - for `--target wasm32-wasi`:
  - an IR→WASM backend that emits `memory` plus `_start () -> void`, imports `wasi_snapshot_preview1.proc_exit`, and calls Silk `fn main () -> int` (the `main(argc, argv)` entrypoint form is not supported yet for WASI),
+ - programs that need argv on `wasm32-wasi` should read it inside `main()`
+ via `std::args::{argc,argv,current}` and then build the usual
+ `std::args::Args` view,
  - also supports export-only modules for embedding (export-only modules do not include `_start`),
  - for both wasm targets, a smaller constant-only wasm backend remains as a fallback for programs that fit the constant subset,
  - other targets are not implemented yet (see [backend wasm](?p=compiler/backend-wasm)),
@@ -36628,7 +36705,7 @@ This document enumerates the current hard limits in the Silk compiler and its
 tooling. These limits are **implementation guardrails** (primarily to keep
 memory usage bounded when compiling untrusted inputs); they are not intended to
 be permanent language constraints unless explicitly called out in the language
-spec (`docs/language/`).
+specification or language reference on this site.
 
 Where a language feature has an implementation cap that affects user code, the
 cap is also documented in the relevant language document (for example
@@ -36774,9 +36851,9 @@ language or stdlib feature.
 
 - For each compiler subsystem (lexer, parser, type checker, verifier, codegen), add Zig tests **as the subsystem is implemented**:
  - Unit tests for lexer, parser, type checker, and verifier.
- - Integration tests that compile and run programs exercising each concept from `docs/language/`.
+ - Integration tests that compile and run programs exercising each concept from the language reference on this site.
 - Prefer placing tests close to the code they exercise (e.g. Zig `test` blocks in the same modules, plus higher-level integration suites where needed).
-- Use examples and edge cases from `docs/language/*` as canonical test inputs.
+- Use examples and edge cases from the language reference as canonical test inputs.
 
 ## C99 Tests
 
@@ -36869,7 +36946,7 @@ The Silk language server:
  those sources are available,
 - does not change the language surface or ABI; it is a tooling layer on top of the existing compiler.
 
-No language features or CLI options are introduced by the LSP itself. Any future extensions that affect language semantics or user-facing flags must still be documented in the appropriate `docs/language/` or [cli silk](?p=compiler/cli-silk) files first.
+No language features or CLI options are introduced by the LSP itself. Any future extensions that affect language semantics or user-facing flags must still be documented in the appropriate language-reference pages on this site or in [cli silk](?p=compiler/cli-silk) first.
 
 ## Running the Server
 
@@ -36888,7 +36965,7 @@ Typical client configurations (e.g., Vim/Neovim LSP, VS Code, or other LSP front
 
 - set the command to `["silk-lsp"]`,
 - enable standard LSP text document synchronization,
-- rely on the capabilities advertised in `initialize`; the current request/notification surface includes diagnostics, hover, definition, references, rename, completion, signature help, semantic tokens, inlay hints, document symbols, shutdown, and exit.
+- rely on the capabilities advertised in `initialize`; the current request/notification surface includes diagnostics, hover, definition, references, rename, completion, formatting, signature help, semantic tokens, inlay hints, document symbols, shutdown, and exit.
 
 ## Transport and Protocol
 
@@ -36922,6 +36999,7 @@ The server supports the standard LSP initialization sequence:
  - `definitionProvider: true` (definition lookups backed by the module-set symbol index; see below).
  - `referencesProvider: true` (reference queries across the current cached module set; see below).
  - `renameProvider: true` (identifier renames across the current cached module set; see below).
+ - `documentFormattingProvider: true` (whole-document formatting via the canonical `silk format` formatter; see below).
  - `documentSymbolProvider: true` (hierarchical document symbols for declarations and nested bodies as described below).
  - `semanticTokensProvider`:
  - legend-driven `full` semantic token responses,
@@ -36954,13 +37032,17 @@ workspace module set.
  - floating-point literals as “float literal”,
  - boolean literals (`true`/`false`) as “bool literal”,
  - string and character literals as “string literal” and “char literal”,
+ - the context-sensitive keyword forms `panic`, `await`, `await *`, `yield`,
+ and `yield *` as Markdown usage help, including hovering either token in
+ the two-token `*` forms,
  - identifiers are reported as `identifier 'name'`.
 - Hover now includes lightweight semantic hints:
  - function identifiers show their `fn name (...) -> result` signature when available,
  - `let` bindings show the declared (or literal-inferred) type when available,
  - struct / enum / interface / error identifiers report `struct Name` / `enum Name` / `interface Name` / `error Name`,
  - `ext` declarations report `ext name: <type>` when available,
- - field and method accesses (`value.field`, `value.method`) report the field type or method signature when the receiver is a known struct,
+ - field and method accesses (`value.field`, `value.method`) report the field type for known struct or error receivers, and report method signatures for known struct receivers,
+ - chained field receivers (`box.value.field`) are resolved by walking the known struct/error field path, including applied generic structs where direct field type parameters can be substituted before rendering the hover type,
  - imported names are resolved across the module set:
  - package imports (`import ns::pkg;`, `import ns::pkg as alias;`),
  - qualified symbol imports (`import ns::pkg::name;`, `import ns::pkg::name as alias;`, `import ::malloc;`),
@@ -36988,7 +37070,7 @@ The server provides `textDocument/definition` for open documents.
  package graphs + definition files + std modules when enabled) to resolve:
  - exported or package-local `fn`, `let`, `ext`, `struct`, `enum`, `interface`, and `error` declarations,
  - methods declared in `impl` blocks when invoked as `value.method(...)`,
- - qualified names such as `std::pkg::name` and namespace-qualified names like `alias::name` when `alias` is introduced by:
+ - qualified names such as `std::pkg::name` and namespace-qualified names like `alias::name` or `alias::child::name` when `alias` is introduced by:
  - a package import,
  - a default/namespace import,
  - or a module-scope `using` alias.
@@ -37000,12 +37082,19 @@ The server provides `textDocument/definition` for open documents.
 - Local scopes are then consulted to resolve:
  - function parameters,
  - block-scoped `let` bindings,
+ - destructuring `let` pattern binders,
+ - `let ... else` binders after the statement succeeds,
+ - `if let` and `while let` pattern binders, including chained `&& let`
+ clauses within the active body,
+ - C-style `for` initializer bindings within the loop,
  - `match`-statement binders within the selected arm body.
 - Member access (`value.field` / `value.method`) uses the heuristic receiver-type resolver:
- - when a method is found, the definition points at the `impl` method declaration,
- - when a struct field is found, the definition points at that field declaration,
- - otherwise the definition falls back to the receiver struct declaration.
-- Constructor calls (`new Type(...)`) resolve to the `fn constructor` declaration when the constructor overload set is unambiguous; otherwise the server falls back to the `struct Type` declaration.
+ - receiver expressions may be direct locals/types or chained field paths such as `box.value.field`,
+ - applied generic struct receivers substitute direct type-parameter fields before resolving the next field in the path,
+ - when a struct method is found, the definition points at the `impl` method declaration,
+ - when a struct or error field is found, the definition points at that field declaration,
+ - otherwise the definition falls back to the receiver struct or error declaration.
+- Constructor calls (`new Type(...)`, including namespace/import-qualified `new pkg::Type(...)`) resolve to the public/exported `fn constructor` overload selected by the callsite argument count, using the same arity ranking as the compiler for exact matches, defaulted trailing parameters, and trailing varargs. Empty allocation literals (`new Type{}`) similarly resolve through the zero-argument constructor ranking. If the call shape is incomplete, unmatched, hidden by visibility, or still ambiguous, the server falls back to the `struct Type` declaration.
 - When a resolved `ext` declaration has a matching native C symbol in a
  manifest-owned source/header file, go-to-definition prefers the C definition
  (or declaration if no definition is present locally) over the Silk `ext`
@@ -37014,7 +37103,9 @@ The server provides `textDocument/definition` for open documents.
 
 Known limitations in this initial support:
 
-- local block scopes and shadowing are only modeled for `let`-style bindings (not for match-expression binders),
+- local block scopes and shadowing are modeled for statement-level binders, but
+ match-expression binders and full control-flow refinement are not yet a
+ complete semantic scope tree,
 - ambiguous names across multiple imports are not disambiguated; the first match wins,
 - cross-file results are limited to declarations present in the current module
  set (open docs, manifest-discovered package files, and std modules when
@@ -37035,26 +37126,68 @@ module set.
 
 - Completion items are offered for:
  - all language keywords defined in `src/token.zig` (via `keywordTable()`),
+ tagged with LSP keyword kind,
+ - guided keyword-help completions for `panic`, `await`, `await *`, `yield`,
+ and `yield *`, with compact detail strings and Markdown documentation for
+ the typed-error, Promise, and Task usage contracts,
  - all distinct identifiers lexed from the current document (names that are not recognized as keywords),
  - symbol-aware suggestions from the current package and imported packages (functions, lets, ext, structs, enums, interfaces, errors),
  - imported names from:
  - package imports and qualified symbol imports,
  - JS-style named/default imports from file or package specifiers,
  - and module-scope `using` aliases,
+ - unqualified local-package and named imported functions in
+ statement-position buffers that are temporarily incomplete while typing
+ (for example before `(` or `;` has been inserted),
  - import specifier path completion inside `from "..."` strings:
  - file specifiers (`"./..."`, `"../..."`, and absolute paths) suggest `.slk` files and subdirectories,
  - std-root file specifiers (`"std/..."`) suggest stdlib paths (omitting the `.slk` extension),
- - namespace completions after `::` for known packages, package-import aliases, default/namespace imports, and `using`-introduced namespace aliases,
- - member completions for struct fields and methods after `.` when the receiver type is known (including locals with type annotations or struct-literal/cast inference),
- - struct-literal field suggestions in `Type { ... }` expressions when the cursor is in a field-name position (before the `:`).
+ - namespace completions after `::` for known packages, package-import aliases, default/namespace imports, and `using`-introduced namespace aliases, including nested alias chains such as `rt::mem::`,
+ - member completions for struct and error fields after `.` when the receiver type is known (including locals with type annotations, struct/error literals, casts, or `new Type(...)` initializers); struct receivers also include instance methods,
+ - bare member-trigger completions such as `manager.` by parsing a transient completion probe in memory and returning member results instead of falling back to global lexical keywords,
+ - static impl method completions after a type receiver such as `User.`, limited to `impl User` functions without an explicit `self` receiver while value receivers keep instance fields and methods,
+ - receiver completions after local bindings initialized from static impl calls, such as `let user = User.create(options); user.`, by using the static impl function result type,
+ - array element receiver completions such as `inputs[0].` when `inputs` has an array or slice type annotation,
+ - `for item in items { item. }` completions when `items` has an array or slice type annotation,
+ - `for item in manager.iter() { item. }` completions when the iterator-returning call result, local type aliases, rewritten std/file imports, and `next() -> T?` element type can be resolved through the cached symbol index or transient parse overlay,
+ - local completion and receiver inference for statement-level language
+ binders, including destructuring `let` patterns, `let ... else`, `if let`
+ / `while let` and chained `&& let` clauses, `match` statement arms, and
+ C-style `for` initializers,
+ - field/method completions for safe pattern payloads when the scrutinee type
+ is known, including optional `Some(value)` payloads, generic
+ `Result(T, E)`-style `Ok(value)` / `Err(error)` payloads, struct
+ destructuring fields, and array destructuring elements,
+ - chained field completions such as `box.value.` by walking known
+ struct/error receiver fields without invoking the full type checker,
+ - applied generic receiver completions such as `b.value.` where
+ `b: Box(Inner)` by substituting direct struct type parameters (`T`) into
+ field types before resolving the next field,
+ - struct- and error-literal field suggestions in `Type { ... }` expressions,
+ including `panic Error { ... }` payloads, when the cursor is in a
+ field-name position (before the `:`); this contextual completion remains
+ limited to record fields while the entry is incomplete, returns field-kind
+ items with `field: Type` detail/documentation, inserts the canonical
+ `field: ` initializer prefix through `textEdit`, suppresses fields already
+ initialized in the current literal, and supplies `filterText` so editors
+ can keep showing field choices even when the partial token does not
+ prefix-match a field label.
 - Currently:
  - returns completion items with `label`, `kind`, and `detail` populated when symbol data is available,
- - attaches a plaintext signature preview for functions and methods in completion documentation,
+ - attaches Markdown documentation for functions, methods, structs, and documented `let` bindings when doc comments are available, falling back to a compact signature/type preview,
  - filters results by the identifier prefix immediately preceding the cursor position,
  - uses a heuristic symbol index built from the module set (open docs + imports + std modules).
+- When the current buffer is syntactically incomplete, ordinary identifier
+ completion may parse a transient in-memory probe before falling back to
+ lexical identifiers. If a lexical identifier is later resolved to a symbol,
+ the server promotes that item with the resolved kind, detail, and
+ documentation. If the symbol overlay still cannot represent the current
+ file, lexical `fn name` declarations are still promoted to function
+ completion items so local functions remain visible.
 - Scope precision is still limited:
  - receiver type inference is heuristic (it is not a full typechecker),
- - local scopes are only partially modeled for completion (not all binder forms and control-flow refinements are represented),
+ - match-expression binders and full control-flow refinements are not yet
+ represented in completion,
  - cross-file results are limited to declarations present in the current module set (open docs + manifest/package import closure + std modules when enabled).
 
 As richer front-end support becomes available, completion may be extended to:
@@ -37074,13 +37207,18 @@ The server provides a minimal implementation of `textDocument/signatureHelp`:
  - method calls (`value.method(...)`) when the receiver resolves to a known struct type.
 - constructor calls via heap allocation syntax (`new Type(...)`), which resolves to the `constructor` overload set defined in `impl Type { ... }`.
 - calls via named imports and default-imported default exports (`import { f as g } from "..."; g(...)`, `import g from "./mod.slk"; g(...)`) when resolvable.
-- Active parameter selection is based on comma counting in the current call.
+- When the current buffer is temporarily incomplete after typing `(` or `,`,
+ signature help parses a transient in-memory call probe and overlays the
+ current document's symbols on the workspace cache, so local, named-imported,
+ default-imported, and namespace-qualified function signatures remain
+ available while the user is still typing the argument list.
+- Active parameter selection is based on delimiter-aware comma counting in the current call. Explicit generic-call arguments before `;` are excluded from the value-argument count, and commas inside nested calls, array literals, and aggregate literals are ignored for the outer call.
 - Signature labels follow the Silk surface syntax (e.g. `fn foo (a: int, b: int) -> int`).
 - When doc comments are available:
  - `SignatureInformation.documentation` is populated with rendered Markdown from the doc comment,
  - `SignatureParameter.documentation` is populated from `@param` entries when present.
 
-For constructor overload sets, the server returns multiple signatures and selects an active signature using argument-count heuristics. The implicit receiver parameter (`mut self: &Type`) is not shown in the signature parameters for `new Type(...)`.
+For constructor overload sets, the server returns public/exported signatures and selects an active signature using delimiter-aware value-argument heuristics, with exact arity preferred over defaulted trailing parameters and varargs. The implicit receiver parameter (`mut self: &Type`) is not shown in the signature parameters for `new Type(...)`.
 
 Signature help is heuristic and will become richer as the front-end’s symbol tables evolve. Some clients may request signature help even before `(` is typed; the server will attempt to resolve the identifier under the cursor as a callee in that case.
 
@@ -37146,6 +37284,7 @@ The server provides `textDocument/inlayHint`.
 
 - The current implementation emits type hints for:
  - unannotated `let` bindings when the initializer’s type is inferable from the current tooling subset,
+ - `for` binders over inferable arrays, slices, and ranges,
  - unannotated C-style `for` initializer bindings with the same inferable-type rule.
 - Hints are range-aware: the server only returns hints whose insertion positions fall inside the requested LSP range.
 
@@ -37153,6 +37292,21 @@ Limitations:
 
 - only a narrow type-hint subset is emitted today,
 - parameter-name hints and broader expression/result hints are not yet implemented.
+
+## Formatting
+
+The server provides `textDocument/formatting` for open documents.
+
+- Formatting uses the same canonical source formatter as `silk format`.
+- The response is whole-document oriented:
+ - if the open document is already formatted, the server returns an empty edit list,
+ - otherwise it returns one full-range `TextEdit` that replaces the document text with the formatted text.
+- Newline-based `if` / `else if` headers use the same canonical layout as the CLI formatter: chained condition lines are indented one level deeper than the control keyword, and the following standalone `{` aligns back to the control keyword.
+
+Limitations:
+
+- LSP formatting currently uses the default formatter configuration; editor-specific `FormattingOptions` and `.silk/format.toml` discovery are not yet applied inside the server.
+- Range formatting is not advertised.
 
 ## Text Document Lifetime and Diagnostics
 
@@ -37164,6 +37318,7 @@ The server maintains an in-memory table of open documents, keyed by URI:
  - publishes diagnostics via `textDocument/publishDiagnostics` for the opened URI by parsing the opened document and type-checking it against the cached module set (imports + std modules).
 - `textDocument/didChange` (full sync):
  - replaces the stored text with the new full contents,
+ - increments only the changed document revision for already-open documents so hover/definition/completion/signature-help can continue using the existing workspace/import/std cache while typing,
  - parses the changed document and type-checks it against the cached module set (imports + std modules),
  - publishes updated diagnostics for the changed URI.
 - `textDocument/didSave`:
@@ -37236,7 +37391,8 @@ The current LSP diagnostic surface follows these rules:
 - Resolve/type-check diagnostics:
  - use the compiler’s existing structured failure data (stable code, message, source span, and any available detail),
  - map that span/code directly onto the LSP diagnostic when the compiler reports one,
- - flatten available note/help guidance inline into the LSP `message` field because the current payload shape does not expose separate rich note/help arrays.
+ - include exact expected/found type detail for supported incorrect `await`, `await *`, `yield`, and `yield *` task/async operand errors,
+ - flatten available note/help guidance inline into the LSP `message` field and also attach structured `data.detail`, `data.notes`, and `data.helps` when the compiler provides them.
 - Conditional compilation (`if attr(...)`):
  - the server evaluates `attr(...)` query conditions using the host target (`arch`, `os`, `target`) and the enabled feature set (empty in Silk currently),
  - when an `if` / `else if` condition is an attribute-query boolean expression that resolves to a constant `true`/`false`, the inactive branch body is published as a `Hint` diagnostic tagged `Unnecessary` so editors may render it faded (similar to inactive `#if` blocks in C/C++).
@@ -37254,11 +37410,11 @@ Current limits:
 - project-wide navigation or rename outside the current cached module set,
 - fully semantic token classification for every identifier use,
 - richer inlay-hint categories beyond the current local type hints,
-- code actions or formatting.
+- code actions.
 
 These features are intended as future extensions and must be:
 
-- designed and documented here (and in any relevant `docs/language/` or `docs/std/` docs),
+- designed and documented here (and in any relevant language-reference or standard-library docs on this site),
 - backed by the underlying compiler front-end and/or standard library,
 - covered by tests (Zig and, where appropriate, C) before being advertised as supported capabilities.
 
@@ -37548,6 +37704,8 @@ The initial C header provided in the Silk compiler repository defines:
  - `wasm32-wasi`:
  - requires `fn main () -> int` (the `main(argc, argv)` form is not supported
  yet for WASI),
+ - programs that need process arguments must read them from WASI inside
+ `main()` (for example via `std::args::{argc,argv,current}`),
  - emits an exported `_start () -> void` wrapper that calls `main` and then
  imports/calls WASI `proc_exit`,
  - export-only modules are supported for embedding (export-only modules do
@@ -37645,7 +37803,7 @@ The initial C header provided in the Silk compiler repository defines:
  - it lexes and parses each module into an internal representation,
  - it then type‑checks the *set* of modules as a unit, taking into account
  package/import relationships and exported constants, according to the
- language grammar and semantics documented under `docs/language/`,
+ language grammar and semantics documented throughout the Silk language reference on this site,
  - if Formal Silk syntax is present (for example `#require`, `#assure`,
  `#assert`, `#invariant`, `#variant`, `#monovariant`, `#const`), it also runs the Z3-backed verifier
  and fails the build if verification fails (`E3001`..`E3008`),
@@ -38831,11 +38989,9 @@ For terminal-first discovery, `silk man` is the main entrypoint: use
 discover commands/concepts/modules/symbols, `silk man <query>` to open a page,
 and `silk doc --man <query> -o <path>` when you need the generated roff file.
 
-`silk format` is the canonical source formatter for Silk code; it enforces statement splitting, block-spacing readability rules, canonical import grouping, and comment preservation in addition to indentation cleanup. Semicolons inside paren/bracket groups remain inline (for example generic-call separators and C-style `for` headers) instead of being treated as standalone statement breaks. Recursive directory walks honor `.gitignore`, while explicitly named file paths still format on demand.
+`silk format` is the canonical source formatter for Silk code; it enforces statement splitting, block-spacing readability rules, canonical import grouping, and comment preservation in addition to indentation cleanup. Semicolons inside paren/bracket groups remain inline (for example generic-call separators and C-style `for` headers) instead of being treated as standalone statement breaks. Newline-based `if` / `else if` headers keep chained condition lines one indent level deeper than the control keyword and keep the opening `{` on its own line. Recursive directory walks honor `.gitignore`, while explicitly named file paths still format on demand.
 
-`silk guide` is the curated example discovery surface. It queries the installed
-`share/silk/guide.db` database generated from `examples/guide/catalog.json` and
-returns canonical runnable patterns for common Silk tasks.
+`silk guide` is the curated example discovery surface. It queries the bundled guide database shipped with the toolchain and returns canonical runnable patterns for common Silk tasks.
 
 `silk cache` is the managed cache inspection and maintenance surface. It
 understands the recognized cache entries under `<work_root>/cache` (default:
@@ -38880,6 +39036,9 @@ For the implementation, the supported options are:
  - Stateful by replay of **state-building lines**:
  - import and top-level declaration lines are persisted and validated by
  compilation only (not executed),
+ - in the REPL only, import lines may omit the trailing semicolon; the
+ session stores the semicolon-terminated form, and ordinary source files
+ still require semicolon-terminated imports,
  - runtime lines that build state (for example `let`/`var` bindings and
  assignments) are persisted and replayed from the start on each new
  runtime line,
@@ -39207,8 +39366,9 @@ For the implementation, the supported options are:
  - When a local `package.documentation` page exists, `silk man docs`, `silk man documentation`, and qualified aliases such as `silk man <package-name> documentation` open it directly.
 - **Guide command:**
  - `silk guide [--db <path>] [--json] [--limit <n>] [--printer <cmd>] <query>`:
- - queries the installed guide database generated from `examples/guide/catalog.json`.
- - the seeded corpus floor is `1000` entries, including documentation-backed reference guides for every canonical `docs/language/*.md` and `docs/std/*.md` page.
+ - queries the bundled guide database shipped with the toolchain.
+ - the seeded corpus floor is `1000` entries, including documentation-backed reference guides for every canonical language and standard-library page.
+ - generated public-symbol metadata routes shipped std `export` declarations and public methods (`public fn` and `public async fn`) to the matching API guide.
  - `--list` lists seeded guide ids/titles.
  - `--show <id>` prints a single guide entry with its stored source.
  - `--show <prefix>` expands matching guide ids such as `fs` -> `fs/...` and may print multiple guide entries.
@@ -39220,17 +39380,18 @@ For the implementation, the supported options are:
  - natural free text: `silk guide how to read a file`
  - exact tags: `silk guide tags:concurrency`
  - exact modules: `silk guide module:std::task`
+ - exact public std symbols: `silk guide std::http::request`, `silk guide ByteSlice.find_bytes`, or `silk guide GL_TEXTURE_2D`
  - documentation-backed references: `silk guide tags:reference-guide`, `silk guide language types`, or `silk guide std io overview`
  - exact diagnostics: `silk guide diag:E2034` or `silk guide E2034`
  - exact guide ids: `silk guide fs/file-roundtrip`
- - exact aliases are preferred before free-text fallback
- - free-text search first applies deterministic intent routing for common phrasing such as `read from stdin`, then uses the bundled SQLite FTS5 guide index, ignores common filler terms such as `how`, `to`, and `a`, and text output includes a `matched:` reason for each hit.
+ - exact aliases are preferred before free-text FTS search
+ - free-text search first applies deterministic intent routing for common phrasing such as `read from stdin` and `how do i make a http request`, then uses the bundled SQLite FTS5 guide index, ignores common filler terms such as `how`, `to`, and `a`, and text output includes a `matched:` reason for each hit.
+ - non-empty searches that still miss after alias/FTS routing report no matches instead of printing the alphabetical `--list` output.
  - `--printer <cmd>` selects the source printer used by `--show`; precedence is `--printer`, then `SILK_GUIDE_PRINTER`, then `bat`, then `cat`.
  - `--show` text omits `Run:`, `Source:`, and `Verified:` summary fields, renders `Docs:` as canonical docs links URLs, and prints the stored Silk source directly instead of fenced code blocks.
  - database lookup order:
  - `SILK_GUIDE_DB` when set,
- - otherwise `../share/silk/guide.db` relative to the `silk` executable,
- - otherwise the staged development copy under `build/share/silk/guide.db` when available.
+ - otherwise the bundled guide database that ships with the installed toolchain.
 - **Cache command:**
  - `silk cache [subcommand] [--package <dir|manifest>] [--cache-dir <path>]`:
  - manages the recognized compiler cache under `<work_root>/cache`
@@ -40009,6 +40170,9 @@ The formatter is readability-oriented:
 - it normalizes indentation,
 - it splits same-line statement runs so each statement or block body starts on its own line,
 - it keeps semicolons nested inside paren/bracket groups inline instead of treating them as standalone statement breaks (for example `join(T; h)` and `for (...; ...; ...)` stay single-line unless the source already uses a multiline layout),
+- it preserves newline-based `if` / `else if` headers by keeping the opening
+ `{` on its own line and indenting chained condition lines one level deeper
+ than the control keyword,
 - it inserts a visual separator after standalone block-closing `}` boundaries when the next token starts a new statement or declaration,
 - it keeps `} else {` on one line,
 - it preserves the file’s detected newline style (`\n` or `\r\n`) when it emits new layout,
@@ -41837,11 +42001,10 @@ URL: /silk/docs/?p=man/silk-guide.1
 
 ## Description
 
-`silk guide` queries an installed SQLite guide database generated from the
-curated catalog at `examples/guide/catalog.json`. The seeded corpus is kept
-at a floor of `1000` entries and combines runnable examples with
-documentation-backed reference guides for every canonical page under
-`docs/language/` and `docs/std/`.
+`silk guide` queries the bundled SQLite guide database shipped with the
+toolchain. The seeded corpus is kept at a floor of `1000` entries and
+combines runnable examples with documentation-backed reference guides for every
+canonical language and standard-library page.
 
 Each guide entry contains:
 
@@ -41855,6 +42018,7 @@ Each guide entry contains:
 - environment/runtime requirements,
 - linked documentation references,
 - optional diagnostic-code links,
+- generated public std symbol lookup terms,
 - related guide ids,
 - and verification flags.
 
@@ -41863,11 +42027,16 @@ Each guide entry contains:
 - Free text:
  - `silk guide read file`
  - `silk guide tcp loopback`
+ - `silk guide http request`
 - Exact tag filter:
  - `silk guide tags:concurrency`
 - Exact std-module filter:
  - `silk guide module:std::task`
  - `silk guide std::task`
+- Exact public std symbol lookup:
+ - `silk guide std::http::request`
+ - `silk guide ByteSlice.find_bytes`
+ - `silk guide GL_TEXTURE_2D`
 - Documentation-backed references:
  - `silk guide tags:reference-guide`
  - `silk guide language types`
@@ -41900,21 +42069,23 @@ Each guide entry contains:
 By default, `silk guide` looks for:
 
 - `SILK_GUIDE_DB` when set,
-- `SILK_GUIDE_PRINTER` when set and `--printer` is not provided for `--show`,
-- otherwise `../share/silk/guide.db` relative to the `silk` executable,
-- otherwise the staged development path under `build/share/silk/guide.db` when available.
+- otherwise the bundled guide database that ships with the installed toolchain.
 
 ## Notes
 
 - Exact tag/module/diagnostic/alias lookups use normalized SQLite metadata tables.
+- Exact public std symbol lookups use generated metadata from shipped `std/**/*.slk` modules and route to the matching API guide.
 - `--show` accepts exact ids and id-prefixes; a prefix like `fs` may render
  multiple `fs/...` guides.
 - Free-text queries use a bundled SQLite FTS5 index over guide titles,
  summaries, stored Silk source, aliases, keywords, tags, modules,
  requirements, docs, and diagnostics.
 - Common filler words are ignored and an intent-routing pass runs before
- alias/FTS fallback, so natural queries like `how to read a file` or
- `how can i open a file and read it` or `read from stdin` still resolve.
+ FTS search, so natural queries like `how to read a file`,
+ `how can i open a file and read it`, `read from stdin`, or
+ `how do i make a http request` still resolve.
+- Non-empty searches that still miss after alias/FTS routing report no matches
+ instead of printing the alphabetical `--list` output.
 - Text search results print an explicit `matched:` reason so users can see why
  an example was returned.
 - Text search results do not print a `source:` metadata line.
@@ -41929,13 +42100,15 @@ By default, `silk guide` looks for:
 - `--show` prints action-first metadata in this order:
  `What`, `Why`, `Docs`, and the remaining environment/search details, followed
  by the stored Silk source.
-- Seeded guide sources are verification-backed by the repo test suite:
+- Seeded guide sources are verification-backed by the toolchain test suite:
  every distinct source path is checked, fixture-backed entries remain
  promoted to `verified_build`, entries are built when
  `verified_build = true`, and they run under a bounded timeout when
  `verified_run = true`.
-- The repo test suite also verifies that every canonical `docs/language/*.md`
- and `docs/std/*.md` page is referenced by at least one guide entry.
+- The toolchain test suite also verifies that every canonical language and
+ standard-library documentation page is referenced by at least one guide entry, and that
+ every shipped std `export` declaration and public method (`public fn` or
+ `public async fn`) has generated symbol lookup metadata.
 - High-traffic diagnostics may point directly at guide lookups such as
  `silk guide E2030` or `silk guide E2034`.
 
@@ -46299,9 +46472,7 @@ The `match` expression provides structured pattern matching.
 Key ideas:
 
 - A `match` selects one of several branches based on a scrutinee expression.
-- The full language design includes richer patterns and arm guards, but the
- current shipped subset documented here does not implement `if` guards in any
- `match` form yet.
+- Arm guards of the form `pattern if cond => ...` are not part of the shipped subset documented here. Once a pattern matches, any additional boolean refinement must happen in a nested `if` / `if let`, or before the `match`.
 - `match` is an expression; all arms must be compatible in type.
 
 The compiler must:
@@ -46311,10 +46482,7 @@ The compiler must:
 
 ### Surface Syntax
 
-The full language design includes rich pattern matching, guards, and matching
-over many scrutinee types. The current compiler implementation supports only a
-narrow, explicitly documented subset so we can validate end-to-end lowering and
-code generation.
+This page documents the shipped `match` subset: the scrutinee kinds, pattern forms, and exhaustiveness rules that work end to end today. Patterns or guard forms outside the supported set are intentionally omitted here until they are implemented across parsing, checking, lowering, and code generation.
 
 In the initial subset, `match` is accepted as an *expression* of the form:
 
@@ -46348,7 +46516,7 @@ For optionals, the Supported forms is:
  - `None`
  - `Some(<name>)`
  - `Some(_)`
-- No guards (`if ...`) are implemented yet.
+- Arm guards (`pattern if cond => ...`) are not part of the shipped subset here; use a nested `if` / `if let` in the selected arm, or test the boolean condition before entering the `match`.
 - Matches must be exhaustive for the optional scrutinee: there must be exactly
  one `None` arm and exactly one `Some(...)` arm (order is not significant).
 
@@ -46380,7 +46548,7 @@ Defined initial subset:
 - The match must be exhaustive:
  - there must be exactly one wildcard `_` arm, and
  - literal arms must not repeat the same value.
-- No guards (`if ...`) are implemented yet.
+- Arm guards (`pattern if cond => ...`) are not part of the shipped subset here; use a nested `if` / `if let` in the selected arm, or test the boolean condition before entering the `match`.
 
 Example:
 
@@ -46411,7 +46579,7 @@ Defined initial subset:
  alias for the instantiation (for example `type R = Result(int, string);` then
  `R::Ok(v)` / `R::Err(e)`), or patterns may omit the qualifier and use the
  variant name directly.
-- No guards (`if ...`) are implemented yet.
+- Arm guards (`pattern if cond => ...`) are not part of the shipped subset here; use a nested `if` / `if let` in the selected arm, or test the boolean condition before entering the `match`.
 - In expression form, enum matches must still be exhaustive:
  - either there is exactly one explicit arm for each enum variant,
  - or a final wildcard `_` arm covers every remaining unmatched variant,
@@ -46428,7 +46596,7 @@ Defined initial subset:
  - `name: Ti` (binds the payload as `Ti`), or
  - `_: Ti` (matches and ignores the payload),
  where `Ti` is one of the union member types.
-- No guards (`if ...`) are implemented yet.
+- Arm guards (`pattern if cond => ...`) are not part of the shipped subset here; use a nested `if` / `if let` in the selected arm, or test the boolean condition before entering the `match`.
 - Matches must be exhaustive: there must be exactly one arm per union member
  type (order is not significant).
 
@@ -46554,8 +46722,7 @@ Implementation
  - type unions,
  - recoverable `Result`-style values,
  - and exhaustive enum matches.
-- No match arm guards (`pattern if cond => ...`) are implemented yet in either
- expression or statement form.
+- Match arm guards (`pattern if cond => ...`) are not part of the shipped subset in either expression or statement form. After a pattern matches, any extra boolean refinement must happen in a nested `if` / `if let`, or before the `match` itself.
 - The statement form is implemented for:
  - ordinary values in the supported subset (block arms), and
  - typed errors as part of the typed errors feature work (`Typed Errors (`error`, `panic`, and `T | ErrorType...`)`).
@@ -50446,7 +50613,7 @@ Key points:
 - `Buffer(T)` uses the current compiler’s **scalar-slot** layout (for example
  `sizeof(u8) == 8`). For packed bytes suitable for OS/FFI byte APIs, use
  `std::buffer::BufferU8`.
-- The current API includes operations such as:
+- The shipped surface includes operations such as:
  - allocation: `std::buffer::Buffer(T).init(cap)` / `std::buffer::alloc(T; cap)`
  - reads/writes: `buf.read(i)` / `buf.write(i, v)` and module-level wrappers
  - views: `buf.view(len)` / `buf.slice(start, end)` returning `std::arrays::Slice(T)`
@@ -56523,7 +56690,7 @@ Canonical spec: [flow overview](?p=language/flow-overview).
 
 ## Notes
 
-- Reference details: `docs/language/flow-*.md`
+- Use the linked flow-control pages below for exact supported forms and diagnostics.
 
 ## Example
 ```silk
@@ -57018,16 +57185,15 @@ URL: /silk/wiki/?p=language/grammar
 
 # Grammar
 
-[grammar](?p=language/grammar) is the canonical “what the parser accepts” reference
-for Silk surface syntax.
+[grammar](?p=language/grammar) is the canonical “what the parser accepts” reference for Silk surface syntax.
 
 This wiki page is a reading guide, not a replacement for the grammar itself.
 
 ## How to use the grammar
 
 - Use the grammar when you need the exact token-level surface form.
-- Use the concept docs (`docs/language/*.md`) for semantics and type rules.
-- Use `tests/silk/pass_*.slk` for runnable examples.
+- Use the linked language reference pages for semantics and type rules.
+- Use the canonical docs and guides for runnable examples that exercise each construct.
 
 ## Example
 ```silk
@@ -57424,23 +57590,20 @@ URL: /silk/wiki/?p=language/literals-overview
 
 # Literals
 
-Literals are the simplest way to write values directly in source code:
-numbers, booleans, chars, strings, durations, and aggregates like arrays
-struct literals.
+Literals are the simplest way to write values directly in source code: numbers, booleans, chars, strings, durations, and aggregates like arrays and struct literals.
 
-This wiki page is a learning-oriented companion to the canonical spec:
-[literals overview](?p=language/literals-overview).
+This wiki page is a learning-oriented companion to the canonical spec: [literals overview](?p=language/literals-overview).
 
 ## Notes
 
-- Detailed rules and edge cases: `docs/language/literals-*.md`
+- Use the linked literals pages below for the exact rules and edge cases for each literal family.
 
 ## Syntax
 ```silk
 let n: int = 42;
 let pi: f64 = 3.14159;
 let ok: bool = true;
-let c: char = '\\n';
+let c: char = '\n';
 let s: string = "hello";
 
 // Duration literals
@@ -57466,7 +57629,7 @@ fn main () -> int {
 import std::io;
 
 fn main () -> int {
-  std::io::println("line1\\nline2");
+  std::io::println("line1\nline2");
   return 0;
 }
 ```
@@ -57826,14 +57989,15 @@ Currently, enums support:
 
 - unit variants (`E::A`),
 - tuple variants (`E::B(x)`),
-- exhaustive `match` expressions over enum values (restricted subset; no guards),
+- exhaustive `match` expressions over enum values in the shipped subset,
 - and statement-form ordinary enum `match` with qualified variant arms.
 
 Canonical spec: [enums](?p=language/enums).
 
 ## Notes
 
-- Supported forms + representation: [enums](?p=language/enums)
+- Use [enums](?p=language/enums) for the exact supported forms and representation rules.
+- Match-arm guards of the form `Variant(...) if cond => ...` are not part of the shipped subset. Match on the variant first, then use a nested `if` for any extra boolean refinement.
 
 ## Syntax
 ```silk
@@ -57865,7 +58029,6 @@ fn main () -> int {
 
 - Canonical spec: [enums](?p=language/enums)
 - `match` expressions: [flow match](?p=language/flow-match)
-- Enum fixtures: `tests/silk/pass_enum_*`
 
 ==============================================================================
 WIKI: Errors and assertions (language/errors)
@@ -58591,16 +58754,14 @@ URL: /silk/wiki/?p=std/overview
 
 # Standard library overview (`std::`)
 
-`std::` is the Silk standard library namespace. The `docs/std/` tree specifies
-the intended API and structure; an in-tree stdlib implementation exists
-under `std/` for Silk currently.
+`std::` is the Silk standard library namespace. Start here when you want the top-level map of shipped modules, then move into the exact module pages for the surface you are using.
 
 Canonical doc: [overview](?p=std/overview).
 
 ## Notes
 
-- Design + implementation: many modules have an Supported forms; the overall surface is still evolving.
-- Details: [overview](?p=std/overview)
+- Use [overview](?p=std/overview) for the complete standard-library map and module descriptions.
+- Use [module catalog](../docs/?p=std/module-catalog) when you need an audit-style inventory of what ships in the toolchain.
 
 ## Importing
 

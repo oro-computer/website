@@ -1,16 +1,26 @@
 # `std::args`
 
-A small native-argv helper surface is implemented in
-`std/args.slk` to make early programs ergonomic while `string[]` parameters and
-richer slice/iterator features are still future work.
+`std::args` exposes the process-argument surface used by Silk entrypoints. It keeps argument handling explicit at the ABI boundary: native targets use the conventional `(argc, argv)` shape, while `wasm32-wasi` exposes helpers that reconstruct the same view from WASI process arguments.
 
-`std::args` focuses on the hosted `linux/x86_64` executable entrypoint shape:
+`std::args` currently supports two executable argument shapes:
+
+- hosted/native entrypoints that receive:
 
 ```silk
 fn main (argc: int, argv: u64) -> int { ... }
 ```
 
-Where `argv` is a raw pointer to the process `argv` pointer list (`char**` in C).
+- and `wasm32-wasi` entrypoints that remain parameterless:
+
+```silk
+fn main () -> int { ... }
+```
+
+For hosted/native entrypoints, `argv` is a raw pointer to the process `argv`
+pointer list (`char**` in C). For `wasm32-wasi`, `std::args` exposes helpers
+that read the process arguments from the WASI Preview 1 `args_sizes_get` /
+`args_get` syscalls and present the same `(argc, argv)` shape to downstream
+code.
 
 See also:
 
@@ -35,6 +45,11 @@ export fn cstr_len (cstr: u64) -> int;
 export fn cstr_string (cstr: u64) -> string;
 export fn argv_string (argv: u64, index: int) -> string;
 
+// WASI-only helpers for parameterless `fn main () -> int`.
+export fn argc () -> int;
+export fn argv () -> u64;
+export fn current () -> Args;
+
 // Convenience wrapper for (argc, argv).
 struct Args {
   argc: int,
@@ -49,15 +64,47 @@ impl Args {
 }
 ```
 
+### WASI usage
+
+On `wasm32-wasi`, build the same `Args` view from a parameterless `main`:
+
+```silk
+import args from "std/args";
+
+fn main () -> int {
+  let a = args::Args.init(args::argc(), args::argv());
+  return a.count();
+}
+```
+
+or use the convenience wrapper:
+
+```silk
+import args from "std/args";
+
+fn main () -> int {
+  let a = args::current();
+  return a.count();
+}
+```
+
 ### Safety notes
 
 - `cstr_len` scans memory until it finds a `0` byte. If the pointer is invalid
  or the string is not NUL-terminated, behavior is undefined.
+- `argv_ptr` is target-aware:
+ - on hosted/native entrypoints it reads `argv[index]` from an 8-byte pointer
+ table (`char**`),
+ - on `wasm32-wasi` it reads `argv[index]` from a cached 4-byte pointer table
+ of `u32` linear-memory offsets returned by WASI `args_get`.
 - `cstr_string` / `argv_string` return `string` **views** into existing memory.
  They do not copy or allocate, and therefore do not provide ownership. The
  caller must ensure the pointed-to bytes remain valid for the lifetime of the
  returned `string`. For process `argv` strings this is typically valid for the
  lifetime of the process.
+- On `wasm32-wasi`, `argc()` / `argv()` / `current()` cache the argv snapshot
+ for the process lifetime. When the snapshot cannot be loaded, they report an
+ empty argument view (`argc() == 0`, `argv() == 0`).
 
 ## String construction intrinsic
 

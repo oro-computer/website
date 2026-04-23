@@ -159,7 +159,7 @@ Caching:
  cache activity, so explicit cache maintenance does not race live build-cache
  reads or writes.
 
-- `Run` steps are not cached in the current API.
+- `Run` steps are not cached.
 
 Minimal example (generate a source file before emitting the manifest):
 

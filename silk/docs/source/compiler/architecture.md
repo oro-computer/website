@@ -159,7 +159,7 @@ Testing is incremental and must be developed alongside the implementation:
 
 - Zig unit tests:
  - Each core module (`lexer.zig`, `parser.zig`, `checker.zig`, etc.) contains Zig `test` blocks that exercise its behavior.
- - Additional integration tests may live in dedicated files (e.g. `src/tests_frontend.zig`) that compile sample Silk programs drawn from `docs/language/`.
+ - Additional integration tests may live in dedicated files (e.g. `src/tests_frontend.zig`) that compile sample Silk programs drawn from the language reference on this site.
 - C99 tests:
  - A separate directory (e.g. `c-tests/`) will contain C test programs and harnesses that:
  - link against `libsilk.a`,

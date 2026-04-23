@@ -1,40 +1,25 @@
 # Standard Library Overview (`std::`)
 
-The `docs/std/` directory specifies the
-intended API and structure. A minimal in-tree stdlib source tree also
-exists under `std/` (used by the toolchain to satisfy `import std::...;`).
+The Silk standard library, `std::`, is the default library surface that ships with the toolchain. It provides the modules Silk programs rely on for text, containers, filesystems, networking, concurrency, cryptography, graphics, verification support, and target-specific runtime integration.
 
-As of the current compiler/backend subset, the in-tree stdlib includes a
-small but functional set of utilities implemented purely in Silk (including
-monomorphized, type-parameter generics for core collection types),
-plus a tiny hosted POSIX baseline for OS-facing modules (`std::fs`, `std::task`,
-`std::sync`, `std::io`) implemented via the `std::runtime` interface layer
-(the shipped POSIX runtime backend uses `ext` and therefore requires linking
-libc for executable outputs).
+The shipped stdlib includes:
 
-The Silk standard library, `std::`, provides foundational functionality built
-on top of the language core (regions, buffers, concurrency, etc.). It is intended
-to be:
-
-- **Linked by default** for normal builds driven by `silk`.
-- **Swappable**: an alternative `std::` implementation can be selected at build
- time, without changing the language or the C ABI.
-- **POSIX-first** for OS interactions (initial hosted baseline), while still
- supporting freestanding/embedded builds via a smaller “core” subset.
+- pure-Silk modules for core values, collections, parsing, formatting, and algorithms,
+- hosted POSIX-first modules for OS-facing surfaces such as `std::fs`, `std::io`, `std::task`, and `std::sync`,
+- a runtime interface layer (`std::runtime`) so public `std::...` modules can stay stable while platform backends vary by target,
+- and a swappable build-time model: alternate `std::` implementations can be selected without changing Silk syntax or the C ABI.
 
 See also:
 
 - [package structure](?p=std/package-structure) (namespace + linkage + swappability)
 - [conventions](?p=std/conventions) (API conventions: errors, allocation, ownership)
 - [result](?p=std/result) (the standard `Result(T, E)` error return type)
-- [module catalog](?p=std/module-catalog) (audit-oriented coverage map for the shipped
- `std/**` tree)
+- [module catalog](?p=std/module-catalog) (audit-oriented coverage map for the shipped `std::...` tree)
 
-Exact canonical docs exist for every shipped `std/**` module. Nested modules
-flatten `/` to `-` in `docs/std/`, for example:
+Every shipped `std::...` module has a canonical page on this site. Nested modules flatten `::` to `-` in page ids; for example:
 
-- `std/fs/stream.slk` -> [fs stream](?p=std/fs-stream)
-- `std/runtime/posix/io.slk` -> [runtime posix io](?p=std/runtime-posix-io)
+- `std::fs::stream` -> [fs stream](?p=std/fs-stream)
+- `std::runtime::posix::io` -> [runtime posix io](?p=std/runtime-posix-io)
 
 ## Core Areas
 
@@ -97,7 +82,9 @@ distribution:
 - `std::signal` — pollable signal waiting for TUI programs (Linux `signalfd(2)`
  backend; see [signal](?p=std/signal)).
 - `std::stream` — Web Streams-inspired byte streams and piping (see [stream](?p=std/stream)).
-- `std::args` — native `main(argc, argv)` argument helpers (Supported forms; see [args](?p=std/args)).
+- `std::args` — executable argument helpers for native `main(argc, argv)` and
+ `wasm32-wasi` parameterless `main()` entrypoints (Supported forms; see
+ [args](?p=std/args)).
 - `std::readline` — interactive line editor for CLI programs (TTY mode) built on
  the bundled `linenoise` sources (see [readline](?p=std/readline)).
 - `std::flag` — command line flag + positional parsing, including interspersed
@@ -140,8 +127,4 @@ distribution:
  storage reasoning; module-specific theories live with their owning std
  modules (see [formal](?p=std/formal)).
 
-Each area has a dedicated design document under `docs/std/` (for intrinsic
-surfaces like `std::buffer`, the design lives in both `docs/std/` and the
-corresponding language doc). The exact shapes of types and functions will
-evolve as the language and backend grow; these docs are the source of truth for
-the intended `std::` surface.
+Each area above has a canonical page on this site. Intrinsic or cross-cutting surfaces may also be explained in the language reference when that gives the clearest semantics, but the linked standard-library pages remain the downstream source of truth for the shipped `std::` surface.

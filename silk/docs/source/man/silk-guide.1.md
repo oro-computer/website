@@ -15,11 +15,10 @@
 
 ## Description
 
-`silk guide` queries an installed SQLite guide database generated from the
-curated catalog at `examples/guide/catalog.json`. The seeded corpus is kept
-at a floor of `1000` entries and combines runnable examples with
-documentation-backed reference guides for every canonical page under
-`docs/language/` and `docs/std/`.
+`silk guide` queries the bundled SQLite guide database shipped with the
+toolchain. The seeded corpus is kept at a floor of `1000` entries and
+combines runnable examples with documentation-backed reference guides for every
+canonical language and standard-library page.
 
 Each guide entry contains:
 
@@ -33,6 +32,7 @@ Each guide entry contains:
 - environment/runtime requirements,
 - linked documentation references,
 - optional diagnostic-code links,
+- generated public std symbol lookup terms,
 - related guide ids,
 - and verification flags.
 
@@ -41,11 +41,16 @@ Each guide entry contains:
 - Free text:
  - `silk guide read file`
  - `silk guide tcp loopback`
+ - `silk guide http request`
 - Exact tag filter:
  - `silk guide tags:concurrency`
 - Exact std-module filter:
  - `silk guide module:std::task`
  - `silk guide std::task`
+- Exact public std symbol lookup:
+ - `silk guide std::http::request`
+ - `silk guide ByteSlice.find_bytes`
+ - `silk guide GL_TEXTURE_2D`
 - Documentation-backed references:
  - `silk guide tags:reference-guide`
  - `silk guide language types`
@@ -78,21 +83,23 @@ Each guide entry contains:
 By default, `silk guide` looks for:
 
 - `SILK_GUIDE_DB` when set,
-- `SILK_GUIDE_PRINTER` when set and `--printer` is not provided for `--show`,
-- otherwise `../share/silk/guide.db` relative to the `silk` executable,
-- otherwise the staged development path under `build/share/silk/guide.db` when available.
+- otherwise the bundled guide database that ships with the installed toolchain.
 
 ## Notes
 
 - Exact tag/module/diagnostic/alias lookups use normalized SQLite metadata tables.
+- Exact public std symbol lookups use generated metadata from shipped `std/**/*.slk` modules and route to the matching API guide.
 - `--show` accepts exact ids and id-prefixes; a prefix like `fs` may render
  multiple `fs/...` guides.
 - Free-text queries use a bundled SQLite FTS5 index over guide titles,
  summaries, stored Silk source, aliases, keywords, tags, modules,
  requirements, docs, and diagnostics.
 - Common filler words are ignored and an intent-routing pass runs before
- alias/FTS fallback, so natural queries like `how to read a file` or
- `how can i open a file and read it` or `read from stdin` still resolve.
+ FTS search, so natural queries like `how to read a file`,
+ `how can i open a file and read it`, `read from stdin`, or
+ `how do i make a http request` still resolve.
+- Non-empty searches that still miss after alias/FTS routing report no matches
+ instead of printing the alphabetical `--list` output.
 - Text search results print an explicit `matched:` reason so users can see why
  an example was returned.
 - Text search results do not print a `source:` metadata line.
@@ -107,13 +114,15 @@ By default, `silk guide` looks for:
 - `--show` prints action-first metadata in this order:
  `What`, `Why`, `Docs`, and the remaining environment/search details, followed
  by the stored Silk source.
-- Seeded guide sources are verification-backed by the repo test suite:
+- Seeded guide sources are verification-backed by the toolchain test suite:
  every distinct source path is checked, fixture-backed entries remain
  promoted to `verified_build`, entries are built when
  `verified_build = true`, and they run under a bounded timeout when
  `verified_run = true`.
-- The repo test suite also verifies that every canonical `docs/language/*.md`
- and `docs/std/*.md` page is referenced by at least one guide entry.
+- The toolchain test suite also verifies that every canonical language and
+ standard-library documentation page is referenced by at least one guide entry, and that
+ every shipped std `export` declaration and public method (`public fn` or
+ `public async fn`) has generated symbol lookup metadata.
 - High-traffic diagnostics may point directly at guide lookups such as
  `silk guide E2030` or `silk guide E2034`.
 

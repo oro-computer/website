@@ -8,7 +8,7 @@ family).
 
 ### Parsing and Formatting
 
-The current API supports:
+Supported parse and format surface:
 
 - parsing:
  - canonical hyphenated form (`8-4-4-4-12` hex digits),
@@ -121,8 +121,3 @@ without passing explicit timestamps.
 - Keep parse, format, and inspection helpers straightforward to embed into
  application code and tooling.
 - Attach Formal Silk contracts to buffer and shape preconditions where useful.
-
-### Additional planned surface
-
-- richer formatting options (uppercase, simple hex, braced form, URN form),
-- UUIDv2 (DCE Security) if/when `std::process` exposes stable UID/GID APIs.

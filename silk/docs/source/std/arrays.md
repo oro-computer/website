@@ -109,7 +109,7 @@ Notes:
  packed-byte storage, use `std::buffer::BufferU8`. For owning scalar-slot
  storage, use `std::buffer::Buffer(T)` or `std::vector::Vector(T)` and view it
  as `std::arrays::Slice(T)`.
-- In the current API, `ptr` is represented as a raw `u64`
+- The exported representation uses a raw `u64`
  address for early FFI-friendly bridging. The constructors enforce basic
  invariants via `#require`:
  - `len >= 0`, and

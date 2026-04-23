@@ -1,6 +1,6 @@
 # Language Spec Conventions
 
-This document defines conventions used across `docs/language/`. It exists to
+This document defines conventions used across the Silk language reference on this site. It exists to
 keep the language specification consistent and easy to navigate for both:
 
 - first-time readers learning Silk, and

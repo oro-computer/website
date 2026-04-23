@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-20T20:13:50+00:00",
+  "generatedAt": "2026-04-23T14:16:48+00:00",
   "kind": "wiki",
   "count": 84,
   "items": [
@@ -29,7 +29,7 @@
       "title": "Flow control overview",
       "section": "language",
       "summary": "Silk has familiar structured control flow:",
-      "text": "Flow control overview Silk has familiar structured control flow: branching: if / else loops: while, for, loop structured matching: match early exit: break, continue, return Canonical spec: flow overview. Notes Reference details: docs/language/flow-.md Example fn main () -> int { let mut sum: int = 0; for i in 0..5 { if i == 3 { continue; } sum += i; } if sum > 0 { return sum; } return 0; } See also if / else: flow if else for: flow for match: flow match"
+      "text": "Flow control overview Silk has familiar structured control flow: branching: if / else loops: while, for, loop structured matching: match early exit: break, continue, return Canonical spec: flow overview. Notes Use the linked flow-control pages below for exact supported forms and diagnostics. Example fn main () -> int { let mut sum: int = 0; for i in 0..5 { if i == 3 { continue; } sum += i; } if sum > 0 { return sum; } return 0; } See also if / else: flow if else for: flow for match: flow match"
     },
     {
       "id": "language/flow-if-else",
@@ -106,7 +106,7 @@
       "title": "Grammar",
       "section": "language",
       "summary": "[grammar](?p=language/grammar) is the canonical \u201cwhat the parser accepts\u201d reference for Silk surface syntax.",
-      "text": "Grammar grammar is the canonical \u201cwhat the parser accepts\u201d reference for Silk surface syntax. This wiki page is a reading guide, not a replacement for the grammar itself. How to use the grammar Use the grammar when you need the exact token-level surface form. Use the concept docs (docs/language/.md) for semantics and type rules. Use tests/silk/pass.slk for runnable examples. Example import std::io; fn main () -> int { std::io::println(\"hello {s}\", \"world\"); return 0; } See also Canonical grammar: grammar Syntax tour: syntax tour"
+      "text": "Grammar grammar is the canonical \u201cwhat the parser accepts\u201d reference for Silk surface syntax. This wiki page is a reading guide, not a replacement for the grammar itself. How to use the grammar Use the grammar when you need the exact token-level surface form. Use the linked language reference pages for semantics and type rules. Use the canonical docs and guides for runnable examples that exercise each construct. Example import std::io; fn main () -> int { std::io::println(\"hello {s}\", \"world\"); return 0; } See also Canonical grammar: grammar Syntax tour: syntax tour"
     },
     {
       "id": "language/doc-comments",
@@ -154,8 +154,8 @@
       "id": "language/literals-overview",
       "title": "Literals",
       "section": "language",
-      "summary": "Literals are the simplest way to write values directly in source code: numbers, booleans, chars, strings, durations, and aggregates like arrays struct literals.",
-      "text": "Literals Literals are the simplest way to write values directly in source code: numbers, booleans, chars, strings, durations, and aggregates like arrays struct literals. This wiki page is a learning-oriented companion to the canonical spec: literals overview. Notes Detailed rules and edge cases: docs/language/literals-.md Syntax let n: int = 42; let pi: f64 = 3.14159; let ok: bool = true; let c: char = '\\\\n'; let s: string = \"hello\"; // Duration literals let d: Duration = 10ms; // Aggregates let xs: int[3] = [1, 2, 3]; // let p: Point = Point{ x: 1, y: 2 }; Examples Example: array literal + indexing fn main () -> int { let xs: int[3] = [10, 20, 30]; return xs[1]; } Example: strings and escapes import std::io; fn main () -> int { std::io::println(\"line1\\\\nline2\"); return 0; } See also Canonical spec: literals overview Numeric: literals numeric Strings/chars: literals string, literals character Aggregates: literals aggregate"
+      "summary": "Literals are the simplest way to write values directly in source code: numbers, booleans, chars, strings, durations, and aggregates like arrays and struct literals.",
+      "text": "Literals Literals are the simplest way to write values directly in source code: numbers, booleans, chars, strings, durations, and aggregates like arrays and struct literals. This wiki page is a learning-oriented companion to the canonical spec: literals overview. Notes Use the linked literals pages below for the exact rules and edge cases for each literal family. Syntax let n: int = 42; let pi: f64 = 3.14159; let ok: bool = true; let c: char = '\\n'; let s: string = \"hello\"; // Duration literals let d: Duration = 10ms; // Aggregates let xs: int[3] = [1, 2, 3]; // let p: Point = Point{ x: 1, y: 2 }; Examples Example: array literal + indexing fn main () -> int { let xs: int[3] = [10, 20, 30]; return xs[1]; } Example: strings and escapes import std::io; fn main () -> int { std::io::println(\"line1\\nline2\"); return 0; } See also Canonical spec: literals overview Numeric: literals numeric Strings/chars: literals string, literals character Aggregates: literals aggregate"
     },
     {
       "id": "language/literals-numeric",
@@ -232,7 +232,7 @@
       "title": "Enums",
       "section": "language",
       "summary": "`enum` defines a nominal sum type with a fixed set of variants.",
-      "text": "Enums enum defines a nominal sum type with a fixed set of variants. Currently, enums support: unit variants (E::A), tuple variants (E::B(x)), exhaustive match expressions over enum values (restricted subset; no guards), and statement-form ordinary enum match with qualified variant arms. Canonical spec: enums. Notes Supported forms + representation: enums Syntax enum Msg { Quit, Add(int), } Examples Example: construct + match enum Msg { Quit, Add(int), } fn main () -> int { let m: Msg = Msg::Add(5); return match m { Msg::Quit => 0, Msg::Add(n) => n, }; } See also Canonical spec: enums match expressions: flow match Enum fixtures: tests/silk/passenum"
+      "text": "Enums enum defines a nominal sum type with a fixed set of variants. Currently, enums support: unit variants (E::A), tuple variants (E::B(x)), exhaustive match expressions over enum values in the shipped subset, and statement-form ordinary enum match with qualified variant arms. Canonical spec: enums. Notes Use enums for the exact supported forms and representation rules. Match-arm guards of the form Variant(...) if cond => ... are not part of the shipped subset. Match on the variant first, then use a nested if for any extra boolean refinement. Syntax enum Msg { Quit, Add(int), } Examples Example: construct + match enum Msg { Quit, Add(int), } fn main () -> int { let m: Msg = Msg::Add(5); return match m { Msg::Quit => 0, Msg::Add(n) => n, }; } See also Canonical spec: enums match expressions: flow match"
     },
     {
       "id": "language/errors",
@@ -357,8 +357,8 @@
       "id": "std/overview",
       "title": "Standard library overview (`std::`)",
       "section": "std",
-      "summary": "`std::` is the Silk standard library namespace. The `docs/std/` tree specifies the intended API and structure; an in-tree stdlib implementation exists under `std/` for Silk currently.",
-      "text": "Standard library overview (std::) std:: is the Silk standard library namespace. The docs/std/ tree specifies the intended API and structure; an in-tree stdlib implementation exists under std/ for Silk currently. Canonical doc: overview. Notes Design + implementation: many modules have an Supported forms; the overall surface is still evolving. Details: overview Importing std:: is available to import by default in normal silk build workflows. import std::io; import std::vector; Examples Example: a tiny \u201chello std\u201d program import std::io; import std::vector; type VecInt = std::vector::Vector(int); fn main () -> int { let mut v: VecInt = VecInt.init(4); v.push(10); v.push(32); std::io::println(\"len={d} firstpop={d}\", v.len() as int, v.pop() ?? 0); v.drop(); return 0; } See also Canonical doc: overview Module structure and swappability: package structure API conventions: conventions"
+      "summary": "`std::` is the Silk standard library namespace. Start here when you want the top-level map of shipped modules, then move into the exact module pages for the surface you are using.",
+      "text": "Standard library overview (std::) std:: is the Silk standard library namespace. Start here when you want the top-level map of shipped modules, then move into the exact module pages for the surface you are using. Canonical doc: overview. Notes Use overview for the complete standard-library map and module descriptions. Use module catalog when you need an audit-style inventory of what ships in the toolchain. Importing std:: is available to import by default in normal silk build workflows. import std::io; import std::vector; Examples Example: a tiny \u201chello std\u201d program import std::io; import std::vector; type VecInt = std::vector::Vector(int); fn main () -> int { let mut v: VecInt = VecInt.init(4); v.push(10); v.push(32); std::io::println(\"len={d} firstpop={d}\", v.len() as int, v.pop() ?? 0); v.drop(); return 0; } See also Canonical doc: overview Module structure and swappability: package structure API conventions: conventions"
     },
     {
       "id": "std/conventions",

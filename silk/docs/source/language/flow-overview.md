@@ -48,7 +48,7 @@ Additional notes:
 When in doubt, consult:
 
 - [diagnostics](?p=compiler/diagnostics) (error codes)
-- the runnable examples embedded throughout `docs/language/`
+- the runnable examples embedded throughout the linked language pages
 
 ## Principles
 

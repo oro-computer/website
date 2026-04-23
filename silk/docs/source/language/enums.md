@@ -35,7 +35,7 @@ What works end-to-end today (parser → checker → lowering → codegen):
  - patterns are restricted to enum variants (`E::A`, `E::Data(x)`) and may
  use shorthand (`A`, `Data(x)`) when the scrutinee type is the enum,
  - binders may be names or `_`,
- - no guards (`if ...`) yet,
+ - arm guards in `match` (`Variant(...) if cond => ...`) are not part of the shipped subset; use a nested `if` inside the selected arm or split the boolean test before the `match`,
  - and expression-form matches must still be *exhaustive* in the current
  subset:
  - either by explicit arm coverage for every variant,

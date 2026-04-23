@@ -2,10 +2,7 @@
 
 `std::env` provides access to process environment variables.
 
-This module targets a hosted POSIX baseline (Linux/glibc) and is
-implemented on top of the pluggable `std::runtime::env` interface. WASI support
-is Implemented: `get` works, while `set` remains unsupported (see
-“Platform notes”).
+This module targets a hosted POSIX baseline (Linux/glibc) and is implemented on top of the pluggable `std::runtime::env` interface. On `wasm32-wasi`, `get` works while `set` remains unavailable (see “Platform notes”).
 
 ## Exported API
 
@@ -111,7 +108,7 @@ queries.
 
 `std::env::cwd()` returns the current working directory as a `string?`.
 
-Current implementation:
+Resolution rule:
 
 - returns `std::env::get("PWD")`.
 
@@ -144,7 +141,7 @@ This is an alias for `std::process::chdir(path)`.
 
 `std::env::home_dir()` returns the user’s home directory as a `string?`.
 
-Current implementation:
+Resolution rule:
 
 - returns `std::env::get("HOME")`.
 
@@ -152,7 +149,7 @@ Current implementation:
 
 `std::env::temp_dir()` returns a temporary-directory path as a `string`.
 
-Current implementation:
+Resolution rule:
 
 1. uses `TMPDIR` when set,
 2. otherwise uses `TMP` or `TEMP` when set,

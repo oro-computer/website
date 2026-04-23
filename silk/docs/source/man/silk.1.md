@@ -47,11 +47,9 @@ For terminal-first discovery, `silk man` is the main entrypoint: use
 discover commands/concepts/modules/symbols, `silk man <query>` to open a page,
 and `silk doc --man <query> -o <path>` when you need the generated roff file.
 
-`silk format` is the canonical source formatter for Silk code; it enforces statement splitting, block-spacing readability rules, canonical import grouping, and comment preservation in addition to indentation cleanup. Semicolons inside paren/bracket groups remain inline (for example generic-call separators and C-style `for` headers) instead of being treated as standalone statement breaks. Recursive directory walks honor `.gitignore`, while explicitly named file paths still format on demand.
+`silk format` is the canonical source formatter for Silk code; it enforces statement splitting, block-spacing readability rules, canonical import grouping, and comment preservation in addition to indentation cleanup. Semicolons inside paren/bracket groups remain inline (for example generic-call separators and C-style `for` headers) instead of being treated as standalone statement breaks. Newline-based `if` / `else if` headers keep chained condition lines one indent level deeper than the control keyword and keep the opening `{` on its own line. Recursive directory walks honor `.gitignore`, while explicitly named file paths still format on demand.
 
-`silk guide` is the curated example discovery surface. It queries the installed
-`share/silk/guide.db` database generated from `examples/guide/catalog.json` and
-returns canonical runnable patterns for common Silk tasks.
+`silk guide` is the curated example discovery surface. It queries the bundled guide database shipped with the toolchain and returns canonical runnable patterns for common Silk tasks.
 
 `silk cache` is the managed cache inspection and maintenance surface. It
 understands the recognized cache entries under `<work_root>/cache` (default:
@@ -96,6 +94,9 @@ For the implementation, the supported options are:
  - Stateful by replay of **state-building lines**:
  - import and top-level declaration lines are persisted and validated by
  compilation only (not executed),
+ - in the REPL only, import lines may omit the trailing semicolon; the
+ session stores the semicolon-terminated form, and ordinary source files
+ still require semicolon-terminated imports,
  - runtime lines that build state (for example `let`/`var` bindings and
  assignments) are persisted and replayed from the start on each new
  runtime line,
@@ -423,8 +424,9 @@ For the implementation, the supported options are:
  - When a local `package.documentation` page exists, `silk man docs`, `silk man documentation`, and qualified aliases such as `silk man <package-name> documentation` open it directly.
 - **Guide command:**
  - `silk guide [--db <path>] [--json] [--limit <n>] [--printer <cmd>] <query>`:
- - queries the installed guide database generated from `examples/guide/catalog.json`.
- - the seeded corpus floor is `1000` entries, including documentation-backed reference guides for every canonical `docs/language/*.md` and `docs/std/*.md` page.
+ - queries the bundled guide database shipped with the toolchain.
+ - the seeded corpus floor is `1000` entries, including documentation-backed reference guides for every canonical language and standard-library page.
+ - generated public-symbol metadata routes shipped std `export` declarations and public methods (`public fn` and `public async fn`) to the matching API guide.
  - `--list` lists seeded guide ids/titles.
  - `--show <id>` prints a single guide entry with its stored source.
  - `--show <prefix>` expands matching guide ids such as `fs` -> `fs/...` and may print multiple guide entries.
@@ -436,17 +438,18 @@ For the implementation, the supported options are:
  - natural free text: `silk guide how to read a file`
  - exact tags: `silk guide tags:concurrency`
  - exact modules: `silk guide module:std::task`
+ - exact public std symbols: `silk guide std::http::request`, `silk guide ByteSlice.find_bytes`, or `silk guide GL_TEXTURE_2D`
  - documentation-backed references: `silk guide tags:reference-guide`, `silk guide language types`, or `silk guide std io overview`
  - exact diagnostics: `silk guide diag:E2034` or `silk guide E2034`
  - exact guide ids: `silk guide fs/file-roundtrip`
- - exact aliases are preferred before free-text fallback
- - free-text search first applies deterministic intent routing for common phrasing such as `read from stdin`, then uses the bundled SQLite FTS5 guide index, ignores common filler terms such as `how`, `to`, and `a`, and text output includes a `matched:` reason for each hit.
+ - exact aliases are preferred before free-text FTS search
+ - free-text search first applies deterministic intent routing for common phrasing such as `read from stdin` and `how do i make a http request`, then uses the bundled SQLite FTS5 guide index, ignores common filler terms such as `how`, `to`, and `a`, and text output includes a `matched:` reason for each hit.
+ - non-empty searches that still miss after alias/FTS routing report no matches instead of printing the alphabetical `--list` output.
  - `--printer <cmd>` selects the source printer used by `--show`; precedence is `--printer`, then `SILK_GUIDE_PRINTER`, then `bat`, then `cat`.
  - `--show` text omits `Run:`, `Source:`, and `Verified:` summary fields, renders `Docs:` as canonical docs links URLs, and prints the stored Silk source directly instead of fenced code blocks.
  - database lookup order:
  - `SILK_GUIDE_DB` when set,
- - otherwise `../share/silk/guide.db` relative to the `silk` executable,
- - otherwise the staged development copy under `build/share/silk/guide.db` when available.
+ - otherwise the bundled guide database that ships with the installed toolchain.
 - **Cache command:**
  - `silk cache [subcommand] [--package <dir|manifest>] [--cache-dir <path>]`:
  - manages the recognized compiler cache under `<work_root>/cache`

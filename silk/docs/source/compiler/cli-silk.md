@@ -11,7 +11,7 @@ This document describes the command-line interface of the `silk` compiler from t
 
 ## Core Responsibilities
 
-At maturity, the `silk` CLI should:
+The `silk` CLI covers these responsibilities:
 
 - Compile Silk source files into:
  - executables,
@@ -47,6 +47,9 @@ The implementation is intentionally smaller and focuses on:
  - stateful by replay of **state-building lines**:
  - import and top-level declaration lines are persisted and validated by
  compilation only (not executed),
+ - in the REPL only, import lines may omit the trailing semicolon; the
+ session stores the semicolon-terminated form, and ordinary source files
+ still require semicolon-terminated imports,
  - runtime lines that build state (for example `let`/`var` bindings and
  assignments) are persisted and replayed from the start on each new
  runtime line,
@@ -172,26 +175,28 @@ The implementation is intentionally smaller and focuses on:
  - when a package root is selected/resolved, `silk man readme`, `silk man overview`, `silk man <package-name>`, and qualified aliases such as `silk man <package-name> readme` prefer the package overview page when a local `package.readme` exists.
  - when a package root is selected/resolved, `silk man docs`, `silk man documentation`, and qualified aliases such as `silk man <package-name> documentation` open the local `package.documentation` page when present.
  - when a query cannot be resolved, `silk man` prints actionable next steps (try `--search`, `--list`, or qualify with `std::...` / `pkg::...`).
-- `silk guide [options] <query>` — search a curated installed example corpus:
- - the source-of-truth catalog lives in `examples/guide/catalog.json`,
- - install/build staging generates `share/silk/guide.db`,
- - the seeded corpus target is at least `1000` entries and is guarded by repo tests,
- - the corpus combines runnable examples with documentation-backed reference guides covering every canonical page under `docs/language/` and `docs/std/`,
+- `silk guide [options] <query>` — search the curated installed example corpus:
+ - the seeded corpus target is at least `1000` entries and is guarded by the toolchain test suite,
+ - the command reads the bundled guide database shipped with the toolchain (override with `--db` or `SILK_GUIDE_DB` when needed),
+ - the corpus combines runnable examples with documentation-backed reference guides covering every canonical language and standard-library page,
+ - generated public-symbol metadata lets `silk guide` route shipped std `export` declarations and public methods (`public fn` and `public async fn`) to the matching `std/*-api` guide,
  - fixture-backed seeded guides are promoted to `verified_build` when they compile cleanly,
  - `silk guide --list` lists seeded guide ids and titles,
  - `silk guide --show <id>` renders one guide entry with an action-first summary plus the stored Silk source,
  - `silk guide --show <prefix>` expands guide-id prefixes such as `fs` or `task` and may render multiple matching guides,
  - `silk guide --json ...` emits machine-readable search/show payloads with list-valued metadata rendered as JSON arrays,
  - `silk guide tags:<name>` queries normalized tag metadata,
- - `silk guide module:std::task` (or any `std::...` query) queries normalized std-module metadata,
+ - `silk guide module:std::task` queries normalized std-module metadata, and direct module names such as `silk guide std::task` still resolve as module lookups when they are not exact public-symbol matches,
+ - `silk guide std::http::request`, `silk guide ByteSlice.find_bytes`, and `silk guide GL_TEXTURE_2D` query generated public std symbol metadata before free-text FTS search,
  - `silk guide diag:E2034` (or `silk guide E2034`) queries normalized diagnostic-code metadata,
- - exact alias matches are resolved before free-text fallback,
- - free-text guide search first applies deterministic intent routing plus filler-word normalization for common natural-language queries such as `how to read a file`, `how can i open a file and read it`, and `read from stdin`,
+ - exact alias matches are resolved before free-text FTS search,
+ - free-text guide search first applies deterministic intent routing plus filler-word normalization for common natural-language queries such as `how to read a file`, `how can i open a file and read it`, `read from stdin`, and `how do i make a http request`,
  - free-text queries search a bundled SQLite FTS5 index over guide titles,
  summaries, stored source, aliases, keywords, tags, modules, requirements, docs, and diagnostics,
+ - non-empty guide queries that still miss after alias/FTS routing return no matches instead of falling back to the alphabetical `--list` output,
  - documentation-backed reference guides are tagged with `reference-guide` and link directly to canonical language/std docs,
  - text search results include an explicit `matched:` reason,
- - `--show` prioritizes `What`, `Why`, and other action-oriented metadata before secondary search metadata, does not print `Run:`, `Source:`, or `Verified:` summary fields, and renders `Docs:` as canonical docs links URLs,
+ - `--show` prioritizes `What`, `Why`, and other action-oriented metadata before secondary search metadata, does not print `Run:`, `Source:`, or `Verified:` summary fields, and renders `Docs:` as canonical docs links,
  - the stored Silk source is printed directly through the configured printer path instead of fenced code blocks,
  - guide `Docs:` references are rendered as canonical docs URLs rather than repo-relative markdown paths,
  - guide source output is printed through the configured printer path (or direct plain source fallback), not wrapped in fenced code blocks,
@@ -242,7 +247,7 @@ The implementation is intentionally smaller and focuses on:
  - `SILK_CACHE_MAX_AGE`
  - `SILK_CACHE_KEEP_RECENT`
 - `silk env` — print key environment variables consulted by the `silk` CLI (stdlib resolution, Formal Silk verification, paging, build scratch dirs, C compiler selection).
- - includes `SILK_GUIDE_DB`, which overrides the installed `share/silk/guide.db` path used by `silk guide`.
+ - includes `SILK_GUIDE_DB`, which overrides the bundled guide database path used by `silk guide`.
  - includes the cache-maintenance environment variables that control the
  managed cache policy (`SILK_CACHE_*`).
 - `silk format [--check] <path> [<path> ...]` (alias: `silk fmt`) — format Silk source files (`.slk` / `.silk`) using project configuration from `.silk/format.toml` (discovered by walking upward from each formatted file’s directory).
@@ -253,6 +258,9 @@ The implementation is intentionally smaller and focuses on:
  - the formatter is intentionally readability-oriented rather than indentation-only:
  - same-line statement runs are split so each statement or block body starts on its own line,
  - semicolons nested inside paren/bracket groups stay inline instead of being treated as statement boundaries (for example `join(T; h)` and `for (...; ...; ...)` remain single-line unless the source already breaks them),
+ - newline-based `if` / `else if` headers keep the opening `{` on its own
+ line and indent chained condition lines one level deeper than the
+ control keyword,
  - standalone block-closing `}` boundaries are given breathing room (for example an `if { ... }` followed by another statement becomes `}\n\nnext;` while `} else {` stays on one line),
  - formatter-emitted layout preserves the file’s detected newline style (`\n` vs `\r\n`) instead of introducing mixed line endings,
  - ordinary line/block comments are preserved instead of being deleted or reflowed away during formatting,
@@ -494,6 +502,9 @@ The implementation is intentionally smaller and focuses on:
  - note: Silk `int` currently lowers to wasm `i64`, so wasm exports using `int` surface as `i64`,
  - for `--target wasm32-wasi`:
  - an IR→WASM backend that emits `memory` plus `_start () -> void`, imports `wasi_snapshot_preview1.proc_exit`, and calls Silk `fn main () -> int` (the `main(argc, argv)` entrypoint form is not supported yet for WASI),
+ - programs that need argv on `wasm32-wasi` should read it inside `main()`
+ via `std::args::{argc,argv,current}` and then build the usual
+ `std::args::Args` view,
  - also supports export-only modules for embedding (export-only modules do not include `_start`),
  - for both wasm targets, a smaller constant-only wasm backend remains as a fallback for programs that fit the constant subset,
  - other targets are not implemented yet (see [backend wasm](?p=compiler/backend-wasm)),

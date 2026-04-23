@@ -1,15 +1,14 @@
 # Grammar
 
-[grammar](?p=language/grammar) is the canonical “what the parser accepts” reference
-for Silk surface syntax.
+[grammar](?p=language/grammar) is the canonical “what the parser accepts” reference for Silk surface syntax.
 
 This wiki page is a reading guide, not a replacement for the grammar itself.
 
 ## How to use the grammar
 
 - Use the grammar when you need the exact token-level surface form.
-- Use the concept docs (`docs/language/*.md`) for semantics and type rules.
-- Use `tests/silk/pass_*.slk` for runnable examples.
+- Use the linked language reference pages for semantics and type rules.
+- Use the canonical docs and guides for runnable examples that exercise each construct.
 
 ## Example
 ```silk

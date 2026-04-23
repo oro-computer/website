@@ -1,6 +1,6 @@
 # Language Cheat Sheet
 
-This document summarizes the key syntax and concepts from the Silk language in a condensed form. It is meant as a quick reference; detailed semantics live in the other `docs/language/` files.
+This document summarizes the key syntax and concepts from the Silk language in a condensed form. It is meant as a quick reference; detailed semantics live in the linked language pages throughout this site.
 
 ## Scope
 
@@ -107,7 +107,7 @@ Operator precedence and associativity follow the rules in [operators](?p=languag
 - Blocks: `{ stmt* }`.
 - Expression statements: `expr;` (where allowed).
 
-See `docs/language/flow-*.md` for details.
+See the linked flow-control reference pages for details.
 
 Executable entrypoint (current rule):
 

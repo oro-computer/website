@@ -27,6 +27,9 @@ The formatter is readability-oriented:
 - it normalizes indentation,
 - it splits same-line statement runs so each statement or block body starts on its own line,
 - it keeps semicolons nested inside paren/bracket groups inline instead of treating them as standalone statement breaks (for example `join(T; h)` and `for (...; ...; ...)` stay single-line unless the source already uses a multiline layout),
+- it preserves newline-based `if` / `else if` headers by keeping the opening
+ `{` on its own line and indenting chained condition lines one level deeper
+ than the control keyword,
 - it inserts a visual separator after standalone block-closing `}` boundaries when the next token starts a new statement or declaration,
 - it keeps `} else {` on one line,
 - it preserves the file’s detected newline style (`\n` or `\r\n`) when it emits new layout,

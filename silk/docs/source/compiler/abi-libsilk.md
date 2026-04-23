@@ -265,6 +265,8 @@ The initial C header provided in the Silk compiler repository defines:
  - `wasm32-wasi`:
  - requires `fn main () -> int` (the `main(argc, argv)` form is not supported
  yet for WASI),
+ - programs that need process arguments must read them from WASI inside
+ `main()` (for example via `std::args::{argc,argv,current}`),
  - emits an exported `_start () -> void` wrapper that calls `main` and then
  imports/calls WASI `proc_exit`,
  - export-only modules are supported for embedding (export-only modules do
@@ -362,7 +364,7 @@ The initial C header provided in the Silk compiler repository defines:
  - it lexes and parses each module into an internal representation,
  - it then type‑checks the *set* of modules as a unit, taking into account
  package/import relationships and exported constants, according to the
- language grammar and semantics documented under `docs/language/`,
+ language grammar and semantics documented throughout the Silk language reference on this site,
  - if Formal Silk syntax is present (for example `#require`, `#assure`,
  `#assert`, `#invariant`, `#variant`, `#monovariant`, `#const`), it also runs the Z3-backed verifier
  and fails the build if verification fails (`E3001`..`E3008`),

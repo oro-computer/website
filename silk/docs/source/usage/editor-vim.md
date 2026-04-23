@@ -5,7 +5,7 @@ This document describes the built-in Vim support for Silk shipped with the Silk 
 The goal of the Vim plugin is to provide a lightweight, spec-aligned editing experience that:
 
 - recognizes Silk source files by extension,
-- highlights the core language constructs described in `docs/language/`,
+- highlights the core language constructs described throughout the language reference on this site,
 - matches the indentation and comment style used throughout the Silk docs (see [conventions](?p=language/conventions)).
 
 ## Files and Layout
@@ -33,13 +33,13 @@ The `vim/syntax/silk.vim` file is derived from:
 
 - the lexical and grammar documentation in [grammar](?p=language/grammar),
 - the operator set in [operators](?p=language/operators),
-- the literals, types, flow-control, optional/mutability, concurrency, FFI, and verification docs under `docs/language/`,
+- the literals, types, flow-control, optional/mutability, concurrency, FFI, and verification pages in the language reference,
 - the current token and keyword tables in `src/token.zig`.
 
 It currently highlights:
 
 - lexer keywords (as currently implemented by the keyword table in `src/token.zig`): `package`, `module`, `import`, `from`, `export`, `public`, `private`, `default`, `const`, `let`, `var`, `mut`, `fn`, `test`, `theory`, `struct`, `enum`, `type`, `error`, `interface`, `impl`, `as`, `raw`, `extends`, `if`, `else`, `loop`, `while`, `for`, `in`, `match`, `return`, `panic`, `break`, `continue`, `assert`, `await`, `yield`, `pure`, `async`, `task`, `region`, `with`, `new`, `sizeof`, `ext`, `None`/`none`/`null`, `Some`, `true`/`false`;
-- spec-reserved / design-in-progress keywords used in `docs/language/` examples: `where`;
+- spec-reserved / design-in-progress keywords used in language-reference examples: `where`;
 - testing and assertion keywords: `test`, `assert`;
 - builtin types and type-like names: `bool`, integer and float types (`u8`, `i8`, …, `u64`, `i64`, `int`, `f32`, `f64`), `char`, `string`, `void`, `Instant`, `Duration`, `Task`, `Promise`, `map`, `Option`, `Buffer`, and other core names drawn from the spec;
 - literal forms: boolean literals (`true`, `false`), `None`/`Some`, numeric literals (decimal integers and floats) and duration literals with unit suffixes (e.g. `10ns`, `250us`, `5ms`, `2s`, `5min`, `1h`, `7d`), character and string literals;
@@ -51,7 +51,7 @@ It currently highlights:
 - doc comments: `///` and `/** ... */`, including common doc tags like `@param` / `@returns` / `@throws` / `@example` / `@since` / `@deprecated` / `@remarks` / `@see` (see [doc comments](?p=language/doc-comments));
 - comments: both `//` line comments and `/* ... */` block comments (excluding doc-comment forms), consistent with the current lexer behavior in `src/lexer.zig`.
 
-As the language evolves (new keywords, operators, or constructs), both this document and `vim/syntax/silk.vim` must be updated in lockstep with `docs/language/` and `src/token.zig`.
+As the language evolves (new keywords, operators, or constructs), both this document and `vim/syntax/silk.vim` must be updated in lockstep with the language reference on this site and `src/token.zig`.
 
 ## Editor Defaults
 

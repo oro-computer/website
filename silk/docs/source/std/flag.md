@@ -5,13 +5,19 @@ line argument parser modeled after Go’s `flag` package, but shaped to match
 `std::` conventions (explicit `Result(...)` errors, no leaky out-params, and a
 clear separation between flags, positionals, and `--` rest arguments).
 
-`std::flag` is intended for programs that use the native hosted entrypoint:
+`std::flag` is intended for programs that can build a `std::args::Args` view,
+typically from a native hosted entrypoint:
 
 ```silk
 fn main (argc: int, argv: u64) -> int { ... }
 ```
 
 and the current `std::args::Args` view.
+
+On `wasm32-wasi`, executable entrypoints remain `fn main () -> int`; use
+`std::args::current()` (or `std::args::Args.init(std::args::argc(),
+std::args::argv())`) to construct the same `Args` value before calling
+`FlagSet.parse_args(...)`.
 
 See also:
 

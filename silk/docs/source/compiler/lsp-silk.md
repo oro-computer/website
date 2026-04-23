@@ -24,7 +24,7 @@ The Silk language server:
  those sources are available,
 - does not change the language surface or ABI; it is a tooling layer on top of the existing compiler.
 
-No language features or CLI options are introduced by the LSP itself. Any future extensions that affect language semantics or user-facing flags must still be documented in the appropriate `docs/language/` or [cli silk](?p=compiler/cli-silk) files first.
+No language features or CLI options are introduced by the LSP itself. Any future extensions that affect language semantics or user-facing flags must still be documented in the appropriate language-reference pages on this site or in [cli silk](?p=compiler/cli-silk) first.
 
 ## Running the Server
 
@@ -43,7 +43,7 @@ Typical client configurations (e.g., Vim/Neovim LSP, VS Code, or other LSP front
 
 - set the command to `["silk-lsp"]`,
 - enable standard LSP text document synchronization,
-- rely on the capabilities advertised in `initialize`; the current request/notification surface includes diagnostics, hover, definition, references, rename, completion, signature help, semantic tokens, inlay hints, document symbols, shutdown, and exit.
+- rely on the capabilities advertised in `initialize`; the current request/notification surface includes diagnostics, hover, definition, references, rename, completion, formatting, signature help, semantic tokens, inlay hints, document symbols, shutdown, and exit.
 
 ## Transport and Protocol
 
@@ -77,6 +77,7 @@ The server supports the standard LSP initialization sequence:
  - `definitionProvider: true` (definition lookups backed by the module-set symbol index; see below).
  - `referencesProvider: true` (reference queries across the current cached module set; see below).
  - `renameProvider: true` (identifier renames across the current cached module set; see below).
+ - `documentFormattingProvider: true` (whole-document formatting via the canonical `silk format` formatter; see below).
  - `documentSymbolProvider: true` (hierarchical document symbols for declarations and nested bodies as described below).
  - `semanticTokensProvider`:
  - legend-driven `full` semantic token responses,
@@ -109,13 +110,17 @@ workspace module set.
  - floating-point literals as “float literal”,
  - boolean literals (`true`/`false`) as “bool literal”,
  - string and character literals as “string literal” and “char literal”,
+ - the context-sensitive keyword forms `panic`, `await`, `await *`, `yield`,
+ and `yield *` as Markdown usage help, including hovering either token in
+ the two-token `*` forms,
  - identifiers are reported as `identifier 'name'`.
 - Hover now includes lightweight semantic hints:
  - function identifiers show their `fn name (...) -> result` signature when available,
  - `let` bindings show the declared (or literal-inferred) type when available,
  - struct / enum / interface / error identifiers report `struct Name` / `enum Name` / `interface Name` / `error Name`,
  - `ext` declarations report `ext name: <type>` when available,
- - field and method accesses (`value.field`, `value.method`) report the field type or method signature when the receiver is a known struct,
+ - field and method accesses (`value.field`, `value.method`) report the field type for known struct or error receivers, and report method signatures for known struct receivers,
+ - chained field receivers (`box.value.field`) are resolved by walking the known struct/error field path, including applied generic structs where direct field type parameters can be substituted before rendering the hover type,
  - imported names are resolved across the module set:
  - package imports (`import ns::pkg;`, `import ns::pkg as alias;`),
  - qualified symbol imports (`import ns::pkg::name;`, `import ns::pkg::name as alias;`, `import ::malloc;`),
@@ -143,7 +148,7 @@ The server provides `textDocument/definition` for open documents.
  package graphs + definition files + std modules when enabled) to resolve:
  - exported or package-local `fn`, `let`, `ext`, `struct`, `enum`, `interface`, and `error` declarations,
  - methods declared in `impl` blocks when invoked as `value.method(...)`,
- - qualified names such as `std::pkg::name` and namespace-qualified names like `alias::name` when `alias` is introduced by:
+ - qualified names such as `std::pkg::name` and namespace-qualified names like `alias::name` or `alias::child::name` when `alias` is introduced by:
  - a package import,
  - a default/namespace import,
  - or a module-scope `using` alias.
@@ -155,12 +160,19 @@ The server provides `textDocument/definition` for open documents.
 - Local scopes are then consulted to resolve:
  - function parameters,
  - block-scoped `let` bindings,
+ - destructuring `let` pattern binders,
+ - `let ... else` binders after the statement succeeds,
+ - `if let` and `while let` pattern binders, including chained `&& let`
+ clauses within the active body,
+ - C-style `for` initializer bindings within the loop,
  - `match`-statement binders within the selected arm body.
 - Member access (`value.field` / `value.method`) uses the heuristic receiver-type resolver:
- - when a method is found, the definition points at the `impl` method declaration,
- - when a struct field is found, the definition points at that field declaration,
- - otherwise the definition falls back to the receiver struct declaration.
-- Constructor calls (`new Type(...)`) resolve to the `fn constructor` declaration when the constructor overload set is unambiguous; otherwise the server falls back to the `struct Type` declaration.
+ - receiver expressions may be direct locals/types or chained field paths such as `box.value.field`,
+ - applied generic struct receivers substitute direct type-parameter fields before resolving the next field in the path,
+ - when a struct method is found, the definition points at the `impl` method declaration,
+ - when a struct or error field is found, the definition points at that field declaration,
+ - otherwise the definition falls back to the receiver struct or error declaration.
+- Constructor calls (`new Type(...)`, including namespace/import-qualified `new pkg::Type(...)`) resolve to the public/exported `fn constructor` overload selected by the callsite argument count, using the same arity ranking as the compiler for exact matches, defaulted trailing parameters, and trailing varargs. Empty allocation literals (`new Type{}`) similarly resolve through the zero-argument constructor ranking. If the call shape is incomplete, unmatched, hidden by visibility, or still ambiguous, the server falls back to the `struct Type` declaration.
 - When a resolved `ext` declaration has a matching native C symbol in a
  manifest-owned source/header file, go-to-definition prefers the C definition
  (or declaration if no definition is present locally) over the Silk `ext`
@@ -169,7 +181,9 @@ The server provides `textDocument/definition` for open documents.
 
 Known limitations in this initial support:
 
-- local block scopes and shadowing are only modeled for `let`-style bindings (not for match-expression binders),
+- local block scopes and shadowing are modeled for statement-level binders, but
+ match-expression binders and full control-flow refinement are not yet a
+ complete semantic scope tree,
 - ambiguous names across multiple imports are not disambiguated; the first match wins,
 - cross-file results are limited to declarations present in the current module
  set (open docs, manifest-discovered package files, and std modules when
@@ -190,26 +204,68 @@ module set.
 
 - Completion items are offered for:
  - all language keywords defined in `src/token.zig` (via `keywordTable()`),
+ tagged with LSP keyword kind,
+ - guided keyword-help completions for `panic`, `await`, `await *`, `yield`,
+ and `yield *`, with compact detail strings and Markdown documentation for
+ the typed-error, Promise, and Task usage contracts,
  - all distinct identifiers lexed from the current document (names that are not recognized as keywords),
  - symbol-aware suggestions from the current package and imported packages (functions, lets, ext, structs, enums, interfaces, errors),
  - imported names from:
  - package imports and qualified symbol imports,
  - JS-style named/default imports from file or package specifiers,
  - and module-scope `using` aliases,
+ - unqualified local-package and named imported functions in
+ statement-position buffers that are temporarily incomplete while typing
+ (for example before `(` or `;` has been inserted),
  - import specifier path completion inside `from "..."` strings:
  - file specifiers (`"./..."`, `"../..."`, and absolute paths) suggest `.slk` files and subdirectories,
  - std-root file specifiers (`"std/..."`) suggest stdlib paths (omitting the `.slk` extension),
- - namespace completions after `::` for known packages, package-import aliases, default/namespace imports, and `using`-introduced namespace aliases,
- - member completions for struct fields and methods after `.` when the receiver type is known (including locals with type annotations or struct-literal/cast inference),
- - struct-literal field suggestions in `Type { ... }` expressions when the cursor is in a field-name position (before the `:`).
+ - namespace completions after `::` for known packages, package-import aliases, default/namespace imports, and `using`-introduced namespace aliases, including nested alias chains such as `rt::mem::`,
+ - member completions for struct and error fields after `.` when the receiver type is known (including locals with type annotations, struct/error literals, casts, or `new Type(...)` initializers); struct receivers also include instance methods,
+ - bare member-trigger completions such as `manager.` by parsing a transient completion probe in memory and returning member results instead of falling back to global lexical keywords,
+ - static impl method completions after a type receiver such as `User.`, limited to `impl User` functions without an explicit `self` receiver while value receivers keep instance fields and methods,
+ - receiver completions after local bindings initialized from static impl calls, such as `let user = User.create(options); user.`, by using the static impl function result type,
+ - array element receiver completions such as `inputs[0].` when `inputs` has an array or slice type annotation,
+ - `for item in items { item. }` completions when `items` has an array or slice type annotation,
+ - `for item in manager.iter() { item. }` completions when the iterator-returning call result, local type aliases, rewritten std/file imports, and `next() -> T?` element type can be resolved through the cached symbol index or transient parse overlay,
+ - local completion and receiver inference for statement-level language
+ binders, including destructuring `let` patterns, `let ... else`, `if let`
+ / `while let` and chained `&& let` clauses, `match` statement arms, and
+ C-style `for` initializers,
+ - field/method completions for safe pattern payloads when the scrutinee type
+ is known, including optional `Some(value)` payloads, generic
+ `Result(T, E)`-style `Ok(value)` / `Err(error)` payloads, struct
+ destructuring fields, and array destructuring elements,
+ - chained field completions such as `box.value.` by walking known
+ struct/error receiver fields without invoking the full type checker,
+ - applied generic receiver completions such as `b.value.` where
+ `b: Box(Inner)` by substituting direct struct type parameters (`T`) into
+ field types before resolving the next field,
+ - struct- and error-literal field suggestions in `Type { ... }` expressions,
+ including `panic Error { ... }` payloads, when the cursor is in a
+ field-name position (before the `:`); this contextual completion remains
+ limited to record fields while the entry is incomplete, returns field-kind
+ items with `field: Type` detail/documentation, inserts the canonical
+ `field: ` initializer prefix through `textEdit`, suppresses fields already
+ initialized in the current literal, and supplies `filterText` so editors
+ can keep showing field choices even when the partial token does not
+ prefix-match a field label.
 - Currently:
  - returns completion items with `label`, `kind`, and `detail` populated when symbol data is available,
- - attaches a plaintext signature preview for functions and methods in completion documentation,
+ - attaches Markdown documentation for functions, methods, structs, and documented `let` bindings when doc comments are available, falling back to a compact signature/type preview,
  - filters results by the identifier prefix immediately preceding the cursor position,
  - uses a heuristic symbol index built from the module set (open docs + imports + std modules).
+- When the current buffer is syntactically incomplete, ordinary identifier
+ completion may parse a transient in-memory probe before falling back to
+ lexical identifiers. If a lexical identifier is later resolved to a symbol,
+ the server promotes that item with the resolved kind, detail, and
+ documentation. If the symbol overlay still cannot represent the current
+ file, lexical `fn name` declarations are still promoted to function
+ completion items so local functions remain visible.
 - Scope precision is still limited:
  - receiver type inference is heuristic (it is not a full typechecker),
- - local scopes are only partially modeled for completion (not all binder forms and control-flow refinements are represented),
+ - match-expression binders and full control-flow refinements are not yet
+ represented in completion,
  - cross-file results are limited to declarations present in the current module set (open docs + manifest/package import closure + std modules when enabled).
 
 As richer front-end support becomes available, completion may be extended to:
@@ -229,13 +285,18 @@ The server provides a minimal implementation of `textDocument/signatureHelp`:
  - method calls (`value.method(...)`) when the receiver resolves to a known struct type.
 - constructor calls via heap allocation syntax (`new Type(...)`), which resolves to the `constructor` overload set defined in `impl Type { ... }`.
 - calls via named imports and default-imported default exports (`import { f as g } from "..."; g(...)`, `import g from "./mod.slk"; g(...)`) when resolvable.
-- Active parameter selection is based on comma counting in the current call.
+- When the current buffer is temporarily incomplete after typing `(` or `,`,
+ signature help parses a transient in-memory call probe and overlays the
+ current document's symbols on the workspace cache, so local, named-imported,
+ default-imported, and namespace-qualified function signatures remain
+ available while the user is still typing the argument list.
+- Active parameter selection is based on delimiter-aware comma counting in the current call. Explicit generic-call arguments before `;` are excluded from the value-argument count, and commas inside nested calls, array literals, and aggregate literals are ignored for the outer call.
 - Signature labels follow the Silk surface syntax (e.g. `fn foo (a: int, b: int) -> int`).
 - When doc comments are available:
  - `SignatureInformation.documentation` is populated with rendered Markdown from the doc comment,
  - `SignatureParameter.documentation` is populated from `@param` entries when present.
 
-For constructor overload sets, the server returns multiple signatures and selects an active signature using argument-count heuristics. The implicit receiver parameter (`mut self: &Type`) is not shown in the signature parameters for `new Type(...)`.
+For constructor overload sets, the server returns public/exported signatures and selects an active signature using delimiter-aware value-argument heuristics, with exact arity preferred over defaulted trailing parameters and varargs. The implicit receiver parameter (`mut self: &Type`) is not shown in the signature parameters for `new Type(...)`.
 
 Signature help is heuristic and will become richer as the front-end’s symbol tables evolve. Some clients may request signature help even before `(` is typed; the server will attempt to resolve the identifier under the cursor as a callee in that case.
 
@@ -301,6 +362,7 @@ The server provides `textDocument/inlayHint`.
 
 - The current implementation emits type hints for:
  - unannotated `let` bindings when the initializer’s type is inferable from the current tooling subset,
+ - `for` binders over inferable arrays, slices, and ranges,
  - unannotated C-style `for` initializer bindings with the same inferable-type rule.
 - Hints are range-aware: the server only returns hints whose insertion positions fall inside the requested LSP range.
 
@@ -308,6 +370,21 @@ Current limitations:
 
 - only a narrow type-hint subset is emitted today,
 - parameter-name hints and broader expression/result hints are not yet implemented.
+
+## Formatting
+
+The server provides `textDocument/formatting` for open documents.
+
+- Formatting uses the same canonical source formatter as `silk format`.
+- The response is whole-document oriented:
+ - if the open document is already formatted, the server returns an empty edit list,
+ - otherwise it returns one full-range `TextEdit` that replaces the document text with the formatted text.
+- Newline-based `if` / `else if` headers use the same canonical layout as the CLI formatter: chained condition lines are indented one level deeper than the control keyword, and the following standalone `{` aligns back to the control keyword.
+
+Current limitations:
+
+- LSP formatting currently uses the default formatter configuration; editor-specific `FormattingOptions` and `.silk/format.toml` discovery are not yet applied inside the server.
+- Range formatting is not advertised.
 
 ## Text Document Lifetime and Diagnostics
 
@@ -319,6 +396,7 @@ The server maintains an in-memory table of open documents, keyed by URI:
  - publishes diagnostics via `textDocument/publishDiagnostics` for the opened URI by parsing the opened document and type-checking it against the cached module set (imports + std modules).
 - `textDocument/didChange` (full sync):
  - replaces the stored text with the new full contents,
+ - increments only the changed document revision for already-open documents so hover/definition/completion/signature-help can continue using the existing workspace/import/std cache while typing,
  - parses the changed document and type-checks it against the cached module set (imports + std modules),
  - publishes updated diagnostics for the changed URI.
 - `textDocument/didSave`:
@@ -391,7 +469,8 @@ The current LSP diagnostic surface follows these rules:
 - Resolve/type-check diagnostics:
  - use the compiler’s existing structured failure data (stable code, message, source span, and any available detail),
  - map that span/code directly onto the LSP diagnostic when the compiler reports one,
- - flatten available note/help guidance inline into the LSP `message` field because the current payload shape does not expose separate rich note/help arrays.
+ - include exact expected/found type detail for supported incorrect `await`, `await *`, `yield`, and `yield *` task/async operand errors,
+ - flatten available note/help guidance inline into the LSP `message` field and also attach structured `data.detail`, `data.notes`, and `data.helps` when the compiler provides them.
 - Conditional compilation (`if attr(...)`):
  - the server evaluates `attr(...)` query conditions using the host target (`arch`, `os`, `target`) and the enabled feature set (empty in Silk currently),
  - when an `if` / `else if` condition is an attribute-query boolean expression that resolves to a constant `true`/`false`, the inactive branch body is published as a `Hint` diagnostic tagged `Unnecessary` so editors may render it faded (similar to inactive `#if` blocks in C/C++).
@@ -409,11 +488,11 @@ Current limits:
 - project-wide navigation or rename outside the current cached module set,
 - fully semantic token classification for every identifier use,
 - richer inlay-hint categories beyond the current local type hints,
-- code actions or formatting.
+- code actions.
 
 These features are intended as future extensions and must be:
 
-- designed and documented here (and in any relevant `docs/language/` or `docs/std/` docs),
+- designed and documented here (and in any relevant language-reference or standard-library docs on this site),
 - backed by the underlying compiler front-end and/or standard library,
 - covered by tests (Zig and, where appropriate, C) before being advertised as supported capabilities.
 

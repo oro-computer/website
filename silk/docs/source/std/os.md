@@ -87,6 +87,6 @@ Ownership:
 
 - Callers must drop the returned vector when finished.
 
-Current implementation:
+Returned CPU metadata:
 
 - `CPU.model` is set to `ARCH_NAME` for each returned CPU record.

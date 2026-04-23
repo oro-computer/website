@@ -7,7 +7,7 @@ expressions, and the Formal Silk verification directives.
 This guide complements (not replaces):
 
 - [grammar](?p=language/grammar) (the exact grammar the parser accepts),
-- the concept documents under `docs/language/` (semantics and checker rules),
+- the linked language concept pages (semantics and checker rules),
 - and [diagnostics](?p=compiler/diagnostics) (error codes for unsupported forms).
 
 ## How to use this guide
@@ -20,7 +20,7 @@ When in doubt, prefer:
 
 - [grammar](?p=language/grammar) for syntax,
 - [diagnostics](?p=compiler/diagnostics) for unsupported forms and error codes,
-- the runnable examples embedded throughout `docs/language/`.
+- the runnable examples embedded throughout the linked language pages.
 
 ## 0. Minimal Executable Module
 
@@ -730,7 +730,7 @@ remaining unsupported generic forms that still report `E2016`.
 ## 6. Statements (Inside Blocks)
 
 The statement grammar is summarized in [grammar](?p=language/grammar) and detailed
-in `docs/language/flow-*.md`.
+in the dedicated flow-control reference pages.
 
 ### `if` / `else`
 
@@ -894,7 +894,7 @@ productions, see [grammar](?p=language/grammar).
 
 ### Literals and other primary expressions
 
-See the `docs/language/literals-*.md` concept documents for precise rules.
+See the dedicated literals reference pages for precise rules.
 
 ```silk
 fn main () -> int {
@@ -1094,7 +1094,7 @@ If you want more detail on a specific construct, jump to:
 - Syntax: [grammar](?p=language/grammar)
 - Types: [types](?p=language/types), [generics](?p=language/generics)
 - Operators: [operators](?p=language/operators)
-- Flow control: [flow overview](?p=language/flow-overview) and `docs/language/flow-*.md`
+- Flow control: [flow overview](?p=language/flow-overview), [flow if else](?p=language/flow-if-else), [flow for](?p=language/flow-for), [flow while](?p=language/flow-while), and [flow match](?p=language/flow-match)
 - Modules/imports/exports: [packages imports exports](?p=language/packages-imports-exports)
 - Optionals: [optional](?p=language/optional)
 - Typed errors: [typed errors](?p=language/typed-errors)
