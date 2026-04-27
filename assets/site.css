@@ -809,12 +809,6 @@ code {
   background: rgba(91, 59, 162, 0.08);
 }
 
-code.hljs-inline {
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
-}
-
 .prose a code {
   padding: 0;
   border: 0;
@@ -833,13 +827,6 @@ code.hljs-inline {
   background: transparent;
   color: var(--color-gold);
   font-weight: 650;
-}
-
-.prose h1 code.hljs-inline,
-.prose h2 code.hljs-inline,
-.prose h3 code.hljs-inline,
-.prose h4 code.hljs-inline {
-  color: inherit;
 }
 
 pre {
@@ -1292,13 +1279,6 @@ pre code {
   background: transparent;
   color: var(--color-gold);
   font-weight: 650;
-}
-
-.docs-nav code.hljs-inline,
-.docs-breadcrumb code.hljs-inline,
-.docs-search-result-title code.hljs-inline,
-.docs-prevnext-title code.hljs-inline {
-  color: inherit;
 }
 
 .prose table {

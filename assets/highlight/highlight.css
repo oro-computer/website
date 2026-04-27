@@ -7,7 +7,7 @@
 }
 
 pre code.hljs,
-code.hljs:not(.hljs-inline) {
+code.hljs {
   display: block;
   color: var(--color-code-fg);
   background: transparent;

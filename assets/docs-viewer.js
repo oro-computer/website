@@ -22,8 +22,6 @@
     .split(/[,\s]+/)
     .map((value) => normalizeRelPath(value))
     .filter(Boolean);
-  const inlineLang = app.getAttribute("data-inline-lang") || "";
-
   const titleSuffix =
     app.getAttribute("data-title-suffix") ||
     (kind === "wiki" ? "Silk Wiki" : "Silk Docs");
@@ -614,34 +612,6 @@
     for (const block of blocks) {
       try {
         hljs.highlightElement(block);
-      } catch {}
-    }
-  }
-
-  function highlightInlineCode(container) {
-    if (!inlineLang) return;
-    const hljs = globalThis.hljs;
-    if (!hljs || typeof hljs.highlight !== "function") return;
-    const nodes = Array.from(container.querySelectorAll("code"));
-
-    const silkInlineCandidate =
-      /(::|^\s*#|^\s*(package|module|import|from|export|public|private|default|const|let|var|mut|move|fn|c_fn|test|theory|struct|extends|enum|type|error|interface|impl|using|as|is|raw|pure|async|task|await|yield|with|region|new|sizeof|alignof|offsetof|typename|asm|ext|where|if|else|match|while|for|in|loop|return|panic|break|continue|assert|attr)\b)/;
-
-    for (const node of nodes) {
-      if (node.closest("pre")) continue;
-      if (node.dataset.inlineHljs === "true") continue;
-
-      const raw = String(node.textContent || "");
-      const text = raw.trim();
-      if (!text) continue;
-      if (text.length > 160) continue;
-      if (!silkInlineCandidate.test(text)) continue;
-
-      try {
-        const res = hljs.highlight(raw, { language: inlineLang, ignoreIllegals: true });
-        node.classList.add("hljs", "hljs-inline");
-        node.innerHTML = res.value;
-        node.dataset.inlineHljs = "true";
       } catch {}
     }
   }
@@ -1247,7 +1217,6 @@
     }
 
     resultsRoot.replaceChildren(list);
-    highlightInlineCode(resultsRoot);
   }
 
   async function renderDoc(state, id, { replaceState = false } = {}) {
@@ -1322,8 +1291,6 @@
     addHeadingAnchors(contentRoot);
     renderToc(contentRoot);
     highlightContent(contentRoot);
-    highlightInlineCode(app);
-
     document.title = `${stripBackticks(item.title)} · ${titleSuffix} · Oro Computer`;
 
     scrollToHashTarget(contentRoot);
