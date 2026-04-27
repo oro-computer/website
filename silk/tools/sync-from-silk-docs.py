@@ -65,8 +65,6 @@ KEEP_DOCS_FILES = {
     "language/packages-imports-exports.md",
     "language/syntax-tour.md",
     "language/typed-errors.md",
-    # Removed feature stubs (kept for search + historical context).
-    "language/refinement-types.md",
     "std/crypto.md",
     "std/json.md",
     "std/url.md",
@@ -77,8 +75,6 @@ KEEP_DOCS_FILES = {
 KEEP_WIKI_FILES = {
     # Website-owned wiki landing/start.
     "start.md",
-    # Removed feature stubs (kept for search + historical context).
-    "language/refinement-types.md",
 }
 
 

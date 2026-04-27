@@ -11,7 +11,6 @@ Important boundaries:
 
 - Regions cover the shipped `with` + `new` allocation model; see [regions](?p=language/regions).
 - Concurrency covers the shipped `Task(T)` / `Promise(T)` plus `yield` / `await` surface; see [concurrency](?p=language/concurrency).
-- Value constraints are expressed via Formal Silk (`#require` / `#assure`, including `#require` on `struct` declarations), not refinement types.
 
 Key notes:
 
@@ -30,7 +29,7 @@ Key notes:
  - inference failures report `E2091`; unsupported generic forms outside the
  shipped subset still report `E2016`,
 - A small concurrency subset is implemented (`Task(T)` / `Promise(T)` plus `yield`/`await`; see [concurrency](?p=language/concurrency)).
-- The builtin `map(K, V)` type form is removed; use `std::map::{HashMap, TreeMap}` instead (`E2017`).
+- Maps / dictionaries use `std::map::{HashMap, TreeMap}`.
 - Function expressions are implemented as first-class function values:
  - non-capturing: inferred `pure` — `let add = fn (x: int, y: int) -> x + y;`
  - capturing closures: may capture immutable scalar locals/parameters by value;

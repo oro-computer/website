@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-04-23T14:50:10+00:00
+Generated: 2026-04-27T17:20:35+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -80,7 +80,6 @@ Silk Docs
   - language/toolchain-metadata — Toolchain Metadata (`SILK_VERSION`, `SILK_ABI_VERSION`, `SILK_GIT_COMMIT`) — /silk/docs/?p=language/toolchain-metadata
   - language/testing — Testing — /silk/docs/?p=language/testing
   - language/formal-verification — Formal Silk — /silk/docs/?p=language/formal-verification
-  - language/refinement-types — Refinement Types (Removed) — /silk/docs/?p=language/refinement-types
   - language/dependent-types — Dependent Types (Const Parameters and Type-Level Computation) — /silk/docs/?p=language/dependent-types
   - language/conventions — Language Spec Conventions — /silk/docs/?p=language/conventions
 - Standard library
@@ -338,7 +337,6 @@ Silk Wiki
   - language/ext — External declarations (`ext`) — /silk/wiki/?p=language/ext
   - language/testing — Testing (`test`) — /silk/wiki/?p=language/testing
   - language/formal-verification — Formal verification (Formal Silk) — /silk/wiki/?p=language/formal-verification
-  - language/refinement-types — Refinement types (removed) — /silk/wiki/?p=language/refinement-types
   - language/dependent-types — Dependent types (const parameters) (design) — /silk/wiki/?p=language/dependent-types
   - language/conventions — Conventions — /silk/wiki/?p=language/conventions
 - Standard library
@@ -3583,7 +3581,6 @@ Important boundaries:
 
 - Regions cover the shipped `with` + `new` allocation model; see [regions](?p=language/regions).
 - Concurrency covers the shipped `Task(T)` / `Promise(T)` plus `yield` / `await` surface; see [concurrency](?p=language/concurrency).
-- Value constraints are expressed via Formal Silk (`#require` / `#assure`, including `#require` on `struct` declarations), not refinement types.
 
 Key notes:
 
@@ -3602,7 +3599,7 @@ Key notes:
  - inference failures report `E2091`; unsupported generic forms outside the
  shipped subset still report `E2016`,
 - A small concurrency subset is implemented (`Task(T)` / `Promise(T)` plus `yield`/`await`; see [concurrency](?p=language/concurrency)).
-- The builtin `map(K, V)` type form is removed; use `std::map::{HashMap, TreeMap}` instead (`E2017`).
+- Maps / dictionaries use `std::map::{HashMap, TreeMap}`.
 - Function expressions are implemented as first-class function values:
  - non-capturing: inferred `pure` — `let add = fn (x: int, y: int) -> x + y;`
  - capturing closures: may capture immutable scalar locals/parameters by value;
@@ -7945,10 +7942,9 @@ This document specifies the Silk type system used by the compiler front-end and 
  are not a stable user API.
 - Special-case: the nominal optional form `Option(T)` is accepted and desugared
  to `T?` in type annotations (it is not a general generics feature).
+- Maps / dictionaries are provided by `std::map::{HashMap, TreeMap}`.
 - Parsed but rejected by the current checker: const parameters and integer
  literal type arguments (`Foo(N: int)`, `Foo(u8, 1024)`) ([diagnostics](?p=compiler/diagnostics), `E2016`).
-- Removed builtin map type form: `map(K, V)` (`E2017`; use
- `std::map::{HashMap, TreeMap}` instead).
 - Defined in the native backend subset: 128-bit scalar primitives
  (`i128`, `u128`, `f128`).
  - In the current scalar-slot model ([structs impls layout](?p=language/structs-impls-layout)),
@@ -16214,121 +16210,6 @@ loading and `silk package inspect` discover these bundle paths so downstream
 tooling can locate the exported Formal Silk payload directly.
 
 ==============================================================================
-DOCS: Refinement Types (Removed) (language/refinement-types)
-URL: /silk/docs/?p=language/refinement-types
-==============================================================================
-
-# Refinement Types (Removed)
-
-Silk previously had an experimental refinement-type design: types annotated with
-logical predicates, often written in a `where`-style form.
-
-That design has been removed.
-
-Silk now uses a clearer split:
-
-- **Formal Silk** for proof obligations and value predicates,
-- **const parameters / dependent-type-like syntax** for compile-time shape.
-
-## What to use instead
-
-### Function preconditions and postconditions
-
-Use `#require` and `#assure` when the rule belongs to an operation:
-
-```silk
-#require x >= 0;
-#assure result == x + 1;
-fn inc (x: int) -> int {
-  return x + 1;
-}
-```
-
-### Type-level invariants
-
-Use `#require` on a `struct` when the invariant belongs to the value itself:
-
-```silk
-#require len >= 0;
-#require cap >= len;
-struct BufferState {
-  ptr: u64,
-  len: int,
-  cap: int,
-}
-```
-
-This is the replacement for the old “refined record” use case.
-
-### Local proof points
-
-Use `#assert` when the fact matters only at one spot in the code:
-
-```silk
-fn main () -> int {
-  let used: int = 4;
-  let total: int = 8;
-  #assert used <= total;
-  return total - used;
-}
-```
-
-### Reusable proof bundles
-
-Use `theory` / `#theory` when the same proof shape appears in multiple places:
-
-```silk
-export theory bounded_window (offset: int, size: int, total: int) {
-  #require offset >= 0;
-  #require size >= 0;
-  #assure offset + size <= total;
-}
-```
-
-### Compile-time shape
-
-If the property is “this type carries a compile-time size/capacity/width,” use
-const parameters rather than a refinement predicate:
-
-```silk
-struct Digest(N: usize) {
-  bytes: u8[N],
-}
-```
-
-See [`Dependent Types`](?p=language/dependent-types).
-
-## Old refinement-type intent → current Silk surface
-
-- `PositiveInt where x > 0`
- - use a function `#require x > 0`, or a `struct` requirement when it belongs
- to a nominal type
-- `Buffer where len <= cap`
- - use `#require` on the `struct`
-- `Result where predicate(result)`
- - use `#assure`
-- repeated proof rule used in many functions
- - use `theory`
-- compile-time-sized collection
- - use const parameters / applied types
-
-## Why this is better downstream
-
-This split keeps the language easier to read:
-
-- types describe runtime representation and compile-time shape,
-- Formal Silk describes proof obligations,
-- and the verifier reasons about those obligations without inventing a second
- predicate-bearing type language.
-
-## See also
-
-- [`Formal Silk`](?p=language/formal-verification)
-- [`Formal Silk guide`](?p=guides/formal-silk)
-- [`Struct Requirements`](?p=language/struct-requirements)
-- [`Dependent Types`](?p=language/dependent-types)
-
-==============================================================================
 DOCS: Dependent Types (Const Parameters and Type-Level Computation) (language/dependent-types)
 URL: /silk/docs/?p=language/dependent-types
 ==============================================================================
@@ -19242,8 +19123,7 @@ container protocols.
 
 ## Design goals
 
-- Provide a consistent, ergonomic key→value container story in `std::` without
- relying on a builtin `map(K, V)` type form.
+- Provide a consistent, ergonomic key→value container story in `std::`.
 - Make allocation behavior explicit and compatible with regions (`with`) and
  `--noheap`.
 - Keep the API close in spirit to C++’s `std::unordered_map` and `std::map`
@@ -36509,7 +36389,7 @@ The compiler assigns a stable code to each currently supported error kind.
 | `E2014` | formal Silk declaration used in runtime expression. |  |
 | `E2015` | binding requires an initializer. |  |
 | `E2016` | generic form is not implemented yet (for example const parameters / const type arguments / generic `impl` methods). |  |
-| `E2017` | builtin `map(K, V)` type form was removed (use `std::map::{HashMap, TreeMap}` instead). |  |
+| `E2017` | invalid map type syntax; use `std::map::{HashMap, TreeMap}` instead. |  |
 | `E2018` | namespace import is not callable. |  |
 | `E2019` | duplicate default export in a module. |  |
 | `E2020` | invalid `panic` statement. |  |
@@ -42152,7 +42032,7 @@ In Silk currently:
 - Monomorphized generics are supported for `struct`/`interface`/`impl` and applied types (`Name(args...)`):
  - const parameters/arguments and generic functions are still rejected (`E2016`),
 - A small concurrency subset is implemented (`Task(T)` / `Promise(T)` plus `yield`/`await`; see `Concurrency`).
-- The builtin `map(K, V)` type form is removed; use `std::map::{HashMap, TreeMap}` instead (`E2017`).
+- Maps / dictionaries use `std::map::{HashMap, TreeMap}`.
 - Function expressions are implemented as first-class function values:
  - non-capturing: inferred `pure` — `let add = fn (x: int, y: int) -> x + y;`
  - capturing closures: may capture immutable scalar locals/parameters by value;
@@ -44156,10 +44036,9 @@ This document specifies the Silk type system used by the compiler front-end and 
  are not a stable user API.
 - Special-case: the nominal optional form `Option(T)` is accepted and desugared
  to `T?` in type annotations (it is not a general generics feature).
+- Maps / dictionaries are provided by `std::map::{HashMap, TreeMap}`.
 - Parsed but rejected by the current checker: const parameters and integer
- literal type arguments (`Foo(N: int)`, `Foo(u8, 1024)`) (`Compiler Diagnostics`, `E2016`),
- and the removed builtin map type form (`map(K, V)`) (`E2017`; use
- `std::map::{HashMap, TreeMap}` instead).
+ literal type arguments (`Foo(N: int)`, `Foo(u8, 1024)`) (`Compiler Diagnostics`, `E2016`).
 - Defined in the native backend subset: 128-bit scalar primitives
  (`i128`, `u128`, `f128`).
  - In the current scalar-slot model (`Structs, Impl Blocks, and Memory Layout`),
@@ -55717,7 +55596,7 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2014` — formal Silk declaration used in runtime expression.
 - `E2015` — `let` requires an initializer.
 - `E2016` — unsupported generic form in the Supported forms (for example const parameters / const type arguments).
-- `E2017` — builtin `map(K, V)` type form was removed (use `std::map::{HashMap, TreeMap}` instead).
+- `E2017` — invalid map type syntax; use `std::map::{HashMap, TreeMap}` instead.
 - `E2018` — namespace import is not callable.
 - `E2019` — duplicate default export in a module.
 - `E2020` — invalid `panic` statement.
@@ -58643,40 +58522,6 @@ fn inc (x: int) -> int {
 - Canonical doc: [formal verification](?p=language/formal-verification)
 
 ==============================================================================
-WIKI: Refinement types (removed) (language/refinement-types)
-URL: /silk/wiki/?p=language/refinement-types
-==============================================================================
-
-# Refinement types (removed)
-
-Silk no longer uses a separate refinement-type surface.
-
-Use:
-
-- `#require` / `#assure` for function contracts,
-- `#require` on `struct` declarations for type-level invariants,
-- `#assert` for local proof points,
-- const parameters for compile-time shape.
-
-## Example
-
-```silk
-#require len >= 0;
-#require cap >= len;
-struct BufferState {
-  ptr: u64,
-  len: int,
-  cap: int,
-}
-```
-
-## See also
-
-- [Formal verification](../docs/?p=language/formal-verification)
-- [Struct requirements](../docs/?p=language/struct-requirements)
-- [Dependent types](../docs/?p=language/dependent-types)
-
-==============================================================================
 WIKI: Dependent types (const parameters) (design) (language/dependent-types)
 URL: /silk/wiki/?p=language/dependent-types
 ==============================================================================
@@ -59284,7 +59129,7 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: [map](?p=std/map)
-- Removed builtin `map(K, V)`: [types](?p=language/types)
+- Type-system reference: [types](?p=language/types)
 
 ==============================================================================
 WIKI: `std::set` (std/set)

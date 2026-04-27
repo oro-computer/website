@@ -48,4 +48,4 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: [map](?p=std/map)
-- Removed builtin `map(K, V)`: [types](?p=language/types)
+- Type-system reference: [types](?p=language/types)

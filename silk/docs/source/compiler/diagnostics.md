@@ -170,7 +170,7 @@ The compiler assigns a stable code to each currently supported error kind.
 | `E2014` | formal Silk declaration used in runtime expression. |  |
 | `E2015` | binding requires an initializer. |  |
 | `E2016` | generic form is not implemented yet (for example const parameters / const type arguments / generic `impl` methods). |  |
-| `E2017` | builtin `map(K, V)` type form was removed (use `std::map::{HashMap, TreeMap}` instead). |  |
+| `E2017` | invalid map type syntax; use `std::map::{HashMap, TreeMap}` instead. |  |
 | `E2018` | namespace import is not callable. |  |
 | `E2019` | duplicate default export in a module. |  |
 | `E2020` | invalid `panic` statement. |  |

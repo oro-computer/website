@@ -28,10 +28,9 @@ This document specifies the Silk type system used by the compiler front-end and 
  are not a stable user API.
 - Special-case: the nominal optional form `Option(T)` is accepted and desugared
  to `T?` in type annotations (it is not a general generics feature).
+- Maps / dictionaries are provided by `std::map::{HashMap, TreeMap}`.
 - Parsed but rejected by the current checker: const parameters and integer
  literal type arguments (`Foo(N: int)`, `Foo(u8, 1024)`) ([diagnostics](?p=compiler/diagnostics), `E2016`).
-- Removed builtin map type form: `map(K, V)` (`E2017`; use
- `std::map::{HashMap, TreeMap}` instead).
 - Implemented in the native backend subset: 128-bit scalar primitives
  (`i128`, `u128`, `f128`).
  - In the current scalar-slot model ([structs impls layout](?p=language/structs-impls-layout)),

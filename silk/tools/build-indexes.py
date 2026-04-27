@@ -113,7 +113,6 @@ LANGUAGE_ORDER = [
     "language/toolchain-metadata",
     "language/testing",
     "language/formal-verification",
-    "language/refinement-types",
     "language/dependent-types",
     # Contributor-oriented conventions (kept, but de-emphasized)
     "language/conventions",

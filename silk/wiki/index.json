@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-03-22T15:21:45+00:00",
+  "generatedAt": "2026-04-27T17:20:31+00:00",
   "kind": "wiki",
-  "count": 84,
+  "count": 83,
   "sections": [
     {
       "name": "overview",
@@ -245,11 +245,6 @@
           "id": "language/formal-verification",
           "title": "Formal verification (Formal Silk)",
           "file": "language/formal-verification.md"
-        },
-        {
-          "id": "language/refinement-types",
-          "title": "Refinement types (removed)",
-          "file": "language/refinement-types.md"
         },
         {
           "id": "language/dependent-types",

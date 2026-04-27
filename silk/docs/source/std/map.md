@@ -220,8 +220,7 @@ container protocols.
 
 ## Design goals
 
-- Provide a consistent, ergonomic key→value container story in `std::` without
- relying on a builtin `map(K, V)` type form.
+- Provide a consistent, ergonomic key→value container story in `std::`.
 - Make allocation behavior explicit and compatible with regions (`with`) and
  `--noheap`.
 - Keep the API close in spirit to C++’s `std::unordered_map` and `std::map`

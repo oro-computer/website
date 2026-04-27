@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-04-23T14:16:48+00:00",
+  "generatedAt": "2026-04-27T17:20:31+00:00",
   "kind": "wiki",
-  "count": 84,
+  "count": 83,
   "items": [
     {
       "id": "start",
@@ -333,13 +333,6 @@
       "text": "Formal verification (Formal Silk) Silk includes syntax for writing contracts and verification metadata: #require / #assure for pre/postconditions #assert for local assertions #invariant / #variant / #monovariant for loops Canonical doc: formal verification. Example (Design / verifier-oriented) require x >= 0; assure result == x + 1; fn inc (x: int) -> int { return x + 1; } See also Canonical doc: formal verification"
     },
     {
-      "id": "language/refinement-types",
-      "title": "Refinement types (removed)",
-      "section": "language",
-      "summary": "Silk no longer uses a separate refinement-type surface.",
-      "text": "Refinement types (removed) Silk no longer uses a separate refinement-type surface. Use: #require / #assure for function contracts, #require on struct declarations for type-level invariants, #assert for local proof points, const parameters for compile-time shape. Example require len >= 0; require cap >= len; struct BufferState { ptr: u64, len: int, cap: int, } See also Formal verification Struct requirements Dependent types"
-    },
-    {
       "id": "language/dependent-types",
       "title": "Dependent types (const parameters) (design)",
       "section": "language",
@@ -428,7 +421,7 @@
       "title": "`std::map`",
       "section": "std",
       "summary": "`std::map` provides associative containers:",
-      "text": "std::map std::map provides associative containers: HashMap(K, V) (unordered, hash table), TreeMap(K, V) (ordered, red-black tree). Canonical doc: map. Notes Supported forms: usable in Silk currently with documented limits. Details: map Importing import std::map; Examples Example: HashMap(u64, int) basic usage import std::map; import std::result; import std::memory; type Map = std::map::HashMap(u64, int); type InitResult = std::result::Result(Map, std::memory::AllocFailed); fn main () -> int { match (Map.init(16)) { InitResult::Ok(map) => { let mut m: Map = map; m.put(1, 10); let v: int = m.get(1) ?? 0; m.drop(); return v; }, InitResult::Err() => { return 2; }, } } See also Canonical doc: map Removed builtin map(K, V): types"
+      "text": "std::map std::map provides associative containers: HashMap(K, V) (unordered, hash table), TreeMap(K, V) (ordered, red-black tree). Canonical doc: map. Notes Supported forms: usable in Silk currently with documented limits. Details: map Importing import std::map; Examples Example: HashMap(u64, int) basic usage import std::map; import std::result; import std::memory; type Map = std::map::HashMap(u64, int); type InitResult = std::result::Result(Map, std::memory::AllocFailed); fn main () -> int { match (Map.init(16)) { InitResult::Ok(map) => { let mut m: Map = map; m.put(1, 10); let v: int = m.get(1) ?? 0; m.drop(); return v; }, InitResult::Err() => { return 2; }, } } See also Canonical doc: map Type-system reference: types"
     },
     {
       "id": "std/set",
