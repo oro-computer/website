@@ -174,7 +174,7 @@ export enum Level {
 }
 
 export struct Logger {
-  min_level: Level;
+  min_level: Level,
 }
 
 export fn info (logger: &Logger, message: string) -> void {
@@ -307,11 +307,11 @@ Minimal `package.json` next to `silk.toml`:
 }
 ```
 
-After installation, point Silk at the package root:
+After installation, depend on the installed package root by path:
 
-```bash
-export SILK_PACKAGE_PATH="$PWD/node_modules/@oro"
-silk build --package .
+```toml
+[dependencies]
+logger = { path = "node_modules/@oro/silk-logger", version = "^0.1.0" }
 ```
 
 If the npm package root is `node_modules/@oro/silk-logger` but the Silk package
@@ -406,7 +406,7 @@ import logger from "oro::logger";
 
 ## Next
 
-- [Toy logger module walkthrough](?p=guides/toy-logger-module)
+- [Practical logger module walkthrough](?p=guides/practical-logger-module)
 - [Standard library](?p=guides/standard-library)
 - [Package manifests](?p=compiler/package-manifests)
 - [Package distribution](?p=compiler/package-distribution)

@@ -244,6 +244,31 @@
     }
   }
 
+  function setCurrentHash(hash) {
+    const value = hash ? String(hash) : "";
+    if (!value) return "";
+    return value.startsWith("#") ? value : `#${value}`;
+  }
+
+  function closestElement(target, selector) {
+    let node = target || null;
+    if (node && node.nodeType !== 1) node = node.parentElement || null;
+    return node?.closest?.(selector) || null;
+  }
+
+  function scrollToDocTop() {
+    const target = contentRoot?.closest?.(".docs-content") || contentRoot || app;
+    if (!target || typeof target.getBoundingClientRect !== "function") {
+      globalThis.scrollTo({ top: 0 });
+      return;
+    }
+
+    const style = globalThis.getComputedStyle?.(document.documentElement);
+    const offset = Number.parseFloat(style?.getPropertyValue("--site-top-offset")) || 0;
+    const top = Math.max(0, target.getBoundingClientRect().top + globalThis.scrollY - offset - 24);
+    globalThis.scrollTo({ top });
+  }
+
   function humanizeSectionName(name) {
     if (!name) return "Docs";
     if (name === "overview") return "Start";
@@ -1219,7 +1244,11 @@
     resultsRoot.replaceChildren(list);
   }
 
-  async function renderDoc(state, id, { replaceState = false } = {}) {
+  async function renderDoc(
+    state,
+    id,
+    { replaceState = false, scrollTop = false, hash = null } = {}
+  ) {
     const currentId = state.itemById.has(id) ? id : defaultId;
     const item = state.itemById.get(currentId);
     if (!item) return;
@@ -1229,7 +1258,22 @@
     }
 
     renderNav(state.index, currentId);
-    setCurrentId(currentId, { replace: replaceState });
+    if (hash !== null) {
+      const params = new URLSearchParams(globalThis.location.search);
+      params.set("p", currentId);
+      const qs = params.toString();
+      const nextHash = setCurrentHash(hash);
+      const next = qs
+        ? `${globalThis.location.pathname}?${qs}${nextHash}`
+        : `${globalThis.location.pathname}${nextHash}`;
+      if (replaceState) {
+        globalThis.history.replaceState({ p: currentId }, "", next);
+      } else {
+        globalThis.history.pushState({ p: currentId }, "", next);
+      }
+    } else {
+      setCurrentId(currentId, { replace: replaceState });
+    }
     updateBreadcrumb(item.section, item.title);
     renderPrevNext(state.flat, currentId);
 
@@ -1293,7 +1337,11 @@
     highlightContent(contentRoot);
     document.title = `${stripBackticks(item.title)} · ${titleSuffix} · Oro Computer`;
 
-    scrollToHashTarget(contentRoot);
+    if (scrollTop && !globalThis.location.hash) {
+      scrollToDocTop();
+    } else {
+      scrollToHashTarget(contentRoot);
+    }
   }
 
   async function init() {
@@ -1407,7 +1455,10 @@
     };
 
     const initial = getCurrentId();
-    await renderDoc(state, initial, { replaceState: true });
+    await renderDoc(state, initial, {
+      replaceState: true,
+      scrollTop: !globalThis.location.hash,
+    });
 
     function getQueryParam(key) {
       const params = new URLSearchParams(globalThis.location.search);
@@ -1438,8 +1489,9 @@
 
     function openSearch(query, { focus = false } = {}) {
       if (!searchInput) return;
-      const q = (query || "").trim();
-      searchInput.value = q;
+      const raw = String(query || "");
+      const q = raw.trim();
+      searchInput.value = raw;
       setQueryParam("q", q);
       if (!q) {
         if (resultsRoot) resultsRoot.hidden = true;
@@ -1462,11 +1514,11 @@
     }
 
     function navigateToId(id) {
-      renderDoc(state, id).catch(() => {});
+      renderDoc(state, id, { hash: "", scrollTop: true }).catch(() => {});
     }
 
     navRoot.addEventListener("click", (event) => {
-      const a = event.target?.closest?.("a[data-doc-id]");
+      const a = closestElement(event.target, "a[data-doc-id]");
       if (!a) return;
       const id = a.dataset.docId;
       if (!id) return;
@@ -1477,7 +1529,7 @@
 
     if (resultsRoot) {
       resultsRoot.addEventListener("click", (event) => {
-        const a = event.target?.closest?.("a[data-doc-id]");
+        const a = closestElement(event.target, "a[data-doc-id]");
         if (!a) return;
         const id = a.dataset.docId;
         if (!id) return;
@@ -1489,7 +1541,7 @@
 
     if (prevRoot) {
       prevRoot.addEventListener("click", (event) => {
-        const a = event.target?.closest?.("a[href]");
+        const a = closestElement(event.target, "a[href]");
         if (!a) return;
         const url = new URL(a.href);
         const p = url.searchParams.get("p");
@@ -1501,7 +1553,7 @@
 
     if (nextRoot) {
       nextRoot.addEventListener("click", (event) => {
-        const a = event.target?.closest?.("a[href]");
+        const a = closestElement(event.target, "a[href]");
         if (!a) return;
         const url = new URL(a.href);
         const p = url.searchParams.get("p");

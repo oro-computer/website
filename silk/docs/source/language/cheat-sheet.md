@@ -178,43 +178,43 @@ See `structs-impls-layout.md` and `interfaces.md` for details.
 ## Concurrency
 
 - Function modifiers:
- - `fn` — normal.
- - `async fn` — `await`-able; calling yields `Promise(T)`.
- - `task fn` — runs in parallel on a worker thread; calling yields `Task(T)`.
- - `async task fn` — `async` + `task`; calling yields `Promise(Task(T))`.
+  - `fn` — normal.
+  - `async fn` — `await`-able; calling yields `Promise(T)`.
+  - `task fn` — runs in parallel on a worker thread; calling yields `Task(T)`.
+  - `async task fn` — `async` + `task`; calling yields `Promise(Task(T))`.
 - Structured block:
 
-	  ```silk
-	  async fn get_dashboard_data() -> Dashboard {
-	    // Note: the scheduler-backed `async { ... }` semantics are still design work,
-	    // but the compiler implements `Task(T)`/`Promise(T)` handles, `yield`, and `await`.
-	    let mut user: User;
-	    let mut orders: Order[];
+```silk
+async fn get_dashboard_data() -> Dashboard {
+  // Note: the scheduler-backed `async { ... }` semantics are still design work,
+  // but the compiler implements `Task(T)`/`Promise(T)` handles, `yield`, and `await`.
+  let mut user: User;
+  let mut orders: Order[];
 
-	    async {
-	      let user_promise = fetch_user_profile(123);
-	      let orders_promise = fetch_recent_orders(123);
-	      user = await user_promise;
-	      orders = await orders_promise;
-	    }
-
-	    return Dashboard(user, orders);
-	  }
-	  ```
-
- To receive task values, use `yield` inside a task context (`task { ... }` or `task fn`):
-
-  ```silk
-  task fn worker () -> int { return 42; }
-
-  async fn main () -> int {
-    let h = worker();
-    task {
-      let value: int = yield h;
-      return value;
-    }
+  async {
+    let user_promise = fetch_user_profile(123);
+    let orders_promise = fetch_recent_orders(123);
+    user = await user_promise;
+    orders = await orders_promise;
   }
-  ```
+
+  return Dashboard(user, orders);
+}
+```
+
+To receive task values, use `yield` inside a task context (`task { ... }` or `task fn`):
+
+```silk
+task fn worker () -> int { return 42; }
+
+async fn main () -> int {
+  let h = worker();
+  task {
+    let value: int = yield h;
+    return value;
+  }
+}
+```
 
 See `concurrency.md` for deeper semantics.
 

@@ -75,17 +75,66 @@
               </div>
             </div>
 
-            <div class="panel" aria-label="Hello world">
+            <div class="panel" aria-label="Hello Silk language sample">
               <div class="panel-header">
-                <div class="panel-title">Hello world</div>
+                <div class="panel-title">Hello, Silk</div>
                 <a class="button button-quiet" href="./docs/?p=guides/hello-world">Guide</a>
               </div>
               <div class="panel-body">
-                <pre><code class="language-silk">import std::io::println;
+                <pre><code class="language-silk">package hello;
 
-fn main () -&gt; int {
-  println(&quot;hello from silk&quot;);
-  return 0;
+import { println } from &quot;std/io&quot;;
+import result from &quot;std/result&quot;;
+
+interface Greeter {
+  fn write(name: string, score: int) -&gt; void;
+}
+
+struct ConsoleGreeter { label: string, }
+
+impl ConsoleGreeter as Greeter {
+  fn write (self: &amp;ConsoleGreeter, name: string, score: int) -&gt; void {
+    println(&quot;[{s}] hello {s}; score={d}&quot;, self.label, name, score);
+  }
+}
+
+struct App { greeter: ConsoleGreeter, }
+
+impl App {
+  fn name (self: &amp;App, raw: string?) -&gt; result::Result(string, string) {
+    let value: string = raw ?? &quot;world&quot;;
+    if value == &quot;&quot; { return Err(&quot;missing name&quot;); }
+    return Ok(value);
+  }
+
+  fn run (self: &amp;App, raw: string?, score: int) -&gt; int {
+    let name: string = match (self.name(raw)) {
+      Ok(v) =&gt; v,
+      Err(_) =&gt; &quot;guest&quot;,
+    };
+    self.greeter.write(name, score);
+    return 0;
+  }
+}
+
+fn platform () -&gt; string {
+  if attr(target=&quot;wasm32-wasi&quot;) { return &quot;wasi&quot;; }
+  if attr(os=&quot;linux&quot;) { return &quot;linux&quot;; }
+  return &quot;host&quot;;
+}
+
+async fn configured_name () -&gt; string? { return Some(&quot;silk&quot;); }
+task fn compute_score () -&gt; int { return 21 * 2; }
+
+async fn main () -&gt; int {
+  let app = App{ greeter: ConsoleGreeter{ label: platform() } };
+  let name: string? = await configured_name();
+  let score_task = compute_score();
+
+  task {
+    let score: int = yield score_task;
+    return app.run(name, score);
+  }
 }</code></pre>
                 <pre><code class="language-bash">silk check hello.slk
 silk test hello.slk

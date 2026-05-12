@@ -46,7 +46,7 @@ GUIDE_ORDER = [
     "guides/hello-world",
     "guides/language-tour",
     "guides/modules-and-packages",
-    "guides/toy-logger-module",
+    "guides/practical-logger-module",
     "guides/standard-library",
     "guides/cli",
     "guides/testing",

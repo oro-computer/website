@@ -110,7 +110,7 @@ The recommended flow:
 1. [Hello world](?p=guides/hello-world)
 2. [Language tour](?p=guides/language-tour)
 3. [Modules & packages](?p=guides/modules-and-packages)
-4. [Toy logger module](?p=guides/toy-logger-module)
+4. [Practical logger module](?p=guides/practical-logger-module)
 5. [Standard library](?p=guides/standard-library)
 6. [CLI and toolchain](?p=guides/cli)
 7. [Testing](?p=guides/testing)

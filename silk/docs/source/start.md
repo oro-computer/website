@@ -37,7 +37,7 @@ If you’re new to Silk, this is a good order:
 2. **Hello world**: the smallest working program and the `check → test → build` loop.
 3. **Language tour**: the shape of real programs (types, functions, control flow, errors).
 4. **Modules & packages**: how code is organized and how imports/exports create clean dependency boundaries.
-5. **Toy logger module**: a complete package walkthrough with stdlib use, targets, ABI notes, and publication.
+5. **Practical logger module**: a reusable logging package walkthrough with configuration, sinks, targets, ABI notes, and publication.
 6. **Standard library**: what lives in `std::` and the common patterns it uses.
 7. **CLI and toolchain**: module sets, build targets, package manifests, package distribution, docs/man, and diagnostics.
 8. **Testing**: language-level tests and TAP output for CI and tooling.
@@ -51,7 +51,7 @@ Start here:
 - Reference: [`silk` CLI](?p=compiler/cli-silk) · [`silk-package` (1)](?p=man/silk-package.1)
 - Guides: [What Silk is for](?p=guides/purpose)
 - Guides: [Hello world](?p=guides/hello-world) · [Language tour](?p=guides/language-tour) · [Modules & packages](?p=guides/modules-and-packages)
-- Guides: [Toy logger module](?p=guides/toy-logger-module) · [Standard library](?p=guides/standard-library) · [CLI and toolchain](?p=guides/cli)
+- Guides: [Practical logger module](?p=guides/practical-logger-module) · [Standard library](?p=guides/standard-library) · [CLI and toolchain](?p=guides/cli)
 - Guides: [Testing](?p=guides/testing) · [Formal Silk](?p=guides/formal-silk)
 - Tutorials: [Concurrency basics](?p=usage/tutorials/05-concurrency) · [Async I/O + Streams + Abort Signals](?p=usage/tutorials/06-async-io-streams-abort) · [Formal Silk in real code](?p=usage/tutorials/07-formal-silk)
 - Spec: [Silk Spec (2026)](/silk/spec/2026/)

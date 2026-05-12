@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-12T00:49:26+00:00",
+  "generatedAt": "2026-05-12T01:05:17+00:00",
   "kind": "docs",
   "count": 286,
   "sections": [
@@ -37,9 +37,9 @@
           "file": "guides/modules-and-packages.md"
         },
         {
-          "id": "guides/toy-logger-module",
-          "title": "Toy Logger Module Walkthrough",
-          "file": "guides/toy-logger-module.md"
+          "id": "guides/practical-logger-module",
+          "title": "Practical Logger Module Walkthrough",
+          "file": "guides/practical-logger-module.md"
         },
         {
           "id": "guides/standard-library",
