@@ -9,7 +9,7 @@ module, and provides a high-level `Context` / `Frame` workflow for rendering
 into `std::window` AppKit windows.
 
 The shipped implementation currently supports macOS. Linux exposes the same
-public package names for import/type-checking, but runtime-facing operations
+public package namespaces for import/type-checking, but runtime-facing operations
 return `Err(MetalFailed{ code: UnsupportedPlatform })` without declaring Metal
 runtime externs for that target. Other non-macOS targets keep the documented
 capability checks and high-level unsupported results.
@@ -18,8 +18,6 @@ capability checks and high-level unsupported results.
 
 ```silk
 module std::graphics::metal;
-
-import result from "std/result";
 import runtime_metal from "std/runtime/graphics/metal";
 import mem from "std/runtime/mem";
 import window from "std/window";

@@ -91,6 +91,8 @@
   }
 
   function initAskAiMenu() {
+    if (document.body?.dataset?.askAi !== "true") return;
+
     const nav = document.querySelector(".nav");
     if (!nav) return;
     if (nav.querySelector("[data-ask-ai]")) return;

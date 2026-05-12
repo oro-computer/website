@@ -13,8 +13,6 @@ support is Implemented (see “Platform notes”).
 
 ```silk
 module std::process;
-
-  import result from "std/result";
   import strings from "std/strings";
 
   enum ChdirErrorKind { InvalidInput, NotFound, NotADirectory, PermissionDenied, Unknown }

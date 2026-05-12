@@ -53,8 +53,6 @@ use `--` to start the raw rest segment explicitly.
 module std::flag;
 
 import args from "std/args";
-import result from "std/result";
-
 enum FlagErrorKind { ... }
 enum FlagValueKind { Bool, Int, I64, U64, String }
 

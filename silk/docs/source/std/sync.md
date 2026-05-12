@@ -40,8 +40,6 @@ See also:
 module std::sync;
 
 import interfaces from "std/interfaces";
-import result from "std/result";
-
 enum SyncErrorKind {
   OutOfMemory,
   InvalidInput,

@@ -4,7 +4,7 @@ This walkthrough builds a logger package that is small enough to study but
 structured enough to adapt:
 
 - a reusable package root with `silk.toml`,
-- a package namespace imported with `import logger from "acme::logger";`,
+- a dependency module imported with `import logger from "logger";`,
 - levels, configuration, structured entries, optional metadata, and filtering,
 - a configurable writer function with a console implementation,
 - a sink interface for source-level conformance checks,
@@ -14,11 +14,12 @@ structured enough to adapt:
 - an ABI wrapper for foreign callers,
 - and GitHub/npm publication.
 
-The package name is `acme::logger`. Downstream code imports the package as a
-module specifier:
+The manifest package name is `logger`. Source modules declare the symbol
+namespace with `package acme::logger;`. Downstream code imports the package's
+default module through the dependency key:
 
 ```silk
-import logger from "acme::logger";
+import logger from "logger";
 ```
 
 Direct imports such as `import acme::logger::logger_write_c;` are shown only in
@@ -34,7 +35,7 @@ logger/
   README.md
   LICENSE
   src/
-    logger.slk
+    lib.slk
     c_api.slk
   defs/
     api.slk
@@ -44,7 +45,7 @@ logger/
     logger_test.slk
 ```
 
-`src/logger.slk` is the normal Silk API. `src/c_api.slk` is the C/ABI edge.
+`src/lib.slk` is the normal Silk API. `src/c_api.slk` is the C/ABI edge.
 `defs/api.slk` mirrors the public surface for binary consumers.
 
 ## Manifest
@@ -53,7 +54,7 @@ logger/
 
 ```toml
 [package]
-name = "acme::logger"
+name = "logger"
 version = "0.1.0"
 description = "Structured logging package for Silk applications"
 license = "MIT"
@@ -80,39 +81,39 @@ include = [
 ]
 
 [[target]]
-name = "logger-static"
+name = "logger_static"
 kind = "static"
 entry = "src/c_api.slk"
 output = "build/libacme_logger.a"
 c_header = "build/acme_logger.h"
 
 [[target]]
-name = "logger-demo"
+name = "logger_demo"
 kind = "executable"
 entry = "examples/main.slk"
 output = "build/logger-demo"
 
 [[target]]
-name = "logger-wasi-demo"
+name = "logger_wasi_demo"
 kind = "executable"
 entry = "examples/main.slk"
 target = "wasm32-wasi"
 output = "build/logger-demo.wasm"
 ```
 
-The package name is the import identity. Target names select build recipes. The
-static target enters through `src/c_api.slk` because that artifact is meant for
-ABI consumers; ordinary Silk consumers import `acme::logger` as a package.
+The manifest package name is the identifier `logger`. The source package
+namespace is `acme::logger`. Target names select build recipes. The static
+target enters through `src/c_api.slk` because that artifact is meant for ABI
+consumers; ordinary Silk consumers import the default module with `"logger"`.
 
 ## Implementation Module
 
-`src/logger.slk` defines the reusable logging API:
+`src/lib.slk` defines the reusable logging API:
 
 ```silk
 package acme::logger;
 
 import { println } from "std/io";
-import result from "std/result";
 
 export enum Level {
   Trace,
@@ -288,7 +289,7 @@ export fn console_writer (entry: &Entry) -> LogError? {
   return None;
 }
 
-export fn parse_level (raw: string) -> result::Result(Level, string) {
+export fn parse_level (raw: string) -> Result(Level, string) {
   if raw == "trace" { return Ok(Level::Trace); }
   if raw == "debug" { return Ok(Level::Debug); }
   if raw == "info" { return Ok(Level::Info); }
@@ -342,17 +343,17 @@ This is still compact, but it is no longer a print helper. It has:
 - a configurable writer hook (`WriteFn`) for file, JSON, syslog, or test sinks,
 - a source-level sink contract (`interface Sink`) for concrete sink types,
 - a concrete console writer,
-- recoverable parse errors (`result::Result(Level, string)`),
+- recoverable parse errors (`Result(Level, string)`),
 - recoverable write errors (`LogError?`),
 - and target-aware defaults through `attr(...)`.
 
 ## Downstream Use
 
-`examples/main.slk` imports the package namespace and handles parse/write
+`examples/main.slk` imports the package's default module namespace and handles parse/write
 outcomes explicitly:
 
 ```silk
-import logger from "acme::logger";
+import logger from "logger";
 
 fn main () -> int {
   let min_level = match (logger::parse_level("info")) {
@@ -390,7 +391,7 @@ fn main () -> int {
 Selected imports are useful when a module owns the logging setup:
 
 ```silk
-import { Config, Field, Level, console_writer, init, warn } from "acme::logger";
+import { Config, Field, Level, console_writer, init, warn } from "logger";
 
 fn main () -> int {
   let log = init(Config{
@@ -413,7 +414,7 @@ writer. The public logger API stores a `WriteFn`, so callers can swap console,
 file, JSON, syslog, or test writers without changing call sites.
 
 ```silk
-import logger from "acme::logger";
+import logger from "logger";
 import { println } from "std/io";
 
 fn audit_writer (entry: &logger::Entry) -> logger::LogError? {
@@ -443,9 +444,6 @@ functions such as `logger_write_c` instead.
 
 ```silk
 module acme::logger;
-
-import result from "std/result";
-
 export enum Level {
   Trace,
   Debug,
@@ -501,7 +499,7 @@ export fn info (logger: &Logger, message: string, request_id: string?, fields: F
 export fn warn (logger: &Logger, message: string, request_id: string?, fields: Field[]) -> LogError?;
 export fn error (logger: &Logger, message: string, request_id: string?, fields: Field[]) -> LogError?;
 export fn console_writer (entry: &Entry) -> LogError?;
-export fn parse_level (raw: string) -> result::Result(Level, string);
+export fn parse_level (raw: string) -> Result(Level, string);
 export fn level_name (level: Level) -> string;
 export fn logger_write_c (level: int, target: string, message: string) -> int;
 ```
@@ -515,7 +513,7 @@ surface without implementation bodies. Binary packages can ship this file plus
 `tests/logger_test.slk` exercises parsing and filtering:
 
 ```silk
-import logger from "acme::logger";
+import logger from "logger";
 import { expect, expect_equal } from "std/test";
 
 test "parse level" {
@@ -548,11 +546,15 @@ silk test --package .
 
 The imports above resolve through the active module set:
 
-- `std/io`, `std/result`, and `std/test` load stdlib modules from the configured
- std root.
-- `acme::logger` resolves as a package specifier from the package graph or
- package search path.
+- `std/io` and `std/test` load stdlib modules from the configured std root.
+- `Result` is a std-prelude global from `std::runtime::globals`, so it does not
+ need an import in user-space modules.
+- `logger` resolves through the dependency key or package root named `logger`;
+ by convention it loads the package's `src/lib.slk` module.
 - `./file.slk` resolves relative to the importing file.
+
+Quoted import specifiers use `/` path separators. Do not put `::` inside the
+string; `::` belongs to direct package/symbol imports and qualified names.
 
 For local development, downstream apps should use a path dependency:
 
@@ -561,37 +563,37 @@ For local development, downstream apps should use a path dependency:
 logger = { path = "../logger", version = "^0.1.0" }
 ```
 
-Source still imports the package by Silk identity:
+Source still imports the package through the dependency module specifier:
 
 ```silk
-import logger from "acme::logger";
+import logger from "logger";
 ```
 
-The dependency key (`logger`) is manifest-local. The import identity is
-`package.name`.
+The dependency key (`logger`) is manifest-local. Source files inside the package
+declare the corresponding symbol namespace with `package acme::logger;`.
 
 ## Build Targets
 
 Build the demo executable:
 
 ```bash
-silk build --package . --package-target logger-demo
+silk build --package . --package-target logger_demo
 ```
 
 Build the static library and C header:
 
 ```bash
-silk build --package . --package-target logger-static
+silk build --package . --package-target logger_static
 ```
 
 Build the WASI demo:
 
 ```bash
-silk build --package . --package-target logger-wasi-demo
+silk build --package . --package-target logger_wasi_demo
 ```
 
 Target selection changes code guarded with `attr(os="...")` and
-`attr(target="...")`. The package import path stays `acme::logger`.
+`attr(target="...")`. The quoted dependency module specifier stays `logger`.
 
 ## ABI and FFI Edge
 
@@ -640,7 +642,7 @@ for definition modules, FFI wrappers, and low-level integration tests. Ordinary
 application code should use:
 
 ```silk
-import logger from "acme::logger";
+import logger from "logger";
 ```
 
 ## Publishing on GitHub
@@ -660,10 +662,10 @@ logger = { path = "vendor/logger", version = "^0.1.0" }
 ```
 
 For package-search-path consumption, place the root under a directory layout
-that matches the Silk package name:
+that matches the manifest package name:
 
 ```text
-vendor/acme/logger/silk.toml
+vendor/logger/silk.toml
 ```
 
 Then:
@@ -705,10 +707,10 @@ logger = { path = "node_modules/@acme/silk-logger", version = "^0.1.0" }
 ```
 
 If you want `SILK_PACKAGE_PATH` lookup instead, materialize the package under a
-search root that mirrors `acme::logger`:
+search root that mirrors the package name `logger`:
 
 ```text
-packages/acme/logger -> ../../node_modules/@acme/silk-logger
+packages/logger -> ../../node_modules/@acme/silk-logger
 ```
 
 Then set:
@@ -719,7 +721,7 @@ export SILK_PACKAGE_PATH="$PWD/packages"
 
 ## Best Practices
 
-- Keep the public import style user-facing: `import logger from "acme::logger";`.
+- Keep the public import style user-facing: `import logger from "logger";`.
 - Use direct `import package::ns::symbol;` imports only in ABI/FFI code.
 - Keep a narrow public API in `defs/api.slk`.
 - Treat `Config` as the stable setup surface; add new behavior there before
@@ -727,7 +729,7 @@ export SILK_PACKAGE_PATH="$PWD/packages"
 - Keep sink-specific code behind `WriteFn` functions or concrete types that
  satisfy `interface Sink`; add file, JSON, or syslog sinks as separate modules.
 - Use `LogError?` for write paths where failure is uncommon but must be visible.
-- Use `result::Result` for parsing or configuration loading where failure
+- Use `Result` for parsing or configuration loading where failure
  carries a message.
 - Keep target-specific defaults behind `attr(os="...")` or
  `attr(target="...")`.

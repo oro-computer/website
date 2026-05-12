@@ -599,7 +599,7 @@ The manifest records, for each entry:
 - a stable entry id
 - whether it is a `theory`, `function`, or `method`
 - the originating module path
-- the package name
+- the package namespace
 - the exported symbol name
 - the owner type for methods
 - the normalized signature string

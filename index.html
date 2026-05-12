@@ -3,66 +3,179 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Oro Computer</title>
+    <title>Technology · Oro Computer</title>
     <meta
       name="description"
-      content="Oro Computer is a software research and development firm focused on high-fidelity software used in far-edge environments."
+      content="Oro Computer builds Oro Runtime, Silk Language, and Virtnosis for native app delivery, verified systems software, and local infrastructure diagnostics."
     />
-    <meta name="theme-color" content="#faf8f4" />
+    <meta name="theme-color" content="#11100f" />
     <link rel="icon" type="image/png" href="docs/branding/assets/logo-icon-small.png" sizes="32x32" />
     <link rel="stylesheet" href="assets/site.css" />
+    <link rel="stylesheet" href="assets/highlight/highlight.css" />
+    <script src="assets/highlight/highlight.min.js" defer></script>
+    <script src="assets/highlight/languages/bash.min.js" defer></script>
+    <script src="assets/highlight/languages/javascript.min.js" defer></script>
+    <script src="assets/highlight/languages/silk.js" defer></script>
   </head>
-  <body class="home-page">
+  <body class="site-dark tech-page">
     <a class="skip-link" href="#main">Skip to content</a>
     <header class="site-top" id="top">
       <div class="container container-wide">
-        <div class="site-header home-header">
+        <div class="site-header">
           <a class="brand" href="./">
             <img class="brand-mark" src="docs/branding/assets/logo-icon.png" alt="Oro Computer logo" width="32" height="32" />
             <span class="brand-name">Oro Computer</span>
           </a>
           <nav class="nav" aria-label="Primary navigation">
-            <a href="runtime/">Runtime</a>
-            <a href="silk/">Silk</a>
-            <a href="sage/">Sage</a>
-            <a href="slg/">slg</a>
-            <a href="virtnosis/">Virtnosis</a>
-            <a href="https://github.com/oro-computer" target="_blank" rel="noreferrer">GitHub</a>
-            <a href="#contact">Contact</a>
+            <a href="./" aria-current="page">Technology</a>
+            <a href="blog/">Blog</a>
+            <a href="docs/">Docs</a>
           </nav>
         </div>
       </div>
     </header>
 
     <main id="main">
-      <section class="home-hero" aria-label="Overview">
-        <div class="home-hero-grid" aria-hidden="true"></div>
+      <section class="tech-hero" aria-label="Technology overview">
+        <div class="tech-hero-grid" aria-hidden="true"></div>
+        <div class="tech-constellation" aria-hidden="true">
+          <div class="constellation-panel panel-runtime">Runtime</div>
+          <div class="constellation-panel panel-silk">Silk</div>
+          <div class="constellation-panel panel-virtnosis">Virtnosis</div>
+          <div class="constellation-panel panel-edge">Edge apps</div>
+          <div class="constellation-panel panel-formal">Formal checks</div>
+          <div class="constellation-panel panel-ops">Local ops</div>
+        </div>
         <div class="container container-wide">
-          <div class="home-hero-copy">
-            <h1>High-fidelity software for systems that leave the datacenter.</h1>
-            <p class="home-lede">
-              Oro Computer is a software research and development firm focused on high-fidelity software used in far-edge
-              environments. We build languages, runtimes, operator tools, and security diagnostics for constrained, local-first,
-              and reliability-sensitive software.
+          <div class="tech-hero-copy">
+            <div class="home-eyebrow">
+              <span class="home-eyebrow-mark" aria-hidden="true"></span>
+              Oro Computer
+            </div>
+            <h1>Systems technology for software that has to run close to the machine.</h1>
+            <p>
+              Oro Computer builds a native app runtime, a verified systems language, and local-first infrastructure
+              diagnostics for software that needs clear boundaries, predictable builds, and inspectable behavior.
             </p>
             <div class="hero-actions home-actions">
-              <a class="button button-primary" href="runtime/docs/">Runtime docs</a>
-              <a class="button" href="silk/docs/">Silk docs</a>
-              <a class="button" href="https://github.com/oro-computer" target="_blank" rel="noreferrer">GitHub</a>
+              <a class="button button-primary" href="docs/">Read the docs</a>
+              <a class="button" href="#technologies">Explore technology</a>
+              <a class="button button-quiet" href="https://github.com/oro-computer" target="_blank" rel="noreferrer">GitHub</a>
             </div>
           </div>
-
         </div>
       </section>
 
-      <section class="section home-section" id="contact">
+      <section class="tech-band" id="technologies" aria-label="Core technologies">
         <div class="container container-wide">
-          <div class="contact-panel">
-            <h2>Contact</h2>
-            <div class="contact-links">
-              <a href="mailto:info@oro.computer">info@oro.computer</a>
-              <a href="mailto:contributors@oro.computer">contributors@oro.computer</a>
-              <a href="mailto:runtime@oro.computer">runtime@oro.computer</a>
+          <div class="section-heading">
+            <p class="section-kicker">Technology</p>
+            <h2>Three surfaces, one operating posture.</h2>
+          </div>
+
+          <div class="technology-grid">
+            <article class="technology-card technology-card-runtime">
+              <div class="technology-card-head">
+                <span class="technology-label">Oro Runtime</span>
+                <span class="technology-status">Native app runtime</span>
+              </div>
+              <h3>Ship web code as native desktop, mobile, and edge apps.</h3>
+              <p>
+                Use ordinary HTML, CSS, and JavaScript with explicit <code>oro:*</code> modules for windows, files,
+                notifications, service workers, storage, workers, updates, and host integration.
+              </p>
+              <pre><code class="language-bash">oroc init notes
+cd notes
+oroc run .
+oroc build . --platform=ios-simulator</code></pre>
+              <div class="technology-links">
+                <a href="runtime/">Overview</a>
+                <a href="runtime/docs/?p=guides/from-zero-to-first-run">Quick start</a>
+                <a href="runtime/docs/?p=javascript/module-index">API index</a>
+              </div>
+            </article>
+
+            <article class="technology-card technology-card-silk">
+              <div class="technology-card-head">
+                <span class="technology-label">Silk Language</span>
+                <span class="technology-status">Verified systems language</span>
+              </div>
+              <h3>Write explicit systems code with formal verification built in.</h3>
+              <p>
+                Silk keeps imports, targets, ABI boundaries, async work, and proofs visible in the source so reviewers can
+                reason about what runs, what links, and what must hold.
+              </p>
+              <pre><code class="language-silk">package app;
+
+import { println } from "std/io";
+
+fn main () -> int {
+  println("hello from Silk");
+  return 0;
+}</code></pre>
+              <div class="technology-links">
+                <a href="silk/">Overview</a>
+                <a href="silk/docs/?p=usage/getting-started">Quick start</a>
+                <a href="silk/spec/2026/">2026 spec</a>
+              </div>
+            </article>
+
+            <article class="technology-card technology-card-virtnosis">
+              <div class="technology-card-head">
+                <span class="technology-label">Virtnosis</span>
+                <span class="technology-status">Local diagnostics</span>
+              </div>
+              <h3>Inspect libvirt infrastructure without mutating host or guest state.</h3>
+              <p>
+                Virtnosis is a read-only local control plane for operators who need bounded scans, redacted output, explicit
+                degraded-state reporting, and stable machine-consumable findings.
+              </p>
+              <pre><code class="language-bash">virtnosis-agent --verbose
+vnactl status
+vnactl scan --deep --confirm-xml --redact -f json</code></pre>
+              <div class="technology-links">
+                <a href="virtnosis/">Overview</a>
+                <a href="virtnosis/docs/?p=start">Start</a>
+                <a href="virtnosis/docs/?p=cli/vnactl">CLI</a>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="tech-band tech-band-muted" aria-label="Runtime and Silk focus">
+        <div class="container container-wide">
+          <div class="focus-grid">
+            <div class="focus-copy">
+              <p class="section-kicker">Runtime</p>
+              <h2>Most apps start with obvious commands and useful native capabilities.</h2>
+              <p>
+                Oro Runtime is presented around the work people actually do: run a project, open and coordinate windows,
+                persist local data, register service workers, request notifications, and package the app.
+              </p>
+            </div>
+            <div class="focus-list">
+              <a href="runtime/docs/?p=guides/offline-first-with-service-workers">Offline-first service workers</a>
+              <a href="runtime/docs/?p=guides/files-and-sandboxing">Filesystem and sandboxing</a>
+              <a href="runtime/docs/?p=guides/desktop-integrations">Notifications and desktop integrations</a>
+              <a href="runtime/docs/?p=guides/windows-and-messaging">Window management and messaging</a>
+            </div>
+          </div>
+
+          <div class="focus-grid focus-grid-reverse">
+            <div class="focus-copy">
+              <p class="section-kicker">Silk</p>
+              <h2>The language is documented as a complete system, not a syntax teaser.</h2>
+              <p>
+                The Silk path starts with readable programs, then exposes modules, imports, targets, ABI/FFI, stdlib APIs,
+                embedders, and Formal Silk as first-class surfaces.
+              </p>
+            </div>
+            <div class="focus-list">
+              <a href="silk/docs/?p=guides/language-tour">Language tour</a>
+              <a href="silk/docs/?p=guides/modules-and-packages">Modules and packages</a>
+              <a href="silk/docs/?p=compiler/abi-libsilk">ABI and embedders</a>
+              <a href="silk/docs/?p=guides/formal-silk">Formal Silk</a>
             </div>
           </div>
         </div>
@@ -73,7 +186,7 @@
       <div class="container container-wide">
         <div class="footer-inner">
           <strong>Oro Computer</strong>
-          <span>© <span data-year>2026</span> Oro Computer.</span>
+          <span>&copy; <span data-year>2026</span> Oro Computer.</span>
         </div>
       </div>
     </footer>

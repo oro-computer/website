@@ -21,9 +21,9 @@ Supported forms:
 - Module-specifier imports (`import { Name } from "...";`, `import ns from "...";`)
  including:
  - relative file imports (`from "./file.slk"`),
- - std-root file imports (`from "std/strings"`; `.slk` is appended when missing),
- - and package specifier imports (`from "ns_pkg"`, `from "ns_pkg/subpath"` where `/`
- is treated as `::` for namespace paths).
+ - std-root imports (`from "std/strings"`; `.slk` is appended when missing),
+ - and dependency-rooted module imports (`from "logger"` or
+ `from "logger/sinks"`).
 - Direct package/ABI imports (`import package::ns;`,
  `import package::ns::symbol;`, `import ::symbol;`) for cases where code needs
  to name the package/export path that the resolver and linker see directly.
@@ -97,9 +97,9 @@ Rules:
 - When present, the `package` declaration MUST appear before all other
  top-level declarations in the module; it is the first declaration in
  the file.
-- Package names are sequences of identifiers separated by `::`.
+- Source package namespaces are sequences of identifiers separated by `::`.
  - As a special case, the keyword `task` is permitted as a `::`-qualified
- segment so `std::task` is a valid package name.
+ segment so `std::task` is a valid package namespace.
  - `std::strings`
  - `std::task`
  - `my_app::core`
@@ -114,7 +114,7 @@ multi-module builds are implemented.
 
 In the current `silk` CLI implementation, when building a package via a package
 manifest (`silk.toml`), source files that omit `package` default to the
-manifest’s `package.name`. See [Package manifests](?p=compiler/package-manifests).
+manifest `package.name`. See [Package manifests](?p=compiler/package-manifests).
 
 ## Modules (`module`)
 
@@ -211,16 +211,17 @@ Rules:
  optional `package` declaration (if present) and before any other kind of
  top-level declaration. In other words, imports form a contiguous block at
  the beginning of the module immediately following the optional package.
-- An `import` path is a sequence of identifiers separated by `::`, matching
- the package naming rules above (including the `std::task` special case).
- - As with expression/type qualified names, an import path MAY start with `::`
- to explicitly name the global namespace (the unnamed package).
+- A direct `import` path is a sequence of identifiers separated by `::`,
+ matching the package naming rules above (including the `std::task` special
+ case).
+ - As with expression/type qualified names, a direct import path MAY start with
+ `::` to explicitly name the global namespace (the unnamed package).
 - User-space modules should prefer **module-specifier imports**:
  - `import { Name, Other as Alias } from "./module.slk";`
  - `import ns from "./module.slk";`
  - `import io from "std/io";`
  - `import { println } from "std/io";`
- - `import logger from "oro::logger";`
+ - `import logger from "logger";`
 - Direct `::` imports remain supported for package/ABI-oriented code and are
  documented below.
 
@@ -231,7 +232,7 @@ Use module-specifier imports for application and library code:
 ```silk
 import { println } from "std/io";
 import fs from "std/fs";
-import logger from "oro::logger";
+import logger from "logger";
 import { Logger, log_info as info } from "./logger.slk";
 ```
 
@@ -244,8 +245,8 @@ Effects:
 - The string specifier tells readers how the dependency is resolved:
  - `./` or `../` means a source file relative to the importing file,
  - `std/...` means a stdlib source module resolved from the configured stdlib root,
- - any other string means a package specifier resolved from the module set or
- package search path.
+ - any other string means a dependency-rooted module path resolved from the
+ importing package manifest or package search path.
 - This form keeps ordinary user-space code independent of the lower-level ABI
  path syntax and supports local aliases directly.
 
@@ -267,10 +268,10 @@ see directly.
 
 Semantics:
 
-- If the import path matches a package name present in the module set, it is a
+- If the import path matches a package namespace present in the module set, it is a
  **direct package import** (`import oro::logger;`).
 - Otherwise, it is treated as a **direct symbol import**:
- - the compiler finds the longest package-name prefix of the path,
+ - the compiler finds the longest loaded package namespace prefix of the path,
  - the remaining suffix is the symbol name within that package (it may contain
  `::` due to exported inline modules),
  - the symbol is introduced into the importing module under its final path
@@ -282,7 +283,7 @@ Use this form deliberately:
 
 - for prototype/definition modules that describe an ABI surface,
 - for FFI wrappers that expose or consume exact external symbols,
-- for stdlib/runtime internals where direct package names mirror linker-visible
+- for stdlib/runtime internals where direct package namespaces mirror linker-visible
  organization,
 - and when you need the explicit global namespace escape (`::malloc`).
 
@@ -292,7 +293,7 @@ forms:
 ```silk
 import io from "std/io";
 import { println } from "std/io";
-import logger from "oro::logger";
+import logger from "logger";
 ```
 
 Reasons:
@@ -306,7 +307,7 @@ Reasons:
 Global namespace (`::name`) rules:
 
 - The global namespace is the package formed by modules that have **no**
- `package ...;` or header-form `module ...;` declaration (their package name is
+ `package ...;` or header-form `module ...;` declaration (their package namespace is
  empty).
 - `::Name` resolves `Name` from that global namespace, if a matching declaration
  exists in the current module set.
@@ -320,8 +321,8 @@ write `import str from "std/strings";` for a local namespace alias.
 
 ### Example: a two-module package program
 
-Two modules can share a package name and export symbols for other packages to
-use.
+Two modules can share a package namespace and export symbols for other packages
+to use.
 
 ```silk
 // util.slk
@@ -353,21 +354,22 @@ fn main () -> int {
 A **package import** resolves only if the package exists in the current module
 set.
 
-This matters most when you use package specifiers (`from "ns_pkg"`) or when you
-expect a package import to find a package that is not otherwise present.
+This matters most when you use direct package imports such as
+`import ns_pkg;`, or when you expect a dependency module import such as
+`from "logger"` to load a package root that is not otherwise present.
 
 Tooling note (the `silk` CLI):
 
 - The language semantics are still “imports resolve against the module set”.
  The CLI grows the module set by loading additional source files.
 - In addition to auto-loading `std/...` modules from the stdlib root, the CLI
- MAY load non-`std` packages from a **package search path** when a bare
- package specifier is imported (for example `import api from "my_api";`).
+ MAY load non-`std` packages from a **package search path** when a dependency
+ module specifier is imported (for example `import api from "my_api";` or
+ `import widgets from "my_api/widgets";`).
 - The package search path is configured via `SILK_PACKAGE_PATH` (PATH-like:
  roots separated by `:` on POSIX).
-- A package name like `my_api::core` maps to the filesystem candidate
- `<root>/my_api/core/silk.toml`. The first matching manifest in search order is
- used.
+- A package name like `my_api` maps to the filesystem candidate
+ `<root>/my_api/silk.toml`. The first matching manifest in search order is used.
 - Direct imports that include extra `::` segments (for example
  `my_api::core::Thing`) are treated as direct symbol imports: the CLI resolves the **longest**
  package prefix that exists (`my_api::core`, then `my_api`) and loads that
@@ -379,7 +381,7 @@ the package namespace:
 ```silk
 // main.slk
 import { answer as ignored } from "./support_pkg_ns_pkg.slk"; // declares `package ns_pkg;`
-import pkg from "ns_pkg"; // now resolves because `ns_pkg` exists in the module set
+import pkg from "ns_pkg"; // loads the dependency/root default module
 
 fn main () -> int {
   return pkg::add1(pkg::answer);
@@ -387,7 +389,7 @@ fn main () -> int {
 ```
 
 If you omit the file import (or otherwise fail to include a module that declares
-`package ns_pkg;`), the package specifier import fails with `E1001` ("unknown imported package").
+`package ns_pkg;`), the direct package import fails with `E1001` ("unknown imported package").
 
 From the CLI, the usual fix is to ensure the missing package’s module(s) are
 part of the command’s module set (for example by passing their `.slk` files to
@@ -409,17 +411,18 @@ An import specifier string is interpreted in one of three ways:
 
 - **File specifier**: the string begins with `./` or `../`, or is an absolute
  path. These imports resolve to a module by file path.
-- **Std-root file specifier**: the string begins with `std/`. These imports
- resolve to a module by file path under the configured stdlib root (see the
- stdlib root selection rules in [`silk` CLI](?p=compiler/cli-silk) and
+- **Std-root specifier**: the string begins with `std/`. These imports resolve
+ to a stdlib module by path under the configured stdlib root (see the stdlib
+ root selection rules in [`silk` CLI](?p=compiler/cli-silk) and
  [C ABI (`libsilk`)](?p=compiler/abi-libsilk)).
-- **Package specifier**: any other string. These imports resolve to a package
- by name (for example `"ui"` or `"std::strings"`).
+- **Dependency module specifier**: any other string. The first path segment is a
+ package/dependency name, and any remaining path selects a module below that
+ package's `src/` directory. For example, `"logger"` loads the default
+ `src/lib.slk` module and `"logger/sinks"` loads `src/sinks.slk`.
 
-Note: package specifiers are matched literally
-against package names present in the module set. In practice this means the
-specifier must be a valid Silk package path (identifiers separated by `::`,
-with `task` permitted as a `::` segment).
+Quoted specifiers use `/` path separators. Do not put `::` inside a string
+import specifier; `::` is reserved for source namespaces, direct package/symbol
+imports, and qualified names.
 
 This mirrors the common JS convention that relative file imports must start
 with `./` or `../`. Silk additionally reserves the `std/` prefix for stdlib
@@ -428,7 +431,7 @@ source imports resolved via the configured stdlib root.
 Example (namespace-style imports):
 
 ```silk
-import ui from "ui";                 // package namespace
+import ui from "ui";                 // dependency default module namespace
 import helpers from "./helpers.slk";  // file module namespace (if no default export)
 
 fn main () -> void {
@@ -453,8 +456,8 @@ Notes:
  specifier-based imports:
  - `./` / `../` / absolute paths are resolved as file imports,
  - `std/<path>` is resolved under the configured stdlib root,
- - other strings are treated as package specifiers (for example `"ui"` or
- `"std::strings"`).
+ - other strings are treated as dependency module specifiers (for example
+ `"logger"` or `"logger/sinks"`).
 - Ambient imports do not bind a namespace or import any symbols. If you need to
  call a function or reference a type from the imported module, use a named
  import or a default import (namespace import).
@@ -486,7 +489,7 @@ Rules:
  top-level declaration.
 - The `from` keyword is part of the import syntax.
 - The `from` specifier may be either:
- - a string literal (`from "./file.slk"`, `from "std/io"`, `from "ns_pkg/sub"`), or
+ - a string literal (`from "./file.slk"`, `from "std/io"`, `from "logger/sinks"`), or
  - a package path form kept for compatibility (`from std::io;`,
  `from ns_pkg::sub;`). User-space docs use string specifiers because they work
  uniformly for files, stdlib modules, and packages.
@@ -498,11 +501,11 @@ Rules:
  `"std/<path>.slk"`), it is resolved relative to the configured stdlib root and
  then treated as a file import. If the `.slk` extension is omitted, it is
  appended during std-root resolution.
-- If the specifier is a **package specifier**, it is interpreted as a package
- name (using the same `::`-separated syntax as `package` declarations) and is
- resolved via the package graph.
+- If the specifier is a **dependency module specifier**, the first path segment
+ is a dependency/package name and the remaining path selects a source module in
+ that package.
 - The imported module MAY declare a `package` or omit it. File specifiers refer
- to the target module *by file path*, not by package name.
+ to the target module *by file path*, not by source package namespace.
 
 Exported names for named imports:
 
@@ -621,10 +624,10 @@ Rules:
 - Using a namespace import name as a callable (e.g. `foo()`) is an error; add an
  explicit `export default` to the imported module or use a named import.
 
-Package namespace imports:
+Dependency module namespace imports:
 
-- For a **package specifier** (for example `import ui from "ui";`), the default
- import binds the package’s default export when the package declares one.
+- For a dependency module specifier (for example `import ui from "ui";`), the
+ default import binds the module's default export when it declares one.
  Otherwise, it binds a namespace and exported names are accessed via `ui::Name`.
 
 ## Exports

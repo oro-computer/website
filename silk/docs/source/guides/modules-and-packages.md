@@ -35,7 +35,7 @@ logger/
   README.md
   LICENSE
   src/
-    logger.slk
+    lib.slk
     sinks.slk
   defs/
     api.slk
@@ -74,7 +74,11 @@ Rules that keep tooling simple:
 - `package ...;` or `module ...;` comes first.
 - Imports form one contiguous block immediately after the package/module header.
 - Exports are explicit.
-- Package names use `::` paths.
+- Source package declarations use `::` namespaces.
+- Manifest package names are simple identifiers such as `logger` or
+ `oro_logger`.
+- Quoted import specifiers use filesystem-style paths such as `logger` or
+ `logger/sinks`.
 
 Use `package ...;` for reusable application/library code. Use header-form
 `module ...;` when you need a compile-time-only namespace or module conformance
@@ -92,7 +96,7 @@ export module level {
 ```
 
 Downstream code can then refer to `logger::level::INFO` after importing the
-package namespace.
+package's default module namespace.
 
 ## Import style for user-space code
 
@@ -101,8 +105,8 @@ Prefer module-specifier imports:
 ```silk
 import { println } from "std/io";
 import fs from "std/fs";
-import logger from "oro::logger";
-import { Logger, info as log_info } from "./logger.slk";
+import logger from "logger";
+import { Logger, info as log_info } from "./lib.slk";
 ```
 
 Use these forms as your default:
@@ -118,11 +122,52 @@ Specifier meanings:
 
 - `./x.slk` or `../x.slk` resolves relative to the importing file.
 - `std/io` resolves from the configured stdlib root.
-- `oro::logger` resolves as a package specifier from the module set or package
- search path.
+- `logger` resolves through the dependency key or package root named `logger`.
+- `logger/sinks` resolves to the `sinks` module inside that package root.
+
+String import specifiers are path-like. Use `/` for module paths inside the
+string, not `::`. Reserve `::` for source namespaces, direct package/symbol
+import paths, and qualified names in code.
 
 This form scales well because it works for local files, stdlib modules, and
 dependencies while keeping aliases explicit.
+
+## Std prelude globals
+
+When the standard library is enabled, the compiler automatically loads
+`std::runtime::globals`. That module exposes a small prelude with `using`
+aliases for common std types and interfaces. User code does not import these
+names.
+
+The current global list is:
+
+```text
+Boolean
+Builder
+Capacity
+Clear
+Deserialize
+Drop
+Function
+IsEmpty
+Iterator
+Len
+Number
+Parse
+Range
+ReadU8
+RegExp
+ReserveAdditional
+Result
+Serialize
+Sized
+String
+TrySerialize
+WriteU8
+```
+
+Use those names directly. For example, write `Result(T, E)` rather than
+importing `std/result` only to reach `std::result::Result`.
 
 ## Direct package and symbol imports
 
@@ -152,8 +197,8 @@ Effects:
 For ordinary user-space modules, prefer:
 
 ```silk
-import logger from "oro::logger";
-import { info } from "oro::logger";
+import logger from "logger";
+import { info } from "logger";
 ```
 
 That keeps low-level ABI paths out of most code and gives you aliases through
@@ -196,7 +241,7 @@ Best practices:
 
 ```toml
 [package]
-name = "oro::logger"
+name = "logger"
 version = "0.1.0"
 description = "Small structured logger for Silk examples"
 license = "MIT"
@@ -213,12 +258,12 @@ include = ["silk.toml", "README.md", "LICENSE", "src/**", "defs/**"]
 [[target]]
 name = "logger"
 kind = "static"
-entry = "src/logger.slk"
+entry = "src/lib.slk"
 output = "build/liblogger.a"
 c_header = "build/logger.h"
 
 [[target]]
-name = "logger-demo"
+name = "logger_demo"
 kind = "executable"
 entry = "examples/main.slk"
 output = "build/logger-demo"
@@ -231,9 +276,13 @@ How loading works:
 - A dependency with `path = "../logger"` is loaded from that directory.
 - A dependency without `path` is searched through `SILK_PACKAGE_PATH` and the
  installed package roots.
-- Package names map to paths by replacing `::` with `/`; `oro::logger` maps to
- `oro/logger/silk.toml` under each search root.
-- The manifest package name must match the import/dependency name.
+- Manifest package names are identifiers; `logger` maps to
+ `logger/silk.toml` under each search root.
+- Quoted imports use dependency-rooted module paths: `import logger from
+ "logger";` loads the dependency's default module, and `import sinks from
+ "logger/sinks";` loads a submodule.
+- Source modules may still declare a symbol namespace such as
+ `package oro::logger;`.
 
 ## Dependencies
 
@@ -244,10 +293,10 @@ A package depends on another package through `[dependencies]`:
 logger = { path = "../logger", version = "^0.1.0" }
 ```
 
-Then source can import the dependency by package name:
+Then source can import the dependency through the dependency key:
 
 ```silk
-import logger from "oro::logger";
+import logger from "logger";
 
 fn main () -> int {
   let l = logger::Logger{ min_level: logger::Level::Info };
@@ -280,7 +329,7 @@ Recommended release payload:
 Consumers can unpack the archive and either:
 
 - use a path dependency,
-- vendor it under `./packages/oro/logger`,
+- vendor it under `./packages/logger`,
 - or add the parent search root to `SILK_PACKAGE_PATH`.
 
 ## Publishing through npm
@@ -315,9 +364,9 @@ logger = { path = "node_modules/@oro/silk-logger", version = "^0.1.0" }
 ```
 
 If the npm package root is `node_modules/@oro/silk-logger` but the Silk package
-name is `oro::logger`, either place or symlink the package under a search root
-as `oro/logger`, or use a manifest `path` dependency directly to the installed
-package directory.
+name is `logger`, either place or symlink the package under a search root as
+`logger`, or use a manifest `path` dependency directly to the installed package
+directory.
 
 ## Targets and platform selection
 
@@ -326,14 +375,14 @@ public module surface and build different artifacts:
 
 ```toml
 [[target]]
-name = "logger-static"
+name = "logger_static"
 kind = "static"
-entry = "src/logger.slk"
+entry = "src/lib.slk"
 target = "linux-x86_64"
 output = "build/linux-x86_64/liblogger.a"
 
 [[target]]
-name = "logger-wasi"
+name = "logger_wasi"
 kind = "executable"
 entry = "examples/main.slk"
 target = "wasm32-wasi"
@@ -387,7 +436,7 @@ import ::puts;
 User code should normally import the friendly namespace instead:
 
 ```silk
-import logger from "oro::logger";
+import logger from "logger";
 ```
 
 ## Best practices

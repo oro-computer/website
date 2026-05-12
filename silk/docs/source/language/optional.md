@@ -254,9 +254,7 @@ Notes:
 Example (`map` + `and_then`):
 
 ```silk
-import result from "std/result";
-
-fn parse_port (s: string) -> result::Result(int, int) {
+fn parse_port (s: string) -> Result(int, int) {
   return Ok(123);
 }
 

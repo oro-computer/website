@@ -25,6 +25,18 @@
   const titleSuffix =
     app.getAttribute("data-title-suffix") ||
     (kind === "wiki" ? "Silk Wiki" : "Silk Docs");
+  const docAliases = {
+    "guides/toy-logger-module": {
+      id: "guides/practical-logger-module",
+      title: "Practical Logger Module Walkthrough",
+      file: "guides/practical-logger-module.md",
+    },
+    "guides/toy-logger-module.md": {
+      id: "guides/practical-logger-module",
+      title: "Practical Logger Module Walkthrough",
+      file: "guides/practical-logger-module.md",
+    },
+  };
 
   const marked = globalThis.marked;
   if (marked?.setOptions) {
@@ -171,6 +183,70 @@
     return normalized;
   }
 
+  function aliasFor(targetKind, value) {
+    if (targetKind !== "docs") return null;
+    const normalized = normalizeRelPath(value);
+    return normalized ? docAliases[normalized] || null : null;
+  }
+
+  function canonicalDocId(targetKind, id) {
+    const normalized = normalizeRelPath(id);
+    if (!normalized) return null;
+    return aliasFor(targetKind, normalized)?.id || normalized;
+  }
+
+  function canonicalDocFile(targetKind, file) {
+    const normalized = normalizeRelPath(file);
+    if (!normalized) return null;
+    return aliasFor(targetKind, normalized)?.file || normalized;
+  }
+
+  function canonicalDocItem(targetKind, item) {
+    if (!item) return null;
+    const alias = aliasFor(targetKind, item.id) || aliasFor(targetKind, item.file);
+    return {
+      ...item,
+      id: canonicalDocId(targetKind, item.id) || item.id,
+      title: alias?.title || item.title,
+      file: canonicalDocFile(targetKind, item.file) || item.file,
+    };
+  }
+
+  function canonicalizeIndex(targetKind, index) {
+    if (!index?.sections) return index;
+    return {
+      ...index,
+      sections: (index.sections || []).map((section) => {
+        const seen = new Set();
+        const items = [];
+        for (const item of section.items || []) {
+          const next = canonicalDocItem(targetKind, item);
+          if (!next || seen.has(next.id)) continue;
+          seen.add(next.id);
+          items.push(next);
+        }
+        return { ...section, items };
+      }),
+    };
+  }
+
+  function canonicalizeSearchItems(targetKind, items) {
+    const seen = new Set();
+    const out = [];
+    for (const item of items || []) {
+      const next = canonicalDocItem(targetKind, item);
+      if (!next || seen.has(next.id)) continue;
+      seen.add(next.id);
+      out.push(next);
+    }
+    return out;
+  }
+
+  async function fetchJson(url) {
+    const res = await fetch(url, { cache: "no-store" });
+    return res.ok ? res.json() : null;
+  }
+
   // Standalone spec pages: keep the spec reader-focused (TC39-style).
   if (kind === "docs") {
     const params = new URLSearchParams(globalThis.location.search);
@@ -215,7 +291,7 @@
   }
 
   function viewerHref(targetKind, targetId, hash = "") {
-    const encoded = encodeURIComponent(targetId);
+    const encoded = encodeURIComponent(canonicalDocId(targetKind, targetId) || targetId);
     if (targetKind === kind) return `?p=${encoded}${hash}`;
     if (kind === "docs" && targetKind === "wiki")
       return `../wiki/?p=${encoded}${hash}`;
@@ -227,20 +303,21 @@
   function getCurrentId() {
     const params = new URLSearchParams(globalThis.location.search);
     const raw = params.get("p") || defaultId;
-    const normalized = normalizeRelPath(raw);
+    const normalized = canonicalDocId(kind, raw);
     return normalized || defaultId;
   }
 
   function setCurrentId(id, { replace = false } = {}) {
+    const currentId = canonicalDocId(kind, id) || id;
     const params = new URLSearchParams(globalThis.location.search);
-    params.set("p", id);
+    params.set("p", currentId);
     const next = `${globalThis.location.pathname}?${params.toString()}${
       globalThis.location.hash || ""
     }`;
     if (replace) {
-      globalThis.history.replaceState({ p: id }, "", next);
+      globalThis.history.replaceState({ p: currentId }, "", next);
     } else {
-      globalThis.history.pushState({ p: id }, "", next);
+      globalThis.history.pushState({ p: currentId }, "", next);
     }
   }
 
@@ -1249,7 +1326,8 @@
     id,
     { replaceState = false, scrollTop = false, hash = null } = {}
   ) {
-    const currentId = state.itemById.has(id) ? id : defaultId;
+    const requestedId = canonicalDocId(kind, id) || defaultId;
+    const currentId = state.itemById.has(requestedId) ? requestedId : defaultId;
     const item = state.itemById.get(currentId);
     if (!item) return;
 
@@ -1282,7 +1360,7 @@
     const url = `${baseUrl}${item.file}`;
     let raw = "";
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, { cache: "no-store" });
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
       raw = await res.text();
     } catch {
@@ -1347,10 +1425,11 @@
   async function init() {
     if (!navRoot || !contentRoot) return;
 
-    const [index, search] = await Promise.all([
-      fetch(indexUrl).then((r) => (r.ok ? r.json() : null)),
-      fetch(searchUrl).then((r) => (r.ok ? r.json() : null)),
+    const [rawIndex, search] = await Promise.all([
+      fetchJson(indexUrl),
+      fetchJson(searchUrl),
     ]);
+    const index = canonicalizeIndex(kind, rawIndex);
 
     if (!index || !index.sections) {
       contentRoot.innerHTML =
@@ -1410,9 +1489,7 @@
     // These are used to rewrite "docs/..." and "wiki/..." references.
     try {
       if (kind === "docs") {
-        const other = await fetch("../wiki/index.json").then((r) =>
-          r.ok ? r.json() : null
-        );
+        const other = canonicalizeIndex("wiki", await fetchJson("../wiki/index.json"));
         for (const s of other?.sections || []) {
           for (const it of s.items || []) {
             wikiIdByFile.set(it.file, it.id);
@@ -1423,9 +1500,7 @@
           }
         }
       } else {
-        const other = await fetch("../docs/index.json").then((r) =>
-          r.ok ? r.json() : null
-        );
+        const other = canonicalizeIndex("docs", await fetchJson("../docs/index.json"));
         for (const s of other?.sections || []) {
           for (const it of s.items || []) {
             docsIdByFile.set(it.file, it.id);
@@ -1438,7 +1513,7 @@
       }
     } catch {}
 
-    const searchIndex = compileSearch(search?.items || []);
+    const searchIndex = compileSearch(canonicalizeSearchItems(kind, search?.items || []));
 
     const state = {
       index,

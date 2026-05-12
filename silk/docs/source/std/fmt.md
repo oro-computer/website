@@ -145,8 +145,6 @@ import { println } from "std/io";
 import format from "std/fmt";
 import fmt from "std/fmt";
 import strings from "std/strings";
-import result from "std/result";
-
 type StringAllocResult = std::result::Result(std::strings::String, std::fmt::Error);
 
 fn main () -> int {

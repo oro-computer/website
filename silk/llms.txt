@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-05-12T01:15:00+00:00
+Generated: 2026-05-12T22:18:58+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -1238,14 +1238,12 @@ fn parse_flag (s: string) -> bool? {
 
 Use optionals when “missing” is a normal outcome and you don’t need structured error details.
 
-## Results: `std::result::Result(T, E)`
+## Results: `Result(T, E)`
 
 When you want a standard “success or error” return shape, use `Result(T, E)`:
 
 ```silk
-import result from "std/result";
-
-type IntOrMessage = result::Result(int, string);
+type IntOrMessage = Result(int, string);
 
 fn div (a: int, b: int) -> IntOrMessage {
   if b == 0 { return Err("division by zero"); }
@@ -1354,7 +1352,7 @@ logger/
   README.md
   LICENSE
   src/
-    logger.slk
+    lib.slk
     sinks.slk
   defs/
     api.slk
@@ -1393,7 +1391,11 @@ Rules that keep tooling simple:
 - `package ...;` or `module ...;` comes first.
 - Imports form one contiguous block immediately after the package/module header.
 - Exports are explicit.
-- Package names use `::` paths.
+- Source package declarations use `::` namespaces.
+- Manifest package names are simple identifiers such as `logger` or
+ `oro_logger`.
+- Quoted import specifiers use filesystem-style paths such as `logger` or
+ `logger/sinks`.
 
 Use `package ...;` for reusable application/library code. Use header-form
 `module ...;` when you need a compile-time-only namespace or module conformance
@@ -1411,7 +1413,7 @@ export module level {
 ```
 
 Downstream code can then refer to `logger::level::INFO` after importing the
-package namespace.
+package's default module namespace.
 
 ## Import style for user-space code
 
@@ -1420,8 +1422,8 @@ Prefer module-specifier imports:
 ```silk
 import { println } from "std/io";
 import fs from "std/fs";
-import logger from "oro::logger";
-import { Logger, info as log_info } from "./logger.slk";
+import logger from "logger";
+import { Logger, info as log_info } from "./lib.slk";
 ```
 
 Use these forms as your default:
@@ -1437,11 +1439,52 @@ Specifier meanings:
 
 - `./x.slk` or `../x.slk` resolves relative to the importing file.
 - `std/io` resolves from the configured stdlib root.
-- `oro::logger` resolves as a package specifier from the module set or package
- search path.
+- `logger` resolves through the dependency key or package root named `logger`.
+- `logger/sinks` resolves to the `sinks` module inside that package root.
+
+String import specifiers are path-like. Use `/` for module paths inside the
+string, not `::`. Reserve `::` for source namespaces, direct package/symbol
+import paths, and qualified names in code.
 
 This form scales well because it works for local files, stdlib modules, and
 dependencies while keeping aliases explicit.
+
+## Std prelude globals
+
+When the standard library is enabled, the compiler automatically loads
+`std::runtime::globals`. That module exposes a small prelude with `using`
+aliases for common std types and interfaces. User code does not import these
+names.
+
+The current global list is:
+
+```text
+Boolean
+Builder
+Capacity
+Clear
+Deserialize
+Drop
+Function
+IsEmpty
+Iterator
+Len
+Number
+Parse
+Range
+ReadU8
+RegExp
+ReserveAdditional
+Result
+Serialize
+Sized
+String
+TrySerialize
+WriteU8
+```
+
+Use those names directly. For example, write `Result(T, E)` rather than
+importing `std/result` only to reach `std::result::Result`.
 
 ## Direct package and symbol imports
 
@@ -1471,8 +1514,8 @@ Effects:
 For ordinary user-space modules, prefer:
 
 ```silk
-import logger from "oro::logger";
-import { info } from "oro::logger";
+import logger from "logger";
+import { info } from "logger";
 ```
 
 That keeps low-level ABI paths out of most code and gives you aliases through
@@ -1515,7 +1558,7 @@ Best practices:
 
 ```toml
 [package]
-name = "oro::logger"
+name = "logger"
 version = "0.1.0"
 description = "Small structured logger for Silk examples"
 license = "MIT"
@@ -1532,12 +1575,12 @@ include = ["silk.toml", "README.md", "LICENSE", "src/**", "defs/**"]
 [[target]]
 name = "logger"
 kind = "static"
-entry = "src/logger.slk"
+entry = "src/lib.slk"
 output = "build/liblogger.a"
 c_header = "build/logger.h"
 
 [[target]]
-name = "logger-demo"
+name = "logger_demo"
 kind = "executable"
 entry = "examples/main.slk"
 output = "build/logger-demo"
@@ -1550,9 +1593,13 @@ How loading works:
 - A dependency with `path = "../logger"` is loaded from that directory.
 - A dependency without `path` is searched through `SILK_PACKAGE_PATH` and the
  installed package roots.
-- Package names map to paths by replacing `::` with `/`; `oro::logger` maps to
- `oro/logger/silk.toml` under each search root.
-- The manifest package name must match the import/dependency name.
+- Manifest package names are identifiers; `logger` maps to
+ `logger/silk.toml` under each search root.
+- Quoted imports use dependency-rooted module paths: `import logger from
+ "logger";` loads the dependency's default module, and `import sinks from
+ "logger/sinks";` loads a submodule.
+- Source modules may still declare a symbol namespace such as
+ `package oro::logger;`.
 
 ## Dependencies
 
@@ -1563,10 +1610,10 @@ A package depends on another package through `[dependencies]`:
 logger = { path = "../logger", version = "^0.1.0" }
 ```
 
-Then source can import the dependency by package name:
+Then source can import the dependency through the dependency key:
 
 ```silk
-import logger from "oro::logger";
+import logger from "logger";
 
 fn main () -> int {
   let l = logger::Logger{ min_level: logger::Level::Info };
@@ -1598,7 +1645,7 @@ Recommended release payload:
 Consumers can unpack the archive and either:
 
 - use a path dependency,
-- vendor it under `./packages/oro/logger`,
+- vendor it under `./packages/logger`,
 - or add the parent search root to `SILK_PACKAGE_PATH`.
 
 ## Publishing through npm
@@ -1633,9 +1680,9 @@ logger = { path = "node_modules/@oro/silk-logger", version = "^0.1.0" }
 ```
 
 If the npm package root is `node_modules/@oro/silk-logger` but the Silk package
-name is `oro::logger`, either place or symlink the package under a search root
-as `oro/logger`, or use a manifest `path` dependency directly to the installed
-package directory.
+name is `logger`, either place or symlink the package under a search root as
+`logger`, or use a manifest `path` dependency directly to the installed package
+directory.
 
 ## Targets and platform selection
 
@@ -1644,14 +1691,14 @@ public module surface and build different artifacts:
 
 ```toml
 [[target]]
-name = "logger-static"
+name = "logger_static"
 kind = "static"
-entry = "src/logger.slk"
+entry = "src/lib.slk"
 target = "linux-x86_64"
 output = "build/linux-x86_64/liblogger.a"
 
 [[target]]
-name = "logger-wasi"
+name = "logger_wasi"
 kind = "executable"
 entry = "examples/main.slk"
 target = "wasm32-wasi"
@@ -1705,7 +1752,7 @@ import ::puts;
 User code should normally import the friendly namespace instead:
 
 ```silk
-import logger from "oro::logger";
+import logger from "logger";
 ```
 
 ## Best practices
@@ -1740,7 +1787,7 @@ This walkthrough builds a logger package that is small enough to study but
 structured enough to adapt:
 
 - a reusable package root with `silk.toml`,
-- a package namespace imported with `import logger from "acme::logger";`,
+- a dependency module imported with `import logger from "logger";`,
 - levels, configuration, structured entries, optional metadata, and filtering,
 - a configurable writer function with a console implementation,
 - a sink interface for source-level conformance checks,
@@ -1750,11 +1797,12 @@ structured enough to adapt:
 - an ABI wrapper for foreign callers,
 - and GitHub/npm publication.
 
-The package name is `acme::logger`. Downstream code imports the package as a
-module specifier:
+The manifest package name is `logger`. Source modules declare the symbol
+namespace with `package acme::logger;`. Downstream code imports the package's
+default module through the dependency key:
 
 ```silk
-import logger from "acme::logger";
+import logger from "logger";
 ```
 
 Direct imports such as `import acme::logger::logger_write_c;` are shown only in
@@ -1770,7 +1818,7 @@ logger/
   README.md
   LICENSE
   src/
-    logger.slk
+    lib.slk
     c_api.slk
   defs/
     api.slk
@@ -1780,7 +1828,7 @@ logger/
     logger_test.slk
 ```
 
-`src/logger.slk` is the normal Silk API. `src/c_api.slk` is the C/ABI edge.
+`src/lib.slk` is the normal Silk API. `src/c_api.slk` is the C/ABI edge.
 `defs/api.slk` mirrors the public surface for binary consumers.
 
 ## Manifest
@@ -1789,7 +1837,7 @@ logger/
 
 ```toml
 [package]
-name = "acme::logger"
+name = "logger"
 version = "0.1.0"
 description = "Structured logging package for Silk applications"
 license = "MIT"
@@ -1816,39 +1864,39 @@ include = [
 ]
 
 [[target]]
-name = "logger-static"
+name = "logger_static"
 kind = "static"
 entry = "src/c_api.slk"
 output = "build/libacme_logger.a"
 c_header = "build/acme_logger.h"
 
 [[target]]
-name = "logger-demo"
+name = "logger_demo"
 kind = "executable"
 entry = "examples/main.slk"
 output = "build/logger-demo"
 
 [[target]]
-name = "logger-wasi-demo"
+name = "logger_wasi_demo"
 kind = "executable"
 entry = "examples/main.slk"
 target = "wasm32-wasi"
 output = "build/logger-demo.wasm"
 ```
 
-The package name is the import identity. Target names select build recipes. The
-static target enters through `src/c_api.slk` because that artifact is meant for
-ABI consumers; ordinary Silk consumers import `acme::logger` as a package.
+The manifest package name is the identifier `logger`. The source package
+namespace is `acme::logger`. Target names select build recipes. The static
+target enters through `src/c_api.slk` because that artifact is meant for ABI
+consumers; ordinary Silk consumers import the default module with `"logger"`.
 
 ## Implementation Module
 
-`src/logger.slk` defines the reusable logging API:
+`src/lib.slk` defines the reusable logging API:
 
 ```silk
 package acme::logger;
 
 import { println } from "std/io";
-import result from "std/result";
 
 export enum Level {
   Trace,
@@ -2024,7 +2072,7 @@ export fn console_writer (entry: &Entry) -> LogError? {
   return None;
 }
 
-export fn parse_level (raw: string) -> result::Result(Level, string) {
+export fn parse_level (raw: string) -> Result(Level, string) {
   if raw == "trace" { return Ok(Level::Trace); }
   if raw == "debug" { return Ok(Level::Debug); }
   if raw == "info" { return Ok(Level::Info); }
@@ -2078,17 +2126,17 @@ This is still compact, but it is no longer a print helper. It has:
 - a configurable writer hook (`WriteFn`) for file, JSON, syslog, or test sinks,
 - a source-level sink contract (`interface Sink`) for concrete sink types,
 - a concrete console writer,
-- recoverable parse errors (`result::Result(Level, string)`),
+- recoverable parse errors (`Result(Level, string)`),
 - recoverable write errors (`LogError?`),
 - and target-aware defaults through `attr(...)`.
 
 ## Downstream Use
 
-`examples/main.slk` imports the package namespace and handles parse/write
+`examples/main.slk` imports the package's default module namespace and handles parse/write
 outcomes explicitly:
 
 ```silk
-import logger from "acme::logger";
+import logger from "logger";
 
 fn main () -> int {
   let min_level = match (logger::parse_level("info")) {
@@ -2126,7 +2174,7 @@ fn main () -> int {
 Selected imports are useful when a module owns the logging setup:
 
 ```silk
-import { Config, Field, Level, console_writer, init, warn } from "acme::logger";
+import { Config, Field, Level, console_writer, init, warn } from "logger";
 
 fn main () -> int {
   let log = init(Config{
@@ -2149,7 +2197,7 @@ writer. The public logger API stores a `WriteFn`, so callers can swap console,
 file, JSON, syslog, or test writers without changing call sites.
 
 ```silk
-import logger from "acme::logger";
+import logger from "logger";
 import { println } from "std/io";
 
 fn audit_writer (entry: &logger::Entry) -> logger::LogError? {
@@ -2179,9 +2227,6 @@ functions such as `logger_write_c` instead.
 
 ```silk
 module acme::logger;
-
-import result from "std/result";
-
 export enum Level {
   Trace,
   Debug,
@@ -2237,7 +2282,7 @@ export fn info (logger: &Logger, message: string, request_id: string?, fields: F
 export fn warn (logger: &Logger, message: string, request_id: string?, fields: Field[]) -> LogError?;
 export fn error (logger: &Logger, message: string, request_id: string?, fields: Field[]) -> LogError?;
 export fn console_writer (entry: &Entry) -> LogError?;
-export fn parse_level (raw: string) -> result::Result(Level, string);
+export fn parse_level (raw: string) -> Result(Level, string);
 export fn level_name (level: Level) -> string;
 export fn logger_write_c (level: int, target: string, message: string) -> int;
 ```
@@ -2251,7 +2296,7 @@ surface without implementation bodies. Binary packages can ship this file plus
 `tests/logger_test.slk` exercises parsing and filtering:
 
 ```silk
-import logger from "acme::logger";
+import logger from "logger";
 import { expect, expect_equal } from "std/test";
 
 test "parse level" {
@@ -2284,11 +2329,15 @@ silk test --package .
 
 The imports above resolve through the active module set:
 
-- `std/io`, `std/result`, and `std/test` load stdlib modules from the configured
- std root.
-- `acme::logger` resolves as a package specifier from the package graph or
- package search path.
+- `std/io` and `std/test` load stdlib modules from the configured std root.
+- `Result` is a std-prelude global from `std::runtime::globals`, so it does not
+ need an import in user-space modules.
+- `logger` resolves through the dependency key or package root named `logger`;
+ by convention it loads the package's `src/lib.slk` module.
 - `./file.slk` resolves relative to the importing file.
+
+Quoted import specifiers use `/` path separators. Do not put `::` inside the
+string; `::` belongs to direct package/symbol imports and qualified names.
 
 For local development, downstream apps should use a path dependency:
 
@@ -2297,37 +2346,37 @@ For local development, downstream apps should use a path dependency:
 logger = { path = "../logger", version = "^0.1.0" }
 ```
 
-Source still imports the package by Silk identity:
+Source still imports the package through the dependency module specifier:
 
 ```silk
-import logger from "acme::logger";
+import logger from "logger";
 ```
 
-The dependency key (`logger`) is manifest-local. The import identity is
-`package.name`.
+The dependency key (`logger`) is manifest-local. Source files inside the package
+declare the corresponding symbol namespace with `package acme::logger;`.
 
 ## Build Targets
 
 Build the demo executable:
 
 ```bash
-silk build --package . --package-target logger-demo
+silk build --package . --package-target logger_demo
 ```
 
 Build the static library and C header:
 
 ```bash
-silk build --package . --package-target logger-static
+silk build --package . --package-target logger_static
 ```
 
 Build the WASI demo:
 
 ```bash
-silk build --package . --package-target logger-wasi-demo
+silk build --package . --package-target logger_wasi_demo
 ```
 
 Target selection changes code guarded with `attr(os="...")` and
-`attr(target="...")`. The package import path stays `acme::logger`.
+`attr(target="...")`. The quoted dependency module specifier stays `logger`.
 
 ## ABI and FFI Edge
 
@@ -2376,7 +2425,7 @@ for definition modules, FFI wrappers, and low-level integration tests. Ordinary
 application code should use:
 
 ```silk
-import logger from "acme::logger";
+import logger from "logger";
 ```
 
 ## Publishing on GitHub
@@ -2396,10 +2445,10 @@ logger = { path = "vendor/logger", version = "^0.1.0" }
 ```
 
 For package-search-path consumption, place the root under a directory layout
-that matches the Silk package name:
+that matches the manifest package name:
 
 ```text
-vendor/acme/logger/silk.toml
+vendor/logger/silk.toml
 ```
 
 Then:
@@ -2441,10 +2490,10 @@ logger = { path = "node_modules/@acme/silk-logger", version = "^0.1.0" }
 ```
 
 If you want `SILK_PACKAGE_PATH` lookup instead, materialize the package under a
-search root that mirrors `acme::logger`:
+search root that mirrors the package name `logger`:
 
 ```text
-packages/acme/logger -> ../../node_modules/@acme/silk-logger
+packages/logger -> ../../node_modules/@acme/silk-logger
 ```
 
 Then set:
@@ -2455,7 +2504,7 @@ export SILK_PACKAGE_PATH="$PWD/packages"
 
 ## Best Practices
 
-- Keep the public import style user-facing: `import logger from "acme::logger";`.
+- Keep the public import style user-facing: `import logger from "logger";`.
 - Use direct `import package::ns::symbol;` imports only in ABI/FFI code.
 - Keep a narrow public API in `defs/api.slk`.
 - Treat `Config` as the stable setup surface; add new behavior there before
@@ -2463,7 +2512,7 @@ export SILK_PACKAGE_PATH="$PWD/packages"
 - Keep sink-specific code behind `WriteFn` functions or concrete types that
  satisfy `interface Sink`; add file, JSON, or syslog sinks as separate modules.
 - Use `LogError?` for write paths where failure is uncommon but must be visible.
-- Use `result::Result` for parsing or configuration loading where failure
+- Use `Result` for parsing or configuration loading where failure
  carries a message.
 - Keep target-specific defaults behind `attr(os="...")` or
  `attr(target="...")`.
@@ -2498,7 +2547,6 @@ Use module-specifier imports for application and library code:
 import io from "std/io";              // namespace import; call io::println(...)
 import { println } from "std/io";     // selected symbol import
 import fs from "std/fs";              // filesystem namespace
-import { Result } from "std/result";  // common return shape
 ```
 
 Use selected imports when a small program needs one or two names. Use namespace
@@ -2506,6 +2554,10 @@ imports when a module uses a cohesive surface such as `fs::read_file_string`.
 Direct imports such as `import std::io::println;` remain available for ABI-facing
 definition modules and low-level interop code; ordinary user-space code should
 prefer `from "std/..."`.
+
+Some standard-library types are always in scope through the std prelude. `Result`
+is one of those globals, so user code writes `Result(T, E)` without importing
+`std/result`.
 
 ## The three common “return shapes”
 
@@ -2525,14 +2577,12 @@ fn parse_port (s: string) -> int? {
 }
 ```
 
-### 2) Results: `std::result::Result(T, E)`
+### 2) Results: `Result(T, E)`
 
 `Result(T, E)` is the standard “success or error” type used across `std::`.
 
 ```silk
-import result from "std/result";
-
-type IntOrMessage = result::Result(int, string);
+type IntOrMessage = Result(int, string);
 
 fn div (a: int, b: int) -> IntOrMessage {
   if b == 0 { return Err("division by zero"); }
@@ -3741,10 +3791,8 @@ Notes:
  Enum destructuring is also supported:
 
   ```silk
-  import result from "std/result";
-
   fn main () -> int {
-    type R = result::Result(int, int);
+    type R = Result(int, int);
     let Ok(value) = R.ok(7);
     return value;
   }
@@ -5088,10 +5136,8 @@ fn main () -> int {
 Example (recoverable `Result`):
 
 ```silk
-import result from "std/result";
-
 fn main () -> int {
-  let r: result::Result(int, string) = Ok(42);
+  let r: Result(int, string) = Ok(42);
   if let Ok(v) = r {
     return v;
   }
@@ -6175,9 +6221,7 @@ supported patterns are the same refutable subset already implemented by
 Example:
 
 ```silk
-import result from "std/result";
-
-type R = result::Result(int, int);
+type R = Result(int, int);
 
 fn main () -> int {
   let xs: R[4] = [R.ok(2), R.err(7), R.ok(3), R.err(9)];
@@ -6771,11 +6815,9 @@ For array/slice destructuring:
 Enum destructuring binds payload elements from a single enum variant:
 
 ```silk
-import result from "std/result";
-
 error Oops { code: int }
 
-fn foo (oops: bool) -> result::Result(int, Oops) {
+fn foo (oops: bool) -> Result(int, Oops) {
   if (oops) {
     return Err(Oops{ code: 123 });
   }
@@ -6840,11 +6882,9 @@ fn main () -> int {
 ```
 
 ```silk
-import result from "std/result";
-
 error Oops { code: int }
 
-fn foo (ok: bool) -> result::Result(int, Oops) {
+fn foo (ok: bool) -> Result(int, Oops) {
   if ok { return Ok(7); }
   return Err(Oops{ code: 123 });
 }
@@ -7214,8 +7254,9 @@ At a high level, the language can be structured as:
  file specifiers and resolve to a module by file path,
  - strings starting with `std/` are treated as std-root file specifiers and
  resolve to a module by file path under the configured stdlib root,
- - other strings are treated as package specifiers and resolve to a package
- by name (see [packages imports exports](?p=language/packages-imports-exports)).
+ - other strings are treated as dependency-rooted module specifiers; the first
+ path segment is a package/dependency name and the remaining path selects a
+ source module in that package (see [packages imports exports](?p=language/packages-imports-exports)).
 
  - `BindingDecl ::= ('const' | 'let' MutOpt | 'var') Identifier TypeAnnotationOpt InitializerOpt ';'`
  - `LetDecl ::= ExportModifier BindingDecl`
@@ -8258,9 +8299,9 @@ Supported forms:
 - Module-specifier imports (`import { Name } from "...";`, `import ns from "...";`)
  including:
  - relative file imports (`from "./file.slk"`),
- - std-root file imports (`from "std/strings"`; `.slk` is appended when missing),
- - and package specifier imports (`from "ns_pkg"`, `from "ns_pkg/subpath"` where `/`
- is treated as `::` for namespace paths).
+ - std-root imports (`from "std/strings"`; `.slk` is appended when missing),
+ - and dependency-rooted module imports (`from "logger"` or
+ `from "logger/sinks"`).
 - Direct package/ABI imports (`import package::ns;`,
  `import package::ns::symbol;`, `import ::symbol;`) for cases where code needs
  to name the package/export path that the resolver and linker see directly.
@@ -8334,9 +8375,9 @@ Rules:
 - When present, the `package` declaration MUST appear before all other
  top-level declarations in the module; it is the first declaration in
  the file.
-- Package names are sequences of identifiers separated by `::`.
+- Source package namespaces are sequences of identifiers separated by `::`.
  - As a special case, the keyword `task` is permitted as a `::`-qualified
- segment so `std::task` is a valid package name.
+ segment so `std::task` is a valid package namespace.
  - `std::strings`
  - `std::task`
  - `my_app::core`
@@ -8351,7 +8392,7 @@ multi-module builds are implemented.
 
 In the current `silk` CLI implementation, when building a package via a package
 manifest (`silk.toml`), source files that omit `package` default to the
-manifest’s `package.name`. See [Package manifests](?p=compiler/package-manifests).
+manifest `package.name`. See [Package manifests](?p=compiler/package-manifests).
 
 ## Modules (`module`)
 
@@ -8448,16 +8489,17 @@ Rules:
  optional `package` declaration (if present) and before any other kind of
  top-level declaration. In other words, imports form a contiguous block at
  the beginning of the module immediately following the optional package.
-- An `import` path is a sequence of identifiers separated by `::`, matching
- the package naming rules above (including the `std::task` special case).
- - As with expression/type qualified names, an import path MAY start with `::`
- to explicitly name the global namespace (the unnamed package).
+- A direct `import` path is a sequence of identifiers separated by `::`,
+ matching the package naming rules above (including the `std::task` special
+ case).
+ - As with expression/type qualified names, a direct import path MAY start with
+ `::` to explicitly name the global namespace (the unnamed package).
 - User-space modules should prefer **module-specifier imports**:
  - `import { Name, Other as Alias } from "./module.slk";`
  - `import ns from "./module.slk";`
  - `import io from "std/io";`
  - `import { println } from "std/io";`
- - `import logger from "oro::logger";`
+ - `import logger from "logger";`
 - Direct `::` imports remain supported for package/ABI-oriented code and are
  documented below.
 
@@ -8468,7 +8510,7 @@ Use module-specifier imports for application and library code:
 ```silk
 import { println } from "std/io";
 import fs from "std/fs";
-import logger from "oro::logger";
+import logger from "logger";
 import { Logger, log_info as info } from "./logger.slk";
 ```
 
@@ -8481,8 +8523,8 @@ Effects:
 - The string specifier tells readers how the dependency is resolved:
  - `./` or `../` means a source file relative to the importing file,
  - `std/...` means a stdlib source module resolved from the configured stdlib root,
- - any other string means a package specifier resolved from the module set or
- package search path.
+ - any other string means a dependency-rooted module path resolved from the
+ importing package manifest or package search path.
 - This form keeps ordinary user-space code independent of the lower-level ABI
  path syntax and supports local aliases directly.
 
@@ -8504,10 +8546,10 @@ see directly.
 
 Semantics:
 
-- If the import path matches a package name present in the module set, it is a
+- If the import path matches a package namespace present in the module set, it is a
  **direct package import** (`import oro::logger;`).
 - Otherwise, it is treated as a **direct symbol import**:
- - the compiler finds the longest package-name prefix of the path,
+ - the compiler finds the longest loaded package namespace prefix of the path,
  - the remaining suffix is the symbol name within that package (it may contain
  `::` due to exported inline modules),
  - the symbol is introduced into the importing module under its final path
@@ -8519,7 +8561,7 @@ Use this form deliberately:
 
 - for prototype/definition modules that describe an ABI surface,
 - for FFI wrappers that expose or consume exact external symbols,
-- for stdlib/runtime internals where direct package names mirror linker-visible
+- for stdlib/runtime internals where direct package namespaces mirror linker-visible
  organization,
 - and when you need the explicit global namespace escape (`::malloc`).
 
@@ -8529,7 +8571,7 @@ forms:
 ```silk
 import io from "std/io";
 import { println } from "std/io";
-import logger from "oro::logger";
+import logger from "logger";
 ```
 
 Reasons:
@@ -8543,7 +8585,7 @@ Reasons:
 Global namespace (`::name`) rules:
 
 - The global namespace is the package formed by modules that have **no**
- `package ...;` or header-form `module ...;` declaration (their package name is
+ `package ...;` or header-form `module ...;` declaration (their package namespace is
  empty).
 - `::Name` resolves `Name` from that global namespace, if a matching declaration
  exists in the current module set.
@@ -8557,8 +8599,8 @@ write `import str from "std/strings";` for a local namespace alias.
 
 ### Example: a two-module package program
 
-Two modules can share a package name and export symbols for other packages to
-use.
+Two modules can share a package namespace and export symbols for other packages
+to use.
 
 ```silk
 // util.slk
@@ -8590,21 +8632,22 @@ fn main () -> int {
 A **package import** resolves only if the package exists in the current module
 set.
 
-This matters most when you use package specifiers (`from "ns_pkg"`) or when you
-expect a package import to find a package that is not otherwise present.
+This matters most when you use direct package imports such as
+`import ns_pkg;`, or when you expect a dependency module import such as
+`from "logger"` to load a package root that is not otherwise present.
 
 Tooling note (the `silk` CLI):
 
 - The language semantics are still “imports resolve against the module set”.
  The CLI grows the module set by loading additional source files.
 - In addition to auto-loading `std/...` modules from the stdlib root, the CLI
- MAY load non-`std` packages from a **package search path** when a bare
- package specifier is imported (for example `import api from "my_api";`).
+ MAY load non-`std` packages from a **package search path** when a dependency
+ module specifier is imported (for example `import api from "my_api";` or
+ `import widgets from "my_api/widgets";`).
 - The package search path is configured via `SILK_PACKAGE_PATH` (PATH-like:
  roots separated by `:` on POSIX).
-- A package name like `my_api::core` maps to the filesystem candidate
- `<root>/my_api/core/silk.toml`. The first matching manifest in search order is
- used.
+- A package name like `my_api` maps to the filesystem candidate
+ `<root>/my_api/silk.toml`. The first matching manifest in search order is used.
 - Direct imports that include extra `::` segments (for example
  `my_api::core::Thing`) are treated as direct symbol imports: the CLI resolves the **longest**
  package prefix that exists (`my_api::core`, then `my_api`) and loads that
@@ -8616,7 +8659,7 @@ the package namespace:
 ```silk
 // main.slk
 import { answer as ignored } from "./support_pkg_ns_pkg.slk"; // declares `package ns_pkg;`
-import pkg from "ns_pkg"; // now resolves because `ns_pkg` exists in the module set
+import pkg from "ns_pkg"; // loads the dependency/root default module
 
 fn main () -> int {
   return pkg::add1(pkg::answer);
@@ -8624,7 +8667,7 @@ fn main () -> int {
 ```
 
 If you omit the file import (or otherwise fail to include a module that declares
-`package ns_pkg;`), the package specifier import fails with `E1001` ("unknown imported package").
+`package ns_pkg;`), the direct package import fails with `E1001` ("unknown imported package").
 
 From the CLI, the usual fix is to ensure the missing package’s module(s) are
 part of the command’s module set (for example by passing their `.slk` files to
@@ -8646,17 +8689,18 @@ An import specifier string is interpreted in one of three ways:
 
 - **File specifier**: the string begins with `./` or `../`, or is an absolute
  path. These imports resolve to a module by file path.
-- **Std-root file specifier**: the string begins with `std/`. These imports
- resolve to a module by file path under the configured stdlib root (see the
- stdlib root selection rules in [`silk` CLI](?p=compiler/cli-silk) and
+- **Std-root specifier**: the string begins with `std/`. These imports resolve
+ to a stdlib module by path under the configured stdlib root (see the stdlib
+ root selection rules in [`silk` CLI](?p=compiler/cli-silk) and
  [C ABI (`libsilk`)](?p=compiler/abi-libsilk)).
-- **Package specifier**: any other string. These imports resolve to a package
- by name (for example `"ui"` or `"std::strings"`).
+- **Dependency module specifier**: any other string. The first path segment is a
+ package/dependency name, and any remaining path selects a module below that
+ package's `src/` directory. For example, `"logger"` loads the default
+ `src/lib.slk` module and `"logger/sinks"` loads `src/sinks.slk`.
 
-Note: package specifiers are matched literally
-against package names present in the module set. In practice this means the
-specifier must be a valid Silk package path (identifiers separated by `::`,
-with `task` permitted as a `::` segment).
+Quoted specifiers use `/` path separators. Do not put `::` inside a string
+import specifier; `::` is reserved for source namespaces, direct package/symbol
+imports, and qualified names.
 
 This mirrors the common JS convention that relative file imports must start
 with `./` or `../`. Silk additionally reserves the `std/` prefix for stdlib
@@ -8665,7 +8709,7 @@ source imports resolved via the configured stdlib root.
 Example (namespace-style imports):
 
 ```silk
-import ui from "ui";                 // package namespace
+import ui from "ui";                 // dependency default module namespace
 import helpers from "./helpers.slk";  // file module namespace (if no default export)
 
 fn main () -> void {
@@ -8690,8 +8734,8 @@ Notes:
  specifier-based imports:
  - `./` / `../` / absolute paths are resolved as file imports,
  - `std/<path>` is resolved under the configured stdlib root,
- - other strings are treated as package specifiers (for example `"ui"` or
- `"std::strings"`).
+ - other strings are treated as dependency module specifiers (for example
+ `"logger"` or `"logger/sinks"`).
 - Ambient imports do not bind a namespace or import any symbols. If you need to
  call a function or reference a type from the imported module, use a named
  import or a default import (namespace import).
@@ -8723,7 +8767,7 @@ Rules:
  top-level declaration.
 - The `from` keyword is part of the import syntax.
 - The `from` specifier may be either:
- - a string literal (`from "./file.slk"`, `from "std/io"`, `from "ns_pkg/sub"`), or
+ - a string literal (`from "./file.slk"`, `from "std/io"`, `from "logger/sinks"`), or
  - a package path form kept for compatibility (`from std::io;`,
  `from ns_pkg::sub;`). User-space docs use string specifiers because they work
  uniformly for files, stdlib modules, and packages.
@@ -8735,11 +8779,11 @@ Rules:
  `"std/<path>.slk"`), it is resolved relative to the configured stdlib root and
  then treated as a file import. If the `.slk` extension is omitted, it is
  appended during std-root resolution.
-- If the specifier is a **package specifier**, it is interpreted as a package
- name (using the same `::`-separated syntax as `package` declarations) and is
- resolved via the package graph.
+- If the specifier is a **dependency module specifier**, the first path segment
+ is a dependency/package name and the remaining path selects a source module in
+ that package.
 - The imported module MAY declare a `package` or omit it. File specifiers refer
- to the target module *by file path*, not by package name.
+ to the target module *by file path*, not by source package namespace.
 
 Exported names for named imports:
 
@@ -8858,10 +8902,10 @@ Rules:
 - Using a namespace import name as a callable (e.g. `foo()`) is an error; add an
  explicit `export default` to the imported module or use a named import.
 
-Package namespace imports:
+Dependency module namespace imports:
 
-- For a **package specifier** (for example `import ui from "ui";`), the default
- import binds the package’s default export when the package declares one.
+- For a dependency module specifier (for example `import ui from "ui";`), the
+ default import binds the module's default export when it declares one.
  Otherwise, it binds a namespace and exported names are accessed via `ui::Name`.
 
 ## Exports
@@ -10155,9 +10199,7 @@ Notes:
 Example (`map` + `and_then`):
 
 ```silk
-import result from "std/result";
-
-fn parse_port (s: string) -> result::Result(int, int) {
+fn parse_port (s: string) -> Result(int, int) {
   return Ok(123);
 }
 
@@ -17791,7 +17833,7 @@ The manifest records, for each entry:
 - a stable entry id
 - whether it is a `theory`, `function`, or `method`
 - the originating module path
-- the package name
+- the package namespace
 - the exported symbol name
 - the owner type for methods
 - the normalized signature string
@@ -18459,7 +18501,7 @@ available to user programs.
   module std::strings;
   ```
 
-The compiler treats module/package names (including `std::...`) as part of the
+The compiler treats module/package namespaces (including `std::...`) as part of the
 module set dependency graph, as specified in [packages imports exports](?p=language/packages-imports-exports).
 
 ## `std::runtime` (Runtime Interface Layer)
@@ -19874,8 +19916,6 @@ import { println } from "std/io";
 import format from "std/fmt";
 import fmt from "std/fmt";
 import strings from "std/strings";
-import result from "std/result";
-
 type StringAllocResult = std::result::Result(std::strings::String, std::fmt::Error);
 
 fn main () -> int {
@@ -20766,7 +20806,6 @@ Example (using `std::map` defaults via `HashMap.init(cap)` / `HashMap.empty()`):
 
 ```silk
 import map from "std/map";
-import result from "std/result";
 import memory from "std/memory";
 
 type Map = std::map::HashMap(u64, int);
@@ -20794,7 +20833,6 @@ Example (custom hashing/equality):
 
 ```silk
 import map from "std/map";
-import result from "std/result";
 import memory from "std/memory";
 
 type Map = std::map::HashMap(u64, int);
@@ -21637,8 +21675,6 @@ export type MatrixF64Result = std::math::matrix::MatrixF64Result;
 
 ```silk
 module std::math::vector;
-
-import result from "std/result";
 import vector from "std/vector";
 
 export enum MathErrorKind {
@@ -21783,8 +21819,6 @@ impl VectorF64 {
 
 ```silk
 module std::math::matrix;
-
-import result from "std/result";
 import vector from "std/vector";
 import math_vector from "std/math/vector";
 
@@ -22411,8 +22445,6 @@ support is Implemented (see “Platform notes”).
 
 ```silk
 module std::process;
-
-  import result from "std/result";
   import strings from "std/strings";
 
   enum ChdirErrorKind { InvalidInput, NotFound, NotADirectory, PermissionDenied, Unknown }
@@ -22606,7 +22638,6 @@ See also:
 module std::os;
 
 import memory from "std/memory";
-import result from "std/result";
 import temporal from "std/temporal";
 import vector from "std/vector";
 
@@ -25463,7 +25494,6 @@ Not implemented (yet):
 module std::http;
 
 import net from "std/net";
-import result from "std/result";
 import strings from "std/strings";
 import map from "std/map";
 import set from "std/set";
@@ -25716,8 +25746,6 @@ module std::https;
 
 import http from "std/http";
 import net from "std/net";
-import result from "std/result";
-
 export let ERR_CONNECT: int = 1;
 export let ERR_TLS: int = 2;
 export let ERR_IO: int = 3;
@@ -25865,7 +25893,6 @@ module std::websocket;
 
 import net from "std/net";
 import arrays from "std/arrays";
-import result from "std/result";
 import strings from "std/strings";
 
 // Message opcodes (subset).
@@ -25995,8 +26022,6 @@ import arrays from "std/arrays";
 import buffer from "std/buffer";
 import interfaces from "std/interfaces";
 import memory from "std/memory";
-import result from "std/result";
-
 export enum StreamErrorKind {
   OutOfMemory,
   InvalidInput,
@@ -26513,9 +26538,6 @@ Public error/value types in the Supported forms:
 
 ```silk
 module std::tls;
-
-import result from "std/result";
-
 enum TLSErrorKind {
   OutOfMemory,
   InvalidInput,
@@ -26661,9 +26683,6 @@ Public error/value types in the Supported forms:
 
 ```silk
 module std::ssh2;
-
-import result from "std/result";
-
 enum SSH2ErrorKind {
   OutOfMemory,
   InvalidInput,
@@ -27458,8 +27477,6 @@ See also:
 module std::sync;
 
 import interfaces from "std/interfaces";
-import result from "std/result";
-
 enum SyncErrorKind {
   OutOfMemory,
   InvalidInput,
@@ -27910,8 +27927,6 @@ module std::abort_controller;
 
 import interfaces from "std/interfaces";
 import memory from "std/memory";
-import result from "std/result";
-
 export enum AbortReasonKind {
   Aborted,
   Message,
@@ -28465,8 +28480,6 @@ use `--` to start the raw rest segment explicitly.
 module std::flag;
 
 import args from "std/args";
-import result from "std/result";
-
 enum FlagErrorKind { ... }
 enum FlagValueKind { Bool, Int, I64, U64, String }
 
@@ -29711,7 +29724,6 @@ module unless a future provider is added and reached.
 module std::graphics::window;
 
 import metal from "std/graphics/metal";
-import result from "std/result";
 import window from "std/window";
 
 export enum Backend {
@@ -29938,7 +29950,7 @@ module, and provides a high-level `Context` / `Frame` workflow for rendering
 into `std::window` AppKit windows.
 
 The shipped implementation currently supports macOS. Linux exposes the same
-public package names for import/type-checking, but runtime-facing operations
+public package namespaces for import/type-checking, but runtime-facing operations
 return `Err(MetalFailed{ code: UnsupportedPlatform })` without declaring Metal
 runtime externs for that target. Other non-macOS targets keep the documented
 capability checks and high-level unsupported results.
@@ -29947,8 +29959,6 @@ capability checks and high-level unsupported results.
 
 ```silk
 module std::graphics::metal;
-
-import result from "std/result";
 import runtime_metal from "std/runtime/graphics/metal";
 import mem from "std/runtime/mem";
 import window from "std/window";
@@ -30213,9 +30223,6 @@ reaches `std::window`.
 
 ```silk
 module std::window;
-
-import result from "std/result";
-
 export enum Backend { Unsupported, MacOS, IOS, GTK }
 export enum WindowErrorKind {
   UnsupportedPlatform,
@@ -31372,9 +31379,6 @@ contract violations such as:
 ## Exported API
 ```silk
 module std::ggml;
-
-import result from "std/result";
-
 type Type = i32;
 
 let TYPE_F32: i32;
@@ -37536,8 +37540,7 @@ The implementation is intentionally smaller and focuses on:
  the selected line, or `Escape` / `Ctrl-G` to cancel back to the original
  edited line,
  - completion candidates include REPL commands, language keywords, std
- namespace paths, quoted `from "std/..."` and `from "std::..."`
- import specifier paths,
+ namespace paths, quoted `from "std/..."` import specifier paths,
  current-session declarations and bindings, imported symbols, functions,
  static impl functions after `Type.`, and struct fields or receiver methods
  after typed values and receiver expressions such as call results, indexed
@@ -37843,8 +37846,9 @@ The implementation is intentionally smaller and focuses on:
  package normalization,
  - named imports bind against the package export surface and can participate
  in prebuilt std archive linking.
-- package search path import resolution (non-`std::`):
- - when a module imports a bare package specifier (for example `import api from "my_api";`),
+ - package search path import resolution (non-`std/`):
+ - when a module imports a dependency-rooted module specifier (for example
+ `import api from "my_api";` or `import widgets from "my_api/widgets";`),
  the CLI may load that package from a package search path:
  - when `SILK_PACKAGE_PATH` is set, it is the primary search path (PATH-like list of roots separated by `:` on POSIX, `;` on Windows),
  - when `SILK_PACKAGE_PATH` is not set, the CLI uses a small default set:
@@ -37852,8 +37856,8 @@ The implementation is intentionally smaller and focuses on:
  - `../share/silk/packages` relative to the `silk` executable (installed layout),
  - `$HOME/.local/share/silk/packages` when it exists (user-local installs),
  - finally, the CLI appends a system library root at `PREFIX/lib/silk` (default `PREFIX=/usr/local`) as the last search path entry when it exists,
- - package-to-path mapping is deterministic: `my_api::core` resolves to the candidate
- directory `<root>/my_api/core` and the manifest `<candidate>/silk.toml`,
+ - package-to-path mapping is deterministic: package name `my_api` resolves to
+ candidate directory `<root>/my_api` and manifest `<candidate>/silk.toml`,
  - qualified symbol imports resolve the longest package prefix that exists (for example
  `my_api::core::Thing` loads `my_api::core` if present, otherwise `my_api`),
  - the same search path is used when loading manifest dependencies that omit a `path`
@@ -38789,20 +38793,25 @@ version = "0.1.0"
 
 ### `package.name` (required)
 
-The package name used for package imports (e.g. `import ui from "ui";`) and as
-the default package name for modules that omit an explicit `package ...;`
-declaration.
+The package name used for package metadata, package-search-path lookup, and as
+the default package namespace for modules that omit an explicit
+`package ...;` declaration.
 
-`name` MUST be a valid Silk package path:
+`name` MUST be a single Silk identifier:
 
-- one or more identifiers separated by `::`
-- each identifier matches `[A-Za-z_][A-Za-z0-9_]*`
+- the identifier matches `[A-Za-z_][A-Za-z0-9_]*`
+- the string MUST NOT contain `/`, `::`, `-`, `.`, or other punctuation
 
 Examples:
 
 - `ui`
 - `my_app`
-- `my_app::core`
+- `acme_logger`
+
+Source package declarations may still use namespace syntax such as
+`package acme::logger;`. In that case the explicit source namespace is
+authoritative; `package.name` remains the package-root identity and does not
+need to repeat the namespace.
 
 ### `package.version` (optional)
 
@@ -38978,7 +38987,7 @@ Rules:
 
 ## Dependencies (`[dependencies]`)
 
-Dependencies are a table mapping dependency import names to dependency specs:
+Dependencies are a table mapping dependency keys to dependency specs:
 
 ```toml
 [dependencies]
@@ -38987,9 +38996,9 @@ ui = { path = "../libs/silk-ui", version = "^1.4.0", sha256 = "sha256:0123456789
 
 Fields:
 
-- The dependency key (`ui` above) is the package import name used in source
- (`import ui from "ui";`). This MUST match the
- dependency’s own manifest `package.name`.
+- The dependency key (`ui` above) is the manifest-local import root used by
+ quoted dependency module specifiers such as `import ui from "ui";` or
+ `import widgets from "ui/widgets";`. It MUST be a single Silk identifier.
 - `path` (optional): local filesystem path to the dependency package root,
  resolved relative to the importing manifest directory when not absolute.
  When `path` is omitted, the dependency is resolved from the package search
@@ -39063,14 +39072,14 @@ Rules:
  - `$HOME/.local/share/silk/packages` when it exists (user-local installs).
 - Finally, the compiler appends a system library root at `PREFIX/lib/silk`
  (default `PREFIX=/usr/local`) as the last search path entry when it exists.
-- For a dependency named `my_api::core`, each root directory contributes a
+- For a dependency named `my_api`, each root directory contributes a
  candidate package root:
- - `<root>/my_api/core` (where `::` maps to `/`)
+ - `<root>/my_api`
  - and the manifest is `<candidate>/silk.toml`.
 - The compiler searches roots in order and uses the first candidate that exists.
 - The discovered manifest MUST declare `package.name` exactly matching the
- dependency key, and the dependency is still subject to the `sha256`
- verification rules above.
+ dependency package name being resolved, and the dependency is still subject to
+ the `sha256` verification rules above.
 
 ## Distributed Artifacts (`[[artifact]]`)
 
@@ -39391,9 +39400,9 @@ Rules:
 
 ## Interaction With `package` Declarations
 
-- If a module contains an explicit `package name;` declaration, that name is
- authoritative.
-- If a module omits `package`, the compiler assigns it to the manifest
+- If a module contains an explicit `package name;` declaration, that source
+ namespace is authoritative.
+- If a module omits `package`, the compiler assigns it to manifest
  `package.name` (for files under that package root).
 
 This defaulting behavior exists to support small projects that do not want to
@@ -39484,11 +39493,16 @@ release asset is only a transport for that package root.
 
 ### 2. Package identity is always Silk-native
 
-The canonical package identity is `package.name` from `silk.toml`, for example:
+The canonical package identity is the identifier-style `package.name` from
+`silk.toml`, for example:
 
 - `http`
-- `oro::http`
-- `std::io`
+- `oro_http`
+- `std_io`
+
+Source modules still declare symbol namespaces with `package oro::http;` or
+`package std::io;`. The manifest string is the package-root identity and must
+not contain `/`, `::`, `-`, `.`, or other punctuation.
 
 External names used by GitHub, npm, distro repositories, or other ecosystems
 must not replace Silk package identity.
@@ -39776,8 +39790,10 @@ The dependency model should separate package identity from transport:
  - third-party-managed install tree,
  - system-installed package.
 
-This keeps a dependency on `oro::http` stable regardless of where the package
-came from.
+This keeps a dependency on `oro_http` stable regardless of where the package
+came from. The dependency key is the manifest package name, so it is a single
+identifier. Source files inside that package may still declare a separate symbol
+namespace such as `package oro::http;`.
 
 ### Version requirements
 
@@ -39786,10 +39802,10 @@ in the manifest, for example:
 
 ```toml
 [dependencies]
-oro::http = { version = "^1.4.0" }
-oro::tls = { version = ">=1.2.0, <2.0.0" }
-oro::local = { path = "../oro-local" }
-oro::vendored = { path = "vendor/oro-vendored", sha256 = "sha256:..." }
+oro_http = { version = "^1.4.0" }
+oro_tls = { version = ">=1.2.0, <2.0.0" }
+oro_local = { path = "../oro-local" }
+oro_vendored = { path = "vendor/oro-vendored", sha256 = "sha256:..." }
 ```
 
 The initial supported forms should be:
@@ -42358,7 +42374,7 @@ The server provides `textDocument/definition` for open documents.
  - a default/namespace import,
  - or a module-scope `using` alias.
 - Package and import resolution covers:
- - module-specifier imports from package specifiers and file specifiers,
+ - module-specifier imports from dependency-rooted module specifiers and file specifiers,
  - direct package imports (`import ns::pkg;`),
  - direct symbol imports (`import ns::pkg::name;`, `import ::name;`),
  - and `using` aliases for both value names and namespace aliases.
@@ -42418,14 +42434,14 @@ module set.
  - symbol-aware suggestions from the current package and imported packages (functions, lets, ext, structs, enums, interfaces, errors),
  - imported names from:
  - package imports and qualified symbol imports,
- - JS-style named/default imports from file or package specifiers,
+ - JS-style named/default imports from file, std, or dependency module specifiers,
  - and module-scope `using` aliases,
  - unqualified local-package and named imported functions in
  statement-position buffers that are temporarily incomplete while typing
  (for example before `(` or `;` has been inserted),
  - import specifier path completion inside `from "..."` strings:
  - file specifiers (`"./..."`, `"../..."`, and absolute paths) suggest `.slk` files and subdirectories,
- - std package specifiers (`"std/..."`) suggest stdlib package paths (omitting the `.slk` extension),
+ - std-root module specifiers (`"std/..."`) suggest stdlib module paths (omitting the `.slk` extension),
  - `#embed("path", "...")` encoding completion in the optional second
  argument, offering exactly `"utf8"`, `"utf16"`, `"u8"`, `"u16"`, and
  `"u32"`; omitting the argument is equivalent to `"utf8"`,
@@ -42628,9 +42644,9 @@ The workspace cache is manifest-aware:
  nearest owning `silk.toml`,
 - it loads the full package graph rooted there, including dependency packages,
 - it adds manifest-declared definition files to the indexed module set,
-- it applies the manifest package name as the default package for source or
- definition files that omit an explicit `package ...;` / `module ...;`
- declaration,
+- it applies the manifest package name as the default package namespace for
+ source or definition files that omit an explicit
+ `package ...;` / `module ...;` declaration,
 - and it collects manifest-owned `.c` / `.h` / `.m` sources from target inputs
  and shipped C headers for the native symbol index.
 
@@ -44430,8 +44446,8 @@ For the implementation, the supported options are:
  the selected line, or `Escape` / `Ctrl-G` to cancel back to the original
  edited line.
  - Completion candidates include REPL commands, keywords, std namespace
- paths, quoted `from "std/..."` and `from "std::..."` import specifier
- paths, current-session declarations and bindings, imported symbols,
+ paths, quoted `from "std/..."` import specifier paths, current-session
+ declarations and bindings, imported symbols,
  functions, static impl functions after `Type.`, and struct fields or
  receiver methods after typed values and receiver expressions such as call
  results, indexed values, chained field accesses, imported type aliases, and
@@ -44964,8 +44980,8 @@ See also: [`silk-env(1)`](?p=man/silk-env.1) for a complete list of environment 
  - `../share/silk/packages` relative to the `silk` executable (installed layout),
  - `$HOME/.local/share/silk/packages` when it exists (user-local installs).
  - Finally, `silk` appends a system library root at `PREFIX/lib/silk` as the last search path entry when it exists.
- - A package like `my_api::core` maps to the candidate manifest
- `<root>/my_api/core/silk.toml` (where `::` maps to `/`).
+ - A package name like `my_api` maps to the candidate manifest
+ `<root>/my_api/silk.toml`.
 - `SILK_Z3_LIB` — path to a dynamic Z3 library used by the Formal Silk verifier. When `--z3-lib` is not provided, the verifier will use this value when set.
 - `SILK_VERIFY_JOBS` — override the number of worker threads used for Formal Silk verification (default: auto; capped at 8).
 - `SILK_TEST_TIMEOUT_MS` — per-top-level-test process timeout in milliseconds (default: `30000`).
@@ -45988,11 +46004,11 @@ silk format --check .
 ```
 
 ```silk
-import util from "pkg::util";
+import util from "pkg/util";
 import { Delta, Alpha, Beta, Gamma } from "./local.slk";
 import "./a.slk";
 import io from "std/io";
-import { Zebra, Beta, Alpha, Gamma } from "pkg::names";
+import { Zebra, Beta, Alpha, Gamma } from "pkg/names";
 import fs from "std/fs";
 
 fn main () -> int { let x: int = 1; if x == 1 { return 0; } return 1; }
@@ -46009,8 +46025,8 @@ import {
   Beta,
   Gamma,
   Zebra,
-} from "pkg::names";
-import util from "pkg::util";
+} from "pkg/names";
+import util from "pkg/util";
 
 import "./a.slk";
 import {
@@ -48475,10 +48491,8 @@ Notes:
  Enum destructuring is also supported:
 
   ```silk
-  import result from "std/result";
-
   fn main () -> int {
-    type R = result::Result(int, int);
+    type R = Result(int, int);
     let Ok(value) = R.ok(7);
     return value;
   }
@@ -49542,11 +49556,12 @@ At a high level, the language can be structured as:
  - The `from` string literal is a *module specifier* (either `"..."` or `` `...` ``):
  - strings starting with `./`, `../`, or an absolute path are treated as
  file specifiers and resolve to a module by file path,
- - strings starting with `std/` are treated as std package specifiers and
- resolve through package lookup after `/` is normalized to `::` (a
- trailing `.slk` is stripped for compatibility),
- - other strings are treated as package specifiers and resolve to a package
- by name (see `Packages, Imports, and Exports`).
+ - strings starting with `std/` are treated as std-root module specifiers and
+ resolve through the configured stdlib root (a trailing `.slk` is accepted for
+ compatibility),
+ - other strings are treated as dependency module specifiers: the first path
+ segment is a package/dependency name, and the remaining path selects a source
+ module in that package (see `Packages, Imports, and Exports`).
 
  - `BindingDecl ::= LetIntroducer Identifier TypeAnnotationOpt InitializerOpt ';'`
  - `LetIntroducer ::= 'const' | 'let' LetModifierOpt | 'var' LetModifierOpt`
@@ -51873,10 +51888,8 @@ fn main () -> int {
 Example (recoverable `Result`):
 
 ```silk
-import result from "std/result";
-
 fn main () -> int {
-  let r: result::Result(int, string) = Ok(42);
+  let r: Result(int, string) = Ok(42);
   if let Ok(v) = r {
     return v;
   }
@@ -54224,10 +54237,10 @@ extended as the compiler’s resolver and linker mature.
 - Module-specifier imports (`import { Name } from "...";`, `import ns from "...";`)
  including:
  - relative file imports (`from "./file.slk"`),
- - std package specifier imports (`from "std/strings"`; a trailing `.slk` is
- accepted for compatibility and stripped before package lookup),
- - and package specifier imports (`from "ns_pkg"`, `from "ns_pkg/subpath"` where `/`
- is treated as `::` for namespace paths).
+ - std-root module imports (`from "std/strings"`; a trailing `.slk` is
+ accepted for compatibility),
+ - and dependency-rooted module imports (`from "logger"` or
+ `from "logger/sinks"`).
 - Direct package/ABI imports (`import package::ns;`,
  `import package::ns::symbol;`, `import ::symbol;`) for cases where code needs
  to name the package/export path that the resolver and linker see directly.
@@ -54291,9 +54304,9 @@ Rules:
 - When present, the `package` declaration MUST appear before all other
  top-level declarations in the module; it is the first declaration in
  the file.
-- Package names are sequences of identifiers separated by `::`.
+- Source package namespaces are sequences of identifiers separated by `::`.
  - As a special case, the keyword `task` is permitted as a `::`-qualified
- segment so `std::task` is a valid package name.
+ segment so `std::task` is a valid package namespace.
  - `std::strings`
  - `std::task`
  - `my_app::core`
@@ -54308,7 +54321,7 @@ multi-module builds are implemented.
 
 In the current `silk` CLI implementation, when building a package via a package
 manifest (`silk.toml`), source files that omit `package` default to the
-manifest’s `package.name`. See `Package Manifests (`silk.toml`)`.
+manifest `package.name`. See `Package Manifests (`silk.toml`)`.
 
 ### Modules (`module`)
 
@@ -54423,7 +54436,7 @@ Rules:
  - `import ns from "./module.slk";`
  - `import io from "std/io";`
  - `import { println } from "std/io";`
- - `import logger from "oro::logger";`
+ - `import logger from "logger";`
 - Direct `::` imports remain supported for package/ABI-oriented code and are
  documented below.
 - Currently:
@@ -54515,10 +54528,10 @@ that the resolver, ABI surface, and linker see directly.
 
 Semantics:
 
-- If the import path matches a package name present in the module set, it is a
+- If the import path matches a package namespace present in the module set, it is a
  **direct package import** (`import oro::logger;`).
 - Otherwise, it is treated as a **qualified symbol import**:
- - the compiler finds the longest package-name prefix of the path,
+ - the compiler finds the longest loaded package namespace prefix of the path,
  - the remaining suffix is the symbol name within that package (it may contain
  `::` due to exported inline modules),
  - the symbol is introduced into the importing module under its final path
@@ -54531,13 +54544,13 @@ For ordinary application and reusable library code, prefer:
 ```silk
 import io from "std/io";
 import { println } from "std/io";
-import logger from "oro::logger";
+import logger from "logger";
 ```
 
 Global namespace (`::name`) rules (current implementation):
 
 - The global namespace is the package formed by modules that have **no**
- `package ...;` or header-form `module ...;` declaration (their package name is
+ `package ...;` or header-form `module ...;` declaration (their package namespace is
  empty).
 - `::Name` resolves `Name` from that global namespace, if a matching declaration
  exists in the current module set.
@@ -54556,8 +54569,8 @@ be documented here before they are implemented.
 
 #### Example: a two-module package program
 
-Two modules can share a package name and export symbols for other packages to
-use.
+Two modules can share a package namespace and export symbols for other packages
+to use.
 
 ```silk
 // util.slk
@@ -54592,21 +54605,22 @@ fn main () -> int {
 A **package import** resolves only if the package exists in the current module
 set.
 
-This matters most when you use package specifiers (`from "ns_pkg"`) or when you
-expect a package import to find a package that is not otherwise present.
+This matters most when you use direct package imports such as `import ns_pkg;`,
+or when you expect a dependency module import such as `from "logger"` to load a
+package root that is not otherwise present.
 
 Tooling note (the `silk` CLI):
 
 - The language semantics are still “imports resolve against the module set”.
  The CLI grows the module set by loading additional source files.
-- In addition to auto-loading `std::...` packages from the stdlib root, the CLI
- MAY load non-`std::` packages from a **package search path** when a bare
- package specifier is imported (e.g. `import api from "my_api";`).
+- In addition to auto-loading `std/...` packages from the stdlib root, the CLI
+ MAY load non-`std` packages from a **package search path** when a dependency
+ module specifier is imported (for example `import api from "my_api";` or
+ `import widgets from "my_api/widgets";`).
 - The package search path is configured via `SILK_PACKAGE_PATH` (PATH-like:
  roots separated by `:` on POSIX).
-- A package name like `my_api::core` maps to the filesystem candidate
- `<root>/my_api/core/silk.toml`. The first matching manifest in search order is
- used.
+- A package name like `my_api` maps to the filesystem candidate
+ `<root>/my_api/silk.toml`. The first matching manifest in search order is used.
 - Qualified imports that include extra `::` segments (e.g. `my_api::core::Thing`)
  are treated as qualified symbol imports: the CLI resolves the **longest**
  package prefix that exists (`my_api::core`, then `my_api`) and loads that
@@ -54618,7 +54632,7 @@ the package namespace:
 ```silk
 // main.slk
 import { answer as ignored } from "./support_pkg_ns_pkg.slk"; // declares `package ns_pkg;`
-import pkg from "ns_pkg"; // now resolves because `ns_pkg` exists in the module set
+import pkg from "ns_pkg"; // loads the dependency/root default module
 
 fn main () -> int {
   return pkg::add1(pkg::answer);
@@ -54648,16 +54662,16 @@ An import specifier string is interpreted in one of three ways:
 
 - **File specifier**: the string begins with `./` or `../`, or is an absolute
  path. These imports resolve to a module by file path.
-- **Std package specifier**: the string begins with `std/`. These imports
- normalize `/` to `::` and resolve against the linked std package surface,
- not by direct file path lookup.
-- **Package specifier**: any other string. These imports resolve to a package
- by name (for example `"ui"` or `"std::strings"`).
+- **Std-root module specifier**: the string begins with `std/`. These imports
+ resolve against the configured stdlib root using the slash path.
+- **Dependency module specifier**: any other string. The first path segment is a
+ package/dependency name, and any remaining path selects a source module below
+ that package root. For example, `"logger"` loads the package's default module
+ and `"logger/sinks"` loads its `sinks` module.
 
-Note: in Silk currently, package specifiers are matched literally
-against package names present in the module set. In practice this means the
-specifier must be a valid Silk package path (identifiers separated by `::`,
-with `task` permitted as a `::` segment).
+Quoted specifiers use `/` path separators. Do not put `::` inside a string
+import specifier; `::` is reserved for source namespaces, direct package/symbol
+imports, and qualified names.
 
 This mirrors the common JS convention that relative file imports must start
 with `./` or `../`. Silk additionally reserves the `std/` prefix for stdlib
@@ -54666,7 +54680,7 @@ package imports backed by the linked stdlib.
 Example (namespace-style imports):
 
 ```silk
-import ui from "ui";                 // package namespace
+import ui from "ui";                 // dependency default module namespace
 import helpers from "./helpers.slk";  // file module namespace (if no default export)
 
 fn main () -> void {
@@ -54690,9 +54704,9 @@ Notes:
 - Ambient imports use the same specifier interpretation rules as other
  specifier-based imports:
  - `./` / `../` / absolute paths are resolved as file imports,
- - `std/<path>` is normalized to a std package name,
- - other strings are treated as package specifiers (for example `"ui"` or
- `"std::strings"`).
+ - `std/<path>` is resolved from the configured stdlib root,
+ - other strings are treated as dependency module specifiers (for example
+ `"logger"` or `"logger/sinks"`).
 - Ambient imports do not bind a namespace or import any symbols. If you need to
  call a function or reference a type from the imported module, use a named
  import, a default import (namespace import), or a package import.
@@ -54715,7 +54729,7 @@ Notes:
 - There is no combined `import foo, { bar } from "...";` form in the current grammar.
  Use separate `import` declarations.
 - File specifiers should include the `.slk` extension explicitly. `std/...`
- strings are package specifiers rather than file paths.
+ strings are std-root module specifiers rather than relative file paths.
 
 Rules:
 
@@ -54724,21 +54738,22 @@ Rules:
  top-level declaration.
 - The `from` keyword is part of the import syntax.
 - The `from` specifier may be either:
- - a string literal (`from "./file.slk"`, `from "std/io"`, `from "ns_pkg/sub"`), or
- - a package path (`from std::io;`, `from ns_pkg::sub;`).
+ - a string literal (`from "./file.slk"`, `from "std/io"`, `from "logger/sinks"`), or
+ - a package path form kept for compatibility (`from std::io;`,
+ `from ns_pkg::sub;`).
 - If the specifier is a **file specifier**, it is resolved relative to the
  importing file’s directory. `./` and `../` path segments are permitted.
  (Absolute paths are permitted for tooling, but downstream projects should
  prefer relative imports.)
-- If the specifier starts with **`std/`** (`"std/<path>"` or
- `"std/<path>.slk"`), it is a std package specifier. `/` is normalized to
- `::`, and a trailing `.slk` is accepted for compatibility and stripped before
- package lookup. For example, `from "std/io"` resolves package `std::io`.
-- If the specifier is a **package specifier**, it is interpreted as a package
- name (using the same `::`-separated syntax as `package` declarations) and is
- resolved via the package graph.
+- If the specifier is a **std-root file specifier** (`"std/<path>"` or
+ `"std/<path>.slk"`), it is resolved relative to the configured stdlib root and
+ then treated as a file import. If the `.slk` extension is omitted, it is
+ appended during std-root resolution.
+- If the specifier is a **dependency module specifier**, the first path segment
+ is a dependency/package name and the remaining path selects a source module in
+ that package.
 - The imported module MAY declare a `package` or omit it. File specifiers refer
- to the target module *by file path*, not by package name.
+ to the target module *by file path*, not by source package namespace.
 
 Exported names for named imports:
 
@@ -54865,10 +54880,10 @@ Rules:
 - Using a namespace import name as a callable (e.g. `foo()`) is an error; add an
  explicit `export default` to the imported module or use a named import.
 
-Package namespace imports:
+Dependency module namespace imports:
 
-- For a **package specifier** (for example `import ui from "ui";`), the default
- import binds the package’s default export when the package declares one.
+- For a dependency module specifier (for example `import ui from "ui";`), the
+ default import binds the module's default export when it declares one.
  Otherwise, it binds a namespace and exported names are accessed via `ui::Name`.
 
 ### Exports
@@ -55336,9 +55351,7 @@ Notes:
 Example (`map` + `and_then`):
 
 ```silk
-import result from "std/result";
-
-fn parse_port (s: string) -> result::Result(int, int) {
+fn parse_port (s: string) -> Result(int, int) {
   return Ok(123);
 }
 
@@ -58394,7 +58407,7 @@ The manifest records, for each entry:
 - a stable entry id
 - whether it is a `theory`, `function`, or `method`
 - the originating module path
-- the package name
+- the package namespace
 - the exported symbol name
 - the owner type for methods
 - the normalized signature string
@@ -60723,11 +60736,9 @@ For array/slice destructuring:
 Enum destructuring binds payload elements from a single enum variant:
 
 ```silk
-import result from "std/result";
-
 error Oops { code: int }
 
-fn foo (oops: bool) -> result::Result(int, Oops) {
+fn foo (oops: bool) -> Result(int, Oops) {
   if (oops) {
     return Err(Oops{ code: 123 });
   }
@@ -60792,11 +60803,9 @@ fn main () -> int {
 ```
 
 ```silk
-import result from "std/result";
-
 error Oops { code: int }
 
-fn foo (ok: bool) -> result::Result(int, Oops) {
+fn foo (ok: bool) -> Result(int, Oops) {
   if ok { return Ok(7); }
   return Err(Oops{ code: 123 });
 }
@@ -61960,9 +61969,7 @@ supported patterns are the same refutable subset already implemented by
 Example:
 
 ```silk
-import result from "std/result";
-
-type R = result::Result(int, int);
+type R = Result(int, int);
 
 fn main () -> int {
   let xs: R[4] = [R.ok(2), R.err(7), R.ok(3), R.err(9)];
@@ -65802,7 +65809,7 @@ Canonical doc: [conventions](?p=std/conventions).
 - **Errors**:
  - use `T?` for “absence” (`None`) without extra error information,
  - use typed errors (`T | SomeError`) for recoverable runtime errors with meaning,
- - use `std::result::Result(T, E)` when callers need to distinguish multiple error causes and propagate them cleanly.
+ - use `Result(T, E)` when callers need to distinguish multiple error causes and propagate them cleanly.
 
 ## Examples
 
@@ -65947,20 +65954,20 @@ Canonical doc: [result](?p=std/result).
 
 - Implemented (current representation is a tagged union enum).
 - Details: [result](?p=std/result)
+- `Result` is available without an import through the std prelude module
+ `std::runtime::globals`.
 
 ## Importing
 
-```silk
-import std::result;
-```
+No import is needed to use `Result(T, E)` in normal user code. If you need to
+refer to the defining module itself, use a module-specifier import such as
+`import result from "std/result";`.
 
 ## Examples
 
 ### Example: create and inspect a `Result`
 ```silk
-import std::result;
-
-type R = std::result::Result(int, string);
+type R = Result(int, string);
 
 fn main () -> int {
   let check: R = R.ok(123);
@@ -66257,11 +66264,10 @@ import std::map;
 ### Example: `HashMap(u64, int)` basic usage
 ```silk
 import std::map;
-import std::result;
 import std::memory;
 
 type Map = std::map::HashMap(u64, int);
-type InitResult = std::result::Result(Map, std::memory::AllocFailed);
+type InitResult = Result(Map, std::memory::AllocFailed);
 
 fn main () -> int {
   match (Map.init(16)) {
@@ -66314,12 +66320,11 @@ import std::set;
 ### Example: `SetMap(u64)` basic usage
 ```silk
 import std::set;
-import std::result;
 import std::memory;
 
 type Set = std::set::SetMap(u64);
-type InitResult = std::result::Result(Set, std::memory::AllocFailed);
-type InsertResult = std::result::Result(bool, std::memory::OutOfMemory);
+type InitResult = Result(Set, std::memory::AllocFailed);
+type InsertResult = Result(bool, std::memory::OutOfMemory);
 
 fn main () -> int {
   match (Set.init(4)) {
@@ -66759,8 +66764,8 @@ import std::strings;
 - `Document.as_string(id: i64) -> string?`
 - `Document.as_number_lexeme(id: i64) -> string?`
 - `std::json::number_as_i64(doc: &Document, id: i64) -> i64?`
-- `std::json::stringify(doc: &Document, id: i64) -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
-- `std::json::stringify_pretty(doc: &Document, id: i64, indent: int) -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
+- `std::json::stringify(doc: &Document, id: i64) -> Result(std::strings::String, std::memory::OutOfMemory)`
+- `std::json::stringify_pretty(doc: &Document, id: i64, indent: int) -> Result(std::strings::String, std::memory::OutOfMemory)`
 
 ## Examples
 
@@ -66768,10 +66773,9 @@ import std::strings;
 ```silk
 import std::json;
 import std::strings;
-import std::result;
 import std::memory;
 
-type StringAllocResult = std::result::Result(std::strings::String, std::memory::OutOfMemory);
+type StringAllocResult = Result(std::strings::String, std::memory::OutOfMemory);
 
 fn main () -> int {
   let mut doc: Document = Document{};
@@ -66974,12 +66978,12 @@ import std::strings;
 
 - `std::url::parse(input: string) -> URLResult`
 - `std::url::parse_with_base(input: string, base: &URL) -> URLResult`
-- `URL.href() -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
-- `URL.origin() -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
-- `URLSearchParams.from_string(s: string) -> std::result::Result(URLSearchParams, std::memory::OutOfMemory)`
-- `URLSearchParams.to_string() -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
-- `URLSearchParams.has(name: string) -> std::result::Result(bool, std::memory::OutOfMemory)`
-- `URLSearchParams.get(name: string) -> std::result::Result(std::strings::String?, std::memory::OutOfMemory)`
+- `URL.href() -> Result(std::strings::String, std::memory::OutOfMemory)`
+- `URL.origin() -> Result(std::strings::String, std::memory::OutOfMemory)`
+- `URLSearchParams.from_string(s: string) -> Result(URLSearchParams, std::memory::OutOfMemory)`
+- `URLSearchParams.to_string() -> Result(std::strings::String, std::memory::OutOfMemory)`
+- `URLSearchParams.has(name: string) -> Result(bool, std::memory::OutOfMemory)`
+- `URLSearchParams.get(name: string) -> Result(std::strings::String?, std::memory::OutOfMemory)`
 - `URLSearchParams.append/delete/set/sort -> std::memory::OutOfMemory?`
 
 ## Examples
@@ -67228,10 +67232,9 @@ import std::strings;
 ```silk
 import std::uuid;
 import std::strings;
-import std::result;
 import std::memory;
 
-type StringAllocResult = std::result::Result(std::strings::String, std::memory::OutOfMemory);
+type StringAllocResult = Result(std::strings::String, std::memory::OutOfMemory);
 
 fn uuid_string_eq (u: UUID, expected: string) -> bool {
   let r: StringAllocResult = u.to_string_lower();

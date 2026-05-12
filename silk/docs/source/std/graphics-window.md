@@ -18,7 +18,6 @@ module unless a future provider is added and reached.
 module std::graphics::window;
 
 import metal from "std/graphics/metal";
-import result from "std/result";
 import window from "std/window";
 
 export enum Backend {

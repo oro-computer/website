@@ -50,8 +50,6 @@ module std::https;
 
 import http from "std/http";
 import net from "std/net";
-import result from "std/result";
-
 export let ERR_CONNECT: int = 1;
 export let ERR_TLS: int = 2;
 export let ERR_IO: int = 3;

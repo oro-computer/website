@@ -28,9 +28,6 @@ reaches `std::window`.
 
 ```silk
 module std::window;
-
-import result from "std/result";
-
 export enum Backend { Unsupported, MacOS, IOS, GTK }
 export enum WindowErrorKind {
   UnsupportedPlatform,

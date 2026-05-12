@@ -21,12 +21,12 @@ import std::strings;
 
 - `std::url::parse(input: string) -> URLResult`
 - `std::url::parse_with_base(input: string, base: &URL) -> URLResult`
-- `URL.href() -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
-- `URL.origin() -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
-- `URLSearchParams.from_string(s: string) -> std::result::Result(URLSearchParams, std::memory::OutOfMemory)`
-- `URLSearchParams.to_string() -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
-- `URLSearchParams.has(name: string) -> std::result::Result(bool, std::memory::OutOfMemory)`
-- `URLSearchParams.get(name: string) -> std::result::Result(std::strings::String?, std::memory::OutOfMemory)`
+- `URL.href() -> Result(std::strings::String, std::memory::OutOfMemory)`
+- `URL.origin() -> Result(std::strings::String, std::memory::OutOfMemory)`
+- `URLSearchParams.from_string(s: string) -> Result(URLSearchParams, std::memory::OutOfMemory)`
+- `URLSearchParams.to_string() -> Result(std::strings::String, std::memory::OutOfMemory)`
+- `URLSearchParams.has(name: string) -> Result(bool, std::memory::OutOfMemory)`
+- `URLSearchParams.get(name: string) -> Result(std::strings::String?, std::memory::OutOfMemory)`
 - `URLSearchParams.append/delete/set/sort -> std::memory::OutOfMemory?`
 
 ## Examples

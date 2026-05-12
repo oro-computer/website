@@ -89,8 +89,7 @@ The implementation is intentionally smaller and focuses on:
  the selected line, or `Escape` / `Ctrl-G` to cancel back to the original
  edited line,
  - completion candidates include REPL commands, language keywords, std
- namespace paths, quoted `from "std/..."` and `from "std::..."`
- import specifier paths,
+ namespace paths, quoted `from "std/..."` import specifier paths,
  current-session declarations and bindings, imported symbols, functions,
  static impl functions after `Type.`, and struct fields or receiver methods
  after typed values and receiver expressions such as call results, indexed
@@ -396,8 +395,9 @@ The implementation is intentionally smaller and focuses on:
  package normalization,
  - named imports bind against the package export surface and can participate
  in prebuilt std archive linking.
-- package search path import resolution (non-`std::`):
- - when a module imports a bare package specifier (for example `import api from "my_api";`),
+ - package search path import resolution (non-`std/`):
+ - when a module imports a dependency-rooted module specifier (for example
+ `import api from "my_api";` or `import widgets from "my_api/widgets";`),
  the CLI may load that package from a package search path:
  - when `SILK_PACKAGE_PATH` is set, it is the primary search path (PATH-like list of roots separated by `:` on POSIX, `;` on Windows),
  - when `SILK_PACKAGE_PATH` is not set, the CLI uses a small default set:
@@ -405,8 +405,8 @@ The implementation is intentionally smaller and focuses on:
  - `../share/silk/packages` relative to the `silk` executable (installed layout),
  - `$HOME/.local/share/silk/packages` when it exists (user-local installs),
  - finally, the CLI appends a system library root at `PREFIX/lib/silk` (default `PREFIX=/usr/local`) as the last search path entry when it exists,
- - package-to-path mapping is deterministic: `my_api::core` resolves to the candidate
- directory `<root>/my_api/core` and the manifest `<candidate>/silk.toml`,
+ - package-to-path mapping is deterministic: package name `my_api` resolves to
+ candidate directory `<root>/my_api` and manifest `<candidate>/silk.toml`,
  - qualified symbol imports resolve the longest package prefix that exists (for example
  `my_api::core::Thing` loads `my_api::core` if present, otherwise `my_api`),
  - the same search path is used when loading manifest dependencies that omit a `path`

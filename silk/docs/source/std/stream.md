@@ -28,8 +28,6 @@ import arrays from "std/arrays";
 import buffer from "std/buffer";
 import interfaces from "std/interfaces";
 import memory from "std/memory";
-import result from "std/result";
-
 export enum StreamErrorKind {
   OutOfMemory,
   InvalidInput,

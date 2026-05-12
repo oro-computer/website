@@ -25,8 +25,8 @@ import std::strings;
 - `Document.as_string(id: i64) -> string?`
 - `Document.as_number_lexeme(id: i64) -> string?`
 - `std::json::number_as_i64(doc: &Document, id: i64) -> i64?`
-- `std::json::stringify(doc: &Document, id: i64) -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
-- `std::json::stringify_pretty(doc: &Document, id: i64, indent: int) -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
+- `std::json::stringify(doc: &Document, id: i64) -> Result(std::strings::String, std::memory::OutOfMemory)`
+- `std::json::stringify_pretty(doc: &Document, id: i64, indent: int) -> Result(std::strings::String, std::memory::OutOfMemory)`
 
 ## Examples
 
@@ -34,10 +34,9 @@ import std::strings;
 ```silk
 import std::json;
 import std::strings;
-import std::result;
 import std::memory;
 
-type StringAllocResult = std::result::Result(std::strings::String, std::memory::OutOfMemory);
+type StringAllocResult = Result(std::strings::String, std::memory::OutOfMemory);
 
 fn main () -> int {
   let mut doc: Document = Document{};

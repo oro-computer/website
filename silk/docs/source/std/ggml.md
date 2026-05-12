@@ -169,9 +169,6 @@ contract violations such as:
 ## Exported API
 ```silk
 module std::ggml;
-
-import result from "std/result";
-
 type Type = i32;
 
 let TYPE_F32: i32;

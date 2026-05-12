@@ -39,7 +39,6 @@ module std::websocket;
 
 import net from "std/net";
 import arrays from "std/arrays";
-import result from "std/result";
 import strings from "std/strings";
 
 // Message opcodes (subset).

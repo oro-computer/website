@@ -64,7 +64,6 @@ Example (using `std::map` defaults via `HashMap.init(cap)` / `HashMap.empty()`):
 
 ```silk
 import map from "std/map";
-import result from "std/result";
 import memory from "std/memory";
 
 type Map = std::map::HashMap(u64, int);
@@ -92,7 +91,6 @@ Example (custom hashing/equality):
 
 ```silk
 import map from "std/map";
-import result from "std/result";
 import memory from "std/memory";
 
 type Map = std::map::HashMap(u64, int);

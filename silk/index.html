@@ -8,7 +8,7 @@
       name="description"
       content="Silk is a high performance general purpose programming language with formal verification built in. Silk targets computer systems, mobile / tablet devices, WASM / WASI runtimes, and the web."
     />
-    <meta name="theme-color" content="#faf8f4" />
+    <meta name="theme-color" content="#11100f" />
     <link rel="icon" type="image/png" href="../docs/branding/assets/logo-icon-small.png" sizes="32x32" />
     <link rel="stylesheet" href="../assets/site.css" />
     <link rel="stylesheet" href="../assets/highlight/highlight.css" />
@@ -16,7 +16,7 @@
     <script src="../assets/highlight/languages/bash.min.js" defer></script>
     <script src="../assets/highlight/languages/silk.js" defer></script>
   </head>
-  <body>
+  <body class="site-dark product-page silk-product-page">
     <a class="skip-link" href="#main">Skip to content</a>
     <header class="site-top" id="top">
       <div class="container">
@@ -32,15 +32,9 @@
             <span class="brand-name">Oro Computer</span>
           </a>
           <nav class="nav" aria-label="Primary navigation">
-            <a href="../">Home</a>
-            <a href="../runtime/">Runtime</a>
-            <a href="./" aria-current="page">Silk</a>
-            <a href="../sage/">Sage</a>
-            <a href="../slg/">slg</a>
-            <a href="../virtnosis/">Virtnosis</a>
-            <a href="https://github.com/oro-computer" target="_blank" rel="noreferrer">GitHub</a>
-            <a href="../#contact">Contact</a>
-            <a class="button button-primary" href="./docs/?p=usage/getting-started">Get started</a>
+            <a href="../" aria-current="page">Technology</a>
+            <a href="../blog/">Blog</a>
+            <a href="../docs/">Docs</a>
           </nav>
           <div class="site-subnav" aria-label="Silk section navigation">
             <div class="site-subnav-label">Inside</div>
@@ -62,10 +56,11 @@
           <div class="hero-grid">
             <div class="hero-copy">
               <div class="hero-kicker">Silk</div>
-              <h1>High performance language with formal verification built in.</h1>
+              <h1>Systems language with formal verification built in.</h1>
               <p class="lede">
-                Silk is a high performance general purpose programming language with formal verification built in. Silk targets
-                computer systems, mobile / tablet devices, WASM / WASI runtimes, and the web.
+                Silk is designed for explicit modules, visible imports, clear ABI boundaries, target-aware code, and proofs
+                that live with the program. Start with small programs, then move into packages, stdlib APIs, embedders, and
+                Formal Silk.
               </p>
               <div class="hero-actions">
                 <a class="button button-primary" href="./docs/">Read the docs</a>
@@ -75,70 +70,40 @@
               </div>
             </div>
 
-            <div class="panel" aria-label="Hello Silk language sample">
+            <div class="panel hero-code-panel" aria-label="Hello Silk language sample">
               <div class="panel-header">
-                <div class="panel-title">Hello, Silk</div>
+                <div class="panel-title">Small but representative</div>
                 <a class="button button-quiet" href="./docs/?p=guides/hello-world">Guide</a>
               </div>
               <div class="panel-body">
                 <pre><code class="language-silk">package hello;
-
 import { println } from &quot;std/io&quot;;
-import result from &quot;std/result&quot;;
+task fn score () -&gt; int { return 21 * 2; }
+async fn configured_name () -&gt; string? { return Some(&quot;silk&quot;); }
 
-interface Greeter {
-  fn write(name: string, score: int) -&gt; void;
-}
-
+interface Greeter { fn write(n: string, s: int) -&gt; void; }
 struct ConsoleGreeter { label: string, }
 
 impl ConsoleGreeter as Greeter {
-  fn write (self: &amp;ConsoleGreeter, name: string, score: int) -&gt; void {
-    println(&quot;[{s}] hello {s}; score={d}&quot;, self.label, name, score);
+  fn write (self: &amp;ConsoleGreeter, n: string, s: int) -&gt; void {
+    println(&quot;[{s}] {s}: {d}&quot;, self.label, n, s);
   }
 }
-
-struct App { greeter: ConsoleGreeter, }
-
-impl App {
-  fn name (self: &amp;App, raw: string?) -&gt; result::Result(string, string) {
-    let value: string = raw ?? &quot;world&quot;;
-    if value == &quot;&quot; { return Err(&quot;missing name&quot;); }
-    return Ok(value);
-  }
-
-  fn run (self: &amp;App, raw: string?, score: int) -&gt; int {
-    let name: string = match (self.name(raw)) {
-      Ok(v) =&gt; v,
-      Err(_) =&gt; &quot;guest&quot;,
-    };
-    self.greeter.write(name, score);
-    return 0;
-  }
-}
-
 fn platform () -&gt; string {
   if attr(target=&quot;wasm32-wasi&quot;) { return &quot;wasi&quot;; }
   if attr(os=&quot;linux&quot;) { return &quot;linux&quot;; }
   return &quot;host&quot;;
 }
-
-async fn configured_name () -&gt; string? { return Some(&quot;silk&quot;); }
-task fn compute_score () -&gt; int { return 21 * 2; }
-
 async fn main () -&gt; int {
-  let app = App{ greeter: ConsoleGreeter{ label: platform() } };
-  let name: string? = await configured_name();
-  let score_task = compute_score();
-
-  task {
-    let score: int = yield score_task;
-    return app.run(name, score);
-  }
+  let raw = await configured_name();
+  let name: Result(string, string) = Ok(raw ?? &quot;world&quot;);
+  let greeter = ConsoleGreeter{ label: platform() };
+  match (name) {
+    Ok(v) =&gt; greeter.write(v, yield score()),
+    Err(e) =&gt; println(&quot;error: {s}&quot;, e),
+  };
+  return 0;
 }</code></pre>
-                <pre><code class="language-bash">silk check hello.slk
-silk test hello.slk
-silk build hello.slk -o build/hello</code></pre>
               </div>
             </div>
           </div>
@@ -149,7 +114,7 @@ silk build hello.slk -o build/hello</code></pre>
         <div class="container">
           <div class="prose">
             <h2>Start</h2>
-            <p>A short path into the language, toolchain, and canonical references.</p>
+            <p>A short path into the language, toolchain, references, and verification model.</p>
           </div>
 
           <div class="list mt-lg">

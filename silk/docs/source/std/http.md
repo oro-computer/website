@@ -54,7 +54,6 @@ Not implemented (yet):
 module std::http;
 
 import net from "std/net";
-import result from "std/result";
 import strings from "std/strings";
 import map from "std/map";
 import set from "std/set";

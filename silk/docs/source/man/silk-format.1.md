@@ -86,11 +86,11 @@ silk format --check .
 ```
 
 ```silk
-import util from "pkg::util";
+import util from "pkg/util";
 import { Delta, Alpha, Beta, Gamma } from "./local.slk";
 import "./a.slk";
 import io from "std/io";
-import { Zebra, Beta, Alpha, Gamma } from "pkg::names";
+import { Zebra, Beta, Alpha, Gamma } from "pkg/names";
 import fs from "std/fs";
 
 fn main () -> int { let x: int = 1; if x == 1 { return 0; } return 1; }
@@ -107,8 +107,8 @@ import {
   Beta,
   Gamma,
   Zebra,
-} from "pkg::names";
-import util from "pkg::util";
+} from "pkg/names";
+import util from "pkg/util";
 
 import "./a.slk";
 import {

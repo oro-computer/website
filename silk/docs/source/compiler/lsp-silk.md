@@ -155,7 +155,7 @@ The server provides `textDocument/definition` for open documents.
  - a default/namespace import,
  - or a module-scope `using` alias.
 - Package and import resolution covers:
- - module-specifier imports from package specifiers and file specifiers,
+ - module-specifier imports from dependency-rooted module specifiers and file specifiers,
  - direct package imports (`import ns::pkg;`),
  - direct symbol imports (`import ns::pkg::name;`, `import ::name;`),
  - and `using` aliases for both value names and namespace aliases.
@@ -215,14 +215,14 @@ module set.
  - symbol-aware suggestions from the current package and imported packages (functions, lets, ext, structs, enums, interfaces, errors),
  - imported names from:
  - package imports and qualified symbol imports,
- - JS-style named/default imports from file or package specifiers,
+ - JS-style named/default imports from file, std, or dependency module specifiers,
  - and module-scope `using` aliases,
  - unqualified local-package and named imported functions in
  statement-position buffers that are temporarily incomplete while typing
  (for example before `(` or `;` has been inserted),
  - import specifier path completion inside `from "..."` strings:
  - file specifiers (`"./..."`, `"../..."`, and absolute paths) suggest `.slk` files and subdirectories,
- - std package specifiers (`"std/..."`) suggest stdlib package paths (omitting the `.slk` extension),
+ - std-root module specifiers (`"std/..."`) suggest stdlib module paths (omitting the `.slk` extension),
  - `#embed("path", "...")` encoding completion in the optional second
  argument, offering exactly `"utf8"`, `"utf16"`, `"u8"`, `"u16"`, and
  `"u32"`; omitting the argument is equivalent to `"utf8"`,
@@ -425,9 +425,9 @@ The workspace cache is manifest-aware:
  nearest owning `silk.toml`,
 - it loads the full package graph rooted there, including dependency packages,
 - it adds manifest-declared definition files to the indexed module set,
-- it applies the manifest package name as the default package for source or
- definition files that omit an explicit `package ...;` / `module ...;`
- declaration,
+- it applies the manifest package name as the default package namespace for
+ source or definition files that omit an explicit
+ `package ...;` / `module ...;` declaration,
 - and it collects manifest-owned `.c` / `.h` / `.m` sources from target inputs
  and shipped C headers for the native symbol index.
 

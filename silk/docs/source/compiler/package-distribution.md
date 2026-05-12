@@ -69,11 +69,16 @@ release asset is only a transport for that package root.
 
 ### 2. Package identity is always Silk-native
 
-The canonical package identity is `package.name` from `silk.toml`, for example:
+The canonical package identity is the identifier-style `package.name` from
+`silk.toml`, for example:
 
 - `http`
-- `oro::http`
-- `std::io`
+- `oro_http`
+- `std_io`
+
+Source modules still declare symbol namespaces with `package oro::http;` or
+`package std::io;`. The manifest string is the package-root identity and must
+not contain `/`, `::`, `-`, `.`, or other punctuation.
 
 External names used by GitHub, npm, distro repositories, or other ecosystems
 must not replace Silk package identity.
@@ -361,8 +366,10 @@ The dependency model should separate package identity from transport:
  - third-party-managed install tree,
  - system-installed package.
 
-This keeps a dependency on `oro::http` stable regardless of where the package
-came from.
+This keeps a dependency on `oro_http` stable regardless of where the package
+came from. The dependency key is the manifest package name, so it is a single
+identifier. Source files inside that package may still declare a separate symbol
+namespace such as `package oro::http;`.
 
 ### Version requirements
 
@@ -371,10 +378,10 @@ in the manifest, for example:
 
 ```toml
 [dependencies]
-oro::http = { version = "^1.4.0" }
-oro::tls = { version = ">=1.2.0, <2.0.0" }
-oro::local = { path = "../oro-local" }
-oro::vendored = { path = "vendor/oro-vendored", sha256 = "sha256:..." }
+oro_http = { version = "^1.4.0" }
+oro_tls = { version = ">=1.2.0, <2.0.0" }
+oro_local = { path = "../oro-local" }
+oro_vendored = { path = "vendor/oro-vendored", sha256 = "sha256:..." }
 ```
 
 The initial supported forms should be:

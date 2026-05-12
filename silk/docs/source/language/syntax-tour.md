@@ -275,10 +275,8 @@ Notes:
  Enum destructuring is also supported:
 
   ```silk
-  import result from "std/result";
-
   fn main () -> int {
-    type R = result::Result(int, int);
+    type R = Result(int, int);
     let Ok(value) = R.ok(7);
     return value;
   }

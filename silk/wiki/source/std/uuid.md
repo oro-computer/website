@@ -22,10 +22,9 @@ import std::strings;
 ```silk
 import std::uuid;
 import std::strings;
-import std::result;
 import std::memory;
 
-type StringAllocResult = std::result::Result(std::strings::String, std::memory::OutOfMemory);
+type StringAllocResult = Result(std::strings::String, std::memory::OutOfMemory);
 
 fn uuid_string_eq (u: UUID, expected: string) -> bool {
   let r: StringAllocResult = u.to_string_lower();

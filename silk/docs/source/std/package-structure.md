@@ -74,7 +74,7 @@ available to user programs.
   module std::strings;
   ```
 
-The compiler treats module/package names (including `std::...`) as part of the
+The compiler treats module/package namespaces (including `std::...`) as part of the
 module set dependency graph, as specified in [packages imports exports](?p=language/packages-imports-exports).
 
 ## `std::runtime` (Runtime Interface Layer)

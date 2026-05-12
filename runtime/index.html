@@ -8,7 +8,7 @@
       name="description"
       content="Oro Runtime runs web applications as native applications with oroc, oro.toml, copy_map, and a broad oro:* JavaScript API surface."
     />
-    <meta name="theme-color" content="#faf8f4" />
+    <meta name="theme-color" content="#11100f" />
     <link rel="icon" type="image/png" href="../docs/branding/assets/logo-icon-small.png" sizes="32x32" />
     <link rel="stylesheet" href="../assets/site.css" />
     <link rel="stylesheet" href="../assets/highlight/highlight.css" />
@@ -18,7 +18,7 @@
     <script src="../assets/highlight/languages/xml.min.js" defer></script>
     <script src="../assets/highlight/languages/toml.js" defer></script>
   </head>
-  <body>
+  <body class="site-dark product-page runtime-product-page">
     <a class="skip-link" href="#main">Skip to content</a>
     <header class="site-top" id="top">
       <div class="container">
@@ -34,15 +34,9 @@
             <span class="brand-name">Oro Computer</span>
           </a>
           <nav class="nav" aria-label="Primary navigation">
-            <a href="../">Home</a>
-            <a href="./" aria-current="page">Runtime</a>
-            <a href="../silk/">Silk</a>
-            <a href="../sage/">Sage</a>
-            <a href="../slg/">slg</a>
-            <a href="../virtnosis/">Virtnosis</a>
-            <a href="https://github.com/oro-computer/runtime" target="_blank" rel="noreferrer">GitHub</a>
-            <a href="../#contact">Contact</a>
-            <a class="button button-primary" href="./docs/?p=guides/hello-world">Hello world</a>
+            <a href="../" aria-current="page">Technology</a>
+            <a href="../blog/">Blog</a>
+            <a href="../docs/">Docs</a>
           </nav>
           <div class="site-subnav" aria-label="Runtime section navigation">
             <div class="site-subnav-label">Inside</div>
@@ -64,11 +58,10 @@
           <div class="hero-grid">
             <div class="hero-copy">
               <div class="hero-kicker">Oro Runtime</div>
-              <h1>Ship native applications with web code.</h1>
+              <h1>Build native applications from web projects.</h1>
               <p class="lede">
-                Build UI with HTML/CSS, behavior with JavaScript, configure projects with <code>oro.toml</code>, and import
-                native capabilities as explicit ES modules under <code>oro:*</code>. Use <code>oroc</code> to run, build,
-                package, inspect, and publish updates from the same project model.
+                Oro Runtime keeps the web programming model and adds explicit native capabilities through <code>oro:*</code>
+                modules: windows, files, notifications, service workers, storage, workers, packaging, and signed updates.
               </p>
               <div class="hero-actions">
                 <a class="button button-primary" href="./docs/">Read the docs</a>
@@ -80,22 +73,16 @@
 
             <div class="panel" aria-label="Runtime workflow">
               <div class="panel-header">
-                <div class="panel-title">Common workflow</div>
-                <a class="button button-quiet" href="./docs/?p=start">Start</a>
+                <div class="panel-title">Start with the obvious commands</div>
+                <a class="button button-quiet" href="./docs/?p=guides/from-zero-to-first-run">Guide</a>
               </div>
               <div class="panel-body">
-                <pre><code class="language-plaintext">hello/
-  oro.toml
-  copy-map.toml
-  src/
-    index.html
-  main.js</code></pre>
                 <pre><code class="language-bash">oroc run .
 oroc run src/index.html
-oroc run src/main.js
-oroc build . --platform=ios-simulator
-oroc update init</code></pre>
-                <p>Start from a project directory, a single HTML entry point, or a single JavaScript module.</p>
+oroc config --describe window.width
+oroc build . --platform=macos-aarch64
+oroc install-app build/app</code></pre>
+                <p>Start from a project, a single HTML file, or a JavaScript entry point. Add configuration when the app needs it.</p>
               </div>
             </div>
           </div>
@@ -107,48 +94,46 @@ oroc update init</code></pre>
           <div class="prose">
             <h2>Programming model</h2>
             <p>
-              The web platform is the UI toolkit. Oro Runtime adds an explicit capability layer (<code>oro:*</code>) plus a
-              bundling story that feels like shipping a website.
+              The web platform is the UI toolkit. Oro Runtime adds an explicit capability layer (<code>oro:*</code>) and a
+              CLI workflow that turns a project directory into a native package.
             </p>
           </div>
 
           <div class="card-grid mt-lg">
             <div class="card col-span-4">
               <div class="card-body">
-                <h3 class="card-title">Web standards</h3>
+                <h3 class="card-title">Service workers</h3>
                 <div class="card-meta">
-                  DOM, ES modules, <code>fetch</code>, URLs, WebCrypto, WebAssembly, and modern browser APIs — because your app
-                  runs inside the platform WebView.
+                  Route offline assets, custom protocols, and app-local requests through the same web model you already know.
                 </div>
                 <div class="card-links">
-                  <a class="button button-quiet" href="./docs/?p=guides/project-layout">Project layout</a>
+                  <a class="button button-quiet" href="./docs/?p=guides/offline-first-with-service-workers">Service worker guide</a>
                 </div>
               </div>
             </div>
 
             <div class="card col-span-4">
               <div class="card-body">
-                <h3 class="card-title">Explicit capabilities</h3>
+                <h3 class="card-title">Files and notifications</h3>
                 <div class="card-meta">
-                  Import native functionality as ES modules under <code>oro:*</code>. The public surface spans application and
-                  windows, filesystem and process, networking and transport, storage, workers, notifications, MCP, and AI.
+                  Use sandboxed file APIs, file pickers, clipboard, notifications, and desktop integration where those
+                  capabilities create real user value.
                 </div>
                 <div class="card-links">
-                  <a class="button button-quiet" href="./docs/?p=javascript/module-index">Module index</a>
+                  <a class="button button-quiet" href="./docs/?p=guides/desktop-integrations">Desktop integrations</a>
                 </div>
               </div>
             </div>
 
             <div class="card col-span-4">
               <div class="card-body">
-                <h3 class="card-title">CLI, config, and updates</h3>
+                <h3 class="card-title">Window management</h3>
                 <div class="card-meta">
-                  Define bundle inputs with <code>copy_map</code>, tune behavior in <code>oro.toml</code> and
-                  <code>.ororc</code>, then use <code>oroc</code> for setup, packaging, device install, versioning, MCP, and
-                  signed update manifests and bundles.
+                  Open secondary windows, send messages between windows, coordinate shared workers, and keep local app state
+                  predictable across native shells.
                 </div>
                 <div class="card-links">
-                  <a class="button button-quiet" href="./docs/?p=cli/oroc">CLI reference</a>
+                  <a class="button button-quiet" href="./docs/?p=guides/windows-and-messaging">Windows guide</a>
                 </div>
               </div>
             </div>

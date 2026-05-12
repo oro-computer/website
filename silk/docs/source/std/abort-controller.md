@@ -26,8 +26,6 @@ module std::abort_controller;
 
 import interfaces from "std/interfaces";
 import memory from "std/memory";
-import result from "std/result";
-
 export enum AbortReasonKind {
   Aborted,
   Message,

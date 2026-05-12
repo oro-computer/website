@@ -245,8 +245,9 @@ At a high level, the language can be structured as:
  file specifiers and resolve to a module by file path,
  - strings starting with `std/` are treated as std-root file specifiers and
  resolve to a module by file path under the configured stdlib root,
- - other strings are treated as package specifiers and resolve to a package
- by name (see [packages imports exports](?p=language/packages-imports-exports)).
+ - other strings are treated as dependency-rooted module specifiers; the first
+ path segment is a package/dependency name and the remaining path selects a
+ source module in that package (see [packages imports exports](?p=language/packages-imports-exports)).
 
  - `BindingDecl ::= ('const' | 'let' MutOpt | 'var') Identifier TypeAnnotationOpt InitializerOpt ';'`
  - `LetDecl ::= ExportModifier BindingDecl`

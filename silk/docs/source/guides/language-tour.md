@@ -167,14 +167,12 @@ fn parse_flag (s: string) -> bool? {
 
 Use optionals when “missing” is a normal outcome and you don’t need structured error details.
 
-## Results: `std::result::Result(T, E)`
+## Results: `Result(T, E)`
 
 When you want a standard “success or error” return shape, use `Result(T, E)`:
 
 ```silk
-import result from "std/result";
-
-type IntOrMessage = result::Result(int, string);
+type IntOrMessage = Result(int, string);
 
 fn div (a: int, b: int) -> IntOrMessage {
   if b == 0 { return Err("division by zero"); }

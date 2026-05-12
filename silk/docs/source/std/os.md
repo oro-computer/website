@@ -19,7 +19,6 @@ See also:
 module std::os;
 
 import memory from "std/memory";
-import result from "std/result";
 import temporal from "std/temporal";
 import vector from "std/vector";
 

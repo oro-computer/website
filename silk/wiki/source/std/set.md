@@ -23,12 +23,11 @@ import std::set;
 ### Example: `SetMap(u64)` basic usage
 ```silk
 import std::set;
-import std::result;
 import std::memory;
 
 type Set = std::set::SetMap(u64);
-type InitResult = std::result::Result(Set, std::memory::AllocFailed);
-type InsertResult = std::result::Result(bool, std::memory::OutOfMemory);
+type InitResult = Result(Set, std::memory::AllocFailed);
+type InsertResult = Result(bool, std::memory::OutOfMemory);
 
 fn main () -> int {
   match (Set.init(4)) {

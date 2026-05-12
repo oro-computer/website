@@ -59,20 +59,25 @@ version = "0.1.0"
 
 ### `package.name` (required)
 
-The package name used for package imports (e.g. `import ui from "ui";`) and as
-the default package name for modules that omit an explicit `package ...;`
-declaration.
+The package name used for package metadata, package-search-path lookup, and as
+the default package namespace for modules that omit an explicit
+`package ...;` declaration.
 
-`name` MUST be a valid Silk package path:
+`name` MUST be a single Silk identifier:
 
-- one or more identifiers separated by `::`
-- each identifier matches `[A-Za-z_][A-Za-z0-9_]*`
+- the identifier matches `[A-Za-z_][A-Za-z0-9_]*`
+- the string MUST NOT contain `/`, `::`, `-`, `.`, or other punctuation
 
 Examples:
 
 - `ui`
 - `my_app`
-- `my_app::core`
+- `acme_logger`
+
+Source package declarations may still use namespace syntax such as
+`package acme::logger;`. In that case the explicit source namespace is
+authoritative; `package.name` remains the package-root identity and does not
+need to repeat the namespace.
 
 ### `package.version` (optional)
 
@@ -249,7 +254,7 @@ Rules:
 
 ## Dependencies (`[dependencies]`)
 
-Dependencies are a table mapping dependency import names to dependency specs:
+Dependencies are a table mapping dependency keys to dependency specs:
 
 ```toml
 [dependencies]
@@ -258,9 +263,9 @@ ui = { path = "../libs/silk-ui", version = "^1.4.0", sha256 = "sha256:0123456789
 
 Fields:
 
-- The dependency key (`ui` above) is the package import name used in source
- (`import ui from "ui";`). This MUST match the
- dependency’s own manifest `package.name`.
+- The dependency key (`ui` above) is the manifest-local import root used by
+ quoted dependency module specifiers such as `import ui from "ui";` or
+ `import widgets from "ui/widgets";`. It MUST be a single Silk identifier.
 - `path` (optional): local filesystem path to the dependency package root,
  resolved relative to the importing manifest directory when not absolute.
  When `path` is omitted, the dependency is resolved from the package search
@@ -334,14 +339,14 @@ Rules:
  - `$HOME/.local/share/silk/packages` when it exists (user-local installs).
 - Finally, the compiler appends a system library root at `PREFIX/lib/silk`
  (default `PREFIX=/usr/local`) as the last search path entry when it exists.
-- For a dependency named `my_api::core`, each root directory contributes a
+- For a dependency named `my_api`, each root directory contributes a
  candidate package root:
- - `<root>/my_api/core` (where `::` maps to `/`)
+ - `<root>/my_api`
  - and the manifest is `<candidate>/silk.toml`.
 - The compiler searches roots in order and uses the first candidate that exists.
 - The discovered manifest MUST declare `package.name` exactly matching the
- dependency key, and the dependency is still subject to the `sha256`
- verification rules above.
+ dependency package name being resolved, and the dependency is still subject to
+ the `sha256` verification rules above.
 
 ## Distributed Artifacts (`[[artifact]]`)
 
@@ -662,9 +667,9 @@ Rules:
 
 ## Interaction With `package` Declarations
 
-- If a module contains an explicit `package name;` declaration, that name is
- authoritative.
-- If a module omits `package`, the compiler assigns it to the manifest
+- If a module contains an explicit `package name;` declaration, that source
+ namespace is authoritative.
+- If a module omits `package`, the compiler assigns it to manifest
  `package.name` (for files under that package root).
 
 This defaulting behavior exists to support small projects that do not want to

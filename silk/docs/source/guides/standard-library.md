@@ -14,7 +14,6 @@ Use module-specifier imports for application and library code:
 import io from "std/io";              // namespace import; call io::println(...)
 import { println } from "std/io";     // selected symbol import
 import fs from "std/fs";              // filesystem namespace
-import { Result } from "std/result";  // common return shape
 ```
 
 Use selected imports when a small program needs one or two names. Use namespace
@@ -22,6 +21,10 @@ imports when a module uses a cohesive surface such as `fs::read_file_string`.
 Direct imports such as `import std::io::println;` remain available for ABI-facing
 definition modules and low-level interop code; ordinary user-space code should
 prefer `from "std/..."`.
+
+Some standard-library types are always in scope through the std prelude. `Result`
+is one of those globals, so user code writes `Result(T, E)` without importing
+`std/result`.
 
 ## The three common “return shapes”
 
@@ -41,14 +44,12 @@ fn parse_port (s: string) -> int? {
 }
 ```
 
-### 2) Results: `std::result::Result(T, E)`
+### 2) Results: `Result(T, E)`
 
 `Result(T, E)` is the standard “success or error” type used across `std::`.
 
 ```silk
-import result from "std/result";
-
-type IntOrMessage = result::Result(int, string);
+type IntOrMessage = Result(int, string);
 
 fn div (a: int, b: int) -> IntOrMessage {
   if b == 0 { return Err("division by zero"); }

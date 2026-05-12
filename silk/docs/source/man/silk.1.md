@@ -157,8 +157,8 @@ For the implementation, the supported options are:
  the selected line, or `Escape` / `Ctrl-G` to cancel back to the original
  edited line.
  - Completion candidates include REPL commands, keywords, std namespace
- paths, quoted `from "std/..."` and `from "std::..."` import specifier
- paths, current-session declarations and bindings, imported symbols,
+ paths, quoted `from "std/..."` import specifier paths, current-session
+ declarations and bindings, imported symbols,
  functions, static impl functions after `Type.`, and struct fields or
  receiver methods after typed values and receiver expressions such as call
  results, indexed values, chained field accesses, imported type aliases, and
@@ -691,8 +691,8 @@ See also: [`silk-env(1)`](?p=man/silk-env.1) for a complete list of environment 
  - `../share/silk/packages` relative to the `silk` executable (installed layout),
  - `$HOME/.local/share/silk/packages` when it exists (user-local installs).
  - Finally, `silk` appends a system library root at `PREFIX/lib/silk` as the last search path entry when it exists.
- - A package like `my_api::core` maps to the candidate manifest
- `<root>/my_api/core/silk.toml` (where `::` maps to `/`).
+ - A package name like `my_api` maps to the candidate manifest
+ `<root>/my_api/silk.toml`.
 - `SILK_Z3_LIB` — path to a dynamic Z3 library used by the Formal Silk verifier. When `--z3-lib` is not provided, the verifier will use this value when set.
 - `SILK_VERIFY_JOBS` — override the number of worker threads used for Formal Silk verification (default: auto; capped at 8).
 - `SILK_TEST_TIMEOUT_MS` — per-top-level-test process timeout in milliseconds (default: `30000`).

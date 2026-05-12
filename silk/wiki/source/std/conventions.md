@@ -17,7 +17,7 @@ Canonical doc: [conventions](?p=std/conventions).
 - **Errors**:
  - use `T?` for “absence” (`None`) without extra error information,
  - use typed errors (`T | SomeError`) for recoverable runtime errors with meaning,
- - use `std::result::Result(T, E)` when callers need to distinguish multiple error causes and propagate them cleanly.
+ - use `Result(T, E)` when callers need to distinguish multiple error causes and propagate them cleanly.
 
 ## Examples
 

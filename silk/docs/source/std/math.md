@@ -76,8 +76,6 @@ export type MatrixF64Result = std::math::matrix::MatrixF64Result;
 
 ```silk
 module std::math::vector;
-
-import result from "std/result";
 import vector from "std/vector";
 
 export enum MathErrorKind {
@@ -222,8 +220,6 @@ impl VectorF64 {
 
 ```silk
 module std::math::matrix;
-
-import result from "std/result";
 import vector from "std/vector";
 import math_vector from "std/math/vector";
 

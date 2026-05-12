@@ -23,11 +23,10 @@ import std::map;
 ### Example: `HashMap(u64, int)` basic usage
 ```silk
 import std::map;
-import std::result;
 import std::memory;
 
 type Map = std::map::HashMap(u64, int);
-type InitResult = std::result::Result(Map, std::memory::AllocFailed);
+type InitResult = Result(Map, std::memory::AllocFailed);
 
 fn main () -> int {
   match (Map.init(16)) {

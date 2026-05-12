@@ -56,9 +56,6 @@ Public error/value types in the Supported forms:
 
 ```silk
 module std::ssh2;
-
-import result from "std/result";
-
 enum SSH2ErrorKind {
   OutOfMemory,
   InvalidInput,
