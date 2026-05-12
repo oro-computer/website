@@ -181,7 +181,7 @@ Both methods:
 ## Example
 
 ```silk
-import std::toml;
+import toml from "std/toml";
 
 fn main () -> int {
   let mut doc: Document = Document{};
@@ -247,7 +247,7 @@ pi = 3.14
 Construction and emission example:
 
 ```silk
-import std::toml;
+import toml from "std/toml";
 
 fn main () -> int {
   let mut doc: Document = Document{};
@@ -291,7 +291,7 @@ fn main () -> int {
 Serializing a custom type with the convenience helpers:
 
 ```silk
-import std::toml;
+import toml from "std/toml";
 
 struct Config {
   title: string,

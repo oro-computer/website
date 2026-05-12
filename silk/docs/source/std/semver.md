@@ -96,7 +96,7 @@ Notes:
 ## Example
 
 ```silk
-import std::semver;
+import semver from "std/semver";
 
 fn main () -> int {
   match (std::semver::parse("1.2.3-alpha.1+build.5")) {

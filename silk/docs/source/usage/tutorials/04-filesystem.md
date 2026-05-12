@@ -14,38 +14,38 @@ Reference: `std::fs` (sidebar → standard library).
 Create `fs_roundtrip.slk`:
 
 ```silk
-import std::fs;
-import std::io::println;
+import fs from "std/fs";
+import { println } from "std/io";
 
 fn main () -> int {
   // 493 == 0o755 on POSIX.
-  if std::fs::mkdir_all("tmp", 493) != None {
+  if fs::mkdir_all("tmp", 493) != None {
     println("mkdir failed");
     return 1;
   }
 
   let path: string = "tmp/tutorial_fs_roundtrip.txt";
-  std::fs::unlink(path); // ignore errors; we just want the file gone
+  fs::unlink(path); // ignore errors; we just want the file gone
 
   // 420 == 0o644 on POSIX.
-  match (std::fs::write_file_string(path, "hello\\n", 420)) {
+  match (fs::write_file_string(path, "hello\\n", 420)) {
     Ok(_) => {},
     Err(_) => {
       println("write failed");
-      std::fs::unlink(path);
+      fs::unlink(path);
       return 2;
     },
   }
 
-  match (std::fs::read_file_string(path)) {
+  match (fs::read_file_string(path)) {
     Ok(s) => {
       println("read: {s}", s.as_string());
-      std::fs::unlink(path);
+      fs::unlink(path);
       return 0;
     },
     Err(_) => {
       println("read failed");
-      std::fs::unlink(path);
+      fs::unlink(path);
       return 3;
     },
   }

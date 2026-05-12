@@ -325,10 +325,10 @@ impl Counter as Len {
 
 ```silk
 import c_owned from "std/ffi/c_owned";
-import std::path;
-import std::strings;
-import std::url;
-import std::runtime::mem;
+import path from "std/path";
+import strings from "std/strings";
+import url from "std/url";
+import mem from "std/runtime/mem";
 
 fn main () -> int {
   let owned_r = std::strings::String.from_string("hello");
@@ -384,8 +384,8 @@ fn main () -> int {
 ## Example (`TrySerialize` for owned text output)
 
 ```silk
-import std::semver;
-import std::uuid;
+import semver from "std/semver";
+import uuid from "std/uuid";
 
 fn main () -> int {
   match (std::semver::Version.parse("1.2.3-alpha+build.5")) {
@@ -426,10 +426,10 @@ fn main () -> int {
 ## Example (`Parse` in the stdlib)
 
 ```silk
-import std::path;
-import std::semver;
-import std::url;
-import std::uuid;
+import path from "std/path";
+import semver from "std/semver";
+import url from "std/url";
+import uuid from "std/uuid";
 
 fn main () -> int {
   match (std::semver::Version.parse("1.2.3")) {

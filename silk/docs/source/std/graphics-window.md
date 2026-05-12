@@ -17,9 +17,9 @@ module unless a future provider is added and reached.
 ```silk
 module std::graphics::window;
 
-import std::graphics::metal;
-import std::result;
-import std::window;
+import metal from "std/graphics/metal";
+import result from "std/result";
+import window from "std/window";
 
 export enum Backend {
   Unsupported,

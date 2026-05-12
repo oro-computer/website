@@ -78,7 +78,7 @@ which forwards to `std::url::parse`.
 ### Parse, resolve, and mutate query params
 
 ```silk
-import std::url;
+import url from "std/url";
 
 fn main () -> int {
   let base = match std::url::parse("https://example.com/docs/index.html") {

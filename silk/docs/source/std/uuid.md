@@ -31,7 +31,7 @@ API notes:
 ### Parse, generate, and inspect
 
 ```silk
-import std::uuid;
+import uuid from "std/uuid";
 
 fn main () -> int {
   let parsed = match std::uuid::parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8") {

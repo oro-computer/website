@@ -81,10 +81,10 @@ The type checker rejects:
 ### Basic `test`
 
 ```silk
-import std::regex;
+import regex from "std/regex";
 
 fn main () -> int {
-  if std::regex::matches(/hello/, "hello world") {
+  if regex::matches(/hello/, "hello world") {
     return 0;
   }
   return 1;

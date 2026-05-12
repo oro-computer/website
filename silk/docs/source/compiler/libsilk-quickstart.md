@@ -98,7 +98,7 @@ silk_compiler_add_source_buffer(
     compiler,
     silk_str("src/main.slk"),
     silk_str(
-        "import std::fs;\n"
+        "import fs from \"std/fs\";\n"
         "fn main () -> int { return 0; }\n"));
 
 if (!silk_compiler_build(

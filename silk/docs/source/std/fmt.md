@@ -143,9 +143,9 @@ so output precision is limited to `f64` precision in the Supported forms.
 ```silk
 import { println } from "std/io";
 import format from "std/fmt";
-import std::fmt;
-import std::strings;
-import std::result;
+import fmt from "std/fmt";
+import strings from "std/strings";
+import result from "std/result";
 
 type StringAllocResult = std::result::Result(std::strings::String, std::fmt::Error);
 

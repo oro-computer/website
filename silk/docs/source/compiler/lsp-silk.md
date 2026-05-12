@@ -34,7 +34,8 @@ The `silk-lsp` binary is built and installed alongside the `silk` CLI:
 - Editor and IDE integrations should launch `silk-lsp` as a stdio-based LSP server, without extra arguments, and then speak JSON-RPC 2.0 over its stdin/stdout.
 - The server writes protocol messages to stdout and may emit diagnostic logs to stderr; LSP clients must not treat stderr as protocol traffic.
 - Optional flags:
- - `--std-root <path>` overrides the stdlib root used for resolving `import std::...;`.
+ - `--std-root <path>` overrides the stdlib root used for resolving
+ `from "std/..."` imports and direct std ABI imports.
  - `--std <path>` is an accepted alias of `--std-root <path>`.
  - `--nostd` disables stdlib auto-loading entirely.
  - `-h` / `--help` prints the current usage text.
@@ -122,9 +123,10 @@ workspace module set.
  - field and method accesses (`value.field`, `value.method`) report the field type for known struct or error receivers, and report method signatures for known struct receivers,
  - chained field receivers (`box.value.field`) are resolved by walking the known struct/error field path, including applied generic structs where direct field type parameters can be substituted before rendering the hover type,
  - imported names are resolved across the module set:
- - package imports (`import ns::pkg;`, `import ns::pkg as alias;`),
- - qualified symbol imports (`import ns::pkg::name;`, `import ns::pkg::name as alias;`, `import ::malloc;`),
- - JS-style imports (`import { name } from "ns/pkg";`, `import { name as alias } from "ns/pkg";`, `import alias from "ns/pkg";`),
+ - module-specifier imports (`import { name } from "ns/pkg";`,
+ `import { name as alias } from "ns/pkg";`, `import alias from "ns/pkg";`),
+ - direct package imports (`import ns::pkg;`),
+ - direct symbol imports (`import ns::pkg::name;`, `import ::malloc;`),
  - and module-scope `using` aliases for imported or local names,
  - when an `ext` declaration resolves to a locally indexed native C symbol, hover includes the native C declaration/prototype in an additional `c` code block,
  - native C lookup is filtered by the `ext` shape (`fn` / `c_fn` externs prefer C functions; non-function externs prefer C variables), so common C tag/function collisions like `struct stat` vs `stat(...)` do not override the callable symbol.
@@ -153,9 +155,9 @@ The server provides `textDocument/definition` for open documents.
  - a default/namespace import,
  - or a module-scope `using` alias.
 - Package and import resolution covers:
- - package imports (`import ns::pkg;`, `import ns::pkg as alias;`),
- - qualified symbol imports (`import ns::pkg::name;`, `import ns::pkg::name as alias;`, `import ::name;`),
- - JS-style imports from package specifiers and file specifiers,
+ - module-specifier imports from package specifiers and file specifiers,
+ - direct package imports (`import ns::pkg;`),
+ - direct symbol imports (`import ns::pkg::name;`, `import ::name;`),
  - and `using` aliases for both value names and namespace aliases.
 - Local scopes are then consulted to resolve:
  - function parameters,
@@ -442,7 +444,10 @@ File-backed URI handling note:
 
 ### Standard Library Integration
 
-By default, the language server will load standard library packages referenced by `import std::...` when a stdlib root is available. The stdlib root is selected using the same rules as the compiler, with an additional workspace-root fallback:
+By default, the language server will load standard library packages referenced
+by `from "std/..."` imports and direct std ABI imports when a stdlib root is
+available. The stdlib root is selected using the same rules as the compiler,
+with an additional workspace-root fallback:
 
 - `--std-root <path>` passed to `silk-lsp` (highest priority),
 - `SILK_STD_ROOT` when set,

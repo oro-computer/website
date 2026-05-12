@@ -26,7 +26,7 @@ The output includes, at minimum:
 
 - `SILK_DEBUG_BACKEND` — enable backend debug output when set to a non-empty, non-`0` value.
 - `SILK_DEBUG_BACKEND_ENUMS` — enable enum-lowering debug output.
-- `SILK_STD_ROOT` — override stdlib root used to resolve `import std::...;`.
+- `SILK_STD_ROOT` — override stdlib root used to resolve `from "std/..."` module specifiers and direct std ABI imports.
 - `SILK_STD_LIB` — override stdlib archive used for linking (`libsilk_std.a`).
 - `SILK_Z3_LIB` — override Z3 dynamic library path used for Formal Silk verification.
 - `SILK_VERIFY_JOBS` — override the number of worker threads used for Formal Silk verification (default: auto; capped at 8).

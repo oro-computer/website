@@ -25,8 +25,8 @@ When explicit input files are used (no `--package`), the `silk` CLI may load add
 - `--help`, `-h` — show command help and exit.
 - `--verify` — enable Formal Silk verification for modules that contain Formal Silk directives.
 - `--no-verify` — disable Formal Silk verification (default).
-- `--nostd`, `-nostd` — disable stdlib auto-loading for `import std::...;`.
-- `--std-root <path>` — override the stdlib root directory used to resolve `import std::...;`.
+- `--nostd`, `-nostd` — disable stdlib auto-loading for std imports.
+- `--std-root <path>` — override the stdlib root directory used to resolve `from "std/..."` module specifiers and direct std ABI imports.
 - `--std <path>` — alias of `--std-root` when `<path>` does not end in `.a`.
 - `--std-lib <path>` — accepted for consistency; ignored by `check`.
 - `--std <path>.a` — accepted for consistency; ignored by `check`.

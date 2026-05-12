@@ -53,11 +53,11 @@ Not implemented (yet):
 ```silk
 module std::http;
 
-import std::net;
-import std::result;
-import std::strings;
-import std::map;
-import std::set;
+import net from "std/net";
+import result from "std/result";
+import strings from "std/strings";
+import map from "std/map";
+import set from "std/set";
 
 export let DEFAULT_MAX_HEADER_BYTES: i64 = 16384;
 
@@ -208,8 +208,8 @@ Notes:
 ## Example (Client)
 
 ```silk
-import std::http;
-import std::net;
+import http from "std/http";
+import net from "std/net";
 
 export fn main () -> int {
   // Plain HTTP to a loopback server (no DNS in the current stdlib).

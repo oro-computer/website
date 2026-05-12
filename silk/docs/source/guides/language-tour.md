@@ -18,7 +18,7 @@ At the top of a file you declare your package and then import dependencies:
 ```silk
 package my_app::core;
 
-import std::io::println;
+import { println } from "std/io";
 ```
 
 This header ordering is intentional: it keeps dependency structure tooling-friendly and prevents “imports halfway down the
@@ -124,7 +124,7 @@ Interfaces describe required method signatures for a contract. In user code, the
 such as readers, writers, serializers, or log sinks.
 
 ```silk
-import std::io;
+import io from "std/io";
 
 interface LogSink {
   fn write(line: string) -> void;
@@ -134,7 +134,7 @@ struct StdoutSink {}
 
 impl StdoutSink as LogSink {
   fn write (self: &StdoutSink, line: string) -> void {
-    std::io::println("{s}", line);
+    io::println("{s}", line);
   }
 }
 ```
@@ -172,9 +172,9 @@ Use optionals when “missing” is a normal outcome and you don’t need struct
 When you want a standard “success or error” return shape, use `Result(T, E)`:
 
 ```silk
-import std::result;
+import result from "std/result";
 
-type IntOrMessage = std::result::Result(int, string);
+type IntOrMessage = result::Result(int, string);
 
 fn div (a: int, b: int) -> IntOrMessage {
   if b == 0 { return Err("division by zero"); }
@@ -227,7 +227,7 @@ Silk provides language-level tests (`test "name" { ... }`). Tests live next to t
 `silk test`.
 
 ```silk
-import std::test::expect_equal;
+import { expect_equal } from "std/test";
 
 fn add (a: int, b: int) -> int { return a + b; }
 

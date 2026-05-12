@@ -14,8 +14,8 @@ support is Implemented (see “Platform notes”).
 ```silk
 module std::process;
 
-  import std::result;
-  import std::strings;
+  import result from "std/result";
+  import strings from "std/strings";
 
   enum ChdirErrorKind { InvalidInput, NotFound, NotADirectory, PermissionDenied, Unknown }
   error ChdirFailed { code: int }
@@ -43,7 +43,7 @@ For convenience, `std::process` re-exports the high-level `std::process::child`
 surface so downstream users can write:
 
 ```silk
-import std::process;
+import process from "std/process";
 
 let mut cmd = std::process::Command.init("/bin/echo");
 cmd.arg("hello");

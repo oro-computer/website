@@ -75,8 +75,8 @@ Semantics:
 Example:
 
 ```silk
-import std::map;
-import std::wasm;
+import map from "std/map";
+import wasm from "std/wasm";
 
 type ImportMap = std::map::HashMap(std::wasm::ImportFuncName, std::wasm::HostCall);
 
@@ -216,9 +216,9 @@ pointing at the opcode.
 ## Example
 
 ```silk
-import std::wasm;
-import std::arrays;
-import std::buffer;
+import wasm from "std/wasm";
+import arrays from "std/arrays";
+import buffer from "std/buffer";
 
 using Engine = std::wasm::Engine;
 using EngineResult = std::wasm::EngineResult;

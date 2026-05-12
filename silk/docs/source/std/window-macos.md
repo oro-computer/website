@@ -9,7 +9,7 @@ select the macOS provider explicitly while still using the portable
 ```silk
 module std::window::macos;
 
-import std::window;
+import window from "std/window";
 
 export fn is_supported () -> bool;
 export fn open (options: std::window::Options) -> std::window::WindowResult;

@@ -10,7 +10,7 @@ Assumption: you have a `silk` binary available on your PATH.
 Create a file named `hello.slk`:
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 fn main () -> int {
   println("hello from silk");
@@ -50,7 +50,7 @@ Next: [CLI and toolchain](?p=guides/cli)
 This adds a helper function and shows how “real” Silk code stays ordinary:
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 fn greet (name: string) -> void {
   println("hello {s}", name);
@@ -68,11 +68,11 @@ On hosted targets, Silk can also accept a conventional `(argc, argv)` entrypoint
 small `std::args` helper so you can treat raw `argv` pointers as `string` views.
 
 ```silk
-import std::args;
-import std::io::println;
+import args from "std/args";
+import { println } from "std/io";
 
 fn main (argc: int, argv: u64) -> int {
-  let a = std::args::Args.init(argc, argv);
+  let a = args::Args.init(argc, argv);
   if a.count() < 2 {
     println("usage: hello <name>");
     return 2;
@@ -99,38 +99,38 @@ more. Each tab below is a self-contained “hello, but practical” sketch you c
 Create a directory, write a file, read it back, clean up:
 
 ```silk
-import std::fs;
-import std::io::println;
+import fs from "std/fs";
+import { println } from "std/io";
 
 fn main () -> int {
   // 493 == 0o755 on POSIX.
-  if std::fs::mkdir_all("tmp", 493) != None {
+  if fs::mkdir_all("tmp", 493) != None {
     println("mkdir failed");
     return 1;
   }
 
   let path: string = "tmp/hello_silk.txt";
-  std::fs::unlink(path); // ignore errors; we just want the file gone
+  fs::unlink(path); // ignore errors; we just want the file gone
 
   // 420 == 0o644 on POSIX.
-  match (std::fs::write_file_string(path, "hello from silk\\n", 420)) {
+  match (fs::write_file_string(path, "hello from silk\\n", 420)) {
     Ok(_) => {},
     Err(_) => {
       println("write failed");
-      std::fs::unlink(path);
+      fs::unlink(path);
       return 2;
     },
   }
 
-  match (std::fs::read_file_string(path)) {
+  match (fs::read_file_string(path)) {
     Ok(s) => {
       println("read: {s}", s.as_string());
-      std::fs::unlink(path);
+      fs::unlink(path);
       return 0;
     },
     Err(_) => {
       println("read failed");
-      std::fs::unlink(path);
+      fs::unlink(path);
       return 3;
     },
   }
@@ -144,9 +144,9 @@ Reference: [`std::fs`](?p=std/filesystem)
 A tiny single-request HTTP server on loopback (blocking I/O):
 
 ```silk
-import std::http;
-import std::net;
-import std::io::println;
+import http from "std/http";
+import net from "std/net";
+import { println } from "std/io";
 
 fn main () -> int {
   let addr = net::SocketAddrV4.loopback(8080);
@@ -197,33 +197,32 @@ Reference: [`std::net`](?p=std/networking), [`std::http`](?p=std/http)
 Hash bytes, compare safely, and wipe buffers when you’re done:
 
 ```silk
-import std::arrays;
-import std::buffer;
-import std::crypto;
-import std::crypto::hash;
-import std::io::print;
-import std::io::println;
-import std::runtime::mem;
+import arrays from "std/arrays";
+import buffer from "std/buffer";
+import crypto from "std/crypto";
+import hash from "std/crypto/hash";
+import { print, println } from "std/io";
+import mem from "std/runtime/mem";
 
 fn main () -> int {
-  if std::crypto::init() != None {
+  if crypto::init() != None {
     println("crypto init failed");
     return 1;
   }
 
   let msg: string = "hello from silk";
-  let msg_ptr: u64 = std::runtime::mem::string_ptr(msg);
-  let msg_len: i64 = std::runtime::mem::string_len(msg);
+  let msg_ptr: u64 = mem::string_ptr(msg);
+  let msg_len: i64 = mem::string_len(msg);
 
-  let mut out = match std::buffer::BufferU8.init(32) {
+  let mut out = match buffer::BufferU8.init(32) {
     Ok(v) => v,
     Err(_) => return 2,
   };
 
-  let hash_err: std::crypto::CryptoError? = std::crypto::hash::blake2b(
+  let hash_err: crypto::CryptoError? = hash::blake2b(
     mut out,
     32,
-    std::arrays::ByteSlice{ ptr: msg_ptr, len: msg_len }
+    arrays::ByteSlice{ ptr: msg_ptr, len: msg_len }
   );
   if hash_err != None {
     out.drop();
@@ -238,7 +237,7 @@ fn main () -> int {
   }
   println("");
 
-  let wipe_err: std::crypto::CryptoFailed? = std::crypto::memzero(out.as_bytes());
+  let wipe_err: crypto::CryptoFailed? = crypto::memzero(out.as_bytes());
   out.drop();
   if wipe_err != None { return 4; }
   return 0;
@@ -253,8 +252,8 @@ Reference: [`std::crypto`](?p=std/crypto)
 auto-links ggml when the module is included in your module set.
 
 ```silk
-import std::ggml;
-import std::io::println;
+import ggml from "std/ggml";
+import { println } from "std/io";
 
 fn main () -> int {
   println("hello from std::ggml");
@@ -270,8 +269,8 @@ Reference: [`std::ggml`](?p=std/ggml)
 creation and safety live above this layer — and hosted builds must link the appropriate loader library.
 
 ```silk
-import std::graphics::opengl;
-import std::io::println;
+import opengl from "std/graphics/opengl";
+import { println } from "std/io";
 
 fn main () -> int {
   println("hello from std::graphics::opengl");
@@ -298,7 +297,7 @@ Silk’s concurrency keywords are explicit: `task` spawns work (returns a `Task(
 ### Task + `yield`
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 task fn add (a: int, b: int) -> int { return a + b; }
 
@@ -316,7 +315,7 @@ async fn main () -> int {
 ### Promise + `await`
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 async fn answer () -> int { return 42; }
 
@@ -392,10 +391,10 @@ Silk can target `wasm32-wasi` and run under standard WASI runtimes (including No
 ### `main.slk`
 
 ```silk
-import std::io;
+import io from "std/io";
 
 fn main () -> int {
-  std::io::println("hello from silk wasm wasi");
+  io::println("hello from silk wasm wasi");
   return 7;
 }
 ```

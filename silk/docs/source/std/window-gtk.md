@@ -13,7 +13,7 @@ bundled Linux runtime loads GTK dynamically when `std::window` code is reached.
 ```silk
 module std::window::gtk;
 
-import std::window;
+import window from "std/window";
 
 export fn is_supported () -> bool;
 export fn open (options: std::window::Options) -> std::window::WindowResult;

@@ -9,7 +9,7 @@ Small surface example:
 ```silk
 package app;
 
-import std::io::println;
+import { println } from "std/io";
 
 fn main () -> int {
   println("hello");

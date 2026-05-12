@@ -372,8 +372,9 @@ The implementation is intentionally smaller and focuses on:
  `silk error --list` lists the stable catalog,
  - the diagnostic format and initial error code set are specified in [diagnostics](?p=compiler/diagnostics).
 - standard library import resolution (first slice):
- - when a module contains `import std::...;` or a module-specifier import such
- as `import { println } from "std/io";`, the CLI automatically loads the
+ - when a module contains a module-specifier import such as
+ `import { println } from "std/io";` or direct ABI import such as
+ `import std::io::println;`, the CLI automatically loads the
  referenced `std::...` package modules from a configured stdlib root, so
  downstream users do **not** need to pass std source files explicitly on the
  command line,
@@ -423,9 +424,8 @@ The implementation is intentionally smaller and focuses on:
  - for `-O1`+ builds, `silk build` prefers compiling std sources into the
  executable so unreachable std code can be pruned,
  - `--std-lib` / `--std <path>.a` forces archive linking regardless of `-O`,
- - std modules auto-loaded via `import std::...;` and package-shaped
- `from "std/..."` module specifiers participate in this external/archive
- path,
+ - std modules auto-loaded via `from "std/..."` module specifiers and direct
+ std ABI imports participate in this external/archive path,
  - archive discovery (in order):
  - `--std-lib <path>` (or `--std <path>.a` / `-std <path>.a`) when provided, otherwise
  - `SILK_STD_LIB` when set, otherwise
@@ -736,7 +736,7 @@ The implementation is intentionally smaller and focuses on:
  - on the same baseline, when `std::image::png`/`std::image::jpeg` are imported (or when linked `.o`/`.a` inputs reference the shim symbols) and the vendored archives are present, `silk` links them automatically and adds `libz.so.1` and/or `libm.so.6` as `DT_NEEDED` dependencies (see [image](?p=std/image) and [vendored deps](?p=compiler/vendored-deps)),
  - on the same baseline, when `std::xml` is imported (or when linked `.o`/`.a` inputs reference `silk_xml_node_name_ptr`) and the vendored libxml2 archives are present, `silk` links them automatically and adds `libm.so.6` as a `DT_NEEDED` dependency (see [xml](?p=std/xml) and [vendored deps](?p=compiler/vendored-deps)),
  - on `linux/x86_64`, when `std::window` is imported and reaches the bundled runtime, `silk` links the bundled runtime archive and adds the dynamic-loader library used by the runtime-loaded GTK provider (`libdl.so.2` on glibc targets, `libdl.so` on musl targets); GTK itself is loaded at runtime, so GTK libraries are not recorded as `DT_NEEDED` dependencies,
- - on the same baseline, when bundled runtime support symbols are imported (for example via `import std::regex;`, `import std::unicode;`, or `import std::number;`), `silk` statically links the bundled runtime support archive into the output (`libsilk_rt.a`, or `libsilk_rt_noheap.a` when building with `--noheap`); the produced executable/shared library does not depend on `libsilk_rt*.so` at runtime,
+ - on the same baseline, when bundled runtime support symbols are imported (for example via `import regex from "std/regex";`, `import unicode from "std/unicode";`, or `import number from "std/number";`), `silk` statically links the bundled runtime support archive into the output (`libsilk_rt.a`, or `libsilk_rt_noheap.a` when building with `--noheap`); the produced executable/shared library does not depend on `libsilk_rt*.so` at runtime,
  - additional non-libc dependencies still must be declared via `--needed <soname>` (or otherwise be available in the process global scope at load time, for example via `LD_PRELOAD`),
  - bundled runtime archive discovery:
  - the compiler locates `libsilk_rt.a` / `libsilk_rt_noheap.a` via (in order):
@@ -963,7 +963,7 @@ Top-level commands:
  - on `linux/x86_64`, when `std::dylib` is imported, or when linked native `.o` / `.a` inputs reference bundled `silk_rt_dylib_*` runtime symbols, `silk` automatically adds `libdl.so.2` as a `DT_NEEDED` dependency.
  - on supported native hosts (`linux/x86_64`, `macos/aarch64`), when `std::ggml` is imported, or when linked native `.o` / `.a` inputs reference `silk_ggml_init`, `silk` auto-links the vendored ggml archives; on `linux/x86_64` it also adds `libstdc++.so.6`, `libgcc_s.so.1`, `libm.so.6`, and `libdl.so.2`, while on Apple Silicon macOS hosts it adds `-lc++` for the native link.
  - on `linux/x86_64`, when `std::window` reaches the bundled runtime, `silk` adds the dynamic-loader dependency used by the runtime-loaded GTK provider (`libdl.so.2` on glibc targets, `libdl.so` on musl targets); GTK remains runtime-loaded rather than a required `DT_NEEDED` entry.
- - when bundled runtime support symbols are imported (for example via `import std::regex;`), `silk` statically links `libsilk_rt.a` (or `libsilk_rt_noheap.a` when building with `--noheap`) into the output; no runtime `DT_NEEDED` entry is emitted for `libsilk_rt*`.
+ - when bundled runtime support symbols are imported (for example via `import regex from "std/regex";`), `silk` statically links `libsilk_rt.a` (or `libsilk_rt_noheap.a` when building with `--noheap`) into the output; no runtime `DT_NEEDED` entry is emitted for `libsilk_rt*`.
  - `--needed` entries starting with `libsilk_rt` are rejected; the bundled runtime support layer is always linked from the static archives.
  - Debug builds:
  - `--debug` (or `-g`) enables runtime stack traces for failed `assert` statements on `linux/x86_64` by printing a stack trace to stderr before aborting, and preserves internal function symbols in `.dynsym` for better symbolization.

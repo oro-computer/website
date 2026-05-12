@@ -24,9 +24,9 @@ silk build my_program.slk -o my_program
 
 Notes:
 
-- `--nostd` disables auto-loading of `import std::...;` modules, but it does not
- prevent `from "std/..."` file imports from resolving relative to the selected
- std root. See: [CLI and toolchain](?p=guides/cli).
+- `--nostd` disables auto-loading of std modules, but it does not prevent
+ `from "std/..."` file imports from resolving relative to the selected std
+ root. See: [CLI and toolchain](?p=guides/cli).
 
 ## Provide a Prebuilt Std Archive
 

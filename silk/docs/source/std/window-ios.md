@@ -15,7 +15,7 @@ It covers:
 ```silk
 module std::window::ios;
 
-import std::window;
+import window from "std/window";
 
 export fn is_supported () -> bool;
 export fn open (options: std::window::Options) -> std::window::WindowResult;

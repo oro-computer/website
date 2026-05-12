@@ -53,9 +53,9 @@ Notes:
 Example:
 
 ```silk
-import std::arrays;
-import std::runtime::mem;
-import std::unicode;
+import arrays from "std/arrays";
+import mem from "std/runtime/mem";
+import unicode from "std/unicode";
 
 fn main () -> int {
   let ptr: u64 = std::runtime::mem::alloc(4);

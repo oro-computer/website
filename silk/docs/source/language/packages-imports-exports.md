@@ -13,21 +13,20 @@ Supported forms:
  `module ... as <Interface>;` conformance checking.
 - Inline module declarations (`module Name { ... }` / `export module Name { ... }`)
  for nested namespaces.
-- A contiguous top-level `import` block (package imports and `from "..."` module
- specifier imports).
+- A contiguous top-level `import` block. User-space code should usually use
+ module specifier imports: `import { Name } from "...";` or
+ `import ns from "...";`.
 - Named re-exports: `export { Name, Other as Alias };` (exports an in-scope value
  name so other modules may import it).
-- Package imports (`import std::strings;`) that make a package’s exported values
- available for use in the importing source file.
-- Qualified symbol imports (`import std::strings::Builder;`, `import std::io::println;`,
- `import ::malloc;`) that bring a single symbol into scope without importing the
- entire package namespace.
 - Module-specifier imports (`import { Name } from "...";`, `import ns from "...";`)
  including:
  - relative file imports (`from "./file.slk"`),
  - std-root file imports (`from "std/strings"`; `.slk` is appended when missing),
  - and package specifier imports (`from "ns_pkg"`, `from "ns_pkg/subpath"` where `/`
  is treated as `::` for namespace paths).
+- Direct package/ABI imports (`import package::ns;`,
+ `import package::ns::symbol;`, `import ::symbol;`) for cases where code needs
+ to name the package/export path that the resolver and linker see directly.
 - Default exports (`export default fn ...` and `export default Name;`) and default
  imports that bind either:
  - the default-exported symbol, or
@@ -39,7 +38,8 @@ Supported forms:
 
 Limitations:
 
-- Package-import aliasing (for example `import std::strings as str;`).
+- Package-import aliasing for direct package imports (for example
+ `import std::strings as str;`). Use `import str from "std/strings";` instead.
 - Bulk re-exports (“export from ...”) and forwarding of export surfaces.
 
 The current package-root workflow is documented separately from this language
@@ -74,6 +74,11 @@ Related tooling and diagnostics:
  a namespace, depending on what is imported).
 - **Namespace import**: a default import that binds a module or package namespace; you
  access its members as `X::Name`.
+- **Direct package import**: `import package::ns;`, an ABI-oriented import path
+ that names a package namespace directly instead of going through a string
+ module specifier.
+- **Direct symbol import**: `import package::ns::symbol;` or `import ::symbol;`,
+ an ABI-oriented import path that binds one exported symbol directly.
 
 ## Packages
 
@@ -191,7 +196,7 @@ Source files may refer to other packages or modules via `import` declarations:
 ```silk
 package my_app::core;
 
-import std::strings;
+import strings from "std/strings";
 
 fn main () -> int {
   return 0;
@@ -210,70 +215,61 @@ Rules:
  the package naming rules above (including the `std::task` special case).
  - As with expression/type qualified names, an import path MAY start with `::`
  to explicitly name the global namespace (the unnamed package).
-- `import` declarations identify dependencies and bring exported symbols
- from the imported package into scope in the importing module, subject to
- the visibility rules below.
-- Currently:
- - importing a package makes its exported `let` bindings with explicit
- type annotations visible as ordinary, unqualified names in the
- importing module (for example, `import util;` followed by `answer`
- refers to `util::answer` when `util` exports `let answer: int = 42;`),
- - imported exported `let` bindings are also reachable via qualified
- names of the form `pkg::name` (for example, `util::answer` after
- `import util;`); both unqualified (`answer`) and qualified
- (`util::answer`) forms are accepted for now, but the qualified form
- reflects the intended package-namespaced style,
- - exported functions (`export fn`) are callable across packages for the
- compiler’s current backend subset:
- - within a package, top-level functions form a shared namespace across
- all modules in that package (so functions in one module may call
- functions defined in another module of the same package),
- - when a module imports a package, that package’s `export fn`
- declarations become callable from the importing module,
- - both unqualified (`foo()`) and qualified (`util::foo()`) call forms
- are accepted initially for imported exports, matching the current
- constant-import behavior, though the qualified form reflects the
- intended package-namespaced style,
- - this callable subset is limited to the compiler’s current
- code generation subset (supported parameters/results, direct calls, and
- structured control flow supported by the IR→ELF backend on
- `linux/x86_64`),
- - struct type names (`struct` declarations) from imported packages are visible in the importing module for supported struct declarations:
- - the qualified form `pkg::Struct` is always accepted when `pkg` is imported,
- - the unqualified form `Struct` is accepted when it is unambiguous across the module’s imports and does not conflict with a locally defined struct name,
- - when multiple imported packages define the same struct name, the unqualified form is rejected as ambiguous and the qualified form must be used,
- - enum type names (`enum` declarations) from imported packages are visible in the importing module for supported enum declarations:
- - the qualified form `pkg::Enum` is always accepted when `pkg` is imported,
- - the unqualified form `Enum` is accepted when it is unambiguous across the module’s imports and does not conflict with a locally defined type name,
- - enum variants are referenced relative to the enum name (`Enum::Variant` or `pkg::Enum::Variant`),
- - if an imported package does not exist, resolution fails before
- type-checking (see the resolver).
- - a leading `::` on a qualified name forces lookup in the **global namespace**
- (the unnamed package), bypassing any same-named declarations in the current
- package or imported packages. This is intended as an explicit escape hatch
- for shadowing (for example, calling `::malloc(...)` when the current module
- also defines or exports `malloc`). The prefix is valid in both expression
- and type positions, including:
- - values: `::malloc(...)`,
- - types and struct literals: `::Foo` and `::Foo{...}`,
- - enum variant paths/patterns: `::E::Variant`.
+- User-space modules should prefer **module-specifier imports**:
+ - `import { Name, Other as Alias } from "./module.slk";`
+ - `import ns from "./module.slk";`
+ - `import io from "std/io";`
+ - `import { println } from "std/io";`
+ - `import logger from "oro::logger";`
+- Direct `::` imports remain supported for package/ABI-oriented code and are
+ documented below.
 
-### Qualified Symbol Imports
+### Recommended import style
 
-In addition to importing whole packages, a module may import a single symbol by
-fully qualifying it:
+Use module-specifier imports for application and library code:
 
 ```silk
+import { println } from "std/io";
+import fs from "std/fs";
+import logger from "oro::logger";
+import { Logger, log_info as info } from "./logger.slk";
+```
+
+Effects:
+
+- `import ns from "specifier";` binds a namespace unless the imported module or
+ package declares an explicit default export. Use `ns::Name` at call sites.
+- `import { Name } from "specifier";` imports selected exported names and can
+ rename them with `as`.
+- The string specifier tells readers how the dependency is resolved:
+ - `./` or `../` means a source file relative to the importing file,
+ - `std/...` means a stdlib source module resolved from the configured stdlib root,
+ - any other string means a package specifier resolved from the module set or
+ package search path.
+- This form keeps ordinary user-space code independent of the lower-level ABI
+ path syntax and supports local aliases directly.
+
+### Direct package and symbol imports
+
+Silk also supports import paths written directly as package-qualified names:
+
+```silk
+import std::io;
 import std::io::println;
-import std::url::URL;
+import oro::logger;
+import oro::logger::log_info;
 import ::malloc;
 ```
+
+These are the **direct package/ABI import** forms. They are useful when source
+needs to name the package/export path that the resolver, ABI surface, and linker
+see directly.
 
 Semantics:
 
 - If the import path matches a package name present in the module set, it is a
- **package import** (`import std::io;`).
-- Otherwise, it is treated as a **qualified symbol import**:
+ **direct package import** (`import oro::logger;`).
+- Otherwise, it is treated as a **direct symbol import**:
  - the compiler finds the longest package-name prefix of the path,
  - the remaining suffix is the symbol name within that package (it may contain
  `::` due to exported inline modules),
@@ -282,8 +278,30 @@ Semantics:
 - When the import path begins with `::`, the symbol is resolved from the global
  namespace (the unnamed package) and is not subject to package export gating.
 
-`import { Name } from "...";` remains the preferred form when you need to rename
-imports (`as`) or import from a file path.
+Use this form deliberately:
+
+- for prototype/definition modules that describe an ABI surface,
+- for FFI wrappers that expose or consume exact external symbols,
+- for stdlib/runtime internals where direct package names mirror linker-visible
+ organization,
+- and when you need the explicit global namespace escape (`::malloc`).
+
+For ordinary application and reusable library code, prefer the module-specifier
+forms:
+
+```silk
+import io from "std/io";
+import { println } from "std/io";
+import logger from "oro::logger";
+```
+
+Reasons:
+
+- specifier imports work with relative files, stdlib modules, and package
+ dependencies using one syntax,
+- they support `as` aliases for selected symbols,
+- namespace imports make the origin visible at call sites (`logger::log_info`),
+- and they keep low-level ABI symbol paths out of most user-space modules.
 
 Global namespace (`::name`) rules:
 
@@ -297,9 +315,8 @@ Global namespace (`::name`) rules:
 - Global names are only accessible via the explicit `::` prefix; there is no
  implicit “prelude import” of global symbols.
 
-Future extensions may introduce aliasing (e.g. `import std::strings as str;`)
-and more fine-grained import forms. Such features will be documented here
-before they are implemented.
+Future extensions may introduce aliasing for direct package imports. Until then,
+write `import str from "std/strings";` for a local namespace alias.
 
 ### Example: a two-module package program
 
@@ -321,12 +338,9 @@ export fn add1 (x: int) -> int {
 // app.slk
 package app;
 
-import util;
+import util from "util";
 
 fn main () -> int {
-  // Currently, both unqualified and qualified access are
-  // accepted after importing a package. Prefer the qualified form to make the
-  // origin explicit.
   if util::add1(util::answer) != 42 {
     return 1;
   }
@@ -346,16 +360,16 @@ Tooling note (the `silk` CLI):
 
 - The language semantics are still “imports resolve against the module set”.
  The CLI grows the module set by loading additional source files.
-- In addition to auto-loading `std::...` packages from the stdlib root, the CLI
- MAY load non-`std::` packages from a **package search path** when a bare
- package specifier is imported (e.g. `import api from "my_api";`).
+- In addition to auto-loading `std/...` modules from the stdlib root, the CLI
+ MAY load non-`std` packages from a **package search path** when a bare
+ package specifier is imported (for example `import api from "my_api";`).
 - The package search path is configured via `SILK_PACKAGE_PATH` (PATH-like:
  roots separated by `:` on POSIX).
 - A package name like `my_api::core` maps to the filesystem candidate
  `<root>/my_api/core/silk.toml`. The first matching manifest in search order is
  used.
-- Qualified imports that include extra `::` segments (e.g. `my_api::core::Thing`)
- are treated as qualified symbol imports: the CLI resolves the **longest**
+- Direct imports that include extra `::` segments (for example
+ `my_api::core::Thing`) are treated as direct symbol imports: the CLI resolves the **longest**
  package prefix that exists (`my_api::core`, then `my_api`) and loads that
  package into the module set.
 
@@ -373,19 +387,19 @@ fn main () -> int {
 ```
 
 If you omit the file import (or otherwise fail to include a module that declares
-`package ns_pkg;`), the package import fails with `E1001` (“unknown imported package”).
+`package ns_pkg;`), the package specifier import fails with `E1001` ("unknown imported package").
 
 From the CLI, the usual fix is to ensure the missing package’s module(s) are
 part of the command’s module set (for example by passing their `.slk` files to
 `silk check` / `silk build`, or by adding a file import). See
 [`silk` CLI](?p=compiler/cli-silk) and [CLI examples](?p=usage/cli-examples).
 
-## Import Specifier Imports (JS-style)
+## Module-specifier imports
 
-In addition to `import pkg::name;` package imports, Silk supports JS-style
-import forms that use a string literal *import specifier* after `from`.
+Module-specifier imports are the preferred user-space import style. They use a
+string literal *import specifier* after `from`.
 
-The current JS-style forms are:
+The current forms are:
 
 - Named imports: `import { Name } from "<specifier>";`
 - Default imports / namespace imports: `import Name from "<specifier>";`
@@ -443,7 +457,7 @@ Notes:
  `"std::strings"`).
 - Ambient imports do not bind a namespace or import any symbols. If you need to
  call a function or reference a type from the imported module, use a named
- import, a default import (namespace import), or a package import.
+ import or a default import (namespace import).
 - Ambient imports are useful for declaring dependencies that exist only to:
  - satisfy prototype/definition conformance rules (see below), or
  - ensure a module is present in the module set so its types and methods are
@@ -473,7 +487,9 @@ Rules:
 - The `from` keyword is part of the import syntax.
 - The `from` specifier may be either:
  - a string literal (`from "./file.slk"`, `from "std/io"`, `from "ns_pkg/sub"`), or
- - a package path (`from std::io;`, `from ns_pkg::sub;`).
+ - a package path form kept for compatibility (`from std::io;`,
+ `from ns_pkg::sub;`). User-space docs use string specifiers because they work
+ uniformly for files, stdlib modules, and packages.
 - If the specifier is a **file specifier**, it is resolved relative to the
  importing file’s directory. `./` and `../` path segments are permitted.
  (Absolute paths are permitted for tooling, but downstream projects should

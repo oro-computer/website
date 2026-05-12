@@ -22,7 +22,8 @@ Security note:
 
 On `linux/x86_64` with the glibc dynamic loader (`ld-linux`), `silk build`
 automatically adds `libsodium.so.23` as a `DT_NEEDED` dependency when a program
-imports libsodium-backed extern symbols (for example via `import std::crypto;`).
+imports libsodium-backed extern symbols (for example via
+`import crypto from "std/crypto";`).
 
 This mirrors the existing behavior for `libc.so.6` so downstream users do not
 have to pass `--needed libsodium.so.23` for normal hosted builds.
@@ -76,11 +77,11 @@ Key design rules:
 ## Example: init, hash, wipe
 
 ```silk
-import std::arrays;
-import std::buffer;
-import std::crypto;
-import std::crypto::hash;
-import std::runtime::mem;
+import arrays from "std/arrays";
+import buffer from "std/buffer";
+import crypto from "std/crypto";
+import hash from "std/crypto/hash";
+import mem from "std/runtime/mem";
 
 fn main () -> int {
   if std::crypto::init() != None {

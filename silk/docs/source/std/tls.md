@@ -57,7 +57,7 @@ Public error/value types in the Supported forms:
 ```silk
 module std::tls;
 
-import std::result;
+import result from "std/result";
 
 enum TLSErrorKind {
   OutOfMemory,

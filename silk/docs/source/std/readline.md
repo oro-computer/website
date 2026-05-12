@@ -13,7 +13,7 @@ archive (`libsilk_rt`).
 Typical use:
 
 ```silk
-import std::readline;
+import readline from "std/readline";
 
 export fn main () -> int {
   let r = readline.read_line("> ");

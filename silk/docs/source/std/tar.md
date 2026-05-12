@@ -153,14 +153,14 @@ export type Writer = std::tar::AsyncWriter;
 ```
 
 Note: the implementations live in `std/tar.slk`; `std/tar/async.slk` is a thin
-re-export module so callers can `import std::tar::async;`.
+re-export module so callers can `import tar_async from "std/tar/async";`.
 
 ## Example: in-memory roundtrip
 
 ```silk
-import std::arrays;
-import std::buffer;
-import std::tar;
+import arrays from "std/arrays";
+import buffer from "std/buffer";
+import tar from "std/tar";
 
 fn main () -> int {
   let payload: string = "hello";

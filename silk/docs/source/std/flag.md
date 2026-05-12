@@ -52,8 +52,8 @@ use `--` to start the raw rest segment explicitly.
 ```silk
 module std::flag;
 
-import std::args;
-import std::result;
+import args from "std/args";
+import result from "std/result";
 
 enum FlagErrorKind { ... }
 enum FlagValueKind { Bool, Int, I64, U64, String }
@@ -157,8 +157,8 @@ Notes:
 ## Example
 
 ```silk
-import std::args;
-import std::flag;
+import args from "std/args";
+import flag from "std/flag";
 import { println } from "std/io";
 
 fn main (argc: int, argv: u64) -> int {

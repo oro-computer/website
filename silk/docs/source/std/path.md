@@ -17,7 +17,7 @@ Design goals (modeled after Rust `std::path` and Node.js `path`):
 ```silk
 module std::path;
 
-import std::strings;
+import strings from "std/strings";
 
 export let SEP: string = "/";
 export let DELIMITER: string = ":";
@@ -143,8 +143,8 @@ Functions that return `std::strings::String` allocate an owned buffer.
 Callers must drop returned owned strings when finished:
 
 ```silk
-import std::path;
-import std::strings;
+import path from "std/path";
+import strings from "std/strings";
 
 fn main () -> int {
   match std::path::join("/tmp", "file.txt") {
@@ -161,7 +161,7 @@ fn main () -> int {
 Borrowing a `PathBuf` as `string` is allocation-free:
 
 ```silk
-import std::path;
+import path from "std/path";
 
 fn main () -> int {
   let pb_r = std::path::PathBuf.from_string("/tmp/demo");

@@ -74,10 +74,10 @@ Names are often qualified with `::`:
 ```silk
 package my_app::core;
 
-import std::strings;
+import strings from "std/strings";
 
 fn main () -> int {
-  let s: string = std::strings::trim(" hi ");
+  let s: string = strings::trim(" hi ");
   return 0;
 }
 ```
@@ -155,16 +155,15 @@ module drivers::uart as Device;
 
 See [packages imports exports](?p=language/packages-imports-exports) for the full import/export model.
 
-### Package imports
+### Module-specifier imports
 
 ```silk
 package app;
 
-import std::strings;
+import strings from "std/strings";
 
 fn main () -> int {
-  let s: string = trim(" hi "); // may be visible unqualified in the current subset
-  let t: string = std::strings::trim(" hi ");
+  let s: string = strings::trim(" hi ");
   return 0;
 }
 ```
@@ -276,10 +275,10 @@ Notes:
  Enum destructuring is also supported:
 
   ```silk
-  import std::result;
+  import result from "std/result";
 
   fn main () -> int {
-    type R = std::result::Result(int, int);
+    type R = result::Result(int, int);
     let Ok(value) = R.ok(7);
     return value;
   }

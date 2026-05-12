@@ -18,10 +18,10 @@ See also:
 ```silk
 module std::os;
 
-import std::memory;
-import std::result;
-import std::temporal;
-import std::vector;
+import memory from "std/memory";
+import result from "std/result";
+import temporal from "std/temporal";
+import vector from "std/vector";
 
 export const PLATFORM_NAME: string;
 export const ARCH_NAME: string;

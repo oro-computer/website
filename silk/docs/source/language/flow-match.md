@@ -441,8 +441,7 @@ Rules (Supported forms):
 Example:
 
 ```silk
-import std::result;
-import std::strings::String;
+import { String } from "std/strings";
 
 fn main () -> int {
   let s: String = match String.from_string("hello") {

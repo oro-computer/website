@@ -63,9 +63,9 @@ Default helper functions are provided for these key types:
 Example (using `std::map` defaults via `HashMap.init(cap)` / `HashMap.empty()`):
 
 ```silk
-import std::map;
-import std::result;
-import std::memory;
+import map from "std/map";
+import result from "std/result";
+import memory from "std/memory";
 
 type Map = std::map::HashMap(u64, int);
 type InitResult = std::result::Result(Map, std::memory::AllocFailed);
@@ -91,9 +91,9 @@ fn main () -> int {
 Example (custom hashing/equality):
 
 ```silk
-import std::map;
-import std::result;
-import std::memory;
+import map from "std/map";
+import result from "std/result";
+import memory from "std/memory";
 
 type Map = std::map::HashMap(u64, int);
 type InitResult = std::result::Result(Map, std::memory::AllocFailed);

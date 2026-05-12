@@ -52,7 +52,7 @@ Semantics:
 ## Example
 
 ```silk
-import std::test;
+import test from "std/test";
 
 test "parsing smoke test" {
   let value = Some(42);

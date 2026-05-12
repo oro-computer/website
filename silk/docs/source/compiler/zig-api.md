@@ -209,7 +209,8 @@ Create a compiler, configure it, add sources, build, then destroy it.
 - `setStdlib(stdlib_name: []const u8)`
  - Selects the stdlib package name, usually `"std"`.
 - `setStdRoot(std_root: []const u8)`
- - Points the compiler at the stdlib source root for `import std::...;`.
+ - Points the compiler at the stdlib source root for `from "std/..."` imports
+ and direct std ABI imports.
 - `setNoStd(nostd: bool)`
  - Disables filesystem-based stdlib auto-loading.
 - `setDebug(debug: bool)`

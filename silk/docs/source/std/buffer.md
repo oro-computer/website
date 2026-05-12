@@ -32,8 +32,8 @@ See also:
 ```silk
 module std::buffer;
 
-import std::arrays;
-import std::memory;
+import arrays from "std/arrays";
+import memory from "std/memory";
 
 struct Buffer(T) {
   ptr: u64,
@@ -65,8 +65,8 @@ export fn slice (T; buf: &Buffer(T), start: i64, end: i64) -> std::arrays::Slice
 ```silk
 module std::buffer;
 
-import std::arrays;
-import std::memory;
+import arrays from "std/arrays";
+import memory from "std/memory";
 
 struct BufferU8 {
   ptr: u64,
@@ -102,7 +102,7 @@ impl BufferU8 {
 ```silk
 module std::buffer;
 
-import std::vector;
+import vector from "std/vector";
 
 // Signed integers.
 export type BufferI8 = std::vector::Vector(i8);

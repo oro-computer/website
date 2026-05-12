@@ -52,18 +52,18 @@ Until the full intrinsic surface lands, downstream code should usually reach
 for the current stdlib layers directly:
 
 ```silk
-import std::buffer;
-import std::vector;
+import buffer from "std/buffer";
+import vector from "std/vector";
 
 fn main () -> int {
-  let mut bytes = match std::buffer::BufferU8.init(4) {
+  let mut bytes = match buffer::BufferU8.init(4) {
     Ok(v) => v,
     Err(_) => return 1,
   };
   if bytes.push(1 as u8) != None { bytes.drop(); return 2; }
   if bytes.push(2 as u8) != None { bytes.drop(); return 3; }
 
-  let mut values = std::vector::Vector(int).empty();
+  let mut values = vector::Vector(int).empty();
   if values.push(10) != None { values.drop(); bytes.drop(); return 4; }
   if values.push(20) != None { values.drop(); bytes.drop(); return 5; }
 

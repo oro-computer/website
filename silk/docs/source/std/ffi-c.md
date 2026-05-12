@@ -88,7 +88,7 @@ Notes:
 
 ```silk
 import c_owned from "std/ffi/c_owned";
-import std::runtime::mem;
+import mem from "std/runtime/mem";
 
 fn main () -> int {
   let p: u64 = std::runtime::mem::alloc(3);

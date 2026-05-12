@@ -39,8 +39,8 @@ See also:
 ```silk
 module std::sync;
 
-import std::interfaces;
-import std::result;
+import interfaces from "std/interfaces";
+import result from "std/result";
 
 enum SyncErrorKind {
   OutOfMemory,

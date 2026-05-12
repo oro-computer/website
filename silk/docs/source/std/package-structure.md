@@ -104,7 +104,7 @@ This layering is specified in [runtime](?p=std/runtime).
  path during builds, so that:
 
   ```silk
-  import std::strings;
+  import strings from "std/strings";
   ```
 
  resolves without the user having to explicitly pass the stdlib source files
@@ -112,9 +112,9 @@ This layering is specified in [runtime](?p=std/runtime).
 
 Notes:
 
-- This does **not** imply an implicit `import std::...;` of all std modules;
- importing remains explicit. Linking-by-default means “`std::` is available to
- import”.
+- This does **not** imply an implicit import of all std modules. Imports remain
+ explicit. Linking-by-default means `std::` is available through
+ `from "std/..."` imports and direct std ABI imports.
 - When the standard library is enabled (the default), the compiler provides a
  small implicit std prelude of selected symbols (for example `Result` and the
  `std::interfaces` interface names) as specified by `std::runtime::globals`.

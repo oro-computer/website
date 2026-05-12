@@ -119,11 +119,11 @@ For array/slice destructuring:
 Enum destructuring binds payload elements from a single enum variant:
 
 ```silk
-import std::result;
+import result from "std/result";
 
 error Oops { code: int }
 
-fn foo (oops: bool) -> std::result::Result(int, Oops) {
+fn foo (oops: bool) -> result::Result(int, Oops) {
   if (oops) {
     return Err(Oops{ code: 123 });
   }
@@ -188,11 +188,11 @@ fn main () -> int {
 ```
 
 ```silk
-import std::result;
+import result from "std/result";
 
 error Oops { code: int }
 
-fn foo (ok: bool) -> std::result::Result(int, Oops) {
+fn foo (ok: bool) -> result::Result(int, Oops) {
   if ok { return Ok(7); }
   return Err(Oops{ code: 123 });
 }

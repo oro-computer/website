@@ -115,7 +115,7 @@ Top-level wrappers:
 ### Parse and query a document
 
 ```silk
-import std::json;
+import json from "std/json";
 
 fn main () -> int {
   let mut doc: Document = Document{};
@@ -154,7 +154,7 @@ fn main () -> int {
 ### Own parsed strings instead of borrowing from the input
 
 ```silk
-import std::json;
+import json from "std/json";
 
 fn main () -> int {
   let mut doc: Document = Document{};

@@ -115,7 +115,7 @@ to `Unknown`).
 ### Target-gated behavior
 
 ```silk
-import std::os;
+import os from "std/os";
 import { println } from "std/io";
 
 fn main () -> int {
@@ -123,10 +123,10 @@ fn main () -> int {
     println("posix");
   }
 
-  match (std::os::platform()) {
-    std::os::Platform::Linux => println("linux"),
-    std::os::Platform::WASI => println("wasi"),
-    std::os::Platform::Unknown => println("unknown"),
+  match (os::platform()) {
+    os::Platform::Linux => println("linux"),
+    os::Platform::WASI => println("wasi"),
+    os::Platform::Unknown => println("unknown"),
   };
 
   return 0;

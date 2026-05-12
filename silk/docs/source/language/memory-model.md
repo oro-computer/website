@@ -123,9 +123,9 @@ A `struct` type is considered “droppable” when it provides a method with thi
 surface signature (usually via an interface impl):
 
 ```silk
-import std::interfaces;
+import interfaces from "std/interfaces";
 
-impl T as std::interfaces::Drop {
+impl T as interfaces::Drop {
   public fn drop (mut self: &T) -> void { ... }
 }
 ```

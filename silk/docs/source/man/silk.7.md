@@ -76,7 +76,7 @@ The currently implemented coverage is documented in:
 
 - Silk source files use the `.slk` extension.
 - Package builds are driven by a manifest file named `silk.toml` (see [package manifests](?p=compiler/package-manifests)).
-- The default stdlib implementation is a directory tree rooted at `std/` and is imported via `import std::...;`.
+- The default stdlib implementation is a directory tree rooted at `std/` and is imported via `from "std/..."` module specifiers or direct std ABI imports.
 
 ## Standard Library
 

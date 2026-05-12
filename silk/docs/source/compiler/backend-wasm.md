@@ -45,10 +45,10 @@ and [`silk(1)`](?p=man/silk.1)).
 ### WASI executable
 
 ```silk
-import std::io;
+import io from "std/io";
 
 fn main () -> int {
-  std::io::println("hello from wasm wasi");
+  io::println("hello from wasm wasi");
   return 0;
 }
 ```

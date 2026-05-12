@@ -140,10 +140,10 @@ fn main () -> int {
 Example (recoverable `Result`):
 
 ```silk
-import std::result;
+import result from "std/result";
 
 fn main () -> int {
-  let r: std::result::Result(int, string) = Ok(42);
+  let r: result::Result(int, string) = Ok(42);
   if let Ok(v) = r {
     return v;
   }

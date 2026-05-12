@@ -12,7 +12,7 @@ For flag-by-flag reference, use the manpages (sidebar → man).
 Create `hello.slk`:
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 fn main () -> int {
   println("hello {s}", "world");

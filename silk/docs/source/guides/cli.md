@@ -54,7 +54,7 @@ That maps directly to `attr(feature="...")` queries in the language reference. S
 Silk tests live in the language, next to the code they exercise:
 
 ```silk
-import std::test::expect_equal;
+import { expect_equal } from "std/test";
 
 fn add (a: int, b: int) -> int { return a + b; }
 

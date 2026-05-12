@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-05-11T22:52:49+00:00
+Generated: 2026-05-12T00:49:25+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -421,7 +421,7 @@ If you’re setting up a workspace, start with: [Getting started](?p=usage/getti
 Silk programs are ordinary `.slk` files. A small program can look like this:
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 fn main () -> int {
   println("hello from silk");
@@ -443,10 +443,11 @@ If you’re new to Silk, this is a good order:
 2. **Hello world**: the smallest working program and the `check → test → build` loop.
 3. **Language tour**: the shape of real programs (types, functions, control flow, errors).
 4. **Modules & packages**: how code is organized and how imports/exports create clean dependency boundaries.
-5. **Standard library**: what lives in `std::` and the common patterns it uses.
-6. **CLI and toolchain**: module sets, build targets, package manifests, package distribution, docs/man, and diagnostics.
-7. **Testing**: language-level tests and TAP output for CI and tooling.
-8. **Formal Silk**: opt-in proofs with Z3; how to write verified code with zero runtime cost.
+5. **Toy logger module**: a complete package walkthrough with stdlib use, targets, ABI notes, and publication.
+6. **Standard library**: what lives in `std::` and the common patterns it uses.
+7. **CLI and toolchain**: module sets, build targets, package manifests, package distribution, docs/man, and diagnostics.
+8. **Testing**: language-level tests and TAP output for CI and tooling.
+9. **Formal Silk**: opt-in proofs with Z3; how to write verified code with zero runtime cost.
 
 Start here:
 
@@ -456,7 +457,7 @@ Start here:
 - Reference: [`silk` CLI](?p=compiler/cli-silk) · [`silk-package` (1)](?p=man/silk-package.1)
 - Guides: [What Silk is for](?p=guides/purpose)
 - Guides: [Hello world](?p=guides/hello-world) · [Language tour](?p=guides/language-tour) · [Modules & packages](?p=guides/modules-and-packages)
-- Guides: [Standard library](?p=guides/standard-library) · [CLI and toolchain](?p=guides/cli)
+- Guides: [Toy logger module](?p=guides/toy-logger-module) · [Standard library](?p=guides/standard-library) · [CLI and toolchain](?p=guides/cli)
 - Guides: [Testing](?p=guides/testing) · [Formal Silk](?p=guides/formal-silk)
 - Tutorials: [Concurrency basics](?p=usage/tutorials/05-concurrency) · [Async I/O + Streams + Abort Signals](?p=usage/tutorials/06-async-io-streams-abort) · [Formal Silk in real code](?p=usage/tutorials/07-formal-silk)
 - Spec: [Silk Spec (2026)](/silk/spec/2026/)
@@ -531,10 +532,10 @@ A simple file often begins like this:
 ```silk
 package app;
 
-import std::io::println;
+import { println } from "std/io";
 ```
 
-That header tells you the namespace (`app`) and the dependencies (here: `std::io::println`) before you read the rest of the
+That header tells you the namespace (`app`) and the dependencies (here: `std/io`) before you read the rest of the
 file.
 
 ### Programs are ordinary code
@@ -542,7 +543,7 @@ file.
 Executables use a conventional entry point: `fn main () -> int` (exit code).
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 fn main () -> int {
   println("hello from silk");
@@ -578,10 +579,11 @@ The recommended flow:
 1. [Hello world](?p=guides/hello-world)
 2. [Language tour](?p=guides/language-tour)
 3. [Modules & packages](?p=guides/modules-and-packages)
-4. [Standard library](?p=guides/standard-library)
-5. [CLI and toolchain](?p=guides/cli)
-6. [Testing](?p=guides/testing)
-7. [Formal Silk](?p=guides/formal-silk)
+4. [Toy logger module](?p=guides/toy-logger-module)
+5. [Standard library](?p=guides/standard-library)
+6. [CLI and toolchain](?p=guides/cli)
+7. [Testing](?p=guides/testing)
+8. [Formal Silk](?p=guides/formal-silk)
 
 If you already know what you’re looking for, use search and the sidebar reference sections.
 
@@ -602,7 +604,7 @@ Assumption: you have a `silk` binary available on your PATH.
 Create a file named `hello.slk`:
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 fn main () -> int {
   println("hello from silk");
@@ -642,7 +644,7 @@ Next: [CLI and toolchain](?p=guides/cli)
 This adds a helper function and shows how “real” Silk code stays ordinary:
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 fn greet (name: string) -> void {
   println("hello {s}", name);
@@ -660,11 +662,11 @@ On hosted targets, Silk can also accept a conventional `(argc, argv)` entrypoint
 small `std::args` helper so you can treat raw `argv` pointers as `string` views.
 
 ```silk
-import std::args;
-import std::io::println;
+import args from "std/args";
+import { println } from "std/io";
 
 fn main (argc: int, argv: u64) -> int {
-  let a = std::args::Args.init(argc, argv);
+  let a = args::Args.init(argc, argv);
   if a.count() < 2 {
     println("usage: hello <name>");
     return 2;
@@ -691,38 +693,38 @@ more. Each tab below is a self-contained “hello, but practical” sketch you c
 Create a directory, write a file, read it back, clean up:
 
 ```silk
-import std::fs;
-import std::io::println;
+import fs from "std/fs";
+import { println } from "std/io";
 
 fn main () -> int {
   // 493 == 0o755 on POSIX.
-  if std::fs::mkdir_all("tmp", 493) != None {
+  if fs::mkdir_all("tmp", 493) != None {
     println("mkdir failed");
     return 1;
   }
 
   let path: string = "tmp/hello_silk.txt";
-  std::fs::unlink(path); // ignore errors; we just want the file gone
+  fs::unlink(path); // ignore errors; we just want the file gone
 
   // 420 == 0o644 on POSIX.
-  match (std::fs::write_file_string(path, "hello from silk\\n", 420)) {
+  match (fs::write_file_string(path, "hello from silk\\n", 420)) {
     Ok(_) => {},
     Err(_) => {
       println("write failed");
-      std::fs::unlink(path);
+      fs::unlink(path);
       return 2;
     },
   }
 
-  match (std::fs::read_file_string(path)) {
+  match (fs::read_file_string(path)) {
     Ok(s) => {
       println("read: {s}", s.as_string());
-      std::fs::unlink(path);
+      fs::unlink(path);
       return 0;
     },
     Err(_) => {
       println("read failed");
-      std::fs::unlink(path);
+      fs::unlink(path);
       return 3;
     },
   }
@@ -736,9 +738,9 @@ Reference: [`std::fs`](?p=std/filesystem)
 A tiny single-request HTTP server on loopback (blocking I/O):
 
 ```silk
-import std::http;
-import std::net;
-import std::io::println;
+import http from "std/http";
+import net from "std/net";
+import { println } from "std/io";
 
 fn main () -> int {
   let addr = net::SocketAddrV4.loopback(8080);
@@ -789,33 +791,32 @@ Reference: [`std::net`](?p=std/networking), [`std::http`](?p=std/http)
 Hash bytes, compare safely, and wipe buffers when you’re done:
 
 ```silk
-import std::arrays;
-import std::buffer;
-import std::crypto;
-import std::crypto::hash;
-import std::io::print;
-import std::io::println;
-import std::runtime::mem;
+import arrays from "std/arrays";
+import buffer from "std/buffer";
+import crypto from "std/crypto";
+import hash from "std/crypto/hash";
+import { print, println } from "std/io";
+import mem from "std/runtime/mem";
 
 fn main () -> int {
-  if std::crypto::init() != None {
+  if crypto::init() != None {
     println("crypto init failed");
     return 1;
   }
 
   let msg: string = "hello from silk";
-  let msg_ptr: u64 = std::runtime::mem::string_ptr(msg);
-  let msg_len: i64 = std::runtime::mem::string_len(msg);
+  let msg_ptr: u64 = mem::string_ptr(msg);
+  let msg_len: i64 = mem::string_len(msg);
 
-  let mut out = match std::buffer::BufferU8.init(32) {
+  let mut out = match buffer::BufferU8.init(32) {
     Ok(v) => v,
     Err(_) => return 2,
   };
 
-  let hash_err: std::crypto::CryptoError? = std::crypto::hash::blake2b(
+  let hash_err: crypto::CryptoError? = hash::blake2b(
     mut out,
     32,
-    std::arrays::ByteSlice{ ptr: msg_ptr, len: msg_len }
+    arrays::ByteSlice{ ptr: msg_ptr, len: msg_len }
   );
   if hash_err != None {
     out.drop();
@@ -830,7 +831,7 @@ fn main () -> int {
   }
   println("");
 
-  let wipe_err: std::crypto::CryptoFailed? = std::crypto::memzero(out.as_bytes());
+  let wipe_err: crypto::CryptoFailed? = crypto::memzero(out.as_bytes());
   out.drop();
   if wipe_err != None { return 4; }
   return 0;
@@ -845,8 +846,8 @@ Reference: [`std::crypto`](?p=std/crypto)
 auto-links ggml when the module is included in your module set.
 
 ```silk
-import std::ggml;
-import std::io::println;
+import ggml from "std/ggml";
+import { println } from "std/io";
 
 fn main () -> int {
   println("hello from std::ggml");
@@ -862,8 +863,8 @@ Reference: [`std::ggml`](?p=std/ggml)
 creation and safety live above this layer — and hosted builds must link the appropriate loader library.
 
 ```silk
-import std::graphics::opengl;
-import std::io::println;
+import opengl from "std/graphics/opengl";
+import { println } from "std/io";
 
 fn main () -> int {
   println("hello from std::graphics::opengl");
@@ -890,7 +891,7 @@ Silk’s concurrency keywords are explicit: `task` spawns work (returns a `Task(
 ### Task + `yield`
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 task fn add (a: int, b: int) -> int { return a + b; }
 
@@ -908,7 +909,7 @@ async fn main () -> int {
 ### Promise + `await`
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 async fn answer () -> int { return 42; }
 
@@ -984,10 +985,10 @@ Silk can target `wasm32-wasi` and run under standard WASI runtimes (including No
 ### `main.slk`
 
 ```silk
-import std::io;
+import io from "std/io";
 
 fn main () -> int {
-  std::io::println("hello from silk wasm wasi");
+  io::println("hello from silk wasm wasi");
   return 7;
 }
 ```
@@ -1087,7 +1088,7 @@ At the top of a file you declare your package and then import dependencies:
 ```silk
 package my_app::core;
 
-import std::io::println;
+import { println } from "std/io";
 ```
 
 This header ordering is intentional: it keeps dependency structure tooling-friendly and prevents “imports halfway down the
@@ -1193,7 +1194,7 @@ Interfaces describe required method signatures for a contract. In user code, the
 such as readers, writers, serializers, or log sinks.
 
 ```silk
-import std::io;
+import io from "std/io";
 
 interface LogSink {
   fn write(line: string) -> void;
@@ -1203,7 +1204,7 @@ struct StdoutSink {}
 
 impl StdoutSink as LogSink {
   fn write (self: &StdoutSink, line: string) -> void {
-    std::io::println("{s}", line);
+    io::println("{s}", line);
   }
 }
 ```
@@ -1241,9 +1242,9 @@ Use optionals when “missing” is a normal outcome and you don’t need struct
 When you want a standard “success or error” return shape, use `Result(T, E)`:
 
 ```silk
-import std::result;
+import result from "std/result";
 
-type IntOrMessage = std::result::Result(int, string);
+type IntOrMessage = result::Result(int, string);
 
 fn div (a: int, b: int) -> IntOrMessage {
   if b == 0 { return Err("division by zero"); }
@@ -1296,7 +1297,7 @@ Silk provides language-level tests (`test "name" { ... }`). Tests live next to t
 `silk test`.
 
 ```silk
-import std::test::expect_equal;
+import { expect_equal } from "std/test";
 
 fn add (a: int, b: int) -> int { return a + b; }
 
@@ -1315,187 +1316,417 @@ DOCS: Modules & packages (guides/modules-and-packages)
 URL: /silk/docs/?p=guides/modules-and-packages
 ==============================================================================
 
-# Modules & packages
+# Modules, Packages, and Publication
 
-Silk uses `::`-qualified names to organize code. The goal is not novelty — it’s **clarity**:
+Silk code is organized around explicit module sets. A module set is the group of
+`.slk` files the compiler loads, resolves, checks, and builds together. Packages
+give those files a public namespace, imports describe dependencies, and manifests
+make the package root portable across local workspaces, GitHub releases, npm
+packages, and system installs.
 
-- you can see where names come from,
-- you can see what depends on what,
-- and builds stay deterministic because the compiler always knows what the module set is.
+This guide is the user-space view of that system. For exact grammar and edge
+cases, use [Packages, Imports, and Exports](?p=language/packages-imports-exports).
 
-This page focuses on the practical model you’ll use in real code.
+## The model
 
-## Packages
+- A **source file** is one `.slk` file.
+- A **module** is a compile-time namespace. It may be a file namespace, a
+ header-form `module ...;`, or an inline `module Name { ... }`.
+- A **package** is a named collection of modules that share a namespace and a
+ `silk.toml` package identity.
+- A **module set** is the concrete set of modules loaded for one compiler
+ command.
+- A **package root** is a directory with `silk.toml`; this is the unit you
+ publish or depend on.
 
-A **package** is a named collection of source files that share a namespace. A file can declare its package at the top:
+The most important practical rule: imports resolve against the module set. A
+package can only be imported after the compiler knows where that package root or
+source file lives.
 
-```silk
-package my_app::core;
+## File layout
+
+A reusable package usually looks like this:
+
+```text
+logger/
+  silk.toml
+  README.md
+  LICENSE
+  src/
+    logger.slk
+    sinks.slk
+  defs/
+    api.slk
+  examples/
+    main.slk
+  tests/
+    logger_test.slk
 ```
 
-Package names are `::`-qualified paths. The standard library lives under `std::...` (for example `std::io`, `std::fs`,
-`std::strings`).
+Conventions:
 
-### Importing packages
+- `src/` contains implementation modules.
+- `defs/` contains prototype/interface modules for public ABI or binary package
+ consumers.
+- `examples/` contains copyable downstream examples.
+- `tests/` contains package-local tests.
+- `silk.toml` declares package metadata, sources, dependencies, targets, and the
+ distribution file set.
 
-When you import a package, you are declaring a dependency on that package’s public surface:
+## Defining modules
+
+Most user-space files start with a package declaration:
 
 ```silk
-import std::strings;
+package oro::logger;
+
+import { println } from "std/io";
+
+export fn info (message: string) -> void {
+  println("[info] {s}", message);
+}
 ```
 
-Exports are explicit (`export fn`, `export let`, and named re-exports). This keeps public API surfaces intentional.
+Rules that keep tooling simple:
 
-### A tiny multi-file example
+- `package ...;` or `module ...;` comes first.
+- Imports form one contiguous block immediately after the package/module header.
+- Exports are explicit.
+- Package names use `::` paths.
 
-`util.slk`:
+Use `package ...;` for reusable application/library code. Use header-form
+`module ...;` when you need a compile-time-only namespace or module conformance
+surface, especially in definition/prototype files.
+
+Inline modules are useful for nested namespaces inside one package:
 
 ```silk
-package app::util;
+package oro::logger;
 
-export fn add (a: int, b: int) -> int { return a + b; }
+export module level {
+  export let INFO: int = 20;
+  export let ERROR: int = 40;
+}
 ```
 
-`main.slk`:
+Downstream code can then refer to `logger::level::INFO` after importing the
+package namespace.
+
+## Import style for user-space code
+
+Prefer module-specifier imports:
 
 ```silk
-package app;
+import { println } from "std/io";
+import fs from "std/fs";
+import logger from "oro::logger";
+import { Logger, info as log_info } from "./logger.slk";
+```
 
-import app::util;
-import std::io::println;
+Use these forms as your default:
+
+- `import ns from "specifier";` binds a namespace, then call
+ `ns::symbol(...)`.
+- `import { Name } from "specifier";` imports selected exported names.
+- `import { Name as LocalName } from "specifier";` gives a local alias.
+- `import "./file.slk";` loads a module for side effects such as prototype
+ conformance without binding names.
+
+Specifier meanings:
+
+- `./x.slk` or `../x.slk` resolves relative to the importing file.
+- `std/io` resolves from the configured stdlib root.
+- `oro::logger` resolves as a package specifier from the module set or package
+ search path.
+
+This form scales well because it works for local files, stdlib modules, and
+dependencies while keeping aliases explicit.
+
+## Direct package and symbol imports
+
+Silk also supports direct import paths:
+
+```silk
+import oro::logger;
+import oro::logger::info;
+import ::puts;
+```
+
+These are ABI-oriented imports. They name the package/export path directly, so
+they are useful for:
+
+- definition/prototype modules that describe an ABI surface,
+- FFI wrappers that expose exact linked symbols,
+- stdlib/runtime internals,
+- and explicit global namespace access such as `::malloc`.
+
+Effects:
+
+- `import oro::logger;` imports the package namespace directly.
+- `import oro::logger::info;` binds the exported symbol `info` directly in the
+ importing module.
+- `import ::puts;` resolves `puts` from the unnamed global package.
+
+For ordinary user-space modules, prefer:
+
+```silk
+import logger from "oro::logger";
+import { info } from "oro::logger";
+```
+
+That keeps low-level ABI paths out of most code and gives you aliases through
+the same import form.
+
+## Exports
+
+Exports define the public surface other modules may depend on:
+
+```silk
+package oro::logger;
+
+export enum Level {
+  Debug,
+  Info,
+  Warn,
+  Error,
+}
+
+export struct Logger {
+  min_level: Level;
+}
+
+export fn info (logger: &Logger, message: string) -> void {
+  log(logger, Level::Info, message);
+}
+```
+
+Best practices:
+
+- Export only the surface you intend downstream users to call.
+- Keep implementation helpers private by leaving off `export`.
+- Prefer one small public namespace over many unrelated exported names.
+- Use a `defs/api.slk` prototype file when a package may be consumed as a
+ prebuilt binary.
+
+## Manifests and module loading
+
+`silk.toml` is the package root manifest:
+
+```toml
+[package]
+name = "oro::logger"
+version = "0.1.0"
+description = "Small structured logger for Silk examples"
+license = "MIT"
+repository = "https://github.com/oro-computer/silk-logger"
+readme = "README.md"
+definitions = ["defs/api.slk"]
+
+[sources]
+include = ["src/**/*.slk", "defs/**/*.slk", "examples/**/*.slk"]
+
+[dist]
+include = ["silk.toml", "README.md", "LICENSE", "src/**", "defs/**"]
+
+[[target]]
+name = "logger"
+kind = "static"
+entry = "src/logger.slk"
+output = "build/liblogger.a"
+c_header = "build/logger.h"
+
+[[target]]
+name = "logger-demo"
+kind = "executable"
+entry = "examples/main.slk"
+output = "build/logger-demo"
+```
+
+How loading works:
+
+- `silk build --package .` reads `silk.toml` and loads files selected by
+ `[sources]`.
+- A dependency with `path = "../logger"` is loaded from that directory.
+- A dependency without `path` is searched through `SILK_PACKAGE_PATH` and the
+ installed package roots.
+- Package names map to paths by replacing `::` with `/`; `oro::logger` maps to
+ `oro/logger/silk.toml` under each search root.
+- The manifest package name must match the import/dependency name.
+
+## Dependencies
+
+A package depends on another package through `[dependencies]`:
+
+```toml
+[dependencies]
+logger = { path = "../logger", version = "^0.1.0" }
+```
+
+Then source can import the dependency by package name:
+
+```silk
+import logger from "oro::logger";
 
 fn main () -> int {
-  println("sum={d}", app::util::add(20, 22));
+  let l = logger::Logger{ min_level: logger::Level::Info };
+  logger::info(&l, "hello");
   return 0;
 }
 ```
 
-The important thing is how *obvious* this is: `main` depends on `app::util` and `std::io::println`, and nothing else is
-implicitly pulled in.
+For local development, prefer `path`. For published packages, use a version
+requirement plus a package root materialized by your chosen distribution system.
 
-## Modules
+## Publishing through GitHub
 
-A **module** declaration is a compile-time-only namespace value. It lets you write code that is “about” a module, including
-module-level conformance checks.
-
-```silk
-module my_app::logger;
-```
-
-Modules are useful when you want a named namespace in a single file without necessarily treating it as “a package you import
-from other files”.
-
-In addition to header-form modules, you can define inline modules for nested namespaces:
-
-```silk
-package my_app;
-
-export module math {
-  export fn add (a: int, b: int) -> int { return a + b; }
-}
-```
-
-## Imports: whole packages vs individual symbols
-
-Silk supports a small set of import forms that cover most real programs:
-
-- **package imports** for cohesive namespaces
-- **symbol imports** when you want a single dependency in scope
-- **module-specifier imports** (for relative files, `std/` file paths, or package specifiers)
-
-```silk
-import std::io::println;
-import std::strings;
-```
-
-Use package imports when you want a cohesive namespace; use symbol imports when you want explicit local dependencies.
-
-## Exports: keeping APIs deliberate
-
-Exports define what other packages can depend on.
-
-Common forms:
-
-```silk
-export let version: string = "0.1.0";
-
-export fn parse (s: string) -> int? {
-  return None;
-}
-
-export { parse as parse_port };
-```
-
-This “explicit exports” rule is a major readability win in larger codebases: public surfaces stay curated.
-
-## The CLI view: module sets and package manifests
-
-The compiler always operates on a **module set**: the set of `.slk` files compiled together for that command.
-
-You can define the module set explicitly (a list of files), or you can load it from a package manifest (`silk.toml`) using
-`--package`.
-
-Why this matters for packages/modules:
-
-- Package imports only resolve to packages that exist in the module set.
-- Tooling can answer questions like “what packages exist?” without executing code.
-- Builds become reproducible because “what was compiled” is not a hidden global.
-
-If you want the user-facing toolchain model, read: [CLI and toolchain](?p=guides/cli).
-
-## From package graph to distributable package
-
-For libraries and reusable apps, `silk.toml` is the bridge from source layout to public package surface.
-
-Small example:
-
-```toml
-[package]
-name = "acme::http"
-version = "0.1.0"
-definitions = ["defs/api.slk"]
-
-[[target]]
-name = "acme-http"
-kind = "static"
-entry = "src/lib.slk"
-output = "build/libacme_http.a"
-```
-
-That manifest gives you:
-
-- a stable package identity
-- an explicit importable/public surface (`defs/api.slk`)
-- named build targets
-- a basis for `silk package inspect` and `silk package lint`
-
-Useful commands:
+Silk does not require a Silk-owned registry. A GitHub release can publish the
+same package root users build locally:
 
 ```bash
-silk build --package .
-silk package inspect --package .
-silk package lint --package .
+git archive --format=tar --prefix=logger-0.1.0/ v0.1.0 | gzip > logger-0.1.0.tar.gz
 ```
 
-References:
+Recommended release payload:
 
-- [Package manifests](?p=compiler/package-manifests)
-- [Package distribution](?p=compiler/package-distribution)
-- [`silk-package` (1)](?p=man/silk-package.1)
+- `silk.toml`
+- `src/**` for source packages
+- `defs/**` for importable public surfaces
+- `lib/<target>/**` for prebuilt libraries, when shipped
+- `share/man/**` or `docs/**` for package docs
 
-## Why this structure matters
+Consumers can unpack the archive and either:
 
-The language design is intentionally strict about where these declarations live (package/module headers first, then a
-contiguous import block). The payoff is large in practice:
+- use a path dependency,
+- vendor it under `./packages/oro/logger`,
+- or add the parent search root to `SILK_PACKAGE_PATH`.
 
-- tools can parse dependency structure without executing code
-- refactors are safer because imports and exports are explicit
-- builds can be reproducible because module sets are well-defined
+## Publishing through npm
+
+npm can act as a transport for a Silk package root. Silk still consumes files
+from disk; the compiler does not fetch npm packages itself.
+
+Minimal `package.json` next to `silk.toml`:
+
+```json
+{
+  "name": "@oro/silk-logger",
+  "version": "0.1.0",
+  "description": "Small structured logger for Silk examples",
+  "files": [
+    "silk.toml",
+    "README.md",
+    "LICENSE",
+    "src",
+    "defs",
+    "lib",
+    "share"
+  ]
+}
+```
+
+After installation, point Silk at the package root:
+
+```bash
+export SILK_PACKAGE_PATH="$PWD/node_modules/@oro"
+silk build --package .
+```
+
+If the npm package root is `node_modules/@oro/silk-logger` but the Silk package
+name is `oro::logger`, either place or symlink the package under a search root
+as `oro/logger`, or use a manifest `path` dependency directly to the installed
+package directory.
+
+## Targets and platform selection
+
+Targets describe build outputs, not imports. A single package can expose one
+public module surface and build different artifacts:
+
+```toml
+[[target]]
+name = "logger-static"
+kind = "static"
+entry = "src/logger.slk"
+target = "linux-x86_64"
+output = "build/linux-x86_64/liblogger.a"
+
+[[target]]
+name = "logger-wasi"
+kind = "executable"
+entry = "examples/main.slk"
+target = "wasm32-wasi"
+output = "build/logger.wasm"
+```
+
+Inside code, use `attr(...)` for compile-time selection:
+
+```silk
+import { println } from "std/io";
+
+attr(os="linux") fn platform_note () -> string { return "linux"; }
+attr(os="macos") fn platform_note () -> string { return "macos"; }
+attr(target="wasm32-wasi") fn platform_note () -> string { return "wasi"; }
+
+fn main () -> int {
+  println("{s}", platform_note());
+  return 0;
+}
+```
+
+Use target gates sparingly. Prefer portable stdlib code first, then isolate
+target-specific code in small modules or functions.
+
+## ABI and FFI packages
+
+When a package exposes native ABI, ship a definition file:
+
+```silk
+// defs/api.slk
+module oro::logger as LoggerAbi;
+
+export struct LoggerHandle;
+export fn logger_new () -> &LoggerHandle;
+export fn logger_free (handle: &LoggerHandle) -> void;
+export fn logger_info (handle: &LoggerHandle, message: string) -> void;
+```
+
+Implementation modules may use `ext` to bind C symbols or may provide Silk
+`export fn` bodies directly. Binary-only packages ship the `defs/` file plus a
+compatible artifact in `lib/<target>/`.
+
+Direct package/symbol imports are appropriate in this layer because the code is
+describing ABI paths intentionally:
+
+```silk
+import oro::logger::logger_info;
+import ::puts;
+```
+
+User code should normally import the friendly namespace instead:
+
+```silk
+import logger from "oro::logger";
+```
+
+## Best practices
+
+- Prefer `import ns from "module"` for namespaces and
+ `import { Name } from "module"` for selected names.
+- Use direct `package::symbol` imports only when naming ABI/export paths is the
+ point.
+- Keep a package's public surface small and exported deliberately.
+- Put reusable public prototypes in `defs/` when publishing libraries.
+- Keep source packages buildable without network access.
+- Make GitHub/npm/system packages materialize the same package root.
+- Use `[dist]` so published files are intentional.
+- Put platform-specific code behind `attr(os="...")` or `attr(target="...")`,
+ and keep those gates narrow.
 
 ## Next
 
+- [Toy logger module walkthrough](?p=guides/toy-logger-module)
 - [Standard library](?p=guides/standard-library)
-- [Testing](?p=guides/testing)
+- [Package manifests](?p=compiler/package-manifests)
+- [Package distribution](?p=compiler/package-distribution)
 
 ==============================================================================
 DOCS: Standard library (guides/standard-library)
@@ -1512,17 +1743,20 @@ patterns to expect.
 
 ## Importing `std::` modules
 
-You can import an entire package, or import a single symbol:
+Use module-specifier imports for application and library code:
 
 ```silk
-import std::io;                 // package import (use as std::io::println, ...)
-import std::io::println;        // symbol import (use as println(...))
-import std::fs;                 // filesystem
-import std::result::Result;     // common return shape
+import io from "std/io";              // namespace import; call io::println(...)
+import { println } from "std/io";     // selected symbol import
+import fs from "std/fs";              // filesystem namespace
+import { Result } from "std/result";  // common return shape
 ```
 
-Use symbol imports when you want the dependency to be explicit at the call site (especially in small programs). Use package
-imports when you want a cohesive namespace (common for larger modules).
+Use selected imports when a small program needs one or two names. Use namespace
+imports when a module uses a cohesive surface such as `fs::read_file_string`.
+Direct imports such as `import std::io::println;` remain available for ABI-facing
+definition modules and low-level interop code; ordinary user-space code should
+prefer `from "std/..."`.
 
 ## The three common “return shapes”
 
@@ -1547,9 +1781,9 @@ fn parse_port (s: string) -> int? {
 `Result(T, E)` is the standard “success or error” type used across `std::`.
 
 ```silk
-import std::result;
+import result from "std/result";
 
-type IntOrMessage = std::result::Result(int, string);
+type IntOrMessage = result::Result(int, string);
 
 fn div (a: int, b: int) -> IntOrMessage {
   if b == 0 { return Err("division by zero"); }
@@ -1578,7 +1812,7 @@ is easy to pattern-match.
 `std::io` covers console I/O and basic stream patterns.
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 fn main () -> int {
   println("hello {s} answer={d}", "world", 42);
@@ -1597,11 +1831,11 @@ Reference: `std::io` (see the sidebar under “Standard library”).
 Whole-file helpers are intentionally common:
 
 ```silk
-import std::fs;
-import std::io::println;
+import fs from "std/fs";
+import { println } from "std/io";
 
 fn main () -> int {
-  match (std::fs::read_file_string("message.txt")) {
+  match (fs::read_file_string("message.txt")) {
     Ok(s) => {
       println("{s}", s.as_string());
       return 0;
@@ -1717,7 +1951,7 @@ That maps directly to `attr(feature="...")` queries in the language reference. S
 Silk tests live in the language, next to the code they exercise:
 
 ```silk
-import std::test::expect_equal;
+import { expect_equal } from "std/test";
 
 fn add (a: int, b: int) -> int { return a + b; }
 
@@ -1894,7 +2128,7 @@ The goal is a workflow where “write code + write tests” is the default, not 
 ## A basic test
 
 ```silk
-import std::test::expect_equal;
+import { expect_equal } from "std/test";
 
 test "addition" {
   expect_equal(3, 1 + 2);
@@ -1912,7 +2146,7 @@ silk test hello.slk
 Tests can be nested to share setup and group behavior:
 
 ```silk
-import std::test::expect_equal;
+import { expect_equal } from "std/test";
 
 fn add (a: int, b: int) -> int { return a + b; }
 
@@ -1943,7 +2177,7 @@ You have two complementary tools:
 Example:
 
 ```silk
-import std::test;
+import test from "std/test";
 
 test "example" {
   test::expect(1 + 1 == 2, Some("basic arithmetic"));
@@ -2557,10 +2791,10 @@ Names are often qualified with `::`:
 ```silk
 package my_app::core;
 
-import std::strings;
+import strings from "std/strings";
 
 fn main () -> int {
-  let s: string = std::strings::trim(" hi ");
+  let s: string = strings::trim(" hi ");
   return 0;
 }
 ```
@@ -2638,16 +2872,15 @@ module drivers::uart as Device;
 
 See [packages imports exports](?p=language/packages-imports-exports) for the full import/export model.
 
-### Package imports
+### Module-specifier imports
 
 ```silk
 package app;
 
-import std::strings;
+import strings from "std/strings";
 
 fn main () -> int {
-  let s: string = trim(" hi "); // may be visible unqualified in the
-  let t: string = std::strings::trim(" hi ");
+  let s: string = strings::trim(" hi ");
   return 0;
 }
 ```
@@ -2759,10 +2992,10 @@ Notes:
  Enum destructuring is also supported:
 
   ```silk
-  import std::result;
+  import result from "std/result";
 
   fn main () -> int {
-    type R = std::result::Result(int, int);
+    type R = result::Result(int, int);
     let Ok(value) = R.ok(7);
     return value;
   }
@@ -4106,10 +4339,10 @@ fn main () -> int {
 Example (recoverable `Result`):
 
 ```silk
-import std::result;
+import result from "std/result";
 
 fn main () -> int {
-  let r: std::result::Result(int, string) = Ok(42);
+  let r: result::Result(int, string) = Ok(42);
   if let Ok(v) = r {
     return v;
   }
@@ -4726,8 +4959,7 @@ Rules (Supported forms):
 Example:
 
 ```silk
-import std::result;
-import std::strings::String;
+import { String } from "std/strings";
 
 fn main () -> int {
   let s: String = match String.from_string("hello") {
@@ -5194,9 +5426,9 @@ supported patterns are the same refutable subset already implemented by
 Example:
 
 ```silk
-import std::result;
+import result from "std/result";
 
-type R = std::result::Result(int, int);
+type R = result::Result(int, int);
 
 fn main () -> int {
   let xs: R[4] = [R.ok(2), R.err(7), R.ok(3), R.err(9)];
@@ -5790,11 +6022,11 @@ For array/slice destructuring:
 Enum destructuring binds payload elements from a single enum variant:
 
 ```silk
-import std::result;
+import result from "std/result";
 
 error Oops { code: int }
 
-fn foo (oops: bool) -> std::result::Result(int, Oops) {
+fn foo (oops: bool) -> result::Result(int, Oops) {
   if (oops) {
     return Err(Oops{ code: 123 });
   }
@@ -5859,11 +6091,11 @@ fn main () -> int {
 ```
 
 ```silk
-import std::result;
+import result from "std/result";
 
 error Oops { code: int }
 
-fn foo (ok: bool) -> std::result::Result(int, Oops) {
+fn foo (ok: bool) -> result::Result(int, Oops) {
   if ok { return Ok(7); }
   return Err(Oops{ code: 123 });
 }
@@ -5997,7 +6229,7 @@ Small surface example:
 ```silk
 package app;
 
-import std::io::println;
+import { println } from "std/io";
 
 fn main () -> int {
   println("hello");
@@ -7269,21 +7501,20 @@ Supported forms:
  `module ... as <Interface>;` conformance checking.
 - Inline module declarations (`module Name { ... }` / `export module Name { ... }`)
  for nested namespaces.
-- A contiguous top-level `import` block (package imports and `from "..."` module
- specifier imports).
+- A contiguous top-level `import` block. User-space code should usually use
+ module specifier imports: `import { Name } from "...";` or
+ `import ns from "...";`.
 - Named re-exports: `export { Name, Other as Alias };` (exports an in-scope value
  name so other modules may import it).
-- Package imports (`import std::strings;`) that make a package’s exported values
- available for use in the importing source file.
-- Qualified symbol imports (`import std::strings::Builder;`, `import std::io::println;`,
- `import ::malloc;`) that bring a single symbol into scope without importing the
- entire package namespace.
 - Module-specifier imports (`import { Name } from "...";`, `import ns from "...";`)
  including:
  - relative file imports (`from "./file.slk"`),
  - std-root file imports (`from "std/strings"`; `.slk` is appended when missing),
  - and package specifier imports (`from "ns_pkg"`, `from "ns_pkg/subpath"` where `/`
  is treated as `::` for namespace paths).
+- Direct package/ABI imports (`import package::ns;`,
+ `import package::ns::symbol;`, `import ::symbol;`) for cases where code needs
+ to name the package/export path that the resolver and linker see directly.
 - Default exports (`export default fn ...` and `export default Name;`) and default
  imports that bind either:
  - the default-exported symbol, or
@@ -7295,7 +7526,8 @@ Supported forms:
 
 Limitations:
 
-- Package-import aliasing (for example `import std::strings as str;`).
+- Package-import aliasing for direct package imports (for example
+ `import std::strings as str;`). Use `import str from "std/strings";` instead.
 - Bulk re-exports (“export from ...”) and forwarding of export surfaces.
 
 The current package-root workflow is documented separately from this language
@@ -7330,6 +7562,11 @@ Related tooling and diagnostics:
  a namespace, depending on what is imported).
 - **Namespace import**: a default import that binds a module or package namespace; you
  access its members as `X::Name`.
+- **Direct package import**: `import package::ns;`, an ABI-oriented import path
+ that names a package namespace directly instead of going through a string
+ module specifier.
+- **Direct symbol import**: `import package::ns::symbol;` or `import ::symbol;`,
+ an ABI-oriented import path that binds one exported symbol directly.
 
 ## Packages
 
@@ -7447,7 +7684,7 @@ Source files may refer to other packages or modules via `import` declarations:
 ```silk
 package my_app::core;
 
-import std::strings;
+import strings from "std/strings";
 
 fn main () -> int {
   return 0;
@@ -7466,70 +7703,61 @@ Rules:
  the package naming rules above (including the `std::task` special case).
  - As with expression/type qualified names, an import path MAY start with `::`
  to explicitly name the global namespace (the unnamed package).
-- `import` declarations identify dependencies and bring exported symbols
- from the imported package into scope in the importing module, subject to
- the visibility rules below.
-- Currently:
- - importing a package makes its exported `let` bindings with explicit
- type annotations visible as ordinary, unqualified names in the
- importing module (for example, `import util;` followed by `answer`
- refers to `util::answer` when `util` exports `let answer: int = 42;`),
- - imported exported `let` bindings are also reachable via qualified
- names of the form `pkg::name` (for example, `util::answer` after
- `import util;`); both unqualified (`answer`) and qualified
- (`util::answer`) forms are accepted for now, but the qualified form
- reflects the intended package-namespaced style,
- - exported functions (`export fn`) are callable across packages for the
- compiler’s current backend subset:
- - within a package, top-level functions form a shared namespace across
- all modules in that package (so functions in one module may call
- functions defined in another module of the same package),
- - when a module imports a package, that package’s `export fn`
- declarations become callable from the importing module,
- - both unqualified (`foo()`) and qualified (`util::foo()`) call forms
- are accepted initially for imported exports, matching the current
- constant-import behavior, though the qualified form reflects the
- intended package-namespaced style,
- - this callable subset is limited to the compiler’s current
- code generation subset (supported parameters/results, direct calls, and
- structured control flow supported by the IR→ELF backend on
- `linux/x86_64`),
- - struct type names (`struct` declarations) from imported packages are visible in the importing module for supported struct declarations:
- - the qualified form `pkg::Struct` is always accepted when `pkg` is imported,
- - the unqualified form `Struct` is accepted when it is unambiguous across the module’s imports and does not conflict with a locally defined struct name,
- - when multiple imported packages define the same struct name, the unqualified form is rejected as ambiguous and the qualified form must be used,
- - enum type names (`enum` declarations) from imported packages are visible in the importing module for supported enum declarations:
- - the qualified form `pkg::Enum` is always accepted when `pkg` is imported,
- - the unqualified form `Enum` is accepted when it is unambiguous across the module’s imports and does not conflict with a locally defined type name,
- - enum variants are referenced relative to the enum name (`Enum::Variant` or `pkg::Enum::Variant`),
- - if an imported package does not exist, resolution fails before
- type-checking (see the resolver).
- - a leading `::` on a qualified name forces lookup in the **global namespace**
- (the unnamed package), bypassing any same-named declarations in the current
- package or imported packages. This is intended as an explicit escape hatch
- for shadowing (for example, calling `::malloc(...)` when the current module
- also defines or exports `malloc`). The prefix is valid in both expression
- and type positions, including:
- - values: `::malloc(...)`,
- - types and struct literals: `::Foo` and `::Foo{...}`,
- - enum variant paths/patterns: `::E::Variant`.
+- User-space modules should prefer **module-specifier imports**:
+ - `import { Name, Other as Alias } from "./module.slk";`
+ - `import ns from "./module.slk";`
+ - `import io from "std/io";`
+ - `import { println } from "std/io";`
+ - `import logger from "oro::logger";`
+- Direct `::` imports remain supported for package/ABI-oriented code and are
+ documented below.
 
-### Qualified Symbol Imports
+### Recommended import style
 
-In addition to importing whole packages, a module may import a single symbol by
-fully qualifying it:
+Use module-specifier imports for application and library code:
 
 ```silk
+import { println } from "std/io";
+import fs from "std/fs";
+import logger from "oro::logger";
+import { Logger, log_info as info } from "./logger.slk";
+```
+
+Effects:
+
+- `import ns from "specifier";` binds a namespace unless the imported module or
+ package declares an explicit default export. Use `ns::Name` at call sites.
+- `import { Name } from "specifier";` imports selected exported names and can
+ rename them with `as`.
+- The string specifier tells readers how the dependency is resolved:
+ - `./` or `../` means a source file relative to the importing file,
+ - `std/...` means a stdlib source module resolved from the configured stdlib root,
+ - any other string means a package specifier resolved from the module set or
+ package search path.
+- This form keeps ordinary user-space code independent of the lower-level ABI
+ path syntax and supports local aliases directly.
+
+### Direct package and symbol imports
+
+Silk also supports import paths written directly as package-qualified names:
+
+```silk
+import std::io;
 import std::io::println;
-import std::url::URL;
+import oro::logger;
+import oro::logger::log_info;
 import ::malloc;
 ```
+
+These are the **direct package/ABI import** forms. They are useful when source
+needs to name the package/export path that the resolver, ABI surface, and linker
+see directly.
 
 Semantics:
 
 - If the import path matches a package name present in the module set, it is a
- **package import** (`import std::io;`).
-- Otherwise, it is treated as a **qualified symbol import**:
+ **direct package import** (`import oro::logger;`).
+- Otherwise, it is treated as a **direct symbol import**:
  - the compiler finds the longest package-name prefix of the path,
  - the remaining suffix is the symbol name within that package (it may contain
  `::` due to exported inline modules),
@@ -7538,8 +7766,30 @@ Semantics:
 - When the import path begins with `::`, the symbol is resolved from the global
  namespace (the unnamed package) and is not subject to package export gating.
 
-`import { Name } from "...";` remains the preferred form when you need to rename
-imports (`as`) or import from a file path.
+Use this form deliberately:
+
+- for prototype/definition modules that describe an ABI surface,
+- for FFI wrappers that expose or consume exact external symbols,
+- for stdlib/runtime internals where direct package names mirror linker-visible
+ organization,
+- and when you need the explicit global namespace escape (`::malloc`).
+
+For ordinary application and reusable library code, prefer the module-specifier
+forms:
+
+```silk
+import io from "std/io";
+import { println } from "std/io";
+import logger from "oro::logger";
+```
+
+Reasons:
+
+- specifier imports work with relative files, stdlib modules, and package
+ dependencies using one syntax,
+- they support `as` aliases for selected symbols,
+- namespace imports make the origin visible at call sites (`logger::log_info`),
+- and they keep low-level ABI symbol paths out of most user-space modules.
 
 Global namespace (`::name`) rules:
 
@@ -7553,9 +7803,8 @@ Global namespace (`::name`) rules:
 - Global names are only accessible via the explicit `::` prefix; there is no
  implicit “prelude import” of global symbols.
 
-Future extensions may introduce aliasing (e.g. `import std::strings as str;`)
-and more fine-grained import forms. Such features will be documented here
-before they are implemented.
+Future extensions may introduce aliasing for direct package imports. Until then,
+write `import str from "std/strings";` for a local namespace alias.
 
 ### Example: a two-module package program
 
@@ -7577,12 +7826,9 @@ export fn add1 (x: int) -> int {
 // app.slk
 package app;
 
-import util;
+import util from "util";
 
 fn main () -> int {
-  // Currently, both unqualified and qualified access are
-  // accepted after importing a package. Prefer the qualified form to make the
-  // origin explicit.
   if util::add1(util::answer) != 42 {
     return 1;
   }
@@ -7602,16 +7848,16 @@ Tooling note (the `silk` CLI):
 
 - The language semantics are still “imports resolve against the module set”.
  The CLI grows the module set by loading additional source files.
-- In addition to auto-loading `std::...` packages from the stdlib root, the CLI
- MAY load non-`std::` packages from a **package search path** when a bare
- package specifier is imported (e.g. `import api from "my_api";`).
+- In addition to auto-loading `std/...` modules from the stdlib root, the CLI
+ MAY load non-`std` packages from a **package search path** when a bare
+ package specifier is imported (for example `import api from "my_api";`).
 - The package search path is configured via `SILK_PACKAGE_PATH` (PATH-like:
  roots separated by `:` on POSIX).
 - A package name like `my_api::core` maps to the filesystem candidate
  `<root>/my_api/core/silk.toml`. The first matching manifest in search order is
  used.
-- Qualified imports that include extra `::` segments (e.g. `my_api::core::Thing`)
- are treated as qualified symbol imports: the CLI resolves the **longest**
+- Direct imports that include extra `::` segments (for example
+ `my_api::core::Thing`) are treated as direct symbol imports: the CLI resolves the **longest**
  package prefix that exists (`my_api::core`, then `my_api`) and loads that
  package into the module set.
 
@@ -7629,19 +7875,19 @@ fn main () -> int {
 ```
 
 If you omit the file import (or otherwise fail to include a module that declares
-`package ns_pkg;`), the package import fails with `E1001` (“unknown imported package”).
+`package ns_pkg;`), the package specifier import fails with `E1001` ("unknown imported package").
 
 From the CLI, the usual fix is to ensure the missing package’s module(s) are
 part of the command’s module set (for example by passing their `.slk` files to
 `silk check` / `silk build`, or by adding a file import). See
 [`silk` CLI](?p=compiler/cli-silk) and [CLI examples](?p=usage/cli-examples).
 
-## Import Specifier Imports (JS-style)
+## Module-specifier imports
 
-In addition to `import pkg::name;` package imports, Silk supports JS-style
-import forms that use a string literal *import specifier* after `from`.
+Module-specifier imports are the preferred user-space import style. They use a
+string literal *import specifier* after `from`.
 
-The current JS-style forms are:
+The current forms are:
 
 - Named imports: `import { Name } from "<specifier>";`
 - Default imports / namespace imports: `import Name from "<specifier>";`
@@ -7699,7 +7945,7 @@ Notes:
  `"std::strings"`).
 - Ambient imports do not bind a namespace or import any symbols. If you need to
  call a function or reference a type from the imported module, use a named
- import, a default import (namespace import), or a package import.
+ import or a default import (namespace import).
 - Ambient imports are useful for declaring dependencies that exist only to:
  - satisfy prototype/definition conformance rules (see below), or
  - ensure a module is present in the module set so its types and methods are
@@ -7729,7 +7975,9 @@ Rules:
 - The `from` keyword is part of the import syntax.
 - The `from` specifier may be either:
  - a string literal (`from "./file.slk"`, `from "std/io"`, `from "ns_pkg/sub"`), or
- - a package path (`from std::io;`, `from ns_pkg::sub;`).
+ - a package path form kept for compatibility (`from std::io;`,
+ `from ns_pkg::sub;`). User-space docs use string specifiers because they work
+ uniformly for files, stdlib modules, and packages.
 - If the specifier is a **file specifier**, it is resolved relative to the
  importing file’s directory. `./` and `../` path segments are permitted.
  (Absolute paths are permitted for tooling, but downstream projects should
@@ -9158,9 +9406,9 @@ Notes:
 Example (`map` + `and_then`):
 
 ```silk
-import std::result;
+import result from "std/result";
 
-fn parse_port (s: string) -> std::result::Result(int, int) {
+fn parse_port (s: string) -> result::Result(int, int) {
   return Ok(123);
 }
 
@@ -11009,10 +11257,10 @@ The type checker rejects:
 ### Basic `test`
 
 ```silk
-import std::regex;
+import regex from "std/regex";
 
 fn main () -> int {
-  if std::regex::matches(/hello/, "hello world") {
+  if regex::matches(/hello/, "hello world") {
     return 0;
   }
   return 1;
@@ -11757,7 +12005,7 @@ writers, iterators, and allocators.
 When the standard library is enabled (the default), the compiler provides a
 small implicit std prelude (see [packages imports exports](?p=language/packages-imports-exports)).
 In particular, the interface names from `std::interfaces` are available without
-an explicit `import std::interfaces;`. This prelude is specified by the stdlib
+an explicit `import interfaces from "std/interfaces";`. This prelude is specified by the stdlib
 module `std::runtime::globals`.
 
 Key components:
@@ -13419,9 +13667,9 @@ A `struct` type is considered “droppable” when it provides a method with thi
 surface signature (usually via an interface impl):
 
 ```silk
-import std::interfaces;
+import interfaces from "std/interfaces";
 
-impl T as std::interfaces::Drop {
+impl T as interfaces::Drop {
   public fn drop (mut self: &T) -> void { ... }
 }
 ```
@@ -13571,13 +13819,13 @@ Atomic operations have operation-specific ordering contracts:
 Invalid statically visible orderings are rejected by the checker with `E2127`.
 
 ```silk
-import std::atomic;
+import atomic from "std/atomic";
 
 fn main () -> int {
-  let mut value = std::atomic::AtomicU64.init(1);
+  let mut value = atomic::AtomicU64.init(1);
 
   // error[E2127]: atomic loads cannot use Release or AcqRel
-  let current = value.load(std::atomic::Ordering::Release);
+  let current = value.load(atomic::Ordering::Release);
   return current as int;
 }
 ```
@@ -13951,18 +14199,18 @@ Until the full intrinsic surface lands, downstream code should usually reach
 for the current stdlib layers directly:
 
 ```silk
-import std::buffer;
-import std::vector;
+import buffer from "std/buffer";
+import vector from "std/vector";
 
 fn main () -> int {
-  let mut bytes = match std::buffer::BufferU8.init(4) {
+  let mut bytes = match buffer::BufferU8.init(4) {
     Ok(v) => v,
     Err(_) => return 1,
   };
   if bytes.push(1 as u8) != None { bytes.drop(); return 2; }
   if bytes.push(2 as u8) != None { bytes.drop(); return 3; }
 
-  let mut values = std::vector::Vector(int).empty();
+  let mut values = vector::Vector(int).empty();
   if values.push(10) != None { values.drop(); bytes.drop(); return 4; }
   if values.push(20) != None { values.drop(); bytes.drop(); return 5; }
 
@@ -15925,7 +16173,7 @@ to `Unknown`).
 ### Target-gated behavior
 
 ```silk
-import std::os;
+import os from "std/os";
 import { println } from "std/io";
 
 fn main () -> int {
@@ -15933,10 +16181,10 @@ fn main () -> int {
     println("posix");
   }
 
-  match (std::os::platform()) {
-    std::os::Platform::Linux => println("linux"),
-    std::os::Platform::WASI => println("wasi"),
-    std::os::Platform::Unknown => println("unknown"),
+  match (os::platform()) {
+    os::Platform::Linux => println("linux"),
+    os::Platform::WASI => println("wasi"),
+    os::Platform::Unknown => println("unknown"),
   };
 
   return 0;
@@ -17017,7 +17265,8 @@ URL: /silk/docs/?p=std/overview
 
 The `docs/std/` directory specifies the
 intended API and structure. A minimal in-tree stdlib source tree also
-exists under `std/` (used by the toolchain to satisfy `import std::...;`).
+exists under `std/` (used by the toolchain to satisfy `from "std/..."` imports
+and direct std ABI imports).
 
 As of the compiler, the in-tree stdlib includes a
 small but functional set of utilities implemented purely in Silk (including
@@ -17491,7 +17740,7 @@ This layering is specified in [runtime](?p=std/runtime).
  path during builds, so that:
 
   ```silk
-  import std::strings;
+  import strings from "std/strings";
   ```
 
  resolves without the user having to explicitly pass the stdlib source files
@@ -17499,9 +17748,9 @@ This layering is specified in [runtime](?p=std/runtime).
 
 Notes:
 
-- This does **not** imply an implicit `import std::...;` of all std modules;
- importing remains explicit. Linking-by-default means “`std::` is available to
- import”.
+- This does **not** imply an implicit import of all std modules. Imports remain
+ explicit. Linking-by-default means `std::` is available through
+ `from "std/..."` imports and direct std ABI imports.
 - When the standard library is enabled (the default), the compiler provides a
  small implicit std prelude of selected symbols (for example `Result` and the
  `std::interfaces` interface names) as specified by `std::runtime::globals`.
@@ -18144,10 +18393,10 @@ impl Counter as Len {
 
 ```silk
 import c_owned from "std/ffi/c_owned";
-import std::path;
-import std::strings;
-import std::url;
-import std::runtime::mem;
+import path from "std/path";
+import strings from "std/strings";
+import url from "std/url";
+import mem from "std/runtime/mem";
 
 fn main () -> int {
   let owned_r = std::strings::String.from_string("hello");
@@ -18203,8 +18452,8 @@ fn main () -> int {
 ## Example (`TrySerialize` for owned text output)
 
 ```silk
-import std::semver;
-import std::uuid;
+import semver from "std/semver";
+import uuid from "std/uuid";
 
 fn main () -> int {
   match (std::semver::Version.parse("1.2.3-alpha+build.5")) {
@@ -18245,10 +18494,10 @@ fn main () -> int {
 ## Example (`Parse` in the stdlib)
 
 ```silk
-import std::path;
-import std::semver;
-import std::url;
-import std::uuid;
+import path from "std/path";
+import semver from "std/semver";
+import url from "std/url";
+import uuid from "std/uuid";
 
 fn main () -> int {
   match (std::semver::Version.parse("1.2.3")) {
@@ -18625,7 +18874,7 @@ Notes:
 Example (formatted printing):
 
 ```silk
-import std::io;
+import io from "std/io";
 
 fn main () -> int {
   std::io::println("hello {s} answer={d}", "world", 42);
@@ -18636,10 +18885,10 @@ fn main () -> int {
 Example (stdin → stdout echo using unbuffered reads/writes):
 
 ```silk
-import std::io;
-import std::arrays;
-import std::runtime::io;
-import std::runtime::mem;
+import io from "std/io";
+import arrays from "std/arrays";
+import runtime_io from "std/runtime/io";
+import mem from "std/runtime/mem";
 
 fn main () -> int {
   let buf: u64 = std::runtime::mem::alloc(64);
@@ -18874,9 +19123,9 @@ so output precision is limited to `f64` precision in the Supported forms.
 ```silk
 import { println } from "std/io";
 import format from "std/fmt";
-import std::fmt;
-import std::strings;
-import std::result;
+import fmt from "std/fmt";
+import strings from "std/strings";
+import result from "std/result";
 
 type StringAllocResult = std::result::Result(std::strings::String, std::fmt::Error);
 
@@ -19092,7 +19341,7 @@ Notes:
 Example:
 
 ```silk
-import std::strings;
+import strings from "std/strings";
 
 fn main () -> int {
   let owned_r = std::strings::String.from_string("hello");
@@ -19130,8 +19379,8 @@ fn main () -> int {
 Example: converting scalar values requires UTF-8 encoding, not a pointer cast:
 
 ```silk
-import std::arrays;
-import std::strings;
+import arrays from "std/arrays";
+import strings from "std/strings";
 
 fn main () -> int {
   let chars: char[5] = ['h', 'e', 'l', 'l', 'o'];
@@ -19340,7 +19589,7 @@ non-owning, FFI-friendly slice representation for early bridging:
 ```silk
 module std::arrays;
 
-import std::interfaces;
+import interfaces from "std/interfaces";
 
 struct Slice(T) {
   ptr: u64,
@@ -19546,8 +19795,8 @@ tool.
 This example collects `TabState` values into a `Vector(TabState)`:
 
 ```silk
-import std::arrays;
-import std::vector;
+import arrays from "std/arrays";
+import vector from "std/vector";
 
 struct TabState {
   path: string,
@@ -19629,8 +19878,8 @@ different naming model for each module.
 ```silk
 module std::vector;
 
-import std::arrays;
-import std::interfaces;
+import arrays from "std/arrays";
+import interfaces from "std/interfaces";
 
 struct Vector(T) {
   ptr: u64,
@@ -19767,9 +20016,9 @@ Default helper functions are provided for these key types:
 Example (using `std::map` defaults via `HashMap.init(cap)` / `HashMap.empty()`):
 
 ```silk
-import std::map;
-import std::result;
-import std::memory;
+import map from "std/map";
+import result from "std/result";
+import memory from "std/memory";
 
 type Map = std::map::HashMap(u64, int);
 type InitResult = std::result::Result(Map, std::memory::AllocFailed);
@@ -19795,9 +20044,9 @@ fn main () -> int {
 Example (custom hashing/equality):
 
 ```silk
-import std::map;
-import std::result;
-import std::memory;
+import map from "std/map";
+import result from "std/result";
+import memory from "std/memory";
 
 type Map = std::map::HashMap(u64, int);
 type InitResult = std::result::Result(Map, std::memory::AllocFailed);
@@ -20120,8 +20369,8 @@ See also:
 ```silk
 module std::buffer;
 
-import std::arrays;
-import std::memory;
+import arrays from "std/arrays";
+import memory from "std/memory";
 
 struct Buffer(T) {
   ptr: u64,
@@ -20153,8 +20402,8 @@ export fn slice (T; buf: &Buffer(T), start: i64, end: i64) -> std::arrays::Slice
 ```silk
 module std::buffer;
 
-import std::arrays;
-import std::memory;
+import arrays from "std/arrays";
+import memory from "std/memory";
 
 struct BufferU8 {
   ptr: u64,
@@ -20190,7 +20439,7 @@ impl BufferU8 {
 ```silk
 module std::buffer;
 
-import std::vector;
+import vector from "std/vector";
 
 // Signed integers.
 export type BufferI8 = std::vector::Vector(i8);
@@ -20315,7 +20564,7 @@ bit width (`32` or `64`).
 ## Example
 
 ```silk
-import std::bits;
+import bits from "std/bits";
 
 fn main () -> int {
   let x: u32 = std::bits::rotl_u32(1, 5);
@@ -20602,8 +20851,8 @@ incompatible (for example adding vectors of different lengths).
 ```silk
 module std::math;
 
-import std::math::vector;
-import std::math::matrix;
+import math_vector from "std/math/vector";
+import math_matrix from "std/math/matrix";
 
 // Re-export core types for ergonomic imports.
 export type Vec2f = std::math::vector::Vec2f;
@@ -20640,8 +20889,8 @@ export type MatrixF64Result = std::math::matrix::MatrixF64Result;
 ```silk
 module std::math::vector;
 
-import std::result;
-import std::vector;
+import result from "std/result";
+import vector from "std/vector";
 
 export enum MathErrorKind {
   InvalidInput,
@@ -20786,9 +21035,9 @@ impl VectorF64 {
 ```silk
 module std::math::matrix;
 
-import std::result;
-import std::vector;
-import std::math::vector;
+import result from "std/result";
+import vector from "std/vector";
+import math_vector from "std/math/vector";
 
 export type MathFailed = std::math::vector::MathFailed;
 export type MathErrorKind = std::math::vector::MathErrorKind;
@@ -21214,9 +21463,9 @@ is Implemented: `get` works, while `set` remains unsupported (see
 ```silk
 module std::env;
 
-import std::process;
-import std::strings;
-import std::args;
+import process from "std/process";
+import strings from "std/strings";
+import args from "std/args";
 
 enum SetVarErrorKind { InvalidKey, OutOfMemory, Unknown }
 
@@ -21262,7 +21511,7 @@ valid for the process lifetime.
 Example:
 
 ```silk
-import std::env;
+import env from "std/env";
 import { println } from "std/io";
 
 fn main () -> int {
@@ -21287,7 +21536,7 @@ Errors are reported as an optional error value (`SetVarFailed?`).
 Example:
 
 ```silk
-import std::env;
+import env from "std/env";
 import { println } from "std/io";
 
 fn main () -> int {
@@ -21414,8 +21663,8 @@ support is Implemented (see “Platform notes”).
 ```silk
 module std::process;
 
-  import std::result;
-  import std::strings;
+  import result from "std/result";
+  import strings from "std/strings";
 
   enum ChdirErrorKind { InvalidInput, NotFound, NotADirectory, PermissionDenied, Unknown }
   error ChdirFailed { code: int }
@@ -21443,7 +21692,7 @@ For convenience, `std::process` re-exports the high-level `std::process::child`
 surface so downstream users can write:
 
 ```silk
-import std::process;
+import process from "std/process";
 
 let mut cmd = std::process::Command.init("/bin/echo");
 cmd.arg("hello");
@@ -21607,10 +21856,10 @@ See also:
 ```silk
 module std::os;
 
-import std::memory;
-import std::result;
-import std::temporal;
-import std::vector;
+import memory from "std/memory";
+import result from "std/result";
+import temporal from "std/temporal";
+import vector from "std/vector";
 
 export const PLATFORM_NAME: string;
 export const ARCH_NAME: string;
@@ -21908,7 +22157,7 @@ Design goals (modeled after Rust `std::path` and Node.js `path`):
 ```silk
 module std::path;
 
-import std::strings;
+import strings from "std/strings";
 
 export let SEP: string = "/";
 export let DELIMITER: string = ":";
@@ -22034,8 +22283,8 @@ Functions that return `std::strings::String` allocate an owned buffer.
 Callers must drop returned owned strings when finished:
 
 ```silk
-import std::path;
-import std::strings;
+import path from "std/path";
+import strings from "std/strings";
 
 fn main () -> int {
   match std::path::join("/tmp", "file.txt") {
@@ -22052,7 +22301,7 @@ fn main () -> int {
 Borrowing a `PathBuf` as `string` is allocation-free:
 
 ```silk
-import std::path;
+import path from "std/path";
 
 fn main () -> int {
   let pb_r = std::path::PathBuf.from_string("/tmp/demo");
@@ -22705,7 +22954,7 @@ Top-level wrappers:
 ### Parse and query a document
 
 ```silk
-import std::json;
+import json from "std/json";
 
 fn main () -> int {
   let mut doc: Document = Document{};
@@ -22744,7 +22993,7 @@ fn main () -> int {
 ### Own parsed strings instead of borrowing from the input
 
 ```silk
-import std::json;
+import json from "std/json";
 
 fn main () -> int {
   let mut doc: Document = Document{};
@@ -22974,7 +23223,7 @@ Both methods:
 ## Example
 
 ```silk
-import std::toml;
+import toml from "std/toml";
 
 fn main () -> int {
   let mut doc: Document = Document{};
@@ -23040,7 +23289,7 @@ pi = 3.14
 Construction and emission example:
 
 ```silk
-import std::toml;
+import toml from "std/toml";
 
 fn main () -> int {
   let mut doc: Document = Document{};
@@ -23084,7 +23333,7 @@ fn main () -> int {
 Serializing a custom type with the convenience helpers:
 
 ```silk
-import std::toml;
+import toml from "std/toml";
 
 struct Config {
   title: string,
@@ -23503,7 +23752,7 @@ which forwards to `std::url::parse`.
 ### Parse, resolve, and mutate query params
 
 ```silk
-import std::url;
+import url from "std/url";
 
 fn main () -> int {
   let base = match std::url::parse("https://example.com/docs/index.html") {
@@ -23659,7 +23908,7 @@ Notes:
 ## Example
 
 ```silk
-import std::semver;
+import semver from "std/semver";
 
 fn main () -> int {
   match (std::semver::parse("1.2.3-alpha.1+build.5")) {
@@ -23732,7 +23981,7 @@ API notes:
 ### Parse, generate, and inspect
 
 ```silk
-import std::uuid;
+import uuid from "std/uuid";
 
 fn main () -> int {
   let parsed = match std::uuid::parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8") {
@@ -23883,9 +24132,9 @@ Notes:
 Example:
 
 ```silk
-import std::arrays;
-import std::runtime::mem;
-import std::unicode;
+import arrays from "std/arrays";
+import mem from "std/runtime/mem";
+import unicode from "std/unicode";
 
 fn main () -> int {
   let ptr: u64 = std::runtime::mem::alloc(4);
@@ -24464,11 +24713,11 @@ Not implemented (yet):
 ```silk
 module std::http;
 
-import std::net;
-import std::result;
-import std::strings;
-import std::map;
-import std::set;
+import net from "std/net";
+import result from "std/result";
+import strings from "std/strings";
+import map from "std/map";
+import set from "std/set";
 
 export let DEFAULT_MAX_HEADER_BYTES: i64 = 16384;
 
@@ -24619,8 +24868,8 @@ Notes:
 ## Example (Client)
 
 ```silk
-import std::http;
-import std::net;
+import http from "std/http";
+import net from "std/net";
 
 export fn main () -> int {
   // Plain HTTP to a loopback server (no DNS in the current stdlib).
@@ -24716,9 +24965,9 @@ Not implemented (yet):
 ```silk
 module std::https;
 
-import std::http;
-import std::net;
-import std::result;
+import http from "std/http";
+import net from "std/net";
+import result from "std/result";
 
 export let ERR_CONNECT: int = 1;
 export let ERR_TLS: int = 2;
@@ -24865,10 +25114,10 @@ Non-goals (for now):
 ```silk
 module std::websocket;
 
-import std::net;
-import std::arrays;
-import std::result;
-import std::strings;
+import net from "std/net";
+import arrays from "std/arrays";
+import result from "std/result";
+import strings from "std/strings";
 
 // Message opcodes (subset).
 export let OPCODE_TEXT: int = 1;
@@ -24993,11 +25242,11 @@ See also:
 ```silk
 module std::stream;
 
-import std::arrays;
-import std::buffer;
-import std::interfaces;
-import std::memory;
-import std::result;
+import arrays from "std/arrays";
+import buffer from "std/buffer";
+import interfaces from "std/interfaces";
+import memory from "std/memory";
+import result from "std/result";
 
 export enum StreamErrorKind {
   OutOfMemory,
@@ -25187,7 +25436,7 @@ transform loop in a `task` and rely on backpressure to bound memory.
 ### Producer → consumer (tasks)
 
 ```silk
-import std::stream;
+import stream from "std/stream";
 
 task fn producer (w: std::stream::WritableStream) -> int { ... }
 task fn consumer (r: std::stream::ReadableStream) -> int { ... }
@@ -25232,9 +25481,9 @@ Typical wiring:
 `std::fs` provides task-based helpers for piping files into/out of streams:
 
 ```silk
-import std::fs;
-import std::fs::stream;
-import std::stream;
+import fs from "std/fs";
+import fs_stream from "std/fs/stream";
+import stream from "std/stream";
 
 async fn main () -> int {
   task {
@@ -25278,7 +25527,7 @@ observed between read/write steps; they do not yet interrupt a blocking
 `ReadableStream.read()` call.
 
 ```silk
-import std::stream;
+import stream from "std/stream";
 
 fn run_pipeline (src: std::stream::ReadableStream, dst: std::stream::WritableStream) -> int {
   let r = std::stream::pipe_to(src, dst);
@@ -25330,7 +25579,8 @@ Security note:
 
 On `linux/x86_64` with the glibc dynamic loader (`ld-linux`), `silk build`
 automatically adds `libsodium.so.23` as a `DT_NEEDED` dependency when a program
-imports libsodium-backed extern symbols (for example via `import std::crypto;`).
+imports libsodium-backed extern symbols (for example via
+`import crypto from "std/crypto";`).
 
 This mirrors the existing behavior for `libc.so.6` so downstream users do not
 have to pass `--needed libsodium.so.23` for normal hosted builds.
@@ -25384,11 +25634,11 @@ Key design rules:
 ## Example: init, hash, wipe
 
 ```silk
-import std::arrays;
-import std::buffer;
-import std::crypto;
-import std::crypto::hash;
-import std::runtime::mem;
+import arrays from "std/arrays";
+import buffer from "std/buffer";
+import crypto from "std/crypto";
+import hash from "std/crypto/hash";
+import mem from "std/runtime/mem";
 
 fn main () -> int {
   if std::crypto::init() != None {
@@ -25515,7 +25765,7 @@ Public error/value types in the Supported forms:
 ```silk
 module std::tls;
 
-import std::result;
+import result from "std/result";
 
 enum TLSErrorKind {
   OutOfMemory,
@@ -25663,7 +25913,7 @@ Public error/value types in the Supported forms:
 ```silk
 module std::ssh2;
 
-import std::result;
+import result from "std/result";
 
 enum SSH2ErrorKind {
   OutOfMemory,
@@ -26198,7 +26448,7 @@ references are rejected at task boundaries. Pass `AtomicU64Borrow` or
 `AtomicBoolBorrow` instead:
 
 ```silk
-import std::atomic;
+import atomic from "std/atomic";
 
 task fn worker (counter: std::atomic::AtomicU64Borrow) -> int {
   counter.fetch_add(1, std::atomic::Ordering::AcqRel);
@@ -26264,11 +26514,11 @@ signals early keeps delivery consistent.
 This pattern avoids polling terminal size in a loop:
 
 ```silk
-import std::io;
-import std::runtime::event_loop;
-import std::runtime::io;
-import std::runtime::mem;
-import std::signal;
+import io from "std/io";
+import event_loop from "std/runtime/event_loop";
+import runtime_io from "std/runtime/io";
+import mem from "std/runtime/mem";
+import signal from "std/signal";
 
 async fn main () -> int {
   let sfd_r: std::signal::SignalFDResult = std::signal::SignalFD.open(std::signal::SIGWINCH);
@@ -26458,8 +26708,8 @@ See also:
 ```silk
 module std::sync;
 
-import std::interfaces;
-import std::result;
+import interfaces from "std/interfaces";
+import result from "std/result";
 
 enum SyncErrorKind {
   OutOfMemory,
@@ -26909,9 +27159,9 @@ Thread-safety:
 ```silk
 module std::abort_controller;
 
-import std::interfaces;
-import std::memory;
-import std::result;
+import interfaces from "std/interfaces";
+import memory from "std/memory";
+import result from "std/result";
 
 export enum AbortReasonKind {
   Aborted,
@@ -27283,14 +27533,14 @@ export type Writer = std::tar::AsyncWriter;
 ```
 
 Note: the implementations live in `std/tar.slk`; `std/tar/async.slk` is a thin
-re-export module so callers can `import std::tar::async;`.
+re-export module so callers can `import tar_async from "std/tar/async";`.
 
 ## Example: in-memory roundtrip
 
 ```silk
-import std::arrays;
-import std::buffer;
-import std::tar;
+import arrays from "std/arrays";
+import buffer from "std/buffer";
+import tar from "std/tar";
 
 fn main () -> int {
   let payload: string = "hello";
@@ -27392,7 +27642,7 @@ Semantics:
 ## Example
 
 ```silk
-import std::test;
+import test from "std/test";
 
 test "parsing smoke test" {
   let value = Some(42);
@@ -27465,8 +27715,8 @@ use `--` to start the raw rest segment explicitly.
 ```silk
 module std::flag;
 
-import std::args;
-import std::result;
+import args from "std/args";
+import result from "std/result";
 
 enum FlagErrorKind { ... }
 enum FlagValueKind { Bool, Int, I64, U64, String }
@@ -27570,8 +27820,8 @@ Notes:
 ## Example
 
 ```silk
-import std::args;
-import std::flag;
+import args from "std/args";
+import flag from "std/flag";
 import { println } from "std/io";
 
 fn main (argc: int, argv: u64) -> int {
@@ -27697,7 +27947,7 @@ archive (`libsilk_rt`).
 Typical use:
 
 ```silk
-import std::readline;
+import readline from "std/readline";
 
 export fn main () -> int {
   let r = readline.read_line("> ");
@@ -27904,7 +28154,7 @@ Notes:
 
 ```silk
 import c_owned from "std/ffi/c_owned";
-import std::runtime::mem;
+import mem from "std/runtime/mem";
 
 fn main () -> int {
   let p: u64 = std::runtime::mem::alloc(3);
@@ -28213,8 +28463,8 @@ Semantics:
 Example:
 
 ```silk
-import std::map;
-import std::wasm;
+import map from "std/map";
+import wasm from "std/wasm";
 
 type ImportMap = std::map::HashMap(std::wasm::ImportFuncName, std::wasm::HostCall);
 
@@ -28354,9 +28604,9 @@ pointing at the opcode.
 ## Example
 
 ```silk
-import std::wasm;
-import std::arrays;
-import std::buffer;
+import wasm from "std/wasm";
+import arrays from "std/arrays";
+import buffer from "std/buffer";
 
 using Engine = std::wasm::Engine;
 using EngineResult = std::wasm::EngineResult;
@@ -28711,9 +28961,9 @@ module unless a future provider is added and reached.
 ```silk
 module std::graphics::window;
 
-import std::graphics::metal;
-import std::result;
-import std::window;
+import metal from "std/graphics/metal";
+import result from "std/result";
+import window from "std/window";
 
 export enum Backend {
   Unsupported,
@@ -28949,10 +29199,10 @@ capability checks and high-level unsupported results.
 ```silk
 module std::graphics::metal;
 
-import std::result;
-import std::runtime::graphics::metal;
-import std::runtime::mem;
-import std::window;
+import result from "std/result";
+import runtime_metal from "std/runtime/graphics/metal";
+import mem from "std/runtime/mem";
+import window from "std/window";
 
 export type Handle = u64;
 export type PixelFormat = u64;
@@ -29215,7 +29465,7 @@ reaches `std::window`.
 ```silk
 module std::window;
 
-import std::result;
+import result from "std/result";
 
 export enum Backend { Unsupported, MacOS, IOS, GTK }
 export enum WindowErrorKind {
@@ -29372,7 +29622,7 @@ declare or import `silk_rt_window_*` provider symbols.
 window application imports only `std::window`:
 
 ```silk
-import std::window;
+import window from "std/window";
 
 fn main () -> int {
   let options = std::window::Options{
@@ -29423,8 +29673,8 @@ inside the frame callback. Examples and applications should not call
 `std::runtime::window` directly.
 
 ```silk
-import std::task;
-import std::window;
+import task from "std/task";
+import window from "std/window";
 
 fn frame (window: std::window::Window) -> int {
   let title_code = match (window.set_title("Ready - close the window to exit")) {
@@ -29484,8 +29734,8 @@ For frame-rendering demos, use `run_loop(options, frame)`. The stdlib owns the
 provider lifecycle and the application provides only per-frame behavior:
 
 ```silk
-import std::graphics::window;
-import std::window;
+import graphics_window from "std/graphics/window";
+import window from "std/window";
 
 fn draw_frame (window: std::window::Window) -> int {
   let color = std::graphics::window::ClearColor{
@@ -29633,7 +29883,7 @@ select the macOS provider explicitly while still using the portable
 ```silk
 module std::window::macos;
 
-import std::window;
+import window from "std/window";
 
 export fn is_supported () -> bool;
 export fn open (options: std::window::Options) -> std::window::WindowResult;
@@ -29689,7 +29939,7 @@ It covers:
 ```silk
 module std::window::ios;
 
-import std::window;
+import window from "std/window";
 
 export fn is_supported () -> bool;
 export fn open (options: std::window::Options) -> std::window::WindowResult;
@@ -29749,7 +29999,7 @@ bundled Linux runtime loads GTK dynamically when `std::window` code is reached.
 ```silk
 module std::window::gtk;
 
-import std::window;
+import window from "std/window";
 
 export fn is_supported () -> bool;
 export fn open (options: std::window::Options) -> std::window::WindowResult;
@@ -30374,7 +30624,7 @@ contract violations such as:
 ```silk
 module std::ggml;
 
-import std::result;
+import result from "std/result";
 
 type Type = i32;
 
@@ -30523,7 +30773,7 @@ impl Graph {
 ## Example: elementwise graph
 
 ```silk
-import std::ggml;
+import ggml from "std/ggml";
 
 fn main () -> int {
   let ctx = match std::ggml::Context.init(16 * 1024 * 1024) {
@@ -30585,7 +30835,7 @@ Because `Tensor.set_f32(...)` fills an entire tensor with one value, it is easy
 to build a smoke-test matrix multiply with a predictable result:
 
 ```silk
-import std::ggml;
+import ggml from "std/ggml";
 
 fn main () -> int {
   let ctx = match std::ggml::Context.init(16 * 1024 * 1024) {
@@ -30734,7 +30984,7 @@ export const INT_MAX: int;
 Validating that a host-facing length fits in `i32`:
 
 ```silk
-import std::limits;
+import limits from "std/limits";
 
 fn validate_len (len: i64) -> bool {
   return len >= 0 && len <= (std::limits::I32_MAX as i64);
@@ -33683,8 +33933,8 @@ In other words, these forms are intended to be interchangeable in the current
 subset:
 
 ```silk
-import std::ssh;
-import std::ssh2;
+import ssh from "std/ssh";
+import ssh2 from "std/ssh2";
 
 let a: std::ssh::Session = std::ssh::Session.invalid();
 let b: std::ssh2::Session = std::ssh2::Session.invalid();
@@ -34081,7 +34331,7 @@ If you don’t, see “Build from source” for the reference compiler workflow.
 Create `hello.slk`:
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 fn main () -> int {
   println("hello from silk");
@@ -34187,7 +34437,7 @@ This tutorial gets you from “a file” to “a runnable program” with the sm
 Create `hello.slk`:
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 fn main () -> int {
   println("hello from silk");
@@ -34217,7 +34467,7 @@ On hosted platforms, `main` returns a conventional process exit code (`0` means 
 Add this to the same file:
 
 ```silk
-import std::test::expect_equal;
+import { expect_equal } from "std/test";
 
 fn add (a: int, b: int) -> int { return a + b; }
 
@@ -34288,7 +34538,7 @@ Two important ideas:
 Create `packet.slk`:
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 struct Packet {
   sequence: u32,
@@ -34438,38 +34688,38 @@ Reference: `std::fs` (sidebar → standard library).
 Create `fs_roundtrip.slk`:
 
 ```silk
-import std::fs;
-import std::io::println;
+import fs from "std/fs";
+import { println } from "std/io";
 
 fn main () -> int {
   // 493 == 0o755 on POSIX.
-  if std::fs::mkdir_all("tmp", 493) != None {
+  if fs::mkdir_all("tmp", 493) != None {
     println("mkdir failed");
     return 1;
   }
 
   let path: string = "tmp/tutorial_fs_roundtrip.txt";
-  std::fs::unlink(path); // ignore errors; we just want the file gone
+  fs::unlink(path); // ignore errors; we just want the file gone
 
   // 420 == 0o644 on POSIX.
-  match (std::fs::write_file_string(path, "hello\\n", 420)) {
+  match (fs::write_file_string(path, "hello\\n", 420)) {
     Ok(_) => {},
     Err(_) => {
       println("write failed");
-      std::fs::unlink(path);
+      fs::unlink(path);
       return 2;
     },
   }
 
-  match (std::fs::read_file_string(path)) {
+  match (fs::read_file_string(path)) {
     Ok(s) => {
       println("read: {s}", s.as_string());
-      std::fs::unlink(path);
+      fs::unlink(path);
       return 0;
     },
     Err(_) => {
       println("read failed");
-      std::fs::unlink(path);
+      fs::unlink(path);
       return 3;
     },
   }
@@ -34615,15 +34865,15 @@ For full language semantics and limitations, see:
 Minimal pattern:
 
 ```silk
-import std::abort_controller;
+import abort_controller from "std/abort_controller";
 
-task fn worker (sig: std::abort_controller::AbortSignalBorrow) -> int {
+task fn worker (sig: abort_controller::AbortSignalBorrow) -> int {
   if sig.is_aborted() { return 0; }
   return 1;
 }
 
 async fn main () -> int {
-  let controller = match std::abort_controller::AbortController.init() {
+  let controller = match abort_controller::AbortController.init() {
     Ok(v) => v,
     Err(_) => return 1,
   };
@@ -34651,16 +34901,16 @@ length).
 The core readiness-wait shape is:
 
 ```silk
-import std::abort_controller;
-import std::runtime::event_loop;
+import abort_controller from "std/abort_controller";
+import event_loop from "std/runtime/event_loop";
 
-async fn wait_readable_or_abort (fd: int, sig: std::abort_controller::AbortSignalBorrow) -> int {
+async fn wait_readable_or_abort (fd: int, sig: abort_controller::AbortSignalBorrow) -> int {
   let abort_fd = match sig.wait_fd() {
     Some(v) => v,
     None => return 1,
   };
 
-  let which: i64 = await std::runtime::event_loop::fd_wait_readable2(fd, abort_fd);
+  let which: i64 = await event_loop::fd_wait_readable2(fd, abort_fd);
   if which == 0 { return 0; }
   return 1;
 }
@@ -34696,11 +34946,11 @@ To connect OS resources to streams:
 Minimal wiring:
 
 ```silk
-import std::stream;
+import stream from "std/stream";
 
 async fn main () -> int {
   task {
-    let mut t = match std::stream::TransformStream.init_default() {
+    let mut t = match stream::TransformStream.init_default() {
       Ok(v) => v,
       Err(_) => return 1,
     };
@@ -34926,7 +35176,7 @@ For flag-by-flag reference, use the manpages (sidebar → man).
 Create `hello.slk`:
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 fn main () -> int {
   println("hello {s}", "world");
@@ -35110,9 +35360,9 @@ silk build my_program.slk -o my_program
 
 Notes:
 
-- `--nostd` disables auto-loading of `import std::...;` modules, but it does not
- prevent `from "std/..."` file imports from resolving relative to the selected
- std root. See: [CLI and toolchain](?p=guides/cli).
+- `--nostd` disables auto-loading of std modules, but it does not prevent
+ `from "std/..."` file imports from resolving relative to the selected std
+ root. See: [CLI and toolchain](?p=guides/cli).
 
 ## Provide a Prebuilt Std Archive
 
@@ -35169,10 +35419,10 @@ The `wasm32-wasi` backend emits a `_start () -> void` entrypoint that calls Silk
 Create `main.slk`:
 
 ```silk
-import std::io;
+import io from "std/io";
 
 fn main () -> int {
-  std::io::println("hello from silk wasm wasi");
+  io::println("hello from silk wasm wasi");
   return 7;
 }
 ```
@@ -36820,8 +37070,9 @@ The implementation is intentionally smaller and focuses on:
  `silk error --list` lists the stable catalog,
  - the diagnostic format and initial error code set are specified in [diagnostics](?p=compiler/diagnostics).
 - standard library import resolution (first slice):
- - when a module contains `import std::...;` or a module-specifier import such
- as `import { println } from "std/io";`, the CLI automatically loads the
+ - when a module contains a module-specifier import such as
+ `import { println } from "std/io";` or direct ABI import such as
+ `import std::io::println;`, the CLI automatically loads the
  referenced `std::...` package modules from a configured stdlib root, so
  downstream users do **not** need to pass std source files explicitly on the
  command line,
@@ -36871,9 +37122,8 @@ The implementation is intentionally smaller and focuses on:
  - for `-O1`+ builds, `silk build` prefers compiling std sources into the
  executable so unreachable std code can be pruned,
  - `--std-lib` / `--std <path>.a` forces archive linking regardless of `-O`,
- - std modules auto-loaded via `import std::...;` and package-shaped
- `from "std/..."` module specifiers participate in this external/archive
- path,
+ - std modules auto-loaded via `from "std/..."` module specifiers and direct
+ std ABI imports participate in this external/archive path,
  - archive discovery (in order):
  - `--std-lib <path>` (or `--std <path>.a` / `-std <path>.a`) when provided, otherwise
  - `SILK_STD_LIB` when set, otherwise
@@ -37184,7 +37434,7 @@ The implementation is intentionally smaller and focuses on:
  - on the same baseline, when `std::image::png`/`std::image::jpeg` are imported (or when linked `.o`/`.a` inputs reference the shim symbols) and the vendored archives are present, `silk` links them automatically and adds `libz.so.1` and/or `libm.so.6` as `DT_NEEDED` dependencies (see [image](?p=std/image) and [vendored deps](?p=compiler/vendored-deps)),
  - on the same baseline, when `std::xml` is imported (or when linked `.o`/`.a` inputs reference `silk_xml_node_name_ptr`) and the vendored libxml2 archives are present, `silk` links them automatically and adds `libm.so.6` as a `DT_NEEDED` dependency (see [xml](?p=std/xml) and [vendored deps](?p=compiler/vendored-deps)),
  - on `linux/x86_64`, when `std::window` is imported and reaches the bundled runtime, `silk` links the bundled runtime archive and adds the dynamic-loader library used by the runtime-loaded GTK provider (`libdl.so.2` on glibc targets, `libdl.so` on musl targets); GTK itself is loaded at runtime, so GTK libraries are not recorded as `DT_NEEDED` dependencies,
- - on the same baseline, when bundled runtime support symbols are imported (for example via `import std::regex;`, `import std::unicode;`, or `import std::number;`), `silk` statically links the bundled runtime support archive into the output (`libsilk_rt.a`, or `libsilk_rt_noheap.a` when building with `--noheap`); the produced executable/shared library does not depend on `libsilk_rt*.so` at runtime,
+ - on the same baseline, when bundled runtime support symbols are imported (for example via `import regex from "std/regex";`, `import unicode from "std/unicode";`, or `import number from "std/number";`), `silk` statically links the bundled runtime support archive into the output (`libsilk_rt.a`, or `libsilk_rt_noheap.a` when building with `--noheap`); the produced executable/shared library does not depend on `libsilk_rt*.so` at runtime,
  - additional non-libc dependencies still must be declared via `--needed <soname>` (or otherwise be available in the process global scope at load time, for example via `LD_PRELOAD`),
  - bundled runtime archive discovery:
  - the compiler locates `libsilk_rt.a` / `libsilk_rt_noheap.a` via (in order):
@@ -37411,7 +37661,7 @@ Top-level commands:
  - on `linux/x86_64`, when `std::dylib` is imported, or when linked native `.o` / `.a` inputs reference bundled `silk_rt_dylib_*` runtime symbols, `silk` automatically adds `libdl.so.2` as a `DT_NEEDED` dependency.
  - on supported native hosts (`linux/x86_64`, `macos/aarch64`), when `std::ggml` is imported, or when linked native `.o` / `.a` inputs reference `silk_ggml_init`, `silk` auto-links the vendored ggml archives; on `linux/x86_64` it also adds `libstdc++.so.6`, `libgcc_s.so.1`, `libm.so.6`, and `libdl.so.2`, while on Apple Silicon macOS hosts it adds `-lc++` for the native link.
  - on `linux/x86_64`, when `std::window` reaches the bundled runtime, `silk` adds the dynamic-loader dependency used by the runtime-loaded GTK provider (`libdl.so.2` on glibc targets, `libdl.so` on musl targets); GTK remains runtime-loaded rather than a required `DT_NEEDED` entry.
- - when bundled runtime support symbols are imported (for example via `import std::regex;`), `silk` statically links `libsilk_rt.a` (or `libsilk_rt_noheap.a` when building with `--noheap`) into the output; no runtime `DT_NEEDED` entry is emitted for `libsilk_rt*`.
+ - when bundled runtime support symbols are imported (for example via `import regex from "std/regex";`), `silk` statically links `libsilk_rt.a` (or `libsilk_rt_noheap.a` when building with `--noheap`) into the output; no runtime `DT_NEEDED` entry is emitted for `libsilk_rt*`.
  - `--needed` entries starting with `libsilk_rt` are rejected; the bundled runtime support layer is always linked from the static archives.
  - Debug builds:
  - `--debug` (or `-g`) enables runtime stack traces for failed `assert` statements on `linux/x86_64` by printing a stack trace to stderr before aborting, and preserves internal function symbols in `.dynsym` for better symbolization.
@@ -37621,7 +37871,7 @@ silk_compiler_add_source_buffer(
     compiler,
     silk_str("src/main.slk"),
     silk_str(
-        "import std::fs;\n"
+        "import fs from \"std/fs\";\n"
         "fn main () -> int { return 0; }\n"));
 
 if (!silk_compiler_build(
@@ -39312,10 +39562,10 @@ and [`silk(1)`](?p=man/silk.1)).
 ### WASI executable
 
 ```silk
-import std::io;
+import io from "std/io";
 
 fn main () -> int {
-  std::io::println("hello from wasm wasi");
+  io::println("hello from wasm wasi");
   return 0;
 }
 ```
@@ -41238,7 +41488,8 @@ The `silk-lsp` binary is built and installed alongside the `silk` CLI:
 - Editor and IDE integrations should launch `silk-lsp` as a stdio-based LSP server, without extra arguments, and then speak JSON-RPC 2.0 over its stdin/stdout.
 - The server writes protocol messages to stdout and may emit diagnostic logs to stderr; LSP clients must not treat stderr as protocol traffic.
 - Optional flags:
- - `--std-root <path>` overrides the stdlib root used for resolving `import std::...;`.
+ - `--std-root <path>` overrides the stdlib root used for resolving
+ `from "std/..."` imports and direct std ABI imports.
  - `--std <path>` is an accepted alias of `--std-root <path>`.
  - `--nostd` disables stdlib auto-loading entirely.
  - `-h` / `--help` prints the current usage text.
@@ -41326,9 +41577,10 @@ workspace module set.
  - field and method accesses (`value.field`, `value.method`) report the field type for known struct or error receivers, and report method signatures for known struct receivers,
  - chained field receivers (`box.value.field`) are resolved by walking the known struct/error field path, including applied generic structs where direct field type parameters can be substituted before rendering the hover type,
  - imported names are resolved across the module set:
- - package imports (`import ns::pkg;`, `import ns::pkg as alias;`),
- - qualified symbol imports (`import ns::pkg::name;`, `import ns::pkg::name as alias;`, `import ::malloc;`),
- - JS-style imports (`import { name } from "ns/pkg";`, `import { name as alias } from "ns/pkg";`, `import alias from "ns/pkg";`),
+ - module-specifier imports (`import { name } from "ns/pkg";`,
+ `import { name as alias } from "ns/pkg";`, `import alias from "ns/pkg";`),
+ - direct package imports (`import ns::pkg;`),
+ - direct symbol imports (`import ns::pkg::name;`, `import ::malloc;`),
  - and module-scope `using` aliases for imported or local names,
  - when an `ext` declaration resolves to a locally indexed native C symbol, hover includes the native C declaration/prototype in an additional `c` code block,
  - native C lookup is filtered by the `ext` shape (`fn` / `c_fn` externs prefer C functions; non-function externs prefer C variables), so common C tag/function collisions like `struct stat` vs `stat(...)` do not override the callable symbol.
@@ -41357,9 +41609,9 @@ The server provides `textDocument/definition` for open documents.
  - a default/namespace import,
  - or a module-scope `using` alias.
 - Package and import resolution covers:
- - package imports (`import ns::pkg;`, `import ns::pkg as alias;`),
- - qualified symbol imports (`import ns::pkg::name;`, `import ns::pkg::name as alias;`, `import ::name;`),
- - JS-style imports from package specifiers and file specifiers,
+ - module-specifier imports from package specifiers and file specifiers,
+ - direct package imports (`import ns::pkg;`),
+ - direct symbol imports (`import ns::pkg::name;`, `import ::name;`),
  - and `using` aliases for both value names and namespace aliases.
 - Local scopes are then consulted to resolve:
  - function parameters,
@@ -41646,7 +41898,10 @@ File-backed URI handling note:
 
 ### Standard Library Integration
 
-By default, the language server will load standard library packages referenced by `import std::...` when a stdlib root is available. The stdlib root is selected using the same rules as the compiler, with an additional workspace-root fallback:
+By default, the language server will load standard library packages referenced
+by `from "std/..."` imports and direct std ABI imports when a stdlib root is
+available. The stdlib root is selected using the same rules as the compiler,
+with an additional workspace-root fallback:
 
 - `--std-root <path>` passed to `silk-lsp` (highest priority),
 - `SILK_STD_ROOT` when set,
@@ -41929,12 +42184,13 @@ The initial C header provided in the Silk compiler repository defines:
   ```
 
  `silk_compiler_set_std_root` configures the filesystem stdlib root directory used
- to auto-load `std::...` packages when modules contain `import std::...;`. The
+ to auto-load `std::...` packages when modules contain `from "std/..."`
+ module specifiers or direct std ABI imports. The
  `std_root` string is copied. When set, it overrides `SILK_STD_ROOT` and the
  working-directory/default search behavior described below.
 
  `silk_compiler_set_nostd` disables this stdlib auto-loading behavior when set
- to `true`. When `nostd` is enabled, `import std::...;` declarations must be
+ to `true`. When `nostd` is enabled, std imports must be
  satisfied by explicitly adding the corresponding std sources as modules (for
  example via `silk_compiler_add_source_buffer`); the compiler will not consult
  `SILK_STD_ROOT` or the filesystem std root search paths.
@@ -41956,7 +42212,7 @@ The initial C header provided in the Silk compiler repository defines:
  builds, it also prunes unreachable functions from the executable entrypoint
  (function-level dead-code elimination), typically reducing output size and
  over-linking when using the prebuilt `libsilk_std.a` archive to satisfy
- auto-loaded `import std::...;` modules.
+ auto-loaded std modules.
  The CLI also exposes `silk build --strip-unused` to force analogous
  reachability-based pruning at `-O0` for executable/static/shared outputs; the
  current C ABI does not yet expose a separate setter for that flag.
@@ -42144,7 +42400,8 @@ The initial C header provided in the Silk compiler repository defines:
  - duplicate exported names within a single package are reported as a
  resolver error (`"duplicate exported symbol"`).
  - standard library import resolution (first slice):
- - when a module contains `import std::...;`, the compiler will attempt to
+ - when a module contains `from "std/..."` module specifiers or direct std ABI
+ imports, the compiler will attempt to
  auto-load the referenced `std::...` package modules from a configured
  stdlib root so embedders do **not** need to provide std sources
  explicitly in the common case,
@@ -42713,7 +42970,8 @@ Create a compiler, configure it, add sources, build, then destroy it.
 - `setStdlib(stdlib_name: []const u8)`
  - Selects the stdlib package name, usually `"std"`.
 - `setStdRoot(std_root: []const u8)`
- - Points the compiler at the stdlib source root for `import std::...;`.
+ - Points the compiler at the stdlib source root for `from "std/..."` imports
+ and direct std ABI imports.
 - `setNoStd(nostd: bool)`
  - Disables filesystem-based stdlib auto-loading.
 - `setDebug(debug: bool)`
@@ -43459,8 +43717,8 @@ For the implementation, the supported options are:
  - `--help`, `-h` — show `check` usage and exit.
  - `--verify` — enable Formal Silk verification for modules that contain Formal Silk directives.
  - `--no-verify` — disable Formal Silk verification (default).
- - `--nostd`, `-nostd` — disable stdlib auto-loading; `import std::...;` must be satisfied by explicitly passing source files.
- - `--std-root <path>` (or `--std <path>` / `-std <path>` when `<path>` does **not** end in `.a`) — override the stdlib root directory used to resolve `import std::...;` and package-shaped `from "std/<path>"` module specifiers.
+ - `--nostd`, `-nostd` — disable stdlib auto-loading; std modules must be satisfied by explicitly passing source files.
+ - `--std-root <path>` (or `--std <path>` / `-std <path>` when `<path>` does **not** end in `.a`) — override the stdlib root directory used to resolve `from "std/<path>"` module specifiers and direct std ABI imports.
  - `--std-lib <path>` (or `--std <path>.a` / `-std <path>.a`) — select a stdlib archive path for linking auto-loaded `std::...` modules during builds (ignored by `check`).
  - `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`; valid only with `--verify`).
  - `--debug`, `-g` — when Formal Silk verification fails, emit Z3 debugging output and write an SMT-LIB2 reproduction script under `.silk/z3/` (or `$SILK_WORK_DIR/z3`; valid only with `--verify`).
@@ -43640,8 +43898,8 @@ For the implementation, the supported options are:
  - `--runpath <path>`, `--rpath <path>` — add a runtime search path element (emitted as `DT_RUNPATH`) for executable and shared outputs; may be repeated (joined with ':').
  - `--soname <soname>` — set the shared library soname recorded as `DT_SONAME` for shared outputs (an empty string clears it).
  - `--elf-interp <path>` — override the ELF `PT_INTERP` dynamic loader path used for `linux-x86_64` executable outputs.
- - `--nostd`, `-nostd` — disable stdlib auto-loading; `import std::...;` must be satisfied by explicitly passing source files.
- - `--std-root <path>` (or `--std <path>` / `-std <path>` when `<path>` does **not** end in `.a`) — override the stdlib root directory used to resolve `import std::...;`.
+ - `--nostd`, `-nostd` — disable stdlib auto-loading; std modules must be satisfied by explicitly passing source files.
+ - `--std-root <path>` (or `--std <path>` / `-std <path>` when `<path>` does **not** end in `.a`) — override the stdlib root directory used to resolve `from "std/..."` module specifiers and direct std ABI imports.
  - `--std-lib <path>` (or `--std <path>.a` / `-std <path>.a`) — select a stdlib archive path for linking auto-loaded `std::...` modules during executable builds.
  - The build currently:
  - runs front-end checks,
@@ -43679,7 +43937,7 @@ For the implementation, the supported options are:
  - on `linux/x86_64`, when `std::dylib` is imported, or when linked native `.o` / `.a` inputs reference bundled `silk_rt_dylib_*` runtime symbols, `silk` automatically adds `libdl.so.2` as a `DT_NEEDED` dependency,
  - on supported native hosts (`linux/x86_64`, `macos/aarch64`), when `std::ggml` is imported, or when linked native `.o` / `.a` inputs reference `silk_ggml_init`, `silk` auto-links the vendored ggml archives; on `linux/x86_64` it also adds `libstdc++.so.6`, `libgcc_s.so.1`, `libm.so.6`, and `libdl.so.2`, while on Apple Silicon macOS hosts it adds `-lc++` for the native link,
  - on `linux/x86_64`, when `std::window` reaches the bundled runtime, `silk` adds the dynamic-loader dependency used by the runtime-loaded GTK provider (`libdl.so.2` on glibc targets, `libdl.so` on musl targets); GTK itself is not recorded as a required `DT_NEEDED` entry,
- - when bundled runtime helpers are imported (for example via `import std::{regex,unicode,number};`), `silk` statically links the bundled runtime archive (`libsilk_rt.a`, or `libsilk_rt_noheap.a` when `--noheap`) into the output, and does not emit a runtime `DT_NEEDED` dependency on `libsilk_rt*`,
+ - when bundled runtime helpers are imported (for example via `import regex from "std/regex";`), `silk` statically links the bundled runtime archive (`libsilk_rt.a`, or `libsilk_rt_noheap.a` when `--noheap`) into the output, and does not emit a runtime `DT_NEEDED` dependency on `libsilk_rt*`,
  - `--needed` entries starting with `libsilk_rt` are rejected; the bundled runtime support layer is always linked from the static archives,
  - additional dependencies must be declared via `--needed` (or be available in the process global scope at load time, for example via `LD_PRELOAD`),
  - multi-file builds are supported for `--kind executable` and for `--kind object`, `--kind static`, and `--kind shared`:
@@ -43926,7 +44184,7 @@ For the implementation, the supported options are:
 See also: [`silk-env(1)`](?p=man/silk-env.1) for a complete list of environment variables printed by `silk env`.
 
 - `SILK_STD_ROOT` — path to the stdlib root directory used to resolve
- `import std::...;` declarations when `--std`/`--std-root` is not provided. When neither
+ `from "std/..."` module specifiers and direct std ABI imports when `--std`/`--std-root` is not provided. When neither
  is set (and `--nostd` is not set), `silk` searches for:
  - a `std/` directory in the current working directory (development default), otherwise
  - `../share/silk/std` relative to the `silk` executable (installed default).
@@ -44181,8 +44439,8 @@ Notes:
 
 ### Stdlib and verification
 
-- `--nostd`, `-nostd` — disable stdlib auto-loading for `import std::...;`.
-- `--std-root <path>` — override the stdlib root directory used to resolve `import std::...;`.
+- `--nostd`, `-nostd` — disable stdlib auto-loading for std imports.
+- `--std-root <path>` — override the stdlib root directory used to resolve `from "std/..."` module specifiers and direct std ABI imports.
 - `--std-lib <path>` — select a stdlib archive path for linking hosted builds.
 - `--std <path>` — alias of `--std-root` when `<path>` does not end in `.a`.
 - `--std <path>.a` — alias of `--std-lib`.
@@ -44653,8 +44911,8 @@ When explicit input files are used (no `--package`), the `silk` CLI may load add
 - `--help`, `-h` — show command help and exit.
 - `--verify` — enable Formal Silk verification for modules that contain Formal Silk directives.
 - `--no-verify` — disable Formal Silk verification (default).
-- `--nostd`, `-nostd` — disable stdlib auto-loading for `import std::...;`.
-- `--std-root <path>` — override the stdlib root directory used to resolve `import std::...;`.
+- `--nostd`, `-nostd` — disable stdlib auto-loading for std imports.
+- `--std-root <path>` — override the stdlib root directory used to resolve `from "std/..."` module specifiers and direct std ABI imports.
 - `--std <path>` — alias of `--std-root` when `<path>` does not end in `.a`.
 - `--std-lib <path>` — accepted for consistency; ignored by `check`.
 - `--std <path>.a` — accepted for consistency; ignored by `check`.
@@ -44739,8 +44997,8 @@ When explicit input files are used (no `--package`), the `silk` CLI may load add
 ## Options
 
 - `--help`, `-h` — show command help and exit.
-- `--nostd`, `-nostd` — disable stdlib auto-loading for `import std::...;`.
-- `--std-root <path>` — override the stdlib root directory used to resolve `import std::...;`.
+- `--nostd`, `-nostd` — disable stdlib auto-loading for std imports.
+- `--std-root <path>` — override the stdlib root directory used to resolve `from "std/..."` module specifiers and direct std ABI imports.
 - `--std-lib <path>` — select a stdlib archive path for linking hosted builds.
 - `--std <path>` — alias of `--std-root` when `<path>` does not end in `.a`.
 - `--std <path>.a` — alias of `--std-lib`.
@@ -44981,12 +45239,12 @@ silk format --check .
 ```
 
 ```silk
-import util from pkg::util;
+import util from "pkg::util";
 import { Delta, Alpha, Beta, Gamma } from "./local.slk";
 import "./a.slk";
-import std::io;
-import { Zebra, Beta, Alpha, Gamma } from pkg::names;
-import std::fs;
+import io from "std/io";
+import { Zebra, Beta, Alpha, Gamma } from "pkg::names";
+import fs from "std/fs";
 
 fn main () -> int { let x: int = 1; if x == 1 { return 0; } return 1; }
 ```
@@ -44994,16 +45252,16 @@ fn main () -> int { let x: int = 1; if x == 1 { return 0; } return 1; }
 becomes:
 
 ```silk
-import std::fs;
-import std::io;
+import fs from "std/fs";
+import io from "std/io";
 
 import {
   Alpha,
   Beta,
   Gamma,
   Zebra,
-} from pkg::names;
-import util from pkg::util;
+} from "pkg::names";
+import util from "pkg::util";
 
 import "./a.slk";
 import {
@@ -45129,7 +45387,7 @@ The output includes, at minimum:
 
 - `SILK_DEBUG_BACKEND` — enable backend debug output when set to a non-empty, non-`0` value.
 - `SILK_DEBUG_BACKEND_ENUMS` — enable enum-lowering debug output.
-- `SILK_STD_ROOT` — override stdlib root used to resolve `import std::...;`.
+- `SILK_STD_ROOT` — override stdlib root used to resolve `from "std/..."` module specifiers and direct std ABI imports.
 - `SILK_STD_LIB` — override stdlib archive used for linking (`libsilk_std.a`).
 - `SILK_Z3_LIB` — override Z3 dynamic library path used for Formal Silk verification.
 - `SILK_VERIFY_JOBS` — override the number of worker threads used for Formal Silk verification (default: auto; capped at 8).
@@ -45798,7 +46056,7 @@ The currently implemented coverage is documented in:
 
 - Silk source files use the `.slk` extension.
 - Package builds are driven by a manifest file named `silk.toml` (see [package manifests](?p=compiler/package-manifests)).
-- The default stdlib implementation is a directory tree rooted at `std/` and is imported via `import std::...;`.
+- The default stdlib implementation is a directory tree rooted at `std/` and is imported via `from "std/..."` module specifiers or direct std ABI imports.
 
 ## Standard Library
 
@@ -46139,7 +46397,8 @@ bool silk_compiler_set_std_root(SilkCompiler *compiler,
                                 SilkString    std_root);
 ```
 
-- Sets the filesystem stdlib root directory used to resolve `import std::...;` declarations.
+- Sets the filesystem stdlib root directory used to resolve `from "std/..."`
+ module specifiers and direct std ABI imports.
 - This overrides `SILK_STD_ROOT` (environment variable) and the `std/` working-directory default.
 - The function:
  - validates that the directory exists,
@@ -46155,7 +46414,7 @@ bool silk_compiler_set_nostd(SilkCompiler *compiler,
 ```
 
 - When `nostd` is `true`, the compiler disables filesystem-based stdlib
- auto-loading for `import std::...;`.
+ auto-loading for std imports.
 - In this mode, any `std::...` packages must be provided explicitly by adding
  the corresponding sources as modules (for example via
  `silk_compiler_add_source_buffer`).
@@ -46304,7 +46563,7 @@ bool silk_compiler_set_optimization_level(SilkCompiler *compiler,
 - `level >= 1` enables lowering-time pruning of
  unused extern symbols before code generation. This typically reduces output
  size and over-linking when using the prebuilt stdlib archive (`libsilk_std.a`)
- to satisfy auto-loaded `import std::...;` modules.
+ to satisfy auto-loaded std modules.
 - The CLI also exposes `silk build --strip-unused` to force analogous
  reachability-based pruning at `-O0` for executable/static/shared outputs; the
  current C ABI does not yet expose a separate setter for that flag.
@@ -46639,7 +46898,7 @@ covers the full std surface.
 ## Environment
 
 - `SILK_STD_ROOT` — path to the stdlib root directory used to resolve
- `import std::...;` declarations when the embedder has not called
+ `from "std/..."` module specifiers and direct std ABI imports when the embedder has not called
  `silk_compiler_set_std_root`.
 - `SILK_STD_LIB` — path to a target-specific stdlib static archive
  (`libsilk_std.a`). When present, supported executable builds treat auto-loaded
@@ -46844,7 +47103,7 @@ All configuration functions return `true` on success and `false` on failure. On 
 Stdlib configuration:
 
 - `silk_compiler_set_stdlib` selects the stdlib package name (for example `"std"`).
-- `silk_compiler_set_std_root` selects the filesystem root used to resolve `import std::...;`.
+- `silk_compiler_set_std_root` selects the filesystem root used to resolve `from "std/..."` module specifiers and direct std ABI imports.
 - `silk_compiler_set_nostd(true)` disables filesystem-based stdlib auto-loading.
 - `silk_compiler_set_std_archive` overrides the stdlib archive path used by hosted executable builds when archive linking is applicable.
 
@@ -46864,7 +47123,7 @@ Target, linkage, and header emission:
 Optimization:
 
 - `silk_compiler_set_optimization_level` accepts an integer level in the range documented by the public Silk header. The default is level 0 unless overridden.
-- Level 1+ enables lowering-time pruning of unused extern symbols before code generation (typically reducing output size and over-linking when using the prebuilt `libsilk_std.a` archive for auto-loaded `import std::...;` modules).
+- Level 1+ enables lowering-time pruning of unused extern symbols before code generation (typically reducing output size and over-linking when using the prebuilt `libsilk_std.a` archive for auto-loaded std modules).
 - The CLI also exposes `silk build --strip-unused` to force analogous reachability-based pruning at `-O0` for executable/static/shared outputs; the current C ABI does not yet expose a separate setter for that flag.
 
 ## Sources
@@ -47288,10 +47547,10 @@ Names are often qualified with `::`:
 ```silk
 package my_app::core;
 
-import std::strings;
+import strings from "std/strings";
 
 fn main () -> int {
-  let s: string = std::strings::trim(" hi ");
+  let s: string = strings::trim(" hi ");
   return 0;
 }
 ```
@@ -47347,16 +47606,15 @@ module drivers::uart as Device;
 
 See `Packages, Imports, and Exports` for the full import/export model.
 
-#### Package imports
+#### Module-specifier imports
 
 ```silk
 package app;
 
-import std::strings;
+import strings from "std/strings";
 
 fn main () -> int {
-  let s: string = trim(" hi "); // may be visible unqualified in the
-  let t: string = std::strings::trim(" hi ");
+  let s: string = strings::trim(" hi ");
   return 0;
 }
 ```
@@ -47468,10 +47726,10 @@ Notes:
  Enum destructuring is also supported:
 
   ```silk
-  import std::result;
+  import result from "std/result";
 
   fn main () -> int {
-    type R = std::result::Result(int, int);
+    type R = result::Result(int, int);
     let Ok(value) = R.ok(7);
     return value;
   }
@@ -47713,7 +47971,7 @@ See `Interfaces`.
 Error type declaration:
 
 ```silk
-import std::arrays;
+import arrays from "std/arrays";
 
 error OutOfBounds {
   index: i64,
@@ -47724,7 +47982,7 @@ error OutOfBounds {
 Error-producing signatures use `|`:
 
 ```silk
-fn get_at (xs: std::arrays::Slice(u8), index: i64) -> u8 | OutOfBounds {
+fn get_at (xs: arrays::Slice(u8), index: i64) -> u8 | OutOfBounds {
   if index < 0 || index >= xs.len() {
     panic OutOfBounds { index: index, len: xs.len() };
   }
@@ -47737,7 +47995,7 @@ Handling typed errors uses the `match` **statement** form:
 ```silk
 fn main () -> int {
   let xs_arr: u8[3] = [1, 2, 3];
-  let xs: std::arrays::Slice(u8) = { ptr: xs_arr as u64, len: 3 };
+  let xs: arrays::Slice(u8) = { ptr: xs_arr as u64, len: 3 };
 
   match (get_at(xs, 10)) {
     value => {
@@ -50124,10 +50382,10 @@ The type checker rejects:
 #### Basic `test`
 
 ```silk
-import std::regex;
+import regex from "std/regex";
 
 fn main () -> int {
-  if std::regex::matches(/hello/, "hello world") {
+  if regex::matches(/hello/, "hello world") {
     return 0;
   }
   return 1;
@@ -50866,10 +51124,10 @@ fn main () -> int {
 Example (recoverable `Result`):
 
 ```silk
-import std::result;
+import result from "std/result";
 
 fn main () -> int {
-  let r: std::result::Result(int, string) = Ok(42);
+  let r: result::Result(int, string) = Ok(42);
   if let Ok(v) = r {
     return v;
   }
@@ -51931,8 +52189,7 @@ Rules (Supported forms):
 Example:
 
 ```silk
-import std::result;
-import std::strings::String;
+import { String } from "std/strings";
 
 fn main () -> int {
   let s: String = match String.from_string("hello") {
@@ -52845,7 +53102,7 @@ writers, iterators, and allocators.
 When the standard library is enabled (the default), the compiler provides a
 small implicit std prelude (see `Packages, Imports, and Exports`).
 In particular, the interface names from `std::interfaces` are available without
-an explicit `import std::interfaces;`. This prelude is specified by the stdlib
+an explicit `import interfaces from "std/interfaces";`. This prelude is specified by the stdlib
 module `std::runtime::globals`.
 
 Key components:
@@ -53210,17 +53467,11 @@ extended as the compiler’s resolver and linker mature.
  `module ... as <Interface>;` conformance checking.
 - Inline module declarations (`module Name { ... }` / `export module Name { ... }`)
  for nested namespaces.
-- A contiguous top-level `import` block (package imports and `from "..."` module
- specifier imports).
+- A contiguous top-level `import` block. User-space code should usually use
+ module specifier imports: `import { Name } from "...";` or
+ `import ns from "...";`.
 - Named re-exports: `export { Name, Other as Alias };` (exports an in-scope value
  name so other modules may import it).
-- Package imports (`import std::strings;`) that make a package’s exported values
- available for use in the importing source file.
-- Package-import aliasing (`import std::window;`, `import std::strings as str;`)
- that binds a namespace alias for qualified access (`window::is_supported`, `str::eq`).
-- Qualified symbol imports (`import std::strings::Builder;`, `import std::io::println;`,
- `import ::malloc;`) that bring a single symbol into scope without importing the
- entire package namespace.
 - Module-specifier imports (`import { Name } from "...";`, `import ns from "...";`)
  including:
  - relative file imports (`from "./file.slk"`),
@@ -53228,6 +53479,9 @@ extended as the compiler’s resolver and linker mature.
  accepted for compatibility and stripped before package lookup),
  - and package specifier imports (`from "ns_pkg"`, `from "ns_pkg/subpath"` where `/`
  is treated as `::` for namespace paths).
+- Direct package/ABI imports (`import package::ns;`,
+ `import package::ns::symbol;`, `import ::symbol;`) for cases where code needs
+ to name the package/export path that the resolver and linker see directly.
 - Default exports (`export default fn ...` and `export default Name;`) and default
  imports that bind either:
  - the default-exported symbol, or
@@ -53400,7 +53654,7 @@ Source files may refer to other packages or modules via `import` declarations:
 ```silk
 package my_app::core;
 
-import std::strings;
+import strings from "std/strings";
 
 fn main () -> int {
   return 0;
@@ -53415,21 +53669,22 @@ Rules:
  optional `package` declaration (if present) and before any other kind of
  top-level declaration. In other words, imports form a contiguous block at
  the beginning of the module immediately following the optional package.
-- An `import` path is a sequence of identifiers separated by `::`, matching
- the package naming rules above (including the `std::task` special case).
- - As with expression/type qualified names, an import path MAY start with `::`
- to explicitly name the global namespace (the unnamed package).
-- `import` declarations identify dependencies and bring exported symbols
- from the imported package into scope in the importing module, subject to
- the visibility rules below.
+- User-space modules should prefer module-specifier imports:
+ - `import { Name, Other as Alias } from "./module.slk";`
+ - `import ns from "./module.slk";`
+ - `import io from "std/io";`
+ - `import { println } from "std/io";`
+ - `import logger from "oro::logger";`
+- Direct `::` imports remain supported for package/ABI-oriented code and are
+ documented below.
 - Currently:
- - importing a package makes its exported `let` bindings with explicit
+ - importing a package namespace makes its exported `let` bindings with explicit
  type annotations visible as ordinary, unqualified names in the
- importing module (for example, `import util;` followed by `answer`
+ importing module (for example, `import util from "util";` followed by `answer`
  refers to `util::answer` when `util` exports `let answer: int = 42;`),
  - imported exported `let` bindings are also reachable via qualified
  names of the form `pkg::name` (for example, `util::answer` after
- `import util;`); both unqualified (`answer`) and qualified
+ `import util from "util";`); both unqualified (`answer`) and qualified
  (`util::answer`) forms are accepted for now, but the qualified form
  reflects the intended package-namespaced style,
  - exported functions (`export fn`) are callable across packages for the
@@ -53457,7 +53712,7 @@ Rules:
  - enum variants are referenced relative to the enum name (`Enum::Variant` or `pkg::Enum::Variant`),
  - unqualified type names are introduced only by:
  - local declarations in the current package, and
- - explicit imports (package imports and module-specifier named imports).
+ - explicit imports (namespace imports and module-specifier named imports).
  The checker does not resolve an unqualified type name by scanning every
  package in the module set for a “unique match”.
  - if an imported package does not exist, resolution fails before
@@ -53472,13 +53727,12 @@ Rules:
  - types and struct literals: `::Foo` and `::Foo{...}`,
  - enum variant paths/patterns: `::E::Variant`.
 
-#### Package import aliasing (`import pkg;` / `import pkg as alias;`)
+#### Module-specifier namespace imports
 
-In addition to importing exported symbols, a package import also binds a
-**namespace alias** that can be used for qualified access:
+Use a default import to bind a module or package namespace:
 
 ```silk
-import std::window;
+import window from "std/window";
 
 fn main () -> int {
   if window::is_supported() {
@@ -53489,36 +53743,31 @@ fn main () -> int {
 }
 ```
 
-Rules (current implementation):
-
-- The default alias is the **last segment** of the imported package path:
- - `import std::strings;` binds `strings`
- - `import std::runtime::mem;` binds `mem`
-- You may override the alias with `as`:
-
-  ```silk
-  import std::strings as str;
-  ```
-
-- If the alias would conflict with an existing in-scope name, the import is a
- compile-time error; use `as` to choose a different alias or use the fully
- qualified package path (for example `std::strings::eq`).
-
-#### Qualified Symbol Imports
-
-In addition to importing whole packages, a module may import a single symbol by
-fully qualifying it:
+Use a selected import when you want a small local surface:
 
 ```silk
+import { trim as trim_string } from "std/strings";
+```
+
+#### Direct package and symbol imports
+
+Silk also supports import paths written directly as package-qualified names:
+
+```silk
+import std::io;
 import std::io::println;
-import std::url::URL;
+import oro::logger;
+import oro::logger::log_info;
 import ::malloc;
 ```
+
+These are direct package/ABI import forms. They name the package/export path
+that the resolver, ABI surface, and linker see directly.
 
 Semantics:
 
 - If the import path matches a package name present in the module set, it is a
- **package import** (`import std::io;`).
+ **direct package import** (`import oro::logger;`).
 - Otherwise, it is treated as a **qualified symbol import**:
  - the compiler finds the longest package-name prefix of the path,
  - the remaining suffix is the symbol name within that package (it may contain
@@ -53528,8 +53777,13 @@ Semantics:
 - When the import path begins with `::`, the symbol is resolved from the global
  namespace (the unnamed package) and is not subject to package export gating.
 
-`import { Name } from "...";` remains the preferred form when you need to rename
-imports (`as`) or import from a file path.
+For ordinary application and reusable library code, prefer:
+
+```silk
+import io from "std/io";
+import { println } from "std/io";
+import logger from "oro::logger";
+```
 
 Global namespace (`::name`) rules (current implementation):
 
@@ -53630,12 +53884,12 @@ part of the command’s module set (for example by passing their `.slk` files to
 `silk check` / `silk build`, or by adding a file import). See
 ``silk` CLI` and `CLI Usage Examples`.
 
-### Import Specifier Imports (JS-style)
+### Module-specifier imports
 
-In addition to `import pkg::name;` package imports, Silk supports JS-style
-import forms that use a string literal *import specifier* after `from`.
+Module-specifier imports are the preferred user-space import style. They use a
+string literal *import specifier* after `from`.
 
-The current JS-style forms are:
+The current forms are:
 
 - Named imports: `import { Name } from "<specifier>";`
 - Default imports / namespace imports: `import Name from "<specifier>";`
@@ -54333,9 +54587,9 @@ Notes:
 Example (`map` + `and_then`):
 
 ```silk
-import std::result;
+import result from "std/result";
 
-fn parse_port (s: string) -> std::result::Result(int, int) {
+fn parse_port (s: string) -> result::Result(int, int) {
   return Ok(123);
 }
 
@@ -55259,9 +55513,9 @@ A `struct` type is considered “droppable” when it provides a method with thi
 surface signature (usually via an interface impl):
 
 ```silk
-import std::interfaces;
+import interfaces from "std/interfaces";
 
-impl T as std::interfaces::Drop {
+impl T as interfaces::Drop {
   public fn drop (mut self: &T) -> void { ... }
 }
 ```
@@ -56001,13 +56255,13 @@ Atomic operations have operation-specific ordering contracts:
 Invalid statically visible orderings are rejected by the checker with `E2127`.
 
 ```silk
-import std::atomic;
+import atomic from "std/atomic";
 
 fn main () -> int {
-  let mut value = std::atomic::AtomicU64.init(1);
+  let mut value = atomic::AtomicU64.init(1);
 
   // error[E2127]: atomic loads cannot use Release or AcqRel
-  let current = value.load(std::atomic::Ordering::Release);
+  let current = value.load(atomic::Ordering::Release);
   return current as int;
 }
 ```
@@ -59720,11 +59974,11 @@ For array/slice destructuring:
 Enum destructuring binds payload elements from a single enum variant:
 
 ```silk
-import std::result;
+import result from "std/result";
 
 error Oops { code: int }
 
-fn foo (oops: bool) -> std::result::Result(int, Oops) {
+fn foo (oops: bool) -> result::Result(int, Oops) {
   if (oops) {
     return Err(Oops{ code: 123 });
   }
@@ -59789,11 +60043,11 @@ fn main () -> int {
 ```
 
 ```silk
-import std::result;
+import result from "std/result";
 
 error Oops { code: int }
 
-fn foo (ok: bool) -> std::result::Result(int, Oops) {
+fn foo (ok: bool) -> result::Result(int, Oops) {
   if ok { return Ok(7); }
   return Err(Oops{ code: 123 });
 }
@@ -60243,7 +60497,7 @@ to `Unknown`).
 #### Target-gated behavior
 
 ```silk
-import std::os;
+import os from "std/os";
 import { println } from "std/io";
 
 fn main () -> int {
@@ -60251,10 +60505,10 @@ fn main () -> int {
     println("posix");
   }
 
-  match (std::os::platform()) {
-    std::os::Platform::Linux => println("linux"),
-    std::os::Platform::WASI => println("wasi"),
-    std::os::Platform::Unknown => println("unknown"),
+  match (os::platform()) {
+    os::Platform::Linux => println("linux"),
+    os::Platform::WASI => println("wasi"),
+    os::Platform::Unknown => println("unknown"),
   };
 
   return 0;
@@ -60957,9 +61211,9 @@ supported patterns are the same refutable subset already implemented by
 Example:
 
 ```silk
-import std::result;
+import result from "std/result";
 
-type R = std::result::Result(int, int);
+type R = result::Result(int, int);
 
 fn main () -> int {
   let xs: R[4] = [R.ok(2), R.err(7), R.ok(3), R.err(9)];
@@ -62015,12 +62269,13 @@ The initial C header provided in the Silk compiler repository defines:
   ```
 
  `silk_compiler_set_std_root` configures the filesystem stdlib root directory used
- to auto-load `std::...` packages when modules contain `import std::...;`. The
+ to auto-load `std::...` packages when modules contain `from "std/..."`
+ module specifiers or direct std ABI imports. The
  `std_root` string is copied. When set, it overrides `SILK_STD_ROOT` and the
  working-directory/default search behavior described below.
 
  `silk_compiler_set_nostd` disables this stdlib auto-loading behavior when set
- to `true`. When `nostd` is enabled, `import std::...;` declarations must be
+ to `true`. When `nostd` is enabled, std imports must be
  satisfied by explicitly adding the corresponding std sources as modules (for
  example via `silk_compiler_add_source_buffer`); the compiler will not consult
  `SILK_STD_ROOT` or the filesystem std root search paths.
@@ -62042,7 +62297,7 @@ The initial C header provided in the Silk compiler repository defines:
  builds, it also prunes unreachable functions from the executable entrypoint
  (function-level dead-code elimination), typically reducing output size and
  over-linking when using the prebuilt `libsilk_std.a` archive to satisfy
- auto-loaded `import std::...;` modules.
+ auto-loaded std modules.
  The CLI also exposes `silk build --strip-unused` to force analogous
  reachability-based pruning at `-O0` for executable/static/shared outputs; the
  current C ABI does not yet expose a separate setter for that flag.
@@ -62230,7 +62485,8 @@ The initial C header provided in the Silk compiler repository defines:
  - duplicate exported names within a single package are reported as a
  resolver error (`"duplicate exported symbol"`).
  - standard library import resolution (first slice):
- - when a module contains `import std::...;`, the compiler will attempt to
+ - when a module contains `from "std/..."` module specifiers or direct std ABI
+ imports, the compiler will attempt to
  auto-load the referenced `std::...` package modules from a configured
  stdlib root so embedders do **not** need to provide std sources
  explicitly in the common case,

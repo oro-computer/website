@@ -11,7 +11,7 @@ This tutorial gets you from “a file” to “a runnable program” with the sm
 Create `hello.slk`:
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 fn main () -> int {
   println("hello from silk");
@@ -41,7 +41,7 @@ On hosted platforms, `main` returns a conventional process exit code (`0` means 
 Add this to the same file:
 
 ```silk
-import std::test::expect_equal;
+import { expect_equal } from "std/test";
 
 fn add (a: int, b: int) -> int { return a + b; }
 

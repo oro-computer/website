@@ -19,10 +19,10 @@ capability checks and high-level unsupported results.
 ```silk
 module std::graphics::metal;
 
-import std::result;
-import std::runtime::graphics::metal;
-import std::runtime::mem;
-import std::window;
+import result from "std/result";
+import runtime_metal from "std/runtime/graphics/metal";
+import mem from "std/runtime/mem";
+import window from "std/window";
 
 export type Handle = u64;
 export type PixelFormat = u64;

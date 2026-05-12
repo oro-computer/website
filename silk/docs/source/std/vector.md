@@ -40,8 +40,8 @@ tool.
 This example collects `TabState` values into a `Vector(TabState)`:
 
 ```silk
-import std::arrays;
-import std::vector;
+import arrays from "std/arrays";
+import vector from "std/vector";
 
 struct TabState {
   path: string,
@@ -123,8 +123,8 @@ different naming model for each module.
 ```silk
 module std::vector;
 
-import std::arrays;
-import std::interfaces;
+import arrays from "std/arrays";
+import interfaces from "std/interfaces";
 
 struct Vector(T) {
   ptr: u64,

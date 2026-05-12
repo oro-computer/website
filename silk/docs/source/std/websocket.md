@@ -37,10 +37,10 @@ Non-goals (for now):
 ```silk
 module std::websocket;
 
-import std::net;
-import std::arrays;
-import std::result;
-import std::strings;
+import net from "std/net";
+import arrays from "std/arrays";
+import result from "std/result";
+import strings from "std/strings";
 
 // Message opcodes (subset).
 export let OPCODE_TEXT: int = 1;

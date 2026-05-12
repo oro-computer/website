@@ -157,7 +157,7 @@ Notes:
 Example (formatted printing):
 
 ```silk
-import std::io;
+import io from "std/io";
 
 fn main () -> int {
   std::io::println("hello {s} answer={d}", "world", 42);
@@ -168,10 +168,10 @@ fn main () -> int {
 Example (stdin → stdout echo using unbuffered reads/writes):
 
 ```silk
-import std::io;
-import std::arrays;
-import std::runtime::io;
-import std::runtime::mem;
+import io from "std/io";
+import arrays from "std/arrays";
+import runtime_io from "std/runtime/io";
+import mem from "std/runtime/mem";
 
 fn main () -> int {
   let buf: u64 = std::runtime::mem::alloc(64);

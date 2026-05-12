@@ -24,9 +24,9 @@ Thread-safety:
 ```silk
 module std::abort_controller;
 
-import std::interfaces;
-import std::memory;
-import std::result;
+import interfaces from "std/interfaces";
+import memory from "std/memory";
+import result from "std/result";
 
 export enum AbortReasonKind {
   Aborted,

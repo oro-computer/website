@@ -13,10 +13,10 @@ The `wasm32-wasi` backend emits a `_start () -> void` entrypoint that calls Silk
 Create `main.slk`:
 
 ```silk
-import std::io;
+import io from "std/io";
 
 fn main () -> int {
-  std::io::println("hello from silk wasm wasi");
+  io::println("hello from silk wasm wasi");
   return 7;
 }
 ```

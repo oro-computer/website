@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-05-11T22:52:03+00:00",
+  "generatedAt": "2026-05-12T00:49:26+00:00",
   "kind": "docs",
-  "count": 285,
+  "count": 286,
   "sections": [
     {
       "name": "overview",
@@ -33,8 +33,13 @@
         },
         {
           "id": "guides/modules-and-packages",
-          "title": "Modules & packages",
+          "title": "Modules, Packages, and Publication",
           "file": "guides/modules-and-packages.md"
+        },
+        {
+          "id": "guides/toy-logger-module",
+          "title": "Toy Logger Module Walkthrough",
+          "file": "guides/toy-logger-module.md"
         },
         {
           "id": "guides/standard-library",

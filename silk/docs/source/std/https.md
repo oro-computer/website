@@ -48,9 +48,9 @@ Not implemented (yet):
 ```silk
 module std::https;
 
-import std::http;
-import std::net;
-import std::result;
+import http from "std/http";
+import net from "std/net";
+import result from "std/result";
 
 export let ERR_CONNECT: int = 1;
 export let ERR_TLS: int = 2;

@@ -274,7 +274,8 @@ bool silk_compiler_set_std_root(SilkCompiler *compiler,
                                 SilkString    std_root);
 ```
 
-- Sets the filesystem stdlib root directory used to resolve `import std::...;` declarations.
+- Sets the filesystem stdlib root directory used to resolve `from "std/..."`
+ module specifiers and direct std ABI imports.
 - This overrides `SILK_STD_ROOT` (environment variable) and the `std/` working-directory default.
 - The function:
  - validates that the directory exists,
@@ -290,7 +291,7 @@ bool silk_compiler_set_nostd(SilkCompiler *compiler,
 ```
 
 - When `nostd` is `true`, the compiler disables filesystem-based stdlib
- auto-loading for `import std::...;`.
+ auto-loading for std imports.
 - In this mode, any `std::...` packages must be provided explicitly by adding
  the corresponding sources as modules (for example via
  `silk_compiler_add_source_buffer`).
@@ -439,7 +440,7 @@ bool silk_compiler_set_optimization_level(SilkCompiler *compiler,
 - `level >= 1` enables lowering-time pruning of
  unused extern symbols before code generation. This typically reduces output
  size and over-linking when using the prebuilt stdlib archive (`libsilk_std.a`)
- to satisfy auto-loaded `import std::...;` modules.
+ to satisfy auto-loaded std modules.
 - The CLI also exposes `silk build --strip-unused` to force analogous
  reachability-based pruning at `-O0` for executable/static/shared outputs; the
  current C ABI does not yet expose a separate setter for that flag.
@@ -774,7 +775,7 @@ covers the full std surface.
 ## Environment
 
 - `SILK_STD_ROOT` — path to the stdlib root directory used to resolve
- `import std::...;` declarations when the embedder has not called
+ `from "std/..."` module specifiers and direct std ABI imports when the embedder has not called
  `silk_compiler_set_std_root`.
 - `SILK_STD_LIB` — path to a target-specific stdlib static archive
  (`libsilk_std.a`). When present, supported executable builds treat auto-loaded

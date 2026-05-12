@@ -11,7 +11,7 @@ If you don’t, see “Build from source” for the reference compiler workflow.
 Create `hello.slk`:
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 fn main () -> int {
   println("hello from silk");

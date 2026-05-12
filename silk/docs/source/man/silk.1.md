@@ -193,8 +193,8 @@ For the implementation, the supported options are:
  - `--help`, `-h` — show `check` usage and exit.
  - `--verify` — enable Formal Silk verification for modules that contain Formal Silk directives.
  - `--no-verify` — disable Formal Silk verification (default).
- - `--nostd`, `-nostd` — disable stdlib auto-loading; `import std::...;` must be satisfied by explicitly passing source files.
- - `--std-root <path>` (or `--std <path>` / `-std <path>` when `<path>` does **not** end in `.a`) — override the stdlib root directory used to resolve `import std::...;` and package-shaped `from "std/<path>"` module specifiers.
+ - `--nostd`, `-nostd` — disable stdlib auto-loading; std modules must be satisfied by explicitly passing source files.
+ - `--std-root <path>` (or `--std <path>` / `-std <path>` when `<path>` does **not** end in `.a`) — override the stdlib root directory used to resolve `from "std/<path>"` module specifiers and direct std ABI imports.
  - `--std-lib <path>` (or `--std <path>.a` / `-std <path>.a`) — select a stdlib archive path for linking auto-loaded `std::...` modules during builds (ignored by `check`).
  - `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`; valid only with `--verify`).
  - `--debug`, `-g` — when Formal Silk verification fails, emit Z3 debugging output and write an SMT-LIB2 reproduction script under `.silk/z3/` (or `$SILK_WORK_DIR/z3`; valid only with `--verify`).
@@ -374,8 +374,8 @@ For the implementation, the supported options are:
  - `--runpath <path>`, `--rpath <path>` — add a runtime search path element (emitted as `DT_RUNPATH`) for executable and shared outputs; may be repeated (joined with ':').
  - `--soname <soname>` — set the shared library soname recorded as `DT_SONAME` for shared outputs (an empty string clears it).
  - `--elf-interp <path>` — override the ELF `PT_INTERP` dynamic loader path used for `linux-x86_64` executable outputs.
- - `--nostd`, `-nostd` — disable stdlib auto-loading; `import std::...;` must be satisfied by explicitly passing source files.
- - `--std-root <path>` (or `--std <path>` / `-std <path>` when `<path>` does **not** end in `.a`) — override the stdlib root directory used to resolve `import std::...;`.
+ - `--nostd`, `-nostd` — disable stdlib auto-loading; std modules must be satisfied by explicitly passing source files.
+ - `--std-root <path>` (or `--std <path>` / `-std <path>` when `<path>` does **not** end in `.a`) — override the stdlib root directory used to resolve `from "std/..."` module specifiers and direct std ABI imports.
  - `--std-lib <path>` (or `--std <path>.a` / `-std <path>.a`) — select a stdlib archive path for linking auto-loaded `std::...` modules during executable builds.
  - The build currently:
  - runs front-end checks,
@@ -413,7 +413,7 @@ For the implementation, the supported options are:
  - on `linux/x86_64`, when `std::dylib` is imported, or when linked native `.o` / `.a` inputs reference bundled `silk_rt_dylib_*` runtime symbols, `silk` automatically adds `libdl.so.2` as a `DT_NEEDED` dependency,
  - on supported native hosts (`linux/x86_64`, `macos/aarch64`), when `std::ggml` is imported, or when linked native `.o` / `.a` inputs reference `silk_ggml_init`, `silk` auto-links the vendored ggml archives; on `linux/x86_64` it also adds `libstdc++.so.6`, `libgcc_s.so.1`, `libm.so.6`, and `libdl.so.2`, while on Apple Silicon macOS hosts it adds `-lc++` for the native link,
  - on `linux/x86_64`, when `std::window` reaches the bundled runtime, `silk` adds the dynamic-loader dependency used by the runtime-loaded GTK provider (`libdl.so.2` on glibc targets, `libdl.so` on musl targets); GTK itself is not recorded as a required `DT_NEEDED` entry,
- - when bundled runtime helpers are imported (for example via `import std::{regex,unicode,number};`), `silk` statically links the bundled runtime archive (`libsilk_rt.a`, or `libsilk_rt_noheap.a` when `--noheap`) into the output, and does not emit a runtime `DT_NEEDED` dependency on `libsilk_rt*`,
+ - when bundled runtime helpers are imported (for example via `import regex from "std/regex";`), `silk` statically links the bundled runtime archive (`libsilk_rt.a`, or `libsilk_rt_noheap.a` when `--noheap`) into the output, and does not emit a runtime `DT_NEEDED` dependency on `libsilk_rt*`,
  - `--needed` entries starting with `libsilk_rt` are rejected; the bundled runtime support layer is always linked from the static archives,
  - additional dependencies must be declared via `--needed` (or be available in the process global scope at load time, for example via `LD_PRELOAD`),
  - multi-file builds are supported for `--kind executable` and for `--kind object`, `--kind static`, and `--kind shared`:
@@ -660,7 +660,7 @@ For the implementation, the supported options are:
 See also: [`silk-env(1)`](?p=man/silk-env.1) for a complete list of environment variables printed by `silk env`.
 
 - `SILK_STD_ROOT` — path to the stdlib root directory used to resolve
- `import std::...;` declarations when `--std`/`--std-root` is not provided. When neither
+ `from "std/..."` module specifiers and direct std ABI imports when `--std`/`--std-root` is not provided. When neither
  is set (and `--nostd` is not set), `silk` searches for:
  - a `std/` directory in the current working directory (development default), otherwise
  - `../share/silk/std` relative to the `silk` executable (installed default).

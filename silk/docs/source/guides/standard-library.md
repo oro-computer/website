@@ -8,17 +8,20 @@ patterns to expect.
 
 ## Importing `std::` modules
 
-You can import an entire package, or import a single symbol:
+Use module-specifier imports for application and library code:
 
 ```silk
-import std::io;                 // package import (use as std::io::println, ...)
-import std::io::println;        // symbol import (use as println(...))
-import std::fs;                 // filesystem
-import std::result::Result;     // common return shape
+import io from "std/io";              // namespace import; call io::println(...)
+import { println } from "std/io";     // selected symbol import
+import fs from "std/fs";              // filesystem namespace
+import { Result } from "std/result";  // common return shape
 ```
 
-Use symbol imports when you want the dependency to be explicit at the call site (especially in small programs). Use package
-imports when you want a cohesive namespace (common for larger modules).
+Use selected imports when a small program needs one or two names. Use namespace
+imports when a module uses a cohesive surface such as `fs::read_file_string`.
+Direct imports such as `import std::io::println;` remain available for ABI-facing
+definition modules and low-level interop code; ordinary user-space code should
+prefer `from "std/..."`.
 
 ## The three common “return shapes”
 
@@ -43,9 +46,9 @@ fn parse_port (s: string) -> int? {
 `Result(T, E)` is the standard “success or error” type used across `std::`.
 
 ```silk
-import std::result;
+import result from "std/result";
 
-type IntOrMessage = std::result::Result(int, string);
+type IntOrMessage = result::Result(int, string);
 
 fn div (a: int, b: int) -> IntOrMessage {
   if b == 0 { return Err("division by zero"); }
@@ -74,7 +77,7 @@ is easy to pattern-match.
 `std::io` covers console I/O and basic stream patterns.
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 fn main () -> int {
   println("hello {s} answer={d}", "world", 42);
@@ -93,11 +96,11 @@ Reference: `std::io` (see the sidebar under “Standard library”).
 Whole-file helpers are intentionally common:
 
 ```silk
-import std::fs;
-import std::io::println;
+import fs from "std/fs";
+import { println } from "std/io";
 
 fn main () -> int {
-  match (std::fs::read_file_string("message.txt")) {
+  match (fs::read_file_string("message.txt")) {
     Ok(s) => {
       println("{s}", s.as_string());
       return 0;

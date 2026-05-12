@@ -197,12 +197,13 @@ The initial C header provided in the Silk compiler repository defines:
   ```
 
  `silk_compiler_set_std_root` configures the filesystem stdlib root directory used
- to auto-load `std::...` packages when modules contain `import std::...;`. The
+ to auto-load `std::...` packages when modules contain `from "std/..."`
+ module specifiers or direct std ABI imports. The
  `std_root` string is copied. When set, it overrides `SILK_STD_ROOT` and the
  working-directory/default search behavior described below.
 
  `silk_compiler_set_nostd` disables this stdlib auto-loading behavior when set
- to `true`. When `nostd` is enabled, `import std::...;` declarations must be
+ to `true`. When `nostd` is enabled, std imports must be
  satisfied by explicitly adding the corresponding std sources as modules (for
  example via `silk_compiler_add_source_buffer`); the compiler will not consult
  `SILK_STD_ROOT` or the filesystem std root search paths.
@@ -224,7 +225,7 @@ The initial C header provided in the Silk compiler repository defines:
  builds, it also prunes unreachable functions from the executable entrypoint
  (function-level dead-code elimination), typically reducing output size and
  over-linking when using the prebuilt `libsilk_std.a` archive to satisfy
- auto-loaded `import std::...;` modules.
+ auto-loaded std modules.
  The CLI also exposes `silk build --strip-unused` to force analogous
  reachability-based pruning at `-O0` for executable/static/shared outputs; the
  current C ABI does not yet expose a separate setter for that flag.
@@ -412,7 +413,8 @@ The initial C header provided in the Silk compiler repository defines:
  - duplicate exported names within a single package are reported as a
  resolver error (`"duplicate exported symbol"`).
  - standard library import resolution (first slice):
- - when a module contains `import std::...;`, the compiler will attempt to
+ - when a module contains `from "std/..."` module specifiers or direct std ABI
+ imports, the compiler will attempt to
  auto-load the referenced `std::...` package modules from a configured
  stdlib root so embedders do **not** need to provide std sources
  explicitly in the common case,

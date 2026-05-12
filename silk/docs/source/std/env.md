@@ -12,9 +12,9 @@ is Implemented: `get` works, while `set` remains unsupported (see
 ```silk
 module std::env;
 
-import std::process;
-import std::strings;
-import std::args;
+import process from "std/process";
+import strings from "std/strings";
+import args from "std/args";
 
 enum SetVarErrorKind { InvalidKey, OutOfMemory, Unknown }
 
@@ -60,7 +60,7 @@ valid for the process lifetime.
 Example:
 
 ```silk
-import std::env;
+import env from "std/env";
 import { println } from "std/io";
 
 fn main () -> int {
@@ -85,7 +85,7 @@ Errors are reported as an optional error value (`SetVarFailed?`).
 Example:
 
 ```silk
-import std::env;
+import env from "std/env";
 import { println } from "std/io";
 
 fn main () -> int {

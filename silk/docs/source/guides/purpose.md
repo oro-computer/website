@@ -63,10 +63,10 @@ A simple file often begins like this:
 ```silk
 package app;
 
-import std::io::println;
+import { println } from "std/io";
 ```
 
-That header tells you the namespace (`app`) and the dependencies (here: `std::io::println`) before you read the rest of the
+That header tells you the namespace (`app`) and the dependencies (here: `std/io`) before you read the rest of the
 file.
 
 ### Programs are ordinary code
@@ -74,7 +74,7 @@ file.
 Executables use a conventional entry point: `fn main () -> int` (exit code).
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 fn main () -> int {
   println("hello from silk");
@@ -110,9 +110,10 @@ The recommended flow:
 1. [Hello world](?p=guides/hello-world)
 2. [Language tour](?p=guides/language-tour)
 3. [Modules & packages](?p=guides/modules-and-packages)
-4. [Standard library](?p=guides/standard-library)
-5. [CLI and toolchain](?p=guides/cli)
-6. [Testing](?p=guides/testing)
-7. [Formal Silk](?p=guides/formal-silk)
+4. [Toy logger module](?p=guides/toy-logger-module)
+5. [Standard library](?p=guides/standard-library)
+6. [CLI and toolchain](?p=guides/cli)
+7. [Testing](?p=guides/testing)
+8. [Formal Silk](?p=guides/formal-silk)
 
 If you already know what you’re looking for, use search and the sidebar reference sections.

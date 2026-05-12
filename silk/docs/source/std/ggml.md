@@ -170,7 +170,7 @@ contract violations such as:
 ```silk
 module std::ggml;
 
-import std::result;
+import result from "std/result";
 
 type Type = i32;
 
@@ -319,7 +319,7 @@ impl Graph {
 ## Example: elementwise graph
 
 ```silk
-import std::ggml;
+import ggml from "std/ggml";
 
 fn main () -> int {
   let ctx = match std::ggml::Context.init(16 * 1024 * 1024) {
@@ -381,7 +381,7 @@ Because `Tensor.set_f32(...)` fills an entire tensor with one value, it is easy
 to build a smoke-test matrix multiply with a predictable result:
 
 ```silk
-import std::ggml;
+import ggml from "std/ggml";
 
 fn main () -> int {
   let ctx = match std::ggml::Context.init(16 * 1024 * 1024) {

@@ -161,7 +161,7 @@ Notes:
 Example:
 
 ```silk
-import std::strings;
+import strings from "std/strings";
 
 fn main () -> int {
   let owned_r = std::strings::String.from_string("hello");
@@ -199,8 +199,8 @@ fn main () -> int {
 Example: converting scalar values requires UTF-8 encoding, not a pointer cast:
 
 ```silk
-import std::arrays;
-import std::strings;
+import arrays from "std/arrays";
+import strings from "std/strings";
 
 fn main () -> int {
   let chars: char[5] = ['h', 'e', 'l', 'l', 'o'];

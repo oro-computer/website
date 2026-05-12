@@ -75,7 +75,7 @@ All configuration functions return `true` on success and `false` on failure. On 
 Stdlib configuration:
 
 - `silk_compiler_set_stdlib` selects the stdlib package name (for example `"std"`).
-- `silk_compiler_set_std_root` selects the filesystem root used to resolve `import std::...;`.
+- `silk_compiler_set_std_root` selects the filesystem root used to resolve `from "std/..."` module specifiers and direct std ABI imports.
 - `silk_compiler_set_nostd(true)` disables filesystem-based stdlib auto-loading.
 - `silk_compiler_set_std_archive` overrides the stdlib archive path used by hosted executable builds when archive linking is applicable.
 
@@ -95,7 +95,7 @@ Target, linkage, and header emission:
 Optimization:
 
 - `silk_compiler_set_optimization_level` accepts an integer level in the range documented by the public Silk header. The default is level 0 unless overridden.
-- Level 1+ enables lowering-time pruning of unused extern symbols before code generation (typically reducing output size and over-linking when using the prebuilt `libsilk_std.a` archive for auto-loaded `import std::...;` modules).
+- Level 1+ enables lowering-time pruning of unused extern symbols before code generation (typically reducing output size and over-linking when using the prebuilt `libsilk_std.a` archive for auto-loaded std modules).
 - The CLI also exposes `silk build --strip-unused` to force analogous reachability-based pruning at `-O0` for executable/static/shared outputs; the current C ABI does not yet expose a separate setter for that flag.
 
 ## Sources

@@ -39,8 +39,8 @@ incompatible (for example adding vectors of different lengths).
 ```silk
 module std::math;
 
-import std::math::vector;
-import std::math::matrix;
+import math_vector from "std/math/vector";
+import math_matrix from "std/math/matrix";
 
 // Re-export core types for ergonomic imports.
 export type Vec2f = std::math::vector::Vec2f;
@@ -77,8 +77,8 @@ export type MatrixF64Result = std::math::matrix::MatrixF64Result;
 ```silk
 module std::math::vector;
 
-import std::result;
-import std::vector;
+import result from "std/result";
+import vector from "std/vector";
 
 export enum MathErrorKind {
   InvalidInput,
@@ -223,9 +223,9 @@ impl VectorF64 {
 ```silk
 module std::math::matrix;
 
-import std::result;
-import std::vector;
-import std::math::vector;
+import result from "std/result";
+import vector from "std/vector";
+import math_vector from "std/math/vector";
 
 export type MathFailed = std::math::vector::MathFailed;
 export type MathErrorKind = std::math::vector::MathErrorKind;

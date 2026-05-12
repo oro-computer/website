@@ -8,7 +8,7 @@ The goal is a workflow where “write code + write tests” is the default, not 
 ## A basic test
 
 ```silk
-import std::test::expect_equal;
+import { expect_equal } from "std/test";
 
 test "addition" {
   expect_equal(3, 1 + 2);
@@ -26,7 +26,7 @@ silk test hello.slk
 Tests can be nested to share setup and group behavior:
 
 ```silk
-import std::test::expect_equal;
+import { expect_equal } from "std/test";
 
 fn add (a: int, b: int) -> int { return a + b; }
 
@@ -57,7 +57,7 @@ You have two complementary tools:
 Example:
 
 ```silk
-import std::test;
+import test from "std/test";
 
 test "example" {
   test::expect(1 + 1 == 2, Some("basic arithmetic"));

@@ -137,8 +137,8 @@ Notes:
 
 ### Stdlib and verification
 
-- `--nostd`, `-nostd` — disable stdlib auto-loading for `import std::...;`.
-- `--std-root <path>` — override the stdlib root directory used to resolve `import std::...;`.
+- `--nostd`, `-nostd` — disable stdlib auto-loading for std imports.
+- `--std-root <path>` — override the stdlib root directory used to resolve `from "std/..."` module specifiers and direct std ABI imports.
 - `--std-lib <path>` — select a stdlib archive path for linking hosted builds.
 - `--std <path>` — alias of `--std-root` when `<path>` does not end in `.a`.
 - `--std <path>.a` — alias of `--std-lib`.

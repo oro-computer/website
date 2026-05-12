@@ -24,11 +24,11 @@ See also:
 ```silk
 module std::stream;
 
-import std::arrays;
-import std::buffer;
-import std::interfaces;
-import std::memory;
-import std::result;
+import arrays from "std/arrays";
+import buffer from "std/buffer";
+import interfaces from "std/interfaces";
+import memory from "std/memory";
+import result from "std/result";
 
 export enum StreamErrorKind {
   OutOfMemory,
@@ -218,7 +218,7 @@ transform loop in a `task` and rely on backpressure to bound memory.
 ### Producer → consumer (tasks)
 
 ```silk
-import std::stream;
+import stream from "std/stream";
 
 task fn producer (w: std::stream::WritableStream) -> int { ... }
 task fn consumer (r: std::stream::ReadableStream) -> int { ... }
@@ -263,9 +263,9 @@ Typical wiring:
 `std::fs` provides task-based helpers for piping files into/out of streams:
 
 ```silk
-import std::fs;
-import std::fs::stream;
-import std::stream;
+import fs from "std/fs";
+import fs_stream from "std/fs/stream";
+import stream from "std/stream";
 
 async fn main () -> int {
   task {
@@ -309,7 +309,7 @@ observed between read/write steps; they do not yet interrupt a blocking
 `ReadableStream.read()` call.
 
 ```silk
-import std::stream;
+import stream from "std/stream";
 
 fn run_pipeline (src: std::stream::ReadableStream, dst: std::stream::WritableStream) -> int {
   let r = std::stream::pipe_to(src, dst);

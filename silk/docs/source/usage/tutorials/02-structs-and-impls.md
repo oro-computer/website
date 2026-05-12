@@ -44,7 +44,7 @@ Two important ideas:
 Create `packet.slk`:
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 struct Packet {
   sequence: u32,

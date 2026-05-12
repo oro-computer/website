@@ -1,181 +1,412 @@
-# Modules & packages
+# Modules, Packages, and Publication
 
-Silk uses `::`-qualified names to organize code. The goal is not novelty — it’s **clarity**:
+Silk code is organized around explicit module sets. A module set is the group of
+`.slk` files the compiler loads, resolves, checks, and builds together. Packages
+give those files a public namespace, imports describe dependencies, and manifests
+make the package root portable across local workspaces, GitHub releases, npm
+packages, and system installs.
 
-- you can see where names come from,
-- you can see what depends on what,
-- and builds stay deterministic because the compiler always knows what the module set is.
+This guide is the user-space view of that system. For exact grammar and edge
+cases, use [Packages, Imports, and Exports](?p=language/packages-imports-exports).
 
-This page focuses on the practical model you’ll use in real code.
+## The model
 
-## Packages
+- A **source file** is one `.slk` file.
+- A **module** is a compile-time namespace. It may be a file namespace, a
+ header-form `module ...;`, or an inline `module Name { ... }`.
+- A **package** is a named collection of modules that share a namespace and a
+ `silk.toml` package identity.
+- A **module set** is the concrete set of modules loaded for one compiler
+ command.
+- A **package root** is a directory with `silk.toml`; this is the unit you
+ publish or depend on.
 
-A **package** is a named collection of source files that share a namespace. A file can declare its package at the top:
+The most important practical rule: imports resolve against the module set. A
+package can only be imported after the compiler knows where that package root or
+source file lives.
 
-```silk
-package my_app::core;
+## File layout
+
+A reusable package usually looks like this:
+
+```text
+logger/
+  silk.toml
+  README.md
+  LICENSE
+  src/
+    logger.slk
+    sinks.slk
+  defs/
+    api.slk
+  examples/
+    main.slk
+  tests/
+    logger_test.slk
 ```
 
-Package names are `::`-qualified paths. The standard library lives under `std::...` (for example `std::io`, `std::fs`,
-`std::strings`).
+Conventions:
 
-### Importing packages
+- `src/` contains implementation modules.
+- `defs/` contains prototype/interface modules for public ABI or binary package
+ consumers.
+- `examples/` contains copyable downstream examples.
+- `tests/` contains package-local tests.
+- `silk.toml` declares package metadata, sources, dependencies, targets, and the
+ distribution file set.
 
-When you import a package, you are declaring a dependency on that package’s public surface:
+## Defining modules
+
+Most user-space files start with a package declaration:
 
 ```silk
-import std::strings;
+package oro::logger;
+
+import { println } from "std/io";
+
+export fn info (message: string) -> void {
+  println("[info] {s}", message);
+}
 ```
 
-Exports are explicit (`export fn`, `export let`, and named re-exports). This keeps public API surfaces intentional.
+Rules that keep tooling simple:
 
-### A tiny multi-file example
+- `package ...;` or `module ...;` comes first.
+- Imports form one contiguous block immediately after the package/module header.
+- Exports are explicit.
+- Package names use `::` paths.
 
-`util.slk`:
+Use `package ...;` for reusable application/library code. Use header-form
+`module ...;` when you need a compile-time-only namespace or module conformance
+surface, especially in definition/prototype files.
+
+Inline modules are useful for nested namespaces inside one package:
 
 ```silk
-package app::util;
+package oro::logger;
 
-export fn add (a: int, b: int) -> int { return a + b; }
+export module level {
+  export let INFO: int = 20;
+  export let ERROR: int = 40;
+}
 ```
 
-`main.slk`:
+Downstream code can then refer to `logger::level::INFO` after importing the
+package namespace.
+
+## Import style for user-space code
+
+Prefer module-specifier imports:
 
 ```silk
-package app;
+import { println } from "std/io";
+import fs from "std/fs";
+import logger from "oro::logger";
+import { Logger, info as log_info } from "./logger.slk";
+```
 
-import app::util;
-import std::io::println;
+Use these forms as your default:
+
+- `import ns from "specifier";` binds a namespace, then call
+ `ns::symbol(...)`.
+- `import { Name } from "specifier";` imports selected exported names.
+- `import { Name as LocalName } from "specifier";` gives a local alias.
+- `import "./file.slk";` loads a module for side effects such as prototype
+ conformance without binding names.
+
+Specifier meanings:
+
+- `./x.slk` or `../x.slk` resolves relative to the importing file.
+- `std/io` resolves from the configured stdlib root.
+- `oro::logger` resolves as a package specifier from the module set or package
+ search path.
+
+This form scales well because it works for local files, stdlib modules, and
+dependencies while keeping aliases explicit.
+
+## Direct package and symbol imports
+
+Silk also supports direct import paths:
+
+```silk
+import oro::logger;
+import oro::logger::info;
+import ::puts;
+```
+
+These are ABI-oriented imports. They name the package/export path directly, so
+they are useful for:
+
+- definition/prototype modules that describe an ABI surface,
+- FFI wrappers that expose exact linked symbols,
+- stdlib/runtime internals,
+- and explicit global namespace access such as `::malloc`.
+
+Effects:
+
+- `import oro::logger;` imports the package namespace directly.
+- `import oro::logger::info;` binds the exported symbol `info` directly in the
+ importing module.
+- `import ::puts;` resolves `puts` from the unnamed global package.
+
+For ordinary user-space modules, prefer:
+
+```silk
+import logger from "oro::logger";
+import { info } from "oro::logger";
+```
+
+That keeps low-level ABI paths out of most code and gives you aliases through
+the same import form.
+
+## Exports
+
+Exports define the public surface other modules may depend on:
+
+```silk
+package oro::logger;
+
+export enum Level {
+  Debug,
+  Info,
+  Warn,
+  Error,
+}
+
+export struct Logger {
+  min_level: Level;
+}
+
+export fn info (logger: &Logger, message: string) -> void {
+  log(logger, Level::Info, message);
+}
+```
+
+Best practices:
+
+- Export only the surface you intend downstream users to call.
+- Keep implementation helpers private by leaving off `export`.
+- Prefer one small public namespace over many unrelated exported names.
+- Use a `defs/api.slk` prototype file when a package may be consumed as a
+ prebuilt binary.
+
+## Manifests and module loading
+
+`silk.toml` is the package root manifest:
+
+```toml
+[package]
+name = "oro::logger"
+version = "0.1.0"
+description = "Small structured logger for Silk examples"
+license = "MIT"
+repository = "https://github.com/oro-computer/silk-logger"
+readme = "README.md"
+definitions = ["defs/api.slk"]
+
+[sources]
+include = ["src/**/*.slk", "defs/**/*.slk", "examples/**/*.slk"]
+
+[dist]
+include = ["silk.toml", "README.md", "LICENSE", "src/**", "defs/**"]
+
+[[target]]
+name = "logger"
+kind = "static"
+entry = "src/logger.slk"
+output = "build/liblogger.a"
+c_header = "build/logger.h"
+
+[[target]]
+name = "logger-demo"
+kind = "executable"
+entry = "examples/main.slk"
+output = "build/logger-demo"
+```
+
+How loading works:
+
+- `silk build --package .` reads `silk.toml` and loads files selected by
+ `[sources]`.
+- A dependency with `path = "../logger"` is loaded from that directory.
+- A dependency without `path` is searched through `SILK_PACKAGE_PATH` and the
+ installed package roots.
+- Package names map to paths by replacing `::` with `/`; `oro::logger` maps to
+ `oro/logger/silk.toml` under each search root.
+- The manifest package name must match the import/dependency name.
+
+## Dependencies
+
+A package depends on another package through `[dependencies]`:
+
+```toml
+[dependencies]
+logger = { path = "../logger", version = "^0.1.0" }
+```
+
+Then source can import the dependency by package name:
+
+```silk
+import logger from "oro::logger";
 
 fn main () -> int {
-  println("sum={d}", app::util::add(20, 22));
+  let l = logger::Logger{ min_level: logger::Level::Info };
+  logger::info(&l, "hello");
   return 0;
 }
 ```
 
-The important thing is how *obvious* this is: `main` depends on `app::util` and `std::io::println`, and nothing else is
-implicitly pulled in.
+For local development, prefer `path`. For published packages, use a version
+requirement plus a package root materialized by your chosen distribution system.
 
-## Modules
+## Publishing through GitHub
 
-A **module** declaration is a compile-time-only namespace value. It lets you write code that is “about” a module, including
-module-level conformance checks.
-
-```silk
-module my_app::logger;
-```
-
-Modules are useful when you want a named namespace in a single file without necessarily treating it as “a package you import
-from other files”.
-
-In addition to header-form modules, you can define inline modules for nested namespaces:
-
-```silk
-package my_app;
-
-export module math {
-  export fn add (a: int, b: int) -> int { return a + b; }
-}
-```
-
-## Imports: whole packages vs individual symbols
-
-Silk supports a small set of import forms that cover most real programs:
-
-- **package imports** for cohesive namespaces
-- **symbol imports** when you want a single dependency in scope
-- **module-specifier imports** (for relative files, `std/` file paths, or package specifiers)
-
-```silk
-import std::io::println;
-import std::strings;
-```
-
-Use package imports when you want a cohesive namespace; use symbol imports when you want explicit local dependencies.
-
-## Exports: keeping APIs deliberate
-
-Exports define what other packages can depend on.
-
-Common forms:
-
-```silk
-export let version: string = "0.1.0";
-
-export fn parse (s: string) -> int? {
-  return None;
-}
-
-export { parse as parse_port };
-```
-
-This “explicit exports” rule is a major readability win in larger codebases: public surfaces stay curated.
-
-## The CLI view: module sets and package manifests
-
-The compiler always operates on a **module set**: the set of `.slk` files compiled together for that command.
-
-You can define the module set explicitly (a list of files), or you can load it from a package manifest (`silk.toml`) using
-`--package`.
-
-Why this matters for packages/modules:
-
-- Package imports only resolve to packages that exist in the module set.
-- Tooling can answer questions like “what packages exist?” without executing code.
-- Builds become reproducible because “what was compiled” is not a hidden global.
-
-If you want the user-facing toolchain model, read: [CLI and toolchain](?p=guides/cli).
-
-## From package graph to distributable package
-
-For libraries and reusable apps, `silk.toml` is the bridge from source layout to public package surface.
-
-Small example:
-
-```toml
-[package]
-name = "acme::http"
-version = "0.1.0"
-definitions = ["defs/api.slk"]
-
-[[target]]
-name = "acme-http"
-kind = "static"
-entry = "src/lib.slk"
-output = "build/libacme_http.a"
-```
-
-That manifest gives you:
-
-- a stable package identity
-- an explicit importable/public surface (`defs/api.slk`)
-- named build targets
-- a basis for `silk package inspect` and `silk package lint`
-
-Useful commands:
+Silk does not require a Silk-owned registry. A GitHub release can publish the
+same package root users build locally:
 
 ```bash
-silk build --package .
-silk package inspect --package .
-silk package lint --package .
+git archive --format=tar --prefix=logger-0.1.0/ v0.1.0 | gzip > logger-0.1.0.tar.gz
 ```
 
-References:
+Recommended release payload:
 
-- [Package manifests](?p=compiler/package-manifests)
-- [Package distribution](?p=compiler/package-distribution)
-- [`silk-package` (1)](?p=man/silk-package.1)
+- `silk.toml`
+- `README.md` and license files
+- `src/**` for source packages
+- `defs/**` for importable public surfaces
+- `lib/<target>/**` for prebuilt libraries, when shipped
+- `share/man/**` or `docs/**` for package docs
 
-## Why this structure matters
+Consumers can unpack the archive and either:
 
-The language design is intentionally strict about where these declarations live (package/module headers first, then a
-contiguous import block). The payoff is large in practice:
+- use a path dependency,
+- vendor it under `./packages/oro/logger`,
+- or add the parent search root to `SILK_PACKAGE_PATH`.
 
-- tools can parse dependency structure without executing code
-- refactors are safer because imports and exports are explicit
-- builds can be reproducible because module sets are well-defined
+## Publishing through npm
+
+npm can act as a transport for a Silk package root. Silk still consumes files
+from disk; the compiler does not fetch npm packages itself.
+
+Minimal `package.json` next to `silk.toml`:
+
+```json
+{
+  "name": "@oro/silk-logger",
+  "version": "0.1.0",
+  "description": "Small structured logger for Silk examples",
+  "files": [
+    "silk.toml",
+    "README.md",
+    "LICENSE",
+    "src",
+    "defs",
+    "lib",
+    "share"
+  ]
+}
+```
+
+After installation, point Silk at the package root:
+
+```bash
+export SILK_PACKAGE_PATH="$PWD/node_modules/@oro"
+silk build --package .
+```
+
+If the npm package root is `node_modules/@oro/silk-logger` but the Silk package
+name is `oro::logger`, either place or symlink the package under a search root
+as `oro/logger`, or use a manifest `path` dependency directly to the installed
+package directory.
+
+## Targets and platform selection
+
+Targets describe build outputs, not imports. A single package can expose one
+public module surface and build different artifacts:
+
+```toml
+[[target]]
+name = "logger-static"
+kind = "static"
+entry = "src/logger.slk"
+target = "linux-x86_64"
+output = "build/linux-x86_64/liblogger.a"
+
+[[target]]
+name = "logger-wasi"
+kind = "executable"
+entry = "examples/main.slk"
+target = "wasm32-wasi"
+output = "build/logger.wasm"
+```
+
+Inside code, use `attr(...)` for compile-time selection:
+
+```silk
+import { println } from "std/io";
+
+attr(os="linux") fn platform_note () -> string { return "linux"; }
+attr(os="macos") fn platform_note () -> string { return "macos"; }
+attr(target="wasm32-wasi") fn platform_note () -> string { return "wasi"; }
+
+fn main () -> int {
+  println("{s}", platform_note());
+  return 0;
+}
+```
+
+Use target gates sparingly. Prefer portable stdlib code first, then isolate
+target-specific code in small modules or functions.
+
+## ABI and FFI packages
+
+When a package exposes native ABI, ship a definition file:
+
+```silk
+// defs/api.slk
+module oro::logger as LoggerAbi;
+
+export struct LoggerHandle;
+export fn logger_new () -> &LoggerHandle;
+export fn logger_free (handle: &LoggerHandle) -> void;
+export fn logger_info (handle: &LoggerHandle, message: string) -> void;
+```
+
+Implementation modules may use `ext` to bind C symbols or may provide Silk
+`export fn` bodies directly. Binary-only packages ship the `defs/` file plus a
+compatible artifact in `lib/<target>/`.
+
+Direct package/symbol imports are appropriate in this layer because the code is
+describing ABI paths intentionally:
+
+```silk
+import oro::logger::logger_info;
+import ::puts;
+```
+
+User code should normally import the friendly namespace instead:
+
+```silk
+import logger from "oro::logger";
+```
+
+## Best practices
+
+- Prefer `import ns from "module"` for namespaces and
+ `import { Name } from "module"` for selected names.
+- Use direct `package::symbol` imports only when naming ABI/export paths is the
+ point.
+- Keep a package's public surface small and exported deliberately.
+- Put reusable public prototypes in `defs/` when publishing libraries.
+- Keep source packages buildable without network access.
+- Make GitHub/npm/system packages materialize the same package root.
+- Use `[dist]` so published files are intentional.
+- Put platform-specific code behind `attr(os="...")` or `attr(target="...")`,
+ and keep those gates narrow.
 
 ## Next
 
+- [Toy logger module walkthrough](?p=guides/toy-logger-module)
 - [Standard library](?p=guides/standard-library)
-- [Testing](?p=guides/testing)
+- [Package manifests](?p=compiler/package-manifests)
+- [Package distribution](?p=compiler/package-distribution)

@@ -29,7 +29,7 @@ reaches `std::window`.
 ```silk
 module std::window;
 
-import std::result;
+import result from "std/result";
 
 export enum Backend { Unsupported, MacOS, IOS, GTK }
 export enum WindowErrorKind {
@@ -186,7 +186,7 @@ declare or import `silk_rt_window_*` provider symbols.
 window application imports only `std::window`:
 
 ```silk
-import std::window;
+import window from "std/window";
 
 fn main () -> int {
   let options = std::window::Options{
@@ -237,8 +237,8 @@ inside the frame callback. Examples and applications should not call
 `std::runtime::window` directly.
 
 ```silk
-import std::task;
-import std::window;
+import task from "std/task";
+import window from "std/window";
 
 fn frame (window: std::window::Window) -> int {
   let title_code = match (window.set_title("Ready - close the window to exit")) {
@@ -298,8 +298,8 @@ For frame-rendering demos, use `run_loop(options, frame)`. The stdlib owns the
 provider lifecycle and the application provides only per-frame behavior:
 
 ```silk
-import std::graphics::window;
-import std::window;
+import graphics_window from "std/graphics/window";
+import window from "std/window";
 
 fn draw_frame (window: std::window::Window) -> int {
   let color = std::graphics::window::ClearColor{

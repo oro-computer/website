@@ -28,15 +28,15 @@ For full language semantics and limitations, see:
 Minimal pattern:
 
 ```silk
-import std::abort_controller;
+import abort_controller from "std/abort_controller";
 
-task fn worker (sig: std::abort_controller::AbortSignalBorrow) -> int {
+task fn worker (sig: abort_controller::AbortSignalBorrow) -> int {
   if sig.is_aborted() { return 0; }
   return 1;
 }
 
 async fn main () -> int {
-  let controller = match std::abort_controller::AbortController.init() {
+  let controller = match abort_controller::AbortController.init() {
     Ok(v) => v,
     Err(_) => return 1,
   };
@@ -64,16 +64,16 @@ length).
 The core readiness-wait shape is:
 
 ```silk
-import std::abort_controller;
-import std::runtime::event_loop;
+import abort_controller from "std/abort_controller";
+import event_loop from "std/runtime/event_loop";
 
-async fn wait_readable_or_abort (fd: int, sig: std::abort_controller::AbortSignalBorrow) -> int {
+async fn wait_readable_or_abort (fd: int, sig: abort_controller::AbortSignalBorrow) -> int {
   let abort_fd = match sig.wait_fd() {
     Some(v) => v,
     None => return 1,
   };
 
-  let which: i64 = await std::runtime::event_loop::fd_wait_readable2(fd, abort_fd);
+  let which: i64 = await event_loop::fd_wait_readable2(fd, abort_fd);
   if which == 0 { return 0; }
   return 1;
 }
@@ -109,11 +109,11 @@ To connect OS resources to streams:
 Minimal wiring:
 
 ```silk
-import std::stream;
+import stream from "std/stream";
 
 async fn main () -> int {
   task {
-    let mut t = match std::stream::TransformStream.init_default() {
+    let mut t = match stream::TransformStream.init_default() {
       Ok(v) => v,
       Err(_) => return 1,
     };
