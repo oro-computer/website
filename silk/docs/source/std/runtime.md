@@ -45,7 +45,11 @@ In the shipped stdlib today:
  for higher-level wrappers like `std::runtime::process`),
 - `std::runtime::task` delegates to `std::runtime::posix::task`,
 - `std::runtime::sync` delegates to `std::runtime::posix::sync`,
-- `std::runtime::time` delegates to `std::runtime::posix::time`,
+- `std::runtime::time` delegates to `std::runtime::posix::time`
+ (hosted baseline; on `wasm32-wasi` the compiler rewrites this to
+ `std::runtime::wasi::time`, which implements the same
+ `monotonic_now_ns` / `unix_now_ns` / `unix_now_ms` contract with WASI
+ Preview 1 clocks),
 - `std::runtime::env` delegates to `std::runtime::posix::env`,
 - `std::runtime::process` delegates to `std::runtime::posix::process` (hosted baseline;
  on `wasm32-wasi` the compiler rewrites this to `std::runtime::wasi::process`,
@@ -55,7 +59,10 @@ In the shipped stdlib today:
 - `std::runtime::regex` is implemented via bundled runtime support (`libsilk_rt`) and is used by `std::regex`,
 - `std::runtime::unicode` is implemented via bundled runtime support (`libsilk_rt`) and is used by `std::unicode`,
 - `std::runtime::number` is implemented via bundled runtime support (`libsilk_rt`) and is used by `std::number`,
-- `std::runtime::readline` is implemented via bundled runtime support (`libsilk_rt`) and is used by `std::readline`.
+- `std::runtime::readline` is implemented via bundled runtime support (`libsilk_rt`) and is used by `std::readline`,
+- `std::runtime::window` uses bundled runtime support (`libsilk_rt`) on
+ macOS/iOS and local unsupported-provider stubs on targets without a current
+ window provider; it is used only by the opt-in `std::window` facade.
 
 The long-term shape is still that `std::runtime::<area>` remains the stable
 interface point, while platform backends (such as `std::runtime::posix::<area>`
@@ -129,14 +136,17 @@ Implemented runtime areas in the shipped stdlib:
  writable NUL-terminated template ending in `XXXXXX` (hosted POSIX
  baseline). On `wasm32-wasi` this operation is currently unsupported and
  reports `InvalidInput`.
- - includes path classification (`path_kind`) and owned canonical path
- resolution (`realpath`) for higher-level wrappers such as
- `std::fs::{path_kind,is_regular_file,realpath}`.
- - on the hosted POSIX baseline, `path_kind` follows symlinks before
- classifying the final target and `realpath` resolves symlinks via the
+ - includes raw stat metadata queries (`stat`, `lstat`, `fstat`) plus path
+ classification (`path_kind`) and owned canonical path resolution
+ (`realpath`) for higher-level wrappers such as
+ `std::fs::{stat,lstat,fstat,path_kind,is_regular_file,realpath}`.
+ - on the hosted POSIX baseline, `stat` / `path_kind` follow symlinks,
+ `lstat` reports the link itself, and `realpath` resolves symlinks via the
  underlying OS,
- - on `wasm32-wasi`, `path_kind` is supported via `path_filestat_get`, while
- `realpath` is currently unsupported and reports `InvalidInput`.
+ - on `wasm32-wasi`, `stat` / `lstat` / `fstat` are implemented from WASI
+ preview1 filestat syscalls with a reduced metadata set, `path_kind` is
+ supported, and `realpath` is currently unsupported and reports
+ `InvalidInput`.
 - `std::runtime::io` — low-level stdio primitives used by `std::io` (on
  `wasm32-wasi`, rewritten to `std::runtime::wasi::io`, which maintains a
  POSIX-shaped `errno` cell for wrappers that still query `errno()`). This
@@ -212,6 +222,22 @@ Implemented runtime areas in the shipped stdlib:
  instead of `libsilk_rt.a`. In that configuration, `libsilk_rt` performs no
  default heap allocation unless an embedder installs an allocator via
  `silk_rt_set_allocator`.
+- `std::runtime::window` — low-level target/provider detection, opaque
+ provider handles, nonblocking provider event polling, high-level provider
+ `run(...)` / `run_ex(...)` boundaries, and native window-control hooks used
+ by `std::window`. The shipped runtime currently opens AppKit windows with
+ stdlib creation options, pumps one AppKit event at a time, exposes AppKit
+ title/visibility/focus/size/position/minimize/maximize/always-on-top/
+ background controls, enters `UIApplicationMain` and creates a visible
+ `UIWindow` on iOS when launched from the generated app bundle, and rejects
+ GTK/unsupported targets through local stubs that do not declare window
+ provider externs.
+- `std::runtime::graphics::metal` — low-level macOS Metal runtime boundary used
+ by `std::graphics::metal` and `std::graphics::window`. It declares the
+ `silk_rt_metal_*` device, queue, layer, drawable, render-pass, encoder,
+ buffer, library, pipeline, draw, and compatibility clear-window ABI only for
+ macOS. Unsupported-target behavior stays in the public graphics facades so
+ non-Metal targets do not lower Metal provider externs.
 
 Follow-ups are expected to introduce additional runtime areas:
 

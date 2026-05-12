@@ -2,7 +2,9 @@
 
 `silk guide` is the curated example discovery surface for common Silk tasks.
 
-The seeded corpus is maintained at a floor of `1000` guide entries. It combines runnable examples with documentation-backed reference guides that cover every canonical language and standard-library page.
+The seeded in-repo corpus is maintained at a floor of `1000` guide entries.
+It combines runnable examples with documentation-backed reference guides that
+cover every canonical page under `docs/language/` and `docs/std/`.
 Fixture-backed guide entries are promoted to build-verified status when they
 compile cleanly; any remaining backend-limited exceptions are tracked
 explicitly in the catalog and test suite.
@@ -15,9 +17,15 @@ It is intended to answer questions such as:
 - which example explains a specific diagnostic?
 - where is a public std symbol documented?
 
-## Installed corpus
+## What It Uses
 
-`silk guide` reads the bundled SQLite guide database shipped with the toolchain. Use `--db <path>` or `SILK_GUIDE_DB` when you need to point at an alternate database during staging, testing, or packaging.
+The command reads an installed SQLite database at:
+
+- `<prefix>/share/silk/guide.db`
+
+That database is generated from:
+
+- `examples/guide/catalog.json`
 
 Each guide entry carries:
 
@@ -43,6 +51,7 @@ Free-text search:
 silk guide monotonic sleep
 silk guide channel send receive
 silk guide http request
+silk guide protobuf schema roundtrip
 ```
 
 Exact metadata filters:
@@ -55,6 +64,7 @@ silk guide language types
 silk guide std io overview
 silk guide std::http::request
 silk guide ByteSlice.find_bytes
+silk guide std::protobuf::Reader.read_key
 silk guide GL_TEXTURE_2D
 silk guide diag:E2034
 silk guide E2034
@@ -118,6 +128,9 @@ SILK_GUIDE_DB=/tmp/guide.db
 - non-empty searches that do not match report an error instead of printing the
  alphabetical `--list` results
 - exact guide ids render the full guide entry and example or reference source
+- id-prefix `--show` output may render multiple guides, but generated
+ reference variants that share the same source body are collapsed to one
+ entry, preferring the canonical overview variant
 - guide text output does not print `Run:`, `Source:`, or `Verified:` summary fields
 - guide `Docs:` references are rendered as canonical docs URLs such as
  [types](?p=language/types)
@@ -130,7 +143,7 @@ SILK_GUIDE_DB=/tmp/guide.db
  - fixture-backed seeded entries stay promoted to `verified_build`,
  - `verified_build` entries are built,
  - `verified_run` entries are run under a bounded verifier timeout,
- - every canonical language and standard-library page is covered by at least one guide entry,
+ - every canonical `docs/language/*.md` and `docs/std/*.md` page is covered by at least one guide entry,
  - every shipped std `export` declaration and public method (`public fn` or `public async fn`) has generated symbol lookup metadata
 - high-traffic diagnostics may point directly at guide queries such as:
  - `silk guide E2030`

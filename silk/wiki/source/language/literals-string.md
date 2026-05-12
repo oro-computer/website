@@ -5,12 +5,13 @@
 
 Canonical doc: [literals string](?p=language/literals-string).
 
-## Example: escapes
+## Example: multiline text and escapes
 ```silk
 import std::io;
 
 fn main () -> int {
-  std::io::println("line1\\nline2");
+  std::io::println(`line1
+line2`);
   std::io::println("quote=\\\" backslash=\\\\");
   return 0;
 }

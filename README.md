@@ -4,6 +4,7 @@ This directory contains the static website for Oro Computer, including landing p
 
 - **Oro Runtime** (`website/runtime/`)
 - **Silk** (`website/silk/`)
+- **slg** (`website/slg/`)
 
 ## Runtime docs
 
@@ -36,9 +37,26 @@ python3 website/silk/tools/build-indexes.py
 python3 website/silk/tools/build-llms-txt.py
 ```
 
+To refresh the website copy from the sibling Silk compiler checkout:
+
+```bash
+python3 website/silk/tools/sync-from-silk-docs.py
+```
+
+## slg docs
+
+- Docs viewer: `website/slg/docs/index.html`
+- Markdown sources: `website/slg/docs/source/`
+
+Rebuild generated files:
+
+```bash
+python3 website/slg/tools/build-indexes.py
+python3 website/slg/tools/build-llms-txt.py
+```
+
 ## Shared docs viewer
 
-Both Runtime and Silk use the shared docs viewer:
+Runtime, Silk, and slg use the shared docs viewer:
 
 - `website/assets/docs-viewer.js`
-

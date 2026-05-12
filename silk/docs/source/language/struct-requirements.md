@@ -32,6 +32,9 @@ Rules (Supported forms):
 - When Formal Silk syntax is present in the compiled module set, the verifier
  proves these requirements at struct literal construction sites (`Type{ ... }`
  and `new Type{ ... }`). If any requirement cannot be proven, compilation
- fails.
+ fails with `E3006`.
+- Failed struct-requirement diagnostics include the rejected predicate and the
+ referenced field initializers/defaults that were used for the construction
+ proof.
 
 See [formal verification](?p=language/formal-verification).

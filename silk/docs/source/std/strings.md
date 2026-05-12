@@ -63,6 +63,7 @@ impl StringBuilder {
   public fn init (cap: i64) -> std::result::Result(StringBuilder, std::memory::AllocFailed);
   public fn empty () -> StringBuilder;
   public fn push_u8 (mut self: &StringBuilder, value: u8) -> std::memory::OutOfMemory?;
+  public fn push_char (mut self: &StringBuilder, value: char) -> std::memory::OutOfMemory?;
   public fn pop_u8 (mut self: &StringBuilder) -> u8?;
   public fn get_u8 (self: &StringBuilder, index: i64) -> u8;
   public fn set_u8 (mut self: &StringBuilder, index: i64, value: u8) -> void;
@@ -79,6 +80,9 @@ Notes:
 - `StringBuilder` builds raw bytes. It can be converted into an owned `String`
  via `into_string`; the resulting `String` can then yield a borrowed `string`
  view via `String.as_string()`.
+- `StringBuilder.push_char(value)` encodes one Unicode scalar value into UTF-8
+ bytes and appends those bytes. Use `push_u8` only when the caller already has
+ encoded bytes.
 - `StringBuilder` allocation failure is recoverable:
  - `init(cap)` returns `Err(AllocFailed)` when the initial allocation fails (or
  when `cap` is invalid),
@@ -102,6 +106,7 @@ impl String {
   public fn empty () -> String;
   public fn from_string (s: string) -> std::result::Result(String, std::memory::OutOfMemory);
   public fn from_buffer_u8 (mut v: &std::buffer::BufferU8) -> std::result::Result(String, std::memory::OutOfMemory);
+  public fn from_chars (chars: std::arrays::Slice(char)) -> std::result::Result(String, std::memory::OutOfMemory);
   public fn as_string (self: &String) -> string;
 
   public fn push_u8 (mut self: &String, value: u8) -> std::memory::OutOfMemory?;
@@ -125,7 +130,12 @@ Notes:
  terminator and satisfy `std::strings::string_storage_well_formed`, so the
  borrowed `string` view from `as_string()` remains safe for C APIs that expect
  `const char *`.
-- The current `String` implementation does **not** validate UTF‑8.
+- The byte-oriented constructors and mutators (`from_string`,
+ `from_buffer_u8`, `push_u8`, `push_string`, and `push_repeat_u8`) copy or
+ append bytes and do **not** validate UTF‑8.
+- `String.from_chars(chars)` encodes a `std::arrays::Slice(char)` into UTF-8
+ bytes before constructing the owned `String`. It is the canonical owned
+ conversion from scalar slices.
 - `String.as_string()` yields a non-owning view into the `String` allocation;
  callers must not use the returned `string` after the `String` is dropped.
 - `String` also implements `std::interfaces::{Len,Capacity,IsEmpty,Clear,ReserveAdditional,WriteU8,Serialize(string),TrySerialize(std::memory::OutOfMemory),Parse(std::memory::OutOfMemory),Drop}`.
@@ -185,6 +195,40 @@ fn main () -> int {
   return 0;
 }
 ```
+
+Example: converting scalar values requires UTF-8 encoding, not a pointer cast:
+
+```silk
+import std::arrays;
+import std::strings;
+
+fn main () -> int {
+  let chars: char[5] = ['h', 'e', 'l', 'l', 'o'];
+  let slice: std::arrays::Slice(char) = std::arrays::Slice(char).init(chars as u64, 5);
+
+  let r = std::strings::String.from_chars(slice);
+  if r.is_err() {
+    return 1;
+  }
+
+  let mut owned: std::strings::String = match (r) {
+    Ok(v) => v,
+    Err(_) => std::strings::String.empty(),
+  };
+
+  if owned.as_string() != "hello" {
+    owned.drop();
+    return 2;
+  }
+
+  owned.drop();
+  return 0;
+}
+```
+
+Do not cast a `char[]` backing pointer to `string`; `char` is a Unicode scalar
+value, and its memory representation is not UTF-8 bytes. Raw pointer casts are
+only valid for buffers that already contain encoded bytes.
 
 ## Scope
 

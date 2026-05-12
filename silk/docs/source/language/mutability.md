@@ -36,6 +36,21 @@ fn main () -> int {
 Key rules:
 
 - Only `let mut` bindings may appear on the left-hand side of an assignment.
+- Pattern binders follow the same rule. Refutable forms such as
+ `let mut Some(v) = maybe else { ... };`, `if let mut Some(v) = maybe { ... }`,
+ `while let mut Some(v) = maybe { ... }`, chained `&& let mut ...`, and
+ `for let mut ... in ...` introduce mutable payload binders.
+- `move` is independent from `mut`: `let move Some(v) = maybe;`,
+ `let move Some(v) = maybe else { ... };`, `if let move ...`,
+ `else if let move ...`, and `while let move ...` consume the scrutinee for
+ ownership-tracked values, while
+ `let move mut Some(v) = maybe else { ... };` and
+ `let mut move Some(v) = maybe else { ... };` also make `v` assignable.
+ For simple mutable bindings, `var move value = source;`,
+ `var mut move value = source;`, and `var move mut value = source;` consume
+ `source` during initialization when `source` requires ownership tracking and
+ then introduce `value` as assignable. The explicit `mut` after `var` is
+ redundant, but accepted for modifier-order symmetry.
 - The left-hand side must refer to an existing binding (an lvalue).
 - The type checker enforces that the assigned value’s type matches the binding’s type.
 

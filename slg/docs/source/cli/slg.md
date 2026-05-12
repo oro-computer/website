@@ -71,7 +71,7 @@ By default `slg`:
 
 - skips hidden files and directories
 - skips `.git`, `.hg`, and `.svn`
-- skips a small set of common heavy directories
+- skips a small set of common heavy paths
 - reads `.gitignore`, `.ignore`, and `.agignore`
 - does not follow symlinks
 

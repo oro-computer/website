@@ -11,7 +11,7 @@ Canonical spec: [flow overview](?p=language/flow-overview).
 
 ## Notes
 
-- Use the linked flow-control pages below for exact supported forms and diagnostics.
+- Reference details: `docs/language/flow-*.md`
 
 ## Example
 ```silk

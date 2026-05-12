@@ -4,7 +4,7 @@ slg · LLMS Pack
 This file concatenates the full slg documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-04-23T14:50:15+00:00
+Generated: 2026-05-11T22:52:01+00:00
 
 How to link:
 - Docs: /slg/docs/?p=<id>
@@ -156,7 +156,7 @@ slg --stats error .
 - It is **filesystem-only**. Inputs are files and directories, not stdin or URLs.
 - It has **two modes**: search mode and `--files` mode.
 - It walks directories **recursively** unless you limit depth.
-- It skips hidden entries, VCS directories, common heavy directories, and ignore-file matches by default.
+- It skips hidden entries, VCS directories, common heavy paths, and ignore-file matches by default.
 - It defaults to regex syntax, but patterns without regex metacharacters are automatically handled by the fixed matcher.
 
 ## Read the shipped manual
@@ -258,7 +258,7 @@ slg --hidden --no-ignore-vcs "version" .
 slg --no-ignore "needle" .
 ```
 
-This re-enables hidden/common/VCS paths and ignore-file matches as search candidates, except that hidden entries still require `--hidden` to be traversed.
+This re-enables common/VCS paths and ignore-file matches as search candidates. Hidden entries still require `--hidden` to be traversed.
 
 ## Search binary-looking files anyway
 
@@ -274,18 +274,19 @@ By default, `slg` skips files that contain a NUL byte in the first 1024 bytes.
 slg -q "panic" logs
 ```
 
-`--quiet` is an early-exit mode, not a silent mode. It prints the first matching line or path, flushes output, then stops.
+`--quiet` is a search-mode early-exit flag, not a silent mode. It prints the first matching line, flushes output, then stops.
 
 ## Tune parallel traversal
 
 ```bash
 slg --jobs auto "TODO" .
-slg --jobs auto --file-batch 128 "TODO" .
+slg --jobs auto --file-jobs --file-batch 128 "TODO" .
 slg --files --parallel-files --jobs 8 .
 ```
 
 - Search mode uses parallel traversal when `--jobs` resolves above `1`
 - `--files` needs `--parallel-files` before it parallelizes listing
+- file-batch jobs are enabled with `--file-jobs`; `--file-batch` sets the batch size
 
 ## Search for values that begin with `-`
 
@@ -382,7 +383,7 @@ By default `slg`:
 
 - skips hidden files and directories
 - skips `.git`, `.hg`, and `.svn`
-- skips a small set of common heavy directories
+- skips a small set of common heavy paths
 - reads `.gitignore`, `.ignore`, and `.agignore`
 - does not follow symlinks
 
@@ -745,7 +746,7 @@ For downstream use, prefer explicit non-negative values.
 
 By default, `slg` enables all three ignore sources:
 
-- **common heavy directories** — `node_modules`, `build`, `dist`, `target`, `tmp`, `.cache`
+- **common heavy paths** — directories named `node_modules`, `build`, `dist`, `target`, `tags`, `tmp`, `.cache`, plus files named `tags`
 - **VCS directories** — `.git`, `.hg`, `.svn`
 - **per-directory ignore files** — `.gitignore`, `.ignore`, `.agignore`
 
@@ -893,6 +894,8 @@ Rules:
 - `1` forces single-threaded mode
 - values above `1` enable task-based parallel traversal/search
 
+Automatic sizing is capped to keep scheduler overhead bounded: search mode uses at most `8` jobs, while `--files --parallel-files` uses at most `9` jobs. Explicit `--jobs N` values can go higher, up to the hard clamp.
+
 `--threads` is an alias for `--jobs`.
 
 `--no-parallel` is the same as `--jobs 1`.
@@ -955,15 +958,15 @@ Cap total enqueued jobs across the run:
 slg --jobs auto --max-jobs-total 4096 TODO .
 ```
 
-### `--file-batch`
+### `--file-jobs` and `--file-batch`
 
-Parallelize inside flat, file-heavy directories by batching files into jobs:
+Parallelize inside flat, file-heavy directories by batching files into jobs. File-batch jobs are off by default; enable them explicitly:
 
 ```bash
-slg --jobs auto --file-batch 128 TODO .
+slg --jobs auto --file-jobs --file-batch 128 TODO .
 ```
 
-Use `--no-file-jobs` to disable this and `--file-jobs` to re-enable it.
+Use `--no-file-jobs` to force this path off again. When `--file-batch` is `0` or `auto`, the current default batch size is `512`.
 
 ## Flag syntax rules
 
@@ -985,12 +988,12 @@ slg --split-depth=2 TODO .
 
 The current implementation clamps large values to keep the parallel engine bounded.
 
-| Flag | Auto value accepted | Current hard clamp |
+| Flag | Auto value accepted | Current clamp |
 | --- | --- | --- |
 | `--jobs`, `--threads` | yes | `1024` |
 | `--max-workers` | no | `1023` |
 | `--split-depth` | yes | `8` |
-| `--queue-cap` | yes | `65536` |
+| `--queue-cap` | yes | `8` minimum, `65536` maximum |
 | `--target-jobs` | yes | `1048576` |
 | `--max-jobs-total` | yes | `1048576` |
 | `--file-batch` | yes | `4096` |
@@ -1001,7 +1004,7 @@ These are public enough to document because they affect operator expectations.
 
 - Start with `--jobs auto`
 - Add `--stats` before tuning anything
-- Reach for `--file-batch` in flat directories with many files
+- Reach for `--file-jobs --file-batch` in flat directories with many files
 - Reach for `--split-depth` when the tree is very branchy
 - Use `--jobs 1` to reproduce a result without parallel scheduling
 
@@ -1028,7 +1031,7 @@ slg --files --parallel-files --jobs 8 .
 Flat-directory tuning:
 
 ```bash
-slg --jobs auto --file-batch 64 --queue-cap 256 TODO build
+slg --jobs auto --file-jobs --file-batch 64 --queue-cap 256 TODO build
 ```
 
 ==============================================================================
@@ -1117,11 +1120,11 @@ This mode never searches file contents.
 
 ## `--quiet`
 
-`--quiet` is an early-exit mode, not a silent mode.
+`--quiet` is a search-mode early-exit flag, not a silent mode.
 
 Behavior:
 
-- print the first matching line or path
+- print the first matching line
 - flush output
 - stop immediately
 
@@ -1130,6 +1133,8 @@ Example:
 ```bash
 slg -q TODO src
 ```
+
+In `--files` mode, `--quiet` is parsed but does not change listing behavior.
 
 ## Stats summary
 
@@ -1235,10 +1240,10 @@ This page lists every public CLI flag on `slg`.
 | `--max-depth <n>` | yes | yes | Limit recursion depth; `0` means root-only |
 | `--no-ignore` | yes | yes | Disable all ignore sources |
 | `--ignore` | yes | yes | Re-enable all ignore sources |
-| `--ignore-common` | yes | yes | Re-enable skipping common heavy directories |
+| `--ignore-common` | yes | yes | Re-enable skipping common heavy paths |
 | `--ignore-vcs` | yes | yes | Re-enable skipping `.git`, `.hg`, `.svn` |
 | `--ignore-files` | yes | yes | Re-enable reading ignore files |
-| `--no-ignore-common` | yes | yes | Stop skipping common heavy directories |
+| `--no-ignore-common` | yes | yes | Stop skipping common heavy paths |
 | `--no-ignore-vcs` | yes | yes | Stop skipping VCS directories |
 | `--no-ignore-files` | yes | yes | Stop reading ignore files |
 
@@ -1253,9 +1258,9 @@ This page lists every public CLI flag on `slg`.
 | `--queue-cap <n>` | yes | yes | Bound the job queue |
 | `--target-jobs <n>` | yes | yes | Stop splitting once roughly `n` subtrees are scheduled |
 | `--max-jobs-total <n>` | yes | yes | Cap total enqueued jobs |
-| `--file-batch <n>` | yes | yes | Files per file-batch job |
+| `--file-batch <n>` | yes | yes | Files per file-batch job; used when file jobs are enabled |
 | `--no-file-jobs` | yes | yes | Disable file-batch jobs |
-| `--file-jobs` | yes | yes | Re-enable file-batch jobs |
+| `--file-jobs` | yes | yes | Enable file-batch jobs |
 | `--parallel-files` | no effect | yes | Parallelize file-list mode when jobs resolve above `1` |
 | `--no-parallel` | yes | yes | Same as `--jobs 1` |
 
@@ -1271,7 +1276,7 @@ This page lists every public CLI flag on `slg`.
 | `--no-numbers` | yes | parsed but has no effect | Alias for `--no-line-number` |
 | `--column` | yes | parsed but has no effect | Show the 1-based byte column; requires line numbers |
 | `--stats` | yes | yes | Print summary stats to stderr |
-| `-q`, `--quiet` | yes | yes | Print the first matching line/path and exit early |
+| `-q`, `--quiet` | yes | parsed but has no effect | Print the first matching line and exit early |
 | `--files` | switches mode | n/a | List searchable files instead of searching content |
 
 ## Color and meta
@@ -1571,7 +1576,7 @@ Use `--` to end option parsing.
 - `--max-depth <n>` — limit recursion depth; `0` means only the root
 - `--no-ignore` — disable all ignore sources
 - `--ignore` — re-enable all ignore sources
-- `--ignore-common`, `--no-ignore-common` — control the built-in heavy-directory skip list
+- `--ignore-common`, `--no-ignore-common` — control the built-in heavy-path skip list
 - `--ignore-vcs`, `--no-ignore-vcs` — control skipping `.git`, `.hg`, `.svn`
 - `--ignore-files`, `--no-ignore-files` — control reading `.gitignore`, `.ignore`, `.agignore`
 
@@ -1584,7 +1589,7 @@ Use `--` to end option parsing.
 - `--queue-cap <n>` — bound the job queue
 - `--target-jobs <n>` — stop splitting once roughly `n` subtrees are scheduled
 - `--max-jobs-total <n>` — cap total enqueued jobs
-- `--file-batch <n>` — files per file-batch job
+- `--file-batch <n>` — files per file-batch job; used when file jobs are enabled
 - `--no-file-jobs`, `--file-jobs` — disable or enable file-batch jobs
 - `--parallel-files` — parallelize `--files` traversal when jobs resolve above `1`
 - `--no-parallel` — same as `--jobs 1`
@@ -1601,7 +1606,7 @@ Use `--` to end option parsing.
 - `--no-line-number`, `--no-numbers` — suppress line numbers
 - `--column` — print the 1-based byte column; requires line numbers
 - `--stats` — print summary stats to stderr
-- `-q`, `--quiet` — print the first matching line/path and exit early
+- `-q`, `--quiet` — print the first matching line and exit early
 - `--files` — list files instead of searching file contents
 
 ### Color

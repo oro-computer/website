@@ -27,7 +27,13 @@ available to user programs.
  - `std::graphics` (low-level graphics API bindings; see [graphics](?p=std/graphics))
  - `std::graphics::opengl`
  - `std::graphics::opengles`
+ - `std::graphics::metal`
+ - `std::graphics::window`
  - `std::graphics::vulkan`
+ - `std::window` (opt-in high-level window application facade; see [window](?p=std/window))
+ - `std::window::macos`
+ - `std::window::ios`
+ - `std::window::gtk`
  - `std::image` (image codecs + color utilities; see [image](?p=std/image))
  - `std::image::color`
  - `std::image::png`
@@ -38,7 +44,10 @@ available to user programs.
  - `std::optional`
  - `std::range`
  - `std::function`
+ - `std::dylib`
  - `std::semver`
+ - `std::protobuf` (Protocol Buffers wire helpers and `silk proto` runtime
+ support; see [protobuf](?p=std/protobuf))
  - `std::url`
  - `std::tar` (tar archives; see [tar](?p=std/tar))
  - `std::xml` (XML parsing; see [xml](?p=std/xml))
@@ -145,11 +154,15 @@ For distribution and incremental development, the stdlib can be built into a
 static archive for a specific target ABI:
 
 - `make stdlib` compiles each `std/**/*.slk` module (including `std/runtime/...`)
- to an ELF object via
- `silk build --kind object` and archives them into `build/lib/silk/std/libsilk_std.a`.
-- This archive is target-specific (e.g. `linux/x86_64` ELF objects) and should
- be treated as one artifact per supported target triple/ABI, not as a
- universally portable library.
+ to a target object via `silk build --kind object` and archives the objects
+ with defined external symbols into `build/lib/silk/std/libsilk_std.a`.
+ Type-only, documentation-only, or inactive platform shim modules may still
+ produce valid symbol-empty object files; those files are kept under
+ `build/lib/silk/std/obj/` for object-generation coverage but are omitted from
+ the archive because they cannot satisfy link-time references.
+- This archive is target-specific (for example ELF objects on `linux/x86_64`
+ or Mach-O objects on `macos/aarch64`) and should be treated as one artifact
+ per supported target triple/ABI, not as a universally portable library.
 
 Current toolchain behavior (`linux/x86_64`):
 

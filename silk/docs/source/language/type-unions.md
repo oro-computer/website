@@ -137,8 +137,12 @@ let out: int = match u {
 
 Rules (Supported forms):
 
-- The scrutinee must have a union type.
-- Patterns are restricted to `name: Type` (or `_: Type`) where `Type` is one of
- the union member types.
-- Matches must be exhaustive: exactly one arm per member type (order does not
- matter).
+- When the scrutinee has a union type, patterns are restricted to
+ `name: Type` (or `_: Type`) where `Type` is one of the union member types.
+- Union matches must be exhaustive: exactly one arm per member type (order does
+ not matter).
+- The same typed-binder syntax may also be used with a concrete struct
+ scrutinee before the value is injected into a union. In that form, exactly one
+ typed arm must accept the concrete scrutinee type. Accepted arm types are the
+ exact concrete type, a valid base type through `extends`, or an interface that
+ the concrete type implements.

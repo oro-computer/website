@@ -72,10 +72,8 @@ silk doc --man --package . readme -o pkg_readme.7
 
 ## Exit status
 
-| Status | Meaning |
-| --- | --- |
-| `0` | Success. |
-| non-zero | Error. |
+- `0` on success.
+- non-zero on error.
 
 ## See Also
 

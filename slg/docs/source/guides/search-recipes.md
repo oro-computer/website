@@ -76,7 +76,7 @@ slg --hidden --no-ignore-vcs "version" .
 slg --no-ignore "needle" .
 ```
 
-This re-enables hidden/common/VCS paths and ignore-file matches as search candidates, except that hidden entries still require `--hidden` to be traversed.
+This re-enables common/VCS paths and ignore-file matches as search candidates. Hidden entries still require `--hidden` to be traversed.
 
 ## Search binary-looking files anyway
 
@@ -92,18 +92,19 @@ By default, `slg` skips files that contain a NUL byte in the first 1024 bytes.
 slg -q "panic" logs
 ```
 
-`--quiet` is an early-exit mode, not a silent mode. It prints the first matching line or path, flushes output, then stops.
+`--quiet` is a search-mode early-exit flag, not a silent mode. It prints the first matching line, flushes output, then stops.
 
 ## Tune parallel traversal
 
 ```bash
 slg --jobs auto "TODO" .
-slg --jobs auto --file-batch 128 "TODO" .
+slg --jobs auto --file-jobs --file-batch 128 "TODO" .
 slg --files --parallel-files --jobs 8 .
 ```
 
 - Search mode uses parallel traversal when `--jobs` resolves above `1`
 - `--files` needs `--parallel-files` before it parallelizes listing
+- file-batch jobs are enabled with `--file-jobs`; `--file-batch` sets the batch size
 
 ## Search for values that begin with `-`
 

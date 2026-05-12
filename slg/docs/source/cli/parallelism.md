@@ -16,6 +16,8 @@ Rules:
 - `1` forces single-threaded mode
 - values above `1` enable task-based parallel traversal/search
 
+Automatic sizing is capped to keep scheduler overhead bounded: search mode uses at most `8` jobs, while `--files --parallel-files` uses at most `9` jobs. Explicit `--jobs N` values can go higher, up to the hard clamp.
+
 `--threads` is an alias for `--jobs`.
 
 `--no-parallel` is the same as `--jobs 1`.
@@ -78,15 +80,15 @@ Cap total enqueued jobs across the run:
 slg --jobs auto --max-jobs-total 4096 TODO .
 ```
 
-### `--file-batch`
+### `--file-jobs` and `--file-batch`
 
-Parallelize inside flat, file-heavy directories by batching files into jobs:
+Parallelize inside flat, file-heavy directories by batching files into jobs. File-batch jobs are off by default; enable them explicitly:
 
 ```bash
-slg --jobs auto --file-batch 128 TODO .
+slg --jobs auto --file-jobs --file-batch 128 TODO .
 ```
 
-Use `--no-file-jobs` to disable this and `--file-jobs` to re-enable it.
+Use `--no-file-jobs` to force this path off again. When `--file-batch` is `0` or `auto`, the current default batch size is `512`.
 
 ## Flag syntax rules
 
@@ -108,12 +110,12 @@ slg --split-depth=2 TODO .
 
 The current implementation clamps large values to keep the parallel engine bounded.
 
-| Flag | Auto value accepted | Current hard clamp |
+| Flag | Auto value accepted | Current clamp |
 | --- | --- | --- |
 | `--jobs`, `--threads` | yes | `1024` |
 | `--max-workers` | no | `1023` |
 | `--split-depth` | yes | `8` |
-| `--queue-cap` | yes | `65536` |
+| `--queue-cap` | yes | `8` minimum, `65536` maximum |
 | `--target-jobs` | yes | `1048576` |
 | `--max-jobs-total` | yes | `1048576` |
 | `--file-batch` | yes | `4096` |
@@ -124,7 +126,7 @@ These are public enough to document because they affect operator expectations.
 
 - Start with `--jobs auto`
 - Add `--stats` before tuning anything
-- Reach for `--file-batch` in flat directories with many files
+- Reach for `--file-jobs --file-batch` in flat directories with many files
 - Reach for `--split-depth` when the tree is very branchy
 - Use `--jobs 1` to reproduce a result without parallel scheduling
 
@@ -151,5 +153,5 @@ slg --files --parallel-files --jobs 8 .
 Flat-directory tuning:
 
 ```bash
-slg --jobs auto --file-batch 64 --queue-cap 256 TODO build
+slg --jobs auto --file-jobs --file-batch 64 --queue-cap 256 TODO build
 ```

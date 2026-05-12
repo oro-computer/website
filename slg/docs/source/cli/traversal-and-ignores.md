@@ -45,7 +45,7 @@ For downstream use, prefer explicit non-negative values.
 
 By default, `slg` enables all three ignore sources:
 
-- **common heavy directories** — `node_modules`, `build`, `dist`, `target`, `tmp`, `.cache`
+- **common heavy paths** — directories named `node_modules`, `build`, `dist`, `target`, `tags`, `tmp`, `.cache`, plus files named `tags`
 - **VCS directories** — `.git`, `.hg`, `.svn`
 - **per-directory ignore files** — `.gitignore`, `.ignore`, `.agignore`
 

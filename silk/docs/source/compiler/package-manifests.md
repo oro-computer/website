@@ -463,15 +463,20 @@ Fields:
  - `libsodium`, `mbedTLS`, and `libssh2` are auto-linked on supported native
  hosts (`linux/x86_64`, `macos/aarch64`) when the Silk module set imports
  `std::crypto` / `std::tls` / `std::ssh` / `std::ssh2`, or when native
- `.c` / `.h` / `.o` / `.a` inputs reference their symbol families,
+ `.c` / `.h` / `.m` / `.o` / `.a` inputs reference their symbol families,
  - `libsqlite3` is auto-linked on `linux/x86_64` when the Silk module set
- imports `std::sqlite`, or when native `.c` / `.h` / `.o` / `.a` inputs
+ imports `std::sqlite`, or when native `.c` / `.h` / `.m` / `.o` / `.a` inputs
  reference `sqlite3_*` symbols,
  - each entry MUST end with one of:
- - `.c` — compiled via the host C compiler and linked as an object,
+ - `.c` — compiled via the native compiler for the active target and linked
+ as an object,
+ - `.m` — compiled as Objective-C for supported Apple host-backed Mach-O
+ targets and linked as an object,
  - `.h` — treated as a C build input:
  - if a sibling `.c` file exists next to the header, Silk compiles that
  `.c` file and links the resulting object,
+ - otherwise, if a sibling `.m` file exists next to the header, Silk
+ compiles that Objective-C file and links the resulting object,
  - otherwise Silk falls back to compiling the header itself as a C
  translation unit (passed as `-x c`) and links the resulting object,
  - `.o` — linked as an object (and included in static archives),
@@ -479,28 +484,41 @@ Fields:
  - `.so` / `*.so.<ver>` — treated as a dynamic dependency (equivalent to
  adding a `needed` entry for the library’s basename),
  - `.slk` entries are rejected (use `[sources]` instead),
- - note: non-`.slk` inputs are currently supported only for `linux/x86_64`
- native targets (same limitation as `silk build` CLI inputs).
-- `cflags` (optional): additional C compiler arguments used when compiling any
- `.c`/`.h` inputs for this target (from `inputs` and/or CLI native inputs when
- building a single target).
+ - note: non-`.slk` inputs are supported for `linux/x86_64` native targets and
+ for `macos-aarch64` / iOS device/simulator executable targets on Apple
+ Silicon macOS hosts (same limitation as `silk build` CLI inputs).
+ - note: Objective-C `.m` inputs are supported only for `macos-aarch64`,
+ `ios-aarch64`, `ios-simulator-aarch64`, and
+ `ios-simulator-x86_64` on Apple Silicon macOS hosts; supported executable
+ outputs that include `.m` inputs link the Objective-C runtime automatically.
+- `cflags` (optional): additional native compiler arguments used when compiling
+ any `.c`/`.h`/`.m` inputs for this target (from `inputs` and/or CLI native
+ inputs when building a single target).
  - entries are single `cc` arguments (no shell splitting),
- - include paths passed via `-I<rel>` or `-I`, `<rel>` are resolved relative
- to the manifest directory.
+ - include paths passed via `-I<rel>` / `-I`, `<rel>` and
+ `-isystem<rel>` / `-isystem`, `<rel>` are resolved relative to the
+ manifest directory.
  - On `linux/x86_64`, when compiling `.c`/`.h` inputs, `silk` also adds the
- active toolchain’s vendored include directory to the C compiler’s include
- search path, so C sources can include headers like
+ active toolchain’s vendored include directory to the native compiler’s
+ include search path, so C sources can include headers like
  `#include <mbedtls/net_sockets.h>` without hardcoding a repo-relative
  `-I.../vendor/include` path.
-- `ldflags` (optional): additional link-related arguments for this target.
- Note: `silk` does not invoke a system linker for native codegen; `ldflags`
- are translated into existing manifest/CLI linkage knobs.
+- `ldflags` (optional): additional backend linker arguments for this target.
+ Platform-linker backends can pass supported arguments through directly.
+ Internal backends translate the forms they can represent into existing
+ manifest/CLI linkage state and reject unsupported payloads.
  Supported forms:
+ - `-L<rel>` / `-L`, `<rel>` → adds a library search path; relative paths are
+ resolved relative to the manifest directory,
  - `-Wl,-rpath,<path>` / `-Wl,-rpath=<path>` → adds a `runpath` entry,
  - `-Wl,-soname,<name>` / `-Wl,-soname=<name>` → sets `soname`,
  - `-Wl,--dynamic-linker,<path>` / `-Wl,-dynamic-linker,<path>` / `-Wl,--dynamic-linker=<path>` / `-Wl,-dynamic-linker=<path>` → sets `elf_interp`,
- - `-lfoo` / `-l`, `foo` → adds a `needed` entry:
- - by default, `silk` maps to `needed = ["libfoo.so"]`,
+ - `-lfoo` / `-l`, `foo` → links with a library name:
+ - on `linux/x86_64`, `-L` paths are searched first; a found `.so` adds a
+ `needed` entry by basename, and a found `.a` is linked as a static
+ archive,
+ - if no matching `-L` library is found, `silk` maps to
+ `needed = ["libfoo.so"]`,
  - when the selected dynamic loader looks like glibc (`ld-linux`), `silk` maps common system libraries
  to their versioned runtime sonames (for example `-lm` → `needed = ["libm.so.6"]`, `-lpthread` → `needed = ["libpthread.so.0"]`),
  - note: some distros ship `libfoo.so` only in `*-dev`
@@ -588,13 +606,19 @@ Rules:
 - `build.default_target` is still used by contexts that need one code-bearing
  target:
  - package-graph entry ordering prefers that target’s `entry`,
- - `silk test --package` uses that target’s `inputs`, `needed`, and `runpath`
- as the manifest link metadata for the test harness.
+ - `silk test --package` uses that target’s `inputs`, `cflags`, `ldflags`,
+ `needed`, and `runpath` as the manifest native/link metadata for the test
+ harness.
 - For `silk test --package`:
  - `build.default_target` must name a code target (one with `entry = "..."`);
  pointing it at `kind = "man"` is an error,
  - when `build.default_target` is unset, the first declared code target is
  used,
+ - raw manifest native source inputs (`.c`, `.h`, and supported `.m`) are
+ compiled to temporary objects and linked with the generated test harness,
+ using that target’s `cflags`,
+ - hosted vendored native-input auto-linking for libsodium, mbedTLS, SQLite,
+ and libssh2 follows the same supported-target rules as package builds,
  - when no code targets exist, tests still run from the package source set but
  no manifest link metadata is applied.
 - `build.build_module` (optional; default `false`) enables build module

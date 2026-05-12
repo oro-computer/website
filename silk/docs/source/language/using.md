@@ -27,12 +27,35 @@ At module scope, `using` introduces a local alias for an in-scope symbol:
 - functions (`fn` and `ext` function bindings),
 - Formal Silk theories (`theory`).
 
+For type aliases, the target may be a package-qualified generic type
+declaration made visible through a namespace/package import, for example
+`using Result = std::result::Result;`. This is how a stdlib prelude can expose
+canonical type constructors while keeping the stdlib source on namespace
+imports.
+
 The alias is transparent: using `Alias` is equivalent to using the target
 symbol directly.
 
 Name conflicts are errors, except when the alias already refers to the same
 symbol as the target (a redundant alias). In that case the `using` declaration
 is accepted as a no-op.
+
+Module-scope aliases may also be exported:
+
+```silk
+export using Alias = QualifiedName;
+public using Alias = QualifiedName;
+```
+
+- `export using` and `public using` are equivalent at module scope.
+- Exported aliases participate in the module/package surface just like other
+ exported declarations:
+ - file imports may name the alias directly,
+ - package imports may name the alias directly,
+ - package-qualified access may use the alias name,
+ - and `export default Alias;` may target a module-scope `using` alias.
+- Exported type aliases remain transparent at import sites: importing the alias
+ introduces the alias name as a real type name in the importing module.
 
 ## `interface` Scope
 
@@ -108,6 +131,6 @@ when the source and target layouts are compatible.
 
 ## Supported forms Limitations
 
-- `using` does not accept `public` / `private` modifiers yet (imported methods
- inherit the source method’s visibility).
+- Outside module scope, `using` does not accept `public` / `private`
+ modifiers yet (imported methods inherit the source method’s visibility).
 - Constructor reuse (`constructor`) via `using` is not supported yet.

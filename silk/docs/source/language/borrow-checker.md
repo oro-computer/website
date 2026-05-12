@@ -280,6 +280,18 @@ In the Supported forms, ownership transfer is intentionally conservative:
  assignment from a name are also treated as moves:
  - `let y = x;` consumes `x`,
  - `y = x;` consumes `x`.
+- `let move` / `var move` are the equivalent binding-level spellings for an
+ explicit initialization-time move:
+ - `let move y = x;` and `var move y = x;` consume `x` when `x` requires
+ ownership tracking,
+ - `let mut move y = x;`, `let move mut y = x;`, `var mut move y = x;`, and
+ `var move mut y = x;` are accepted combined modifier forms,
+ - copyable existing sources still copy, so both bindings remain independent,
+ - `let move Some(value) = maybe;`,
+ `let move Some(value) = maybe else { ... };`, `if let move Some(value) =
+ maybe { ... }`, `else if let move Some(value) = maybe { ... }`, and
+ `while let move Some(value) = next() { ... }` consume the pattern scrutinee
+ under the same move and borrow checks.
 
 ## Completeness
 

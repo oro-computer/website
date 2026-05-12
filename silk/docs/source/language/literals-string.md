@@ -33,6 +33,10 @@ What works end-to-end today (lexer → parser → checker → lowering → codeg
  - `\r` escapes are normalized to `\n`.
 - Equality and ordering comparisons (`==`, `!=`, `<`, `<=`, `>`, `>=`) over
  `string` values in the Supported forms.
+- Compile-time file embedding with `#embed("path")`, text encodings
+ `#embed("path", "utf8")` / `#embed("path", "utf16")`, and integer array
+ encodings `#embed("path", "u8")` / `#embed("path", "u16")` /
+ `#embed("path", "u32")`.
 
 Not implemented yet (or not specified as stable):
 
@@ -65,6 +69,16 @@ Raw string literals are delimited by backticks:
 - They do **not** process escape sequences: `\n` is two bytes (`'\'` and `'n'`).
 - They still normalize embedded `\r\n` / `\r` in the source text to `\n`.
 
+Style guidance:
+
+- Prefer raw multiline backtick strings for static multiline text that does not
+ need escape processing. This keeps the source text visually aligned with the
+ produced bytes and avoids dense `\n` escape runs.
+- Use quoted multiline strings when the literal also needs escape processing.
+- Use `\n` escapes for single newline bytes, compact generated fragments,
+ escape-focused tests, or formats that require a literal backslash followed by
+ `n`.
+
 ## Escape Sequences
 
 Double-quoted string literals support the same escape spellings as character
@@ -89,6 +103,8 @@ Multi-line strings:
 
 - Allow embedding newlines directly in the literal.
 - Must be represented and encoded identically to `string` values produced at runtime.
+- Should be written as raw multiline backtick strings when the text is static
+ and does not need escape processing.
 
 ## Line Ending Normalization
 
@@ -103,6 +119,33 @@ forms such as `\r`.
 Note: a sequence of two escapes like `"\r\n"` is still two escapes. In Silk,
 `\r` escapes become `\n`, so `"\r\n"` produces two line
 feed bytes (`"\n\n"`).
+
+## Compile-Time File Embedding
+
+`#embed(filepath[, encoding])` reads a file during parsing and embeds its
+contents into the compiled program.
+
+- `#embed("relative/path.txt")` resolves the path relative to the containing
+ `.slk` source file, validates the file as UTF-8, and produces a `string`.
+ This is equivalent to `#embed("relative/path.txt", "utf8")`.
+- `#embed("path", "utf8")` validates the file as UTF-8 and produces a
+ `string` containing those bytes.
+- `#embed("path", "utf16")` decodes UTF-16LE/UTF-16BE input, using a BOM when
+ present, and produces a UTF-8 `string`.
+- `#embed("path", "u8")`, `#embed("path", "u16")`, and
+ `#embed("path", "u32")` produce compiler-owned array values for array-typed
+ bindings such as `let bytes: u8[] = #embed("./data.bin", "u8");`. Multi-byte
+ integer encodings read little-endian element values; the frontend carries
+ file bytes as embed metadata instead of expanding the payload into
+ source-level integer literal nodes.
+- If no expected array type is present, a raw integer embed infers a dynamic
+ slice (`u8[]`, `u16[]`, or `u32[]`) backed by compiler-owned read-only data.
+
+The compiler rejects empty paths, unreadable paths, invalid UTF-8 text embeds,
+malformed UTF-16 text embeds, and integer encodings whose file byte length is
+not divisible by the requested element width. Embedded strings do not receive
+an implicit NUL terminator; `sizeof(value)` reports the embedded byte length.
+Use the `u8` encoding for raw byte payloads that are not valid UTF-8 text.
 
 ## Examples
 
@@ -141,12 +184,12 @@ fn main () -> int {
 }
 ```
 
-### Multi-line string literal (embedded newline)
+### Raw multiline string literal (preferred for static multiline text)
 
 ```silk
 fn main () -> int {
-  let multi: string = "a
-b";
+  let multi: string = `a
+b`;
 
   // Equivalent to using a `\n` escape.
   if multi != "a\nb" {
@@ -157,20 +200,34 @@ b";
 }
 ```
 
-### Raw multiline string literal (backticks)
+### Quoted multi-line string literal (when escapes are needed)
 
 ```silk
 fn main () -> int {
-  let multi: string = `a
-b`;
+  let multi: string = "a
+b";
   if multi != "a\nb" {
     return 1;
   }
 
-  // Backslashes are literal bytes in raw strings.
+  // Backslashes are literal bytes in raw strings, so escape-focused code may
+  // still need quoted strings for comparison.
   if `a\nb` != "a\\nb" { return 2; }
 
   return 0;
+}
+```
+
+### Embedded adjacent file
+
+```silk
+let shader_source: string = #embed("shader.metal");
+
+fn main () -> int {
+  if sizeof(shader_source) > 0 {
+    return 0;
+  }
+  return 1;
 }
 ```
 

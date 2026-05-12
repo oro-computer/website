@@ -2,7 +2,10 @@
 
 `std::env` provides access to process environment variables.
 
-This module targets a hosted POSIX baseline (Linux/glibc) and is implemented on top of the pluggable `std::runtime::env` interface. On `wasm32-wasi`, `get` works while `set` remains unavailable (see “Platform notes”).
+This module targets a hosted POSIX baseline (Linux/glibc) and is
+implemented on top of the pluggable `std::runtime::env` interface. WASI support
+is Implemented: `get` works, while `set` remains unsupported (see
+“Platform notes”).
 
 ## Exported API
 
@@ -11,10 +14,14 @@ module std::env;
 
 import std::process;
 import std::strings;
+import std::args;
 
 enum SetVarErrorKind { InvalidKey, OutOfMemory, Unknown }
 
 error SetVarFailed { code: int }
+
+export type Args = std::args::Args;
+export type ExecutablePathResult = std::process::ExecutablePathResult;
 
 export fn get (key: string) -> string?;
 export fn set (key: string, value: string) -> SetVarFailed?;
@@ -26,6 +33,11 @@ export fn temp_dir () -> string;
 // Working-directory helpers that query the OS (not the environment).
 export fn get_current_dir () -> std::process::GetCwdResult;
 export fn set_current_dir (path: string) -> std::process::ChdirFailed?;
+
+// Process argument and executable-path helpers.
+export fn args (argc: int, argv: u64) -> Args;
+export fn executable_path_from_args (argc: int, argv: u64) -> string?;
+export fn executable_path () -> ExecutablePathResult;
 ```
 
 ### `get`
@@ -108,7 +120,7 @@ queries.
 
 `std::env::cwd()` returns the current working directory as a `string?`.
 
-Resolution rule:
+Current implementation:
 
 - returns `std::env::get("PWD")`.
 
@@ -137,11 +149,35 @@ Ownership:
 
 This is an alias for `std::process::chdir(path)`.
 
+## Arguments And Executable Paths
+
+`std::env` exposes small wrappers around `std::args` and `std::process` so CLI
+tools can keep environment, argv, cwd, and executable-path access in one
+module.
+
+### `args`
+
+`std::env::args(argc, argv)` constructs a zero-copy `std::args::Args` view from
+the hosted `main(argc, argv)` entrypoint values. The returned argument strings
+borrow the original argv memory.
+
+### `executable_path_from_args`
+
+`std::env::executable_path_from_args(argc, argv)` returns `argv[0]` as a
+borrowed `string?`. It does not allocate and is suitable when the executable
+name supplied by the launcher is enough.
+
+### `executable_path`
+
+`std::env::executable_path()` returns an owned, OS-queried executable path via
+`std::process::executable_path()`. The returned `String` must be dropped by the
+caller.
+
 ### `home_dir`
 
 `std::env::home_dir()` returns the user’s home directory as a `string?`.
 
-Resolution rule:
+Current implementation:
 
 - returns `std::env::get("HOME")`.
 
@@ -149,7 +185,7 @@ Resolution rule:
 
 `std::env::temp_dir()` returns a temporary-directory path as a `string`.
 
-Resolution rule:
+Current implementation:
 
 1. uses `TMPDIR` when set,
 2. otherwise uses `TMP` or `TEMP` when set,

@@ -64,12 +64,24 @@ A region declaration has the surface form:
 const region region_buf: u8[1024];
 ```
 
+The backing-size expression may also use literal arithmetic that folds at parse
+time:
+
+```silk
+const region region_buf: u8[1024 * 1024];
+```
+
 Rules:
 
 - `const region` is a declaration form (it is not a type).
 - A region declaration has no initializer.
 - The type annotation specifies the region backing size and must be a fixed
  byte array type: `u8[N]`.
+ - In the current parser subset, `N` may be an integer literal or a
+ literal-only integer arithmetic expression using `+`, `-`, `*`, `/`, `%`,
+ and parentheses.
+ - In the current region subset, that expression must fold to a concrete byte
+ count at parse/type-check time.
 - The declared name is bound as a `Region` value.
 
 ### Using a region: `with`

@@ -62,6 +62,7 @@ Supported declaration forms:
 - `struct Name(T, ...) { ... }`
 - `interface Name(T, ...) { ... }`
 - `enum Name(T, ...) { ... }`
+- `type Alias(T, ...) = Target(T, ...);`
 - `impl Name(T, ...) { ... }`
 - `impl Name(T, ...) as InterfaceName(T, ...) { ... }`
 
@@ -76,13 +77,42 @@ Mutex(Account)
 Result(int, string)
 ```
 
+## Applied Generic Type Qualifiers
+
+Applied generic type names may be used directly as static member qualifiers
+after their type arguments are fully known:
+
+```silk
+import { Buffer } from "std/buffer";
+
+fn main () -> int {
+  let b = Buffer(u8).empty();
+  return b.capacity() as int;
+}
+```
+
+This form is equivalent to introducing an explicit alias for the instantiation
+and then calling the member through that alias:
+
+```silk
+type BufferOfU8 = Buffer(u8);
+let b = BufferOfU8.empty();
+```
+
+The qualifier applies the same type-argument rules as type positions: type
+arguments must resolve to known types, const arguments must be integer
+compile-time arguments, and named imports of generic templates participate in
+the same lookup rules as imported non-generic types. A generic type whose
+parameters all have defaults may use `Name().member(...)` or the bare
+`Name.member(...)` qualifier form; both forms instantiate the defaults before
+member lookup.
+
 ## Generic enums (tagged unions)
 
 Enums may be parameterized and are monomorphized like generic structs.
 
-Because applied types are not used directly as expression qualifiers in the
-current surface syntax, callers typically introduce a local alias for an
-instantiation and then use that alias to construct and match variants:
+For enum constructors and match arms, callers typically introduce a local alias
+for an instantiation and then use that alias to construct and match variants:
 
 ```silk
 enum Result(T, E) {

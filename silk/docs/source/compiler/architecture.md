@@ -37,9 +37,9 @@ In terms of concrete targets and file formats, the back-end MUST eventually supp
 
 Current snapshot (Silk (ABI) 0.1.0):
 
-- `src/backend_const.zig` provides a **target-aware const-main stub backend** that emits minimal executables for a fully-constant executable entrypoint (`main` reduces to a constant integer; supports `fn main () -> int` and the standard `fn main(argc: int, argv: u64) -> int` form when arguments are unused):
+- `src/backend_const.zig` provides a **target-aware const-main stub backend** that emits minimal executables for a fully-constant executable entrypoint (`main` reduces to a constant integer or a `void` main falls through; supports `fn main () -> int`, `fn main () -> void`, and the standard `fn main(argc: int, argv: u64) -> int` / `fn main(argc: int, argv: u64) -> void` forms when arguments are unused):
  - ELF64: `linux-x86_64`, `linux-aarch64`, `android-aarch64`
- - Mach-O 64-bit: `macos-x86_64`, `macos-aarch64`, `ios-aarch64`
+ - Mach-O 64-bit: `macos-x86_64`, `macos-aarch64`, `ios-aarch64`, `ios-simulator-aarch64`, `ios-simulator-x86_64`
  - PE32+: `windows-x86_64`, `windows-aarch64`
  This backend does not link the full runtime/stdlib; it only encodes “exit with this integer”.
  macOS host note:
@@ -49,16 +49,33 @@ Current snapshot (Silk (ABI) 0.1.0):
  `macos-aarch64`, the driver still performs an ad hoc host `codesign -s -`
  pass so the generated executable is runnable immediately on macOS hosts.
 - `src/backend_macho_aarch64_host.zig` provides a **temporary Apple Silicon
- host-assembled Mach-O executable backend** for `macos-aarch64`:
- - it currently covers the integer/bool scalar IR executable subset on
- `macos/aarch64` hosts,
- - emits arm64 assembly and links it with host `as` / `ld`,
- - expands bundled `libsilk_rt*.a` archives into temporary object members
- before host linking so runtime-backed scalar executables also build on
- Apple Silicon,
- - and this host-backed subset is now wired through both the `silk` CLI and
- the `libsilk.a` filesystem-output executable build path (with the same
- host `codesign -s -` post-pass on macOS),
+ host-backed Mach-O executable backend**:
+ - it currently covers the validated scalar IR executable subset on
+ `macos/aarch64` hosts for:
+ - `macos-aarch64`,
+ - `ios-aarch64`,
+ - `ios-simulator-aarch64`,
+ - and `ios-simulator-x86_64`,
+ - emits target-specific arm64 or x86_64 assembly, assembles it with host
+ `clang -c`, and links it with host `ld`,
+ - `macos-aarch64` also expands bundled `libsilk_rt*.a` archives into
+ temporary object members before host linking so runtime-backed scalar
+ executables build on Apple Silicon,
+ - `ios-aarch64`, `ios-simulator-aarch64`, and `ios-simulator-x86_64` are
+ intentionally narrower than `macos-aarch64`, but now include:
+ - pure-Silk scalar executables,
+ - reachable float-to-int lowering via target-correct helper objects
+ compiled from `src/silk_rt_f128.c`,
+ - and portable bundled runtime helpers compiled on demand for the
+ requested iOS SDK target (number / regex / unicode / filesystem / dns /
+ process / signal / term / pty / readline / task-pool / async),
+ - mixed `.slk` + native `.c` / `.h` / `.m` / `.o` / `.a` executable
+ inputs, with `.m` compiled as Objective-C and linked against `libobjc`,
+ - and native-input-only executables whose `main` comes from linked
+ objects or archives,
+ - this host-backed subset is now wired through the `silk` CLI / driver path
+ (with the same host `codesign -s -` post-pass on macOS targets that need
+ it),
  - and is an explicit bring-up step until the non-const Mach-O executable path
  is emitted fully by Silk-owned codegen.
 - `src/backend_ir_elf.zig` provides an **IR→ELF backend** for `linux-x86_64` outputs (a growing subset of the language, including multi-function programs, rodata, and link-input builds).
@@ -70,7 +87,7 @@ Mach-O and PE/COFF IR-backed object/static/shared library emission, and addition
 An initial IR-driven, native backend is being prototyped alongside the existing constant-expression emitter:
 
 - the front-end (parser + checker) produces `ast.Module` values,
-- a lowering pass in `src/lower_ir.zig` translates a constrained subset of `fn main() -> int` programs into `ir.Function` graphs, using integer arithmetic, comparisons, and simple control flow (`Br` / `BrCond`),
+- a lowering pass in `src/lower_ir.zig` translates a constrained subset of `fn main() -> int` and `fn main() -> void` programs into `ir.Function` graphs, using integer arithmetic, comparisons, and simple control flow (`Br` / `BrCond`),
 - a target-independent IR interpreter in `src/ir_eval.zig` provides reference semantics for these IR functions,
 - the constant-expression backend emits a minimal target-specific executable stub (ELF64/Mach-O/PE32+) whose entrypoint terminates the process with the evaluated `main` return value,
 - a dedicated IR→ELF backend module (`src/backend_ir_elf.zig`) will gradually assume responsibility for emitting native code directly from `ir.Function` graphs, starting with a single-function, integer-returning subset and expanding as more language features are lowered to IR.
@@ -112,15 +129,16 @@ The implementation must remain spec-driven: any architectural decision should be
 For executable builds driven via the C ABI (`SILK_OUTPUT_EXECUTABLE`) and,
 eventually, the `silk` CLI, the compiler enforces a simple, explicit entrypoint:
 
-- there MUST be exactly one top-level function with the signature:
+- there MUST be exactly one top-level function with one of these signatures:
 
   ```silk
   fn main() -> int { ... }
+  fn main() -> void { ... }
   ```
 
 - this function:
  - takes no parameters,
- - returns `int`,
+ - returns `int` or `void`,
  - serves as the process entrypoint when an executable is produced.
 
 In the initial bring-up, this requirement is enforced by the front-end (via
@@ -159,7 +177,7 @@ Testing is incremental and must be developed alongside the implementation:
 
 - Zig unit tests:
  - Each core module (`lexer.zig`, `parser.zig`, `checker.zig`, etc.) contains Zig `test` blocks that exercise its behavior.
- - Additional integration tests may live in dedicated files (e.g. `src/tests_frontend.zig`) that compile sample Silk programs drawn from the language reference on this site.
+ - Additional integration tests may live in dedicated files (e.g. `src/tests_frontend.zig`) that compile sample Silk programs drawn from `docs/language/`.
 - C99 tests:
  - A separate directory (e.g. `c-tests/`) will contain C test programs and harnesses that:
  - link against `libsilk.a`,

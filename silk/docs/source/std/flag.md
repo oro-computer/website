@@ -56,6 +56,7 @@ import std::args;
 import std::result;
 
 enum FlagErrorKind { ... }
+enum FlagValueKind { Bool, Int, I64, U64, String }
 
 struct FlagFailed {
   code: int,
@@ -83,6 +84,16 @@ struct I64Flag { index: i64 }
 struct U64Flag { index: i64 }
 struct StringFlag { index: i64 }
 
+struct FlagInfo {
+  index: i64,
+  kind: FlagValueKind,
+  name: string,
+  alias: string,
+  usage: string,
+}
+
+struct FlagIter { ... }
+
 struct PosString { index: i64 }
 struct PosInt { index: i64 }
 struct PosI64 { index: i64 }
@@ -101,6 +112,17 @@ export type PosStringResult = std::result::Result(PosString, FlagFailed);
 export type PosIntResult = std::result::Result(PosInt, FlagFailed);
 export type PosI64Result = std::result::Result(PosI64, FlagFailed);
 export type PosU64Result = std::result::Result(PosU64, FlagFailed);
+
+impl FlagSet {
+  public fn get_flag_name (self: &FlagSet, index: i64) -> string;
+  public fn get_flag_alias (self: &FlagSet, index: i64) -> string;
+  public fn get_flag_usage (self: &FlagSet, index: i64) -> string;
+  public fn iter (self: &FlagSet) -> FlagIter;
+}
+
+impl FlagIter as std::interfaces::Iterator(FlagInfo) {
+  public fn next (mut self: &FlagIter) -> FlagInfo?;
+}
 ```
 
 Notes:
@@ -111,9 +133,16 @@ Notes:
 - Handle structs have safe defaults (their `index` field defaults to an invalid
  sentinel). `FlagSet.get_*` methods treat invalid handles as “missing” and
  return zero values (`false`, `0`, or `""`) rather than reading out of bounds.
-- Usage strings may be retrieved from the owning `FlagSet` via
- `get_flag_usage(handle.index)` and `get_positional_usage(handle.index)` when
- building usage/help output (or via `handle.usage(fs)`).
+- Declared flag metadata may be retrieved from the owning `FlagSet` via
+ `get_flag_name(handle.index)`, `get_flag_alias(handle.index)`, and
+ `get_flag_usage(handle.index)` when building usage/help output (or via
+ `handle.usage(fs)` for usage text specifically).
+- `FlagSet.iter()` enumerates declared flags in declaration order and yields
+ `FlagInfo` values carrying the declared index, value kind, name, alias, and
+ usage string.
+- `FlagIter` borrows metadata storage owned by the `FlagSet`. Keep the
+ `FlagSet` alive, and do not declare more flags on it, while an iterator
+ snapshot is in use.
 - `ParsedArgs` provides views of:
  - all positional tokens before and after interspersed flags (including the
  `--` rest segment),
@@ -186,6 +215,36 @@ fn main (argc: int, argv: u64) -> int {
       fs.drop();
       return 2;
     },
+  }
+}
+```
+
+## Declared flag metadata
+
+`FlagSet` now exposes the declared flag surface directly:
+
+- `get_flag_name(index)` returns the canonical long name.
+- `get_flag_alias(index)` returns the declared alias, or `""` when the flag has
+ no alias or the index is invalid.
+- `get_flag_usage(index)` returns the usage text, or `""` for an invalid index.
+- `iter()` returns a non-destructive iterator over all declared flags in
+ declaration order.
+
+This is intended for help/usage generation and for generic tooling that only
+has a `FlagSet` plus flag handles.
+
+```silk
+let mut fs = std::flag::FlagSet.init();
+let verbose_r = fs.bool({ name: "verbose", alias: "v", default_value: false, usage: "enable verbose logging" });
+let out_r = fs.string({ name: "out", alias: "o", default_value: "out.txt", usage: "output path" });
+
+if verbose_r.is_ok() && out_r.is_ok() {
+  for info in fs.iter() {
+    if info.alias != "" {
+      println("--{} (-{}): {}", info.name, info.alias, info.usage);
+    } else {
+      println("--{}: {}", info.name, info.usage);
+    }
   }
 }
 ```

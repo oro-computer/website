@@ -1,19 +1,22 @@
 # Literals
 
-Literals are the simplest way to write values directly in source code: numbers, booleans, chars, strings, durations, and aggregates like arrays and struct literals.
+Literals are the simplest way to write values directly in source code:
+numbers, booleans, chars, strings, durations, and aggregates like arrays
+struct literals.
 
-This wiki page is a learning-oriented companion to the canonical spec: [literals overview](?p=language/literals-overview).
+This wiki page is a learning-oriented companion to the canonical spec:
+[literals overview](?p=language/literals-overview).
 
 ## Notes
 
-- Use the linked literals pages below for the exact rules and edge cases for each literal family.
+- Detailed rules and edge cases: `docs/language/literals-*.md`
 
 ## Syntax
 ```silk
 let n: int = 42;
 let pi: f64 = 3.14159;
 let ok: bool = true;
-let c: char = '\n';
+let c: char = '\\n';
 let s: string = "hello";
 
 // Duration literals
@@ -34,12 +37,13 @@ fn main () -> int {
 }
 ```
 
-### Example: strings and escapes
+### Example: multiline strings
 ```silk
 import std::io;
 
 fn main () -> int {
-  std::io::println("line1\nline2");
+  std::io::println(`line1
+line2`);
   return 0;
 }
 ```

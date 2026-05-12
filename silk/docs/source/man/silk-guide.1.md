@@ -15,10 +15,11 @@
 
 ## Description
 
-`silk guide` queries the bundled SQLite guide database shipped with the
-toolchain. The seeded corpus is kept at a floor of `1000` entries and
-combines runnable examples with documentation-backed reference guides for every
-canonical language and standard-library page.
+`silk guide` queries an installed SQLite guide database generated from the
+curated catalog at `examples/guide/catalog.json`. The seeded corpus is kept
+at a floor of `1000` entries and combines runnable examples with
+documentation-backed reference guides for every canonical language and
+standard-library page.
 
 Each guide entry contains:
 
@@ -42,6 +43,7 @@ Each guide entry contains:
  - `silk guide read file`
  - `silk guide tcp loopback`
  - `silk guide http request`
+ - `silk guide protobuf schema roundtrip`
 - Exact tag filter:
  - `silk guide tags:concurrency`
 - Exact std-module filter:
@@ -50,6 +52,7 @@ Each guide entry contains:
 - Exact public std symbol lookup:
  - `silk guide std::http::request`
  - `silk guide ByteSlice.find_bytes`
+ - `silk guide std::protobuf::Reader.read_key`
  - `silk guide GL_TEXTURE_2D`
 - Documentation-backed references:
  - `silk guide tags:reference-guide`
@@ -83,14 +86,17 @@ Each guide entry contains:
 By default, `silk guide` looks for:
 
 - `SILK_GUIDE_DB` when set,
-- otherwise the bundled guide database that ships with the installed toolchain.
+- `SILK_GUIDE_PRINTER` when set and `--printer` is not provided for `--show`,
+- otherwise `../share/silk/guide.db` relative to the `silk` executable,
+- otherwise the staged development path under `build/share/silk/guide.db` when available.
 
 ## Notes
 
 - Exact tag/module/diagnostic/alias lookups use normalized SQLite metadata tables.
 - Exact public std symbol lookups use generated metadata from shipped `std/**/*.slk` modules and route to the matching API guide.
 - `--show` accepts exact ids and id-prefixes; a prefix like `fs` may render
- multiple `fs/...` guides.
+ multiple `fs/...` guides. Prefix output collapses generated variants that
+ share the same source body and prefers the canonical overview entry.
 - Free-text queries use a bundled SQLite FTS5 index over guide titles,
  summaries, stored Silk source, aliases, keywords, tags, modules,
  requirements, docs, and diagnostics.
@@ -114,12 +120,12 @@ By default, `silk guide` looks for:
 - `--show` prints action-first metadata in this order:
  `What`, `Why`, `Docs`, and the remaining environment/search details, followed
  by the stored Silk source.
-- Seeded guide sources are verification-backed by the toolchain test suite:
+- Seeded guide sources are verification-backed by the repo test suite:
  every distinct source path is checked, fixture-backed entries remain
  promoted to `verified_build`, entries are built when
  `verified_build = true`, and they run under a bounded timeout when
  `verified_run = true`.
-- The toolchain test suite also verifies that every canonical language and
+- The repo test suite also verifies that every canonical language and
  standard-library documentation page is referenced by at least one guide entry, and that
  every shipped std `export` declaration and public method (`public fn` or
  `public async fn`) has generated symbol lookup metadata.
@@ -129,5 +135,6 @@ By default, `silk guide` looks for:
 ## See Also
 
 - [`silk(1)`](?p=man/silk.1)
+- [`silk-error(1)`](?p=man/silk-error.1)
 - [`silk-man(1)`](?p=man/silk-man.1)
 - [`silk-doc(1)`](?p=man/silk-doc.1)

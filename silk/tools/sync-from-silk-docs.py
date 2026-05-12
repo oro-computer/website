@@ -185,6 +185,9 @@ def normalize_user_facing_links(markdown: str) -> str:
             prefix = match.group("prefix") or ""
             name = match.group("name")
             section = match.group("section")
+            if name.startswith("std::"):
+                target = name.replace("::", "/")
+                return f"{prefix}[`{name}({section})`](?p={target})"
             return f"{prefix}[`{name}({section})`](?p=man/{name}.{section})"
 
         line = re.sub(

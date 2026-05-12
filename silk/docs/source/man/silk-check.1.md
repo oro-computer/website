@@ -61,19 +61,15 @@ silk check --package .
 
 ## Environment
 
-| Variable | Details |
-| --- | --- |
-| `PREFIX` | installation prefix used for the system package search root at `PREFIX/lib/silk` (searched last when it exists). Default: `/usr/local`. |
-| `SILK_PACKAGE_PATH` | primary package search path for bare-specifier imports (entries separated by `:` on POSIX, `;` on Windows). The compiler appends `PREFIX/lib/silk` as the last search path entry when it exists. |
-| `SILK_Z3_LIB` | path to a dynamic Z3 library used by the Formal Silk verifier when `--verify` is enabled. |
-| `SILK_VERIFY_JOBS` | override the number of worker threads used for Formal Silk verification (default: auto; capped at 8). |
+- `PREFIX` — installation prefix used for the system package search root at `PREFIX/lib/silk` (searched last when it exists). Default: `/usr/local`.
+- `SILK_PACKAGE_PATH` — primary package search path for bare-specifier imports (entries separated by `:` on POSIX, `;` on Windows). The compiler appends `PREFIX/lib/silk` as the last search path entry when it exists.
+- `SILK_Z3_LIB` — path to a dynamic Z3 library used by the Formal Silk verifier when `--verify` is enabled.
+- `SILK_VERIFY_JOBS` — override the number of worker threads used for Formal Silk verification (default: auto; capped at 8).
 
 ## Exit status
 
-| Status | Meaning |
-| --- | --- |
-| `0` | Success. |
-| non-zero | Error. |
+- `0` on success.
+- non-zero on error.
 
 ## See Also
 

@@ -1,31 +1,48 @@
 # Standard Library Overview (`std::`)
 
-The Silk standard library, `std::`, is the default library surface that ships with the toolchain. It provides the modules Silk programs rely on for text, containers, filesystems, networking, concurrency, cryptography, graphics, verification support, and target-specific runtime integration.
+The `docs/std/` directory specifies the
+intended API and structure. A minimal in-tree stdlib source tree also
+exists under `std/` (used by the toolchain to satisfy `import std::...;`).
 
-The shipped stdlib includes:
+As of the current compiler/backend subset, the in-tree stdlib includes a
+small but functional set of utilities implemented purely in Silk (including
+monomorphized, type-parameter generics for core collection types),
+plus a tiny hosted POSIX baseline for OS-facing modules (`std::fs`, `std::task`,
+`std::sync`, `std::io`) implemented via the `std::runtime` interface layer
+(the shipped POSIX runtime backend uses `ext` and therefore requires linking
+libc for executable outputs).
 
-- pure-Silk modules for core values, collections, parsing, formatting, and algorithms,
-- hosted POSIX-first modules for OS-facing surfaces such as `std::fs`, `std::io`, `std::task`, and `std::sync`,
-- a runtime interface layer (`std::runtime`) so public `std::...` modules can stay stable while platform backends vary by target,
-- and a swappable build-time model: alternate `std::` implementations can be selected without changing Silk syntax or the C ABI.
+The Silk standard library, `std::`, provides foundational functionality built
+on top of the language core (regions, buffers, concurrency, etc.). It is intended
+to be:
+
+- **Linked by default** for normal builds driven by `silk`.
+- **Swappable**: an alternative `std::` implementation can be selected at build
+ time, without changing the language or the C ABI.
+- **POSIX-first** for OS interactions (initial hosted baseline), while still
+ supporting freestanding/embedded builds via a smaller “core” subset.
 
 See also:
 
 - [package structure](?p=std/package-structure) (namespace + linkage + swappability)
 - [conventions](?p=std/conventions) (API conventions: errors, allocation, ownership)
 - [result](?p=std/result) (the standard `Result(T, E)` error return type)
-- [module catalog](?p=std/module-catalog) (audit-oriented coverage map for the shipped `std::...` tree)
+- [module catalog](?p=std/module-catalog) (audit-oriented coverage map for the shipped
+ `std/**` tree)
 
-Every shipped `std::...` module has a canonical page on this site. Nested modules flatten `::` to `-` in page ids; for example:
+Exact canonical docs exist for every shipped `std/**` module. Nested modules
+flatten `/` to `-` in `docs/std/`, for example:
 
-- `std::fs::stream` -> [fs stream](?p=std/fs-stream)
-- `std::runtime::posix::io` -> [runtime posix io](?p=std/runtime-posix-io)
+- `std/fs/stream.slk` -> [fs stream](?p=std/fs-stream)
+- `std/runtime/posix/io.slk` -> [runtime posix io](?p=std/runtime-posix-io)
 
 ## Core Areas
 
 These are the minimum required areas for the initial standard library
 distribution:
 
+- `std::bytes` — borrowed byte-slice search, comparison, copy, and ASCII
+ helpers for zero-copy CLI/search/build hot paths (see [bytes](?p=std/bytes)).
 - `std::buffer` — typed, width-oriented buffer utilities built on top of
  `std::vector` for common scalar element types (see [buffer](?p=std/buffer)).
 - `std::strings` — UTF-8 text utilities and owned string building.
@@ -38,8 +55,18 @@ distribution:
 - `std::function` — boxed function-value holders (see [function](?p=std/function)).
 - `std::math` — linear algebra utilities (vectors/matrices) for graphics and
  general computation (see [math](?p=std/math)).
-- `std::graphics` — low-level graphics API bindings (OpenGL, OpenGL ES, Vulkan;
- see [graphics](?p=std/graphics)).
+- `std::graphics` — low-level graphics API bindings and focused platform
+ facades (OpenGL, OpenGL ES, Vulkan, macOS Metal handle/window-context API,
+ and provider-neutral window clear facade; see [graphics](?p=std/graphics)).
+- `std::dylib` — opt-in dynamic-library loading and symbol lookup with explicit
+ `c_fn` function-pointer conversion from symbol addresses (see
+ [dylib](?p=std/dylib)).
+- `std::window` — opt-in high-level window application facade with
+ `run(...)`, `run_loop(...)`, `next_event(...)`, native window creation
+ options, title/visibility/focus/size/position/window-state controls, macOS
+ AppKit support, iOS UIKit app-bundle/lifecycle support, a GTK provider
+ placeholder, and explicit macOS/iOS/GTK provider submodules (see
+ [window](?p=std/window)).
 - `std::image` — image codecs + color utilities (PNG via libpng, JPEG via
  libjpeg-turbo; see [image](?p=std/image)).
 - `std::limits` — numeric min/max limits for primitive types (see [limits](?p=std/limits)).
@@ -52,6 +79,8 @@ distribution:
  comparison (see [semver](?p=std/semver)).
 - `std::json` — JSON parsing, DOM construction, and stringifying (borrowed and
  owned DOM parsing plus explicit builder helpers; see [json](?p=std/json)).
+- `std::protobuf` — dependency-free Protocol Buffers binary wire helpers used
+ by `silk proto` generated modules (see [protobuf](?p=std/protobuf)).
 - `std::toml` — TOML parsing, DOM construction, and deterministic emission
  (borrowed and owned DOM parsing plus explicit builder helpers;
  see [toml](?p=std/toml)).
@@ -72,6 +101,8 @@ distribution:
  [set](?p=std/set)).
 - `std::algorithms` — common algorithms over slices/collections.
 - `std::temporal` — `Instant`/`Duration` utilities and calendar/time helpers.
+- `std::time` — small monotonic-clock and duration facade over
+ `std::temporal` for systems tools (see [time](?p=std/time)).
 - `std::url` — WHATWG URL parsing/serialization and `URLSearchParams` (`application/x-www-form-urlencoded`; see [url](?p=std/url)).
 - `std::task` — task/runtime helpers, including reusable `Task(T)` join helpers
  for async code (hosted baseline; see [task](?p=std/task)).
@@ -127,4 +158,8 @@ distribution:
  storage reasoning; module-specific theories live with their owning std
  modules (see [formal](?p=std/formal)).
 
-Each area above has a canonical page on this site. Intrinsic or cross-cutting surfaces may also be explained in the language reference when that gives the clearest semantics, but the linked standard-library pages remain the downstream source of truth for the shipped `std::` surface.
+Each area has a dedicated design document under `docs/std/` (for intrinsic
+surfaces like `std::buffer`, the design lives in both `docs/std/` and the
+corresponding language doc). The exact shapes of types and functions will
+evolve as the language and backend grow; these docs are the source of truth for
+the intended `std::` surface.

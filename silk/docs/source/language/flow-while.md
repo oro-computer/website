@@ -30,6 +30,10 @@ matches:
 while let <pattern> = <scrutinee> {
   ...
 }
+
+while let mut <pattern> = <scrutinee> {
+  ...
+}
 ```
 
 Notes:
@@ -37,6 +41,8 @@ Notes:
 - The scrutinee expression is evaluated once per iteration.
 - The pattern binders (for example `Some(v)` binds `v`) are in scope only in
  the loop body.
+- `while let mut` marks binders introduced by the pattern as mutable for that
+ iteration's loop body.
 - The loop exits when the scrutinee does not match the pattern.
 - Supported patterns are the same as `if let` (see [flow if else](?p=language/flow-if-else)).
 
@@ -50,9 +56,11 @@ fn main () -> int {
   var x: int? = Some(3);
   var sum: int = 0;
 
-  while let Some(v) = x && v > 0 {
+  while let mut Some(v) = x && v > 0 {
+    let original = v;
+    v = v + 1;
     sum = sum + v;
-    x = if v <= 1 { None } else { Some(v - 1) };
+    x = if original <= 1 { None } else { Some(original - 1) };
   }
 
   return sum;
@@ -64,6 +72,12 @@ Semantics:
 - Clauses are evaluated left-to-right and short-circuit like `&&`.
 - `let` clause binders are in scope for subsequent clauses and for the loop
  body, but they do not escape the loop.
+- `let mut` clauses introduce mutable binders for subsequent clauses and for
+ that iteration's loop body.
+- `let move` clauses consume their scrutinee for ownership-tracked values. This
+ is most useful when the scrutinee is a fresh expression each iteration, such
+ as `while let move Some(value) = next() { ... }`; a moved local source binding
+ is unavailable to later clauses, the loop body, and code after the loop.
 - The loop exits when any clause fails (pattern mismatch or boolean `false`).
 
 Parsing note (Supported forms):

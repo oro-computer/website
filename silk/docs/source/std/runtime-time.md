@@ -20,4 +20,7 @@ Use the following owning docs for the substantive API/design context for this mo
 
 - The shipped source for this module is `std/runtime/time.slk`.
 - The canonical module name is `std::runtime::time`.
+- On `wasm32-wasi`, the shipped implementation rewrites its delegated backend
+ imports to `std::runtime::wasi::time` so higher-level modules such as
+ `std::temporal` keep the same public contract across hosted and WASI targets.
 - This page is intentionally implementation-oriented. Downstream users should usually start with the higher-level std module docs listed above unless they are working on the runtime layer itself.

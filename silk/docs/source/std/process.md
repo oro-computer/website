@@ -25,10 +25,13 @@ module std::process;
 
 export type GetCwdError = GetCwdFailed;
 export type GetCwdResult = std::result::Result(std::strings::String, GetCwdError);
+export type ExecutablePathError = GetCwdFailed;
+export type ExecutablePathResult = std::result::Result(std::strings::String, ExecutablePathError);
 
 export fn chdir (path: string) -> ChdirFailed?;
 export fn getcwd () -> GetCwdResult;
 export fn getpid () -> int;
+export fn executable_path () -> ExecutablePathResult;
 ```
 
 ## Child processes (`std::process::child`)
@@ -130,6 +133,24 @@ Errors are reported as a recoverable result:
 `GetCwdFailed` does not expose platform `errno` values. Use `GetCwdFailed.kind()`
 to classify failures into `GetCwdErrorKind` values.
 
+## `executable_path`
+
+`std::process::executable_path()` returns an owned path to the current
+executable.
+
+Ownership:
+
+- Callers must drop the returned `String` when finished.
+
+Errors use the same stable error family as `getcwd`:
+
+- on success: `Ok(String)`,
+- on failure: `Err(GetCwdFailed{ code, requested })`.
+
+On POSIX hosted targets this queries the operating system rather than reading
+`argv[0]`. Use `std::env::executable_path_from_args(argc, argv)` when the
+borrowed launcher-provided argv string is the desired zero-copy representation.
+
 ## `chdir`
 
 `std::process::chdir(path)` changes the process working directory.
@@ -150,10 +171,13 @@ Notes:
 
 ## Platform notes
 
-- **POSIX (default shipped stdlib)**: implemented via `getcwd(3)` and
- `chdir(2)`. `getpid(2)` is available.
+- **POSIX (default shipped stdlib)**: implemented via `getcwd(3)`,
+ `chdir(2)`, `getpid(2)`, and platform executable-path queries
+ (`/proc/self/exe` on Linux, `_NSGetExecutablePath` on macOS).
 - **Child processes (POSIX)**: implemented via `fork(2)` + `exec*` + `waitpid(2)`
  with pipe-based stdio, PTY-backed child spawn, and poll-based output capture.
 - **WASI (Preview 1)**: `getcwd` and `chdir` are implemented via a virtual
- working directory. `getpid()` currently returns 0. `std::process::child`
- operations remain unsupported.
+ working directory. `getpid()` currently returns 0, and the OS-queried
+ executable path is unavailable; use `std::args::current().get(0)` or
+ `std::env::executable_path_from_args` when argv is available.
+ `std::process::child` operations remain unsupported.

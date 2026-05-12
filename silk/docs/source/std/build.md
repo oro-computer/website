@@ -50,8 +50,8 @@ archives used by `std::tls` on `linux/x86_64`), `[[target]].inputs` supports
 `@vendored/<name>.a` entries (see [package manifests](?p=compiler/package-manifests)). Build
 modules may emit these via `Build.target_add_input(...)`. On supported native
 hosts, common vendored dependency families (`libsodium`, `mbedTLS`,
-`libsqlite3`, `libssh2`) are also auto-linked when native `.c` / `.h` / `.o` /
-`.a` inputs reference their symbol families, so explicit `@vendored/...`
+`libsqlite3`, `libssh2`) are also auto-linked when native `.c` / `.h` / `.m` /
+`.o` / `.a` inputs reference their symbol families, so explicit `@vendored/...`
 entries are optional for those common cases.
 
 For native header inputs, `Build.target_add_input(...)` follows the same rule
@@ -59,6 +59,8 @@ as direct manifest/CLI builds:
 
 - if the added path ends in `.h` and a sibling `.c` exists, Silk compiles that
  `.c`,
+- otherwise, if a sibling `.m` exists, Silk compiles that Objective-C source
+ for supported Apple host-backed Mach-O targets,
 - otherwise Silk falls back to compiling the header itself as a C translation
  unit.
 
@@ -159,7 +161,7 @@ Caching:
  cache activity, so explicit cache maintenance does not race live build-cache
  reads or writes.
 
-- `Run` steps are not cached.
+- `Run` steps are not cached in the current API.
 
 Minimal example (generate a source file before emitting the manifest):
 

@@ -277,6 +277,12 @@ example). A method call like `value.as_string()` on an interface-typed runtime
 value is rewritten by the checker into an ordinary `match` dispatch over that
 union.
 
+Typed-binder `match` patterns may also name an interface. When the scrutinee has
+a concrete struct type and that type implements the named interface, an arm such
+as `value: Object => ...` accepts the scrutinee. This concrete form is selected
+statically and therefore also covers single-conformer cases without requiring a
+preexisting interface-typed union value.
+
 This means the current runtime interface subset supports:
 
 - interface-typed local bindings, function parameters, borrowed function
@@ -287,6 +293,8 @@ This means the current runtime interface subset supports:
  whose values come from known conforming concrete types,
 - method calls on those interface-typed values when the selected method is part
  of the shared conforming surface,
+- typed-binder `match` arms whose pattern type is an implemented interface for
+ a concrete struct scrutinee,
 - special-case compiler hooks for specific interfaces (currently
  `std::interfaces::Drop` for deterministic cleanup; see
  [interfaces](?p=std/interfaces) and [memory model](?p=language/memory-model)).

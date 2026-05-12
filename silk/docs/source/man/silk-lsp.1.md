@@ -31,6 +31,18 @@ The currently advertised capability surface includes:
 - `textDocument/semanticTokens/full`,
 - and `textDocument/inlayHint`.
 
+Hover and completion include guided Markdown help for context-sensitive forms
+such as `panic`, `await`, `yield`, `sizeof`, `#embed`, and `as raw`, including
+the canonical string FFI pointer/byte-length pattern and compile-time file
+embedding. Completion also suggests the valid `#embed` encoding strings
+(`"utf8"`, `"utf16"`, `"u8"`, `"u16"`, and `"u32"`) in the optional second
+argument; omitted encodings default to `"utf8"`.
+
+Diagnostics carry stable compiler error codes when available. Parse diagnostics
+publish `E0001`, and structured resolve/type-check diagnostics include
+`silk error <code>` follow-up help in the diagnostic message/data so users can
+open the same reference exposed by the CLI.
+
 The LSP behavior and supported requests are documented at [lsp silk](?p=compiler/lsp-silk).
 
 ## Options
@@ -42,9 +54,7 @@ The LSP behavior and supported requests are documented at [lsp silk](?p=compiler
 
 ## Environment
 
-| Variable | Details |
-| --- | --- |
-| `SILK_STD_ROOT` | default stdlib root (used when `--std-root` is not provided). |
+- `SILK_STD_ROOT` — default stdlib root (used when `--std-root` is not provided).
 
 ## See Also
 

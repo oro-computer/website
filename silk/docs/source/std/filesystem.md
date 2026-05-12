@@ -1,9 +1,9 @@
 # `std::fs`
 
 `std::fs` provides a small hosted
-filesystem API backed by `std::runtime::fs`. It exposes a low-level `File`
-handle and byte-oriented I/O primitives, staying within the current compiler’s
-feature set.
+filesystem API backed by `std::runtime::fs`. It exposes low-level `File`
+handles, path/file metadata queries, whole-file helpers, directory iteration,
+and byte-oriented I/O primitives.
 
 The public `std::fs` surface does not expose POSIX `errno`. Runtime-specific
 details live under `std::runtime`.
@@ -27,6 +27,18 @@ See also:
  - relative paths (`foo/bar`) are resolved against a virtual working directory
  managed by `std::process::chdir` / `std::process::getcwd`,
  - `.` and `..` segments are normalized; `..` cannot escape above the sandbox root.
+- Metadata platform notes:
+ - `stat(path)` follows symlinks before reporting metadata for the resolved
+ target.
+ - `lstat(path)` reports the symlink itself, so
+ `Stats.is_symbolic_link()` / `Stats.isSymbolicLink()` are only true for
+ `lstat(...)` results that actually describe a link.
+ - `birthtime*` falls back to `ctime*` on targets where creation time is not
+ available from the runtime metadata source (currently the hosted Linux
+ baseline and the shipped `wasm32-wasi` preview1 backend).
+ - On `wasm32-wasi`, `mode` carries file-type bits synthesized from the WASI
+ file type, while fields not exposed by preview1 metadata (`uid`, `gid`,
+ `rdev`, `blksize`, `blocks`) are reported as `0`.
 
 ## Exported API
 A hosted POSIX baseline exists today in `std/fs.slk`. The low-level OS bindings
@@ -40,11 +52,13 @@ export fn exists (path: string) -> bool;
 export fn can_read (path: string) -> bool;
 export fn can_write (path: string) -> bool;
 export fn can_exec (path: string) -> bool;
+export fn stat (path: string) -> FSStatsResult;
+export fn lstat (path: string) -> FSStatsResult;
 export fn path_kind (path: string) -> FSPathKindResult;
 export fn is_regular_file (path: string) -> FSBoolResult;
 export fn realpath (path: string) -> FSStringResult;
 
-enum FSErrorKind {
+export enum FSErrorKind {
   OutOfMemory,
   NotFound,
   PermissionDenied,
@@ -56,7 +70,7 @@ enum FSErrorKind {
   Unknown,
 }
 
-struct FSFailed {
+export struct FSFailed {
   code: int,
   requested: i64,
 }
@@ -72,17 +86,70 @@ export type FSI64Result = std::result::Result(i64, FSFailed);
 export type FSErrorIntResult = std::result::Result(int, FSError);
 export type FSBoolResult = std::result::Result(bool, FSError);
 export type FSBufferU8Result = std::result::Result(std::buffer::BufferU8, FSError);
+export type FSStatsResult = std::result::Result(Stats, FSError);
 export type FSStringResult = std::result::Result(std::strings::String, FSError);
 
-enum PathKind {
+export enum PathKind {
   RegularFile,
   Directory,
   Other,
 }
 
+export enum DirEntryType {
+  Unknown,
+  RegularFile,
+  Directory,
+  SymbolicLink,
+  Other,
+}
+
 export type FSPathKindResult = std::result::Result(PathKind, FSError);
 
-struct OpenOptions {
+export struct Stats {
+  dev: u64,
+  ino: u64,
+  mode: u64,
+  nlink: u64,
+  uid: u64,
+  gid: u64,
+  rdev: u64,
+  size: i64,
+  blksize: i64,
+  blocks: i64,
+  atime_ms: i64,
+  mtime_ms: i64,
+  ctime_ms: i64,
+  birthtime_ms: i64,
+  atime_ns: i64,
+  mtime_ns: i64,
+  ctime_ns: i64,
+  birthtime_ns: i64,
+  atime: std::temporal::DateTime,
+  mtime: std::temporal::DateTime,
+  ctime: std::temporal::DateTime,
+  birthtime: std::temporal::DateTime,
+}
+
+impl Stats {
+  public fn is_file (self: &Stats) -> bool;
+  public fn is_directory (self: &Stats) -> bool;
+  public fn is_block_device (self: &Stats) -> bool;
+  public fn is_character_device (self: &Stats) -> bool;
+  public fn is_symbolic_link (self: &Stats) -> bool;
+  public fn is_fifo (self: &Stats) -> bool;
+  public fn is_socket (self: &Stats) -> bool;
+
+  // Node-compatible aliases on top of the snake_case Silk methods.
+  public fn isFile (self: &Stats) -> bool;
+  public fn isDirectory (self: &Stats) -> bool;
+  public fn isBlockDevice (self: &Stats) -> bool;
+  public fn isCharacterDevice (self: &Stats) -> bool;
+  public fn isSymbolicLink (self: &Stats) -> bool;
+  public fn isFIFO (self: &Stats) -> bool;
+  public fn isSocket (self: &Stats) -> bool;
+}
+
+export struct OpenOptions {
   read: bool,
   write: bool,
   create: bool,
@@ -99,21 +166,21 @@ impl OpenOptions {
   public fn create_append (mode: int) -> OpenOptions;
 }
 
-enum SeekWhence {
+export enum SeekWhence {
   Start,
   Current,
   End,
 }
 
 // A file descriptor wrapper.
-struct File {
+export struct File {
   fd: int,
 }
 
 export type FileResult = std::result::Result(File, FSFailed);
 
 // A read-only memory mapping (hosted baseline).
-struct MMap {
+export struct MMap {
   ptr: u64,
   len: i64,
 }
@@ -157,6 +224,9 @@ impl File {
   public fn seek (self: &File, offset: i64, whence: SeekWhence) -> FSI64Result;
   public fn tell (self: &File) -> FSI64Result;
   public fn size (self: &File) -> FSI64Result;
+  public fn metadata_size (self: &File) -> FSI64Result;
+  public fn file_size (self: &File) -> FSI64Result;
+  public fn stat (self: &File) -> FSStatsResult;
   public fn mmap_readonly (self: &File) -> MMapResult;
   public fn mmap_readonly_range (self: &File, offset: i64, len: i64) -> MMapResult;
   public fn sync (self: &File) -> FSFailed?;
@@ -172,6 +242,10 @@ impl File as std::interfaces::Drop {
   public fn drop (mut self: &File) -> void;
 }
 
+export fn fstat (file: &File) -> FSStatsResult;
+export fn metadata_size (file: &File) -> FSI64Result;
+export fn file_size (file: &File) -> FSI64Result;
+
 // Convenience helpers for common whole-file operations.
 export fn read_file (path: string) -> FSBufferU8Result;
 export fn read_file_string (path: string) -> FSStringResult;
@@ -182,12 +256,23 @@ export fn append_file_string (path: string, contents: string, mode: int) -> FSIn
 export fn copy_file (src: string, dst: string, mode: int) -> FSErrorIntResult;
 
 // Directory iteration.
-struct Dir { handle: u64 }
+export struct Dir {
+  handle: u64,
+  scratch_ptr: u64,
+  scratch_len: i64,
+  scratch_type: int,
+}
 
-struct DirEntry { name: std::strings::String }
+export struct DirEntry { name: std::strings::String }
+
+export struct DirEntryView {
+  name: std::arrays::ByteSlice,
+  kind: DirEntryType,
+}
 
 export type DirResult = std::result::Result(Dir, FSFailed);
 export type DirEntryResult = std::result::Result(DirEntry, FSFailed);
+export type DirEntryViewResult = std::result::Result(DirEntryView, FSFailed);
 
 impl DirEntry {
   public fn name (self: &DirEntry) -> string;
@@ -198,6 +283,7 @@ impl Dir {
   public fn open (path: string) -> DirResult;
   public fn is_valid (self: &Dir) -> bool;
   public fn close (mut self: &Dir) -> FSFailed?;
+  public fn next_view (mut self: &Dir) -> DirEntryViewResult?;
 }
 
 impl Dir as std::interfaces::Iterator(DirEntryResult) {
@@ -209,6 +295,7 @@ impl Dir as std::interfaces::Drop {
 }
 
 export fn read_dir (path: string) -> DirResult;
+export using readdir = read_dir;
 
 // Path-based helpers (`None` on success).
 export fn unlink (path: string) -> FSFailed?;
@@ -216,6 +303,7 @@ export fn rename (old_path: string, new_path: string) -> FSFailed?;
 export fn mkdir (path: string, mode: int) -> FSFailed?;
 export fn rmdir (path: string) -> FSFailed?;
 export fn mkdir_all (path: string, mode: int) -> FSError?;
+export using mkdirp = mkdir_all;
 ```
 
 ## `std::interfaces` surface
@@ -256,13 +344,49 @@ Notes:
  - `mkdir_all` is a convenience helper for `mkdir -p` behavior. In the current
  hosted subset it treats `EEXIST` as success and does not distinguish an
  existing directory from an existing non-directory at the same path.
+ - `mkdirp` is an exported compatibility alias for `mkdir_all`.
  - `read_dir` returns a `Dir` handle for iteration. `Dir.next()` yields
  `Some(Ok(DirEntry))` for entries, `Some(Err(FSFailed))` on error, and
  `None` on end-of-directory. `std::fs` skips `"."` and `".."`.
+ - `Dir.next_view()` yields borrowed zero-copy `DirEntryView` entries with a
+ decoded `DirEntryType` when the runtime reports one. The entry name slice
+ is valid only until the next directory read on that handle or until the
+ directory is closed. The current implementation keeps the small runtime
+ output record inside the `Dir` owner, so `next_view()` itself does not
+ allocate per entry.
+ - `readdir` is an exported compatibility alias for `read_dir`.
  - `path_kind(path)` classifies the resolved filesystem object as
  `RegularFile`, `Directory`, or `Other`.
  - on the hosted POSIX baseline this follows symlinks before classifying the
  final target.
+ - `Stats` is the stat-like metadata object modeled after Node.js `fs.Stats`.
+ - the numeric fields are `dev`, `ino`, `mode`, `nlink`, `uid`, `gid`,
+ `rdev`, `size`, `blksize`, `blocks`, and the timestamp families
+ `atime_ms`, `mtime_ms`, `ctime_ms`, `birthtime_ms`,
+ `atime_ns`, `mtime_ns`, `ctime_ns`, `birthtime_ns`,
+ - `atime`, `mtime`, `ctime`, and `birthtime` are materialized
+ `std::temporal::DateTime` views of the same timestamps,
+ - Silk exposes snake_case predicate methods and exact Node-style aliases:
+ `is_file` / `isFile`, `is_directory` / `isDirectory`,
+ `is_block_device` / `isBlockDevice`,
+ `is_character_device` / `isCharacterDevice`,
+ `is_symbolic_link` / `isSymbolicLink`,
+ `is_fifo` / `isFIFO`, and `is_socket` / `isSocket`.
+ - `stat(path)` returns `Stats` for the resolved filesystem object.
+ - on the hosted POSIX baseline and on the current WASI backend this follows
+ symlinks.
+ - `lstat(path)` returns `Stats` for the path itself.
+ - this is the call to use when you want `is_symbolic_link()` to observe the
+ symlink rather than its target.
+ - `fstat(file)` / `File.stat()` report metadata for the currently open file
+ descriptor without changing the seek position.
+ - `metadata_size(file)` / `File.metadata_size()` and
+ `file_size(file)` / `File.file_size()` return `fstat(2).st_size` without
+ allocating and without changing the descriptor offset. Prefer these over
+ `File.size()` in hot paths or when the seek position must be preserved
+ exactly.
+ - `File.size()` uses `lseek` to save, seek to end, and restore the offset; it
+ only works on seekable descriptors.
  - `is_regular_file(path)` is the ergonomic probe for config/input validation.
  - it returns `Ok(false)` for existing non-regular paths, and
  `Err(FSFailed)` for lookup or permission failures.
@@ -302,7 +426,7 @@ Hosted baseline:
 - `Path` / `PathBuf` for path manipulation (borrowed vs owned).
 - `File` for open file handles.
 - `Dir` / directory iteration.
-- `Metadata` for stat-like information.
+- `Stats` / metadata values for stat-like information.
 
 Illustrative sketch:
 
@@ -331,5 +455,5 @@ export fn read_to_string (alloc: std::memory::Allocator, path: string) -> Result
 ```
 
 ## Considerations
-- Symlink support and canonicalization.
+- Symlink creation / `readlink` helpers.
 - File watching (platform-dependent).

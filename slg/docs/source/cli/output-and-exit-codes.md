@@ -79,11 +79,11 @@ This mode never searches file contents.
 
 ## `--quiet`
 
-`--quiet` is an early-exit mode, not a silent mode.
+`--quiet` is a search-mode early-exit flag, not a silent mode.
 
 Behavior:
 
-- print the first matching line or path
+- print the first matching line
 - flush output
 - stop immediately
 
@@ -92,6 +92,8 @@ Example:
 ```bash
 slg -q TODO src
 ```
+
+In `--files` mode, `--quiet` is parsed but does not change listing behavior.
 
 ## Stats summary
 

@@ -51,7 +51,7 @@ Notes:
  - package manual roots are discovered from common in-package man source trees
  and installed `share/man/man{1,3,7}` layouts.
 - Shorthands:
- - `silk man build` opens `silk-build(1)` (same for `check`, `test`, `doc`, `man`, `cc`, `env`, `format` / `fmt`).
+ - `silk man build` opens `silk-build(1)` (same for `check`, `test`, `doc`, `man`, `guide`, `error`, `proto`, `cc`, `env`, `format` / `fmt`).
  - when no package is selected/resolvable, `silk man fs` is treated as `silk man std::fs` (and similarly for other top-level std modules).
  - when no package is selected/resolvable, `silk man io println` is treated as `silk man std::io::println`.
  - when a package root is selected/resolved, `silk man readme`, `silk man overview`, `silk man <package-name>`, and qualified aliases such as `silk man <package-name> readme` prefer the package overview page when a local `package.readme` exists.
@@ -101,11 +101,9 @@ Typical workflow:
 
 ## Environment
 
-| Variable | Details |
-| --- | --- |
-| `MANPAGER` / `PAGER` | controls the pager used to display the rendered output when the system `man` viewer is unavailable or cannot open the generated local manpage on the current host. When stdout is not a TTY, `silk man <query>` writes the resolved roff page to stdout instead of invoking the interactive viewer. |
-| `PREFIX` | installation prefix used for the system package search root at `PREFIX/lib/silk` (searched last when it exists). Default: `/usr/local`. |
-| `SILK_PACKAGE_PATH` | primary package search path used to resolve non-`std::` queries when no package manifest is selected or discoverable (entries separated by `:` on POSIX, `;` on Windows). The compiler appends `PREFIX/lib/silk` as the last search path entry when it exists. |
+- `MANPAGER` / `PAGER` — controls the pager used to display the rendered output when the system `man` viewer is unavailable or cannot open the generated local manpage on the current host. When stdout is not a TTY, `silk man <query>` writes the resolved roff page to stdout instead of invoking the interactive viewer.
+- `PREFIX` — installation prefix used for the system package search root at `PREFIX/lib/silk` (searched last when it exists). Default: `/usr/local`.
+- `SILK_PACKAGE_PATH` — primary package search path used to resolve non-`std::` queries when no package manifest is selected or discoverable (entries separated by `:` on POSIX, `;` on Windows). The compiler appends `PREFIX/lib/silk` as the last search path entry when it exists.
 
 ## Examples
 
@@ -161,10 +159,8 @@ silk doc --man std::fs -o std_fs.3
 
 ## Exit status
 
-| Status | Meaning |
-| --- | --- |
-| `0` | Success. |
-| non-zero | Error, including unknown query, parse failure, or pager failure. |
+- `0` on success.
+- non-zero on error (unknown query, parse errors, or pager failures).
 
 ## See Also
 

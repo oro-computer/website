@@ -576,6 +576,9 @@ Out of scope for the package model itself:
  output kind, authors must ship one unambiguous compatible artifact. Multiple
  equally compatible artifacts are treated as an authoring error rather than
  being guessed at runtime.
-- For `silk test --package`, manifest native inputs that start as C sources must
- currently be precompiled to `.o` files before they are listed in
- `[[target]].inputs`.
+- `silk test --package` consumes the selected code target’s manifest native
+ inputs directly: `.c` / `.h` / supported `.m` sources are compiled to
+ temporary objects for the generated test harness, while `.o`, `.a`, shared
+ libraries, `needed`, and `runpath` entries are linked as declared. Hosted
+ vendored native-input auto-linking for libsodium, mbedTLS, SQLite, and
+ libssh2 follows the same supported-target rules as package builds.

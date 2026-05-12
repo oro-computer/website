@@ -133,7 +133,7 @@ conditional compilation contexts:
 - `target`:
  - `"linux-x86_64"` or `"linux-aarch64"`
  - `"macos-x86_64"` or `"macos-aarch64"`
- - `"ios-aarch64"`
+ - `"ios-aarch64"`, `"ios-simulator-aarch64"`, or `"ios-simulator-x86_64"`
  - `"android-aarch64"`
  - `"windows-x86_64"` or `"windows-aarch64"`
  - `"wasm32-unknown-unknown"` or `"wasm32-wasi"`

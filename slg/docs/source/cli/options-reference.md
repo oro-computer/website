@@ -23,10 +23,10 @@ This page lists every public CLI flag on `slg`.
 | `--max-depth <n>` | yes | yes | Limit recursion depth; `0` means root-only |
 | `--no-ignore` | yes | yes | Disable all ignore sources |
 | `--ignore` | yes | yes | Re-enable all ignore sources |
-| `--ignore-common` | yes | yes | Re-enable skipping common heavy directories |
+| `--ignore-common` | yes | yes | Re-enable skipping common heavy paths |
 | `--ignore-vcs` | yes | yes | Re-enable skipping `.git`, `.hg`, `.svn` |
 | `--ignore-files` | yes | yes | Re-enable reading ignore files |
-| `--no-ignore-common` | yes | yes | Stop skipping common heavy directories |
+| `--no-ignore-common` | yes | yes | Stop skipping common heavy paths |
 | `--no-ignore-vcs` | yes | yes | Stop skipping VCS directories |
 | `--no-ignore-files` | yes | yes | Stop reading ignore files |
 
@@ -41,9 +41,9 @@ This page lists every public CLI flag on `slg`.
 | `--queue-cap <n>` | yes | yes | Bound the job queue |
 | `--target-jobs <n>` | yes | yes | Stop splitting once roughly `n` subtrees are scheduled |
 | `--max-jobs-total <n>` | yes | yes | Cap total enqueued jobs |
-| `--file-batch <n>` | yes | yes | Files per file-batch job |
+| `--file-batch <n>` | yes | yes | Files per file-batch job; used when file jobs are enabled |
 | `--no-file-jobs` | yes | yes | Disable file-batch jobs |
-| `--file-jobs` | yes | yes | Re-enable file-batch jobs |
+| `--file-jobs` | yes | yes | Enable file-batch jobs |
 | `--parallel-files` | no effect | yes | Parallelize file-list mode when jobs resolve above `1` |
 | `--no-parallel` | yes | yes | Same as `--jobs 1` |
 
@@ -59,7 +59,7 @@ This page lists every public CLI flag on `slg`.
 | `--no-numbers` | yes | parsed but has no effect | Alias for `--no-line-number` |
 | `--column` | yes | parsed but has no effect | Show the 1-based byte column; requires line numbers |
 | `--stats` | yes | yes | Print summary stats to stderr |
-| `-q`, `--quiet` | yes | yes | Print the first matching line/path and exit early |
+| `-q`, `--quiet` | yes | parsed but has no effect | Print the first matching line and exit early |
 | `--files` | switches mode | n/a | List searchable files instead of searching content |
 
 ## Color and meta

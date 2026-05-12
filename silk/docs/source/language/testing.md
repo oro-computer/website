@@ -39,8 +39,16 @@ Rules:
  shared setup.
 - `test` blocks may use `let`, `var`, control flow, and call functions/methods
  using the same expression subset as normal code.
+- Top-level `test` blocks may use `await`. When a test body contains `await`,
+ `silk test` runs that generated test wrapper as async and awaits it from the
+ generated runner.
 - `return;` is allowed inside a `test` block (equivalent to ending the test
  early). `return <expr>;` is not allowed.
+
+`silk test` executable runners use the native host target when Silk has a
+host-backed executable backend for it, and otherwise fall back to
+`linux-x86_64`. Formal Silk target metadata in `silk test` reflects that
+selected execution target.
 
 Doc comments:
 

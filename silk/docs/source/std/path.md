@@ -1,7 +1,7 @@
 # `std::path`
 
-`std::path` provides path manipulation utilities, a borrowed boxed `Path`
-wrapper, and the owned `PathBuf` builder/buffer.
+`std::path` provides path manipulation utilities, borrowed path views, and the
+owned `PathBuf` builder/buffer.
 
 Design goals (modeled after Rust `std::path` and Node.js `path`):
 
@@ -26,9 +26,25 @@ export struct Path {
   value: string,
 }
 
+struct PathView {
+  ptr: u64,
+  len: i64,
+}
+
+impl PathView {
+  public fn from_string (value: string) -> PathView;
+  public fn from_slice (value: std::arrays::ByteSlice) -> PathView;
+  public fn as_slice (self: &PathView) -> std::arrays::ByteSlice;
+  public fn as_string (self: &PathView) -> string;
+  public fn is_absolute (self: &PathView) -> bool;
+  public fn basename (self: &PathView) -> string;
+  public fn dirname (self: &PathView) -> string;
+}
+
 impl Path {
   public fn from_string (value: string) -> Path;
   public fn as_string (self: &Path) -> string;
+  public fn as_view (self: &Path) -> PathView;
   public fn is_absolute (self: &Path) -> bool;
   public fn dirname (self: &Path) -> string;
   public fn basename (self: &Path) -> string;
@@ -51,10 +67,17 @@ impl PathBuf {
   public fn empty () -> std::result::Result(PathBuf, std::memory::OutOfMemory);
   public fn from_string (s: string) -> std::result::Result(PathBuf, std::memory::OutOfMemory);
   public fn as_string (self: &PathBuf) -> string;
+  public fn as_slice (self: &PathBuf) -> std::arrays::ByteSlice;
+  public fn as_view (self: &PathBuf) -> PathView;
+  public fn as_nul_terminated_ptr (self: &PathBuf) -> u64;
   public fn clear (mut self: &PathBuf) -> void;
   public fn push (mut self: &PathBuf, part: string) -> std::memory::OutOfMemory?;
+  public fn push_slice (mut self: &PathBuf, part: std::arrays::ByteSlice) -> std::memory::OutOfMemory?;
+  public fn push_component (mut self: &PathBuf, part: string) -> std::memory::OutOfMemory?;
   public fn pop (mut self: &PathBuf) -> bool;
   public fn truncate_len (mut self: &PathBuf, new_len: i64) -> bool;
+  public fn truncate (mut self: &PathBuf, new_len: i64) -> bool;
+  public fn reserve (mut self: &PathBuf, capacity: i64) -> std::memory::OutOfMemory?;
 }
 
 impl PathBuf as std::interfaces::ReserveAdditional {
@@ -94,6 +117,11 @@ Notes:
 - `PathBuf` uses the same zero-capacity-empty / trailing-NUL invariant as
  `std::strings::String`, captured by
  `std::strings::string_storage_well_formed`.
+- `PathView` is a borrowed `{ ptr, len }` path view. It does not own or
+ validate path bytes, and its `as_string()` result is a borrowed view.
+- `PathBuf.as_slice()` and `PathBuf.as_view()` expose the initialized path bytes
+ without allocating. `PathBuf.as_nul_terminated_ptr()` returns a pointer to a
+ trailing-NUL path buffer suitable for low-level syscall/FFI surfaces.
 - `PathBuf` implements `std::interfaces::{Len,Capacity,IsEmpty,ReserveAdditional,Serialize(string),TrySerialize(std::memory::OutOfMemory),Drop}` for ergonomic use in generic code.
 - `PathBuf.parse(s)` is the standardized receiverless parse surface and
  forwards to `PathBuf.from_string(s)`.

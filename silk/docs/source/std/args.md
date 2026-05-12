@@ -1,6 +1,8 @@
 # `std::args`
 
-`std::args` exposes the process-argument surface used by Silk entrypoints. It keeps argument handling explicit at the ABI boundary: native targets use the conventional `(argc, argv)` shape, while `wasm32-wasi` exposes helpers that reconstruct the same view from WASI process arguments.
+A small native-argv helper surface is implemented in
+`std/args.slk` to make early programs ergonomic while `string[]` parameters and
+richer slice/iterator features are still future work.
 
 `std::args` currently supports two executable argument shapes:
 

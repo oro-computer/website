@@ -32,17 +32,20 @@ When explicit input files are used (no `--package`), the `silk` CLI may load add
 Input kinds (by extension):
 
 - `.slk` — Silk source file (part of the module set being compiled).
-- `.o` — ELF relocatable object file linked into `--kind executable|shared` outputs (and included in `--kind static` archives).
+- `.o` — relocatable object file linked into `--kind executable|shared` outputs (and included in `--kind static` archives).
 - `.a` — static archive; its `.o` members are linked like object inputs (or included in a combined `--kind static` output).
 - `.so` — shared library; treated as a dynamic dependency (equivalent to `--needed <soname>` using the library’s basename).
-- `.c` — C source file; compiled to an object via the host C compiler (see [`silk-cc(1)`](?p=man/silk-cc.1) / `SILK_CC`) and then treated like a `.o` input.
+- `.c` — C source file; compiled to an object via the native compiler for the active target and then treated like a `.o` input.
+- `.m` — Objective-C source file; compiled to an object for the supported Apple host-backed Mach-O targets and then treated like a `.o` input.
 - `.h` — header build input:
  - if a sibling `.c` exists next to the header, `silk build` compiles that
  `.c` and links the resulting object,
+ - otherwise, if a sibling `.m` exists next to the header, `silk build`
+ compiles that Objective-C source and links the resulting object,
  - otherwise it compiles the header itself as a C translation unit and links
  the resulting object.
 
-Package builds: when `--package` is provided, `.slk` inputs must be omitted, but non-`.slk` link inputs (`.c`, `.h`, `.o`, `.a`, `.so`) may still be provided.
+Package builds: when `--package` is provided, `.slk` inputs must be omitted, but non-`.slk` link inputs (`.c`, `.h`, `.m`, `.o`, `.a`, `.so`) may still be provided.
 
 Package installation:
 
@@ -77,7 +80,15 @@ Package installation:
 
 Notes:
 
-- `.o`/`.a`/`.c`/`.h` link inputs are currently supported only for `linux-x86_64` outputs.
+- `.o`/`.a`/`.c`/`.h` link inputs are supported for `linux-x86_64` outputs and for `macos-aarch64` / iOS device/simulator executable outputs on Apple Silicon macOS hosts.
+- Objective-C `.m` inputs are supported only for `macos-aarch64`, `ios-aarch64`, `ios-simulator-aarch64`, and `ios-simulator-x86_64` on Apple Silicon macOS hosts; supported executable outputs that include `.m` inputs link the Objective-C runtime automatically.
+- Objective-C `.m` inputs that import Cocoa / AppKit or UIKit also add the
+ corresponding Apple framework (`AppKit.framework` or `UIKit.framework`) to
+ the host-backed Mach-O executable link; inputs that import Foundation add
+ `Foundation.framework`.
+- On `macos-aarch64`, reachable Silk `ext` calls whose symbol name starts with
+ `silk_appkit_` opt the executable link into `AppKit.framework`; this supports
+ native AppKit `.m` providers shipped beside Silk code.
 - `.so` inputs only affect executable/shared outputs (static archives cannot record dynamic dependencies).
 - on interactive TTY stderr, `silk build` shows a single animated progress line
  while it visits source files, import/package traversal, dependency artifact
@@ -87,13 +98,15 @@ Notes:
  stderr output; non-interactive output stays concise.
 - successful builds report final artifacts as `build: <kind> -> <path>`.
 - script-style entrypoints: when building an executable, if the **first** `.slk` input contains top-level statements (after the normal `package`/`module` header and `import` block) and does not define an explicit `main`, `silk build` synthesizes an implicit `fn main() -> int` that executes those statements and then returns `0`.
-- for `--kind executable`, `--std-lib` / `--std <path>.a` is currently rejected when linking additional `.c`/`.o`/`.a` inputs (std sources are compiled into the build instead).
-- on supported native hosts (`linux/x86_64`, `macos/aarch64`), when `std::crypto` / `std::tls` are present in the module set, or when linked native `.c` / `.h` / `.o` / `.a` inputs reference common libsodium / mbedTLS symbol families, `silk build` automatically links the vendored crypto/TLS archives produced by `zig build deps`.
-- on `linux-x86_64`, when `std::sqlite` is present in the module set, or when linked native `.c` / `.h` / `.o` / `.a` inputs reference `sqlite3_*` symbols, `silk build` automatically links the vendored SQLite archive produced by `zig build deps`.
-- on supported native hosts (`linux/x86_64`, `macos/aarch64`), when `std::ssh` / `std::ssh2` are present in the module set, or when linked native `.c` / `.h` / `.o` / `.a` inputs reference `libssh2_*` symbols, `silk build` automatically links the vendored libssh2 archive and its vendored crypto dependencies produced by `zig build deps`.
-- on `linux-x86_64`, when `std::ggml` is present in the module set (or when linked `.o`/`.a` inputs reference `silk_ggml_init`), `silk build` automatically links the vendored ggml archives produced by `zig build deps` (see [ggml](?p=std/ggml)).
+- for `--kind executable`, `--std-lib` / `--std <path>.a` is currently rejected when linking additional `.c`/`.h`/`.m`/`.o`/`.a` inputs (std sources are compiled into the build instead).
+- on supported native hosts (`linux/x86_64`, `macos/aarch64`), when `std::crypto` / `std::tls` are present in the module set, or when linked native `.c` / `.h` / `.m` / `.o` / `.a` inputs reference common libsodium / mbedTLS symbol families, `silk build` automatically links the vendored crypto/TLS archives produced by `zig build deps`.
+- on `linux-x86_64`, when `std::sqlite` is present in the module set, or when linked native `.c` / `.h` / `.m` / `.o` / `.a` inputs reference `sqlite3_*` symbols, `silk build` automatically links the vendored SQLite archive produced by `zig build deps`.
+- on supported native hosts (`linux/x86_64`, `macos/aarch64`), when `std::ssh` / `std::ssh2` are present in the module set, or when linked native `.c` / `.h` / `.m` / `.o` / `.a` inputs reference `libssh2_*` symbols, `silk build` automatically links the vendored libssh2 archive and its vendored crypto dependencies produced by `zig build deps`.
+- on `linux-x86_64`, when `std::dylib` is present in the module set, or when linked native `.o` / `.a` inputs reference bundled `silk_rt_dylib_*` runtime symbols, `silk build` automatically adds `libdl.so.2`.
+- on supported native hosts (`linux/x86_64`, `macos/aarch64`), when `std::ggml` is present in the module set (or when linked `.o`/`.a` inputs reference `silk_ggml_init`), `silk build` automatically links the vendored ggml archives produced by `zig build deps`; on `linux/x86_64` it also adds `libstdc++.so.6`, `libgcc_s.so.1`, `libm.so.6`, and `libdl.so.2`, while on Apple Silicon macOS hosts it adds `-lc++` to the native link (see [ggml](?p=std/ggml)).
 - on `linux-x86_64`, when `std::image::png` / `std::image::jpeg` are present in the module set (or when linked `.o`/`.a` inputs reference the shim symbols), `silk build` automatically links the vendored image archives produced by `zig build deps` (see [image](?p=std/image)).
 - on `linux-x86_64`, when `std::xml` is present in the module set (or when linked `.o`/`.a` inputs reference `silk_xml_node_name_ptr`), `silk build` automatically links the vendored libxml2 archives produced by `zig build deps` (see [xml](?p=std/xml)).
+- on `linux-x86_64`, when `std::window` reaches the bundled runtime, `silk build` adds the dynamic-loader dependency used by the runtime-loaded GTK provider (`libdl.so.2` on glibc targets, `libdl.so` on musl targets). GTK itself is loaded at runtime and is not recorded as a required `DT_NEEDED` entry.
 
 ## Options
 
@@ -109,13 +122,18 @@ Notes:
 ### General
 
 - `--help`, `-h` — show command help and exit.
-- `--feature <spec>`, `-F<spec>` — enable a build feature for `attr(feature="...")` queries and declaration gating. Repeatable.
+- `--feature <spec>`, `-f <spec>` — enable a build feature for `attr(feature="...")` queries and declaration gating. Repeatable.
  - Spec forms: `NAME` or `NAME=VALUE` (see [attributes](?p=language/attributes)).
  - For package builds, you may target a specific package with `PKG/NAME` or
  `PKG/NAME=VALUE` (for example `ui/tui` or `ui/tui=false`).
 - `--debug`, `-g` — enable debug build mode (also enables extra Formal Silk debug output when verification fails).
 - `-O <0-3>` — set optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`). `-O1`+ prunes unused extern symbols before code generation and prunes unreachable functions in executable builds (typically reducing output size).
 - `--noheap` — reject heap allocation in the supported subset (see [memory model](?p=language/memory-model) and [cli silk](?p=compiler/cli-silk)).
+- `--strip-unused` — force reachability-based pruning even at `-O0`.
+ - For executable outputs, this enables the same unreachable-function pruning normally tied to `-O1`+.
+ - For static/shared outputs, it prunes unreachable non-exported helper functions from the root exported surface before emission.
+ - Object outputs already prune unreachable non-exported helpers; the flag is accepted for consistency.
+ - When executable builds auto-load std modules, `--strip-unused` cannot be combined with `--std-lib` / `--std <path>.a`.
 
 ### Stdlib and verification
 
@@ -125,6 +143,13 @@ Notes:
 - `--std <path>` — alias of `--std-root` when `<path>` does not end in `.a`.
 - `--std <path>.a` — alias of `--std-lib`.
 - `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`).
+- `-Wz <spec>`, `-Wz,<spec>` — pass a Z3 parameter spec to Formal Silk verification. Repeatable; order is preserved.
+ - `NAME=VALUE` applies `Z3_set_param_value(config, NAME, VALUE)` to every verifier config before `Z3_mk_context_rc`.
+ - `config:NAME=VALUE` is the explicit form of the default config scope.
+ - `global:NAME=VALUE` applies `Z3_global_param_set(NAME, VALUE)` once before any verifier context is created.
+ - `NAME` and `VALUE` must both be non-empty after surrounding whitespace is trimmed.
+ - Silk does not whitelist Z3 parameter names. Any non-empty name/value pair accepted by Z3 for `Z3_set_param_value` or `Z3_global_param_set` may be provided; invalid names or values are reported by Z3 according to that library’s behavior.
+ - Repeating the same parameter is allowed. The resulting behavior is the Z3 API behavior for repeated parameter writes in the order provided.
 
 ### Output and target selection
 
@@ -148,12 +173,26 @@ Notes:
  - `android-aarch64` (const-main subset only)
  - `macos-x86_64` (const-main subset only)
  - `macos-aarch64` (const-main subset everywhere; on Apple Silicon macOS
- hosts also supports a temporary non-const integer/bool scalar IR subset
- via host `as` / `ld`, including bundled runtime-backed executables linked
- from extracted `libsilk_rt*.a` object members; that host-supported
- subset is reflected by the target metadata instead of being labeled
- const-main-only on those hosts)
- - `ios-aarch64` (const-main subset only)
+ hosts also supports a temporary non-const scalar IR subset
+ via host `clang -c` / `ld`, including bundled runtime-backed
+ executables linked from extracted `libsilk_rt*.a` object members; that
+ host-supported subset is reflected by the target metadata instead of
+ being labeled const-main-only on those hosts)
+ - `ios-aarch64` (const-main subset everywhere; on Apple Silicon macOS
+ hosts also supports the same temporary non-const pure-Silk scalar IR
+ subset via host `clang -c` / `ld`, including reachable float-to-int
+ lowering via target-correct helper objects compiled from
+ `src/silk_rt_f128.c`, plus portable bundled runtime helper families
+ compiled on demand for the requested iOS SDK target, plus mixed/native
+ `.c` / `.h` / `.m` / `.o` / `.a` executable link-input support, plus hosted
+ async / task runtime linkage via the embedded `silk_rt_async.c` path;
+ when reachable code uses `std::window`, `silk build` also materializes
+ an adjacent `<output>.app` bundle with `Info.plist`, `PkgInfo`, and the
+ executable automatically)
+ - `ios-simulator-aarch64` (same current support envelope as `ios-aarch64`)
+ - `ios-simulator-x86_64` (same current support envelope as
+ `ios-aarch64` on Apple Silicon macOS hosts; const-main subset
+ elsewhere)
  - `windows-x86_64` (const-main subset only)
  - `windows-aarch64` (const-main subset only)
  - `wasm32-unknown-unknown` (IR-backed subset + const-main fallback)
@@ -164,13 +203,32 @@ Notes:
 
 ### Link inputs and dynamic linking
 
-- `--cflag <arg>` — add a host C compiler argument used when compiling `.c` inputs and `.h` inputs that fall back to header-compilation (repeatable).
-- `--ldflag <arg>` — add a link-related argument (repeatable). In the current toolchain these are translated into `--needed`/`--runpath`/`--soname`/`--elf-interp` effects (see [package manifests](?p=compiler/package-manifests)).
+- `--cflag <arg>` — add a native compiler argument used when compiling `.c`, `.h`, and `.m` inputs (repeatable).
+- `-I <path>`, `-I<path>` — add a native include search path for `.c`, `.h`, and `.m` compilation (repeatable). This is the preferred spelling for include paths over a generic `--cflag -I...` entry.
+- `-isystem <path>`, `-isystem<path>` — add a native system include search path for `.c`, `.h`, and `.m` compilation (repeatable).
+- `--ldflag <arg>` — add a backend linker argument (repeatable). Prefer the dedicated `-l` and `-Wl` flags for command-line builds. Recognized `--ldflag` arguments follow the same backend rules as those dedicated flags, including the internal ELF translations for `-Wl,-rpath`, `-Wl,-soname`, and `-Wl,--dynamic-linker`.
+- `-L <path>`, `-L<path>` — add a library search path for supported link backends (repeatable).
+ - On host-backed Apple Mach-O executable links, this is passed to the Apple linker.
+ - On `linux-x86_64`, this is used to resolve `-l` / `-l:` names. A found `.so` is recorded as a `DT_NEEDED` dependency by basename; a found `.a` is linked as a static archive.
+- `-l <name>`, `-lname` — link with a library name. Repeatable.
+ - On host-backed Apple Mach-O executable links, this is passed to the Apple linker as `-l<name>`.
+ - On `linux-x86_64`, `-L` paths are searched first. If no matching library is found, the internal ELF backend translates the name to a `DT_NEEDED` soname (`-lm` becomes `libm.so.6` on glibc targets and `libm.so` otherwise).
+- `-Wl <arg>`, `-Wl,<arg>` — add a backend linker argument. Repeatable.
+ - On backends that invoke a platform linker, comma-separated payloads are split and passed directly in order.
+ - On `linux/x86_64`, supported `-Wl` payloads are translated into owned ELF effects: `-rpath`, `-soname`, and `--dynamic-linker`.
+ - Unsupported `-Wl` payloads are rejected on backends that cannot represent them directly.
 - `--needed <soname>` — add a `DT_NEEDED` entry (repeatable).
 - `--runpath <path>` — add a `DT_RUNPATH` entry (repeatable).
 - `--rpath <path>` — alias of `--runpath`.
 - `--soname <soname>` — set `DT_SONAME` (shared only).
 - `--elf-interp <path>` — override the ELF `PT_INTERP` dynamic loader path used for `linux-x86_64` executable outputs (overrides `SILK_ELF_INTERP`; when cross-compiling from non-`linux/x86_64` hosts the default falls back to `/lib64/ld-linux-x86-64.so.2`). Rejected for non-`linux/x86_64` targets.
+
+### Apple SDK linking
+
+These flags are shown in `silk build --help` only on Apple Silicon macOS compiler hosts. They are supported for host-backed `macos-aarch64`, `ios-aarch64`, `ios-simulator-aarch64`, and `ios-simulator-x86_64` executable targets.
+
+- `--framework <name>` — link an Apple framework by name. Repeatable.
+- `-F <path>`, `-F<path>` — add an Apple framework search path. Repeatable.
 
 ### Package builds
 
@@ -184,8 +242,8 @@ Notes:
 - Legacy aliases (accepted for compatibility): `--build-script` and `--build-script-path`.
 - `--package-target <name>` — select one or more manifest `[[target]]` entries by name (repeatable; `--pkg-target` is accepted as an alias).
  - when omitted, `silk build --package ...` builds every manifest `[[target]]` entry by default.
- - when building multiple targets, per-output flags are rejected (`-o/--out`, `--kind`, `--emit`, `--arch`, `--target`, `--c-header`, `--cflag`, `--ldflag`, `--needed`, `--runpath`, `--soname`, `--elf-interp`).
- - build features may be enabled via `[build].features` in `silk.toml` (and may be overridden by `--feature` / `-F`).
+ - when building multiple targets, per-output flags are rejected (`-o/--out`, `--kind`, `--emit`, `--arch`, `--target`, `--c-header`, `--cflag`, `-I`, `-isystem`, `--ldflag`, `-l`, `-L`, `--framework`, `-F`, `-Wl`, `--needed`, `--runpath`, `--soname`, `--elf-interp`).
+ - build features may be enabled via `[build].features` in `silk.toml` (and may be overridden by `--feature` / `-f`).
 
 ### Install and uninstall
 
@@ -212,6 +270,51 @@ silk build src/main.slk -S -O2 -o build/main.s
 cc -std=c99 -c -o build/extra.o src/extra.c
 silk build src/main.slk build/extra.o -o build/app
 
+# Enable build features used by attr(feature="...") gates.
+silk build src/main.slk -f debug-ui --feature telemetry=false -o build/app
+
+# Link a dynamic library by name and provide an ELF runpath.
+silk build src/main.slk -l sqlite3 -Wl,-rpath,'$ORIGIN/lib' -o build/app
+
+# Compile a native helper with explicit include paths, then link a local
+# dynamic library found via -L.
+silk build src/main.slk native/helper.c \
+  -I include \
+  -isystem vendor/include \
+  -L build/lib \
+  -l helper \
+  -Wl,-rpath,'$ORIGIN/lib' \
+  -o build/app
+
+# Build a macOS AppKit executable from Silk plus an Objective-C provider.
+silk build src/app.slk src/appkit_provider.m \
+  --target macos-aarch64 \
+  --framework AppKit \
+  -F /System/Library/Frameworks \
+  -o build/MacApp
+
+# Build a macOS Metal executable with explicit framework and linker flags.
+silk build examples/std_macos_metal_window.slk \
+  --target macos-aarch64 \
+  --framework Metal \
+  --framework QuartzCore \
+  -Wl,-rpath,@executable_path/Frameworks \
+  -o build/metal-window
+
+# Link against a Homebrew or SDK library on the host-backed Apple linker.
+silk build src/main.slk native.o \
+  --target macos-aarch64 \
+  -L /opt/homebrew/lib \
+  -l sqlite3 \
+  -o build/app
+
+# Tune Formal Silk verification with Z3 config and global parameters.
+silk build verified/main.slk \
+  -Wz timeout=5000 \
+  -Wz config:model=true \
+  -Wz global:smt.random_seed=7 \
+  -o build/verified-app
+
 # Build the current directory as a package (when ./silk.toml exists).
 silk build
 
@@ -230,21 +333,17 @@ silk build uninstall -p /tmp/silk-prefix
 
 ## Environment
 
-| Variable | Details |
-| --- | --- |
-| `PREFIX` | installation prefix used by `silk build install` / `silk build uninstall` when `-p/--prefix` is not provided (default: `/usr/local`). |
-| `SILK_PACKAGE_PATH` | PATH-like list of package root directories used to resolve bare-specifier package imports (entries separated by `:` on POSIX). The compiler appends a system library root at `PREFIX/lib/silk` as the last search path entry when it exists. |
-| `SILK_ELF_INTERP` | override the ELF `PT_INTERP` dynamic loader path used for `linux-x86_64` outputs when emitting dynamically-linked executables/shared libraries. |
-| `SILK_Z3_LIB` | path to a dynamic Z3 library used by the Formal Silk verifier. |
-| `SILK_VERIFY_JOBS` | override the number of worker threads used for Formal Silk verification (default: auto; capped at 8). |
-| `SILK_CC` | host C compiler used by `silk cc` (also used when compiling `.c` inputs passed to `silk build`). |
+- `PREFIX` — installation prefix used by `silk build install` / `silk build uninstall` when `-p/--prefix` is not provided (default: `/usr/local`).
+- `SILK_PACKAGE_PATH` — PATH-like list of package root directories used to resolve bare-specifier package imports (entries separated by `:` on POSIX). The compiler appends a system library root at `PREFIX/lib/silk` as the last search path entry when it exists.
+- `SILK_ELF_INTERP` — override the ELF `PT_INTERP` dynamic loader path used for `linux-x86_64` outputs when emitting dynamically-linked executables/shared libraries.
+- `SILK_Z3_LIB` — path to a dynamic Z3 library used by the Formal Silk verifier.
+- `SILK_VERIFY_JOBS` — override the number of worker threads used for Formal Silk verification (default: auto; capped at 8).
+- `SILK_CC` — host C compiler used by `silk cc` and by host C fallback compilation for `.c`/`.h` inputs passed to `silk build`; Apple `.m` inputs use the target SDK clang path.
 
 ## Exit status
 
-| Status | Meaning |
-| --- | --- |
-| `0` | Success. |
-| non-zero | Error. |
+- `0` on success.
+- non-zero on error.
 
 ## See Also
 

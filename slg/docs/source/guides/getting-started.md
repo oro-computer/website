@@ -60,7 +60,7 @@ slg --stats error .
 - It is **filesystem-only**. Inputs are files and directories, not stdin or URLs.
 - It has **two modes**: search mode and `--files` mode.
 - It walks directories **recursively** unless you limit depth.
-- It skips hidden entries, VCS directories, common heavy directories, and ignore-file matches by default.
+- It skips hidden entries, VCS directories, common heavy paths, and ignore-file matches by default.
 - It defaults to regex syntax, but patterns without regex metacharacters are automatically handled by the fixed matcher.
 
 ## Read the shipped manual

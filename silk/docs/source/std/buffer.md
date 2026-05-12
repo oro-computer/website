@@ -78,7 +78,9 @@ impl BufferU8 {
   public fn init (cap: i64) -> std::result::Result(BufferU8, std::memory::AllocFailed);
   public fn empty () -> BufferU8;
   public fn push (mut self: &BufferU8, value: u8) -> std::memory::OutOfMemory?;
+  public fn push_u8 (mut self: &BufferU8, value: u8) -> std::memory::OutOfMemory?;
   public fn push_bytes (mut self: &BufferU8, bytes: std::arrays::ByteSlice) -> std::memory::OutOfMemory?;
+  public fn push_slice (mut self: &BufferU8, bytes: std::arrays::ByteSlice) -> std::memory::OutOfMemory?;
   public fn pop (mut self: &BufferU8) -> u8?;
   public fn get (self: &BufferU8, index: i64) -> u8;
   public fn set (mut self: &BufferU8, index: i64, value: u8) -> void;
@@ -86,8 +88,11 @@ impl BufferU8 {
   public fn try_set (mut self: &BufferU8, index: i64, value: u8) -> bool;
   public fn swap_remove (mut self: &BufferU8, index: i64) -> u8?;
   public fn clear (mut self: &BufferU8) -> void;
+  public fn truncate (mut self: &BufferU8, new_len: i64) -> bool;
+  public fn reserve (mut self: &BufferU8, capacity: i64) -> std::memory::OutOfMemory?;
   public fn reserve_additional (mut self: &BufferU8, additional: i64) -> std::memory::OutOfMemory?;
   public fn as_bytes (self: &BufferU8) -> std::arrays::ByteSlice;
+  public fn as_slice (self: &BufferU8) -> std::arrays::ByteSlice;
   public fn drop (mut self: &BufferU8) -> void;
 }
 ```
@@ -128,6 +133,11 @@ Notes:
 - growth paths (`reserve_additional`, `push`, `push_bytes`) surface allocation
  failure as `std::memory::OutOfMemory?` (including internal size arithmetic
  overflow; leaves the buffer unchanged on failure).
+- `push_u8`, `push_slice`, and `as_slice` are zero-copy naming aliases for
+ `push`, `push_bytes`, and `as_bytes`; they exist so low-level tools can use
+ familiar byte-buffer terminology without local wrappers.
+- `reserve(capacity)` ensures absolute usable byte capacity. `truncate(new_len)`
+ shortens the initialized byte length without reallocating.
 - The width-oriented aliases are still backed by `std::vector::Vector(T)` in
  the Supported forms, so their underlying storage follows the
  scalar-slot model described in [vector](?p=std/vector).

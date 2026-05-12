@@ -188,6 +188,21 @@ Rules:
 
 `sizeof <operand>` produces the size of a type or value in bytes.
 
+For string values, `sizeof(value)` is the canonical way to read the UTF-8 byte
+length for FFI pointer/length pairs:
+
+```silk
+let title_ptr = title as raw u64;
+let title_len = sizeof(title);
+```
+
+The operand may be a direct name, a field access, or another expression that
+evaluates to `string`, for example `sizeof(options.title)` or
+`sizeof(make_title())`.
+
+Use an explicit cast only when calling an API whose contract is intentionally
+signed or narrower than `usize`.
+
 Result type:
 
 - `sizeof` always returns `usize`.
@@ -203,9 +218,10 @@ Evaluation mode:
 `Sized` integration:
 
 - Implemented (partial): `sizeof <string value>` produces the string’s **byte
- length** (as `usize`). This is sugar over the current string ABI layout
- (`{ ptr: u64, len: i64 }`) and corresponds to `std::runtime::mem::string_len`
- (and the reserved intrinsic `__silk_string_len`).
+ length** (as `usize`). This reads the current string ABI layout
+ (`{ ptr: u64, len: i64 }`) through the reserved intrinsic
+ `__silk_string_len`; `std::runtime::mem::string_len` remains available only as
+ a compatibility and target-shim helper.
 - Planned (general): for other runtime values, if the operand type provides an
  instance method matching `std::interfaces::Sized`
  (`fn size(self: &Self) -> usize`), `sizeof value` will lower to a call of
@@ -241,8 +257,9 @@ Parsing note:
 - Because `Name[expr]` is also indexing syntax, fixed array **type** operands
  should be parenthesized: `sizeof (u8[4])`. Without parentheses, `sizeof u8[4]`
  is parsed as an index expression.
-- Because `as` binds at postfix precedence, `sizeof x as T` parses as
- `sizeof (x as T)`. To cast the result of `sizeof`, write `(sizeof x) as T`.
+- Because `as` binds at postfix precedence, bare `sizeof x as T` parses as
+ `sizeof (x as T)`. To cast the result of `sizeof`, write `sizeof(x) as T` or
+ `(sizeof x) as T`.
 
 ## `alignof`
 
@@ -272,8 +289,9 @@ Parsing notes:
 - As with `sizeof`, fixed array **type** operands should be parenthesized:
  `alignof (u8[4])`. Without parentheses, `alignof u8[4]` is parsed as an index
  expression.
-- Because `as` binds at postfix precedence, `alignof x as T` parses as
- `alignof (x as T)`. To cast the result of `alignof`, write `(alignof x) as T`.
+- Because `as` binds at postfix precedence, bare `alignof x as T` parses as
+ `alignof (x as T)`. To cast the result of `alignof`, write `alignof(x) as T`
+ or `(alignof x) as T`.
 
 ## `offsetof`
 
@@ -588,12 +606,18 @@ Rules (Supported forms):
  `Duration`/`Instant` and `char`.
  - 128-bit wide primitives: `i128`/`u128`/`f128` (two 8-byte lanes; `f128`
  stores the raw IEEE-754 binary128 bit pattern).
-- `as raw` is not permitted for `void`, `&T`, optionals, arrays, maps, function
- types, or structs/enums.
+- `as raw` is not permitted for `void`, optionals, arrays, maps, Silk function
+ value types (`fn (...) -> R`), or structs/enums.
+- Special-case: `u64 as raw c_fn (...) -> R` (and `usize as raw c_fn (...) -> R`)
+ is permitted for dynamic symbol loading and C ABI interop. The reverse
+ direction, `c_fn (...) -> R as raw u64` (or `usize`), extracts the raw code
+ pointer. This does not apply to Silk closure-carrying `fn (...) -> R` values.
 - Special-case: `string as raw u64` (and `string as raw usize`) is permitted
- and extracts the string’s underlying **byte pointer**. This is sugar over
- `std::runtime::mem::string_ptr` (and the reserved intrinsic
- `__silk_string_ptr`).
+ and extracts the string’s underlying **byte pointer** through the reserved
+ intrinsic `__silk_string_ptr`.
+ Prefer this direct syntax in application code, examples, and ordinary stdlib
+ facades. `std::runtime::mem::string_ptr` remains available only as a
+ compatibility and low-level target-shim helper.
 - Special-case: `&T as raw u64` (and `&T as raw usize`) is permitted and
  extracts the reference’s underlying **address** as an integer. This is
  intended for low-level interop (for example passing `&Struct` pointers to C

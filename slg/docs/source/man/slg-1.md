@@ -60,7 +60,7 @@ Use `--` to end option parsing.
 - `--max-depth <n>` — limit recursion depth; `0` means only the root
 - `--no-ignore` — disable all ignore sources
 - `--ignore` — re-enable all ignore sources
-- `--ignore-common`, `--no-ignore-common` — control the built-in heavy-directory skip list
+- `--ignore-common`, `--no-ignore-common` — control the built-in heavy-path skip list
 - `--ignore-vcs`, `--no-ignore-vcs` — control skipping `.git`, `.hg`, `.svn`
 - `--ignore-files`, `--no-ignore-files` — control reading `.gitignore`, `.ignore`, `.agignore`
 
@@ -73,7 +73,7 @@ Use `--` to end option parsing.
 - `--queue-cap <n>` — bound the job queue
 - `--target-jobs <n>` — stop splitting once roughly `n` subtrees are scheduled
 - `--max-jobs-total <n>` — cap total enqueued jobs
-- `--file-batch <n>` — files per file-batch job
+- `--file-batch <n>` — files per file-batch job; used when file jobs are enabled
 - `--no-file-jobs`, `--file-jobs` — disable or enable file-batch jobs
 - `--parallel-files` — parallelize `--files` traversal when jobs resolve above `1`
 - `--no-parallel` — same as `--jobs 1`
@@ -90,7 +90,7 @@ Use `--` to end option parsing.
 - `--no-line-number`, `--no-numbers` — suppress line numbers
 - `--column` — print the 1-based byte column; requires line numbers
 - `--stats` — print summary stats to stderr
-- `-q`, `--quiet` — print the first matching line/path and exit early
+- `-q`, `--quiet` — print the first matching line and exit early
 - `--files` — list files instead of searching file contents
 
 ### Color

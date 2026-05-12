@@ -29,16 +29,19 @@ silk env
 - `silk env` shows the resolved environment that affects stdlib and package
  discovery.
 
-## What works end-to-end today
+## End-to-end surfaces
 
-Silk’s current toolchain surface is strongest in three places:
+Silk’s current toolchain surface is strongest in four places:
 
-- **Hosted native bring-up on `linux/x86_64`**
- - `silk check`, `silk test`, `silk build`, `silk doc`, `silk man`, `silk env`, `silk format`, and `silk package`
- are all part of the public CLI surface.
- - Native outputs currently cover executables, object files, static archives, and shared libraries.
- - Hosted runtime features such as async/task execution, diagnostics, and Z3-backed Formal Silk verification are
- documented and exercised here first.
+- **Hosted native toolchains**
+ - `linux/x86_64` remains the most complete hosted path: checking, testing, building, docs/man generation, package
+ tooling, diagnostics, Z3-backed Formal Silk verification, hosted dependencies, and prebuilt stdlib artifacts are
+ exercised there first.
+ - `macos/arm64` can build and stage the compiler, runtime libraries, headers, std sources, and manpage sources with the
+ pinned Zig toolchain. Hosted async/runtime behavior is still Linux-first, and non-const native `macos-aarch64`
+ executable lowering is not yet at Linux parity.
+ - Native outputs cover executables, object files, static archives, and shared libraries where the selected target/backend
+ supports that artifact shape.
 - **WebAssembly targets**
  - `wasm32-unknown-unknown` for embedder-facing WebAssembly modules.
  - `wasm32-wasi` for WASI-style entrypoints.
@@ -47,6 +50,11 @@ Silk’s current toolchain surface is strongest in three places:
  - `silk.toml` package manifests, package-target builds, and package lint/inspection are part of the public workflow.
  - See [Package manifests](?p=compiler/package-manifests), [Package distribution](?p=compiler/package-distribution),
  and [`silk-package` (1)](?p=man/silk-package.1).
+- **Diagnostics and documentation tooling**
+ - `silk error`, `silk guide`, `silk doc`, `silk man`, and `silk proto` are documented public surfaces for explaining
+ diagnostics, browsing curated guide entries, extracting docs, rendering manpages, and working with protobuf schemas.
+ - See [Compiler diagnostics](?p=compiler/diagnostics), [`silk-error` (1)](?p=man/silk-error.1),
+ [`silk-guide` (1)](?p=man/silk-guide.1), and [`silk-proto` (1)](?p=man/silk-proto.1).
 
 ## Broader target bring-up
 
@@ -67,7 +75,9 @@ These are user-facing and expected to stay in sync with the compiler:
 - `silk test` — compile and run language-level tests with TAP output.
 - `silk build` — emit artifacts for the selected target and output kind.
 - `silk package inspect|lint` — inspect distributable package metadata and validate package roots.
+- `silk error` / `silk guide` — inspect diagnostics and curated guide entries.
 - `silk doc` / `silk man` — extract and render documentation from Silkdoc comments.
+- `silk proto` — generate or inspect protobuf-oriented Silk surfaces.
 - `silk env` / `silk format` — environment inspection and source formatting.
 - `silk-lsp` — editor-facing diagnostics, navigation, hover, completion, and related language tooling.
 
@@ -86,6 +96,6 @@ When you need the exact behavior of a feature, prefer the feature page over this
 Work in this order:
 
 1. Look up the reported code in [Compiler diagnostics](?p=compiler/diagnostics).
-2. Check the feature’s own “Implementation status” section in the language, stdlib, or compiler reference page.
+2. Check the feature’s own notes in the language, stdlib, or compiler reference page.
 3. Confirm the active target and package/build mode in [CLI reference](?p=compiler/cli-silk).
 4. If the docs say the feature should work, file a minimal repro against the Silk compiler repository.

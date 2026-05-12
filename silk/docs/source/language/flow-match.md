@@ -5,7 +5,9 @@ The `match` expression provides structured pattern matching.
 Key ideas:
 
 - A `match` selects one of several branches based on a scrutinee expression.
-- Arm guards of the form `pattern if cond => ...` are not part of the shipped subset documented here. Once a pattern matches, any additional boolean refinement must happen in a nested `if` / `if let`, or before the `match`.
+- The full language design includes richer patterns and arm guards, but the
+ current shipped subset documented here does not implement `if` guards in any
+ `match` form yet.
 - `match` is an expression; all arms must be compatible in type.
 
 The compiler must:
@@ -15,7 +17,10 @@ The compiler must:
 
 ## Surface Syntax
 
-This page documents the shipped `match` subset: the scrutinee kinds, pattern forms, and exhaustiveness rules that work end to end today. Patterns or guard forms outside the supported set are intentionally omitted here until they are implemented across parsing, checking, lowering, and code generation.
+The full language design includes rich pattern matching, guards, and matching
+over many scrutinee types. The current compiler implementation supports only a
+narrow, explicitly documented subset so we can validate end-to-end lowering and
+code generation.
 
 In the initial subset, `match` is accepted as an *expression* of the form:
 
@@ -33,6 +38,8 @@ Notes:
 - In the current compiler, expression-form `match` is implemented for:
  - optionals,
  - primitive integers,
+ - primitive booleans,
+ - primitive strings,
  - enums,
  - type unions,
  - and recoverable `Result`-style values.
@@ -49,7 +56,7 @@ For optionals, the Supported forms is:
  - `None`
  - `Some(<name>)`
  - `Some(_)`
-- Arm guards (`pattern if cond => ...`) are not part of the shipped subset here; use a nested `if` / `if let` in the selected arm, or test the boolean condition before entering the `match`.
+- No guards (`if ...`) are implemented yet.
 - Matches must be exhaustive for the optional scrutinee: there must be exactly
  one `None` arm and exactly one `Some(...)` arm (order is not significant).
 
@@ -79,9 +86,12 @@ Implemented initial subset:
  - integer literals (`0`, `1`, `123`, `0xFF`, ...), and
  - a wildcard `_` arm.
 - The match must be exhaustive:
- - there must be exactly one wildcard `_` arm, and
+ - when the scrutinee is not a known integer literal, there must be exactly one
+ wildcard `_` arm, and that arm must be final,
+ - when the scrutinee is a known integer literal, the wildcard may be omitted
+ only if one integer-literal arm covers that exact value, and
  - literal arms must not repeat the same value.
-- Arm guards (`pattern if cond => ...`) are not part of the shipped subset here; use a nested `if` / `if let` in the selected arm, or test the boolean condition before entering the `match`.
+- No guards (`if ...`) are implemented yet.
 
 Example:
 
@@ -91,6 +101,93 @@ fn main () -> int {
   let y: int = match (x) {
     0 => 1,
     _ => 2,
+  };
+  return y;
+}
+```
+
+Literal scrutinees may be exhaustively matched by the literal arms alone:
+
+```silk
+fn main () -> int {
+  let y: int = match 2 {
+    1 => 10,
+    2 => 20,
+  };
+  return y;
+}
+```
+
+### Boolean Matching (Primitive `bool`)
+
+The compiler also supports `match` over primitive `bool` scrutinees.
+
+Supported forms:
+
+- The scrutinee expression must have type `bool`.
+- Patterns are restricted to:
+ - boolean literals (`false` and `true`), and
+ - a wildcard `_` arm.
+- The match must be exhaustive:
+ - when the scrutinee is not a known boolean literal, it must cover both
+ `false` and `true`, or have exactly one final wildcard `_` arm,
+ - when the scrutinee is a known boolean literal, the wildcard may be omitted
+ only if one boolean-literal arm covers that exact value, and
+ - literal arms must not repeat the same boolean value.
+- No guards (`if ...`) are implemented yet.
+
+Example:
+
+```silk
+fn main () -> int {
+  let b: bool = false;
+  let y: int = match b {
+    false => 1,
+    true => 2,
+  };
+  return y;
+}
+```
+
+### String Matching (Primitive `string`)
+
+The compiler also supports `match` over primitive `string` scrutinees.
+
+Supported forms:
+
+- The scrutinee expression must have type `string`.
+- Patterns are restricted to:
+ - string literals (`"..."` and raw backtick strings), and
+ - a wildcard `_` arm.
+- Literal comparison uses the decoded byte sequence of each string literal.
+- The match must be exhaustive:
+ - when the scrutinee is not a known string literal, it must have exactly one
+ final wildcard `_` arm,
+ - when the scrutinee is a known string literal, the wildcard may be omitted
+ only if one string-literal arm covers that exact decoded byte sequence, and
+ - literal arms must not repeat the same decoded byte sequence.
+- No guards (`if ...`) are implemented yet.
+
+Example:
+
+```silk
+fn main () -> int {
+  let s: string = "foo";
+  let y: int = match s {
+    "foo" => 1,
+    _ => 2,
+  };
+  return y;
+}
+```
+
+Literal scrutinees may be exhaustively matched by the literal arms alone:
+
+```silk
+fn main () -> int {
+  let y: int = match "foo" {
+    "foo" => 1,
+    "bar" => 2,
   };
   return y;
 }
@@ -112,26 +209,61 @@ Implemented initial subset:
  alias for the instantiation (for example `type R = Result(int, string);` then
  `R::Ok(v)` / `R::Err(e)`), or patterns may omit the qualifier and use the
  variant name directly.
-- Arm guards (`pattern if cond => ...`) are not part of the shipped subset here; use a nested `if` / `if let` in the selected arm, or test the boolean condition before entering the `match`.
+- No guards (`if ...`) are implemented yet.
 - In expression form, enum matches must still be exhaustive:
  - either there is exactly one explicit arm for each enum variant,
  - or a final wildcard `_` arm covers every remaining unmatched variant,
  - and if `_` is used, it may appear at most once and must be the final arm.
 
-### Type Union Matching (`T1 | T2 | ...`)
+### Type Union and Concrete Typed-Binder Matching
 
 The language supports matching over **type unions** ([type unions](?p=language/type-unions)).
+The same typed-binder arm syntax is also accepted for concrete struct values in
+the current backend subset when the checker can select exactly one applicable
+arm statically.
 
 Implemented initial subset:
 
-- The scrutinee expression must have a union type `T1 | ... | Tn`.
+- For a union scrutinee, the scrutinee expression must have a union type
+ `T1 | ... | Tn`.
+- For a concrete struct scrutinee, the scrutinee expression must have a known
+ concrete struct type, and exactly one typed-binder arm must accept that type.
 - Patterns are restricted to typed binders:
  - `name: Ti` (binds the payload as `Ti`), or
  - `_: Ti` (matches and ignores the payload),
- where `Ti` is one of the union member types.
-- Arm guards (`pattern if cond => ...`) are not part of the shipped subset here; use a nested `if` / `if let` in the selected arm, or test the boolean condition before entering the `match`.
-- Matches must be exhaustive: there must be exactly one arm per union member
- type (order is not significant).
+ where `Ti` is one of the union member types for union scrutinees, or an
+ accepting nominal type for concrete scrutinees.
+- For concrete struct scrutinees, an arm type accepts the scrutinee when it is:
+ - the exact concrete type or an alias of it,
+ - a valid base type in the struct `extends` chain, or
+ - an interface implemented by the concrete type.
+- No guards (`if ...`) are implemented yet.
+- Union matches must be exhaustive: there must be exactly one arm per union
+ member type (order is not significant).
+- Concrete typed-binder matches are statically selected: there must be exactly
+ one accepting arm. Zero accepting arms are rejected as a missing arm, and more
+ than one accepting arm is rejected as an ambiguous typed-binder match.
+
+Example:
+
+```silk
+interface Object {}
+struct A { x: int }
+struct B { x: int }
+impl A as Object {}
+
+fn main () -> int {
+  let a = A { x: 1 };
+  let y = match a {
+    v: A => v.x,
+    _: B => 0,
+  };
+  let z = match a {
+    _: Object => 2,
+  };
+  return y + z;
+}
+```
 
 ## Semantics
 
@@ -140,6 +272,9 @@ Implemented initial subset:
  are not evaluated.
 - For `Some(v) => ...`, the binder `v` is in scope only within that arm and has
  type `T` (the inner payload type of the scrutinee `T?`).
+- For typed-binder arms `v: T => ...`, the binder `v` is in scope only within
+ that arm and has the annotated type `T`; `_: T` checks the same type contract
+ without introducing a binder.
 - The result type of a `match` expression is the common type of its arms; all
  arms must type-check to the same result type in the initial subset.
 
@@ -185,6 +320,8 @@ subsets as the `match` expression form in this document:
 
 - optionals (`T?`): `None` / `Some(name)` / `Some(_)`
 - primitive integers: integer literals and `_`
+- primitive booleans: `false` / `true` and `_`
+- primitive strings: string literals and `_`
 - enums (`enum`): enum variants (see note below)
 - type unions (`T1 | ... | Tn`): typed binders `name: Ti` / `_: Ti`
 - recoverable results: `Ok(name)` / `Ok(_)` and `Err(name)` / `Err(_)`
@@ -255,7 +392,8 @@ Implementation
  - type unions,
  - recoverable `Result`-style values,
  - and exhaustive enum matches.
-- Match arm guards (`pattern if cond => ...`) are not part of the shipped subset in either expression or statement form. After a pattern matches, any extra boolean refinement must happen in a nested `if` / `if let`, or before the `match` itself.
+- No match arm guards (`pattern if cond => ...`) are implemented yet in either
+ expression or statement form.
 - The statement form is implemented for:
  - ordinary values in the supported subset (block arms), and
  - typed errors as part of the typed errors feature work ([typed errors](?p=language/typed-errors)).

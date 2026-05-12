@@ -25,7 +25,11 @@ Silk currently supports these statement forms (see
 
 - Local bindings:
  - `const` (compile-time constant binding; initializer must be const-evaluable),
- - `let` and `let mut` (and `var` as an alias for `let mut`).
+ - `let` and `let mut` (and `var` as an alias for `let mut`),
+ - `let move` and `var move` for initialization-time ownership transfer,
+ including combined modifier forms such as `let mut move` and
+ `var mut move`, plus direct destructuring forms such as
+ `let move (a, b) = pair;` and `let move Some(value) = maybe;`.
 - Specification-only declarations: `#const` (Formal Silk; not usable in runtime expressions).
 - Structured blocks: `async { ... }` / `task { ... }` (see [concurrency](?p=language/concurrency)).
 - Expression statements: limited to calls, assignments, and increment/decrement
@@ -162,6 +166,12 @@ Semantics (Supported forms):
 - The initializer expression is evaluated exactly once.
 - If the pattern matches, the pattern binders are introduced into the **current
  scope** for the remainder of the block (like a normal `let` binding).
+- `let mut <pattern> = ... else { ... };` introduces mutable pattern binders.
+- `let move <pattern> = ...;` and `let move <pattern> = ... else { ... };`
+ consume the scrutinee for
+ ownership-tracked values before either branch continues. The `else` block
+ cannot use the moved source binding, and the continuation receives the
+ payload binders as moved values.
 - If the pattern does not match, the `else` block executes.
 - The `else` block must be **terminal** (it must not fall through), so the
  binders are always available after the statement on any path that continues.

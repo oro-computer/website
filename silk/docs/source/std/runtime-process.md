@@ -20,4 +20,6 @@ Use the following owning docs for the substantive API/design context for this mo
 
 - The shipped source for this module is `std/runtime/process.slk`.
 - The canonical module name is `std::runtime::process`.
+- It includes the implementation-facing `executable_path_owned` bridge used by
+ `std::process::executable_path`.
 - This page is intentionally implementation-oriented. Downstream users should usually start with the higher-level std module docs listed above unless they are working on the runtime layer itself.

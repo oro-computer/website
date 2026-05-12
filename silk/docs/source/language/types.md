@@ -20,17 +20,18 @@ This document specifies the Silk type system used by the compiler front-end and 
  `__silk_string_len`, and `__silk_string_from_ptr_len`). User code should
  generally prefer the language sugar:
  - `s as raw u64` (extract the underlying byte pointer), and
+ - `sizeof(s)` (extract the string byte length as `usize`), and
  - `p as raw u64` (extract the underlying address for `p: &T`), and
  - `ptr as string(len)` (construct a `string` view from a raw pointer plus an
- explicit byte length), and
- - `sizeof s` (string byte length as `usize`)
+ explicit byte length)
  over calling these helpers directly. The intrinsic names remain reserved and
  are not a stable user API.
 - Special-case: the nominal optional form `Option(T)` is accepted and desugared
  to `T?` in type annotations (it is not a general generics feature).
-- Maps / dictionaries are provided by `std::map::{HashMap, TreeMap}`.
 - Parsed but rejected by the current checker: const parameters and integer
  literal type arguments (`Foo(N: int)`, `Foo(u8, 1024)`) ([diagnostics](?p=compiler/diagnostics), `E2016`).
+- Removed builtin map type form: `map(K, V)` (`E2017`; use
+ `std::map::{HashMap, TreeMap}` instead).
 - Implemented in the native backend subset: 128-bit scalar primitives
  (`i128`, `u128`, `f128`).
  - In the current scalar-slot model ([structs impls layout](?p=language/structs-impls-layout)),
@@ -113,15 +114,21 @@ The core categories are:
  return `&Struct`. Mutability follows the `mut` borrow contract and per-call
  aliasing rules described in [mutability](?p=language/mutability).
 - Arrays / Slices: `T[]`, `T[N]`
- - Examples: `i32[]`, `byte[32]`.
+ - Examples: `i32[]`, `byte[32]`, `u8[1024 * 1024]`.
  - Notes: dynamic slice vs fixed length (compile‑time `N`). In the current
- compiler/backend subset, arrays/slices are supported only when the element
- type lowers to a fixed scalar slot sequence in the current scalar-slot
- memory model (for example primitive scalars, `string`, and supported
- `regexp`, supported non-opaque structs, and enums). See [structs impls layout](?p=language/structs-impls-layout) for the
- current scalar-slot memory model. In the Supported forms, fixed array
- lengths are limited to `N <= 4096`. Indexing `xs[i]` traps when `i` is out
- of bounds in the Supported forms.
+ parser subset, `N` may be:
+ - an integer literal,
+ - a literal-only integer arithmetic expression using `+`, `-`, `*`, `/`,
+ `%`, and parentheses,
+ - or a single const parameter name in generic type positions.
+ In the current compiler/backend subset, arrays/slices are supported only
+ when the element type lowers to a fixed scalar slot sequence in the current
+ scalar-slot memory model (for example primitive scalars, `string`, and
+ supported `regexp`, supported non-opaque structs, and enums). See
+ [structs impls layout](?p=language/structs-impls-layout) for the current scalar-slot memory
+ model. In the Supported forms, fixed array lengths are limited to
+ `N <= 4096`. Indexing `xs[i]` traps when `i` is out of bounds in the
+ Supported forms.
 - Range: `range`
  - Examples: `let r: range = 0..4;`, `let r2: range = (1..) + 2;`.
  - Notes: an `int`-indexed range value used for slicing and other index-based
@@ -174,6 +181,7 @@ type Int32 = i32;
 type struct Bar = Foo;
 type fn IntAdder = fn(int, int) -> int;
 type pure fn PureIntAdder = fn(int, int) -> int;
+type ResultOf(T) = std::result::Result(T, string);
 export type struct PublicBar = Foo;
 ```
 
@@ -183,6 +191,11 @@ Semantics (current implementation):
  introduce a distinct nominal type.
 - The type checker MUST treat uses of the alias name as equivalent to the alias
  target type (the alias is transparent).
+- A type alias may declare generic parameters using the same parameter-list
+ syntax as generic structs, enums, interfaces, impls, and functions. Applying
+ the alias in a type position substitutes the supplied type arguments into the
+ transparent target, for example `ResultOf(int)` is equivalent to
+ `std::result::Result(int, string)`.
 - Type aliases may be used anywhere a type is expected (parameter/result types,
  local annotations, struct fields, `as` casts, etc.).
 - Cycles in type aliases are rejected (`E2058`).

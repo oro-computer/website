@@ -6,15 +6,14 @@ Currently, enums support:
 
 - unit variants (`E::A`),
 - tuple variants (`E::B(x)`),
-- exhaustive `match` expressions over enum values in the shipped subset,
+- exhaustive `match` expressions over enum values (restricted subset; no guards),
 - and statement-form ordinary enum `match` with qualified variant arms.
 
 Canonical spec: [enums](?p=language/enums).
 
 ## Notes
 
-- Use [enums](?p=language/enums) for the exact supported forms and representation rules.
-- Match-arm guards of the form `Variant(...) if cond => ...` are not part of the shipped subset. Match on the variant first, then use a nested `if` for any extra boolean refinement.
+- Supported forms + representation: [enums](?p=language/enums)
 
 ## Syntax
 ```silk
@@ -46,3 +45,4 @@ fn main () -> int {
 
 - Canonical spec: [enums](?p=language/enums)
 - `match` expressions: [flow match](?p=language/flow-match)
+- Enum fixtures: `tests/silk/pass_enum_*`

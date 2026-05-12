@@ -32,6 +32,8 @@ See also:
 - For multi-producer patterns, pass `ChannelSender(T)` to worker tasks and
  clone it explicitly with `sender.clone()`; the channel auto-closes when the
  last sender is dropped.
+- For shared ownership across tasks, use `Arc(T)`. `Arc(T)` uses atomic
+ reference counting and is task-safe when `T` is task-safe to share.
 
 ## Exported API
 ```silk
@@ -51,6 +53,31 @@ enum SyncErrorKind {
 
 export error SyncFailed {
   code: int,
+}
+
+// An atomically reference-counted owning handle.
+struct Arc(T) {
+  handle: u64,
+}
+
+// A non-owning, copyable view of an Arc handle.
+struct ArcBorrow(T) {
+  handle: u64,
+}
+
+type ArcResult(T) = std::result::Result(Arc(T), SyncFailed);
+
+impl Arc(T) {
+  public fn invalid () -> Arc(T);
+  public fn new (value: T) -> ArcResult(T);
+  public fn clone (self: &Arc(T)) -> Arc(T);
+  public fn strong_count (self: &Arc(T)) -> u64;
+  public fn is_valid (self: &Arc(T)) -> bool;
+  public fn borrow (self: &Arc(T)) -> ArcBorrow(T);
+}
+
+impl ArcBorrow(T) {
+  public fn is_valid (self: &ArcBorrow(T)) -> bool;
 }
 
 // A pthread-backed mutex handle.
@@ -166,6 +193,21 @@ impl CancellationTokenBorrow {
 
 Notes:
 
+- `Arc(T)` is an owning handle and implements `Drop`. Cloning is explicit:
+ `clone()` atomically increments the strong count, and dropping an `Arc(T)`
+ atomically decrements it. The final release uses release/acquire
+ synchronization, drops the stored payload exactly once using the concrete
+ payload layout, and frees the backing allocation.
+- The hosted backend stores concrete payload slots in the Arc allocation. This
+ includes scalar payloads, multi-slot structs/enums, optionals, functions, and
+ fixed arrays supported by the current hosted lowering subset.
+- `Arc(T)` is task-safe only when `T` is task-safe to share. The checker applies
+ the same conservative task-boundary rule to the concrete payload and rejects
+ borrowed non-opaque references inside `Arc(T)`.
+- `ArcBorrow(T)` is a non-owning view. It does not retain the allocation; the
+ owning `Arc(T)` must outlive every derived borrow.
+- `Arc(T)` does not make ordinary `new` allocations thread-safe. Use `Arc(T)`
+ when shared ownership itself must cross OS-thread-backed tasks.
 - `Mutex.init`, `Condvar.init`, and `CancellationToken.init` return
  `Result(...)`. `Channel(T).init` / `init_default` return `Result(...)`.
 - `Channel(T).invalid()` returns an inert handle (`handle == 0`); operations treat it as closed/empty and return `InvalidInput` for sends.

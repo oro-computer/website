@@ -225,6 +225,9 @@ The initial C header provided in the Silk compiler repository defines:
  (function-level dead-code elimination), typically reducing output size and
  over-linking when using the prebuilt `libsilk_std.a` archive to satisfy
  auto-loaded `import std::...;` modules.
+ The CLI also exposes `silk build --strip-unused` to force analogous
+ reachability-based pruning at `-O0` for executable/static/shared outputs; the
+ current C ABI does not yet expose a separate setter for that flag.
 
  `silk_compiler_set_target` selects the code generation target. The
  `target_triple` string is copied. The implementation recognizes the
@@ -237,6 +240,8 @@ The initial C header provided in the Silk compiler repository defines:
  - `macos-x86_64`,
  - `macos-aarch64`,
  - `ios-aarch64`,
+ - `ios-simulator-aarch64`,
+ - `ios-simulator-x86_64`,
  - `windows-x86_64`,
  - `windows-aarch64`,
  - `wasm32-unknown-unknown`,
@@ -357,6 +362,22 @@ The initial C header provided in the Silk compiler repository defines:
  Note: the compiler may still consult the filesystem to auto-load `std::...`
  modules unless `silk_compiler_set_nostd(compiler, true)` has been set.
 
+ Current Apple host-backed note:
+
+ - the CLI / driver now supports non-const `ios-aarch64`,
+ `ios-simulator-aarch64`, and `ios-simulator-x86_64` executable builds on
+ Apple Silicon macOS for the current pure-Silk scalar subset, including
+ reachable float-to-int lowering and portable bundled runtime helper
+ families
+ (number / regex / unicode / filesystem / dns / process / signal / term /
+ pty / readline / task-pool / async),
+ - `silk_compiler_build(...)` and `silk_compiler_build_to_bytes(...)` now
+ support that same iOS host-backed subset on Apple Silicon macOS,
+ - the remaining explicit `E4001` iOS limitation is narrower:
+ it now applies only to narrower unsupported bundled runtime-internal
+ helper families, while portable bundled helpers, hosted async/task
+ linkage, and float-to-int now link on this path.
+
  At the current stage of implementation:
 
  - `silk_compiler_build` always performs full front‑end validation for all modules
@@ -364,7 +385,7 @@ The initial C header provided in the Silk compiler repository defines:
  - it lexes and parses each module into an internal representation,
  - it then type‑checks the *set* of modules as a unit, taking into account
  package/import relationships and exported constants, according to the
- language grammar and semantics documented throughout the Silk language reference on this site,
+ language grammar and semantics documented under `docs/language/`,
  - if Formal Silk syntax is present (for example `#require`, `#assure`,
  `#assert`, `#invariant`, `#variant`, `#monovariant`, `#const`), it also runs the Z3-backed verifier
  and fails the build if verification fails (`E3001`..`E3008`),
@@ -433,13 +454,17 @@ The initial C header provided in the Silk compiler repository defines:
  etc.).
  - For executable outputs (`kind == SILK_OUTPUT_EXECUTABLE`), the compiler also
  enforces an entrypoint precondition on the front‑end:
- - there MUST be exactly one top‑level function
+ - there MUST be exactly one top‑level function with one of the forms
 
       ```silk
       fn main() -> int { ... }
+
+      fn main(argc: int, argv: u64) -> int { ... }
       ```
 
- with no parameters and a declared result type of `int`,
+ with a declared result type of `int`, and either:
+ - no parameters, or
+ - exactly two parameters whose types are `int` and `u64`,
  - otherwise `silk_compiler_build` fails with an error message such as
  `"no valid main function for executable output"` or
  `"multiple main functions for executable output"`.
@@ -695,7 +720,7 @@ The initial C header provided in the Silk compiler repository defines:
  - currently this backend writes a minimal target-specific executable
  that terminates the process with the evaluated `main` value:
  - ELF64 for `linux-x86_64`, `linux-aarch64`, and `android-aarch64`,
- - Mach-O 64-bit for `macos-x86_64`, `macos-aarch64`, and `ios-aarch64`,
+ - Mach-O 64-bit for `macos-x86_64`, `macos-aarch64`, `ios-aarch64`, `ios-simulator-aarch64`, and `ios-simulator-x86_64`,
  - PE32+ for `windows-x86_64` and `windows-aarch64`,
  - returns `true` on success with no last error recorded.
  - when the program is front‑end valid but outside this subset

@@ -31,6 +31,12 @@ hosted baseline self-contained (no system OpenSSL headers/libraries required),
 and allows `silk build` to link `std::ssh` / `std::ssh2` without adding
 `DT_NEEDED` entries for `libssh2.so.*`.
 
+Note: the deps workflow also configures ggml in the current CPU-only hosted
+mode (`GGML_OPENMP=OFF`, `GGML_ACCELERATE=OFF`, `GGML_BLAS=OFF`,
+`GGML_METAL=OFF`). This keeps the staged archive surface stable on both
+supported native hosts: `libggml.a`, `libggml-base.a`, `libggml-cpu.a`, and
+`libsilk_ggml_shims.a`.
+
 ## Build
 
 From the repo root:
@@ -168,11 +174,11 @@ zig build -Drequire-vendored-crypto=true
 - `std::crypto` and `std::tls` are wired to the vendored static archives
  produced by `zig build deps` for supported native-host `silk build` outputs,
  and the same vendored crypto/TLS archives are also auto-linked when native
- `.c` / `.h` / `.o` / `.a` inputs reference common libsodium / mbedTLS symbol
+ `.c` / `.h` / `.m` / `.o` / `.a` inputs reference common libsodium / mbedTLS symbol
  families.
 - `std::sqlite` and `std::ssh` / `std::ssh2` likewise auto-link their vendored
- archives when imported from Silk code or when native `.c` / `.h` / `.o` /
- `.a` inputs reference `sqlite3_*` or `libssh2_*` symbols on the supported
+ archives when imported from Silk code or when native `.c` / `.h` / `.m` /
+ `.o` / `.a` inputs reference `sqlite3_*` or `libssh2_*` symbols on the supported
  native-host baseline.
 - `mbedTLS` uses git submodules (`framework`, `tf-psa-crypto`); `zig build deps` initializes them automatically.
 - `zig build deps` configures `mbedTLS` with `ENABLE_TESTING=OFF` and `ENABLE_PROGRAMS=OFF` (we only need the static libraries).

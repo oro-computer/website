@@ -19,6 +19,7 @@ model for date/time computations.
 See also:
 
 - [duration instant](?p=language/duration-instant)
+- [time](?p=std/time)
 - [conventions](?p=std/conventions)
 
 ## Exported API

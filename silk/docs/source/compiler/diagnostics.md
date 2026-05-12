@@ -129,170 +129,218 @@ Examples of help/suggestion content the compiler may emit:
 - guidance to include additional modules in the build/module set when an import
  refers to a package or file that is not present.
 
+## Diagnostic Lookup Command
+
+`silk error` is the terminal lookup surface for stable compiler diagnostics:
+
+- `silk error <code>` prints the canonical code, category, short description,
+ documentation references, any bundled example for that diagnostic, and a
+ `silk guide <code>` follow-up only when the installed guide catalog actually
+ links that diagnostic code.
+- `silk error --list` and `silk error -l` print every stable compiler error
+ code and its short description in deterministic order.
+- `<code>` accepts copied forms such as `E2028`, `2028`, `diag:E2028`, and
+ `error[E2028]`.
+- Examples are syntax-highlighted when stdout is a color-capable TTY; piped
+ output, `NO_COLOR`, and `TERM=dumb` remain plain text.
+
+The command is backed by compiler-owned diagnostic metadata rather than scraped
+documentation. [diagnostics](?p=compiler/diagnostics) remains the normative prose
+catalog for error-code meanings and policy.
+
+`silk-lsp` publishes these stable codes in LSP diagnostics as well. Structured
+resolve/type-check diagnostics include a `silk error <code>` help item, and
+parse diagnostics publish `E0001` with a `silk error E0001` lookup hint in the
+diagnostic data payload.
+
 ## Error Codes
 
 The compiler assigns a stable code to each currently supported error kind.
 
 ### Parsing
 
-| Code | Meaning | Notes |
-| --- | --- | --- |
-| `E0001` | unexpected token / invalid top-level ordering. |  |
+- `E0001` — unexpected token / invalid top-level ordering.
 
 ### Import and Package Resolution
 
-| Code | Meaning | Notes |
-| --- | --- | --- |
-| `E1001` | unknown imported package. |  |
-| `E1002` | cyclic package imports. |  |
-| `E1003` | unknown imported file. |  |
-| `E1004` | cyclic file imports. |  |
-| `E1005` | duplicate exported symbol within a package. |  |
-| `E1006` | file imports require a module file path. |  |
+- `E1001` — unknown imported package.
+- `E1002` — cyclic package imports.
+- `E1003` — unknown imported file.
+- `E1004` — cyclic file imports.
+- `E1005` — duplicate exported symbol within a package.
+- `E1006` — file imports require a module file path.
 
 ### Type Checking
 
-| Code | Meaning | Notes |
-| --- | --- | --- |
-| `E2001` | type mismatch. | • The primary message stays stable, but the diagnostic detail should explain the exact failed contract when available, for example:<br>• `in IntFlag.usage param fs: expected ..., found ...`,<br>• `while initializing binding count: expected ..., found ...`,<br>• `in assignment to queue.reader: expected ..., found ...`,<br>• `in return statement: expected ..., found ...`. |
-| `E2002` | language feature is not implemented yet. | • The diagnostic detail should identify the exact rejected construct (statement / expression / declaration / type) and why it failed.<br>• The public wording should describe an unimplemented feature, not a vague "subset" category.<br>• Common examples of the required detail quality:<br>• field access on an optional value should explain that `opt.field` must be rewritten as `opt?.field` or preceded by an unwrap,<br>• `yield <task_handle>;` in statement position should explain that statement `yield` is the send form and that receiving from a task handle requires value position (`let x = yield h`) or `yield * h;` for drain/forward. |
-| `E2003` | unknown imported name. |  |
-| `E2004` | duplicate imported name. |  |
-| `E2005` | invalid assignment. |  |
-| `E2006` | invalid borrow. |  |
-| `E2007` | invalid `break`. |  |
-| `E2008` | invalid `continue`. |  |
-| `E2009` | invalid `return`. |  |
-| `E2010` | missing `return`. |  |
-| `E2011` | opaque struct used by value. |  |
-| `E2012` | cannot instantiate opaque struct. |  |
-| `E2013` | cannot access fields on opaque struct. |  |
-| `E2014` | formal Silk declaration used in runtime expression. |  |
-| `E2015` | binding requires an initializer. |  |
-| `E2016` | generic form is not implemented yet (for example const parameters / const type arguments / generic `impl` methods). |  |
-| `E2017` | invalid map type syntax; use `std::map::{HashMap, TreeMap}` instead. |  |
-| `E2018` | namespace import is not callable. |  |
-| `E2019` | duplicate default export in a module. |  |
-| `E2020` | invalid `panic` statement. |  |
-| `E2021` | unknown error type. |  |
-| `E2022` | error not declared in function signature. |  |
-| `E2023` | error-producing call must be handled with `match` or `?`. |  |
-| `E2024` | match scrutinee is not an error-producing call. |  |
-| `E2025` | match is missing an arm. |  |
-| `E2026` | typed error-handling match arm must end with a terminal statement. |  |
-| `E2027` | heap allocation is disabled (`--noheap`) and heap-backed allocation is rejected (`new` outside `with`, libc allocator `ext`, concurrency keywords, capturing closures). |  |
-| `E2028` | unknown name. |  |
-| `E2029` | ambiguous implicit coercion. |  |
-| `E2030` | `await` requires an `async` function. |  |
-| `E2031` | `async { ... }` / `task { ... }` requires an `async` function. |  |
-| `E2032` | ambiguous constructor call. |  |
-| `E2033` | `await` requires a Promise operand. |  |
-| `E2034` | cannot copy a Task/Promise handle. |  |
-| `E2035` | Task/Promise handle used after `await`/`yield *`. |  |
-| `E2036` | cannot consume an outer Task/Promise handle inside a loop. |  |
-| `E2037` | `task fn` uses a non-task-safe type at a task boundary. |  |
-| `E2038` | `?` requires an error contract (`-> T \| ErrorType...`). |  |
-| `E2039` | `?` requires a fallible call operand. |  |
-| `E2040` | propagated error is not declared in the function signature. |  |
-| `E2041` | `const` initializer is not compile-time evaluable. |  |
-| `E2042` | `pure fn` may not have a typed-error contract (`\|` in return type). |  |
-| `E2043` | `pure fn` may not contain `panic` statements. |  |
-| `E2044` | `pure fn` may not have `mut` parameters. |  |
-| `E2045` | `pure fn` may not declare mutable locals (`var` or `let mut`). |  |
-| `E2046` | `pure fn` may not perform mutation via assignment. |  |
-| `E2047` | `pure fn` may not allocate (`new`). |  |
-| `E2048` | `pure fn` may not call impure functions. |  |
-| `E2049` | `pure fn` may not be combined with `task` or `async`. |  |
-| `E2050` | theories are not callable as runtime functions (use `#theory Name(...);`). |  |
-| `E2051` | module does not satisfy the declared interface (missing exported function). |  |
-| `E2052` | module does not satisfy the declared interface (signature mismatch). |  |
-| `E2053` | unknown re-export name. |  |
-| `E2054` | duplicate exported name. |  |
-| `E2055` | prototype implementation is missing required import of its prototype module. |  |
-| `E2056` | function expression may not have non-scalar `&T` parameters. |  |
-| `E2057` | duplicate type alias name. |  |
-| `E2058` | type alias cycle. |  |
-| `E2059` | type alias kind mismatch. |  |
-| `E2060` | unknown `extends` base. |  |
-| `E2061` | invalid `extends` base. |  |
-| `E2062` | cyclic `extends` chain. |  |
-| `E2063` | derived struct redeclares an inherited field name. |  |
-| `E2064` | derived interface redeclares an inherited method name. |  |
-| `E2065` | opaque structs may not use `extends`. |  |
-| `E2066` | prototype and implementation signatures do not match. |  |
-| `E2067` | capturing closure is not allowed in `pure` code. |  |
-| `E2068` | capturing closure uses a capture type that is not implemented yet. |  |
-| `E2069` | capturing closure may not capture a mutable binding yet. |  |
-| `E2070` | `yield` requires a `task` context. |  |
-| `E2071` | `yield` in value position requires a Task operand. |  |
-| `E2072` | `yield *` requires a Task operand. |  |
-| `E2073` | `yield` as a statement requires an enclosing task function. | • `yield <value>;` is the send form.<br>• Receiving from a `Task(T)` handle is a value-position form: `let x = yield h`. |
-| `E2074` | `await *` requires a Promise-array operand. |  |
-| `E2075` | duplicate type name. |  |
-| `E2076` | generic type arguments must be fully specified at the use site (missing a required, non-default type argument). |  |
-| `E2077` | invalid `region` declaration. |  |
-| `E2078` | `with` requires a region binding. |  |
-| `E2079` | invalid `with ... from` region slice. |  |
-| `E2080` | reserved (previously: indexing a slice cast from `u64` required an explicit length). |  |
-| `E2081` | cast-length suffix requires a `u64`/`usize` pointer operand and a slice/string target. |  |
-| `E2082` | `const fn` may not be `task` or `async`. |  |
-| `E2083` | `const fn` may not have a typed-error contract (`\|` in return type). |  |
-| `E2084` | `const fn` parameter types must be compile-time value types. |  |
-| `E2085` | `const fn` result type must be a compile-time value type. |  |
-| `E2086` | `const fn` may not allocate (`new`). |  |
-| `E2087` | `const fn` may not call a non-`const fn`. |  |
-| `E2088` | `const fn` may not contain `panic` statements. |  |
-| `E2089` | unsupported construct in a `const fn` body (outside the current const-eval subset). |  |
-| `E2090` | `const fn` may be called only from compile-time contexts. |  |
-| `E2091` | generic function call type arguments could not be inferred at the call site. |  |
-| `E2092` | use of moved value. |  |
-| `E2093` | `move` requires a local binding name. |  |
-| `E2094` | slice borrow escapes its lexical scope. |  |
-| `E2095` | reference borrow escapes its lexical scope. |  |
-| `E2096` | unknown `using` target. |  |
-| `E2097` | `using` alias conflicts with an existing name. |  |
-| `E2098` | `using` target is ambiguous. |  |
-| `E2099` | `using` cannot import `constructor` yet. |  |
-| `E2100` | `using` cannot import methods that require mutable `Self` borrows yet. |  |
-| `E2101` | `using` method reuse requires compatible struct layouts. |  |
-| `E2102` | cannot move value while it is borrowed. |  |
-| `E2103` | invalid regexp flags (unknown or duplicate). |  |
-| `E2104` | invalid regexp literal (pattern compile failed). |  |
-| `E2105` | method is private to its `impl` block (not visible from the call site). |  |
-| `E2106` | interface-required methods may not be declared `private`. |  |
-| `E2107` | destructuring requires a non-opaque struct value. |  |
-| `E2108` | cannot destructure opaque struct. |  |
-| `E2109` | destructuring pattern does not match the struct type (wrong arity, unknown field, or duplicate binder/field). |  |
-| `E2110` | array destructuring requires an array/slice value. |  |
-| `E2111` | array destructuring pattern does not match the array type (wrong arity for fixed arrays, or duplicate binder). |  |
-| `E2112` | enum destructuring requires an enum value. |  |
-| `E2113` | enum destructuring pattern does not match the enum type (unknown variant or wrong arity). |  |
-| `E2114` | `u128` is not implemented yet in all compiler paths. |  |
-| `E2115` | `f128` is not implemented yet in all compiler paths. |  |
-| `E2116` | invalid inline assembly (inline asm failed to assemble, or uses unsupported features in the current implementation). |  |
-| `E2117` | `let ... else { ... };` requires the `else` block to end with a terminal statement. |  |
-| `E2118` | borrowed-view type may not appear in an `async fn` result. |  |
-| `E2119` | borrowed-view type may not cross an `ext` / unnamed/global-package `export fn` boundary. |  |
-| `E2120` | local borrow may not remain live across `await`. |  |
-| `E2121` | cannot mutate local storage while it is borrowed. |  |
-| `E2122` | borrowed control-flow expression is ambiguous. |  |
-| `E2123` | local borrow may not escape through an async call. |  |
-| `E2124` | type does not satisfy the declared interface (missing required method). |  |
-| `E2125` | type does not satisfy the declared interface (signature mismatch). |  |
-| `E2126` | interface method must omit an explicit receiver parameter; ordinary interface methods already have an implicit receiver and must not spell `self: &Self` in the interface declaration. |  |
+- `E2001` — type mismatch.
+ - The primary message stays stable, but the diagnostic detail should explain
+ the exact failed contract when available, for example:
+ - `in IntFlag.usage param fs: expected ..., found ...`,
+ - `while initializing binding count: expected ..., found ...`,
+ - `in assignment to queue.reader: expected ..., found ...`,
+ - `in return statement: expected ..., found ...`.
+- `E2002` — language feature is not implemented yet.
+ - The diagnostic detail should identify the exact rejected construct
+ (statement / expression / declaration / type) and why it failed.
+ - The public wording should describe an unimplemented feature, not a vague
+ "subset" category.
+ - Common examples of the required detail quality:
+ - field access on an optional value should explain that `opt.field` must be
+ rewritten as `opt?.field` or preceded by an unwrap,
+ - `yield <task_handle>;` in statement position should explain that statement
+ `yield` is the send form and that receiving from a task handle requires
+ value position (`let x = yield h`) or `yield * h;` for drain/forward.
+- `E2003` — unknown imported name.
+- `E2004` — duplicate imported name.
+- `E2005` — invalid assignment.
+- `E2006` — invalid borrow.
+- `E2007` — invalid `break`.
+- `E2008` — invalid `continue`.
+- `E2009` — invalid `return`.
+- `E2010` — missing `return`.
+- `E2011` — opaque struct used by value.
+- `E2012` — cannot instantiate opaque struct.
+- `E2013` — cannot access fields on opaque struct.
+- `E2014` — formal Silk declaration used in runtime expression.
+- `E2015` — binding requires an initializer.
+- `E2016` — generic form is not implemented yet (for example const parameters / const type arguments / generic `impl` methods).
+- `E2017` — builtin `map(K, V)` type form was removed (use `std::map::{HashMap, TreeMap}` instead).
+- `E2018` — namespace import is not callable.
+- `E2019` — duplicate default export in a module.
+- `E2020` — invalid `panic` statement.
+- `E2021` — unknown error type.
+- `E2022` — error not declared in function signature.
+- `E2023` — error-producing call must be handled with `match` or `?`.
+- `E2024` — match scrutinee is not an error-producing call.
+- `E2025` — match is missing an arm.
+- `E2026` — typed error-handling match arm must end with a terminal statement.
+- `E2027` — heap allocation is disabled (`--noheap`) and heap-backed allocation is rejected (`new` outside `with`, libc allocator `ext`, capturing closures, and concurrency use that declares/forms `Task(...)` / `Promise(...)` handles; imported stdlib async declarations alone do not trigger it).
+- `E2028` — unknown name.
+- `E2029` — ambiguous implicit coercion.
+- `E2030` — `await` requires an `async` function.
+- `E2031` — `async { ... }` / `task { ... }` requires an `async` function.
+- `E2032` — ambiguous constructor call.
+- `E2033` — `await` requires a Promise operand.
+- `E2034` — cannot copy a Task/Promise handle.
+- `E2035` — Task/Promise handle used after `await`/`yield *`.
+- `E2036` — cannot consume an outer Task/Promise handle inside a loop.
+- `E2037` — `task fn` uses a non-task-safe type at a task boundary.
+- `E2038` — `?` requires an error contract (`-> T | ErrorType...`).
+- `E2039` — `?` requires a fallible call operand.
+- `E2040` — propagated error is not declared in the function signature.
+- `E2041` — `const` initializer is not compile-time evaluable.
+- `E2042` — `pure fn` may not have a typed-error contract (`|` in return type).
+- `E2043` — `pure fn` may not contain `panic` statements.
+- `E2044` — `pure fn` may not have `mut` parameters.
+- `E2045` — `pure fn` may not declare mutable locals (`var` or `let mut`).
+- `E2046` — `pure fn` may not perform mutation via assignment.
+- `E2047` — `pure fn` may not allocate (`new`).
+- `E2048` — `pure fn` may not call impure functions.
+- `E2049` — `pure fn` may not be combined with `task` or `async`.
+- `E2050` — theories are not callable as runtime functions (use `#theory Name(...);`).
+- `E2051` — module does not satisfy the declared interface (missing exported function).
+- `E2052` — module does not satisfy the declared interface (signature mismatch).
+- `E2053` — unknown re-export name.
+- `E2054` — duplicate exported name.
+- `E2055` — prototype implementation is missing required import of its prototype module.
+- `E2056` — function expression may not have non-scalar `&T` parameters.
+- `E2057` — duplicate type alias name.
+- `E2058` — type alias cycle.
+- `E2059` — type alias kind mismatch.
+- `E2060` — unknown `extends` base.
+- `E2061` — invalid `extends` base.
+- `E2062` — cyclic `extends` chain.
+- `E2063` — derived struct redeclares an inherited field name.
+- `E2064` — derived interface redeclares an inherited method name.
+- `E2065` — opaque structs may not use `extends`.
+- `E2066` — prototype and implementation signatures do not match.
+- `E2067` — capturing closure is not allowed in `pure` code.
+- `E2068` — capturing closure uses a capture type that is not implemented yet.
+- `E2069` — capturing closure may not capture a mutable binding yet.
+- `E2070` — `yield` requires a `task` context.
+- `E2071` — `yield` in value position requires a Task operand.
+- `E2072` — `yield *` requires a Task operand.
+- `E2073` — `yield` as a statement requires an enclosing task function.
+ - `yield <value>;` is the send form.
+ - Receiving from a `Task(T)` handle is a value-position form: `let x = yield h`.
+- `E2074` — `await *` requires a Promise-array operand.
+- `E2075` — duplicate type name.
+- `E2076` — generic type arguments must be fully specified at the use site (missing a required, non-default type argument).
+- `E2077` — invalid `region` declaration.
+- `E2078` — `with` requires a region binding.
+- `E2079` — invalid `with ... from` region slice.
+- `E2080` — reserved (previously: indexing a slice cast from `u64` required an explicit length).
+- `E2081` — cast-length suffix requires a `u64`/`usize` pointer operand and a slice/string target.
+- `E2082` — `const fn` may not be `task` or `async`.
+- `E2083` — `const fn` may not have a typed-error contract (`|` in return type).
+- `E2084` — `const fn` parameter types must be compile-time value types.
+- `E2085` — `const fn` result type must be a compile-time value type.
+- `E2086` — `const fn` may not allocate (`new`).
+- `E2087` — `const fn` may not call a non-`const fn`.
+- `E2088` — `const fn` may not contain `panic` statements.
+- `E2089` — unsupported construct in a `const fn` body (outside the current const-eval subset).
+- `E2090` — `const fn` may be called only from compile-time contexts.
+- `E2091` — generic function call type arguments could not be inferred at the call site.
+- `E2092` — use of moved value.
+- `E2093` — `move` requires a local binding name.
+- `E2094` — slice borrow escapes its lexical scope.
+- `E2095` — reference borrow escapes its lexical scope.
+- `E2096` — unknown `using` target.
+- `E2097` — `using` alias conflicts with an existing name.
+- `E2098` — `using` target is ambiguous.
+- `E2099` — `using` cannot import `constructor` yet.
+- `E2100` — `using` cannot import methods that require mutable `Self` borrows yet.
+- `E2101` — `using` method reuse requires compatible struct layouts.
+- `E2102` — cannot move value while it is borrowed.
+- `E2103` — invalid regexp flags (unknown or duplicate).
+- `E2104` — invalid regexp literal (pattern compile failed).
+- `E2105` — method is private to its `impl` block (not visible from the call site).
+- `E2106` — interface-required methods may not be declared `private`.
+- `E2107` — destructuring requires a non-opaque struct value.
+- `E2108` — cannot destructure opaque struct.
+- `E2109` — destructuring pattern does not match the struct type (wrong arity, unknown field, or duplicate binder/field).
+- `E2110` — array destructuring requires an array/slice value.
+- `E2111` — array destructuring pattern does not match the array type (wrong arity for fixed arrays, or duplicate binder).
+- `E2112` — enum destructuring requires an enum value.
+- `E2113` — enum destructuring pattern does not match the enum type (unknown variant or wrong arity).
+- `E2114` — `u128` is not implemented yet in all compiler paths.
+- `E2115` — `f128` is not implemented yet in all compiler paths.
+- `E2116` — invalid inline assembly (inline asm failed to assemble, or uses unsupported features in the current implementation).
+- `E2117` — `let ... else { ... };` requires the `else` block to end with a terminal statement.
+- `E2118` — borrowed-view type may not appear in an `async fn` result.
+- `E2119` — borrowed-view type may not cross an `ext` / unnamed/global-package `export fn` boundary.
+- `E2120` — local borrow may not remain live across `await`.
+- `E2121` — cannot mutate local storage while it is borrowed.
+- `E2122` — borrowed control-flow expression is ambiguous.
+- `E2123` — local borrow may not escape through an async call.
+- `E2124` — type does not satisfy the declared interface (missing required method).
+- `E2125` — type does not satisfy the declared interface (signature mismatch).
+- `E2126` — interface method must omit an explicit receiver parameter; ordinary
+ interface methods already have an implicit receiver and must not spell
+ `self: &Self` in the interface declaration.
+- `E2127` — invalid atomic memory ordering; for example, `load` may not use
+ `Release` / `AcqRel`, `store` may not use `Acquire` / `AcqRel`, and
+ `compare_exchange` failure ordering may not use `Release` / `AcqRel`.
 
 ### Formal Silk Verification
 
-| Code | Meaning | Notes |
-| --- | --- | --- |
-| `E3001` | loop invariant may not hold. |  |
-| `E3002` | loop variant may be negative. |  |
-| `E3003` | loop variant may not decrease. |  |
-| `E3004` | postcondition may not hold. |  |
-| `E3005` | Formal Silk verification failed to initialize or encountered an unsupported construct. |  |
-| `E3006` | assertion may not hold (`#assert` and theory assertions). |  |
-| `E3007` | call precondition may not hold. |  |
-| `E3008` | loop monovariant may not be monotonic. |  |
+- `E3001` — loop invariant may not hold.
+- `E3002` — loop variant may be negative.
+- `E3003` — loop variant may not decrease.
+- `E3004` — postcondition may not hold.
+- `E3005` — Formal Silk verification failed to initialize or encountered an
+ unsupported construct. Unsupported verified-code diagnostics should name the
+ exact construct, for example an optional-field, index, nested-field, or
+ compound assignment target in a verified method.
+- `E3006` — assertion or struct requirement may not hold (`#assert`, theory
+ assertions, and struct `#require` checks). Struct requirement failures include
+ the rejected predicate plus referenced construction/default field values, and
+ direct verified field writes recheck struct requirements after the write.
+- `E3007` — call precondition may not hold. Contracted function/method
+ preconditions are checked at ordinary call sites as well as inside explicitly
+ verified code.
+- `E3008` — loop monovariant may not be monotonic.
+
 Notes:
 
 - When `silk build --debug` or `silk test --debug` is used, failed Formal Silk
@@ -301,10 +349,10 @@ Notes:
 
 ### Code Generation / Backend Lowering
 
-| Code | Meaning | Notes |
-| --- | --- | --- |
-| `E4001` | backend/target limitation prevented code generation for the requested program/output. |  |
-| `E4002` | code generation failed in the backend (unexpected backend error). |  |
+- `E4001` — backend/target limitation prevented code generation for the
+ requested program/output.
+- `E4002` — code generation failed in the backend (unexpected backend error).
+
 Notes:
 
 - This error is reported when a program successfully parses and type-checks, but

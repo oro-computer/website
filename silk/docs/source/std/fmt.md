@@ -61,7 +61,10 @@ Within `{ ... }`:
 
 ## Exported API
 
-The exported surface uses an explicit argument carrier type (`Arg`) together with language-level varargs, so the formatter accepts a variable number of arguments up to the compiler’s current varargs limit.
+Because the language does not yet have generics, the current API uses an
+explicit argument carrier type (`Arg`). With language-level varargs, the
+formatter now accepts a variable number of arguments (up to the current
+compiler’s varargs limit).
 
 ### `Arg`
 
@@ -96,7 +99,7 @@ See [types](?p=language/types) for the full rule.
 
 ### Supported specifiers
 
-Supported specifiers:
+The current formatter supports:
 
 - `s` — string
 - `d` — decimal number (`int`/`u64`/`i128`/`u128` and `f64`/`f128`)
@@ -127,7 +130,8 @@ Float formatting is implemented for `f64` in the Supported forms:
 - precision (`.{N}`) controls the number of digits after the decimal point
  (default: 6), and width/alignment apply like other formatting kinds.
 
-Hex float formatting (`{x}` on floats) and full debug formatting (`{any}` recursing through arbitrary types) are not part of the shipped formatter surface.
+Hex float formatting (`{x}` on floats) and full debug formatting (`{any}`
+recursing through arbitrary types) remain future work.
 
 `f128` formatting is implemented by converting values to `f64` for formatting,
 so output precision is limited to `f64` precision in the Supported forms.

@@ -23,10 +23,8 @@ It selects the underlying compiler via `SILK_CC` (fallback: `CC`, default: `cc`)
 
 ## Environment
 
-| Variable | Details |
-| --- | --- |
-| `SILK_CC` | host C compiler executable (falls back to `CC`, then `cc`). |
-| `CC` | host C compiler executable (used when `SILK_CC` is unset or empty). |
+- `SILK_CC` — host C compiler executable (falls back to `CC`, then `cc`).
+- `CC` — host C compiler executable (used when `SILK_CC` is unset or empty).
 
 ## Examples
 
@@ -37,9 +35,7 @@ silk cc -std=c99 -Wall -Wextra your_app.c -o your_app
 
 ## Exit status
 
-| Status | Meaning |
-| --- | --- |
-| inherited | The exit status of the underlying compiler. |
+- the exit status of the underlying compiler.
 
 ## See Also
 

@@ -99,6 +99,8 @@ behavior depends on the terminal, but common bindings include:
 
 - Left/Right arrows — move by one character (UTF-8 aware).
 - Up/Down arrows — navigate history.
+- Ctrl+R — reverse incremental history search; type to filter, press Ctrl+R
+ again to move to older matches, Enter to accept, or Escape/Ctrl+G to cancel.
 - Home/End — move to start/end of line.
 - Backspace/Delete — delete characters.
 - Ctrl+W — delete previous word (space-delimited).

@@ -44,7 +44,9 @@ Documentation coverage rules:
 This is enforced by the test suite so the stdlib can be fully documented via
 `silk doc` and surfaced consistently in editor tooling.
 
-The canonical narrative for each module lives on this site in the standard-library section. The source-level doc comments are the machine-consumable layer used by `silk doc`, `silk man`, and editor tooling (hover and completion documentation).
+The canonical narrative/spec for each module lives under `docs/std/`. The
+source-level doc comments are the machine-consumable layer used by `silk doc`,
+`silk man`, and editor tooling (hover and completion documentation).
 
 ## Allocation and Ownership
 

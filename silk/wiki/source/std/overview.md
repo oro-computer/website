@@ -1,13 +1,15 @@
 # Standard library overview (`std::`)
 
-`std::` is the Silk standard library namespace. Start here when you want the top-level map of shipped modules, then move into the exact module pages for the surface you are using.
+`std::` is the Silk standard library namespace. The `docs/std/` tree specifies
+the intended API and structure; an in-tree stdlib implementation exists
+under `std/` for Silk currently.
 
 Canonical doc: [overview](?p=std/overview).
 
 ## Notes
 
-- Use [overview](?p=std/overview) for the complete standard-library map and module descriptions.
-- Use [module catalog](../docs/?p=std/module-catalog) when you need an audit-style inventory of what ships in the toolchain.
+- Design + implementation: many modules have an Supported forms; the overall surface is still evolving.
+- Details: [overview](?p=std/overview)
 
 ## Importing
 

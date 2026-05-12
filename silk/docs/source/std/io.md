@@ -1,8 +1,8 @@
 # `std::io`
 
-Basic stdin reads, stdout/stderr
-writes, and a minimal `std::io::async` subset are implemented in `std/io.slk`
-via `std::runtime::io`; buffered I/O remains future work.
+Basic stdin reads, stdout/stderr writes, an
+fd-backed `BufferedWriter`, and a minimal `std::io::async` subset are
+implemented in `std/io.slk` via `std::runtime::io`.
 
 `std::io` provides console and basic stream I/O.
 
@@ -45,10 +45,12 @@ enum IOErrorKind {
 struct IOFailed { code: int, requested: i64 }
 struct TTYSize { rows: int, cols: int }
 struct TTYRawMode { handle: u64 }
+struct BufferedWriter { fd: int, buf: std::buffer::BufferU8, flush_threshold: i64 }
 export type IOResult = std::result::Result(int, IOFailed);
 export type IOError = IOFailed;
 export type IOErrorIntResult = std::result::Result(int, IOError);
 export type TTYRawModeResult = std::result::Result(TTYRawMode, IOFailed);
+export type BufferedWriterResult = std::result::Result(BufferedWriter, IOFailed);
 
 export fn read (fd: int, buf: std::arrays::ByteSlice) -> IOResult;
 export fn write (fd: int, buf: std::arrays::ByteSlice) -> IOResult;
@@ -73,6 +75,18 @@ export fn println (fmt: string, ...args: std::fmt::Arg) -> PrintFailed?;
 export fn eprint (fmt: string, ...args: std::fmt::Arg) -> PrintFailed?;
 
 export fn eprintln (fmt: string, ...args: std::fmt::Arg) -> PrintFailed?;
+
+impl BufferedWriter {
+  public fn init (fd: int, capacity: i64) -> BufferedWriterResult;
+  public fn stdout (capacity: i64) -> BufferedWriterResult;
+  public fn stderr (capacity: i64) -> BufferedWriterResult;
+  public fn set_flush_threshold (mut self: &BufferedWriter, threshold: i64) -> void;
+  public fn write (mut self: &BufferedWriter, bytes: std::arrays::ByteSlice) -> IOFailed?;
+  public fn write_string (mut self: &BufferedWriter, s: string) -> IOFailed?;
+  public fn write_u8 (mut self: &BufferedWriter, value: u8) -> IOFailed?;
+  public fn flush (mut self: &BufferedWriter) -> IOFailed?;
+  public fn drop (mut self: &BufferedWriter) -> void;
+}
 ```
 
 The shipped async subset lives in a sibling module:
@@ -95,6 +109,9 @@ Notes:
 - `IOFailed.code` is a stable stdlib error code; callers should prefer `IOFailed.kind()`.
 - Invalid buffer arguments report `IOErrorKind::InvalidInput`.
 - `read_to_end` returns `IOErrorIntResult` (`Ok(total_bytes)` or `Err(IOFailed)`), where allocation failure is reported as `IOErrorKind::OutOfMemory` and `IOFailed.requested`.
+- `BufferedWriter` batches writes to an fd-backed byte buffer. `flush()`
+ explicitly writes buffered bytes; `drop()` attempts to flush and then releases
+ the backing allocation. Set `capacity == 0` for direct unbuffered writes.
 - `isatty(fd)` returns `true` when `fd` refers to a TTY, otherwise `false`.
 - `tty_size(fd)` returns `Some(TTYSize)` when the window size is available (TTY
  mode), otherwise `None`.
@@ -194,6 +211,7 @@ fn main () -> int {
 - Standard input, output, and error streams.
 - Simple printing and formatted output APIs.
 - Minimal fd-based async wrappers in `std::io::async`.
+- Buffered fd-backed output for CLI tools.
 
 ## Core Interfaces
 The stdlib should standardize reader/writer interfaces:
@@ -232,9 +250,8 @@ key point is that `std::fs` and `std::net` can reuse the same I/O traits.
  built on a stable reader/writer interface.
 
 ## Considerations
-- Buffered I/O wrappers (`BufReader`, `BufWriter`).
+- Buffered readers and async buffered I/O wrappers.
 - Broader async I/O surface beyond the shipped `std::io::async` wrappers:
- - buffered async I/O,
  - richer socket and filesystem stream adapters,
  - stronger cancellation of in-flight operations,
  - and `select`-style waiting over mixed sources.

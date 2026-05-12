@@ -4,7 +4,7 @@ This document enumerates the current hard limits in the Silk compiler and its
 tooling. These limits are **implementation guardrails** (primarily to keep
 memory usage bounded when compiling untrusted inputs); they are not intended to
 be permanent language constraints unless explicitly called out in the language
-specification or language reference on this site.
+spec (`docs/language/`).
 
 Where a language feature has an implementation cap that affects user code, the
 cap is also documented in the relevant language document (for example

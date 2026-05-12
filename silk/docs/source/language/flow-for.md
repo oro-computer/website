@@ -19,6 +19,12 @@ for <pattern> in <iterable> {
 ```
 
 ```silk
+for let <pattern> in <iterable> {
+  ...
+}
+```
+
+```silk
 for (<init>; <condition>; <step>) {
   ...
 }
@@ -26,9 +32,13 @@ for (<init>; <condition>; <step>) {
 
 Notes:
 
-- `<pattern>` is intended to be a pattern binder. In early implementations it
- is restricted to a single identifier (and `_`). It will be expanded alongside
- pattern matching.
+- `for <pattern> in <iterable> { ... }` currently accepts a single identifier
+ binder (and `_`) as the ordinary element-binding form.
+- `for let <pattern> in <iterable> { ... }` is the refutable pattern form.
+ `for let mut <pattern> in <iterable> { ... }` marks pattern binders mutable
+ for the current loop iteration.
+ It uses the same currently supported refutable match-pattern subset as
+ `if let` / `while let`.
 - `<iterable>` is an expression.
 - `<init>` is a local binding (`let` / `var` / `const`) with an initializer.
 - `<condition>` is a boolean expression.
@@ -106,6 +116,56 @@ Semantics (Supported forms):
  current iteration.
 - The binder is in scope only inside the loop body block.
 - `break` exits the loop; `continue` advances to the next element.
+
+### Pattern-filtered iteration with `for let`
+
+Silk also supports a filtered iteration form:
+
+```silk
+for let <pattern> in <iterable> {
+  ...
+}
+```
+
+Semantics (Supported forms):
+
+- The iterable expression is evaluated once.
+- The loop still advances over every produced element in order.
+- Each produced element is matched against `<pattern>`.
+- When the pattern matches, any binders introduced by the pattern are in scope
+ only for that iteration’s loop body, and the body executes once.
+- When the pattern form uses `let mut`, those binders may be reassigned inside
+ that iteration's body.
+- When the pattern does not match, the current element is skipped and iteration
+ continues with the next element.
+- `break` and `continue` keep their ordinary `for` meaning.
+
+supported patterns are the same refutable subset already implemented by
+`if let` / `while let`, including:
+
+- `Some(x)` / `None`
+- `Ok(x)` / `Err(x)`
+- typed binders such as `v: T` where that pattern form is already supported
+- enum variant payload patterns such as `Enum::Variant(x, _)`
+
+Example:
+
+```silk
+import std::result;
+
+type R = std::result::Result(int, int);
+
+fn main () -> int {
+  let xs: R[4] = [R.ok(2), R.err(7), R.ok(3), R.err(9)];
+  let mut sum: int = 0;
+
+  for let Ok(v) in xs {
+    sum += v;
+  }
+
+  return if sum == 5 { 0 } else { 1 };
+}
+```
 
 Current limitations:
 

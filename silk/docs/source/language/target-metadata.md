@@ -40,7 +40,7 @@ Current compiler target set and values:
  - `OS_PLATFORM == "linux"`
 - `macos-x86_64` and `macos-aarch64`:
  - `OS_PLATFORM == "macos"`
-- `ios-aarch64`:
+- `ios-aarch64`, `ios-simulator-aarch64`, and `ios-simulator-x86_64`:
  - `OS_PLATFORM == "ios"`
 - `android-aarch64`:
  - `OS_PLATFORM == "android"`
@@ -57,9 +57,9 @@ A canonical target CPU architecture name string.
 
 Current compiler target set and values:
 
-- `linux-x86_64`, `macos-x86_64`, and `windows-x86_64`:
+- `linux-x86_64`, `macos-x86_64`, `ios-simulator-x86_64`, and `windows-x86_64`:
  - `OS_ARCH == "x86_64"`
-- `linux-aarch64`, `macos-aarch64`, `ios-aarch64`, `android-aarch64`, and `windows-aarch64`:
+- `linux-aarch64`, `macos-aarch64`, `ios-aarch64`, `ios-simulator-aarch64`, `android-aarch64`, and `windows-aarch64`:
  - `OS_ARCH == "aarch64"`
  - Formal Silk comparisons also accept the ARM64 aliases `"arm64"` and `"aarch"` in any letter case, including through compile-time string constants, even though the canonical `OS_ARCH` value remains `"aarch64"`.
 - `wasm32-unknown-unknown` and `wasm32-wasi`:
@@ -76,6 +76,8 @@ Current compiler target set:
 - `macos-x86_64`: `true`
 - `macos-aarch64`: `true`
 - `ios-aarch64`: `true`
+- `ios-simulator-aarch64`: `true`
+- `ios-simulator-x86_64`: `true`
 - `android-aarch64`: `true`
 - `windows-x86_64`: `false`
 - `windows-aarch64`: `false`
@@ -93,6 +95,8 @@ Current compiler target set:
 - `macos-x86_64`: `true`
 - `macos-aarch64`: `true`
 - `ios-aarch64`: `true`
+- `ios-simulator-aarch64`: `true`
+- `ios-simulator-x86_64`: `true`
 - `android-aarch64`: `true`
 - `windows-x86_64`: `false`
 - `windows-aarch64`: `false`

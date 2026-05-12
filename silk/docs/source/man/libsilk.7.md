@@ -337,6 +337,8 @@ bool silk_compiler_set_target(SilkCompiler *compiler,
  - `macos-x86_64`,
  - `macos-aarch64`,
  - `ios-aarch64`,
+ - `ios-simulator-aarch64`,
+ - `ios-simulator-x86_64`,
  - `windows-x86_64`,
  - `windows-aarch64`,
  - `wasm32-unknown-unknown` (IR-backed wasm32 mode; emits a final `.wasm` module exporting `memory` and exported functions, including `main` when present; `ext` declarations become imports under `env.<name>`; also supports export-only modules with no `main` for JS/Node-style embedding),
@@ -438,6 +440,9 @@ bool silk_compiler_set_optimization_level(SilkCompiler *compiler,
  unused extern symbols before code generation. This typically reduces output
  size and over-linking when using the prebuilt stdlib archive (`libsilk_std.a`)
  to satisfy auto-loaded `import std::...;` modules.
+- The CLI also exposes `silk build --strip-unused` to force analogous
+ reachability-based pruning at `-O0` for executable/static/shared outputs; the
+ current C ABI does not yet expose a separate setter for that flag.
 - Returns:
  - `true` on success,
  - `false` and records an error (e.g. `"invalid optimization level (expected 0-3)"`) when the value is invalid.
@@ -555,18 +560,30 @@ Return value:
  - currently this backend writes a minimal target-specific executable
  that terminates the process with the evaluated `main` value:
  - ELF64 for `linux-x86_64`, `linux-aarch64`, and `android-aarch64`,
- - Mach-O 64-bit for `macos-x86_64`, `macos-aarch64`, and `ios-aarch64`,
+ - Mach-O 64-bit for `macos-x86_64`, `macos-aarch64`, `ios-aarch64`, `ios-simulator-aarch64`, and `ios-simulator-x86_64`,
  - PE32+ for `windows-x86_64` and `windows-aarch64`,
  - returns `true` on success and leaves the last error unset,
- - on Apple Silicon macOS hosts, `target = "macos-aarch64"` also supports
- the current temporary host-backed non-const executable subset used by
- the CLI:
- - this path emits arm64 assembly, links it with host `as` / `ld`,
- ad hoc-signs the resulting Mach-O executable when needed, and
- currently covers the implemented integer/bool scalar IR subset,
- - the same subset is available through `silk_compiler_build(...)`
- because that ABI entrypoint writes a filesystem artifact at the
- requested `output_path`,
+ - on Apple Silicon macOS hosts, the current temporary host-backed
+ non-const executable subset used by the CLI is also available through
+ the C ABI:
+ - this path emits target-specific arm64 or x86_64 assembly, assembles
+ it with host `clang -c`, links it with host `ld`, ad hoc-signs
+ macOS Mach-O executables when needed, and currently covers the
+ implemented scalar IR subset,
+ - for `macos-aarch64`, the same subset is available through
+ `silk_compiler_build(...)` because that ABI entrypoint writes a
+ filesystem artifact at the requested `output_path`,
+ - the CLI / driver also supports `ios-aarch64`,
+ `ios-simulator-aarch64`, and `ios-simulator-x86_64` for the same
+ pure-Silk scalar subset on Apple Silicon macOS hosts, including
+ reachable float-to-int lowering and the portable bundled runtime
+ helper families for number / regex / unicode / filesystem / dns /
+ process / signal / term / pty / readline / task-pool / async support,
+ - the C ABI executable entrypoints now support that same non-const iOS
+ host-backed subset as well,
+ - the remaining explicit `E4001` iOS limitation is only for
+ lowered programs that still need narrower unsupported bundled
+ runtime-internal helper families,
  - if the program is front‑end valid but outside this subset (for example,
  `main` contains non‑constant expressions, references to non‑constant
  values, function calls, or unsupported control flow), or if the backend
@@ -579,14 +596,17 @@ Return value:
 
 For executable builds (`kind == SILK_OUTPUT_EXECUTABLE`), the ABI currently enforces a simple entrypoint rule:
 
-- there MUST be exactly one top‑level function with the signature:
+- there MUST be exactly one top‑level function with one of the signatures:
 
   ```silk
   fn main() -> int { ... }
+
+  fn main(argc: int, argv: u64) -> int { ... }
   ```
 
  - name: `main`,
- - zero parameters,
+ - either zero parameters, or exactly two parameters whose types are `int`
+ and `u64`,
  - result type: `int`.
 
 If this condition is not met:
@@ -616,7 +636,15 @@ writing to a filesystem path.
  - this now includes the Apple Silicon macOS `macos-aarch64` host-backed
  executable subset as well; `silk_compiler_build_to_bytes(...)` bridges that
  path through a temporary signed filesystem artifact and then returns the
- produced Mach-O bytes to the caller.
+ produced Mach-O bytes to the caller,
+ - for `ios-aarch64`, `ios-simulator-aarch64`, and
+ `ios-simulator-x86_64`, that same non-const pure-Silk scalar executable
+ subset, including reachable float-to-int lowering and the same portable
+ bundled runtime helper families, is now available through
+ `silk_compiler_build_to_bytes(...)` on Apple Silicon macOS hosts as well,
+ - the remaining explicit `E4001` iOS limitation applies only when the
+ lowered program actually needs narrower unsupported bundled
+ runtime-internal helper families.
 - On success:
  - returns `true`,
  - fills `*out_bytes` with `(ptr, len)` describing the produced artifact,
@@ -745,12 +773,16 @@ covers the full std surface.
 
 ## Environment
 
-| Variable | Details |
-| --- | --- |
-| `SILK_STD_ROOT` | path to the stdlib root directory used to resolve `import std::...;` declarations when the embedder has not called `silk_compiler_set_std_root`. |
-| `SILK_STD_LIB` | path to a target-specific stdlib static archive (`libsilk_std.a`). When present, supported executable builds treat auto-loaded `std::...` modules as external and resolve their exported functions from this archive. |
-| `SILK_Z3_LIB` | path to a dynamic Z3 library used by the Formal Silk verifier. When set, it overrides the default vendored Z3 linkage for verification. |
-| `SILK_VERIFY_JOBS` | override the number of worker threads used for Formal Silk verification (default: auto; capped at 8). |
+- `SILK_STD_ROOT` — path to the stdlib root directory used to resolve
+ `import std::...;` declarations when the embedder has not called
+ `silk_compiler_set_std_root`.
+- `SILK_STD_LIB` — path to a target-specific stdlib static archive
+ (`libsilk_std.a`). When present, supported executable builds treat auto-loaded
+ `std::...` modules as external and resolve their exported functions from this
+ archive.
+- `SILK_Z3_LIB` — path to a dynamic Z3 library used by the Formal Silk verifier.
+ When set, it overrides the default vendored Z3 linkage for verification.
+- `SILK_VERIFY_JOBS` — override the number of worker threads used for Formal Silk verification (default: auto; capped at 8).
 
 ## See Also
 

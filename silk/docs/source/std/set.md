@@ -16,9 +16,11 @@ In the Supported forms:
 
 - `SetMap(T)` and `TreeSet(T)` store elements by value, but do not automatically
  run `Drop` for stored elements when entries are removed.
-- `SetMap(T)` and `TreeSet(T)` currently store each element in a single 8-byte
- scalar slot (`as raw u64`). Multi-slot values such as `string` (and most
- structs) are not supported as set elements yet.
+- `SetMap(T)` stores elements in compiler typed-array layout, which supports
+ multi-slot borrowed values such as `string`.
+- `TreeSet(T)` currently stores each element in a single 8-byte scalar slot
+ (`as raw u64`). Multi-slot values such as `string` (and most structs) are not
+ supported as ordered-set elements yet.
 - Avoid storing Drop-managed structs as set elements until the compiler has
  complete Drop integration for values stored inside container memory.
 
@@ -39,6 +41,7 @@ Default helper functions are provided for these element types:
 - fixed-width integers (`u8`/`i8`/`u16`/`i16`/`u32`/`i32`/`u64`/`i64`/`u128`/`i128`)
 - platform integers (`int`, `usize`, `size`/`isize`)
 - `char`
+- `string`
 
 `SetMap(T)` provides:
 

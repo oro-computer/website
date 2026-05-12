@@ -19,12 +19,12 @@ The Silk language server:
 - builds a workspace cache from open documents, nearest-package
  `silk.toml` roots, dependency package graphs, manifest definition files, and
  standard library modules when enabled,
-- maintains a lightweight native C symbol index for manifest-owned `.c` / `.h`
+- maintains a lightweight native C symbol index for manifest-owned `.c` / `.h` / `.m`
  sources so `ext` declarations can resolve to local native definitions when
  those sources are available,
 - does not change the language surface or ABI; it is a tooling layer on top of the existing compiler.
 
-No language features or CLI options are introduced by the LSP itself. Any future extensions that affect language semantics or user-facing flags must still be documented in the appropriate language-reference pages on this site or in [cli silk](?p=compiler/cli-silk) first.
+No language features or CLI options are introduced by the LSP itself. Any future extensions that affect language semantics or user-facing flags must still be documented in the appropriate `docs/language/` or [cli silk](?p=compiler/cli-silk) files first.
 
 ## Running the Server
 
@@ -111,8 +111,8 @@ workspace module set.
  - boolean literals (`true`/`false`) as “bool literal”,
  - string and character literals as “string literal” and “char literal”,
  - the context-sensitive keyword forms `panic`, `await`, `await *`, `yield`,
- and `yield *` as Markdown usage help, including hovering either token in
- the two-token `*` forms,
+ `yield *`, `sizeof`, and `as raw` as Markdown usage help, including
+ hovering either token in the two-token `*` and `as raw` forms,
  - identifiers are reported as `identifier 'name'`.
 - Hover now includes lightweight semantic hints:
  - function identifiers show their `fn name (...) -> result` signature when available,
@@ -206,8 +206,9 @@ module set.
  - all language keywords defined in `src/token.zig` (via `keywordTable()`),
  tagged with LSP keyword kind,
  - guided keyword-help completions for `panic`, `await`, `await *`, `yield`,
- and `yield *`, with compact detail strings and Markdown documentation for
- the typed-error, Promise, and Task usage contracts,
+ `yield *`, `sizeof`, `#embed`, and `as raw`, with compact detail strings
+ and Markdown documentation for the typed-error, Promise, Task, byte-size,
+ compile-time file embedding, and raw-cast usage contracts,
  - all distinct identifiers lexed from the current document (names that are not recognized as keywords),
  - symbol-aware suggestions from the current package and imported packages (functions, lets, ext, structs, enums, interfaces, errors),
  - imported names from:
@@ -219,7 +220,10 @@ module set.
  (for example before `(` or `;` has been inserted),
  - import specifier path completion inside `from "..."` strings:
  - file specifiers (`"./..."`, `"../..."`, and absolute paths) suggest `.slk` files and subdirectories,
- - std-root file specifiers (`"std/..."`) suggest stdlib paths (omitting the `.slk` extension),
+ - std package specifiers (`"std/..."`) suggest stdlib package paths (omitting the `.slk` extension),
+ - `#embed("path", "...")` encoding completion in the optional second
+ argument, offering exactly `"utf8"`, `"utf16"`, `"u8"`, `"u16"`, and
+ `"u32"`; omitting the argument is equivalent to `"utf8"`,
  - namespace completions after `::` for known packages, package-import aliases, default/namespace imports, and `using`-introduced namespace aliases, including nested alias chains such as `rt::mem::`,
  - member completions for struct and error fields after `.` when the receiver type is known (including locals with type annotations, struct/error literals, casts, or `new Type(...)` initializers); struct receivers also include instance methods,
  - bare member-trigger completions such as `manager.` by parsing a transient completion probe in memory and returning member results instead of falling back to global lexical keywords,
@@ -227,7 +231,7 @@ module set.
  - receiver completions after local bindings initialized from static impl calls, such as `let user = User.create(options); user.`, by using the static impl function result type,
  - array element receiver completions such as `inputs[0].` when `inputs` has an array or slice type annotation,
  - `for item in items { item. }` completions when `items` has an array or slice type annotation,
- - `for item in manager.iter() { item. }` completions when the iterator-returning call result, local type aliases, rewritten std/file imports, and `next() -> T?` element type can be resolved through the cached symbol index or transient parse overlay,
+ - `for item in manager.iter() { item. }` completions when the iterator-returning call result, local type aliases, package/file imports, and `next() -> T?` element type can be resolved through the cached symbol index or transient parse overlay,
  - local completion and receiver inference for statement-level language
  binders, including destructuring `let` patterns, `let ... else`, `if let`
  / `while let` and chained `&& let` clauses, `match` statement arms, and
@@ -422,8 +426,8 @@ The workspace cache is manifest-aware:
 - it applies the manifest package name as the default package for source or
  definition files that omit an explicit `package ...;` / `module ...;`
  declaration,
-- and it collects manifest-owned `.c` / `.h` sources from target inputs and
- shipped C headers for the native symbol index.
+- and it collects manifest-owned `.c` / `.h` / `.m` sources from target inputs
+ and shipped C headers for the native symbol index.
 
 This keeps position-time queries on precomputed module/package/native symbol
 data rather than rescanning manifests or package graphs for each request.
@@ -465,11 +469,18 @@ The current LSP diagnostic surface follows these rules:
 
 - Parse errors:
  - reported at the location of the unexpected token using the token’s line/column and length,
- - message text describes the unexpected token and that parsing failed.
+ - message text describes the unexpected token and that parsing failed,
+ - publish `E0001` and attach structured `data.helps` pointing at
+ `silk error E0001` for clients that surface custom diagnostic data,
+ - `#embed("path")` expressions use the document URI’s filesystem path for
+ source-relative lookup, and unreadable or invalid embedded files are
+ reported as parse diagnostics on the path literal.
 - Resolve/type-check diagnostics:
  - use the compiler’s existing structured failure data (stable code, message, source span, and any available detail),
  - map that span/code directly onto the LSP diagnostic when the compiler reports one,
  - include exact expected/found type detail for supported incorrect `await`, `await *`, `yield`, and `yield *` task/async operand errors,
+ - include a `silk error <code>` lookup hint for stable compiler codes so
+ editor users can open the same diagnostic reference available from the CLI,
  - flatten available note/help guidance inline into the LSP `message` field and also attach structured `data.detail`, `data.notes`, and `data.helps` when the compiler provides them.
 - Conditional compilation (`if attr(...)`):
  - the server evaluates `attr(...)` query conditions using the host target (`arch`, `os`, `target`) and the enabled feature set (empty in Silk currently),
@@ -492,7 +503,7 @@ Current limits:
 
 These features are intended as future extensions and must be:
 
-- designed and documented here (and in any relevant language-reference or standard-library docs on this site),
+- designed and documented here (and in any relevant `docs/language/` or `docs/std/` docs),
 - backed by the underlying compiler front-end and/or standard library,
 - covered by tests (Zig and, where appropriate, C) before being advertised as supported capabilities.
 

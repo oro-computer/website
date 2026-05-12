@@ -68,8 +68,8 @@ fn main () -> int {
 
   // blake2b("abc") with digest_size=32.
   let msg: string = "abc";
-  let msg_ptr: u64 = std::runtime::mem::string_ptr(msg);
-  let msg_len: i64 = std::runtime::mem::string_len(msg);
+  let msg_ptr: u64 = msg as raw u64;
+  let msg_len: i64 = (sizeof(msg)) as i64;
 
   match (std::buffer::BufferU8.init(32)) {
     Ok(out_buffer) => {

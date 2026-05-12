@@ -169,6 +169,13 @@ fn main () -> int {
 Notes:
 
 - `c_fn` values are code pointers only; they cannot capture local variables.
+- A raw dynamic symbol address can be converted explicitly with
+ `addr as raw c_fn (...) -> R` or an alias of that type. This is intended for
+ loader APIs such as `std::dylib`; Silk does not validate the symbol signature
+ at runtime, so the declared `c_fn` type must match the foreign ABI exactly.
+- A `c_fn` value can be called directly from Silk using the same call syntax as
+ ordinary function values. The current value is invoked as a plain C code
+ pointer with no closure environment.
 - If a C API needs context, pass an explicit context pointer (e.g. a `u64` that
  is a `void *` in C) alongside the callback and include that context parameter
  in the callback signature.

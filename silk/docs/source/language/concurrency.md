@@ -111,6 +111,11 @@ implemented by the compiler/runtime today.
  their inner `T` must itself satisfy the task-safety rule above. This
  supports patterns like `Task(Promise(T))` (for tasks that produce promises)
  and `await * yield * t` for `t: Task(Promise(T))`.
+ - `std::sync::Arc(T)` handles are permitted at task boundaries when `T`
+ satisfies the same task-safety rule. Moving an `Arc(T)` into a task
+ transfers that handle; call `clone()` explicitly before spawning multiple
+ tasks that need shared ownership. Borrowed non-opaque references inside
+ `Arc(T)` are rejected at the task boundary.
 
 ### Thread Safety and Sharing
 
@@ -130,10 +135,18 @@ In Silk currently:
  - task boundary types are otherwise restricted to primitives, optionals, and
  structs/enums composed of task-safe members.
 - Shared mutable state must be synchronized explicitly (for example via
- `std::sync` primitives or by communicating through channels).
+ `std::sync` primitives, `std::atomic` atomics, or by communicating through
+ channels).
 - To share a runtime handle across tasks without transferring ownership, prefer
  stdlib APIs that follow the `T` / `TBorrow` pattern (for example
  `Channel(T)` + `ChannelBorrow(T)` and `AbortSignal` + `AbortSignalBorrow`).
+- To share ownership of immutable or internally synchronized state across
+ tasks, use `std::sync::Arc(T)` and clone the handle explicitly. `Arc(T)` does
+ not permit unsynchronized mutation of `T`; put synchronization inside `T`
+ (for example a `Mutex`-like handle) when mutation is required.
+- To share one atomic cell across tasks, keep the owning `std::atomic` value
+ alive in the parent scope and pass `AtomicU64Borrow` or `AtomicBoolBorrow`
+ across the task boundary.
 
 Note: this includes `&Struct` values produced by `new`. The compiler-inserted
 reference counting (RC) used for `new` is non-atomic in the Supported forms and
@@ -166,7 +179,9 @@ must be synchronized by the program.
  resolved.
  - Awaiting a `Task(T)` is rejected by design; use `yield` / `yield *` for task values.
  - Executable entrypoints currently support `fn main (...) -> int`,
- `async fn main (...) -> int`, and `fn main(argc: int, argv: u64) -> int`.
+ `fn main (...) -> void`, `async fn main (...) -> int`,
+ `async fn main (...) -> void`, `fn main(argc: int, argv: u64) -> int`,
+ and `fn main(argc: int, argv: u64) -> void`.
  Task-backed entrypoints such as `task fn main` and `async task fn main`
  are rejected by the executable runtime path; keep task work inside an
  ordinary or async `main`.

@@ -124,7 +124,7 @@ Therefore:
 
 - The verifier cannot generate VCs about the behavior of `ext` bodies.
 - In the current verifier subset, calls are supported only to functions and
- methods that have Formal Silk contracts (see “Calls in verified code” below).
+ methods that have Formal Silk contracts (see “Contracted calls” below).
  `ext` declarations do not have Formal Silk contracts yet, so verified code
  cannot call `ext` functions.
 
@@ -234,7 +234,9 @@ Rules (Supported forms):
  omitted fields.
 - When a struct extends a base struct, the derived struct inherits the base
  struct's requirements (all requirements must be proven at construction).
-- If the verifier cannot prove a requirement, compilation fails.
+- If the verifier cannot prove a requirement, compilation fails with `E3006`.
+ The diagnostic names the failed predicate and, when the predicate references
+ fields initialized by the literal or by defaults, reports those field values.
 
 Loop specifications (`#invariant`, `#variant`, `#monovariant`) follow a similar
 pattern for loops.
@@ -334,18 +336,19 @@ Implemented end-to-end (Z3-backed, Supported forms):
  assertions,
  - `#theory Name(params) { ... }` may also declare an inline (non-exportable)
  local theory inside a block.
-- Calls in verified code (contracted-call subset):
- - direct calls of the form `Name(args...)` are supported in verified code when
- `Name` resolves to a function with a Formal Silk contract,
- - receiver calls of the form `expr.method(args...)` are supported in verified
- code when the receiver resolves to a concrete method owner and `method`
- resolves to a method with a Formal Silk contract,
- - at the call site, the verifier proves the callee’s preconditions (explicit
- `#require` and any attached-theory `#require`) under the caller’s current
- path condition; errors report `E3007`,
+- Contracted calls:
+ - direct calls of the form `Name(args...)` are checked when `Name` resolves to
+ a function with a Formal Silk contract,
+ - receiver calls of the form `expr.method(args...)` are checked when the
+ receiver resolves to a concrete method owner and `method` resolves to a
+ method with a Formal Silk contract,
+ - at every checked call site, including ordinary callers that have no Formal
+ Silk annotations of their own, the verifier proves the callee’s
+ preconditions (explicit `#require` and any attached-theory `#require`) under
+ the caller’s current path condition; errors report `E3007`,
  - after the call, the verifier assumes the callee’s postconditions (explicit
- `#assure` plus attached-theory `#assure`/`#invariant`) into the caller’s
- symbolic state so subsequent proofs can use them,
+ `#assure` plus attached-theory `#assure`/`#invariant`) into verified
+ callers' symbolic state so subsequent proofs can use them,
  - if the callee has a source-visible body, the Supported forms requires that
  body to be a single return expression (no runtime statements); the verifier
  inlines that return expression in the caller’s symbolic state,
@@ -375,12 +378,24 @@ Not implemented yet (selected gaps):
 - Verified local bindings are still limited to primitive/string-like symbolic
  types plus opaque parameter-style values. Field projections from typed
  parameters/results/receivers used in contracts and `#theory` arguments are
- supported through uninterpreted projections, but fully field-sensitive
- named-struct local-state reasoning is not yet supported in verified blocks.
+ supported through uninterpreted projections. Direct field assignment through
+ a named aggregate or receiver (`name.field = expr`) is modeled by creating a
+ fresh aggregate value, constraining the assigned field, preserving the other
+ fields, and rechecking the aggregate's struct requirements. Verified
+ function/method entry also assumes struct requirements for non-optional typed
+ aggregate parameters, so direct field writes can prove requirements over
+ untouched fields from the aggregate's starting invariant. Fully nested
+ field-sensitive named-struct local-state reasoning is not yet supported in
+ verified blocks.
 - Verification of the full expression language and full statement language
  (`match`, nested loops, indirect calls, and many operators are not supported
  yet in verified code). Statement-level `if` path splitting is implemented in
  the Supported forms.
+- Verified assignment statements currently support local names and direct field
+ writes through named aggregate or receiver values (`name.field = expr`).
+ Direct field writes re-prove the target aggregate's struct `#require`
+ clauses after the write. Optional-field, index, nested-field, and compound
+ assignment targets are rejected with `E3005`.
 
 ## Theories (`theory` / `#theory`)
 
@@ -495,8 +510,8 @@ Contract-theory attachments:
 - contribute additional preconditions/postconditions to the function contract:
  - `#require` become additional function preconditions,
  - `#assure` and `#invariant` become additional function postconditions,
-- are used by the verifier to enable contracted calls in verified code (see
- “Calls in verified code” above),
+- are used by the verifier to check contracted call preconditions and to enable
+ contracted calls in verified code (see “Contracted calls” above),
 - are not permitted before a top-level `theory` declaration (only `#require` /
  `#assure` may prefix a theory declaration).
 
@@ -528,12 +543,11 @@ fn main () -> int {
 Rules:
 
 - Only exported theories may be imported.
-- A theory use (`#theory Name(args);`) resolves `Name` as either:
+- A theory use (`#theory Name(args);` or `#theory pkg::Name(args);`) resolves
+ the theory name as either:
  - a local theory declared in the same module, or
- - an imported theory name from `import { ... } from "<specifier>";`.
-- Namespace imports (`import ns from "<specifier>";`) do not currently provide
- theory access, because theory use sites do not accept qualified names
- (`ns::TheoryName`) yet.
+ - an imported theory name from `import { ... } from "<specifier>";`, or
+ - an exported theory addressed by its package-qualified name.
 
 ### Semantics
 

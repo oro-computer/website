@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-04-27T17:20:30+00:00",
+  "generatedAt": "2026-05-11T22:52:03+00:00",
   "kind": "docs",
-  "count": 264,
+  "count": 285,
   "sections": [
     {
       "name": "overview",
@@ -262,6 +262,11 @@
           "file": "language/memory-model.md"
         },
         {
+          "id": "language/atomics",
+          "title": "Atomics",
+          "file": "language/atomics.md"
+        },
+        {
           "id": "language/regions",
           "title": "Regions",
           "file": "language/regions.md"
@@ -392,6 +397,11 @@
           "file": "std/strings.md"
         },
         {
+          "id": "std/bytes",
+          "title": "`std::bytes`",
+          "file": "std/bytes.md"
+        },
+        {
           "id": "std/arrays",
           "title": "`std::arrays`",
           "file": "std/arrays.md"
@@ -462,6 +472,11 @@
           "file": "std/os.md"
         },
         {
+          "id": "std/dylib",
+          "title": "`std::dylib`",
+          "file": "std/dylib.md"
+        },
+        {
           "id": "std/path",
           "title": "`std::path`",
           "file": "std/path.md"
@@ -485,6 +500,11 @@
           "id": "std/xml",
           "title": "`std::xml` \u2014 XML Parsing (libxml2)",
           "file": "std/xml.md"
+        },
+        {
+          "id": "std/protobuf",
+          "title": "`std::protobuf`",
+          "file": "std/protobuf.md"
         },
         {
           "id": "std/url",
@@ -557,6 +577,16 @@
           "file": "std/runtime.md"
         },
         {
+          "id": "std/runtime-event_loop",
+          "title": "`std::runtime::event_loop`",
+          "file": "std/runtime-event_loop.md"
+        },
+        {
+          "id": "std/atomic",
+          "title": "`std::atomic`",
+          "file": "std/atomic.md"
+        },
+        {
           "id": "std/signal",
           "title": "`std::signal`",
           "file": "std/signal.md"
@@ -570,6 +600,11 @@
           "id": "std/sync",
           "title": "`std::sync`",
           "file": "std/sync.md"
+        },
+        {
+          "id": "std/time",
+          "title": "`std::time`",
+          "file": "std/time.md"
         },
         {
           "id": "std/temporal",
@@ -625,6 +660,51 @@
           "id": "std/graphics",
           "title": "`std::graphics` \u2014 Graphics API Bindings",
           "file": "std/graphics.md"
+        },
+        {
+          "id": "std/graphics-window",
+          "title": "`std::graphics::window`",
+          "file": "std/graphics-window.md"
+        },
+        {
+          "id": "std/graphics-opengl",
+          "title": "`std::graphics::opengl`",
+          "file": "std/graphics-opengl.md"
+        },
+        {
+          "id": "std/graphics-opengles",
+          "title": "`std::graphics::opengles`",
+          "file": "std/graphics-opengles.md"
+        },
+        {
+          "id": "std/graphics-vulkan",
+          "title": "`std::graphics::vulkan`",
+          "file": "std/graphics-vulkan.md"
+        },
+        {
+          "id": "std/graphics-metal",
+          "title": "`std::graphics::metal`",
+          "file": "std/graphics-metal.md"
+        },
+        {
+          "id": "std/window",
+          "title": "`std::window`",
+          "file": "std/window.md"
+        },
+        {
+          "id": "std/window-macos",
+          "title": "`std::window::macos`",
+          "file": "std/window-macos.md"
+        },
+        {
+          "id": "std/window-ios",
+          "title": "`std::window::ios`",
+          "file": "std/window-ios.md"
+        },
+        {
+          "id": "std/window-gtk",
+          "title": "`std::window::gtk`",
+          "file": "std/window-gtk.md"
         },
         {
           "id": "std/image",
@@ -722,21 +802,6 @@
           "file": "std/function.md"
         },
         {
-          "id": "std/graphics-opengl",
-          "title": "`std::graphics::opengl`",
-          "file": "std/graphics-opengl.md"
-        },
-        {
-          "id": "std/graphics-opengles",
-          "title": "`std::graphics::opengles`",
-          "file": "std/graphics-opengles.md"
-        },
-        {
-          "id": "std/graphics-vulkan",
-          "title": "`std::graphics::vulkan`",
-          "file": "std/graphics-vulkan.md"
-        },
-        {
           "id": "std/image-color",
           "title": "`std::image::color`",
           "file": "std/image-color.md"
@@ -807,19 +872,24 @@
           "file": "std/range.md"
         },
         {
+          "id": "std/runtime-atomic",
+          "title": "`std::runtime::atomic`",
+          "file": "std/runtime-atomic.md"
+        },
+        {
           "id": "std/runtime-build",
           "title": "`std::runtime::build`",
           "file": "std/runtime-build.md"
         },
         {
+          "id": "std/runtime-dylib",
+          "title": "`std::runtime::dylib`",
+          "file": "std/runtime-dylib.md"
+        },
+        {
           "id": "std/runtime-env",
           "title": "`std::runtime::env`",
           "file": "std/runtime-env.md"
-        },
-        {
-          "id": "std/runtime-event_loop",
-          "title": "`std::runtime::event_loop`",
-          "file": "std/runtime-event_loop.md"
         },
         {
           "id": "std/runtime-fs",
@@ -830,6 +900,11 @@
           "id": "std/runtime-globals",
           "title": "`std::runtime::globals`",
           "file": "std/runtime-globals.md"
+        },
+        {
+          "id": "std/runtime-graphics-metal",
+          "title": "`std::runtime::graphics::metal`",
+          "file": "std/runtime-graphics-metal.md"
         },
         {
           "id": "std/runtime-io",
@@ -855,6 +930,16 @@
           "id": "std/runtime-number",
           "title": "`std::runtime::number`",
           "file": "std/runtime-number.md"
+        },
+        {
+          "id": "std/runtime-posix-atomic",
+          "title": "`std::runtime::posix::atomic`",
+          "file": "std/runtime-posix-atomic.md"
+        },
+        {
+          "id": "std/runtime-posix-dylib",
+          "title": "`std::runtime::posix::dylib`",
+          "file": "std/runtime-posix-dylib.md"
         },
         {
           "id": "std/runtime-posix-env",
@@ -1017,6 +1102,11 @@
           "file": "std/runtime-wasi-time.md"
         },
         {
+          "id": "std/runtime-window",
+          "title": "`std::runtime::window`",
+          "file": "std/runtime-window.md"
+        },
+        {
           "id": "std/runtime-z3",
           "title": "`std::runtime::z3`",
           "file": "std/runtime-z3.md"
@@ -1140,6 +1230,11 @@
           "id": "usage/github-actions",
           "title": "GitHub Actions: Install Released `silk`",
           "file": "usage/github-actions.md"
+        },
+        {
+          "id": "usage/howto-dynamic-libraries",
+          "title": "How To Load Dynamic Libraries",
+          "file": "usage/howto-dynamic-libraries.md"
         }
       ]
     },
@@ -1272,6 +1367,11 @@
           "file": "man/silk-package.1.md"
         },
         {
+          "id": "man/silk-cache.1",
+          "title": "[`silk-cache(1)`](?p=man/silk-cache.1) \u2014 Inspect and Maintain the Managed Silk Cache",
+          "file": "man/silk-cache.1.md"
+        },
+        {
           "id": "man/silk-check.1",
           "title": "[`silk-check(1)`](?p=man/silk-check.1) \u2014 Parse and Type-Check",
           "file": "man/silk-check.1.md"
@@ -1300,6 +1400,21 @@
           "id": "man/silk-env.1",
           "title": "[`silk-env(1)`](?p=man/silk-env.1) \u2014 Print `silk` CLI Environment",
           "file": "man/silk-env.1.md"
+        },
+        {
+          "id": "man/silk-error.1",
+          "title": "[`silk-error(1)`](?p=man/silk-error.1) \u2014 Explain Compiler Diagnostic Codes",
+          "file": "man/silk-error.1.md"
+        },
+        {
+          "id": "man/silk-guide.1",
+          "title": "[`silk-guide(1)`](?p=man/silk-guide.1) \u2014 Search Curated Silk Example Guides",
+          "file": "man/silk-guide.1.md"
+        },
+        {
+          "id": "man/silk-proto.1",
+          "title": "[`silk-proto(1)`](?p=man/silk-proto.1) \u2014 compile proto3 schemas to Silk",
+          "file": "man/silk-proto.1.md"
         },
         {
           "id": "man/silk-man.1",
@@ -1340,16 +1455,6 @@
           "id": "man/silk_abi_get_version.3",
           "title": "[`silk_abi_get_version(3)`](?p=man/silk_abi_get_version.3) \u2014 Query the `libsilk` ABI Version",
           "file": "man/silk_abi_get_version.3.md"
-        },
-        {
-          "id": "man/silk-cache.1",
-          "title": "[`silk-cache(1)`](?p=man/silk-cache.1) \u2014 Inspect and Maintain the Managed Silk Cache",
-          "file": "man/silk-cache.1.md"
-        },
-        {
-          "id": "man/silk-guide.1",
-          "title": "[`silk-guide(1)`](?p=man/silk-guide.1) \u2014 Search Curated Silk Example Guides",
-          "file": "man/silk-guide.1.md"
         }
       ]
     },

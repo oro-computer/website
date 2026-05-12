@@ -37,6 +37,10 @@ if let <pattern> = <scrutinee> {
 } else {
   ...
 }
+
+if let mut <pattern> = <scrutinee> {
+  ...
+}
 ```
 
 Notes:
@@ -44,10 +48,16 @@ Notes:
 - The scrutinee expression is evaluated exactly once.
 - The pattern binders (for example `Some(v)` binds `v`) are in scope only in
  the `then` block.
+- `if let mut` marks binders introduced by the pattern as mutable in that
+ scope, so they may be reassigned like ordinary `let mut` locals.
 - `else` is optional (when omitted, a non-matching scrutinee executes no block).
 - `else if let ...` chains are supported and parse as nesting in the same way
  as `else if ...`.
-- `else let ...` is supported as shorthand for `else if let ...`.
+- `else let ...` is supported as shorthand for `else if let ...`; `else let mut`
+ has the same binder mutability as `else if let mut`.
+- `if let move ...`, `else if let move ...`, and `else let move ...` consume the
+ scrutinee for ownership-tracked values. The consumed source binding is not
+ available in the `then` block, the `else` block, or after the `if`.
 
 ### `if let` chains (`&& let`)
 
@@ -57,8 +67,9 @@ refutable `let` clauses and ordinary boolean clauses:
 ```silk
 if let Some(x) = get_x() &&
    x > 0 &&
-   let Ok(v) = get_value(x) {
+   let mut Ok(v) = get_value(x) {
   // `x` and `v` are in scope here.
+  v = v + 1;
   return v;
 } else {
   // `x` and `v` are NOT in scope here.
@@ -72,6 +83,11 @@ Semantics:
 - A `let <pattern> = <expr>` clause evaluates `<expr>` exactly once:
  - if the pattern matches, its binders are introduced and evaluation continues,
  - otherwise the entire condition is `false`.
+- A `let mut <pattern> = <expr>` clause introduces mutable binders for the
+ remaining clauses and the `then` block.
+- A `let move <pattern> = <expr>` clause consumes the clause scrutinee for
+ ownership-tracked values. The moved source binding is unavailable in later
+ clauses, the `then` block, and the `else` block.
 - A non-`let` clause must have type `bool`; `false` short-circuits.
 - Binders introduced by `let` clauses are in scope for:
  - subsequent clauses in the chain, and
