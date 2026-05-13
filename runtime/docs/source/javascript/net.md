@@ -16,11 +16,6 @@ const server = createServer({}, (socket) => {
 server.listen(4040, '127.0.0.1')
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -33,8 +28,9 @@ oro:net
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:net</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:net`
 
 ```ts
 declare module "oro:net" {
@@ -118,6 +114,9 @@ declare module "oro:net" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

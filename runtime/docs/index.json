@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-03-25T00:52:07+00:00",
+  "generatedAt": "2026-05-13T19:35:37+00:00",
   "kind": "docs",
-  "count": 133,
+  "count": 131,
   "sections": [
     {
       "name": "overview",
@@ -100,6 +100,11 @@
           "id": "guides/frontend-build-pipeline",
           "title": "Frontend build pipeline",
           "file": "guides/frontend-build-pipeline.md"
+        },
+        {
+          "id": "guides/native-extensions",
+          "title": "Native extensions",
+          "file": "guides/native-extensions.md"
         },
         {
           "id": "guides/mobile-targets-and-device-installs",
@@ -277,13 +282,8 @@
           "file": "javascript/overview.md"
         },
         {
-          "id": "javascript/module-index",
-          "title": "Module index",
-          "file": "javascript/module-index.md"
-        },
-        {
           "id": "javascript/all-modules",
-          "title": "All public module specifiers",
+          "title": "JavaScript API modules",
           "file": "javascript/all-modules.md"
         },
         {
@@ -350,11 +350,6 @@
           "id": "javascript/background",
           "title": "`oro:background`",
           "file": "javascript/background.md"
-        },
-        {
-          "id": "javascript/bootstrap",
-          "title": "`oro:bootstrap`",
-          "file": "javascript/bootstrap.md"
         },
         {
           "id": "javascript/buffer",
@@ -545,11 +540,6 @@
           "id": "javascript/network",
           "title": "`oro:network`",
           "file": "javascript/network.md"
-        },
-        {
-          "id": "javascript/node-esm-loader",
-          "title": "`oro:node-esm-loader`",
-          "file": "javascript/node-esm-loader.md"
         },
         {
           "id": "javascript/npm",

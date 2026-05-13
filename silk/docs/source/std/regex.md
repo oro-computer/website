@@ -62,7 +62,7 @@ export struct RegExp {
 
 impl RegExp {
   public fn empty () -> RegExp;
-  public fn compile (pattern: string, flags: string) -> std::result::Result(RegExp, CompileFailed);
+  public fn compile (pattern: string, flags: string) -> Result(RegExp, CompileFailed);
   public fn as_regexp (self: &RegExp) -> regexp;
 }
 

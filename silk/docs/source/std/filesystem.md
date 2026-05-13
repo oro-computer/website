@@ -81,13 +81,13 @@ impl FSFailed {
 
 export type FSError = FSFailed;
 
-export type FSIntResult = std::result::Result(int, FSFailed);
-export type FSI64Result = std::result::Result(i64, FSFailed);
-export type FSErrorIntResult = std::result::Result(int, FSError);
-export type FSBoolResult = std::result::Result(bool, FSError);
-export type FSBufferU8Result = std::result::Result(std::buffer::BufferU8, FSError);
-export type FSStatsResult = std::result::Result(Stats, FSError);
-export type FSStringResult = std::result::Result(std::strings::String, FSError);
+export type FSIntResult = Result(int, FSFailed);
+export type FSI64Result = Result(i64, FSFailed);
+export type FSErrorIntResult = Result(int, FSError);
+export type FSBoolResult = Result(bool, FSError);
+export type FSBufferU8Result = Result(std::buffer::BufferU8, FSError);
+export type FSStatsResult = Result(Stats, FSError);
+export type FSStringResult = Result(std::strings::String, FSError);
 
 export enum PathKind {
   RegularFile,
@@ -103,7 +103,7 @@ export enum DirEntryType {
   Other,
 }
 
-export type FSPathKindResult = std::result::Result(PathKind, FSError);
+export type FSPathKindResult = Result(PathKind, FSError);
 
 export struct Stats {
   dev: u64,
@@ -177,7 +177,7 @@ export struct File {
   fd: int,
 }
 
-export type FileResult = std::result::Result(File, FSFailed);
+export type FileResult = Result(File, FSFailed);
 
 // A read-only memory mapping (hosted baseline).
 export struct MMap {
@@ -185,7 +185,7 @@ export struct MMap {
   len: i64,
 }
 
-export type MMapResult = std::result::Result(MMap, FSFailed);
+export type MMapResult = Result(MMap, FSFailed);
 
 impl MMap {
   public fn empty () -> MMap;
@@ -270,9 +270,9 @@ export struct DirEntryView {
   kind: DirEntryType,
 }
 
-export type DirResult = std::result::Result(Dir, FSFailed);
-export type DirEntryResult = std::result::Result(DirEntry, FSFailed);
-export type DirEntryViewResult = std::result::Result(DirEntryView, FSFailed);
+export type DirResult = Result(Dir, FSFailed);
+export type DirEntryResult = Result(DirEntry, FSFailed);
+export type DirEntryViewResult = Result(DirEntryView, FSFailed);
 
 impl DirEntry {
   public fn name (self: &DirEntry) -> string;

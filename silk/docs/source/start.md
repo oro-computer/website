@@ -16,7 +16,6 @@ Silk programs are ordinary `.slk` files. A small program can look like this:
 
 ```silk
 import { println } from "std/io";
-
 fn main () -> int {
   println("hello from silk");
   return 0;

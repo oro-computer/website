@@ -2,6 +2,11 @@
 
 `oro:navigation` surfaces the Navigation API state that the runtime makes available to application code.
 
+## Related guides
+
+- [Lifecycle hooks and deep links](?p=guides/lifecycle-hooks-and-deep-links)
+- [Windows and messaging](?p=guides/windows-and-messaging)
+
 ## Examples
 
 Read the current navigation entry and listen for browser-style navigation events:
@@ -16,11 +21,6 @@ navigation.addEventListener('navigate', (event) => {
 })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -34,8 +34,9 @@ oro:navigation/navigation
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:navigation</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:navigation`
 
 ```ts
 declare module "oro:navigation" {
@@ -46,10 +47,7 @@ declare module "oro:navigation" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:navigation/navigation</code></summary>
+#### `oro:navigation/navigation`
 
 ```ts
 declare module "oro:navigation/navigation" {
@@ -57,6 +55,9 @@ declare module "oro:navigation/navigation" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

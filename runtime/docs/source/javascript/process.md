@@ -2,6 +2,10 @@
 
 `oro:process` exposes runtime process state, env access, signals, and scheduling helpers.
 
+## Related guides
+
+- [Configure your runtime project](?p=guides/configure-your-runtime-project)
+
 ## Examples
 
 Inspect process state and schedule work on the next tick:
@@ -17,11 +21,6 @@ nextTick(() => {
 })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -35,8 +34,9 @@ oro:process/signal
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:process</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:process`
 
 ```ts
 declare module "oro:process" {
@@ -193,10 +193,7 @@ declare module "oro:process" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:process/signal</code></summary>
+#### `oro:process/signal`
 
 ```ts
 declare module "oro:process/signal" {
@@ -357,6 +354,9 @@ declare module "oro:process/signal" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

@@ -2,6 +2,10 @@
 
 `oro:assert` provides Node-compatible assertion helpers for tests, runtime checks, and invariants.
 
+## Related guides
+
+- [Testing and diagnostics](?p=guides/testing-and-diagnostics)
+
 ## Examples
 
 Use assertion helpers for runtime invariants or tests:
@@ -16,11 +20,6 @@ strictEqual(payload.tags.length, 2)
 deepEqual(payload.tags, ['runtime', 'docs'])
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -33,8 +32,9 @@ oro:assert
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:assert</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:assert`
 
 ```ts
 declare module "oro:assert" {
@@ -66,6 +66,9 @@ declare module "oro:assert" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

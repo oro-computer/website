@@ -18,11 +18,6 @@ await archive.finalize()
 console.log(await archive.entries())
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -35,8 +30,9 @@ oro:tar
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:tar</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:tar`
 
 ```ts
 declare module "oro:tar" {
@@ -313,6 +309,9 @@ declare module "oro:tar" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

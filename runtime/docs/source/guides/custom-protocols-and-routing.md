@@ -3,17 +3,60 @@
 Some apps need more than a single `https://`-style origin. Custom protocols let you give internal resources a stable
 shape and route them through service-worker logic instead of hard-coding filesystem paths or special-case branches in UI code.
 
-## 1) Declare the protocols you want the runtime to treat as app-safe
+## 1) Declare the protocol and enable service workers
+
+```toml
+[permissions]
+allow_service_worker = true
+
+[webview]
+url_protocols = "notes"
+protocol-handlers = "notes"
+```
+
+`url_protocols` teaches the JavaScript URL shim that `notes:` is part of the app’s URL model. `protocol-handlers`
+registers the scheme with the runtime protocol-handler table so navigation and fetch routing can treat it as app-owned.
+
+Use the hyphenated `protocol-handlers` TOML key for current Runtime builds; it maps to the flattened runtime key
+`webview_protocol-handlers`.
+
+## 2) Ship and register a service worker for that scheme
+
+`copy-map.toml`:
+
+```toml
+"./src/index.html" = "index.html"
+"./src/main.js" = "main.js"
+"./src/sw.js" = "sw.js"
+```
+
+`src/main.js`:
+
+```js
+if ('serviceWorker' in navigator) {
+  await navigator.serviceWorker.register('/sw.js', {
+    scope: '/',
+    scheme: 'notes',
+  })
+  await navigator.serviceWorker.ready
+}
+```
+
+The `scheme` option is the important part. Without it, the worker is registered for the default runtime scheme and will
+not receive `notes:` requests.
+
+If you want the runtime to bind the script from config instead of registering it from JavaScript, use a per-scheme
+handler entry instead of the scalar `protocol-handlers` list:
 
 ```toml
 [webview]
 url_protocols = "notes"
-protocol_handlers = "notes"
+
+[webview.protocol-handlers]
+notes = "/sw.js"
 ```
 
-This tells the runtime that `notes:` is part of the app’s URL model rather than an arbitrary external scheme.
-
-## 2) Route the protocol in a service worker
+## 3) Route the protocol in the service worker
 
 `src/sw.js`:
 
@@ -32,11 +75,18 @@ self.addEventListener('fetch', (event) => {
 })
 ```
 
-Now any request for `notes://123` can be handled in a controlled, testable place.
+Now a request for `notes://local/123` can be handled in a controlled, testable place. Use a stable host such as
+`local` when you want the identifier in the pathname; with `notes://123`, `123` is the URL host, not the path.
 
-## 3) Inspect the registered handler from app code
+```js
+const response = await fetch('notes://local/123')
+const note = await response.json()
+console.log(note.noteId)
+```
 
-`oro:protocol-handlers` lets you ask the runtime which service worker is currently bound to a scheme:
+## 4) Inspect the registered handler from app code
+
+`oro:protocol-handlers` lets you ask the runtime which service-worker registration is currently bound to a scheme:
 
 ```js
 import { getServiceWorker } from 'oro:protocol-handlers'
@@ -47,7 +97,7 @@ console.log(worker)
 
 That is useful when debugging route ownership and protocol bootstrapping.
 
-## 4) Use protocol handlers for clarity, not novelty
+## 5) Use protocol handlers for clarity, not novelty
 
 Good uses:
 
@@ -61,7 +111,7 @@ Bad uses:
 - hiding business logic behind clever URL tricks,
 - inventing new schemes when a normal route would do.
 
-## 5) Pair protocols with explicit window creation
+## 6) Pair protocols with explicit window creation
 
 If a secondary window needs the same protocol support, create it with the matching handler list:
 
@@ -76,7 +126,9 @@ await application.createWindow({
 })
 ```
 
-That keeps the routing model consistent across windows instead of only working in the primary one.
+That writes the window-local `webview_protocol-handlers_notes` config entry. The secondary window still needs a
+`navigator.serviceWorker.register('/sw.js', { scope: '/', scheme: 'notes' })` call in its startup path if it must own
+the route itself.
 
 ## Next
 

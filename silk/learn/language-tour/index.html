@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Language Tour · Learn Silk</title>
+    <meta
+      name="description"
+      content="Chapter 2 of Learn Silk: read bindings, functions, control flow, optionals, and small result-oriented APIs."
+    />
+    <meta name="theme-color" content="#11100f" />
+    <link rel="icon" type="image/png" href="../../../docs/branding/assets/logo-icon-small.png" sizes="32x32" />
+    <link rel="stylesheet" href="../../../assets/site.css" />
+    <link rel="stylesheet" href="../../../assets/highlight/highlight.css" />
+    <script src="../../../assets/highlight/highlight.min.js" defer></script>
+    <script src="../../../assets/highlight/languages/bash.min.js" defer></script>
+    <script src="../../../assets/highlight/languages/silk.js" defer></script>
+  </head>
+  <body class="site-dark product-page learn-page learn-lesson-page silk-learn-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-top" id="top">
+      <div class="container">
+        <div class="site-header">
+          <a class="brand" href="../../../">
+            <img
+              class="brand-mark"
+              src="../../../docs/branding/assets/logo-icon.png"
+              alt="Oro Computer logo"
+              width="32"
+              height="32"
+            />
+            <span class="brand-name">oro</span>
+          </a>
+          <nav class="nav" aria-label="Primary navigation">
+            <a href="../../../">Technology</a>
+            <a href="../../../blog/">Blog</a>
+            <a href="../../../docs/">Docs</a>
+          </nav>
+          <div class="site-subnav" aria-label="Silk section navigation">
+            <div class="site-subnav-label">Inside</div>
+            <div class="site-subnav-parent">Silk</div>
+            <nav class="site-subnav-links" aria-label="Silk pages">
+              <a href="../../">Overview</a>
+              <a href="../" aria-current="page">Learn</a>
+              <a href="../../docs/">Docs</a>
+              <a href="../../spec/2026/">Spec</a>
+              <a href="../../wiki/">Wiki</a>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="section">
+        <div class="container">
+          <article class="learn-lesson-shell">
+            <div class="learn-lesson-bar">
+              <a class="learn-lesson-menu" href="../" aria-label="Back to Learn Silk"></a>
+              <div class="learn-lesson-title">
+                <img src="../../../docs/branding/assets/logo-icon-small.png" alt="" width="30" height="30" />
+                <div>
+                  <strong>Chapter 2</strong>
+                  <span>Language tour</span>
+                </div>
+              </div>
+              <nav class="learn-lesson-nav" aria-label="Lesson navigation">
+                <a href="../getting-started/">Previous</a>
+                <span>2 / 5</span>
+                <a href="../modules-and-packages/">Next</a>
+              </nav>
+            </div>
+
+            <header class="learn-lesson-heading">
+              <div class="learn-lesson-number">2</div>
+              <div>
+                <small>Chapter 2</small>
+                <h1>Language tour</h1>
+              </div>
+            </header>
+
+            <div class="prose learn-prose">
+              <p>
+                This chapter expands the first program into the source shapes you will read most often: explicit bindings,
+                functions, branchy control flow, optionals, and a small result-style return type.
+              </p>
+
+              <h2>Make values readable</h2>
+              <p>Use explicit types at useful boundaries and mark mutation where it happens.</p>
+
+              <div class="learn-code" data-code-block>
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/tour.slk</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-silk">package tour;
+
+fn accumulate (limit: int) -> int {
+  let mut total: int = 0;
+  let mut i: int = 0;
+
+  while i < limit {
+    total = total + i;
+    i = i + 1;
+  }
+
+  return total;
+}</code></pre>
+              </div>
+
+              <h2>Use small functions for decisions</h2>
+              <p>Return types make the boundary visible even when the body is simple.</p>
+
+              <div class="learn-code" data-code-block>
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/tour.slk</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-silk">fn classify (score: int) -> string {
+  if score >= 90 { return "excellent"; }
+  if score >= 70 { return "steady"; }
+  if score >= 50 { return "watch"; }
+  return "blocked";
+}</code></pre>
+              </div>
+
+              <h2>Model absence with an optional</h2>
+              <p><code>T?</code> is the right shape when missing is normal and no extra error detail is needed.</p>
+
+              <div class="learn-code" data-code-block>
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/tour.slk</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-silk">fn env_label (name: string) -> string? {
+  if name == "prod" { return Some("production"); }
+  if name == "dev" { return Some("development"); }
+  return None;
+}
+
+fn label_or_default (name: string) -> string {
+  return env_label(name) ?? "unknown";
+}</code></pre>
+              </div>
+
+              <h2>Check the module</h2>
+              <p>Keep using the same quick feedback loop as the first chapter.</p>
+
+              <div class="learn-code" data-code-block data-code-kind="terminal">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">Terminal</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy command"></button>
+                </div>
+                <pre><code class="language-bash">silk check src/tour.slk
+silk test src/tour.slk</code></pre>
+              </div>
+
+              <div class="learn-callout">
+                <p>
+                  The point is not to memorize every construct here. The habit is to read the boundary first: package,
+                  imports, function signatures, return types, and optional/result shapes.
+                </p>
+              </div>
+
+              <h2>What changed</h2>
+              <ul>
+                <li><code>let mut</code> made mutation visible.</li>
+                <li>Function signatures carried the important type information.</li>
+                <li><code>string?</code> represented absence without inventing an error path.</li>
+                <li><code>??</code> handled the optional fallback at the call site.</li>
+              </ul>
+
+              <div class="learn-complete">
+                <h2>Chapter complete</h2>
+                <p>Next, split useful code into package modules and import it deliberately.</p>
+                <a class="button button-primary" href="../modules-and-packages/">Continue to modules and packages</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-inner">
+          <strong>Learn Silk</strong>
+          <span>&copy; <span data-year>2026</span> Oro Computer.</span>
+        </div>
+      </div>
+    </footer>
+    <script src="../../../assets/site.js" defer></script>
+  </body>
+</html>

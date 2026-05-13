@@ -19,11 +19,6 @@ ref(resource)
 unref(resource)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -36,8 +31,9 @@ oro:gc
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:gc</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:gc`
 
 ```ts
 declare module "oro:gc" {
@@ -117,6 +113,9 @@ declare module "oro:gc" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

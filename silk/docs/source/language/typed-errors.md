@@ -35,7 +35,7 @@ failures such as:
 - parsing failures,
 - I/O failures.
 
-Those should typically be modeled as ordinary values using `std::result::Result`
+Those should typically be modeled as ordinary values using `Result`
 or optionals (`T?`) so callers can handle them and continue normal execution.
 
 See:
@@ -233,11 +233,11 @@ match (inspect_issues()) {
 ### `match` statements over Result-like values (recoverable)
 
 The `match` **statement** form can also be used to destructure common
-recoverable result shapes such as `std::result::Result(T, E)`.
+recoverable result shapes such as `Result(T, E)`.
 
 When the scrutinee expression has a recoverable result type such as:
 
-- `std::result::Result(T, E)` (an `enum` with `Ok(T)` and `Err(E)` variants), or
+- `Result(T, E)` (an `enum` with `Ok(T)` and `Err(E)` variants), or
 - a “Result-like” struct with fields:
  - `value: T?`
  - `err: E?` where `E` is an `error` type,

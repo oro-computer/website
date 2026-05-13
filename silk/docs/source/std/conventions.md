@@ -111,13 +111,13 @@ Public owning/resource APIs must make cleanup obvious and safe.
 ## Errors
 
 Silk supports both typed errors ([typed errors](?p=language/typed-errors)) and
-recoverable error values (`T?` and `std::result::Result(T, E)`). Public `std::`
+recoverable error values (`T?` and `Result(T, E)`). Public `std::`
 APIs should follow these rules:
 
 - Use `T?` when “absence” is the only meaningful error case and no additional
  error information is required (e.g. `pop() -> T?`).
 - Use a result type when callers need to distinguish multiple error causes.
- The design target is `std::result::Result(T, E)` (see [result](?p=std/result)),
+ The design target is `Result(T, E)` (see [result](?p=std/result)),
  with `Ok(T)` / `Err(E)` cases.
 - Prefer that the **primary** API name returns `Result(...)` / optional error,
  rather than exporting parallel `*_result` variants.

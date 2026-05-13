@@ -41,7 +41,7 @@ amalgamation source:
 
 ## Error Model
 
-`std::sqlite` uses `std::result::Result(T, E)` and optional-error returns for
+`std::sqlite` uses `Result(T, E)` and optional-error returns for
 fallible operations that do not return a value.
 
 The stable error value is `SqliteFailed`:

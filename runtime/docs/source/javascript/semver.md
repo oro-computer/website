@@ -14,11 +14,6 @@ console.log(compare('1.4.0', '1.3.9'))
 console.log(gt('2.0.0', '1.9.0'))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -31,8 +26,9 @@ oro:semver
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:semver</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:semver`
 
 ```ts
 declare module "oro:semver" {
@@ -214,6 +210,9 @@ declare module "oro:semver" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

@@ -2,6 +2,11 @@
 
 `oro:service-worker/*` exposes the service-worker environment, lifecycle objects, and helpers.
 
+## Related guides
+
+- [Offline-first with service workers](?p=guides/offline-first-with-service-workers)
+- [Custom protocols and routing](?p=guides/custom-protocols-and-routing)
+
 ## Examples
 
 Use the runtime service-worker helpers from inside a service-worker scope:
@@ -15,11 +20,6 @@ if (env) {
   })
 }
 ```
-
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -47,8 +47,9 @@ oro:service-worker/worker
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:service-worker</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:service-worker`
 
 ```ts
 declare module "oro:service-worker" {
@@ -74,10 +75,7 @@ declare module "oro:service-worker" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/clients</code></summary>
+#### `oro:service-worker/clients`
 
 ```ts
 declare module "oro:service-worker/clients" {
@@ -109,10 +107,7 @@ declare module "oro:service-worker/clients" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/container</code></summary>
+#### `oro:service-worker/container`
 
 ```ts
 declare module "oro:service-worker/container" {
@@ -150,10 +145,7 @@ declare module "oro:service-worker/container" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/context</code></summary>
+#### `oro:service-worker/context`
 
 ```ts
 declare module "oro:service-worker/context" {
@@ -217,10 +209,7 @@ declare module "oro:service-worker/context" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/debug</code></summary>
+#### `oro:service-worker/debug`
 
 ```ts
 declare module "oro:service-worker/debug" {
@@ -229,10 +218,7 @@ declare module "oro:service-worker/debug" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/env</code></summary>
+#### `oro:service-worker/env`
 
 ```ts
 declare module "oro:service-worker/env" {
@@ -351,10 +337,7 @@ declare module "oro:service-worker/env" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/events</code></summary>
+#### `oro:service-worker/events`
 
 ```ts
 declare module "oro:service-worker/events" {
@@ -515,10 +498,7 @@ declare module "oro:service-worker/events" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/global</code></summary>
+#### `oro:service-worker/global`
 
 ```ts
 declare module "oro:service-worker/global" {
@@ -547,10 +527,7 @@ declare module "oro:service-worker/global" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/init</code></summary>
+#### `oro:service-worker/init`
 
 ```ts
 declare module "oro:service-worker/init" {
@@ -590,10 +567,7 @@ declare module "oro:service-worker/init" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/instance</code></summary>
+#### `oro:service-worker/instance`
 
 ```ts
 declare module "oro:service-worker/instance" {
@@ -622,10 +596,7 @@ declare module "oro:service-worker/instance" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/notification</code></summary>
+#### `oro:service-worker/notification`
 
 ```ts
 declare module "oro:service-worker/notification" {
@@ -639,10 +610,7 @@ declare module "oro:service-worker/notification" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/registration</code></summary>
+#### `oro:service-worker/registration`
 
 ```ts
 declare module "oro:service-worker/registration" {
@@ -666,10 +634,7 @@ declare module "oro:service-worker/registration" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/state</code></summary>
+#### `oro:service-worker/state`
 
 ```ts
 declare module "oro:service-worker/state" {
@@ -679,10 +644,7 @@ declare module "oro:service-worker/state" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/storage</code></summary>
+#### `oro:service-worker/storage`
 
 ```ts
 declare module "oro:service-worker/storage" {
@@ -1014,10 +976,7 @@ declare module "oro:service-worker/storage" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/worker</code></summary>
+#### `oro:service-worker/worker`
 
 ```ts
 declare module "oro:service-worker/worker" {
@@ -1041,6 +1000,9 @@ declare module "oro:service-worker/worker" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

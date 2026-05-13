@@ -4,6 +4,10 @@
 
 If you want the CLI-hosted server for a workspace, see: [`oroc mcp`](?p=cli/mcp).
 
+## Related guides
+
+- [MCP and agent automation](?p=guides/mcp-and-agent-automation)
+
 ## Register a tool
 
 ```js
@@ -53,8 +57,9 @@ oro:mcp/index
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:mcp</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:mcp`
 
 ```ts
 declare module "oro:mcp" {
@@ -64,10 +69,7 @@ declare module "oro:mcp" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:mcp/index</code></summary>
+#### `oro:mcp/index`
 
 ```ts
 declare module "oro:mcp/index" {
@@ -323,6 +325,8 @@ declare module "oro:mcp/index" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

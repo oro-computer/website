@@ -16,8 +16,8 @@ ORDER = [
     "Exported API",
     "Examples",
     "Considerations",
-    "See also",
     "Design goals",
+    "See also",
 ]
 
 BANNED_HEADINGS = (

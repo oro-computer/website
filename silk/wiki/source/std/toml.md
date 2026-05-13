@@ -12,22 +12,24 @@ Canonical doc: [toml](?p=std/toml).
 ## Importing
 
 ```silk
-import std::toml;
+import toml from "std/toml";
+import { Document } from "std/toml";
 ```
 
 ## Exported API
 
-- `Document.parse(input: string) -> std::toml::ParseResult` (borrowed views into `input`)
-- `Document.parse_owned(input: string) -> std::toml::ParseResult` (owned copies)
+- `Document.parse(input: string) -> toml::ParseResult` (borrowed views into `input`)
+- `Document.parse_owned(input: string) -> toml::ParseResult` (owned copies)
 - `Document.table_get(table: i64, key: string) -> i64?`
 - `Document.as_string(id: i64) -> string?`
-- `std::toml::int_as_i64(doc: &Document, id: i64) -> i64?`
+- `toml::int_as_i64(doc: &Document, id: i64) -> i64?`
 
 ## Examples
 
 ### Example: parse + query
 ```silk
-import std::toml;
+import toml from "std/toml";
+import { Document } from "std/toml";
 
 fn main () -> int {
   let mut doc: Document = Document{};
@@ -64,7 +66,7 @@ answer = 42
         return 6;
       }
       let answer_id: i64 = answer_id_opt ?? 0 as i64;
-      let answer_opt = std::toml::int_as_i64(doc, answer_id);
+      let answer_opt = toml::int_as_i64(doc, answer_id);
       if answer_opt == None {
         doc.drop();
         return 7;

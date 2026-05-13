@@ -18,7 +18,7 @@ Choose the layer that matches your goal:
 ## Minimal shape
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 fn main () -> int {
   println("hello from silk");

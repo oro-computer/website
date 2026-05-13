@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Desktop Integrations · Learn Oro Runtime</title>
+    <meta
+      name="description"
+      content="Chapter 5 of Learn Oro Runtime: add notifications, clipboard actions, and a native application menu."
+    />
+    <meta name="theme-color" content="#11100f" />
+    <link rel="icon" type="image/png" href="../../../docs/branding/assets/logo-icon-small.png" sizes="32x32" />
+    <link rel="stylesheet" href="../../../assets/site.css" />
+    <link rel="stylesheet" href="../../../assets/highlight/highlight.css" />
+    <script src="../../../assets/highlight/highlight.min.js" defer></script>
+    <script src="../../../assets/highlight/languages/javascript.min.js" defer></script>
+    <script src="../../../assets/highlight/languages/toml.js" defer></script>
+  </head>
+  <body class="site-dark product-page learn-page learn-lesson-page runtime-learn-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-top" id="top">
+      <div class="container">
+        <div class="site-header">
+          <a class="brand" href="../../../">
+            <img
+              class="brand-mark"
+              src="../../../docs/branding/assets/logo-icon.png"
+              alt="Oro Computer logo"
+              width="32"
+              height="32"
+            />
+            <span class="brand-name">oro</span>
+          </a>
+          <nav class="nav" aria-label="Primary navigation">
+            <a href="../../../">Technology</a>
+            <a href="../../../blog/">Blog</a>
+            <a href="../../../docs/">Docs</a>
+          </nav>
+          <div class="site-subnav" aria-label="Runtime section navigation">
+            <div class="site-subnav-label">Inside</div>
+            <div class="site-subnav-parent">Runtime</div>
+            <nav class="site-subnav-links" aria-label="Runtime pages">
+              <a href="../../">Overview</a>
+              <a href="../" aria-current="page">Learn</a>
+              <a href="../../docs/">Docs</a>
+              <a href="../../docs/?p=javascript/overview">JavaScript APIs</a>
+              <a href="../../docs/?p=cli/oroc">CLI</a>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="section">
+        <div class="container">
+          <article class="learn-lesson-shell">
+            <div class="learn-lesson-bar">
+              <a class="learn-lesson-menu" href="../" aria-label="Back to Learn Runtime"></a>
+              <div class="learn-lesson-title">
+                <img src="../../../docs/branding/assets/logo-icon-small.png" alt="" width="30" height="30" />
+                <div>
+                  <strong>Chapter 5</strong>
+                  <span>Desktop integrations</span>
+                </div>
+              </div>
+              <nav class="learn-lesson-nav" aria-label="Lesson navigation">
+                <a href="../windows-and-messaging/">Previous</a>
+                <span>5 / 5</span>
+                <a href="../../docs/?p=guides/secure-storage-and-sessions">Docs</a>
+              </nav>
+            </div>
+
+            <header class="learn-lesson-heading">
+              <div class="learn-lesson-number">5</div>
+              <div>
+                <small>Chapter 5</small>
+                <h1>Desktop integrations</h1>
+              </div>
+            </header>
+
+            <div class="prose learn-prose">
+              <p>
+                Native app behavior should stay explicit in the source. This chapter adds permissions, notifications,
+                clipboard access, and a small application menu without leaving the web programming model.
+              </p>
+
+              <h2>Enable the capabilities</h2>
+              <p>Permissions belong in configuration so reviewers can see what the app asks the host to do.</p>
+
+              <div class="learn-code" data-code-block>
+                <div class="learn-code-header">
+                  <span class="learn-code-title">oro.toml</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-toml">[permissions]
+allow_notifications = true
+allow_clipboard = true</code></pre>
+              </div>
+
+              <h2>Notify when work is saved</h2>
+              <p>Ask for permission once, then send notifications for user-visible outcomes.</p>
+
+              <div class="learn-code" data-code-block>
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/main.js</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-javascript">import Notification, { showNotification } from 'oro:notification'
+
+const permission = await Notification.requestPermission()
+
+async function notifySaved(note) {
+  if (permission !== 'granted') return
+
+  await showNotification('Field note saved', {
+    body: note.title,
+  })
+}</code></pre>
+              </div>
+
+              <h2>Copy a useful summary</h2>
+              <p>Clipboard actions are best when they match a clear user command.</p>
+
+              <div class="learn-code" data-code-block>
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/main.js</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-javascript">import { writeText, canWriteText } from 'oro:clipboard'
+
+async function copySummary(note) {
+  if (!canWriteText()) return
+
+  await writeText(`${note.title}\n${note.updatedAt}`)
+}</code></pre>
+              </div>
+
+              <h2>Add a menu command</h2>
+              <p>Desktop menus should mirror high-frequency UI actions, not duplicate every button.</p>
+
+              <div class="learn-code" data-code-block>
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/main.js</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-javascript">import application from 'oro:application'
+
+await application.setSystemMenu({
+  index: 0,
+  value: `
+    File:
+      New Note: n + Meta;
+      Quit: q + Meta;
+    Edit:
+      Copy Summary: c + Meta;
+  `,
+})</code></pre>
+              </div>
+
+              <div class="learn-callout">
+                <p>
+                  The app is still web code. Runtime modules mark the places where the app crosses into host behavior,
+                  which keeps native access readable during review.
+                </p>
+              </div>
+
+              <h2>What changed</h2>
+              <ul>
+                <li>Permissions moved into reviewed config.</li>
+                <li>Notifications became tied to saved work.</li>
+                <li>Clipboard access became an explicit command.</li>
+                <li>The native menu matched the app's repeated actions.</li>
+              </ul>
+
+              <div class="learn-complete">
+                <h2>Chapter complete</h2>
+                <p>You now have the core Runtime learning path. Continue into the docs for storage, service workers, and packaging.</p>
+                <a class="button button-primary" href="../../docs/?p=guides/secure-storage-and-sessions">Continue in docs</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-inner">
+          <strong>Learn Runtime</strong>
+          <span>&copy; <span data-year>2026</span> Oro Computer.</span>
+        </div>
+      </div>
+    </footer>
+    <script src="../../../assets/site.js" defer></script>
+  </body>
+</html>

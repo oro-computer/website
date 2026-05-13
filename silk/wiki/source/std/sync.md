@@ -12,7 +12,7 @@ Canonical doc: [sync](?p=std/sync).
 ## Importing
 
 ```silk
-import std::sync;
+import sync from "std/sync";
 ```
 
 ## Examples

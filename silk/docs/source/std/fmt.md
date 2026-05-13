@@ -145,7 +145,7 @@ import { println } from "std/io";
 import format from "std/fmt";
 import fmt from "std/fmt";
 import strings from "std/strings";
-type StringAllocResult = std::result::Result(std::strings::String, std::fmt::Error);
+type StringAllocResult = Result(std::strings::String, std::fmt::Error);
 
 fn main () -> int {
   const a = 1;
@@ -179,7 +179,7 @@ fn main () -> int {
 Signature:
 
 ```silk
-export default fn format (fmt: string, ...args: Arg) -> std::result::Result(std::strings::String, std::fmt::Error);
+export default fn format (fmt: string, ...args: Arg) -> Result(std::strings::String, std::fmt::Error);
 ```
 
 Notes (Supported forms):

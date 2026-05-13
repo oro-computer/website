@@ -36,7 +36,7 @@ API is not present in mbedTLS 4.x).
 ## Exported API
 ### Error model
 
-The current `std::tls` API uses `std::result::Result(T, E)` and a stable
+The current `std::tls` API uses `Result(T, E)` and a stable
 `TLSFailed` error value instead of exposing raw mbedTLS error codes.
 
 TLS I/O is transport-driven: when using a non-blocking transport (such as
@@ -73,8 +73,8 @@ export error TLSFailed {
   code: int,
 }
 
-export type TLSIntResult = std::result::Result(int, TLSFailed);
-export type SessionResult = std::result::Result(Session, TLSFailed);
+export type TLSIntResult = Result(int, TLSFailed);
+export type SessionResult = Result(Session, TLSFailed);
 ```
 
 ### `Session`

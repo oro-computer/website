@@ -22,7 +22,7 @@ export struct Boolean {
 
 impl Boolean {
   public fn from_bool (value: bool) -> Boolean;
-  public fn parse (value: string) -> std::result::Result(Boolean, ParseFailed);
+  public fn parse (value: string) -> Result(Boolean, ParseFailed);
   public fn as_bool (self: &Boolean) -> bool;
   public fn is_true (self: &Boolean) -> bool;
   public fn is_false (self: &Boolean) -> bool;

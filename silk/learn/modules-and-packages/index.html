@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Modules and Packages · Learn Silk</title>
+    <meta
+      name="description"
+      content="Chapter 3 of Learn Silk: create a package root, export a small module, and import it from a downstream program."
+    />
+    <meta name="theme-color" content="#11100f" />
+    <link rel="icon" type="image/png" href="../../../docs/branding/assets/logo-icon-small.png" sizes="32x32" />
+    <link rel="stylesheet" href="../../../assets/site.css" />
+    <link rel="stylesheet" href="../../../assets/highlight/highlight.css" />
+    <script src="../../../assets/highlight/highlight.min.js" defer></script>
+    <script src="../../../assets/highlight/languages/bash.min.js" defer></script>
+    <script src="../../../assets/highlight/languages/silk.js" defer></script>
+    <script src="../../../assets/highlight/languages/toml.js" defer></script>
+  </head>
+  <body class="site-dark product-page learn-page learn-lesson-page silk-learn-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-top" id="top">
+      <div class="container">
+        <div class="site-header">
+          <a class="brand" href="../../../">
+            <img
+              class="brand-mark"
+              src="../../../docs/branding/assets/logo-icon.png"
+              alt="Oro Computer logo"
+              width="32"
+              height="32"
+            />
+            <span class="brand-name">oro</span>
+          </a>
+          <nav class="nav" aria-label="Primary navigation">
+            <a href="../../../">Technology</a>
+            <a href="../../../blog/">Blog</a>
+            <a href="../../../docs/">Docs</a>
+          </nav>
+          <div class="site-subnav" aria-label="Silk section navigation">
+            <div class="site-subnav-label">Inside</div>
+            <div class="site-subnav-parent">Silk</div>
+            <nav class="site-subnav-links" aria-label="Silk pages">
+              <a href="../../">Overview</a>
+              <a href="../" aria-current="page">Learn</a>
+              <a href="../../docs/">Docs</a>
+              <a href="../../spec/2026/">Spec</a>
+              <a href="../../wiki/">Wiki</a>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="section">
+        <div class="container">
+          <article class="learn-lesson-shell">
+            <div class="learn-lesson-bar">
+              <a class="learn-lesson-menu" href="../" aria-label="Back to Learn Silk"></a>
+              <div class="learn-lesson-title">
+                <img src="../../../docs/branding/assets/logo-icon-small.png" alt="" width="30" height="30" />
+                <div>
+                  <strong>Chapter 3</strong>
+                  <span>Modules and packages</span>
+                </div>
+              </div>
+              <nav class="learn-lesson-nav" aria-label="Lesson navigation">
+                <a href="../language-tour/">Previous</a>
+                <span>3 / 5</span>
+                <a href="../types-and-optionals/">Next</a>
+              </nav>
+            </div>
+
+            <header class="learn-lesson-heading">
+              <div class="learn-lesson-number">3</div>
+              <div>
+                <small>Chapter 3</small>
+                <h1>Modules and packages</h1>
+              </div>
+            </header>
+
+            <div class="prose learn-prose">
+              <p>
+                A Silk package is a named root with source files, public exports, and a manifest. Imports tell readers
+                which package or local file supplies each symbol.
+              </p>
+
+              <h2>Create a package root</h2>
+              <p>Keep implementation, examples, and tests in predictable folders.</p>
+
+              <div class="learn-code" data-code-block data-code-kind="terminal">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">Terminal</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy command"></button>
+                </div>
+                <pre><code class="language-bash">mkdir -p logger/src logger/examples logger/tests
+cd logger</code></pre>
+              </div>
+
+              <div class="learn-code" data-code-block>
+                <div class="learn-code-header">
+                  <span class="learn-code-title">silk.toml</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-toml">[package]
+name = "logger"
+version = "0.1.0"
+description = "A small Silk logging package."
+
+[sources]
+root = "src/lib.slk"</code></pre>
+              </div>
+
+              <h2>Export the package surface</h2>
+              <p>The source namespace can be descriptive while downstream imports use the manifest package name.</p>
+
+              <div class="learn-code" data-code-block>
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/lib.slk</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-silk">package acme::logger;
+
+import { println } from "std/io";
+
+export enum Level {
+  Info,
+  Warn,
+  Error,
+}
+
+export fn write (level: Level, message: string) -> void {
+  match (level) {
+    Level::Info => {
+      println("[info] {s}", message);
+    },
+    Level::Warn => {
+      println("[warn] {s}", message);
+    },
+    Level::Error => {
+      println("[error] {s}", message);
+    },
+  }
+}</code></pre>
+              </div>
+
+              <h2>Import from an example</h2>
+              <p>Quoted imports are the everyday form for stdlib, local files, and package dependencies.</p>
+
+              <div class="learn-code" data-code-block>
+                <div class="learn-code-header">
+                  <span class="learn-code-title">examples/main.slk</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-silk">package logger_example;
+
+import logger from "logger";
+
+fn main () -> int {
+  logger::write(logger::Level::Info, "package import works");
+  return 0;
+}</code></pre>
+              </div>
+
+              <h2>Check the module set</h2>
+              <p>Compile commands load the files and packages needed for that build.</p>
+
+              <div class="learn-code" data-code-block data-code-kind="terminal">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">Terminal</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy command"></button>
+                </div>
+                <pre><code class="language-bash">silk check src/lib.slk examples/main.slk
+silk build examples/main.slk -o build/logger-example</code></pre>
+              </div>
+
+              <div class="learn-callout">
+                <p>
+                  Prefer quoted imports for application and package code. Direct paths such as
+                  <code>import acme::logger::write;</code> are useful later for ABI-oriented definitions.
+                </p>
+              </div>
+
+              <h2>What changed</h2>
+              <ul>
+                <li><code>silk.toml</code> named the reusable package root.</li>
+                <li><code>export</code> marked the public surface.</li>
+                <li><code>import logger from "logger";</code> bound a downstream namespace.</li>
+                <li>The example proved the package boundary without exposing private files.</li>
+              </ul>
+
+              <div class="learn-complete">
+                <h2>Chapter complete</h2>
+                <p>Next, make absence and data shape choices visible in the type system.</p>
+                <a class="button button-primary" href="../types-and-optionals/">Continue to types and optionals</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-inner">
+          <strong>Learn Silk</strong>
+          <span>&copy; <span data-year>2026</span> Oro Computer.</span>
+        </div>
+      </div>
+    </footer>
+    <script src="../../../assets/site.js" defer></script>
+  </body>
+</html>

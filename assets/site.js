@@ -43,6 +43,32 @@
     }
   }
 
+  function initCodeCopy(root = document) {
+    const scope = root && "querySelectorAll" in root ? root : document;
+    const buttons = Array.from(scope.querySelectorAll("[data-copy-code]"));
+    for (const button of buttons) {
+      if (button.dataset.copyInit === "true") continue;
+      button.dataset.copyInit = "true";
+
+      button.addEventListener("click", async () => {
+        const block = button.closest("[data-code-block]");
+        const code = block?.querySelector?.("pre code");
+        const text = code?.textContent || "";
+        const ok = await writeClipboard(text);
+        const previousLabel = button.getAttribute("aria-label") || "Copy code";
+        button.dataset.copyState = ok ? "copied" : "failed";
+        button.setAttribute("aria-label", ok ? "Copied" : "Copy failed");
+        globalThis.setTimeout(() => {
+          delete button.dataset.copyState;
+          button.setAttribute("aria-label", previousLabel);
+        }, 1100);
+      });
+    }
+  }
+
+  globalThis.oroInitCodeCopy = initCodeCopy;
+  initCodeCopy(document);
+
   function getSiteRootUrl() {
     const brand = document.querySelector("a.brand[href]");
     if (brand && brand.href) {
@@ -90,15 +116,24 @@
     return new URL("llms.txt", root).toString();
   }
 
+  function shouldShowAskAiMenu() {
+    const body = document.body;
+    const path = String(globalThis.location.pathname || "");
+    if (body?.dataset?.askAi === "true") return true;
+    if (body?.classList?.contains("docs-page")) return true;
+    if (body?.classList?.contains("docs-landing-page")) return true;
+    return /(^|\/)docs(\/|$)/.test(path);
+  }
+
   function initAskAiMenu() {
-    if (document.body?.dataset?.askAi !== "true") return;
+    if (!shouldShowAskAiMenu()) return;
 
     const nav = document.querySelector(".nav");
     if (!nav) return;
     if (nav.querySelector("[data-ask-ai]")) return;
 
     const menu = document.createElement("details");
-    menu.className = "menu";
+    menu.className = "menu ask-ai-menu";
     menu.dataset.askAi = "true";
 
     const summary = document.createElement("summary");
@@ -152,7 +187,7 @@
 
     const hint = document.createElement("div");
     hint.className = "menu-hint";
-    hint.textContent = "Uses the page’s Markdown when available.";
+    hint.textContent = "Uses page Markdown when available.";
 
     panel.appendChild(chatgpt);
     panel.appendChild(claude);
@@ -162,7 +197,6 @@
     panel.appendChild(sep());
     panel.appendChild(llms);
     panel.appendChild(hint);
-
     menu.appendChild(panel);
 
     const primaryButton = nav.querySelector(".button.button-primary");
@@ -186,7 +220,6 @@
       const target = ctx.markdownUrl || ctx.pageUrl;
       chatgpt.href = buildChatGPTUrl(target);
       claude.href = buildClaudeUrl(target);
-
       llms.href = ctx.llmsUrl;
 
       const hasMd = Boolean(ctx.markdownUrl);
@@ -225,7 +258,6 @@
       menu.open = false;
     });
 
-    // Close when clicking outside or pressing escape.
     document.addEventListener("click", (event) => {
       if (!menu.open) return;
       const t = event.target;
@@ -238,7 +270,6 @@
       if (event.key === "Escape") menu.open = false;
     });
 
-    // Keep links current as docs viewers re-render.
     globalThis.addEventListener("oro:page-markdown", updateMenu);
     updateMenu();
   }

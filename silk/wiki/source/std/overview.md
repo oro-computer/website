@@ -16,25 +16,25 @@ Canonical doc: [overview](?p=std/overview).
 `std::` is available to import by default in normal `silk build` workflows.
 
 ```silk
-import std::io;
-import std::vector;
+import io from "std/io";
+import vector from "std/vector";
 ```
 
 ## Examples
 
 ### Example: a tiny “hello std” program
 ```silk
-import std::io;
-import std::vector;
+import io from "std/io";
+import vector from "std/vector";
 
-type VecInt = std::vector::Vector(int);
+type VecInt = vector::Vector(int);
 
 fn main () -> int {
   let mut v: VecInt = VecInt.init(4);
   v.push(10);
   v.push(32);
 
-  std::io::println("len={d} first_pop={d}", v.len() as int, v.pop() ?? 0);
+  io::println("len={d} first_pop={d}", v.len() as int, v.pop() ?? 0);
   v.drop();
   return 0;
 }

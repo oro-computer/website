@@ -2,6 +2,10 @@
 
 `oro:clipboard` reads and writes clipboard text from the current application context.
 
+## Related guides
+
+- [Desktop integrations](?p=guides/desktop-integrations)
+
 ## Examples
 
 Read and write plain-text clipboard content:
@@ -15,11 +19,6 @@ if (canWriteText()) {
 }
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -32,8 +31,9 @@ oro:clipboard
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:clipboard</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:clipboard`
 
 ```ts
 declare module "oro:clipboard" {
@@ -66,6 +66,9 @@ declare module "oro:clipboard" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

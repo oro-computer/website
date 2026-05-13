@@ -16,11 +16,6 @@ console.log(did.method)
 console.log(url.fragment)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -34,8 +29,9 @@ oro:did/index
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:did</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:did`
 
 ```ts
 declare module "oro:did" {
@@ -45,10 +41,7 @@ declare module "oro:did" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:did/index</code></summary>
+#### `oro:did/index`
 
 ```ts
 declare module "oro:did/index" {
@@ -185,6 +178,9 @@ declare module "oro:did/index" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

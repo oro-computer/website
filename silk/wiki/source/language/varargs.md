@@ -1,24 +1,24 @@
 # Varargs (`...args`)
 
 Silk supports “varargs” parameters to accept a variable number of trailing
-arguments, used by `std::io::print` / `std::io::println`.
+arguments, used by `io::print` / `io::println`.
 
 Canonical doc: [varargs](?p=language/varargs).
 
 ## Syntax
 
 ```silk
-fn log (fmt: string, ...args: std::fmt::Arg) -> void {
-  std::io::println(fmt, args);
+fn log (fmt: string, ...args: fmt::Arg) -> void {
+  io::println(fmt, args);
 }
 ```
 
 ## Example
 ```silk
-import std::io;
+import io from "std/io";
 
 fn main () -> int {
-  std::io::println("hello {s} answer={d}", "world", 42);
+  io::println("hello {s} answer={d}", "world", 42);
   return 0;
 }
 ```
@@ -26,4 +26,4 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: [varargs](?p=language/varargs)
-- `std::fmt`: [fmt](?p=std/fmt)
+- `fmt`: [fmt](?p=std/fmt)

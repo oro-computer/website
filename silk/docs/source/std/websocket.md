@@ -58,8 +58,8 @@ export error HandshakeError {
   kind: int,
 }
 
-export type WebSocketResult = std::result::Result(WebSocket, HandshakeError);
-export type WebSocketServerResult = std::result::Result(WebSocketServer, HandshakeError);
+export type WebSocketResult = Result(WebSocket, HandshakeError);
+export type WebSocketServerResult = Result(WebSocketServer, HandshakeError);
 
 // Protocol/runtime errors during frame processing.
 export let ERR_PROTOCOL_IO: int = 1;
@@ -72,7 +72,7 @@ export error ProtocolError {
   kind: int,
 }
 
-export type MessageResult = std::result::Result(Message, ProtocolError);
+export type MessageResult = Result(Message, ProtocolError);
 
 struct Message {
   opcode: int,              // OPCODE_TEXT or OPCODE_BINARY

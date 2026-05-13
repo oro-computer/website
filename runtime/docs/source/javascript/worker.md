@@ -2,6 +2,11 @@
 
 `oro:worker` re-exports the runtime worker classes for dedicated, shared, and service workers.
 
+## Related guides
+
+- [Worker threads for heavy work](?p=guides/worker-threads-for-heavy-work)
+- [Shared workers across windows](?p=guides/shared-workers-across-windows)
+
 ## Examples
 
 Launch a dedicated worker through the runtime worker surface:
@@ -16,11 +21,6 @@ const worker = new Worker(new URL('./worker.js', import.meta.url), {
 worker.postMessage({ type: 'start' })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -33,8 +33,9 @@ oro:worker
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:worker</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:worker`
 
 ```ts
 declare module "oro:worker" {
@@ -46,6 +47,9 @@ declare module "oro:worker" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

@@ -15,11 +15,6 @@ console.log(record.address)
 console.log(record.family)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -36,8 +31,9 @@ oro:dns/utils
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:dns</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:dns`
 
 ```ts
 declare module "oro:dns" {
@@ -47,10 +43,7 @@ declare module "oro:dns" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:dns/constants</code></summary>
+#### `oro:dns/constants`
 
 ```ts
 declare module "oro:dns/constants" {
@@ -66,10 +59,7 @@ declare module "oro:dns/constants" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:dns/index</code></summary>
+#### `oro:dns/index`
 
 ```ts
 declare module "oro:dns/index" {
@@ -153,10 +143,7 @@ declare module "oro:dns/index" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:dns/promises</code></summary>
+#### `oro:dns/promises`
 
 ```ts
 declare module "oro:dns/promises" {
@@ -185,10 +172,7 @@ declare module "oro:dns/promises" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:dns/utils</code></summary>
+#### `oro:dns/utils`
 
 ```ts
 declare module "oro:dns/utils" {
@@ -215,6 +199,9 @@ declare module "oro:dns/utils" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

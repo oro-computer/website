@@ -19,7 +19,7 @@ This module focuses on:
 - `parse_with_base(input: string, base: &URL) -> URLResult`
  - Parses `input` as a URL relative to `base` using WHATWG relative resolution rules.
 
-`URLResult` is `std::result::Result(URL, ParseError)`:
+`URLResult` is `Result(URL, ParseError)`:
 
 - `Ok(URL)` on success.
 - `Err(ParseError)` on error.
@@ -45,8 +45,8 @@ which forwards to `std::url::parse`.
 - `URL` owns heap allocations and implements `std::interfaces::Drop`; it is
  released automatically at scope exit and may also be dropped explicitly via
  `(mut url).drop()`.
-- `href() -> std::result::Result(std::strings::String, std::memory::OutOfMemory)` — canonical serialization of the full URL.
-- `origin() -> std::result::Result(std::strings::String, std::memory::OutOfMemory)` — serialized origin (opaque origins serialize as `"null"`).
+- `href() -> Result(std::strings::String, std::memory::OutOfMemory)` — canonical serialization of the full URL.
+- `origin() -> Result(std::strings::String, std::memory::OutOfMemory)` — serialized origin (opaque origins serialize as `"null"`).
 - `scheme() -> string`
 - `username() -> string`
 - `password() -> string`
@@ -62,12 +62,12 @@ which forwards to `std::url::parse`.
 
 - `URLSearchParams` owns its query buffer and implements `std::interfaces::Drop`.
 - `URLSearchParams.empty() -> URLSearchParams`
-- `URLSearchParams.from_string(s: string) -> std::result::Result(URLSearchParams, std::memory::OutOfMemory)`
+- `URLSearchParams.from_string(s: string) -> Result(URLSearchParams, std::memory::OutOfMemory)`
  - Accepts either `"a=b&c=d"` or `"?a=b&c=d"`.
-- `to_string() -> std::result::Result(std::strings::String, std::memory::OutOfMemory)` — the encoded query string (no leading `?`).
+- `to_string() -> Result(std::strings::String, std::memory::OutOfMemory)` — the encoded query string (no leading `?`).
 - `len() -> i64` — number of fields.
-- `has(name: string) -> std::result::Result(bool, std::memory::OutOfMemory)`
-- `get(name: string) -> std::result::Result(std::strings::String?, std::memory::OutOfMemory)` — decoded value (`Ok(Some(value))`), `Ok(None)` when absent, or `Err(OutOfMemory)`.
+- `has(name: string) -> Result(bool, std::memory::OutOfMemory)`
+- `get(name: string) -> Result(std::strings::String?, std::memory::OutOfMemory)` — decoded value (`Ok(Some(value))`), `Ok(None)` when absent, or `Err(OutOfMemory)`.
 - `append(name: string, value: string) -> std::memory::OutOfMemory?`
 - `delete(name: string) -> std::memory::OutOfMemory?`
 - `set(name: string, value: string) -> std::memory::OutOfMemory?`

@@ -2,6 +2,10 @@
 
 `oro:test` provides the runtime test harness used by application and module tests.
 
+## Related guides
+
+- [Testing and diagnostics](?p=guides/testing-and-diagnostics)
+
 ## Examples
 
 Write runtime tests with the built-in test harness:
@@ -13,11 +17,6 @@ test('querystring roundtrip', async (t) => {
   t.equal('a=1', new URLSearchParams({ a: '1' }).toString())
 })
 ```
-
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -36,8 +35,9 @@ oro:test/index
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:test</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:test`
 
 ```ts
 declare module "oro:test" {
@@ -47,10 +47,7 @@ declare module "oro:test" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:test/context</code></summary>
+#### `oro:test/context`
 
 ```ts
 declare module "oro:test/context" {
@@ -58,10 +55,7 @@ declare module "oro:test/context" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:test/dom-helpers</code></summary>
+#### `oro:test/dom-helpers`
 
 ```ts
 declare module "oro:test/dom-helpers" {
@@ -151,10 +145,7 @@ declare module "oro:test/dom-helpers" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:test/fast-deep-equal</code></summary>
+#### `oro:test/fast-deep-equal`
 
 ```ts
 declare module "oro:test/fast-deep-equal" {
@@ -162,10 +153,7 @@ declare module "oro:test/fast-deep-equal" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:test/harness</code></summary>
+#### `oro:test/harness`
 
 ```ts
 declare module "oro:test/harness" {
@@ -286,10 +274,7 @@ declare module "oro:test/harness" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:test/index</code></summary>
+#### `oro:test/index`
 
 ```ts
 declare module "oro:test/index" {
@@ -901,6 +886,9 @@ declare module "oro:test/index" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

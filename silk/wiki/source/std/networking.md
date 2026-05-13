@@ -6,7 +6,7 @@ Canonical doc: [networking](?p=std/networking).
 
 ## Example: IPv4 helpers
 ```silk
-import std::net;
+import net from "std/net";
 
 fn main () -> int {
   let a = ipv4(127, 0, 0, 1);

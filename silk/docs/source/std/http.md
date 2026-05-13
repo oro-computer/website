@@ -76,7 +76,7 @@ export error Error {
 
 export type HeaderMap = std::map::HashMap(string, string);
 export type HeaderSet = std::set::SetMap(string);
-export type HeadersMapResult = std::result::Result(HeadersMap, Error);
+export type HeadersMapResult = Result(HeadersMap, Error);
 
 // Request header carrier. Keys and values are borrowed string views.
 export struct HeadersMap { /* opaque */ }
@@ -96,7 +96,7 @@ impl HeadersMap {
 
 // Parsed HTTP request backed by owned bytes.
 struct Request { /* opaque */ }
-export type RequestResult = std::result::Result(Request, Error);
+export type RequestResult = Result(Request, Error);
 impl Request {
   public fn parse (input: string) -> RequestResult;
   public fn method (self: &Request) -> string;
@@ -109,7 +109,7 @@ impl Request {
 
 // Parsed HTTP response backed by owned bytes.
 struct Response { /* opaque */ }
-export type ResponseResult = std::result::Result(Response, Error);
+export type ResponseResult = Result(Response, Error);
 impl Response {
   public fn parse (input: string) -> ResponseResult;
   public fn version (self: &Response) -> string;

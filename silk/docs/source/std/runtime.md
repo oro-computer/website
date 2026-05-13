@@ -74,7 +74,7 @@ alternate stdlib root without changing higher-level `std::...` modules.
 - The `std::runtime::...` surface is allowed to be low-level and `unsafe`:
  raw pointers, integer error codes, and OS-specific constants are acceptable.
 - When an operation can fail, prefer returning the error code *as a value*
- (via `std::result::Result(T, int)` or an optional error `int?`) so callers do
+ (via `Result(T, int)` or an optional error `int?`) so callers do
  not need to pair a sentinel return with a separate `errno()` query.
 - Higher-level, ergonomic, and allocation-aware APIs belong in `std::...`
  modules (for example `std::fs::File.read_to_end`).
@@ -292,7 +292,7 @@ by `std::process::child` such as `dup2`, `pipe`, `poll`, and `set_cloexec`).
 
 Fallible operations should return errors directly:
 
-- value-returning operations use `std::result::Result(T, int)` where `Err(int)`
+- value-returning operations use `Result(T, int)` where `Err(int)`
  is a stable, area-specific error code consumed by higher-level `std::...`
  wrappers (for example `std::io::IOFailed.code`),
 - status operations use optional errors (`int?`), returning `None` on success

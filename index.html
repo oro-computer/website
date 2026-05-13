@@ -6,7 +6,7 @@
     <title>Technology · Oro Computer</title>
     <meta
       name="description"
-      content="Oro Computer builds Oro Runtime, Silk Language, and Virtnosis for native app delivery, verified systems software, and local infrastructure diagnostics."
+      content="Oro Computer builds Oro Runtime, Silk, and Virtnosis for native app delivery, verified systems software, and local infrastructure diagnostics."
     />
     <meta name="theme-color" content="#11100f" />
     <link rel="icon" type="image/png" href="docs/branding/assets/logo-icon-small.png" sizes="32x32" />
@@ -15,6 +15,7 @@
     <script src="assets/highlight/highlight.min.js" defer></script>
     <script src="assets/highlight/languages/bash.min.js" defer></script>
     <script src="assets/highlight/languages/javascript.min.js" defer></script>
+    <script src="assets/highlight/languages/xml.min.js" defer></script>
     <script src="assets/highlight/languages/silk.js" defer></script>
   </head>
   <body class="site-dark tech-page">
@@ -24,7 +25,7 @@
         <div class="site-header">
           <a class="brand" href="./">
             <img class="brand-mark" src="docs/branding/assets/logo-icon.png" alt="Oro Computer logo" width="32" height="32" />
-            <span class="brand-name">Oro Computer</span>
+            <span class="brand-name">oro</span>
           </a>
           <nav class="nav" aria-label="Primary navigation">
             <a href="./" aria-current="page">Technology</a>
@@ -38,144 +39,345 @@
     <main id="main">
       <section class="tech-hero" aria-label="Technology overview">
         <div class="tech-hero-grid" aria-hidden="true"></div>
-        <div class="tech-constellation" aria-hidden="true">
-          <div class="constellation-panel panel-runtime">Runtime</div>
-          <div class="constellation-panel panel-silk">Silk</div>
-          <div class="constellation-panel panel-virtnosis">Virtnosis</div>
-          <div class="constellation-panel panel-edge">Edge apps</div>
-          <div class="constellation-panel panel-formal">Formal checks</div>
-          <div class="constellation-panel panel-ops">Local ops</div>
+        <div class="tech-system-map" aria-hidden="true">
+          <div class="system-map-frame">
+            <div class="system-map-line system-map-line-main"></div>
+            <div class="system-map-line system-map-line-runtime"></div>
+            <div class="system-map-line system-map-line-silk"></div>
+            <div class="system-map-line system-map-line-virtnosis"></div>
+            <div class="system-node node-runtime">
+              <strong>Oro Runtime</strong>
+              <small>Native app surface</small>
+            </div>
+            <div class="system-node node-silk">
+              <strong>Silk</strong>
+              <small>Verified systems code</small>
+            </div>
+            <div class="system-node node-virtnosis">
+              <strong>Virtnosis</strong>
+              <small>Local diagnostics</small>
+            </div>
+          </div>
         </div>
         <div class="container container-wide">
           <div class="tech-hero-copy">
-            <div class="home-eyebrow">
-              <span class="home-eyebrow-mark" aria-hidden="true"></span>
-              Oro Computer
-            </div>
             <h1>Systems technology for software that has to run close to the machine.</h1>
-            <p>
-              Oro Computer builds a native app runtime, a verified systems language, and local-first infrastructure
-              diagnostics for software that needs clear boundaries, predictable builds, and inspectable behavior.
-            </p>
-            <div class="hero-actions home-actions">
-              <a class="button button-primary" href="docs/">Read the docs</a>
-              <a class="button" href="#technologies">Explore technology</a>
-              <a class="button button-quiet" href="https://github.com/oro-computer" target="_blank" rel="noreferrer">GitHub</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="technology-section technology-section-runtime" id="runtime" aria-labelledby="runtime-title">
+        <div class="container container-wide">
+          <div class="technology-layout">
+            <div class="technology-copy">
+              <p class="section-kicker">Oro Runtime</p>
+              <h2 id="runtime-title">Ship web code as native desktop, mobile, and edge apps.</h2>
+              <p>
+                Use ordinary HTML, CSS, and JavaScript with explicit <code>oro:*</code> modules for windows, files,
+                notifications, service workers, storage, workers, updates, and host integration.
+              </p>
+              <ul class="technology-feature-list" aria-label="Runtime focus areas">
+                <li>
+                  <strong>Service workers</strong>
+                  <small>Keep the app shell available offline and coordinate background work.</small>
+                </li>
+                <li>
+                  <strong>Filesystem access</strong>
+                  <small>Read and write through explicit sandboxed paths and native pickers.</small>
+                </li>
+                <li>
+                  <strong>Notifications</strong>
+                  <small>Send useful native alerts from ordinary JavaScript flows.</small>
+                </li>
+                <li>
+                  <strong>Window management</strong>
+                  <small>Create, focus, size, and coordinate multiple app windows.</small>
+                </li>
+              </ul>
+              <div class="technology-links">
+                <a href="runtime/">Overview</a>
+                <a href="runtime/docs/?p=guides/from-zero-to-first-run">Quick start</a>
+                <a href="runtime/docs/?p=javascript/overview">API</a>
+              </div>
+            </div>
+            <div class="technology-code runtime-example" data-tabs data-tabs-id="runtime-example">
+              <div class="tabs runtime-code-tabs">
+                <div class="tabs-list" aria-label="Runtime example files">
+                  <button class="tabs-tab" type="button" aria-selected="true">index.html</button>
+                  <button class="tabs-tab" type="button">main.js</button>
+                  <button class="tabs-tab" type="button">styles.css</button>
+                </div>
+                <section class="tabs-panel">
+                  <pre><code class="language-xml">&lt;!doctype html&gt;
+&lt;html lang="en"&gt;
+  &lt;head&gt;
+    &lt;meta charset="utf-8" /&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1" /&gt;
+    &lt;title&gt;Field Notes&lt;/title&gt;
+    &lt;link rel="stylesheet" href="./styles.css" /&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;main class="notes-app"&gt;
+      &lt;p class="eyebrow"&gt;Offline field notes&lt;/p&gt;
+      &lt;h1&gt;Capture, save, notify.&lt;/h1&gt;
+      &lt;textarea id="note" placeholder="Write a field note..."&gt;&lt;/textarea&gt;
+      &lt;div class="actions"&gt;
+        &lt;button id="save" type="button"&gt;Save locally&lt;/button&gt;
+        &lt;button id="open" type="button"&gt;Open detail window&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;output id="status"&gt;Ready.&lt;/output&gt;
+    &lt;/main&gt;
+    &lt;script type="module" src="./main.js"&gt;&lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                </section>
+                <section class="tabs-panel" hidden>
+                  <pre><code class="language-javascript">import application from 'oro:application'
+import * as fs from 'oro:fs/promises'
+import { showNotification } from 'oro:notification'
+
+if (navigator.serviceWorker) {
+  await navigator.serviceWorker.register('/sw.js')
+}
+
+const currentWindow = await application.getCurrentWindow()
+await currentWindow.setTitle('Field Notes')
+await fs.mkdir('./data', { recursive: true })
+
+const note = document.querySelector('#note')
+const status = document.querySelector('#status')
+
+document.querySelector('#save').addEventListener('click', async () =&gt; {
+  const text = note.value.trim()
+  await fs.writeFile('./data/latest.txt', text, 'utf8')
+  status.value = 'Saved to the app sandbox'
+  await showNotification('Saved field note', {
+    body: `${text.length} bytes written locally.`,
+  })
+})
+
+document.querySelector('#open').addEventListener('click', async () =&gt; {
+  await application.createWindow({
+    path: 'detail.html',
+    title: 'Field note',
+    width: 520,
+    height: 420,
+  })
+})</code></pre>
+                </section>
+                <section class="tabs-panel" hidden>
+                  <pre><code class="language-css">:root {
+  color-scheme: dark;
+  font-family: Inter, system-ui, sans-serif;
+  background: #11100f;
+  color: #f7f3ea;
+}
+
+body {
+  margin: 0;
+}
+
+.notes-app {
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  gap: 1rem;
+  padding: 3rem;
+}
+
+textarea {
+  width: min(680px, 100%);
+  min-height: 12rem;
+  padding: 1rem;
+  border: 1px solid rgba(246, 201, 69, 0.35);
+  border-radius: 12px;
+  background: rgba(250, 248, 244, 0.08);
+  color: inherit;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}</code></pre>
+                </section>
+              </div>
+              <div class="runtime-command" aria-label="Build and run command">
+                <span>Build and run</span>
+                <pre><code class="language-bash">oroc build --run</code></pre>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="tech-band" id="technologies" aria-label="Core technologies">
+      <section class="technology-section technology-section-silk" id="silk" aria-labelledby="silk-title">
         <div class="container container-wide">
-          <div class="section-heading">
-            <p class="section-kicker">Technology</p>
-            <h2>Three surfaces, one operating posture.</h2>
-          </div>
-
-          <div class="technology-grid">
-            <article class="technology-card technology-card-runtime">
-              <div class="technology-card-head">
-                <span class="technology-label">Oro Runtime</span>
-                <span class="technology-status">Native app runtime</span>
-              </div>
-              <h3>Ship web code as native desktop, mobile, and edge apps.</h3>
-              <p>
-                Use ordinary HTML, CSS, and JavaScript with explicit <code>oro:*</code> modules for windows, files,
-                notifications, service workers, storage, workers, updates, and host integration.
-              </p>
-              <pre><code class="language-bash">oroc init notes
-cd notes
-oroc run .
-oroc build . --platform=ios-simulator</code></pre>
-              <div class="technology-links">
-                <a href="runtime/">Overview</a>
-                <a href="runtime/docs/?p=guides/from-zero-to-first-run">Quick start</a>
-                <a href="runtime/docs/?p=javascript/module-index">API index</a>
-              </div>
-            </article>
-
-            <article class="technology-card technology-card-silk">
-              <div class="technology-card-head">
-                <span class="technology-label">Silk Language</span>
-                <span class="technology-status">Verified systems language</span>
-              </div>
-              <h3>Write explicit systems code with formal verification built in.</h3>
+          <div class="technology-layout technology-layout-reverse">
+            <div class="technology-copy">
+              <p class="section-kicker">Silk</p>
+              <h2 id="silk-title">Write explicit systems code with formal verification built in.</h2>
               <p>
                 Silk keeps imports, targets, ABI boundaries, async work, and proofs visible in the source so reviewers can
                 reason about what runs, what links, and what must hold.
               </p>
-              <pre><code class="language-silk">package app;
-
-import { println } from "std/io";
-
-fn main () -> int {
-  println("hello from Silk");
-  return 0;
-}</code></pre>
+              <ul class="technology-feature-list" aria-label="Silk focus areas">
+                <li>
+                  <strong>Module system</strong>
+                  <small>Use file-backed imports, package exports, and explicit namespaces.</small>
+                </li>
+                <li>
+                  <strong>ABI and FFI</strong>
+                  <small>Keep host boundaries visible with direct symbol imports and exports.</small>
+                </li>
+                <li>
+                  <strong>Standard library</strong>
+                  <small>Build on documented modules for IO, paths, processes, data, and time.</small>
+                </li>
+                <li>
+                  <strong>Formal Silk</strong>
+                  <small>Attach requirements, assurances, invariants, and proof obligations.</small>
+                </li>
+              </ul>
               <div class="technology-links">
                 <a href="silk/">Overview</a>
                 <a href="silk/docs/?p=usage/getting-started">Quick start</a>
                 <a href="silk/spec/2026/">2026 spec</a>
               </div>
-            </article>
+            </div>
+            <div class="technology-code">
+              <pre><code class="language-silk">package app;
 
-            <article class="technology-card technology-card-virtnosis">
-              <div class="technology-card-head">
-                <span class="technology-label">Virtnosis</span>
-                <span class="technology-status">Local diagnostics</span>
-              </div>
-              <h3>Inspect libvirt infrastructure without mutating host or guest state.</h3>
+import { println } from "std/io";
+
+interface Sink {
+  fn write(line: string) -> void;
+}
+
+struct ConsoleSink { prefix: string, }
+
+impl ConsoleSink as Sink {
+  fn write(self: &ConsoleSink, line: string) -> void {
+    println("[{}] {}", self.prefix, line);
+  }
+}
+
+struct Job {
+  name: string,
+  retries: int? = None,
+}
+
+impl Job {
+  fn attempts(self: &Job) -> int {
+    return self.retries ?? 1;
+  }
+}
+
+fn platform () -> string {
+  if attr(os="linux") { return "linux"; }
+  if attr(target="wasm32-wasi") { return "wasi"; }
+  return "host";
+}
+
+async fn configured_job () -> string? {
+  return Some("sync-cache");
+}
+
+task fn run(job: Job) -> Result(int, string) {
+  if job.name == "" { return Err("missing job name"); }
+  return Ok(job.attempts());
+}
+
+async fn main () -> int {
+  let sink = ConsoleSink{ prefix: platform() };
+  let name: string? = await configured_job();
+  let job = Job{ name: name ?? "", retries: Some(3) };
+  let handle = run(job);
+
+  task {
+    let results: Result(int, string)[] = yield * handle;
+    match results[0] {
+      Ok(count) => {
+        if count > 1 {
+          sink.write("completed after retry budget");
+        } else {
+          sink.write("completed");
+        }
+      },
+      Err(message) => sink.write(message),
+    }
+  }
+
+  return 0;
+}</code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="technology-section technology-section-virtnosis" id="virtnosis" aria-labelledby="virtnosis-title">
+        <div class="container container-wide">
+          <div class="technology-layout">
+            <div class="technology-copy">
+              <p class="section-kicker">Virtnosis</p>
+              <h2 id="virtnosis-title">Inspect libvirt infrastructure without mutating host or guest state.</h2>
               <p>
                 Virtnosis is a read-only local control plane for operators who need bounded scans, redacted output, explicit
                 degraded-state reporting, and stable machine-consumable findings.
               </p>
-              <pre><code class="language-bash">virtnosis-agent --verbose
-vnactl status
-vnactl scan --deep --confirm-xml --redact -f json</code></pre>
+              <ul class="technology-feature-list" aria-label="Virtnosis focus areas">
+                <li>
+                  <strong>Read-only scans</strong>
+                  <small>Inspect libvirt state without mutating hosts or guests.</small>
+                </li>
+                <li>
+                  <strong>Redacted output</strong>
+                  <small>Emit reports that can move through logs, CI, and tickets.</small>
+                </li>
+                <li>
+                  <strong>Operator CLI</strong>
+                  <small>Use agent and <code>vnactl</code> workflows for local control.</small>
+                </li>
+                <li>
+                  <strong>Stable findings</strong>
+                  <small>Surface degraded states as machine-consumable signals.</small>
+                </li>
+              </ul>
               <div class="technology-links">
                 <a href="virtnosis/">Overview</a>
                 <a href="virtnosis/docs/?p=start">Start</a>
                 <a href="virtnosis/docs/?p=cli/vnactl">CLI</a>
               </div>
-            </article>
-          </div>
-        </div>
-      </section>
+            </div>
+            <div class="technology-code">
+              <pre><code class="language-bash"># Start a local, bounded control plane.
+virtnosis-agent \
+  --listen unix:///run/virtnosis/agent.sock \
+  --scan-timeout-ms 30000 \
+  --verbose
 
-      <section class="tech-band tech-band-muted" aria-label="Runtime and Silk focus">
-        <div class="container container-wide">
-          <div class="focus-grid">
-            <div class="focus-copy">
-              <p class="section-kicker">Runtime</p>
-              <h2>Most apps start with obvious commands and useful native capabilities.</h2>
-              <p>
-                Oro Runtime is presented around the work people actually do: run a project, open and coordinate windows,
-                persist local data, register service workers, request notifications, and package the app.
-              </p>
-            </div>
-            <div class="focus-list">
-              <a href="runtime/docs/?p=guides/offline-first-with-service-workers">Offline-first service workers</a>
-              <a href="runtime/docs/?p=guides/files-and-sandboxing">Filesystem and sandboxing</a>
-              <a href="runtime/docs/?p=guides/desktop-integrations">Notifications and desktop integrations</a>
-              <a href="runtime/docs/?p=guides/windows-and-messaging">Window management and messaging</a>
-            </div>
-          </div>
+# Confirm which daemon and scanner build will answer.
+vnactl status \
+  --connect unix:///run/virtnosis/agent.sock \
+  --raw-json
 
-          <div class="focus-grid focus-grid-reverse">
-            <div class="focus-copy">
-              <p class="section-kicker">Silk</p>
-              <h2>The language is documented as a complete system, not a syntax teaser.</h2>
-              <p>
-                The Silk path starts with readable programs, then exposes modules, imports, targets, ABI/FFI, stdlib APIs,
-                embedders, and Formal Silk as first-class surfaces.
-              </p>
-            </div>
-            <div class="focus-list">
-              <a href="silk/docs/?p=guides/language-tour">Language tour</a>
-              <a href="silk/docs/?p=guides/modules-and-packages">Modules and packages</a>
-              <a href="silk/docs/?p=compiler/abi-libsilk">ABI and embedders</a>
-              <a href="silk/docs/?p=guides/formal-silk">Formal Silk</a>
+# Inspect libvirt without changing host or guest state.
+vnactl scan \
+  --connect unix:///run/virtnosis/agent.sock \
+  --socket /var/run/libvirt/libvirt-sock \
+  --uri qemu:///system \
+  --deep \
+  --deep-enum-max 32 \
+  --deep-resolve-max 8 \
+  --confirm-xml \
+  --redact \
+  -f json \
+  > scan.redacted.json
+
+# Automation reads stable summary and coverage fields.
+jq '.scan.summary,
+    .scan.domains.coverage,
+    .scan.risks_full.total' scan.redacted.json</code></pre>
             </div>
           </div>
         </div>

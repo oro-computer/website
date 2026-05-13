@@ -71,7 +71,7 @@ Key design rules:
  returned `len`),
 - functions return recoverable error values:
  - `ErrorType?` where `None` is success,
- - `std::result::Result(T, ErrorType)` where `Ok(T)` is success and `Err(ErrorType)` is failure
+ - `Result(T, ErrorType)` where `Ok(T)` is success and `Err(ErrorType)` is failure
  (use `Result(bool, ErrorType)` for fallible predicates).
 
 ## Example: init, hash, wipe

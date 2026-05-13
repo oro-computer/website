@@ -14,11 +14,6 @@ console.log(tmpdir())
 console.log(cpus().length)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -32,8 +27,9 @@ oro:os/constants
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:os</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:os`
 
 ```ts
 declare module "oro:os" {
@@ -150,10 +146,7 @@ declare module "oro:os" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:os/constants</code></summary>
+#### `oro:os/constants`
 
 ```ts
 declare module "oro:os/constants" {
@@ -181,6 +174,9 @@ declare module "oro:os/constants" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

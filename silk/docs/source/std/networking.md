@@ -113,7 +113,7 @@ enum NetErrorKind {
 
 error NetFailed { code: int, requested: i64 }
 
-export type NetIntResult = std::result::Result(int, NetFailed);
+export type NetIntResult = Result(int, NetFailed);
 
 struct SocketAddrV4 {
   ip_value: int,
@@ -162,7 +162,7 @@ struct TCPStream {
   fd: int,
 }
 
-export type TCPStreamResult = std::result::Result(TCPStream, NetFailed);
+export type TCPStreamResult = Result(TCPStream, NetFailed);
 
 impl TCPStream {
   public fn invalid () -> TCPStream;
@@ -196,7 +196,7 @@ enum ResolveIpMode {
   V6Only,
 }
 
-export type ResolveAddrsResult = std::result::Result(std::vector::Vector(SocketAddr), NetFailed);
+export type ResolveAddrsResult = Result(std::vector::Vector(SocketAddr), NetFailed);
 
 export fn resolve_host (host: string, port: int, mode: ResolveIpMode) -> ResolveAddrsResult;
 
@@ -204,7 +204,7 @@ struct TCPListener {
   fd: int,
 }
 
-export type TCPListenerResult = std::result::Result(TCPListener, NetFailed);
+export type TCPListenerResult = Result(TCPListener, NetFailed);
 
 impl TCPListener {
   public fn invalid () -> TCPListener;
@@ -257,14 +257,14 @@ struct UDPSocket {
 }
 
 export type NetError = NetFailed;
-export type UDPSocketResult = std::result::Result(UDPSocket, NetFailed);
+export type UDPSocketResult = Result(UDPSocket, NetFailed);
 
 struct UDPRecvFrom {
   n: int,
   addr: SocketAddr,
 }
 
-export type UDPRecvFromResult = std::result::Result(UDPRecvFrom, NetError);
+export type UDPRecvFromResult = Result(UDPRecvFrom, NetError);
 
 struct SocketAddr {
   domain: int,

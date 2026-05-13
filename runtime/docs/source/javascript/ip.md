@@ -15,11 +15,6 @@ console.log(address)
 console.log(isIPv4(address))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -32,8 +27,9 @@ oro:ip
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:ip</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:ip`
 
 ```ts
 declare module "oro:ip" {
@@ -57,6 +53,9 @@ declare module "oro:ip" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

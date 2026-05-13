@@ -2,6 +2,11 @@
 
 `oro:sqlite` opens SQLite databases and exposes sync and async query helpers.
 
+## Related guides
+
+- [Local data with SQLite](?p=guides/local-data-with-sqlite)
+- [Files and sandboxing](?p=guides/files-and-sandboxing)
+
 ## Examples
 
 Open an in-memory database and run a few synchronous queries:
@@ -17,11 +22,6 @@ db.exec("insert into notes (title) values ('hello')")
 console.log(db.query('select * from notes'))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -34,8 +34,9 @@ oro:sqlite
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:sqlite</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:sqlite`
 
 ```ts
 declare module "oro:sqlite" {
@@ -170,6 +171,9 @@ declare module "oro:sqlite" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

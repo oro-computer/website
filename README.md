@@ -4,7 +4,16 @@ This directory contains the static website for Oro Computer, including landing p
 
 - **Oro Runtime** (`website/runtime/`)
 - **Silk** (`website/silk/`)
-- **slg** (`website/slg/`)
+- **Virtnosis** (`website/virtnosis/`)
+
+The public top-level navigation is intentionally small:
+
+- **Technology** (`website/index.html`) presents Oro Runtime, Silk, and Virtnosis.
+- **Blog** (`website/blog/`) is a static placeholder for future engineering notes.
+- **Docs** (`website/docs/`) routes readers into Runtime and Silk documentation.
+
+Legacy Sage and slg pages remain in the repository for continuity, but they are
+not promoted from the top-level navigation or docs hub.
 
 ## Runtime docs
 
@@ -43,6 +52,18 @@ To refresh the website copy from the sibling Silk compiler checkout:
 python3 website/silk/tools/sync-from-silk-docs.py
 ```
 
+## Virtnosis docs
+
+- Docs viewer: `website/virtnosis/docs/index.html`
+- Markdown sources: `website/virtnosis/docs/source/`
+
+Rebuild generated files:
+
+```bash
+python3 website/virtnosis/tools/build-indexes.py
+python3 website/virtnosis/tools/build-llms-txt.py
+```
+
 ## slg docs
 
 - Docs viewer: `website/slg/docs/index.html`
@@ -57,6 +78,6 @@ python3 website/slg/tools/build-llms-txt.py
 
 ## Shared docs viewer
 
-Runtime, Silk, and slg use the shared docs viewer:
+Runtime, Silk, Virtnosis, Sage, and slg use the shared docs viewer:
 
 - `website/assets/docs-viewer.js`

@@ -15,11 +15,6 @@ console.log(url.pathname)
 console.log(url.searchParams.get('project'))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -35,8 +30,9 @@ oro:url/urlpattern/urlpattern
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:url</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:url`
 
 ```ts
 declare module "oro:url" {
@@ -46,10 +42,7 @@ declare module "oro:url" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:url/index</code></summary>
+#### `oro:url/index`
 
 ```ts
 declare module "oro:url/index" {
@@ -134,10 +127,7 @@ declare module "oro:url/index" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:url/url/url</code></summary>
+#### `oro:url/url/url`
 
 ```ts
 declare module "oro:url/url/url" {
@@ -146,10 +136,7 @@ declare module "oro:url/url/url" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:url/urlpattern/urlpattern</code></summary>
+#### `oro:url/urlpattern/urlpattern`
 
 ```ts
 declare module "oro:url/urlpattern/urlpattern" {
@@ -181,6 +168,9 @@ declare module "oro:url/urlpattern/urlpattern" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

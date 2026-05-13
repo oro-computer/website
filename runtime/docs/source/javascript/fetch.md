@@ -2,6 +2,11 @@
 
 `oro:fetch` exposes the runtime fetch stack and standard request/response primitives.
 
+## Related guides
+
+- [Calling HTTP APIs](?p=guides/calling-http-apis)
+- [Offline-first with service workers](?p=guides/offline-first-with-service-workers)
+
 ## Examples
 
 Use the runtime fetch stack exactly like standard web fetch:
@@ -14,11 +19,6 @@ const data = await response.json()
 
 console.log(data)
 ```
-
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -34,8 +34,9 @@ oro:fetch/index
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:fetch</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:fetch`
 
 ```ts
 declare module "oro:fetch" {
@@ -45,10 +46,7 @@ declare module "oro:fetch" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fetch/fetch</code></summary>
+#### `oro:fetch/fetch`
 
 ```ts
 declare module "oro:fetch/fetch" {
@@ -122,10 +120,7 @@ declare module "oro:fetch/fetch" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fetch/index</code></summary>
+#### `oro:fetch/index`
 
 ```ts
 declare module "oro:fetch/index" {
@@ -138,6 +133,9 @@ declare module "oro:fetch/index" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

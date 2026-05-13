@@ -151,7 +151,7 @@ wrapper and control-flow forms:
  - `while let Ok(x) = r { ... }` / `while let Err(x) = r { ... }`
  - statement `match (r) { Ok(x) => ..., Err(y) => ... }`
  for supported result-shaped enums whose payload type carries a borrow,
- including monomorphized `std::result::Result(T, E)` instantiations, and the
+ including monomorphized `Result(T, E)` instantiations, and the
  equivalent qualified enum-variant forms such as `State::Ready(x)`.
 - `if` expressions preserve borrow identity when:
  - every borrowing branch resolves to the same local origin,

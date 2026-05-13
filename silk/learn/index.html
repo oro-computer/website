@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Learn Silk · Oro Computer</title>
+    <meta
+      name="description"
+      content="A guided Silk learning path for first programs, modules, packages, stdlib APIs, C ABI surfaces, and Formal Silk."
+    />
+    <meta name="theme-color" content="#11100f" />
+    <link rel="icon" type="image/png" href="../../docs/branding/assets/logo-icon-small.png" sizes="32x32" />
+    <link rel="stylesheet" href="../../assets/site.css" />
+    <link rel="stylesheet" href="../../assets/highlight/highlight.css" />
+    <script src="../../assets/highlight/highlight.min.js" defer></script>
+    <script src="../../assets/highlight/languages/bash.min.js" defer></script>
+    <script src="../../assets/highlight/languages/silk.js" defer></script>
+  </head>
+  <body class="site-dark product-page learn-page silk-learn-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-top" id="top">
+      <div class="container">
+        <div class="site-header">
+          <a class="brand" href="../../">
+            <img
+              class="brand-mark"
+              src="../../docs/branding/assets/logo-icon.png"
+              alt="Oro Computer logo"
+              width="32"
+              height="32"
+            />
+            <span class="brand-name">oro</span>
+          </a>
+          <nav class="nav" aria-label="Primary navigation">
+            <a href="../../">Technology</a>
+            <a href="../../blog/">Blog</a>
+            <a href="../../docs/">Docs</a>
+          </nav>
+          <div class="site-subnav" aria-label="Silk section navigation">
+            <div class="site-subnav-label">Inside</div>
+            <div class="site-subnav-parent">Silk</div>
+            <nav class="site-subnav-links" aria-label="Silk pages">
+              <a href="../">Overview</a>
+              <a href="./" aria-current="page">Learn</a>
+              <a href="../docs/">Docs</a>
+              <a href="../spec/2026/">Spec</a>
+              <a href="../wiki/">Wiki</a>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-label="Learn Silk">
+        <div class="container">
+          <div class="learn-hero">
+            <div class="hero-kicker">Learn Silk</div>
+            <h1>Learn Silk</h1>
+            <p class="lede">
+              Build from one checked program to packages, tests, native artifacts, C headers, and verification.
+            </p>
+            <div class="hero-actions learn-hero-actions">
+              <a class="button button-primary" href="./getting-started/">Start learning</a>
+              <a class="button" href="../docs/?p=guides/hello-world">Read the guide</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="learn-hero-art" aria-hidden="true">
+          <div class="learn-course-panel">
+            <div class="learn-course-mark">
+              <img src="../../docs/branding/assets/logo-icon-small.png" alt="" width="42" height="42" />
+            </div>
+            <h2>Silk Fundamentals</h2>
+            <p>5 guided chapters before the full Silk docs track.</p>
+            <div class="learn-current-row">
+              <div>
+                <strong>Chapter 1: First program</strong>
+                <span>Check, test, build, and read a small Silk file.</span>
+              </div>
+              <span class="learn-current-dot"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="silk-course-work">
+        <div class="container">
+          <div class="learn-section-heading">
+            <h2 id="silk-course-work">How does the course work?</h2>
+            <p>By building the language model one boundary at a time.</p>
+          </div>
+
+          <div class="learn-info-grid mt-lg">
+            <div class="learn-info">
+              <h3>Follow a working path</h3>
+              <p>Each chapter starts from code you can inspect, run, and extend before moving to the reference docs.</p>
+            </div>
+            <div class="learn-info">
+              <h3>Keep the contracts visible</h3>
+              <p>Imports, typed failure, package surfaces, build targets, and ABI edges stay close to the source.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="silk-learn-chapters">
+        <div class="container">
+          <div class="learn-section-heading">
+            <h2 id="silk-learn-chapters">What will I learn?</h2>
+            <p>The core concepts covered in this track.</p>
+          </div>
+
+          <div class="learn-chapter-grid mt-lg">
+            <a class="learn-chapter" href="./getting-started/">
+              <span class="learn-chapter-number">1</span>
+              <span><strong>First program</strong><span>Write a module, import stdlib I/O, and run the check-test-build loop.</span></span>
+            </a>
+            <a class="learn-chapter" href="./language-tour/">
+              <span class="learn-chapter-number">2</span>
+              <span><strong>Language tour</strong><span>Read functions, values, control flow, optionals, and result-oriented APIs.</span></span>
+            </a>
+            <a class="learn-chapter" href="./modules-and-packages/">
+              <span class="learn-chapter-number">3</span>
+              <span><strong>Modules and packages</strong><span>Use package roots, quoted imports, definitions, and publication layout.</span></span>
+            </a>
+            <a class="learn-chapter" href="./types-and-optionals/">
+              <span class="learn-chapter-number">4</span>
+              <span><strong>Types and optionals</strong><span>Make absence explicit with <code>T?</code> and keep data shapes readable.</span></span>
+            </a>
+            <a class="learn-chapter" href="./results-and-errors/">
+              <span class="learn-chapter-number">5</span>
+              <span><strong>Results and errors</strong><span>Model recoverable failure with typed errors and <code>Result(T, E)</code>.</span></span>
+            </a>
+            <a class="learn-chapter" href="../docs/?p=language/structs-impls-layout">
+              <span class="learn-chapter-number">6</span>
+              <span><strong>Structs and impls</strong><span>Attach behavior to data without hiding layout and ownership choices.</span></span>
+            </a>
+            <a class="learn-chapter" href="../docs/?p=language/interfaces">
+              <span class="learn-chapter-number">7</span>
+              <span><strong>Interfaces</strong><span>Use source-level conformance for shared behavior inside one build.</span></span>
+            </a>
+            <a class="learn-chapter" href="../docs/?p=guides/testing">
+              <span class="learn-chapter-number">8</span>
+              <span><strong>Testing</strong><span>Write language-level tests and read TAP output in local and CI workflows.</span></span>
+            </a>
+            <a class="learn-chapter" href="../docs/?p=guides/standard-library">
+              <span class="learn-chapter-number">9</span>
+              <span><strong>Standard library</strong><span>Use stdlib modules through explicit dependency-rooted imports.</span></span>
+            </a>
+            <a class="learn-chapter" href="../docs/?p=language/target-metadata">
+              <span class="learn-chapter-number">10</span>
+              <span><strong>Target attributes</strong><span>Keep platform choices narrow with <code>attr(os="...")</code> and target gates.</span></span>
+            </a>
+            <a class="learn-chapter" href="../docs/?p=compiler/abi-libsilk">
+              <span class="learn-chapter-number">11</span>
+              <span><strong>C ABI and headers</strong><span>Expose stable symbols, string shapes, and generated C header surfaces.</span></span>
+            </a>
+            <a class="learn-chapter" href="../docs/?p=guides/formal-silk">
+              <span class="learn-chapter-number">12</span>
+              <span><strong>Formal Silk</strong><span>Add local proof obligations where invariants earn their keep.</span></span>
+            </a>
+          </div>
+
+          <div class="hero-actions learn-hero-actions mt-lg">
+            <a class="button button-primary" href="./getting-started/">Start learning</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-inner">
+          <strong>Learn Silk</strong>
+          <span>&copy; <span data-year>2026</span> Oro Computer.</span>
+        </div>
+      </div>
+    </footer>
+    <script src="../../assets/site.js" defer></script>
+  </body>
+</html>

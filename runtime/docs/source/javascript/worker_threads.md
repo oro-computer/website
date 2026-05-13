@@ -2,6 +2,10 @@
 
 `oro:worker_threads` exposes worker-thread primitives, ports, and environment data helpers.
 
+## Related guides
+
+- [Worker threads for heavy work](?p=guides/worker-threads-for-heavy-work)
+
 ## Examples
 
 Pass environment data into worker threads and communicate with message channels:
@@ -16,11 +20,6 @@ port1.onmessage = (event) => console.log(event.data)
 port2.postMessage({ ok: true })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -34,8 +33,9 @@ oro:worker_threads/init
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:worker_threads</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:worker_threads`
 
 ```ts
 declare module "oro:worker_threads" {
@@ -217,10 +217,7 @@ declare module "oro:worker_threads" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:worker_threads/init</code></summary>
+#### `oro:worker_threads/init`
 
 ```ts
 declare module "oro:worker_threads/init" {
@@ -242,6 +239,9 @@ declare module "oro:worker_threads/init" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

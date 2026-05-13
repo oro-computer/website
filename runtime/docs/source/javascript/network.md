@@ -15,11 +15,6 @@ bus.on('error', console.error)
 bus.on('message', (message) => console.log(message))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -32,8 +27,9 @@ oro:network
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:network</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:network`
 
 ```ts
 declare module "oro:network" {
@@ -49,6 +45,9 @@ declare module "oro:network" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

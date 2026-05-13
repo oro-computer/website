@@ -181,7 +181,7 @@ type Int32 = i32;
 type struct Bar = Foo;
 type fn IntAdder = fn(int, int) -> int;
 type pure fn PureIntAdder = fn(int, int) -> int;
-type ResultOf(T) = std::result::Result(T, string);
+type ResultOf(T) = Result(T, string);
 export type struct PublicBar = Foo;
 ```
 
@@ -195,7 +195,7 @@ Semantics (current implementation):
  syntax as generic structs, enums, interfaces, impls, and functions. Applying
  the alias in a type position substitutes the supplied type arguments into the
  transparent target, for example `ResultOf(int)` is equivalent to
- `std::result::Result(int, string)`.
+ `Result(int, string)`.
 - Type aliases may be used anywhere a type is expected (parameter/result types,
  local annotations, struct fields, `as` casts, etc.).
 - Cycles in type aliases are rejected (`E2058`).

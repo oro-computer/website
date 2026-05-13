@@ -39,10 +39,10 @@ fn main () -> int {
 
 ### Example: multiline strings
 ```silk
-import std::io;
+import io from "std/io";
 
 fn main () -> int {
-  std::io::println(`line1
+  io::println(`line1
 line2`);
   return 0;
 }

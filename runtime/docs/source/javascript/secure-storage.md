@@ -2,6 +2,10 @@
 
 `oro:secure-storage` stores secrets scoped by origin (for example tokens, credentials, API keys).
 
+## Related guides
+
+- [Secure storage and sessions](?p=guides/secure-storage-and-sessions)
+
 ## Import
 
 ```js
@@ -51,8 +55,9 @@ oro:secure-storage
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:secure-storage</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:secure-storage`
 
 ```ts
 declare module "oro:secure-storage" {
@@ -124,6 +129,8 @@ declare module "oro:secure-storage" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

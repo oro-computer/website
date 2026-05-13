@@ -413,7 +413,7 @@ Static-method receiver sugar (Supported forms):
  compiler may resolve it as a call to a visible static method of the receiver
  type by inserting the receiver as the first argument: `Type.method(value, ...)`.
 - This supports fluent chaining for value-consuming helper APIs like
- `std::result::Result.unwrap_or`:
+ `Result.unwrap_or`:
 
   ```silk
   let r: R = /* ... */;

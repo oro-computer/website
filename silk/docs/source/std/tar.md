@@ -54,8 +54,8 @@ enum TarErrorKind {
 
 struct TarFailed { code: int, requested: i64 }
 
-export type TarIntResult = std::result::Result(int, TarFailed);
-export type EntryResult = std::result::Result(Entry, TarFailed);
+export type TarIntResult = Result(int, TarFailed);
+export type EntryResult = Result(Entry, TarFailed);
 
 export enum EntryKind {
   Regular,

@@ -45,7 +45,7 @@ compiler prefix:
 
 ## Error Model
 
-The `std::ssh2` API uses `std::result::Result(T, E)` and a stable `SSH2Failed`
+The `std::ssh2` API uses `Result(T, E)` and a stable `SSH2Failed`
 error value. The underlying libssh2 error code is retained as structured detail
 (`SSH2Failed.detail`) for debugging and telemetry.
 
@@ -76,13 +76,13 @@ export error SSH2Failed {
   detail: int,
 }
 
-export type SSH2IntResult = std::result::Result(int, SSH2Failed);
-export type SSH2I64Result = std::result::Result(i64, SSH2Failed);
+export type SSH2IntResult = Result(int, SSH2Failed);
+export type SSH2I64Result = Result(i64, SSH2Failed);
 
-export type SessionResult = std::result::Result(Session, SSH2Failed);
-export type ChannelResult = std::result::Result(Channel, SSH2Failed);
-export type SftpResult = std::result::Result(Sftp, SSH2Failed);
-export type SftpHandleResult = std::result::Result(SftpHandle, SSH2Failed);
+export type SessionResult = Result(Session, SSH2Failed);
+export type ChannelResult = Result(Channel, SSH2Failed);
+export type SftpResult = Result(Sftp, SSH2Failed);
+export type SftpHandleResult = Result(SftpHandle, SSH2Failed);
 
 enum KnownHostCheck {
   Match,
@@ -90,10 +90,10 @@ enum KnownHostCheck {
   NotFound,
 }
 
-export type KnownHostCheckResult = std::result::Result(KnownHostCheck, SSH2Failed);
+export type KnownHostCheckResult = Result(KnownHostCheck, SSH2Failed);
 
 // Agent iteration uses `Ok(Some(identity))` and `Ok(None)` for end-of-list.
-export type AgentNextIdentityResult = std::result::Result(AgentIdentity?, SSH2Failed);
+export type AgentNextIdentityResult = Result(AgentIdentity?, SSH2Failed);
 ```
 
 ## Byte Buffers and Formal Silk

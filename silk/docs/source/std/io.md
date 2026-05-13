@@ -46,11 +46,11 @@ struct IOFailed { code: int, requested: i64 }
 struct TTYSize { rows: int, cols: int }
 struct TTYRawMode { handle: u64 }
 struct BufferedWriter { fd: int, buf: std::buffer::BufferU8, flush_threshold: i64 }
-export type IOResult = std::result::Result(int, IOFailed);
+export type IOResult = Result(int, IOFailed);
 export type IOError = IOFailed;
-export type IOErrorIntResult = std::result::Result(int, IOError);
-export type TTYRawModeResult = std::result::Result(TTYRawMode, IOFailed);
-export type BufferedWriterResult = std::result::Result(BufferedWriter, IOFailed);
+export type IOErrorIntResult = Result(int, IOError);
+export type TTYRawModeResult = Result(TTYRawMode, IOFailed);
+export type BufferedWriterResult = Result(BufferedWriter, IOFailed);
 
 export fn read (fd: int, buf: std::arrays::ByteSlice) -> IOResult;
 export fn write (fd: int, buf: std::arrays::ByteSlice) -> IOResult;

@@ -2,6 +2,11 @@
 
 `oro:path` provides cross-platform path manipulation utilities.
 
+## Related guides
+
+- [Files and sandboxing](?p=guides/files-and-sandboxing)
+- [Project layout](?p=guides/project-layout)
+
 ## Examples
 
 Compose paths without branching on platform separators:
@@ -15,11 +20,6 @@ console.log(absolute)
 console.log(dirname(absolute))
 console.log(basename(join('/tmp', 'report.txt')))
 ```
-
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -39,8 +39,9 @@ oro:path/win32
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:path</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:path`
 
 ```ts
 declare module "oro:path" {
@@ -80,10 +81,7 @@ declare module "oro:path" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:path/index</code></summary>
+#### `oro:path/index`
 
 ```ts
 declare module "oro:path/index" {
@@ -111,10 +109,7 @@ declare module "oro:path/index" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:path/mounts</code></summary>
+#### `oro:path/mounts`
 
 ```ts
 declare module "oro:path/mounts" {
@@ -123,10 +118,7 @@ declare module "oro:path/mounts" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:path/path</code></summary>
+#### `oro:path/path`
 
 ```ts
 declare module "oro:path/path" {
@@ -335,10 +327,7 @@ declare module "oro:path/path" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:path/posix</code></summary>
+#### `oro:path/posix`
 
 ```ts
 declare module "oro:path/posix" {
@@ -445,10 +434,7 @@ declare module "oro:path/posix" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:path/well-known</code></summary>
+#### `oro:path/well-known`
 
 ```ts
 declare module "oro:path/well-known" {
@@ -537,10 +523,7 @@ declare module "oro:path/well-known" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:path/win32</code></summary>
+#### `oro:path/win32`
 
 ```ts
 declare module "oro:path/win32" {
@@ -647,6 +630,9 @@ declare module "oro:path/win32" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

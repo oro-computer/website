@@ -2,6 +2,10 @@
 
 `oro:http` provides Node-compatible HTTP client and server APIs.
 
+## Related guides
+
+- [Calling HTTP APIs](?p=guides/calling-http-apis)
+
 ## Examples
 
 Start a small HTTP server with the Node-compatible API:
@@ -17,11 +21,6 @@ const server = createServer((req, res) => {
 server.listen(8080, '127.0.0.1')
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -35,8 +34,9 @@ oro:http/adapters
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:http</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:http`
 
 ```ts
 declare module "oro:http" {
@@ -810,10 +810,7 @@ declare module "oro:http" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:http/adapters</code></summary>
+#### `oro:http/adapters`
 
 ```ts
 declare module "oro:http/adapters" {
@@ -910,6 +907,9 @@ declare module "oro:http/adapters" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

@@ -15,11 +15,6 @@ const result = await runInContext('answer + 1', context)
 console.log(result)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -34,8 +29,9 @@ oro:vm/world
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:vm</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:vm`
 
 ```ts
 declare module "oro:vm" {
@@ -443,10 +439,7 @@ declare module "oro:vm" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:vm/init</code></summary>
+#### `oro:vm/init`
 
 ```ts
 declare module "oro:vm/init" {
@@ -454,10 +447,7 @@ declare module "oro:vm/init" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:vm/world</code></summary>
+#### `oro:vm/world`
 
 ```ts
 declare module "oro:vm/world" {
@@ -465,6 +455,9 @@ declare module "oro:vm/world" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

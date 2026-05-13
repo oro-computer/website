@@ -13,30 +13,33 @@ Canonical doc: [json](?p=std/json).
 ## Importing
 
 ```silk
-import std::json;
-import std::strings;
+import json from "std/json";
+import { Document } from "std/json";
+import memory from "std/memory";
+import strings from "std/strings";
 ```
 
 ## Exported API
 
-- `Document.parse(input: string) -> std::json::ParseResult` (borrowed views into `input`)
-- `Document.parse_owned(input: string) -> std::json::ParseResult` (owned copies)
+- `Document.parse(input: string) -> json::ParseResult` (borrowed views into `input`)
+- `Document.parse_owned(input: string) -> json::ParseResult` (owned copies)
 - `Document.object_get(obj: i64, key: string) -> i64?`
 - `Document.as_string(id: i64) -> string?`
 - `Document.as_number_lexeme(id: i64) -> string?`
-- `std::json::number_as_i64(doc: &Document, id: i64) -> i64?`
-- `std::json::stringify(doc: &Document, id: i64) -> Result(std::strings::String, std::memory::OutOfMemory)`
-- `std::json::stringify_pretty(doc: &Document, id: i64, indent: int) -> Result(std::strings::String, std::memory::OutOfMemory)`
+- `json::number_as_i64(doc: &Document, id: i64) -> i64?`
+- `json::stringify(doc: &Document, id: i64) -> Result(strings::String, memory::OutOfMemory)`
+- `json::stringify_pretty(doc: &Document, id: i64, indent: int) -> Result(strings::String, memory::OutOfMemory)`
 
 ## Examples
 
 ### Example: parse + query + stringify
 ```silk
-import std::json;
-import std::strings;
-import std::memory;
+import json from "std/json";
+import { Document } from "std/json";
+import strings from "std/strings";
+import memory from "std/memory";
 
-type StringAllocResult = Result(std::strings::String, std::memory::OutOfMemory);
+type StringAllocResult = Result(strings::String, memory::OutOfMemory);
 
 fn main () -> int {
   let mut doc: Document = Document{};
@@ -71,7 +74,7 @@ fn main () -> int {
         return 6;
       }
       let a_id: i64 = a_id_opt ?? 0 as i64;
-      let a_num_opt = std::json::number_as_i64(doc, a_id);
+      let a_num_opt = json::number_as_i64(doc, a_id);
       if a_num_opt == None {
         doc.drop();
         return 7;
@@ -81,9 +84,9 @@ fn main () -> int {
         return 8;
       }
 
-      match (std::json::stringify(doc, root)) {
+      match (json::stringify(doc, root)) {
         StringAllocResult::Ok(compact_value) => {
-          let mut compact: std::strings::String = compact_value;
+          let mut compact: strings::String = compact_value;
           let expected: string = `{"a":1,"b":true,"c":null,"d":["x","y"],"u":"A"}`;
           if compact.as_string() != expected {
             compact.drop();

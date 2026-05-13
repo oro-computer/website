@@ -108,22 +108,22 @@ export struct Frame {
   encoder: RenderCommandEncoder,
 }
 
-export type RenderResult = std::result::Result(bool, MetalFailed);
-export type DeviceResult = std::result::Result(Device, MetalFailed);
-export type CommandQueueResult = std::result::Result(CommandQueue, MetalFailed);
-export type CommandBufferResult = std::result::Result(CommandBuffer, MetalFailed);
-export type LayerResult = std::result::Result(Layer, MetalFailed);
-export type DrawableResult = std::result::Result(Drawable, MetalFailed);
-export type TextureResult = std::result::Result(Texture, MetalFailed);
-export type RenderPassDescriptorResult = std::result::Result(RenderPassDescriptor, MetalFailed);
-export type RenderCommandEncoderResult = std::result::Result(RenderCommandEncoder, MetalFailed);
-export type BufferResult = std::result::Result(Buffer, MetalFailed);
-export type LibraryResult = std::result::Result(Library, MetalFailed);
-export type FunctionResult = std::result::Result(Function, MetalFailed);
-export type RenderPipelineDescriptorResult = std::result::Result(RenderPipelineDescriptor, MetalFailed);
-export type RenderPipelineStateResult = std::result::Result(RenderPipelineState, MetalFailed);
-export type ContextResult = std::result::Result(Context, MetalFailed);
-export type FrameResult = std::result::Result(Frame, MetalFailed);
+export type RenderResult = Result(bool, MetalFailed);
+export type DeviceResult = Result(Device, MetalFailed);
+export type CommandQueueResult = Result(CommandQueue, MetalFailed);
+export type CommandBufferResult = Result(CommandBuffer, MetalFailed);
+export type LayerResult = Result(Layer, MetalFailed);
+export type DrawableResult = Result(Drawable, MetalFailed);
+export type TextureResult = Result(Texture, MetalFailed);
+export type RenderPassDescriptorResult = Result(RenderPassDescriptor, MetalFailed);
+export type RenderCommandEncoderResult = Result(RenderCommandEncoder, MetalFailed);
+export type BufferResult = Result(Buffer, MetalFailed);
+export type LibraryResult = Result(Library, MetalFailed);
+export type FunctionResult = Result(Function, MetalFailed);
+export type RenderPipelineDescriptorResult = Result(RenderPipelineDescriptor, MetalFailed);
+export type RenderPipelineStateResult = Result(RenderPipelineState, MetalFailed);
+export type ContextResult = Result(Context, MetalFailed);
+export type FrameResult = Result(Frame, MetalFailed);
 
 export fn failed (kind: MetalErrorKind) -> MetalFailed;
 export fn default_context_options (width: int, height: int) -> ContextOptions;

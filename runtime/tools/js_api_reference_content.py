@@ -13,7 +13,6 @@ DESCRIPTION_BY_FAMILY: dict[str, str] = {
     "oro:async": "`oro:async` exposes async context propagation, deferred values, and resource tracking primitives.",
     "oro:async_hooks": "`oro:async_hooks` exposes hook-based async lifecycle inspection compatible with Node-style instrumentation.",
     "oro:background": "`oro:background` lets you inspect and coordinate the runtime background task surface.",
-    "oro:bootstrap": "`oro:bootstrap` downloads and verifies application payloads during bootstrap and update flows.",
     "oro:buffer": "`oro:buffer` provides `Buffer`, `Blob`, and related byte-oriented helpers.",
     "oro:cdp": "`oro:cdp` controls the runtime Chrome DevTools Protocol endpoint used for inspection and debugging.",
     "oro:child_process": "`oro:child_process` launches and manages subprocesses with a Node-compatible API.",
@@ -52,7 +51,6 @@ DESCRIPTION_BY_FAMILY: dict[str, str] = {
     "oro:navigation": "`oro:navigation` surfaces the Navigation API state that the runtime makes available to application code.",
     "oro:net": "`oro:net` provides Node-compatible TCP clients and servers.",
     "oro:network": "`oro:network` exposes a higher-level networking surface built on the Latica stack.",
-    "oro:node-esm-loader": "`oro:node-esm-loader` exposes the runtime’s ESM loader resolution hook.",
     "oro:npm": "`oro:npm/*` supports package-resolution and service-worker plumbing for NPM-backed modules.",
     "oro:os": "`oro:os` exposes platform, CPU, temporary-directory, and system metadata helpers.",
     "oro:path": "`oro:path` provides cross-platform path manipulation utilities.",
@@ -165,24 +163,6 @@ EXAMPLES_BY_FAMILY: dict[str, str] = {
         if (background.available) {
           console.log(await background.status())
         }
-        ```
-        """
-    ),
-    "oro:bootstrap": md(
-        """
-        Verify a downloaded artifact before handing it to the bootstrap helper:
-
-        ```js
-        import { bootstrap, checkHash } from 'oro:bootstrap'
-
-        const manifest = { url: 'https://updates.example/app.tar' }
-        const expectedHash = '0123456789abcdef'
-
-        const ok = await checkHash('./downloads/app.tar', expectedHash, 'sha256')
-        if (!ok) throw new Error('artifact hash mismatch')
-
-        const job = bootstrap({ url: manifest.url, dest: './downloads/app.tar' })
-        await job.run()
         ```
         """
     ),
@@ -745,19 +725,6 @@ EXAMPLES_BY_FAMILY: dict[str, str] = {
         ```
         """
     ),
-    "oro:node-esm-loader": md(
-        """
-        Reuse the runtime resolver from a custom ESM loader hook:
-
-        ```js
-        import resolve from 'oro:node-esm-loader'
-
-        export async function resolveHook(specifier, context, nextResolve) {
-          return resolve(specifier, context, nextResolve)
-        }
-        ```
-        """
-    ),
     "oro:npm": md(
         """
         Resolve an NPM specifier to the runtime module URL it will load:
@@ -1171,6 +1138,119 @@ EXAMPLES_BY_FAMILY: dict[str, str] = {
 
 
 DEFAULT_SEE_ALSO: tuple[tuple[str, str], ...] = (
-    ("Module index", "javascript/module-index"),
+    ("JavaScript APIs overview", "javascript/overview"),
     ("All module specifiers", "javascript/all-modules"),
 )
+
+
+GUIDE_REFS_BY_FAMILY: dict[str, tuple[tuple[str, str], ...]] = {
+    "oro:application": (
+        ("Windows and messaging", "guides/windows-and-messaging"),
+        ("Lifecycle hooks and deep links", "guides/lifecycle-hooks-and-deep-links"),
+        ("Desktop integrations", "guides/desktop-integrations"),
+    ),
+    "oro:assert": (
+        ("Testing and diagnostics", "guides/testing-and-diagnostics"),
+    ),
+    "oro:cdp": (
+        ("Testing and diagnostics", "guides/testing-and-diagnostics"),
+    ),
+    "oro:child_process": (
+        ("Configure your runtime project", "guides/configure-your-runtime-project"),
+        ("Testing and diagnostics", "guides/testing-and-diagnostics"),
+    ),
+    "oro:clipboard": (
+        ("Desktop integrations", "guides/desktop-integrations"),
+    ),
+    "oro:console": (
+        ("Testing and diagnostics", "guides/testing-and-diagnostics"),
+    ),
+    "oro:crypto": (
+        ("Secure storage and sessions", "guides/secure-storage-and-sessions"),
+    ),
+    "oro:diagnostics": (
+        ("Testing and diagnostics", "guides/testing-and-diagnostics"),
+    ),
+    "oro:errors": (
+        ("Testing and diagnostics", "guides/testing-and-diagnostics"),
+    ),
+    "oro:extension": (
+        ("Native extensions", "guides/native-extensions"),
+    ),
+    "oro:fetch": (
+        ("Calling HTTP APIs", "guides/calling-http-apis"),
+        ("Offline-first with service workers", "guides/offline-first-with-service-workers"),
+    ),
+    "oro:fs": (
+        ("Files and sandboxing", "guides/files-and-sandboxing"),
+        ("Project layout", "guides/project-layout"),
+    ),
+    "oro:hooks": (
+        ("Lifecycle hooks and deep links", "guides/lifecycle-hooks-and-deep-links"),
+        ("Windows and messaging", "guides/windows-and-messaging"),
+    ),
+    "oro:http": (
+        ("Calling HTTP APIs", "guides/calling-http-apis"),
+    ),
+    "oro:https": (
+        ("Calling HTTP APIs", "guides/calling-http-apis"),
+    ),
+    "oro:ipc": (
+        ("Native extensions", "guides/native-extensions"),
+        ("Windows and messaging", "guides/windows-and-messaging"),
+    ),
+    "oro:location": (
+        ("Lifecycle hooks and deep links", "guides/lifecycle-hooks-and-deep-links"),
+    ),
+    "oro:mcp": (
+        ("MCP and agent automation", "guides/mcp-and-agent-automation"),
+    ),
+    "oro:navigation": (
+        ("Lifecycle hooks and deep links", "guides/lifecycle-hooks-and-deep-links"),
+        ("Windows and messaging", "guides/windows-and-messaging"),
+    ),
+    "oro:notification": (
+        ("Desktop integrations", "guides/desktop-integrations"),
+        ("Lifecycle hooks and deep links", "guides/lifecycle-hooks-and-deep-links"),
+    ),
+    "oro:path": (
+        ("Files and sandboxing", "guides/files-and-sandboxing"),
+        ("Project layout", "guides/project-layout"),
+    ),
+    "oro:process": (
+        ("Configure your runtime project", "guides/configure-your-runtime-project"),
+    ),
+    "oro:protocol-handlers": (
+        ("Custom protocols and routing", "guides/custom-protocols-and-routing"),
+        ("Offline-first with service workers", "guides/offline-first-with-service-workers"),
+    ),
+    "oro:secure-storage": (
+        ("Secure storage and sessions", "guides/secure-storage-and-sessions"),
+    ),
+    "oro:service-worker": (
+        ("Offline-first with service workers", "guides/offline-first-with-service-workers"),
+        ("Custom protocols and routing", "guides/custom-protocols-and-routing"),
+    ),
+    "oro:shared-worker": (
+        ("Shared workers across windows", "guides/shared-workers-across-windows"),
+        ("Windows and messaging", "guides/windows-and-messaging"),
+    ),
+    "oro:sqlite": (
+        ("Local data with SQLite", "guides/local-data-with-sqlite"),
+        ("Files and sandboxing", "guides/files-and-sandboxing"),
+    ),
+    "oro:test": (
+        ("Testing and diagnostics", "guides/testing-and-diagnostics"),
+    ),
+    "oro:worker": (
+        ("Worker threads for heavy work", "guides/worker-threads-for-heavy-work"),
+        ("Shared workers across windows", "guides/shared-workers-across-windows"),
+    ),
+    "oro:worker_threads": (
+        ("Worker threads for heavy work", "guides/worker-threads-for-heavy-work"),
+    ),
+    "oro:window": (
+        ("Windows and messaging", "guides/windows-and-messaging"),
+        ("Desktop integrations", "guides/desktop-integrations"),
+    ),
+}

@@ -2,6 +2,11 @@
 
 `oro:child_process` launches and manages subprocesses with a Node-compatible API.
 
+## Related guides
+
+- [Configure your runtime project](?p=guides/configure-your-runtime-project)
+- [Testing and diagnostics](?p=guides/testing-and-diagnostics)
+
 ## Examples
 
 Spawn a subprocess and consume its stdout stream:
@@ -21,11 +26,6 @@ await new Promise((resolve, reject) => {
 })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -39,8 +39,9 @@ oro:child_process/worker
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:child_process</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:child_process`
 
 ```ts
 declare module "oro:child_process" {
@@ -231,10 +232,7 @@ declare module "oro:child_process" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:child_process/worker</code></summary>
+#### `oro:child_process/worker`
 
 ```ts
 declare module "oro:child_process/worker" {
@@ -242,6 +240,9 @@ declare module "oro:child_process/worker" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

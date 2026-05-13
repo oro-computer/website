@@ -13,17 +13,17 @@ Canonical doc: [io](?p=std/io).
 ## Importing
 
 ```silk
-import std::io;
+import io from "std/io";
 ```
 
 ## Examples
 
 ### Example: formatted printing
 ```silk
-import std::io;
+import io from "std/io";
 
 fn main () -> int {
-  std::io::println("hello {s} answer={d}", "world", 42);
+  io::println("hello {s} answer={d}", "world", 42);
   return 0;
 }
 ```

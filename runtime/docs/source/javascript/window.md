@@ -10,6 +10,11 @@ import application from 'oro:application'
 const current = await application.getCurrentWindow()
 ```
 
+## Related guides
+
+- [Windows and messaging](?p=guides/windows-and-messaging)
+- [Desktop integrations](?p=guides/desktop-integrations)
+
 ## Common operations
 
 ```js
@@ -63,8 +68,9 @@ oro:window/hotkey
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:window</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:window`
 
 ```ts
 declare module "oro:window" {
@@ -443,10 +449,7 @@ declare module "oro:window" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:window/constants</code></summary>
+#### `oro:window/constants`
 
 ```ts
 declare module "oro:window/constants" {
@@ -470,10 +473,7 @@ declare module "oro:window/constants" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:window/hotkey</code></summary>
+#### `oro:window/hotkey`
 
 ```ts
 declare module "oro:window/hotkey" {
@@ -764,6 +764,8 @@ declare module "oro:window/hotkey" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

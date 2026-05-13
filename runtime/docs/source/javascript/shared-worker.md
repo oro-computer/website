@@ -2,6 +2,11 @@
 
 `oro:shared-worker/*` exposes the shared-worker environment and runtime helpers.
 
+## Related guides
+
+- [Shared workers across windows](?p=guides/shared-workers-across-windows)
+- [Windows and messaging](?p=guides/windows-and-messaging)
+
 ## Examples
 
 Launch a shared worker and communicate through its shared port:
@@ -14,11 +19,6 @@ const worker = new SharedWorker(new URL('./shared.js', import.meta.url))
 worker.port.start()
 worker.port.postMessage({ type: 'warmup' })
 ```
-
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -38,8 +38,9 @@ oro:shared-worker/worker
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:shared-worker</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:shared-worker`
 
 ```ts
 declare module "oro:shared-worker" {
@@ -55,10 +56,7 @@ declare module "oro:shared-worker" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:shared-worker/debug</code></summary>
+#### `oro:shared-worker/debug`
 
 ```ts
 declare module "oro:shared-worker/debug" {
@@ -67,10 +65,7 @@ declare module "oro:shared-worker/debug" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:shared-worker/global</code></summary>
+#### `oro:shared-worker/global`
 
 ```ts
 declare module "oro:shared-worker/global" {
@@ -84,10 +79,7 @@ declare module "oro:shared-worker/global" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:shared-worker/index</code></summary>
+#### `oro:shared-worker/index`
 
 ```ts
 declare module "oro:shared-worker/index" {
@@ -124,10 +116,7 @@ declare module "oro:shared-worker/index" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:shared-worker/init</code></summary>
+#### `oro:shared-worker/init`
 
 ```ts
 declare module "oro:shared-worker/init" {
@@ -158,10 +147,7 @@ declare module "oro:shared-worker/init" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:shared-worker/state</code></summary>
+#### `oro:shared-worker/state`
 
 ```ts
 declare module "oro:shared-worker/state" {
@@ -170,10 +156,7 @@ declare module "oro:shared-worker/state" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:shared-worker/worker</code></summary>
+#### `oro:shared-worker/worker`
 
 ```ts
 declare module "oro:shared-worker/worker" {
@@ -191,6 +174,9 @@ declare module "oro:shared-worker/worker" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

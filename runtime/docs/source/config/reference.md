@@ -25,13 +25,17 @@ oroc config --describe build.copy_map
 | `build.env` | — | Space-separated environment variable names forwarded into the runtime. |
 | `build.script` | — | Script to run before the copy phase (common for web build steps). |
 | `build.script_after` | — | Script to run after the build lifecycle completes. |
+| `build.extensions.<name>` | — | Native extension source file or directory to build into the app bundle. |
+| `build.extensions.<name>.source` | — | Directory-style extension source declaration for multi-file extensions. |
+| `build.extensions_abi_strict` | `true` | Require native extensions to match the runtime extension ABI. |
 | `build.headless` | `false` | Start the application in headless mode (no visible window). |
 | `build.allow_exec` | `false` | Allow external command execution during builds (Gradle, NDK, scripts). |
 | `webview.root` | — | Root path under the app origin used as the default navigation base. |
 | `webview.default_index` | `/index.html` | Default index path for navigation. |
 | `webview.allow_any_route` | `false` | SPA-style fallback: unmatched routes resolve to `default_index`. |
 | `webview.url_protocols` | — | Space-separated protocol schemes treated as WebView-safe origins. |
-| `webview.protocol_handlers` | — | Space-separated protocol handlers registered for the URL shim. |
+| `webview.protocol-handlers` | — | Space-separated protocol handler schemes registered for URL and fetch routing. |
+| `webview.protocol-handlers.<scheme>` | — | Service-worker script path to auto-register for a custom protocol handler scheme. |
 | `webview.watch` | `false` | Watch files in development (emits change events). |
 | `webview.watch_reload` | `true` | Reload the page when a file change event is emitted. |
 | `window.width` | `80%` | Default window width (percentage or pixels). |
@@ -39,6 +43,7 @@ oroc config --describe build.copy_map
 | `window.resizable` | `true` | Whether the main window is resizable (desktop). |
 | `filesystem.sandbox_enabled` | `true` | Enable the filesystem sandbox (non-Apple platforms). |
 | `filesystem.no_follow_symlinks` | `true` | Disallow following symlinks for resource paths. |
+| `extensions.allowed_roots` | — | Space-separated absolute directories allowed for native extension loading. |
 
 ## Sections you’ll commonly see
 

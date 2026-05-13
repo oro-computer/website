@@ -2,6 +2,10 @@
 
 `oro:location` normalizes the current runtime location and origin semantics across platforms.
 
+## Related guides
+
+- [Lifecycle hooks and deep links](?p=guides/lifecycle-hooks-and-deep-links)
+
 ## Examples
 
 Inspect the runtime-normalized location values for the current context:
@@ -12,11 +16,6 @@ import location from 'oro:location'
 console.log(location.href)
 console.log(location.origin)
 ```
-
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -30,8 +29,9 @@ oro:location
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:location</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:location`
 
 ```ts
 declare module "oro:location" {
@@ -53,6 +53,9 @@ declare module "oro:location" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

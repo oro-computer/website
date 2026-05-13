@@ -9,7 +9,7 @@ This documentation is organized around how you use `sage` from the command line:
 - **JavaScript APIs** — the full QuickJS plugin surface, stable `sage:*` built-in modules, globals, events, limits, and examples.
 - **Man pages** — reader-friendly versions of `sage(1)`, `sage(7)`, and `sage-plugin-api(3)`.
 
-## Ask AI / `llms.txt`
+## LLM documentation packs
 
 For AI assistants and tooling:
 

@@ -15,11 +15,6 @@ const restored = await gunzip(compressed)
 console.log(restored.toString())
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -32,8 +27,9 @@ oro:zlib
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:zlib</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:zlib`
 
 ```ts
 declare module "oro:zlib" {
@@ -161,6 +157,9 @@ declare module "oro:zlib" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

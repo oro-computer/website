@@ -8,17 +8,17 @@ Canonical doc: [fmt](?p=std/fmt).
 
 ## Notes
 
-- Supported forms is available to support `std::io` printing.
+- Supported forms is available to support `io` printing.
 - Details: [fmt](?p=std/fmt)
 
 ## Examples
 
 ### Example: `println` formatting
 ```silk
-import std::io;
+import io from "std/io";
 
 fn main () -> int {
-  std::io::println("name={s} ok={}", "silk", true);
+  io::println("name={s} ok={}", "silk", true);
   return 0;
 }
 ```

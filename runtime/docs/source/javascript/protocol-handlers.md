@@ -2,6 +2,11 @@
 
 `oro:protocol-handlers` exposes runtime helpers for custom protocol and service-worker routing.
 
+## Related guides
+
+- [Custom protocols and routing](?p=guides/custom-protocols-and-routing)
+- [Offline-first with service workers](?p=guides/offline-first-with-service-workers)
+
 ## Examples
 
 Ask the runtime which service worker is currently handling a custom scheme:
@@ -13,11 +18,6 @@ const worker = await getServiceWorker({ scheme: 'npm' })
 
 console.log(worker)
 ```
-
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -31,8 +31,9 @@ oro:protocol-handlers
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:protocol-handlers</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:protocol-handlers`
 
 ```ts
 declare module "oro:protocol-handlers" {
@@ -57,6 +58,9 @@ declare module "oro:protocol-handlers" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

@@ -1,26 +1,53 @@
 # `oro:extension`
 
-`oro:extension` loads native and wasm extensions and reports extension runtime state.
+`oro:extension` loads app-bundled native extensions and Wasm extensions, then exposes their registered runtime state to
+JavaScript.
 
-## Examples
+Use it when ordinary JavaScript modules are not the right boundary: platform-specific code, a C/C++ library that already
+exists, a small Wasm module, or a runtime route that needs to live beside native resources.
 
-Load a runtime extension and inspect the resulting binding:
+## Related guides
+
+- [Native extensions](?p=guides/native-extensions)
+
+Start with the guide when you need to write the C/C++ or Wasm extension itself.
+
+## Authoring contract
+
+At a high level:
+
+- extension names are filesystem-safe identifiers such as `image_tools` or `simple-ipc-ping`,
+- C/C++ extensions include `oro/extension.h` and export `__oapi_extension_init` through
+  `ORO_RUNTIME_REGISTER_EXTENSION`,
+- Wasm extensions use the same registration contract with `target = "wasm32"`,
+- extension code usually maps one or more IPC routes with `oapi_ipc_router_map`,
+- app code loads the extension with `oro:extension` and talks to those routes with `oro:ipc`,
+- production apps should constrain load locations with `extensions.allowed_roots`.
+
+## Example
 
 ```js
-import { load, stats } from 'oro:extension'
+import extension from 'oro:extension'
+import ipc from 'oro:ipc'
 
-const extension = await load('image-tools', { allow: ['resize'] })
+const imageTools = await extension.load('image_tools', {
+  allow: ['ipc'],
+})
 
-console.log(extension.type)
-console.log(await stats())
+const resized = await ipc.request('image_tools.resize', {
+  path: 'input/avatar.png',
+  width: 256,
+  height: 256,
+})
 
-await extension.unload()
+console.log(imageTools.type)
+console.log(resized.data)
+
+await imageTools.unload()
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
+`allow` is the extension capability policy. If the native initializer or a route handler calls an API that is not
+allowed, that call fails instead of silently expanding the extension's authority.
 
 ## API reference
 
@@ -34,8 +61,9 @@ oro:extension
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:extension</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:extension`
 
 ```ts
 declare module "oro:extension" {
@@ -244,6 +272,8 @@ declare module "oro:extension" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

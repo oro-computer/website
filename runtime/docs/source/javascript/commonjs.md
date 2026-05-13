@@ -15,11 +15,6 @@ console.log(isBuiltin('fs'))
 console.log(require('./package.json').name)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -38,8 +33,9 @@ oro:commonjs/require
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:commonjs</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:commonjs`
 
 ```ts
 declare module "oro:commonjs" {
@@ -56,10 +52,7 @@ declare module "oro:commonjs" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:commonjs/builtins</code></summary>
+#### `oro:commonjs/builtins`
 
 ```ts
 declare module "oro:commonjs/builtins" {
@@ -100,10 +93,7 @@ declare module "oro:commonjs/builtins" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:commonjs/cache</code></summary>
+#### `oro:commonjs/cache`
 
 ```ts
 declare module "oro:commonjs/cache" {
@@ -456,10 +446,7 @@ declare module "oro:commonjs/cache" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:commonjs/loader</code></summary>
+#### `oro:commonjs/loader`
 
 ```ts
 declare module "oro:commonjs/loader" {
@@ -872,10 +859,7 @@ declare module "oro:commonjs/loader" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:commonjs/module</code></summary>
+#### `oro:commonjs/module`
 
 ```ts
 declare module "oro:commonjs/module" {
@@ -1294,10 +1278,7 @@ declare module "oro:commonjs/module" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:commonjs/package</code></summary>
+#### `oro:commonjs/package`
 
 ```ts
 declare module "oro:commonjs/package" {
@@ -1682,10 +1663,7 @@ declare module "oro:commonjs/package" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:commonjs/require</code></summary>
+#### `oro:commonjs/require`
 
 ```ts
 declare module "oro:commonjs/require" {
@@ -1777,6 +1755,9 @@ declare module "oro:commonjs/require" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

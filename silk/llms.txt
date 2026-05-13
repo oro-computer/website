@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-05-12T22:18:58+00:00
+Generated: 2026-05-13T19:03:06+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -423,7 +423,6 @@ Silk programs are ordinary `.slk` files. A small program can look like this:
 
 ```silk
 import { println } from "std/io";
-
 fn main () -> int {
   println("hello from silk");
   return 0;
@@ -470,123 +469,128 @@ URL: /silk/docs/?p=guides/purpose
 
 # What Silk is for
 
-Silk is a high performance general purpose programming language with formal verification built in. Silk targets computer
-systems, mobile / tablet devices, WASM / WASI runtimes, and the web.
+Silk is for systems code that has to be understood, shipped, embedded, and trusted after it grows beyond a single file.
 
-Silk is developed as a coherent system: the language, standard library, compiler, and CLI are documented as the canonical
-reference, and the implementation is built to match that contract.
+It is a native programming language for tools, libraries, runtimes, services, protocol code, WASI modules, and platform-facing
+software where the boundaries are as important as the implementation. Silk keeps those boundaries visible: the package a file
+belongs to, the modules it imports, the values that can be missing, the failures that must be handled, the target assumptions
+behind a branch, and the invariants the compiler should prove.
 
-This matters because it keeps the language predictable as it grows:
+> Silk is for code where “it compiled” is not enough. The source should also say what it depends on, what can fail, what crosses
+> the ABI, and what must remain true.
 
-- The “meaning” of a construct lives in the docs, not in folklore.
-- Tooling can rely on stable concepts (packages, imports, diagnostics, CLI shapes).
-- The implementation can grow incrementally while staying predictable to users.
+## Why it exists
 
-If you’re new to Silk, this page gives you the mental model: what you write, what you get, and why the design looks the way
-it does.
+Most systems languages give you power, but they often leave the shape of the system to convention. Package boundaries live in
+build scripts. Foreign calls live in headers. Failure policy lives in team habits. Correctness arguments live in review comments
+or bug reports.
 
-## Design goals (practical)
+Silk pulls those concerns back into the program. Imports are explicit and path-like for normal user-space modules. Public exports
+are deliberate. `Result(T, E)` and `T?` make failure and absence part of the type a caller sees. `attr(...)` lets source code name
+the platform or target assumption behind a branch. Formal Silk directives let you attach local proofs to the parts of a program
+that are easiest to get wrong: bounds, invariants, preconditions, postconditions, and protocol rules.
 
-Silk is designed around a handful of constraints that show up everywhere:
+The result is not a language trying to hide systems programming. It is a language trying to make systems programming readable
+enough that humans, tooling, embedders, and verifiers can agree on what the program means.
 
-### Explicit structure
+## The shape of useful Silk
 
-Real systems code is easier to maintain when it is obvious where names come from and how code is organized.
-
-- Names are qualified with `::`.
-- Files declare a `package` or `module` header at the top.
-- Imports are explicit and live in a contiguous import block.
-
-That gives you codebases where “what depends on what” is visible without special tooling.
-
-### A language you can reason about
-
-Silk pushes toward **predictable semantics**:
-
-- Types matter most at boundaries (public APIs, FFI, storage formats). Silk keeps those boundaries explicit.
-- Error handling is explicit and typed, so you can see what can fail and what must be handled.
-- Verification is opt-in by syntax (Formal Silk): ordinary code stays ordinary.
-
-### A toolchain you can embed
-
-Silk is not only “a compiler binary”. It is also designed to be integrated as a library:
-
-- a C99 embedding ABI (`libsilk`) for host applications and build systems
-- a Zig embedding wrapper for Zig-native integrations
-
-This is useful when you want compilation as a component inside another program (editors, language servers, build
-orchestrators, analysis tools).
-
-## The basic programming model
-
-### Files form a module set
-
-When you run the compiler, you compile a **module set**: a set of `.slk` files that are type-checked together.
-
-You can provide that set explicitly (a list of files), or you can ask `silk` to load it from a package manifest
-(`silk.toml`). Either way, the idea is the same: *“these files form a unit.”*
-
-### Packages and imports keep boundaries obvious
-
-A simple file often begins like this:
+A Silk file should tell you its operating context before you read the body. In ordinary user-space code, imports use module
+specifier syntax, so dependency paths look like package and filesystem paths instead of ABI symbol paths.
 
 ```silk
-package app;
+package worker;
 
 import { println } from "std/io";
-```
+import fs from "std/fs";
 
-That header tells you the namespace (`app`) and the dependencies (here: `std/io`) before you read the rest of the
-file.
+struct Job {
+  path: string,
+  bytes: int,
+}
 
-### Programs are ordinary code
+interface Sink {
+  fn write(job: Job) -> int;
+}
 
-Executables use a conventional entry point: `fn main () -> int` (exit code).
+struct ConsoleSink {
+  label: string,
+}
 
-```silk
-import { println } from "std/io";
+impl ConsoleSink as Sink {
+  fn write (self: &ConsoleSink, job: Job) -> int {
+    println("[{s}] indexed {s} ({d} bytes)", self.label, job.path, job.bytes);
+    return 0;
+  }
+}
+
+fn default_path () -> string {
+  if attr(target="wasm32-wasi") { return "/data/input.txt"; }
+  if attr(os="linux") { return "/var/lib/app/input.txt"; }
+  return "./input.txt";
+}
+
+fn inspect (path: string, max_bytes: int) -> Job? {
+  match (fs::read_file_string(path)) {
+    Ok(body) => {
+      let bytes: int = body.len() as int;
+      if bytes > max_bytes {
+        return None;
+      }
+      return Some(Job{ path: path, bytes: bytes });
+    },
+    Err(_) => {
+      return None;
+    },
+  }
+}
 
 fn main () -> int {
-  println("hello from silk");
-  return 0;
+  let sink = ConsoleSink{ label: "silk" };
+  let path: string = default_path();
+  let job: Job = match (inspect(path, 1048576)) {
+    Some(v) => v,
+    None => Job{ path: path, bytes: -1 },
+  };
+
+  if job.bytes < 0 {
+    println("error: inspect failed");
+    return 1;
+  }
+
+  return sink.write(job);
 }
 ```
 
-Silk is designed so that “the smallest program” uses the same constructs you use at scale: packages, imports, types,
-functions, and explicit boundaries.
+The point of this example is not that Silk has structs, interfaces, imports, optionals, and attributes. The point
+is that those pieces serve one story: a small systems component can state its dependency surface, platform choice, error path,
+and public behavior without pushing that knowledge into prose or a separate build layer.
 
-## Where Silk fits well
+## Where it fits
 
-Silk is aimed at code where clarity and correctness matter:
+Silk is a good fit when you are writing code that will become someone else’s dependency. That might be a command-line tool, a
+runtime component, a parser, a network or storage library, a WASI module, a native library with a C ABI, or a package meant to be
+published and reused. In each case, the reader needs to know what is stable, what is private, what can fail, and what assumptions
+the build made.
 
-- tools and developer infrastructure
-- network services and protocol code
-- parsers, encoders, and data plumbing
-- libraries that need a stable ABI boundary
-- systems components that benefit from local verification (Formal Silk)
+Silk is also a good fit when correctness has local pressure points. You do not need to turn the whole program into a proof
+project. You can keep ordinary code ordinary, then add Formal Silk where a boundary check, loop invariant, structure requirement,
+or function contract earns its keep.
 
-If you want a language that is both *low-level enough* to express systems concerns and *structured enough* to keep large
-projects readable, Silk is built for that space.
+For embedders, Silk is meant to be more than a standalone compiler binary. The toolchain ships a documented C99 `libsilk` ABI,
+generated headers, explicit output kinds, and target-aware build behavior so hosts can treat compilation as a component in a
+larger system.
 
-## How to use this documentation
+## The payoff
 
-This site is organized into two layers:
+Silk’s value is strongest once a project has multiple modules, targets, and consumers. The language is designed so source files
+remain navigable, package APIs remain intentional, failure remains typed, native and WASI targets remain explicit, and proof
+obligations stay close to the code they justify.
 
-- **Guides**: reading order, “how to think”, and realistic examples.
-- **Reference**: precise language rules, standard library modules, and CLI/ABI details.
-
-The recommended flow:
-
-1. [Hello world](?p=guides/hello-world)
-2. [Language tour](?p=guides/language-tour)
-3. [Modules & packages](?p=guides/modules-and-packages)
-4. [Practical logger module](?p=guides/practical-logger-module)
-5. [Standard library](?p=guides/standard-library)
-6. [CLI and toolchain](?p=guides/cli)
-7. [Testing](?p=guides/testing)
-8. [Formal Silk](?p=guides/formal-silk)
-
-If you already know what you’re looking for, use search and the sidebar reference sections.
+If you are evaluating Silk, read this page as the thesis: Silk is for building systems software whose contracts should be visible
+in the same place as the code. From here, continue with [Hello world](?p=guides/hello-world), then the
+[Language tour](?p=guides/language-tour), [Modules, packages, and publication](?p=guides/modules-and-packages), and
+[Formal Silk](?p=guides/formal-silk).
 
 ==============================================================================
 DOCS: Hello world (guides/hello-world)
@@ -1484,7 +1488,7 @@ WriteU8
 ```
 
 Use those names directly. For example, write `Result(T, E)` rather than
-importing `std/result` only to reach `std::result::Result`.
+importing `std/result` only to reach the defining module.
 
 ## Direct package and symbol imports
 
@@ -1783,19 +1787,28 @@ URL: /silk/docs/?p=guides/practical-logger-module
 
 # Practical Logger Module Walkthrough
 
-This walkthrough builds a logger package that is small enough to study but
-structured enough to adapt:
+This walkthrough builds a small structured logger package that can be imported
+from Silk and exposed to C through a generated header. It starts with the normal
+Silk API in `src/lib.slk`, then adds `src/c_api.slk` for the narrow ABI wrapper.
 
-- a reusable package root with `silk.toml`,
-- a dependency module imported with `import logger from "logger";`,
-- levels, configuration, structured entries, optional metadata, and filtering,
-- a configurable writer function with a console implementation,
-- a sink interface for source-level conformance checks,
-- `Result` for parsing and `T?` for logging outcomes,
-- target-aware defaults with `attr(...)`,
-- package targets for demos, libraries, headers, and WASI,
-- an ABI wrapper for foreign callers,
-- and GitHub/npm publication.
+After the `logger_static` target emits `build/acme_logger.h` and
+`build/libacme_logger.a`, a C caller can drive the package with borrowed
+`SilkString` values:
+
+```c
+#include <silk/silk.h>
+#include "acme_logger.h"
+
+static SilkString silk_str(const char *ptr) {
+  SilkString s = { .ptr = (char *)ptr, .len = 0 };
+  while (ptr[s.len] != '\0') s.len++;
+  return s;
+}
+
+int main(void) {
+  return logger_write_c(20, silk_str("ffi"), silk_str("hello from C"));
+}
+```
 
 The manifest package name is `logger`. Source modules declare the symbol
 namespace with `package acme::logger;`. Downstream code imports the package's
@@ -2407,6 +2420,27 @@ fn level_from_int (level: int) -> Level {
   if level <= 20 { return Level::Info; }
   if level <= 30 { return Level::Warn; }
   return Level::Error;
+}
+```
+
+The generated header uses the ABI shapes from `silk/silk.h`. A minimal C caller
+can pass borrowed string views into the exported wrapper:
+
+```c
+#include <silk/silk.h>
+#include "acme_logger.h"
+
+static SilkString silk_str(const char *ptr) {
+  SilkString s = { .ptr = (char *)ptr, .len = 0 };
+  while (ptr[s.len] != '\0') s.len++;
+  return s;
+}
+
+int main(void) {
+  return logger_write_c(
+      20,
+      silk_str("ffi"),
+      silk_str("hello from C"));
 }
 ```
 
@@ -5720,7 +5754,7 @@ Rule because it is not a `T | ...` typed-error expression.
 The `match` expression also supports a small subset for
 recoverable “success or error” values. In the initial subset, this includes:
 
-- `std::result::Result(T, E)` (an `enum` with `Ok(T)` and `Err(E)` variants), and
+- `Result(T, E)` (an `enum` with `Ok(T)` and `Err(E)` variants), and
 - “Result-like” structs of the form `{ value: T?, err: E? }`.
 
 For the struct form, the runtime invariant is: exactly one of `value` and `err`
@@ -9418,7 +9452,7 @@ type Int32 = i32;
 type struct Bar = Foo;
 type fn IntAdder = fn(int, int) -> int;
 type pure fn PureIntAdder = fn(int, int) -> int;
-type ResultOf(T) = std::result::Result(T, string);
+type ResultOf(T) = Result(T, string);
 export type struct PublicBar = Foo;
 ```
 
@@ -9432,7 +9466,7 @@ Semantics (current implementation):
  syntax as generic structs, enums, interfaces, impls, and functions. Applying
  the alias in a type position substitutes the supplied type arguments into the
  transparent target, for example `ResultOf(int)` is equivalent to
- `std::result::Result(int, string)`.
+ `Result(int, string)`.
 - Type aliases may be used anywhere a type is expected (parameter/result types,
  local annotations, struct fields, `as` casts, etc.).
 - Cycles in type aliases are rejected (`E2058`).
@@ -12698,7 +12732,7 @@ Static-method receiver sugar (Supported forms):
  compiler may resolve it as a call to a visible static method of the receiver
  type by inserting the receiver as the first argument: `Type.method(value, ...)`.
 - This supports fluent chaining for value-consuming helper APIs like
- `std::result::Result.unwrap_or`:
+ `Result.unwrap_or`:
 
   ```silk
   let r: R = /* ... */;
@@ -12948,7 +12982,7 @@ Conformance rules (implementation):
  - `impl T as std::interfaces::Deserialize(S)` provides
  `fn deserialize(value: S) -> Self` (no `self` parameter),
  - `impl T as std::interfaces::Parse(E, S)` provides
- `fn parse(value: S) -> std::result::Result(Self, E)` (no `self`
+ `fn parse(value: S) -> Result(Self, E)` (no `self`
  parameter),
  - calls use `T.deserialize(value)`.
  - and `Parse` calls use `T.parse(value)`.
@@ -13611,7 +13645,7 @@ errors** (`error`, `panic`, and `T | ErrorType...`), specified in
 Silk distinguishes between:
 
 - **Recoverable errors** (invalid user input, I/O failures, parse failures): model
- these as normal values, typically using `std::result::Result(T, E)` or an
+ these as normal values, typically using `Result(T, E)` or an
  optional (`T?`).
 - **Typed errors** (`T | ErrorType...` + `panic`): reserved for unrecoverable
  contract violations and logic bugs that should not be silently ignored (see
@@ -13623,7 +13657,7 @@ Silk distinguishes between:
 tagged result (`std::url::URLResult`), so callers can report an error and keep
 going without aborting.
 
-A runnable example that wraps `URLResult` into `std::result::Result` and parses
+A runnable example that wraps `URLResult` into `Result` and parses
 all command-line arguments is in:
 
 - `examples/feature_errors_recoverable_url_parse.slk`
@@ -13758,7 +13792,7 @@ failures such as:
 - parsing failures,
 - I/O failures.
 
-Those should typically be modeled as ordinary values using `std::result::Result`
+Those should typically be modeled as ordinary values using `Result`
 or optionals (`T?`) so callers can handle them and continue normal execution.
 
 See:
@@ -13956,11 +13990,11 @@ match (inspect_issues()) {
 ### `match` statements over Result-like values (recoverable)
 
 The `match` **statement** form can also be used to destructure common
-recoverable result shapes such as `std::result::Result(T, E)`.
+recoverable result shapes such as `Result(T, E)`.
 
 When the scrutinee expression has a recoverable result type such as:
 
-- `std::result::Result(T, E)` (an `enum` with `Ok(T)` and `Err(E)` variants), or
+- `Result(T, E)` (an `enum` with `Ok(T)` and `Err(E)` variants), or
 - a “Result-like” struct with fields:
  - `value: T?`
  - `err: E?` where `E` is an `error` type,
@@ -14176,7 +14210,7 @@ wrapper and control-flow forms:
  - `while let Ok(x) = r { ... }` / `while let Err(x) = r { ... }`
  - statement `match (r) { Ok(x) => ..., Err(y) => ... }`
  for supported result-shaped enums whose payload type carries a borrow,
- including monomorphized `std::result::Result(T, E)` instantiations, and the
+ including monomorphized `Result(T, E)` instantiations, and the
  equivalent qualified enum-variant forms such as `State::Ready(x)`.
 - `if` expressions preserve borrow identity when:
  - every borrowing branch resolves to the same local origin,
@@ -18337,13 +18371,13 @@ Public owning/resource APIs must make cleanup obvious and safe.
 ## Errors
 
 Silk supports both typed errors ([typed errors](?p=language/typed-errors)) and
-recoverable error values (`T?` and `std::result::Result(T, E)`). Public `std::`
+recoverable error values (`T?` and `Result(T, E)`). Public `std::`
 APIs should follow these rules:
 
 - Use `T?` when “absence” is the only meaningful error case and no additional
  error information is required (e.g. `pop() -> T?`).
 - Use a result type when callers need to distinguish multiple error causes.
- The design target is `std::result::Result(T, E)` (see [result](?p=std/result)),
+ The design target is `Result(T, E)` (see [result](?p=std/result)),
  with `Ok(T)` / `Err(E)` cases.
 - Prefer that the **primary** API name returns `Result(...)` / optional error,
  rather than exporting parallel `*_result` variants.
@@ -18966,11 +19000,11 @@ interface Serialize(S = string) {
 }
 
 interface TrySerialize(E, S = std::strings::String) {
-  fn try_serialize () -> std::result::Result(S, E);
+  fn try_serialize () -> Result(S, E);
 }
 
 interface Parse(E, S = string) {
-  fn parse (value: S) -> std::result::Result(Self, E);
+  fn parse (value: S) -> Result(Self, E);
 }
 
 interface Deserialize(S = string) {
@@ -19554,11 +19588,11 @@ struct IOFailed { code: int, requested: i64 }
 struct TTYSize { rows: int, cols: int }
 struct TTYRawMode { handle: u64 }
 struct BufferedWriter { fd: int, buf: std::buffer::BufferU8, flush_threshold: i64 }
-export type IOResult = std::result::Result(int, IOFailed);
+export type IOResult = Result(int, IOFailed);
 export type IOError = IOFailed;
-export type IOErrorIntResult = std::result::Result(int, IOError);
-export type TTYRawModeResult = std::result::Result(TTYRawMode, IOFailed);
-export type BufferedWriterResult = std::result::Result(BufferedWriter, IOFailed);
+export type IOErrorIntResult = Result(int, IOError);
+export type TTYRawModeResult = Result(TTYRawMode, IOFailed);
+export type BufferedWriterResult = Result(BufferedWriter, IOFailed);
 
 export fn read (fd: int, buf: std::arrays::ByteSlice) -> IOResult;
 export fn write (fd: int, buf: std::arrays::ByteSlice) -> IOResult;
@@ -19916,7 +19950,7 @@ import { println } from "std/io";
 import format from "std/fmt";
 import fmt from "std/fmt";
 import strings from "std/strings";
-type StringAllocResult = std::result::Result(std::strings::String, std::fmt::Error);
+type StringAllocResult = Result(std::strings::String, std::fmt::Error);
 
 fn main () -> int {
   const a = 1;
@@ -19950,7 +19984,7 @@ fn main () -> int {
 Signature:
 
 ```silk
-export default fn format (fmt: string, ...args: Arg) -> std::result::Result(std::strings::String, std::fmt::Error);
+export default fn format (fmt: string, ...args: Arg) -> Result(std::strings::String, std::fmt::Error);
 ```
 
 Notes (Supported forms):
@@ -20005,9 +20039,9 @@ export fn trim (s: string) -> string;
 export fn trim_start (s: string) -> string;
 export fn trim_end (s: string) -> string;
 
-export fn pad_left (s: string, min_len: i64, pad: string) -> std::result::Result(String, std::memory::OutOfMemory);
-export fn pad_right (s: string, min_len: i64, pad: string) -> std::result::Result(String, std::memory::OutOfMemory);
-export fn pad_center (s: string, min_len: i64, pad: string) -> std::result::Result(String, std::memory::OutOfMemory);
+export fn pad_left (s: string, min_len: i64, pad: string) -> Result(String, std::memory::OutOfMemory);
+export fn pad_right (s: string, min_len: i64, pad: string) -> Result(String, std::memory::OutOfMemory);
+export fn pad_center (s: string, min_len: i64, pad: string) -> Result(String, std::memory::OutOfMemory);
 ```
 
 Notes:
@@ -20029,14 +20063,14 @@ struct StringBuilder {
 }
 
 impl StringBuilder {
-  public fn init (cap: i64) -> std::result::Result(StringBuilder, std::memory::AllocFailed);
+  public fn init (cap: i64) -> Result(StringBuilder, std::memory::AllocFailed);
   public fn empty () -> StringBuilder;
   public fn push_u8 (mut self: &StringBuilder, value: u8) -> std::memory::OutOfMemory?;
   public fn push_char (mut self: &StringBuilder, value: char) -> std::memory::OutOfMemory?;
   public fn pop_u8 (mut self: &StringBuilder) -> u8?;
   public fn get_u8 (self: &StringBuilder, index: i64) -> u8;
   public fn set_u8 (mut self: &StringBuilder, index: i64, value: u8) -> void;
-  public fn into_string (mut self: &StringBuilder) -> std::result::Result(String, std::memory::OutOfMemory);
+  public fn into_string (mut self: &StringBuilder) -> Result(String, std::memory::OutOfMemory);
 }
 
 impl StringBuilder as std::interfaces::ReserveAdditional {
@@ -20073,9 +20107,9 @@ struct String {
 
 impl String {
   public fn empty () -> String;
-  public fn from_string (s: string) -> std::result::Result(String, std::memory::OutOfMemory);
-  public fn from_buffer_u8 (mut v: &std::buffer::BufferU8) -> std::result::Result(String, std::memory::OutOfMemory);
-  public fn from_chars (chars: std::arrays::Slice(char)) -> std::result::Result(String, std::memory::OutOfMemory);
+  public fn from_string (s: string) -> Result(String, std::memory::OutOfMemory);
+  public fn from_buffer_u8 (mut v: &std::buffer::BufferU8) -> Result(String, std::memory::OutOfMemory);
+  public fn from_chars (chars: std::arrays::Slice(char)) -> Result(String, std::memory::OutOfMemory);
   public fn as_string (self: &String) -> string;
 
   public fn push_u8 (mut self: &String, value: u8) -> std::memory::OutOfMemory?;
@@ -20677,7 +20711,7 @@ struct Vector(T) {
 }
 
 impl Vector(T) {
-  public fn init (cap: i64) -> std::result::Result(Vector(T), std::memory::AllocFailed);
+  public fn init (cap: i64) -> Result(Vector(T), std::memory::AllocFailed);
   public fn try_init (cap: i64) -> Vector(T)?;
   public fn empty () -> Vector(T);
   public fn push (mut self: &Vector(T), value: T) -> std::memory::OutOfMemory?;
@@ -20809,7 +20843,7 @@ import map from "std/map";
 import memory from "std/memory";
 
 type Map = std::map::HashMap(u64, int);
-type InitResult = std::result::Result(Map, std::memory::AllocFailed);
+type InitResult = Result(Map, std::memory::AllocFailed);
 
 fn main () -> int {
   match (Map.init(16)) {
@@ -20836,7 +20870,7 @@ import map from "std/map";
 import memory from "std/memory";
 
 type Map = std::map::HashMap(u64, int);
-type InitResult = std::result::Result(Map, std::memory::AllocFailed);
+type InitResult = Result(Map, std::memory::AllocFailed);
 
 fn hash_u64 (k: u64) -> u64 { return k; }
 fn eq_u64 (a: u64, b: u64) -> bool { return a == b; }
@@ -20866,15 +20900,15 @@ fn main () -> int {
 `HashMap(K, V)` provides:
 
 - `fn empty () -> HashMap(K, V);` (only for default key types)
-- `fn init (cap: i64) -> std::result::Result(HashMap(K, V), std::memory::AllocFailed);` (only for default key types)
+- `fn init (cap: i64) -> Result(HashMap(K, V), std::memory::AllocFailed);` (only for default key types)
 - `fn empty_with (hash: fn(K) -> u64, eq: fn(K, K) -> bool) -> HashMap(K, V);`
-- `fn init_with (cap: i64, hash: fn(K) -> u64, eq: fn(K, K) -> bool) -> std::result::Result(HashMap(K, V), std::memory::AllocFailed);`
+- `fn init_with (cap: i64, hash: fn(K) -> u64, eq: fn(K, K) -> bool) -> Result(HashMap(K, V), std::memory::AllocFailed);`
 - `fn len (self: &HashMap(K, V)) -> i64;`
 - `fn is_empty (self: &HashMap(K, V)) -> bool;`
 - `fn capacity (self: &HashMap(K, V)) -> i64;`
 - `fn contains_key (self: &HashMap(K, V), key: K) -> bool;`
 - `fn get (self: &HashMap(K, V), key: K) -> V?;`
-- `fn put (mut self: &HashMap(K, V), key: K, value: V) -> std::result::Result(V?, std::memory::OutOfMemory);`
+- `fn put (mut self: &HashMap(K, V), key: K, value: V) -> Result(V?, std::memory::OutOfMemory);`
  Inserts or replaces and returns the previous value, if present.
 - `fn remove (mut self: &HashMap(K, V), key: K) -> V?;`
 - `fn iter (self: &HashMap(K, V)) -> HashMapIter(K, V);`
@@ -20902,7 +20936,7 @@ Complexity expectations:
 - `fn is_empty (self: &TreeMap(K, V)) -> bool;`
 - `fn contains_key (self: &TreeMap(K, V), key: K) -> bool;`
 - `fn get (self: &TreeMap(K, V), key: K) -> V?;`
-- `fn put (mut self: &TreeMap(K, V), key: K, value: V) -> std::result::Result(V?, std::memory::OutOfMemory);`
+- `fn put (mut self: &TreeMap(K, V), key: K, value: V) -> Result(V?, std::memory::OutOfMemory);`
 - `fn remove (mut self: &TreeMap(K, V), key: K) -> V?;`
 - `fn iter (self: &TreeMap(K, V)) -> TreeMapIter(K, V);`
 - `fn clear (mut self: &TreeMap(K, V)) -> void;`
@@ -21020,14 +21054,14 @@ Default helper functions are provided for these element types:
 `SetMap(T)` provides:
 
 - `fn empty () -> SetMap(T);` (only for default element types)
-- `fn init (cap: i64) -> std::result::Result(SetMap(T), std::memory::AllocFailed);` (only for default element types)
+- `fn init (cap: i64) -> Result(SetMap(T), std::memory::AllocFailed);` (only for default element types)
 - `fn empty_with (hash: fn(T) -> u64, eq: fn(T, T) -> bool) -> SetMap(T);`
-- `fn init_with (cap: i64, hash: fn(T) -> u64, eq: fn(T, T) -> bool) -> std::result::Result(SetMap(T), std::memory::AllocFailed);`
+- `fn init_with (cap: i64, hash: fn(T) -> u64, eq: fn(T, T) -> bool) -> Result(SetMap(T), std::memory::AllocFailed);`
 - `fn len (self: &SetMap(T)) -> i64;`
 - `fn is_empty (self: &SetMap(T)) -> bool;`
 - `fn capacity (self: &SetMap(T)) -> i64;`
 - `fn contains (self: &SetMap(T), key: T) -> bool;`
-- `fn insert (mut self: &SetMap(T), key: T) -> std::result::Result(bool, std::memory::OutOfMemory);`
+- `fn insert (mut self: &SetMap(T), key: T) -> Result(bool, std::memory::OutOfMemory);`
  Returns `true` when `key` was not already present.
 - `fn remove (mut self: &SetMap(T), key: T) -> bool;`
  Returns `true` when `key` was present and removed.
@@ -21060,7 +21094,7 @@ Complexity expectations:
 - `fn len (self: &TreeSet(T)) -> i64;`
 - `fn is_empty (self: &TreeSet(T)) -> bool;`
 - `fn contains (self: &TreeSet(T), key: T) -> bool;`
-- `fn insert (mut self: &TreeSet(T), key: T) -> std::result::Result(bool, std::memory::OutOfMemory);`
+- `fn insert (mut self: &TreeSet(T), key: T) -> Result(bool, std::memory::OutOfMemory);`
 - `fn remove (mut self: &TreeSet(T), key: T) -> bool;`
 - `fn iter (self: &TreeSet(T)) -> TreeSetIter(T);`
 - `fn clear (mut self: &TreeSet(T)) -> void;`
@@ -21165,7 +21199,7 @@ struct Buffer(T) {
 }
 
 impl Buffer(T) {
-  public fn init (cap: i64) -> std::result::Result(Buffer(T), std::memory::AllocFailed);
+  public fn init (cap: i64) -> Result(Buffer(T), std::memory::AllocFailed);
   public fn empty () -> Buffer(T);
   public fn read (self: &Buffer(T), index: i64) -> T;
   public fn write (mut self: &Buffer(T), index: i64, value: T) -> void;
@@ -21175,7 +21209,7 @@ impl Buffer(T) {
 }
 
 // Module-level wrappers (synonyms for the methods above).
-export fn alloc (T; cap: i64) -> std::result::Result(Buffer(T), std::memory::AllocFailed);
+export fn alloc (T; cap: i64) -> Result(Buffer(T), std::memory::AllocFailed);
 export fn capacity (T; buf: &Buffer(T)) -> i64;
 export fn drop (T; mut buf: &Buffer(T)) -> void;
 export fn read (T; buf: &Buffer(T), index: i64) -> T;
@@ -21199,7 +21233,7 @@ struct BufferU8 {
 }
 
 impl BufferU8 {
-  public fn init (cap: i64) -> std::result::Result(BufferU8, std::memory::AllocFailed);
+  public fn init (cap: i64) -> Result(BufferU8, std::memory::AllocFailed);
   public fn empty () -> BufferU8;
   public fn push (mut self: &BufferU8, value: u8) -> std::memory::OutOfMemory?;
   public fn push_u8 (mut self: &BufferU8, value: u8) -> std::memory::OutOfMemory?;
@@ -21772,11 +21806,11 @@ export struct VectorF64 {
   data: std::vector::Vector(f64),
 }
 
-export type VectorF32Result = std::result::Result(VectorF32, MathFailed);
-export type F32Result = std::result::Result(f32, MathFailed);
-export type VectorF64Result = std::result::Result(VectorF64, MathFailed);
-export type F64Result = std::result::Result(f64, MathFailed);
-export type BoolResult = std::result::Result(bool, MathFailed);
+export type VectorF32Result = Result(VectorF32, MathFailed);
+export type F32Result = Result(f32, MathFailed);
+export type VectorF64Result = Result(VectorF64, MathFailed);
+export type F64Result = Result(f64, MathFailed);
+export type BoolResult = Result(bool, MathFailed);
 
 impl VectorF32 {
   public fn empty () -> VectorF32;
@@ -21895,8 +21929,8 @@ export struct MatrixF64 {
   data: std::vector::Vector(f64), // length = rows * cols
 }
 
-export type MatrixF32Result = std::result::Result(MatrixF32, MathFailed);
-export type MatrixF64Result = std::result::Result(MatrixF64, MathFailed);
+export type MatrixF32Result = Result(MatrixF32, MathFailed);
+export type MatrixF64Result = Result(MatrixF64, MathFailed);
 
 impl MatrixF32 {
   public fn empty () -> MatrixF32;
@@ -21981,13 +22015,13 @@ export error ParseFailed {
   offset: int,
 }
 
-export type AtodResult = std::result::Result(f64, ParseFailed);
-export type Atou64Result = std::result::Result(u64, ParseFailed);
-export type Atoi64Result = std::result::Result(i64, ParseFailed);
-export type Atou32Result = std::result::Result(u32, ParseFailed);
-export type Atoi32Result = std::result::Result(i32, ParseFailed);
-export type Atou128Result = std::result::Result(u128, ParseFailed);
-export type Atoi128Result = std::result::Result(i128, ParseFailed);
+export type AtodResult = Result(f64, ParseFailed);
+export type Atou64Result = Result(u64, ParseFailed);
+export type Atoi64Result = Result(i64, ParseFailed);
+export type Atou32Result = Result(u32, ParseFailed);
+export type Atoi32Result = Result(i32, ParseFailed);
+export type Atou128Result = Result(u128, ParseFailed);
+export type Atoi128Result = Result(i128, ParseFailed);
 
 export fn atod (s: string) -> AtodResult;
 export fn atou64 (s: string) -> Atou64Result;
@@ -22013,15 +22047,15 @@ Notes:
 Formatting functions allocate and return owned `std::strings::String` values.
 
 ```silk
-export fn dtoa (value: f64) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+export fn dtoa (value: f64) -> Result(std::strings::String, std::memory::OutOfMemory);
 
-export fn u64toa (value: u64) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
-export fn i64toa (value: i64) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
-export fn u32toa (value: u32) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
-export fn i32toa (value: i32) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+export fn u64toa (value: u64) -> Result(std::strings::String, std::memory::OutOfMemory);
+export fn i64toa (value: i64) -> Result(std::strings::String, std::memory::OutOfMemory);
+export fn u32toa (value: u32) -> Result(std::strings::String, std::memory::OutOfMemory);
+export fn i32toa (value: i32) -> Result(std::strings::String, std::memory::OutOfMemory);
 
-export fn u128toa (value: u128) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
-export fn i128toa (value: i128) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+export fn u128toa (value: u128) -> Result(std::strings::String, std::memory::OutOfMemory);
+export fn i128toa (value: i128) -> Result(std::strings::String, std::memory::OutOfMemory);
 ```
 
 ### Boxed `Number`
@@ -22038,7 +22072,7 @@ export struct Number {
   float: f64,
 }
 
-export type ParseNumberResult = std::result::Result(Number, ParseFailed);
+export type ParseNumberResult = Result(Number, ParseFailed);
 
 impl Number {
   public fn from_i8 (value: i8) -> Number;
@@ -22064,7 +22098,7 @@ impl Number {
   public fn to_i128_exact (self: &Number) -> i128?;
   public fn to_u128_exact (self: &Number) -> u128?;
   public fn eq (self: &Number, other: &Number) -> bool;
-  public fn to_string (self: &Number) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+  public fn to_string (self: &Number) -> Result(std::strings::String, std::memory::OutOfMemory);
 }
 ```
 
@@ -22454,9 +22488,9 @@ module std::process;
   error GetCwdFailed { code: int, requested: i64 }
 
 export type GetCwdError = GetCwdFailed;
-export type GetCwdResult = std::result::Result(std::strings::String, GetCwdError);
+export type GetCwdResult = Result(std::strings::String, GetCwdError);
 export type ExecutablePathError = GetCwdFailed;
-export type ExecutablePathResult = std::result::Result(std::strings::String, ExecutablePathError);
+export type ExecutablePathResult = Result(std::strings::String, ExecutablePathError);
 
 export fn chdir (path: string) -> ChdirFailed?;
 export fn getcwd () -> GetCwdResult;
@@ -22493,13 +22527,13 @@ export enum Stdio { Inherit, Null, Pipe }
 export error Failed { code: int, stage: int, detail: int }
 
 export struct ExitStatus { /* opaque */ }
-export type WaitResult = std::result::Result(ExitStatus, Failed);
+export type WaitResult = Result(ExitStatus, Failed);
 
 export struct Child { /* opaque */ }
-export type ChildResult = std::result::Result(Child, Failed);
+export type ChildResult = Result(Child, Failed);
 
 export struct PtyChild { /* opaque */ }
-export type PtyChildResult = std::result::Result(PtyChild, Failed);
+export type PtyChildResult = Result(PtyChild, Failed);
 
 export struct Command { /* opaque */ }
 impl Command {
@@ -22652,11 +22686,11 @@ enum Platform { Linux, WASI, Unknown }
 export fn arch () -> Architecture;
 export fn platform () -> Platform;
 
-export type UptimeResult = std::result::Result(Duration, std::temporal::TemporalFailed);
+export type UptimeResult = Result(Duration, std::temporal::TemporalFailed);
 export fn uptime () -> UptimeResult;
 
 struct CPU { model: string }
-export type CPUsResult = std::result::Result(std::vector::Vector(CPU), std::memory::AllocFailed);
+export type CPUsResult = Result(std::vector::Vector(CPU), std::memory::AllocFailed);
 export fn cpus () -> CPUsResult;
 
 export fn cpu_count () -> int;
@@ -22971,9 +23005,9 @@ impl Path {
   public fn extname (self: &Path) -> string;
   public fn stem (self: &Path) -> string;
   public fn parent (self: &Path) -> string;
-  public fn join (self: &Path, part: string) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
-  public fn normalize (self: &Path) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
-  public fn to_path_buf (self: &Path) -> std::result::Result(PathBuf, std::memory::OutOfMemory);
+  public fn join (self: &Path, part: string) -> Result(std::strings::String, std::memory::OutOfMemory);
+  public fn normalize (self: &Path) -> Result(std::strings::String, std::memory::OutOfMemory);
+  public fn to_path_buf (self: &Path) -> Result(PathBuf, std::memory::OutOfMemory);
 }
 
 // Owned path buffer (like Rust `PathBuf`).
@@ -22984,8 +23018,8 @@ struct PathBuf {
 }
 
 impl PathBuf {
-  public fn empty () -> std::result::Result(PathBuf, std::memory::OutOfMemory);
-  public fn from_string (s: string) -> std::result::Result(PathBuf, std::memory::OutOfMemory);
+  public fn empty () -> Result(PathBuf, std::memory::OutOfMemory);
+  public fn from_string (s: string) -> Result(PathBuf, std::memory::OutOfMemory);
   public fn as_string (self: &PathBuf) -> string;
   public fn as_slice (self: &PathBuf) -> std::arrays::ByteSlice;
   public fn as_view (self: &PathBuf) -> PathView;
@@ -23009,19 +23043,19 @@ impl PathBuf as std::interfaces::Serialize(string) {
 }
 
 impl PathBuf as std::interfaces::TrySerialize(std::memory::OutOfMemory) {
-  public fn try_serialize (self: &PathBuf) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+  public fn try_serialize (self: &PathBuf) -> Result(std::strings::String, std::memory::OutOfMemory);
 }
 
 impl PathBuf as std::interfaces::Parse(std::memory::OutOfMemory) {
-  public fn parse (value: string) -> std::result::Result(PathBuf, std::memory::OutOfMemory);
+  public fn parse (value: string) -> Result(PathBuf, std::memory::OutOfMemory);
 }
 
 // Inspection.
 export fn is_absolute (path: string) -> bool;
 
 // Building and normalization.
-export fn join (a: string, b: string) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
-export fn normalize (path: string) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+export fn join (a: string, b: string) -> Result(std::strings::String, std::memory::OutOfMemory);
+export fn normalize (path: string) -> Result(std::strings::String, std::memory::OutOfMemory);
 export fn realpath (path: string) -> std::fs::FSStringResult;
 
 // Inspection helpers (views into the input string).
@@ -23235,13 +23269,13 @@ impl FSFailed {
 
 export type FSError = FSFailed;
 
-export type FSIntResult = std::result::Result(int, FSFailed);
-export type FSI64Result = std::result::Result(i64, FSFailed);
-export type FSErrorIntResult = std::result::Result(int, FSError);
-export type FSBoolResult = std::result::Result(bool, FSError);
-export type FSBufferU8Result = std::result::Result(std::buffer::BufferU8, FSError);
-export type FSStatsResult = std::result::Result(Stats, FSError);
-export type FSStringResult = std::result::Result(std::strings::String, FSError);
+export type FSIntResult = Result(int, FSFailed);
+export type FSI64Result = Result(i64, FSFailed);
+export type FSErrorIntResult = Result(int, FSError);
+export type FSBoolResult = Result(bool, FSError);
+export type FSBufferU8Result = Result(std::buffer::BufferU8, FSError);
+export type FSStatsResult = Result(Stats, FSError);
+export type FSStringResult = Result(std::strings::String, FSError);
 
 export enum PathKind {
   RegularFile,
@@ -23257,7 +23291,7 @@ export enum DirEntryType {
   Other,
 }
 
-export type FSPathKindResult = std::result::Result(PathKind, FSError);
+export type FSPathKindResult = Result(PathKind, FSError);
 
 export struct Stats {
   dev: u64,
@@ -23331,7 +23365,7 @@ export struct File {
   fd: int,
 }
 
-export type FileResult = std::result::Result(File, FSFailed);
+export type FileResult = Result(File, FSFailed);
 
 // A read-only memory mapping (hosted baseline).
 export struct MMap {
@@ -23339,7 +23373,7 @@ export struct MMap {
   len: i64,
 }
 
-export type MMapResult = std::result::Result(MMap, FSFailed);
+export type MMapResult = Result(MMap, FSFailed);
 
 impl MMap {
   public fn empty () -> MMap;
@@ -23424,9 +23458,9 @@ export struct DirEntryView {
   kind: DirEntryType,
 }
 
-export type DirResult = std::result::Result(Dir, FSFailed);
-export type DirEntryResult = std::result::Result(DirEntry, FSFailed);
-export type DirEntryViewResult = std::result::Result(DirEntryView, FSFailed);
+export type DirResult = Result(Dir, FSFailed);
+export type DirEntryResult = Result(DirEntry, FSFailed);
+export type DirEntryViewResult = Result(DirEntryView, FSFailed);
 
 impl DirEntry {
   public fn name (self: &DirEntry) -> string;
@@ -23667,7 +23701,7 @@ Exported error constants:
 
 Helpers:
 
-- `ParseResult = std::result::Result(ValueId, ParseError)`
+- `ParseResult = Result(ValueId, ParseError)`
 - `error_message(kind: int) -> string`
 
 ### `Document`
@@ -23719,15 +23753,15 @@ Methods:
 
 - `doc.number_as_i64(id) -> i64?`
 - `doc.number_as_f64(id) -> f64?`
-- `doc.stringify(id) -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
-- `doc.stringify_pretty(id, indent: int) -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
+- `doc.stringify(id) -> Result(std::strings::String, std::memory::OutOfMemory)`
+- `doc.stringify_pretty(id, indent: int) -> Result(std::strings::String, std::memory::OutOfMemory)`
 
 Top-level wrappers:
 
 - `number_as_i64(doc: &Document, id: ValueId) -> i64?`
 - `number_as_f64(doc: &Document, id: ValueId) -> f64?`
-- `stringify(doc: &Document, id: ValueId) -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
-- `stringify_pretty(doc: &Document, id: ValueId, indent: int) -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
+- `stringify(doc: &Document, id: ValueId) -> Result(std::strings::String, std::memory::OutOfMemory)`
+- `stringify_pretty(doc: &Document, id: ValueId, indent: int) -> Result(std::strings::String, std::memory::OutOfMemory)`
 
 ## Examples
 
@@ -23851,7 +23885,7 @@ an index-based DOM.
 module std::toml;
 
 export type ValueId = i64;
-export type ParseResult = std::result::Result(ValueId, ParseError);
+export type ParseResult = Result(ValueId, ParseError);
 
 error ParseError {
   kind: int,
@@ -23916,12 +23950,12 @@ impl Document {
   public fn member_value (self: &Document, member: ValueId) -> ValueId?;
   public fn member_next (self: &Document, member: ValueId) -> ValueId?;
   public fn table_get (self: &Document, table: ValueId, key: string) -> ValueId?;
-  public fn stringify (self: &Document, id: ValueId) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+  public fn stringify (self: &Document, id: ValueId) -> Result(std::strings::String, std::memory::OutOfMemory);
 }
 
 export fn int_as_i64 (doc: &Document, id: ValueId) -> i64?;
 export fn float_as_f64 (doc: &Document, id: ValueId) -> f64?;
-export fn stringify (doc: &Document, id: ValueId) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+export fn stringify (doc: &Document, id: ValueId) -> Result(std::strings::String, std::memory::OutOfMemory);
 export fn error_message (kind: int) -> string;
 ```
 
@@ -24256,7 +24290,7 @@ third-party protobuf runtime.
 - `Key` is the decoded `(field_number, wire_type)` record key returned by
  `Reader.read_key()`.
 - `Reader` is a borrowing binary reader over `std::arrays::ByteSlice`.
-- `Decode*Result` aliases are `std::result::Result(..., DecodeError)` shapes
+- `Decode*Result` aliases are `Result(..., DecodeError)` shapes
  used by reader methods.
 
 Strings and byte slices decoded by `Reader` borrow from the input byte slice.
@@ -24473,7 +24507,7 @@ This module focuses on:
 - `parse_with_base(input: string, base: &URL) -> URLResult`
  - Parses `input` as a URL relative to `base` using WHATWG relative resolution rules.
 
-`URLResult` is `std::result::Result(URL, ParseError)`:
+`URLResult` is `Result(URL, ParseError)`:
 
 - `Ok(URL)` on success.
 - `Err(ParseError)` on error.
@@ -24499,8 +24533,8 @@ which forwards to `std::url::parse`.
 - `URL` owns heap allocations and implements `std::interfaces::Drop`; it is
  released automatically at scope exit and may also be dropped explicitly via
  `(mut url).drop()`.
-- `href() -> std::result::Result(std::strings::String, std::memory::OutOfMemory)` — canonical serialization of the full URL.
-- `origin() -> std::result::Result(std::strings::String, std::memory::OutOfMemory)` — serialized origin (opaque origins serialize as `"null"`).
+- `href() -> Result(std::strings::String, std::memory::OutOfMemory)` — canonical serialization of the full URL.
+- `origin() -> Result(std::strings::String, std::memory::OutOfMemory)` — serialized origin (opaque origins serialize as `"null"`).
 - `scheme() -> string`
 - `username() -> string`
 - `password() -> string`
@@ -24516,12 +24550,12 @@ which forwards to `std::url::parse`.
 
 - `URLSearchParams` owns its query buffer and implements `std::interfaces::Drop`.
 - `URLSearchParams.empty() -> URLSearchParams`
-- `URLSearchParams.from_string(s: string) -> std::result::Result(URLSearchParams, std::memory::OutOfMemory)`
+- `URLSearchParams.from_string(s: string) -> Result(URLSearchParams, std::memory::OutOfMemory)`
  - Accepts either `"a=b&c=d"` or `"?a=b&c=d"`.
-- `to_string() -> std::result::Result(std::strings::String, std::memory::OutOfMemory)` — the encoded query string (no leading `?`).
+- `to_string() -> Result(std::strings::String, std::memory::OutOfMemory)` — the encoded query string (no leading `?`).
 - `len() -> i64` — number of fields.
-- `has(name: string) -> std::result::Result(bool, std::memory::OutOfMemory)`
-- `get(name: string) -> std::result::Result(std::strings::String?, std::memory::OutOfMemory)` — decoded value (`Ok(Some(value))`), `Ok(None)` when absent, or `Err(OutOfMemory)`.
+- `has(name: string) -> Result(bool, std::memory::OutOfMemory)`
+- `get(name: string) -> Result(std::strings::String?, std::memory::OutOfMemory)` — decoded value (`Ok(Some(value))`), `Ok(None)` when absent, or `Err(OutOfMemory)`.
 - `append(name: string, value: string) -> std::memory::OutOfMemory?`
 - `delete(name: string) -> std::memory::OutOfMemory?`
 - `set(name: string, value: string) -> std::memory::OutOfMemory?`
@@ -24622,7 +24656,7 @@ This module is intentionally strict and focused:
  - Legacy/explicit formatting helper; returns the same canonical output as
  `try_serialize()`.
 
-`ParseResult` is `std::result::Result(Version, ParseError)`.
+`ParseResult` is `Result(Version, ParseError)`.
 
 `ParseError.offset` is a **byte offset** into the original `input`.
 `ParseError.kind()` reports a stable error kind.
@@ -24837,12 +24871,6 @@ Fallibility:
 `std::runtime::time::unix_now_ns` / `unix_now_ms` so callers can generate UUIDs
 without passing explicit timestamps.
 
-## See also
-
-- [`std::crypto`](?p=std/crypto)
-- [`std::temporal`](?p=std/temporal)
-- [`std::strings`](?p=std/strings)
-
 ## Design goals
 
 - Keep the implementation small and auditable, without external dependencies
@@ -24851,6 +24879,12 @@ without passing explicit timestamps.
 - Keep parse, format, and inspection helpers straightforward to embed into
  application code and tooling.
 - Attach Formal Silk contracts to buffer and shape preconditions where useful.
+
+## See also
+
+- [`std::crypto`](?p=std/crypto)
+- [`std::temporal`](?p=std/temporal)
+- [`std::strings`](?p=std/strings)
 
 ==============================================================================
 DOCS: `std::unicode` (std/unicode)
@@ -25010,7 +25044,7 @@ export struct RegExp {
 
 impl RegExp {
   public fn empty () -> RegExp;
-  public fn compile (pattern: string, flags: string) -> std::result::Result(RegExp, CompileFailed);
+  public fn compile (pattern: string, flags: string) -> Result(RegExp, CompileFailed);
   public fn as_regexp (self: &RegExp) -> regexp;
 }
 
@@ -25190,7 +25224,7 @@ enum NetErrorKind {
 
 error NetFailed { code: int, requested: i64 }
 
-export type NetIntResult = std::result::Result(int, NetFailed);
+export type NetIntResult = Result(int, NetFailed);
 
 struct SocketAddrV4 {
   ip_value: int,
@@ -25239,7 +25273,7 @@ struct TCPStream {
   fd: int,
 }
 
-export type TCPStreamResult = std::result::Result(TCPStream, NetFailed);
+export type TCPStreamResult = Result(TCPStream, NetFailed);
 
 impl TCPStream {
   public fn invalid () -> TCPStream;
@@ -25273,7 +25307,7 @@ enum ResolveIpMode {
   V6Only,
 }
 
-export type ResolveAddrsResult = std::result::Result(std::vector::Vector(SocketAddr), NetFailed);
+export type ResolveAddrsResult = Result(std::vector::Vector(SocketAddr), NetFailed);
 
 export fn resolve_host (host: string, port: int, mode: ResolveIpMode) -> ResolveAddrsResult;
 
@@ -25281,7 +25315,7 @@ struct TCPListener {
   fd: int,
 }
 
-export type TCPListenerResult = std::result::Result(TCPListener, NetFailed);
+export type TCPListenerResult = Result(TCPListener, NetFailed);
 
 impl TCPListener {
   public fn invalid () -> TCPListener;
@@ -25334,14 +25368,14 @@ struct UDPSocket {
 }
 
 export type NetError = NetFailed;
-export type UDPSocketResult = std::result::Result(UDPSocket, NetFailed);
+export type UDPSocketResult = Result(UDPSocket, NetFailed);
 
 struct UDPRecvFrom {
   n: int,
   addr: SocketAddr,
 }
 
-export type UDPRecvFromResult = std::result::Result(UDPRecvFrom, NetError);
+export type UDPRecvFromResult = Result(UDPRecvFrom, NetError);
 
 struct SocketAddr {
   domain: int,
@@ -25516,7 +25550,7 @@ export error Error {
 
 export type HeaderMap = std::map::HashMap(string, string);
 export type HeaderSet = std::set::SetMap(string);
-export type HeadersMapResult = std::result::Result(HeadersMap, Error);
+export type HeadersMapResult = Result(HeadersMap, Error);
 
 // Request header carrier. Keys and values are borrowed string views.
 export struct HeadersMap { /* opaque */ }
@@ -25536,7 +25570,7 @@ impl HeadersMap {
 
 // Parsed HTTP request backed by owned bytes.
 struct Request { /* opaque */ }
-export type RequestResult = std::result::Result(Request, Error);
+export type RequestResult = Result(Request, Error);
 impl Request {
   public fn parse (input: string) -> RequestResult;
   public fn method (self: &Request) -> string;
@@ -25549,7 +25583,7 @@ impl Request {
 
 // Parsed HTTP response backed by owned bytes.
 struct Response { /* opaque */ }
-export type ResponseResult = std::result::Result(Response, Error);
+export type ResponseResult = Result(Response, Error);
 impl Response {
   public fn parse (input: string) -> ResponseResult;
   public fn version (self: &Response) -> string;
@@ -25758,10 +25792,10 @@ export error Error {
   kind: int,
 }
 
-export type ClientResponseResult = std::result::Result(std::http::Response, Error);
+export type ClientResponseResult = Result(std::http::Response, Error);
 
 struct Connection { /* opaque */ }
-export type ConnectionResult = std::result::Result(Connection, Error);
+export type ConnectionResult = Result(Connection, Error);
 impl Connection {
   // Establish TCP, then perform a TLS client handshake.
   public fn connect (addr: std::net::SocketAddrV4) -> ConnectionResult;
@@ -25781,7 +25815,7 @@ impl Connection {
 }
 
 struct Server { /* opaque */ }
-export type ServerResult = std::result::Result(Server, Error);
+export type ServerResult = Result(Server, Error);
 impl Server {
   // Listen on TCP, accept, then perform a TLS server handshake with the provided
   // certificate and private key (PEM).
@@ -25912,8 +25946,8 @@ export error HandshakeError {
   kind: int,
 }
 
-export type WebSocketResult = std::result::Result(WebSocket, HandshakeError);
-export type WebSocketServerResult = std::result::Result(WebSocketServer, HandshakeError);
+export type WebSocketResult = Result(WebSocket, HandshakeError);
+export type WebSocketServerResult = Result(WebSocketServer, HandshakeError);
 
 // Protocol/runtime errors during frame processing.
 export let ERR_PROTOCOL_IO: int = 1;
@@ -25926,7 +25960,7 @@ export error ProtocolError {
   kind: int,
 }
 
-export type MessageResult = std::result::Result(Message, ProtocolError);
+export type MessageResult = Result(Message, ProtocolError);
 
 struct Message {
   opcode: int,              // OPCODE_TEXT or OPCODE_BINARY
@@ -26046,7 +26080,7 @@ export struct Bytes {
   handle: u64,
 }
 
-export type BytesResult = std::result::Result(Bytes, std::memory::AllocFailed);
+export type BytesResult = Result(Bytes, std::memory::AllocFailed);
 
 impl Bytes {
   public fn empty () -> Bytes;
@@ -26077,7 +26111,7 @@ export enum Read {
   Chunk(u64),
 }
 
-export type ReadResult = std::result::Result(Read, StreamFailed);
+export type ReadResult = Result(Read, StreamFailed);
 
 // Readable end.
 export struct ReadableStream {
@@ -26120,7 +26154,7 @@ export struct PassThroughStream {
   writable: WritableStream,
 }
 
-export type PassThroughResult = std::result::Result(PassThroughStream, StreamFailed);
+export type PassThroughResult = Result(PassThroughStream, StreamFailed);
 
 impl PassThroughStream {
   public fn init_default () -> PassThroughResult;
@@ -26130,7 +26164,7 @@ impl PassThroughStream {
 }
 
 // Transformer output.
-export type TransformBytesResult = std::result::Result(Bytes, StreamFailed);
+export type TransformBytesResult = Result(Bytes, StreamFailed);
 
 // A paired transform stage.
 export struct TransformStream {
@@ -26140,7 +26174,7 @@ export struct TransformStream {
   transform_writable: WritableStream,
 }
 
-export type TransformResult = std::result::Result(TransformStream, StreamFailed);
+export type TransformResult = Result(TransformStream, StreamFailed);
 
 impl TransformStream {
   public fn init_default () -> TransformResult;
@@ -26153,14 +26187,14 @@ impl TransformStream {
 }
 
 // Pipe a readable into a writable until done.
-export fn pipe_to (mut src: ReadableStream, mut dst: WritableStream) -> std::result::Result(int, StreamFailed);
+export fn pipe_to (mut src: ReadableStream, mut dst: WritableStream) -> Result(int, StreamFailed);
 
 // Pipe until done or until aborted.
 export fn pipe_to_abortable (
   mut src: ReadableStream,
   mut dst: WritableStream,
   sig: std::abort_controller::AbortSignalBorrow?
-) -> std::result::Result(int, StreamFailed);
+) -> Result(int, StreamFailed);
 ```
 
 ## Semantics
@@ -26402,7 +26436,7 @@ Key design rules:
  returned `len`),
 - functions return recoverable error values:
  - `ErrorType?` where `None` is success,
- - `std::result::Result(T, ErrorType)` where `Ok(T)` is success and `Err(ErrorType)` is failure
+ - `Result(T, ErrorType)` where `Ok(T)` is success and `Err(ErrorType)` is failure
  (use `Result(bool, ErrorType)` for fallible predicates).
 
 ## Example: init, hash, wipe
@@ -26518,7 +26552,7 @@ API is not present in mbedTLS 4.x).
 ## Exported API
 ### Error model
 
-The current `std::tls` API uses `std::result::Result(T, E)` and a stable
+The current `std::tls` API uses `Result(T, E)` and a stable
 `TLSFailed` error value instead of exposing raw mbedTLS error codes.
 
 TLS I/O is transport-driven: when using a non-blocking transport (such as
@@ -26555,8 +26589,8 @@ export error TLSFailed {
   code: int,
 }
 
-export type TLSIntResult = std::result::Result(int, TLSFailed);
-export type SessionResult = std::result::Result(Session, TLSFailed);
+export type TLSIntResult = Result(int, TLSFailed);
+export type SessionResult = Result(Session, TLSFailed);
 ```
 
 ### `Session`
@@ -26672,7 +26706,7 @@ compiler prefix:
 
 ## Error Model
 
-The `std::ssh2` API uses `std::result::Result(T, E)` and a stable `SSH2Failed`
+The `std::ssh2` API uses `Result(T, E)` and a stable `SSH2Failed`
 error value. The underlying libssh2 error code is retained as structured detail
 (`SSH2Failed.detail`) for debugging and telemetry.
 
@@ -26703,13 +26737,13 @@ export error SSH2Failed {
   detail: int,
 }
 
-export type SSH2IntResult = std::result::Result(int, SSH2Failed);
-export type SSH2I64Result = std::result::Result(i64, SSH2Failed);
+export type SSH2IntResult = Result(int, SSH2Failed);
+export type SSH2I64Result = Result(i64, SSH2Failed);
 
-export type SessionResult = std::result::Result(Session, SSH2Failed);
-export type ChannelResult = std::result::Result(Channel, SSH2Failed);
-export type SftpResult = std::result::Result(Sftp, SSH2Failed);
-export type SftpHandleResult = std::result::Result(SftpHandle, SSH2Failed);
+export type SessionResult = Result(Session, SSH2Failed);
+export type ChannelResult = Result(Channel, SSH2Failed);
+export type SftpResult = Result(Sftp, SSH2Failed);
+export type SftpHandleResult = Result(SftpHandle, SSH2Failed);
 
 enum KnownHostCheck {
   Match,
@@ -26717,10 +26751,10 @@ enum KnownHostCheck {
   NotFound,
 }
 
-export type KnownHostCheckResult = std::result::Result(KnownHostCheck, SSH2Failed);
+export type KnownHostCheckResult = Result(KnownHostCheck, SSH2Failed);
 
 // Agent iteration uses `Ok(Some(identity))` and `Ok(None)` for end-of-list.
-export type AgentNextIdentityResult = std::result::Result(AgentIdentity?, SSH2Failed);
+export type AgentNextIdentityResult = Result(AgentIdentity?, SSH2Failed);
 ```
 
 ## Byte Buffers and Formal Silk
@@ -26832,7 +26866,7 @@ alternate stdlib root without changing higher-level `std::...` modules.
 - The `std::runtime::...` surface is allowed to be low-level and `unsafe`:
  raw pointers, integer error codes, and OS-specific constants are acceptable.
 - When an operation can fail, prefer returning the error code *as a value*
- (via `std::result::Result(T, int)` or an optional error `int?`) so callers do
+ (via `Result(T, int)` or an optional error `int?`) so callers do
  not need to pair a sentinel return with a separate `errno()` query.
 - Higher-level, ergonomic, and allocation-aware APIs belong in `std::...`
  modules (for example `std::fs::File.read_to_end`).
@@ -27050,7 +27084,7 @@ by `std::process::child` such as `dup2`, `pipe`, `poll`, and `set_cloexec`).
 
 Fallible operations should return errors directly:
 
-- value-returning operations use `std::result::Result(T, int)` where `Err(int)`
+- value-returning operations use `Result(T, int)` where `Err(int)`
  is a stable, area-specific error code consumed by higher-level `std::...`
  wrappers (for example `std::io::IOFailed.code`),
 - status operations use optional errors (`int?`), returning `None` on success
@@ -27500,7 +27534,7 @@ struct ArcBorrow(T) {
   handle: u64,
 }
 
-type ArcResult(T) = std::result::Result(Arc(T), SyncFailed);
+type ArcResult(T) = Result(Arc(T), SyncFailed);
 
 impl Arc(T) {
   public fn invalid () -> Arc(T);
@@ -27523,7 +27557,7 @@ struct Mutex {
 impl Mutex {
   public fn invalid () -> Mutex;
   public fn is_valid (self: &Mutex) -> bool;
-  public fn init () -> std::result::Result(Mutex, SyncFailed);
+  public fn init () -> Result(Mutex, SyncFailed);
   public fn lock (self: &Mutex) -> SyncFailed?;
   public fn unlock (self: &Mutex) -> SyncFailed?;
   public fn destroy (mut self: &Mutex) -> void;
@@ -27537,7 +27571,7 @@ struct Condvar {
 impl Condvar {
   public fn invalid () -> Condvar;
   public fn is_valid (self: &Condvar) -> bool;
-  public fn init () -> std::result::Result(Condvar, SyncFailed);
+  public fn init () -> Result(Condvar, SyncFailed);
   public fn wait (self: &Condvar, m: &Mutex) -> SyncFailed?;
   public fn signal (self: &Condvar) -> SyncFailed?;
   public fn broadcast (self: &Condvar) -> SyncFailed?;
@@ -27562,10 +27596,10 @@ struct ChannelSender(T) {
 
 impl Channel(T) {
   public fn invalid () -> Channel(T);
-  public fn init_default () -> std::result::Result(Channel(T), SyncFailed);
-  public fn init (cap: int) -> std::result::Result(Channel(T), SyncFailed);
+  public fn init_default () -> Result(Channel(T), SyncFailed);
+  public fn init (cap: int) -> Result(Channel(T), SyncFailed);
   public fn borrow (self: &Channel(T)) -> ChannelBorrow(T);
-  public fn sender (self: &Channel(T)) -> std::result::Result(ChannelSender(T), SyncFailed);
+  public fn sender (self: &Channel(T)) -> Result(ChannelSender(T), SyncFailed);
   public fn cap (self: &Channel(T)) -> int;
   public fn is_closed (self: &Channel(T)) -> bool;
   public fn try_send (self: &Channel(T), value: T) -> SyncFailed?;
@@ -27594,7 +27628,7 @@ impl ChannelBorrow(T) {
 }
 
 impl ChannelSender(T) {
-  public fn clone (self: &ChannelSender(T)) -> std::result::Result(ChannelSender(T), SyncFailed);
+  public fn clone (self: &ChannelSender(T)) -> Result(ChannelSender(T), SyncFailed);
   public fn send (self: &ChannelSender(T), value: T) -> SyncFailed?;
 }
 
@@ -27611,7 +27645,7 @@ struct CancellationTokenBorrow {
 impl CancellationToken {
   public fn invalid () -> CancellationToken;
   public fn is_valid (self: &CancellationToken) -> bool;
-  public fn init () -> std::result::Result(CancellationToken, SyncFailed);
+  public fn init () -> Result(CancellationToken, SyncFailed);
   public fn borrow (self: &CancellationToken) -> CancellationTokenBorrow;
   public fn cancel (self: &CancellationToken) -> void;
   public fn is_cancelled (self: &CancellationToken) -> bool;
@@ -27813,8 +27847,8 @@ export fn after (a: Instant, b: Instant) -> bool;
 
 enum TemporalErrorKind { OutOfMemory, NoMonotonicClock, InvalidInput, Overflow, Unknown }
 error TemporalFailed { code: int, requested: i64 }
-export type InstantResult = std::result::Result(Instant, TemporalFailed);
-export type TemporalStringResult = std::result::Result(std::strings::String, TemporalFailed);
+export type InstantResult = Result(Instant, TemporalFailed);
+export type TemporalStringResult = Result(std::strings::String, TemporalFailed);
 
 export fn now_monotonic () -> InstantResult;
 
@@ -27845,9 +27879,9 @@ export fn format_datetime_iso (dt: DateTime) -> TemporalStringResult;
 
 enum ParseErrorKind { InvalidInput, InvalidLength, InvalidDigit, InvalidSeparator, InvalidRange, TrailingInput, Unknown }
 error ParseError { code: int, offset: i64 }
-export type DateParseResult = std::result::Result(Date, ParseError);
-export type TimeParseResult = std::result::Result(TimeOfDay, ParseError);
-export type DateTimeParseResult = std::result::Result(DateTime, ParseError);
+export type DateParseResult = Result(Date, ParseError);
+export type TimeParseResult = Result(TimeOfDay, ParseError);
+export type DateTimeParseResult = Result(DateTime, ParseError);
 
 export fn parse_date_iso (s: string) -> DateParseResult;
 export fn parse_time_iso (s: string) -> TimeParseResult;
@@ -27952,7 +27986,7 @@ export struct AbortSignalBorrow {
   handle: u64,
 }
 
-export type AbortControllerResult = std::result::Result(AbortController, std::memory::OutOfMemory);
+export type AbortControllerResult = Result(AbortController, std::memory::OutOfMemory);
 
 impl AbortController {
   public fn init () -> AbortControllerResult;
@@ -28088,7 +28122,7 @@ amalgamation source:
 
 ## Error Model
 
-`std::sqlite` uses `std::result::Result(T, E)` and optional-error returns for
+`std::sqlite` uses `Result(T, E)` and optional-error returns for
 fallible operations that do not return a value.
 
 The stable error value is `SqliteFailed`:
@@ -28198,8 +28232,8 @@ enum TarErrorKind {
 
 struct TarFailed { code: int, requested: i64 }
 
-export type TarIntResult = std::result::Result(int, TarFailed);
-export type EntryResult = std::result::Result(Entry, TarFailed);
+export type TarIntResult = Result(int, TarFailed);
+export type EntryResult = Result(Entry, TarFailed);
 
 export enum EntryKind {
   Regular,
@@ -28526,17 +28560,17 @@ struct PosU64 { index: i64 }
 
 struct ParsedArgs { ... }
 
-export type ParseResult = std::result::Result(ParsedArgs, FlagFailed);
-export type BoolFlagResult = std::result::Result(BoolFlag, FlagFailed);
-export type IntFlagResult = std::result::Result(IntFlag, FlagFailed);
-export type I64FlagResult = std::result::Result(I64Flag, FlagFailed);
-export type U64FlagResult = std::result::Result(U64Flag, FlagFailed);
-export type StringFlagResult = std::result::Result(StringFlag, FlagFailed);
+export type ParseResult = Result(ParsedArgs, FlagFailed);
+export type BoolFlagResult = Result(BoolFlag, FlagFailed);
+export type IntFlagResult = Result(IntFlag, FlagFailed);
+export type I64FlagResult = Result(I64Flag, FlagFailed);
+export type U64FlagResult = Result(U64Flag, FlagFailed);
+export type StringFlagResult = Result(StringFlag, FlagFailed);
 
-export type PosStringResult = std::result::Result(PosString, FlagFailed);
-export type PosIntResult = std::result::Result(PosInt, FlagFailed);
-export type PosI64Result = std::result::Result(PosI64, FlagFailed);
-export type PosU64Result = std::result::Result(PosU64, FlagFailed);
+export type PosStringResult = Result(PosString, FlagFailed);
+export type PosIntResult = Result(PosInt, FlagFailed);
+export type PosI64Result = Result(PosI64, FlagFailed);
+export type PosU64Result = Result(PosU64, FlagFailed);
 
 impl FlagSet {
   public fn get_flag_name (self: &FlagSet, index: i64) -> string;
@@ -29750,7 +29784,7 @@ export struct ClearColor {
   alpha: f64,
 }
 
-export type RenderResult = std::result::Result(bool, RenderFailed);
+export type RenderResult = Result(bool, RenderFailed);
 
 export fn failed (kind: RenderErrorKind) -> RenderFailed;
 export fn backend () -> Backend;
@@ -30049,22 +30083,22 @@ export struct Frame {
   encoder: RenderCommandEncoder,
 }
 
-export type RenderResult = std::result::Result(bool, MetalFailed);
-export type DeviceResult = std::result::Result(Device, MetalFailed);
-export type CommandQueueResult = std::result::Result(CommandQueue, MetalFailed);
-export type CommandBufferResult = std::result::Result(CommandBuffer, MetalFailed);
-export type LayerResult = std::result::Result(Layer, MetalFailed);
-export type DrawableResult = std::result::Result(Drawable, MetalFailed);
-export type TextureResult = std::result::Result(Texture, MetalFailed);
-export type RenderPassDescriptorResult = std::result::Result(RenderPassDescriptor, MetalFailed);
-export type RenderCommandEncoderResult = std::result::Result(RenderCommandEncoder, MetalFailed);
-export type BufferResult = std::result::Result(Buffer, MetalFailed);
-export type LibraryResult = std::result::Result(Library, MetalFailed);
-export type FunctionResult = std::result::Result(Function, MetalFailed);
-export type RenderPipelineDescriptorResult = std::result::Result(RenderPipelineDescriptor, MetalFailed);
-export type RenderPipelineStateResult = std::result::Result(RenderPipelineState, MetalFailed);
-export type ContextResult = std::result::Result(Context, MetalFailed);
-export type FrameResult = std::result::Result(Frame, MetalFailed);
+export type RenderResult = Result(bool, MetalFailed);
+export type DeviceResult = Result(Device, MetalFailed);
+export type CommandQueueResult = Result(CommandQueue, MetalFailed);
+export type CommandBufferResult = Result(CommandBuffer, MetalFailed);
+export type LayerResult = Result(Layer, MetalFailed);
+export type DrawableResult = Result(Drawable, MetalFailed);
+export type TextureResult = Result(Texture, MetalFailed);
+export type RenderPassDescriptorResult = Result(RenderPassDescriptor, MetalFailed);
+export type RenderCommandEncoderResult = Result(RenderCommandEncoder, MetalFailed);
+export type BufferResult = Result(Buffer, MetalFailed);
+export type LibraryResult = Result(Library, MetalFailed);
+export type FunctionResult = Result(Function, MetalFailed);
+export type RenderPipelineDescriptorResult = Result(RenderPipelineDescriptor, MetalFailed);
+export type RenderPipelineStateResult = Result(RenderPipelineState, MetalFailed);
+export type ContextResult = Result(Context, MetalFailed);
+export type FrameResult = Result(Frame, MetalFailed);
 
 export fn failed (kind: MetalErrorKind) -> MetalFailed;
 export fn default_context_options (width: int, height: int) -> ContextOptions;
@@ -30296,15 +30330,15 @@ impl Window {
   public fn close (self: Window) -> CloseResult;
 }
 
-export type WindowResult = std::result::Result(Window, WindowFailed);
-export type EventResult = std::result::Result(Event, WindowFailed);
-export type PollResult = std::result::Result(bool, WindowFailed);
-export type CloseResult = std::result::Result(bool, WindowFailed);
-export type ActionResult = std::result::Result(bool, WindowFailed);
-export type BoolResult = std::result::Result(bool, WindowFailed);
-export type SizeResult = std::result::Result(Size, WindowFailed);
-export type PositionResult = std::result::Result(Position, WindowFailed);
-export type RunResult = std::result::Result(bool, WindowFailed);
+export type WindowResult = Result(Window, WindowFailed);
+export type EventResult = Result(Event, WindowFailed);
+export type PollResult = Result(bool, WindowFailed);
+export type CloseResult = Result(bool, WindowFailed);
+export type ActionResult = Result(bool, WindowFailed);
+export type BoolResult = Result(bool, WindowFailed);
+export type SizeResult = Result(Size, WindowFailed);
+export type PositionResult = Result(Position, WindowFailed);
+export type RunResult = Result(bool, WindowFailed);
 export type FrameCallback = fn (Window) -> int;
 
 export fn options (title: string, width: int, height: int) -> Options;
@@ -31348,7 +31382,7 @@ Implications:
 
 ## Error model
 
-All fallible wrapper methods return `std::result::Result(..., GgmlFailed)`.
+All fallible wrapper methods return `Result(..., GgmlFailed)`.
 
 Public error-code constants:
 
@@ -31416,14 +31450,14 @@ impl GgmlFailed {
   public fn kind (self: &GgmlFailed) -> GgmlErrorKind;
 }
 
-type ContextResult = std::result::Result(Context, GgmlFailed);
-type TensorResult = std::result::Result(Tensor, GgmlFailed);
-type GraphResult = std::result::Result(Graph, GgmlFailed);
-type BoolResult = std::result::Result(bool, GgmlFailed);
-type F32Result = std::result::Result(f32, GgmlFailed);
-type IntResult = std::result::Result(i32, GgmlFailed);
-type I64Result = std::result::Result(i64, GgmlFailed);
-type U64Result = std::result::Result(u64, GgmlFailed);
+type ContextResult = Result(Context, GgmlFailed);
+type TensorResult = Result(Tensor, GgmlFailed);
+type GraphResult = Result(Graph, GgmlFailed);
+type BoolResult = Result(bool, GgmlFailed);
+type F32Result = Result(f32, GgmlFailed);
+type IntResult = Result(i32, GgmlFailed);
+type I64Result = Result(i64, GgmlFailed);
+type U64Result = Result(u64, GgmlFailed);
 
 struct Context {
   handle: u64,
@@ -32019,7 +32053,7 @@ export struct Boolean {
 
 impl Boolean {
   public fn from_bool (value: bool) -> Boolean;
-  public fn parse (value: string) -> std::result::Result(Boolean, ParseFailed);
+  public fn parse (value: string) -> Result(Boolean, ParseFailed);
   public fn as_bool (self: &Boolean) -> bool;
   public fn is_true (self: &Boolean) -> bool;
   public fn is_false (self: &Boolean) -> bool;
@@ -32517,7 +32551,7 @@ struct FixedList(T) { ... }
 Common methods:
 
 ```silk
-public fn init (cap: i64) -> std::result::Result(Self, std::memory::AllocFailed);
+public fn init (cap: i64) -> Result(Self, std::memory::AllocFailed);
 public fn try_init (cap: i64) -> Self?;
 public fn empty () -> Self;
 public fn push (mut self: &Self, value: T) -> std::memory::OutOfMemory?;
@@ -32838,7 +32872,7 @@ struct FixedLIFOQueue(T) { ... }
 Common methods on all four queue structs:
 
 ```silk
-public fn init (cap: i64) -> std::result::Result(Self, std::memory::AllocFailed);
+public fn init (cap: i64) -> Result(Self, std::memory::AllocFailed);
 public fn try_init (cap: i64) -> Self?;
 public fn empty () -> Self;
 public fn push_back (mut self: &Self, value: T) -> std::memory::OutOfMemory?;
@@ -32940,7 +32974,7 @@ impl Range {
   public fn is_inclusive (self: &Range) -> bool;
   public fn shift (self: &Range, offset: int) -> Range;
   public fn is_empty_known (self: &Range) -> bool;
-  public fn to_string (self: &Range) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+  public fn to_string (self: &Range) -> Result(std::strings::String, std::memory::OutOfMemory);
 }
 ```
 
@@ -34762,7 +34796,7 @@ struct FixedStack(T) { ... }
 Common methods:
 
 ```silk
-public fn init (cap: i64) -> std::result::Result(Self, std::memory::AllocFailed);
+public fn init (cap: i64) -> Result(Self, std::memory::AllocFailed);
 public fn try_init (cap: i64) -> Self?;
 public fn empty () -> Self;
 public fn push (mut self: &Self, value: T) -> std::memory::OutOfMemory?;
@@ -50232,7 +50266,7 @@ type Int32 = i32;
 type struct Bar = Foo;
 type fn IntAdder = fn(int, int) -> int;
 type pure fn PureIntAdder = fn(int, int) -> int;
-type ResultOf(T) = std::result::Result(T, string);
+type ResultOf(T) = Result(T, string);
 export type struct PublicBar = Foo;
 ```
 
@@ -50246,7 +50280,7 @@ Semantics (current implementation):
  syntax as generic structs, enums, interfaces, impls, and functions. Applying
  the alias in a type position substitutes the supplied type arguments into the
  transparent target, for example `ResultOf(int)` is equivalent to
- `std::result::Result(int, string)`.
+ `Result(int, string)`.
 - Type aliases may be used anywhere a type is expected (parameter/result types,
  local annotations, struct fields, `as` casts, etc.).
 - Cycles in type aliases are rejected (`E2058`).
@@ -52917,7 +52951,7 @@ Rule because it is not a `T | ...` typed-error expression.
 The `match` expression also supports a small subset for
 recoverable “success or error” values. In the initial subset, this includes:
 
-- `std::result::Result(T, E)` (an `enum` with `Ok(T)` and `Err(E)` variants), and
+- `Result(T, E)` (an `enum` with `Ok(T)` and `Err(E)` variants), and
 - “Result-like” structs of the form `{ value: T?, err: E? }`.
 
 For the struct form, the runtime invariant is: exactly one of `value` and `err`
@@ -53395,7 +53429,7 @@ Static-method receiver sugar (Supported forms):
  compiler may resolve it as a call to a visible static method of the receiver
  type by inserting the receiver as the first argument: `Type.method(value, ...)`.
 - This supports fluent chaining for value-consuming helper APIs like
- `std::result::Result.unwrap_or`:
+ `Result.unwrap_or`:
 
   ```silk
   let r: R = /* ... */;
@@ -54016,7 +54050,7 @@ Conformance rules (implementation):
  - `impl T as std::interfaces::Deserialize(S)` provides
  `fn deserialize(value: S) -> Self` (no `self` parameter),
  - `impl T as std::interfaces::Parse(E, S)` provides
- `fn parse(value: S) -> std::result::Result(Self, E)` (no `self`
+ `fn parse(value: S) -> Result(Self, E)` (no `self`
  parameter),
  - calls use `T.deserialize(value)`.
  - and `Parse` calls use `T.parse(value)`.
@@ -55407,7 +55441,7 @@ errors** (`error`, `panic`, and `T | ErrorType...`), specified in
 Silk distinguishes between:
 
 - **Recoverable errors** (invalid user input, I/O failures, parse failures): model
- these as normal values, typically using `std::result::Result(T, E)` or an
+ these as normal values, typically using `Result(T, E)` or an
  optional (`T?`).
 - **Typed errors** (`T | ErrorType...` + `panic`): reserved for unrecoverable
  contract violations and logic bugs that should not be silently ignored (see
@@ -55419,7 +55453,7 @@ Silk distinguishes between:
 tagged result (`std::url::URLResult`), so callers can report an error and keep
 going without aborting.
 
-A runnable example that wraps `URLResult` into `std::result::Result` and parses
+A runnable example that wraps `URLResult` into `Result` and parses
 all command-line arguments is in:
 
 - `an example program`
@@ -55550,7 +55584,7 @@ failures such as:
 - parsing failures,
 - I/O failures.
 
-Those should typically be modeled as ordinary values using `std::result::Result`
+Those should typically be modeled as ordinary values using `Result`
 or optionals (`T?`) so callers can handle them and continue normal execution.
 
 See:
@@ -55801,12 +55835,12 @@ match (inspect_issues()) {
 #### `match` statements over Result-like values (recoverable)
 
 The `match` **statement** form can also be used to destructure common
-recoverable result shapes such as `std::result::Result(T, E)`.
+recoverable result shapes such as `Result(T, E)`.
 
 When the scrutinee expression is a **call expression** whose result type is
 either:
 
-- `std::result::Result(T, E)` (an `enum` with `Ok(T)` and `Err(E)` variants), or
+- `Result(T, E)` (an `enum` with `Ok(T)` and `Err(E)` variants), or
 - a “Result-like” struct with fields:
  - `value: T?`
  - `err: E?` where `E` is an `error` type,
@@ -56515,7 +56549,7 @@ wrapper and control-flow forms:
  - `while let Ok(x) = r { ... }` / `while let Err(x) = r { ... }`
  - statement `match (r) { Ok(x) => ..., Err(y) => ... }`
  for supported result-shaped enums whose payload type carries a borrow,
- including monomorphized `std::result::Result(T, E)` instantiations, and the
+ including monomorphized `Result(T, E)` instantiations, and the
  equivalent qualified enum-variant forms such as `State::Ready(x)`.
 - `if` expressions preserve borrow identity when:
  - every borrowing branch resolves to the same local origin,
@@ -63620,7 +63654,7 @@ Choose the layer that matches your goal:
 ## Minimal shape
 
 ```silk
-import std::io::println;
+import { println } from "std/io";
 
 fn main () -> int {
   println("hello from silk");
@@ -63643,25 +63677,132 @@ URL: /silk/wiki/?p=language/syntax-tour
 
 # Syntax tour
 
-The canonical syntax tour is a soup-to-nuts walkthrough of Silk surface syntax,
-with many examples and cross-links:
+This tour gives you the shape of a Silk source file before you dive into the
+full reference. It is intentionally compact; the detailed tour is here:
+[syntax tour](../docs/?p=language/syntax-tour).
 
-- [syntax tour](?p=language/syntax-tour)
+## Minimal Executable
 
-This wiki page keeps navigation self-contained and highlights where to look
-next when you want precise rules.
-
-## Example: minimal executable
 ```silk
 fn main () -> int {
   return 0;
 }
 ```
 
+Most Silk statements end in `;`, blocks use braces, and executable builds use a
+top-level `main` that returns `int`.
+
+## File Header
+
+Larger files usually start with a package declaration and imports:
+
+```silk
+package app;
+
+import io from "std/io";
+import { trim } from "std/strings";
+```
+
+Declarations follow the import block.
+
+## Functions
+
+```silk
+fn add (a: int, b: int) -> int {
+  return a + b;
+}
+```
+
+Function parameters are named and typed. Return types are explicit after `->`.
+
+## Structs And Impl Blocks
+
+```silk
+struct User {
+  id: int,
+  name: string,
+}
+
+impl User {
+  fn label (self: &User) -> string {
+    return self.name;
+  }
+}
+```
+
+Struct literals use field names:
+
+```silk
+let user = User{ id: 1, name: "ada" };
+```
+
+## Flow Control
+
+```silk
+fn classify (n: int) -> string {
+  if n == 0 {
+    return "zero";
+  } else if n > 0 {
+    return "positive";
+  }
+  return "negative";
+}
+```
+
+Silk also has `match`, `loop`, `while`, `for`, `break`, `continue`, and
+`return`.
+
+## Optionals
+
+```silk
+fn configured_name () -> string? {
+  return None;
+}
+
+fn main () -> int {
+  let name: string = configured_name() ?? "guest";
+  return 0;
+}
+```
+
+`T?` means an optional `T`. Use `??` to provide a fallback.
+
+## Async And Task
+
+```silk
+task fn compute () -> int {
+  return 42;
+}
+
+async fn main () -> int {
+  task {
+    let t = compute();
+    let value: int = yield t;
+    return value;
+  }
+}
+```
+
+`async` works with promises; `task` works with task handles.
+
+## Formal Silk
+
+```silk
+#require x >= 0;
+#assure result >= x;
+fn inc (x: int) -> int {
+  return x + 1;
+}
+```
+
+Formal Silk directives are parsed syntax, not comments.
+
 ## See also
 
+- Full tour: [syntax tour](../docs/?p=language/syntax-tour)
 - Grammar: [grammar](?p=language/grammar)
 - Packages/imports/exports: [packages imports exports](?p=language/packages-imports-exports)
+- Types: [types](?p=language/types)
 
 ==============================================================================
 WIKI: Cheat sheet (language/cheat-sheet)
@@ -63670,20 +63811,125 @@ URL: /silk/wiki/?p=language/cheat-sheet
 
 # Cheat sheet
 
-If you want a fast, high-signal overview of Silk surface syntax, start with the
-canonical cheat sheet:
+This page is the wiki-sized quick reference for the syntax people look up most
+often. For the complete reference, open the full
+[language cheat sheet](../docs/?p=language/cheat-sheet).
 
-- [cheat sheet](?p=language/cheat-sheet)
+## Minimal Executable
 
-This wiki page exists to keep wiki navigation self-contained; the cheat sheet
-itself is already concise and example-heavy.
-
-## Example
 ```silk
 fn main () -> int {
   return 0;
 }
 ```
+
+## Packages And Imports
+
+```silk
+package app;
+
+import io from "std/io";
+import { trim } from "std/strings";
+
+fn main () -> int {
+  io::println(trim(" hello "));
+  return 0;
+}
+```
+
+- `import name from "module"` binds a namespace or default export.
+- `import { symbol } from "module"` imports a named symbol.
+- `package` gives the file a package namespace.
+
+## Bindings
+
+```silk
+const answer: int = 42;
+
+fn main () -> int {
+  let x: int = answer;
+  let mut y: int = 0;
+  var z: int = 1;
+  y += 1;
+  z += 2;
+  return x + y + z;
+}
+```
+
+- `const` is compile-time.
+- `let` is immutable.
+- `let mut` and `var` are mutable.
+
+## Types
+
+- `bool`, `char`, `string`, `void`
+- integers: `u8`, `i8`, `u16`, `i16`, `u32`, `i32`, `u64`, `i64`, `int`
+- floats: `f32`, `f64`
+- optionals: `T?`
+- references: `&T`
+- arrays and slices: `T[N]`, `T[]`
+- structs, enums, interfaces, and function types
+
+## Structs And Methods
+
+```silk
+struct Point {
+  x: int,
+  y: int,
+}
+
+impl Point {
+  fn sum (self: &Point) -> int {
+    return self.x + self.y;
+  }
+}
+```
+
+## Errors And Optionals
+
+```silk
+fn configured_name () -> string? {
+  return Some("silk");
+}
+
+fn main () -> int {
+  let name: string = configured_name() ?? "guest";
+  return 0;
+}
+```
+
+## Concurrency
+
+```silk
+task fn compute () -> int {
+  return 21 * 2;
+}
+
+async fn main () -> int {
+  task {
+    let t = compute();
+    let value: int = yield t;
+    return value;
+  }
+}
+```
+
+## Formal Silk
+
+```silk
+#require x >= 0;
+#assure result == x + 1;
+fn inc (x: int) -> int {
+  return x + 1;
+}
+```
+
+## Common Links
+
+- Full reference: [language cheat sheet](../docs/?p=language/cheat-sheet)
+- Syntax tour: [syntax tour](?p=language/syntax-tour)
+- Grammar: [grammar](?p=language/grammar)
+- Formal Silk: [formal verification](?p=language/formal-verification)
 
 ==============================================================================
 WIKI: Flow control overview (language/flow-overview)
@@ -64135,13 +64381,13 @@ URL: /silk/wiki/?p=language/flow-expression-statements
 Many expressions can appear as standalone statements when followed by `;`
 (assignment, calls, `++`/`--`, and other “statement-like” expressions).
 
-Canonical spec: [flow expression statements](?p=language/flow-expression-statements).
+Reference: [expression statements](../docs/?p=language/flow-expression-statements).
 
-## Notes
+## What They Are
 
-- Supported forms + restrictions: [flow expression statements](?p=language/flow-expression-statements)
+An expression statement evaluates an expression for its effects and discards the
+result.
 
-## Example: assignment + increment
 ```silk
 fn main () -> int {
   let mut x: int = 0;
@@ -64151,10 +64397,68 @@ fn main () -> int {
 }
 ```
 
+Assignments and increments are common expression statements because their
+purpose is the state change.
+
+## Calls
+
+Function calls can be statements when the useful result is the side effect:
+
+```silk
+import io from "std/io";
+
+fn main () -> int {
+  io::println("hello");
+  return 0;
+}
+```
+
+If the call returns a value you need, bind it instead:
+
+```silk
+fn main () -> int {
+  let value: int = compute();
+  return value;
+}
+```
+
+## Async Forms
+
+In async code, `await` can appear as a statement when the promise result is
+`void` or intentionally discarded:
+
+```silk
+async fn flush () -> void {}
+
+async fn main () -> int {
+  await flush();
+  return 0;
+}
+```
+
+Task code similarly uses `yield` where the task interaction is the point of the
+statement.
+
+## What Not To Do
+
+Do not leave pure computations as statements:
+
+```silk
+fn main () -> int {
+  // Prefer: let x: int = 1 + 2;
+  1 + 2;
+  return 0;
+}
+```
+
+Bind the value, return it, pass it to a function, or use it in control flow.
+
 ## See also
 
-- Canonical spec: [flow expression statements](?p=language/flow-expression-statements)
+- Reference: [expression statements](../docs/?p=language/flow-expression-statements)
 - Operators: [operators](?p=language/operators)
+- Blocks: [blocks and statements](?p=language/flow-blocks-statements)
+- Concurrency: [concurrency](?p=language/concurrency)
 
 ==============================================================================
 WIKI: Blocks and statements (language/flow-blocks-statements)
@@ -64211,10 +64515,10 @@ This wiki page is a reading guide, not a replacement for the grammar itself.
 
 ## Example
 ```silk
-import std::io;
+import io from "std/io";
 
 fn main () -> int {
-  std::io::println("hello {s}", "world");
+  io::println("hello {s}", "world");
   return 0;
 }
 ```
@@ -64234,7 +64538,7 @@ URL: /silk/wiki/?p=language/doc-comments
 Silk supports both line and block doc comments. They attach to the following
 declaration (like many C/Rust-style doc systems).
 
-Canonical doc: [doc comments](?p=language/doc-comments).
+Reference: [doc comments](../docs/?p=language/doc-comments).
 
 ## Syntax
 
@@ -64251,9 +64555,62 @@ fn main () -> int { return 0; }
 fn other () -> int { return 0; }
 ```
 
+## Attachment
+
+Doc comments attach to the next declaration when only whitespace or ordinary
+comments appear between them and the declaration.
+
+```silk
+/// Returns the process exit code.
+fn main () -> int {
+  return 0;
+}
+```
+
+For functions with Formal Silk contracts, the doc comment still describes the
+function even when verification annotations sit between the comment and `fn`:
+
+```silk
+/// Increments a non-negative integer.
+#require x >= 0;
+#assure result == x + 1;
+fn inc (x: int) -> int {
+  return x + 1;
+}
+```
+
+## Tags
+
+Silkdoc supports free-form Markdown-friendly text plus tags:
+
+```silk
+/**
+ * Copies bytes from `src` to `dst`.
+ *
+ * @param dst: &Buffer Destination buffer.
+ * @param src: &Buffer Source buffer.
+ * @returns int Number of bytes copied.
+ */
+fn copy (dst: &Buffer, src: &Buffer) -> int {
+  return 0;
+}
+```
+
+Use tags when generated docs need structured parameter or return information.
+Use prose when the important part is intent, invariants, or examples.
+
+## Good Doc Comments
+
+- say what the declaration is for
+- mention ownership or lifetime rules when relevant
+- mirror important `#require` constraints in human language
+- include a small example for public APIs
+
 ## See also
 
-- Canonical doc: [doc comments](?p=language/doc-comments)
+- Reference: [doc comments](../docs/?p=language/doc-comments)
+- Formal Silk: [formal verification](?p=language/formal-verification)
+- Conventions: [conventions](?p=language/conventions)
 
 ==============================================================================
 WIKI: Packages, imports, and exports (language/packages-imports-exports)
@@ -64268,10 +64625,10 @@ Silk has explicit module/package structure:
 - imports come next as a contiguous block,
 - then declarations (`fn`, `let`, `struct`, `enum`, `impl`, ...).
 
-Silk supports both:
+Silk user-space code should use module specifier imports:
 
-- package imports (`import std::io;`, `import ui;`),
-- file imports (`import { Name } from "./module.slk";`).
+- namespace imports (`import io from "std/io";`, `import ui from "ui";`),
+- named imports (`import { Name } from "./module.slk";`).
 
 Canonical spec: [packages imports exports](?p=language/packages-imports-exports).
 
@@ -64283,7 +64640,7 @@ Canonical spec: [packages imports exports](?p=language/packages-imports-exports)
 ```silk
 package my_app;
 
-import std::io;
+import io from "std/io";
 import { add } from "./math.slk";
 import helpers from "./helpers.slk"; // default import / namespace import
 
@@ -64643,10 +65000,10 @@ fn main () -> int {
 
 ### Example: multiline strings
 ```silk
-import std::io;
+import io from "std/io";
 
 fn main () -> int {
-  std::io::println(`line1
+  io::println(`line1
 line2`);
   return 0;
 }
@@ -64666,12 +65023,36 @@ URL: /silk/wiki/?p=language/literals-numeric
 
 # Numeric literals
 
-Silk supports integer and floating-point literals, including base prefixes
-suffixes as defined in the canonical spec.
+Silk supports integer and floating-point literals, including base prefixes and
+digit separators.
 
-Canonical doc: [literals numeric](?p=language/literals-numeric).
+Reference: [numeric literals](../docs/?p=language/literals-numeric).
+
+## Integers
+
+```silk
+let decimal: int = 42;
+let binary: int = 0b1010;
+let octal: int = 0o17;
+let hex: int = 0xff;
+let readable: int = 1_000_000;
+```
+
+Integer literals default to `int` unless a type context selects another integer
+type.
+
+## Floats
+
+```silk
+let ratio: f64 = 1.5;
+let small: f32 = 0.25;
+```
+
+Floating-point literals need digits on both sides of the decimal point: write
+`0.5`, not `.5`.
 
 ## Example
+
 ```silk
 fn main () -> int {
   let a: int = 42;
@@ -64684,10 +65065,36 @@ fn main () -> int {
 }
 ```
 
+## Sign Is An Operator
+
+`-1` is parsed as unary `-` applied to the literal `1`. That matters for
+precedence and for the exact grammar.
+
+```silk
+let x: int = -1;
+let y: int = 0 - 1;
+```
+
+## Duration Tokens
+
+Time literals such as `500ms` and `1.5s` are duration literal tokens, not a
+number followed by an identifier.
+
+```silk
+let timeout: Duration = 500ms;
+```
+
+## Pitfalls
+
+- Separators must be between digits: `1_000` is valid, `_1000` is not.
+- `0x`, `0b`, and `0o` prefixes require valid digits for that base.
+- Add an explicit type annotation when a literal crosses an API boundary.
+
 ## See also
 
-- Canonical doc: [literals numeric](?p=language/literals-numeric)
+- Reference: [numeric literals](../docs/?p=language/literals-numeric)
 - Operators: [operators](?p=language/operators)
+- Duration literals: [duration literals](?p=language/literals-duration)
 
 ==============================================================================
 WIKI: String literals (language/literals-string)
@@ -64699,23 +65106,67 @@ URL: /silk/wiki/?p=language/literals-string
 `string` is Silk’s built-in UTF‑8 byte sequence type. String literals write a
 `string` value directly in source code.
 
-Canonical doc: [literals string](?p=language/literals-string).
+Reference: [string literals](../docs/?p=language/literals-string).
+
+Use strings for paths, messages, protocol text, JSON, and other byte sequences
+that are normally interpreted as UTF-8.
+
+## Forms
+
+Double-quoted strings process escapes:
+
+```silk
+let one_line: string = "hello\n";
+let quoted: string = "quote=\" backslash=\\";
+```
+
+Backtick strings are raw and are useful for multiline text:
+
+```silk
+let body: string = `line one
+line two`;
+```
 
 ## Example: multiline text and escapes
+
 ```silk
-import std::io;
+import io from "std/io";
 
 fn main () -> int {
-  std::io::println(`line1
+  io::println(`line1
 line2`);
-  std::io::println("quote=\\\" backslash=\\\\");
+  io::println("quote=\\\" backslash=\\\\");
   return 0;
 }
 ```
 
+## Escapes
+
+Double-quoted strings support common escapes:
+
+- `\\` backslash
+- `\"` double quote
+- `\'` single quote
+- `\n`, `\r`, `\t`, `\0`
+- `\xNN` byte escape
+- `\u{...}` Unicode scalar escape
+
+String literals carry their length explicitly; they do not implicitly add a
+trailing NUL byte for C.
+
+## When To Use `char`
+
+Use `char` for one Unicode scalar value and `string` for text:
+
+```silk
+let slash: char = '/';
+let path: string = "/tmp/app";
+```
+
 ## See also
 
-- Canonical doc: [literals string](?p=language/literals-string)
+- Reference: [string literals](../docs/?p=language/literals-string)
+- Character literals: [character literals](?p=language/literals-character)
 - `std::strings`: [strings](?p=std/strings)
 
 ==============================================================================
@@ -64728,9 +65179,37 @@ URL: /silk/wiki/?p=language/literals-character
 `char` represents a Unicode scalar value. Character literals write a `char`
 value directly in source code.
 
-Canonical doc: [literals character](?p=language/literals-character).
+Reference: [character literals](../docs/?p=language/literals-character).
+
+## Shape
+
+Character literals use single quotes and must decode to exactly one Unicode
+scalar value:
+
+```silk
+let letter: char = 'A';
+let newline: char = '\n';
+let accent: char = '\u{00E9}';
+```
+
+Use `string` when you need more than one character.
+
+## Escapes
+
+Common escapes:
+
+- `\n` line feed
+- `\r` carriage return
+- `\t` tab
+- `\0` NUL
+- `\\` backslash
+- `\'` single quote
+- `\"` double quote
+- `\xNN` two hex digits
+- `\u{...}` Unicode scalar
 
 ## Example
+
 ```silk
 fn main () -> int {
   let a: char = 'A';
@@ -64741,9 +65220,24 @@ fn main () -> int {
 }
 ```
 
+## Practical Use
+
+`char` is useful for parser tokens and single-character delimiters:
+
+```silk
+fn is_separator (ch: char) -> bool {
+  return ch == ',' || ch == ';' || ch == '\n';
+}
+```
+
+For user-facing text, prefer `string`; a visible glyph is not always one
+Unicode scalar.
+
 ## See also
 
-- Canonical doc: [literals character](?p=language/literals-character)
+- Reference: [character literals](../docs/?p=language/literals-character)
+- String literals: [string literals](?p=language/literals-string)
+- Types: [types](?p=language/types)
 
 ==============================================================================
 WIKI: Boolean literals (language/literals-boolean)
@@ -64754,9 +65248,10 @@ URL: /silk/wiki/?p=language/literals-boolean
 
 Silk has the boolean type `bool` with literals `true` and `false`.
 
-Canonical doc: [literals boolean](?p=language/literals-boolean).
+Reference: [boolean literals](../docs/?p=language/literals-boolean).
 
-## Example
+## Basic Use
+
 ```silk
 fn main () -> int {
   let ok: bool = true;
@@ -64766,6 +65261,52 @@ fn main () -> int {
   return 1;
 }
 ```
+
+Booleans are not numbers. Conditions must have type `bool`; write a comparison
+when you want to branch on an integer:
+
+```silk
+fn is_empty (count: int) -> bool {
+  return count == 0;
+}
+```
+
+## Operators
+
+Boolean expressions use:
+
+- `!x` for logical not
+- `a && b` for and
+- `a || b` for or
+- `a == b` and `a != b` for equality
+
+`&&` and `||` short-circuit from left to right:
+
+```silk
+fn ready () -> bool {
+  return true;
+}
+
+fn main () -> int {
+  if ready() && true {
+    return 0;
+  }
+  return 1;
+}
+```
+
+## Common Mistakes
+
+- Do not write `if x { ... }` for an integer `x`; use `if x != 0 { ... }`.
+- Avoid hiding side effects inside the right side of `&&` or `||`, because it
+ may not run.
+- Use clear predicate names such as `is_ready`, `has_value`, or `can_write`.
+
+## Related
+
+- Types: [types](?p=language/types)
+- Operators: [operators](?p=language/operators)
+- `if` / `else`: [if else](?p=language/flow-if-else)
 
 ==============================================================================
 WIKI: Duration literals (language/literals-duration)
@@ -64777,9 +65318,30 @@ URL: /silk/wiki/?p=language/literals-duration
 Duration literals represent time spans with unit suffixes (`ms`, `s`, `min`,
 etc) and produce a `Duration` value.
 
-Canonical doc: [literals duration](?p=language/literals-duration).
+Reference: [duration literals](../docs/?p=language/literals-duration).
+
+## Units
+
+Duration literals are numeric values followed immediately by a unit:
+
+- `ns` nanoseconds
+- `us` microseconds
+- `ms` milliseconds
+- `s` seconds
+- `min` minutes
+- `h` hours
+- `d` days
+
+```silk
+let debounce: Duration = 250ms;
+let timeout: Duration = 5s;
+let interval: Duration = 1min;
+```
+
+The suffix is part of the literal token, so `10 ms` is not the same as `10ms`.
 
 ## Example
+
 ```silk
 fn main () -> int {
   let a: Duration = 10ms;
@@ -64790,10 +65352,30 @@ fn main () -> int {
 }
 ```
 
+## Instant vs Duration
+
+`Duration` is a span of time. `Instant` is a point in time. You normally use
+durations for configuration and arithmetic, and instants for measuring elapsed
+time.
+
+```silk
+fn should_retry (elapsed: Duration) -> bool {
+  return elapsed >= 500ms;
+}
+```
+
+## Pitfalls
+
+- Prefer explicit units at call sites; `500ms` is clearer than a bare integer.
+- Watch for overflow when very large values are scaled to nanoseconds.
+- Use `Duration` values for time spans instead of encoding milliseconds in
+ ordinary `int` fields.
+
 ## See also
 
-- Canonical doc: [literals duration](?p=language/literals-duration)
+- Reference: [duration literals](../docs/?p=language/literals-duration)
 - `Duration` and `Instant`: [duration instant](?p=language/duration-instant)
+- Types: [types](?p=language/types)
 
 ==============================================================================
 WIKI: `Duration` and `Instant` (language/duration-instant)
@@ -64930,10 +65512,116 @@ URL: /silk/wiki/?p=language/struct-requirements
 
 # Struct requirements (`#require`)
 
-Use `#require` on a `struct` to state requirements that must hold for all
-values constructed for that type.
+Struct requirements attach invariants directly to a data type. Use `#require`
+before a `struct` when every value of that type must satisfy a condition, no
+matter where the value is constructed.
 
-See [struct requirements](?p=language/struct-requirements) and [formal verification](?p=language/formal-verification).
+That is different from a function precondition. A function `#require` describes
+what callers must prove before entering one function. A struct `#require`
+describes what must be true for every literal, defaulted value, or allocation of
+that struct.
+
+## Shape
+
+```silk
+#require field_name >= 0;
+struct Name {
+  field_name: int,
+}
+```
+
+The requirement may refer to the struct fields by name. At construction sites,
+the verifier proves the requirement using the field initializers and defaults
+that are actually present.
+
+## Example
+
+```silk
+#require len >= 0;
+#require cap >= len;
+struct BufferView {
+  ptr: u64,
+  len: int,
+  cap: int,
+}
+
+fn empty_view () -> BufferView {
+  return BufferView{
+    ptr: 0,
+    len: 0,
+    cap: 0,
+  };
+}
+```
+
+The constructor is accepted because both requirements are provable:
+
+- `len >= 0`
+- `cap >= len`
+
+If a caller tries to construct `BufferView{ ptr: 0, len: 8, cap: 4 }`, the
+struct requirement is the failing obligation, not a later runtime check.
+
+## Defaults Count
+
+Defaults participate in the proof the same way explicit fields do:
+
+```silk
+#require quantity > 0;
+struct LineItem {
+  sku: string,
+  quantity: int = 1,
+}
+
+fn one (sku: string) -> LineItem {
+  return LineItem{ sku };
+}
+```
+
+Because `quantity` defaults to `1`, the requirement is still proven when the
+literal omits that field.
+
+## Field Writes
+
+Verified direct field writes must re-establish the target struct requirements
+after the write. That keeps the invariant attached to the value, not just to
+the original literal.
+
+```silk
+#require value >= 0;
+struct Counter {
+  value: int,
+}
+
+fn reset (mut c: &Counter) -> void {
+  c.value = 0;
+}
+```
+
+Assignments that cannot prove `value >= 0` are rejected in verified code.
+
+## Use It For
+
+- lengths, capacities, and offsets
+- enum-like integer domains
+- protocol header relationships
+- invariants that should survive refactors
+- public structs exposed across module or ABI boundaries
+
+## Avoid It For
+
+- facts that only matter inside one function
+- expensive semantic checks that are not expressible as compile-time proof
+- invariants involving resources whose state changes outside the value
+
+Use a function `#require` for caller obligations, `#assert` for local proof
+steps, and struct `#require` for type-wide shape guarantees.
+
+## Related
+
+- Reference: [struct requirements](../docs/?p=language/struct-requirements)
+- Formal Silk: [formal verification](?p=language/formal-verification)
+- Structs and methods: [structs and impl](?p=language/structs-impls-layout)
 
 ==============================================================================
 WIKI: Interfaces (language/interfaces)
@@ -65063,9 +65751,26 @@ unrecoverable logic bugs and contract violations.
 This page focuses on assertions and the high-level model; see typed errors for
 the full rules.
 
-Canonical doc: [errors](?p=language/errors).
+Reference: [errors](../docs/?p=language/errors).
+
+## Recoverable Errors
+
+Use ordinary values for conditions callers can reasonably handle:
+
+```silk
+fn parse_port (text: string) -> Result(int, string) {
+  if text == "" {
+    return Err("missing port");
+  }
+  return Ok(8080);
+}
+```
+
+`Result(T, E)` keeps the success and failure cases visible in the type.
+Optionals (`T?`) are useful when absence is the whole error.
 
 ## Example: `assert`
+
 ```silk
 fn main () -> int {
   assert (1 + 2) == 3;
@@ -65073,11 +65778,45 @@ fn main () -> int {
 }
 ```
 
+Assertions are for facts that should be impossible to violate. In test builds,
+assertion failures are reported as test failures. In normal executable builds,
+a failed assertion is a program failure.
+
+## Typed Errors
+
+Typed errors model unrecoverable violations with explicit error declarations and
+`panic`:
+
+```silk
+error OutOfBounds {
+  index: int,
+  len: int,
+}
+
+fn at (xs: int[], index: int) -> int | OutOfBounds {
+  if index < 0 {
+    panic OutOfBounds{ index, len: 0 };
+  }
+  return xs[index];
+}
+```
+
+Use typed errors when the failure represents a broken contract or logic error,
+not routine user input.
+
+## Choosing A Shape
+
+- Use `T?` when absence is the only failure information.
+- Use `Result(T, E)` for recoverable domain failures.
+- Use typed errors for contract violations.
+- Use `assert` for local facts that should always hold.
+
 ## See also
 
-- Canonical doc: [errors](?p=language/errors)
+- Reference: [errors](../docs/?p=language/errors)
 - Typed errors: [typed errors](?p=language/typed-errors)
 - `Result(T, E)`: [result](?p=std/result)
+- Testing: [testing](?p=language/testing)
 
 ==============================================================================
 WIKI: Typed errors (`error`, `panic`, and `T | ErrorType...`) (language/typed-errors)
@@ -65151,7 +65890,7 @@ fn main () -> int {
       return value;
     },
     err: Boom => {
-      std::abort();
+      abort();
     },
   }
 }
@@ -65282,7 +66021,7 @@ fn main () -> int {
 
 - Canonical spec: [regions](?p=language/regions)
 - Memory model and `new`: [memory model](?p=language/memory-model)
-- `--noheap` and `std::runtime::mem`: [runtime](?p=std/runtime)
+- `--noheap` and `runtime::mem`: [runtime](?p=std/runtime)
 
 ==============================================================================
 WIKI: Buffers (`Buffer(T)`) (design) (language/buffers)
@@ -65304,7 +66043,7 @@ In the current toolchain, buffer-like functionality is provided via `std::`:
 
 ## Example: buffer aliases
 ```silk
-import std::buffer;
+import { BufferU8 } from "std/buffer";
 
 fn main () -> int {
   match (BufferU8.init(4)) {
@@ -65393,7 +66132,7 @@ async fn main () -> int {
 ## See also
 
 - Canonical spec: [concurrency](?p=language/concurrency)
-- `std::task` and `std::sync`: [task](?p=std/task), [sync](?p=std/sync)
+- `task` and `sync`: [task](?p=std/task), [sync](?p=std/sync)
 
 ==============================================================================
 WIKI: Function disciplines (`pure`, `async`, `task`) (language/function-disciplines)
@@ -65532,24 +66271,24 @@ URL: /silk/wiki/?p=language/varargs
 # Varargs (`...args`)
 
 Silk supports “varargs” parameters to accept a variable number of trailing
-arguments, used by `std::io::print` / `std::io::println`.
+arguments, used by `io::print` / `io::println`.
 
 Canonical doc: [varargs](?p=language/varargs).
 
 ## Syntax
 
 ```silk
-fn log (fmt: string, ...args: std::fmt::Arg) -> void {
-  std::io::println(fmt, args);
+fn log (fmt: string, ...args: fmt::Arg) -> void {
+  io::println(fmt, args);
 }
 ```
 
 ## Example
 ```silk
-import std::io;
+import io from "std/io";
 
 fn main () -> int {
-  std::io::println("hello {s} answer={d}", "world", 42);
+  io::println("hello {s} answer={d}", "world", 42);
   return 0;
 }
 ```
@@ -65557,7 +66296,7 @@ fn main () -> int {
 ## See also
 
 - Canonical doc: [varargs](?p=language/varargs)
-- `std::fmt`: [fmt](?p=std/fmt)
+- `fmt`: [fmt](?p=std/fmt)
 
 ==============================================================================
 WIKI: External declarations (`ext`) (language/ext)
@@ -65593,13 +66332,13 @@ ext errno = i32;
 
 ### Example: call a C symbol
 ```silk
-import std::io;
+import io from "std/io";
 
 ext puts = fn (string) -> i32;
 
 fn main () -> int {
   puts("hello from ext");
-  std::io::println("ok");
+  io::println("ok");
   return 0;
 }
 ```
@@ -65633,22 +66372,88 @@ URL: /silk/wiki/?p=language/testing
 Silk supports top-level `test` declarations that are discovered and executed by
 `silk test`.
 
-Canonical doc: [testing](?p=language/testing).
+Tests live next to the code they exercise. That keeps small examples, library
+checks, and regression tests in the same module set as the declarations they
+validate.
 
 ## Syntax
 
 ```silk
+import { abort } from "std/runtime";
+
 test "addition works" {
   if (1 + 2) != 3 {
-    std::abort();
+    abort();
   }
 }
 ```
 
+The name is optional, but named tests produce clearer TAP output:
+
+```silk
+test {
+  // unnamed test block
+}
+```
+
+## Nested Tests
+
+Nested `test` blocks are scoped subtests. They run in source order inside the
+outer test and report progress using a path-like name.
+
+```silk
+test "math" {
+  test "add" {
+    if (1 + 2) != 3 { abort(); }
+  }
+
+  test "multiply" {
+    if (2 * 3) != 6 { abort(); }
+  }
+}
+```
+
+## Assertions
+
+Use ordinary `assert` for quick checks, or `std/test` helpers when you want
+test-aware failure reporting.
+
+```silk
+import { expect_equal } from "std/test";
+
+fn add (a: int, b: int) -> int {
+  return a + b;
+}
+
+test "add returns the sum" {
+  expect_equal(5, add(2, 3));
+}
+```
+
+In test builds, assertion failures are reported as test failures instead of
+silently passing through the suite.
+
+## Running
+
+```sh
+silk test hello.slk
+silk test --package .
+```
+
+The runner emits TAP output, so CI systems and other tools can consume the
+result without a Silk-specific adapter.
+
+## Where Tests Fit
+
+- use `silk check` for fast parsing and type checking
+- use `silk test` for executable behavior and assertions
+- use `silk build` when you need the final artifact
+
 ## See also
 
-- Canonical doc: [testing](?p=language/testing)
+- Reference: [testing](../docs/?p=language/testing)
 - CLI runner: [cli silk](../docs/?p=compiler/cli-silk)
+- Test helpers: [`std::test`](../docs/?p=std/test)
 
 ==============================================================================
 WIKI: Formal verification (Formal Silk) (language/formal-verification)
@@ -65657,15 +66462,24 @@ URL: /silk/wiki/?p=language/formal-verification
 
 # Formal verification (Formal Silk)
 
-Silk includes syntax for writing contracts and verification metadata:
+Formal Silk is the compile-time proof surface of the language. It lets a module
+state facts that must be proven before code is accepted, without adding runtime
+checks to the compiled artifact.
+
+Silk includes syntax for contracts and verification metadata:
 
 - `#require` / `#assure` for pre/postconditions
 - `#assert` for local assertions
 - `#invariant` / `#variant` / `#monovariant` for loops
+- `#const` for proof-local constants
+- `#theory` for reusable proof facts
 
-Canonical doc: [formal verification](?p=language/formal-verification).
+Reference: [formal verification](../docs/?p=language/formal-verification).
 
-## Example (Design / verifier-oriented)
+## Function Contracts
+
+`#require` describes the caller obligation. `#assure` describes what the
+function proves for its result.
 
 ```silk
 #require x >= 0;
@@ -65675,9 +66489,81 @@ fn inc (x: int) -> int {
 }
 ```
 
+When another function calls `inc`, the verifier must prove the argument is
+non-negative at the call site. After the call, verified code may use the
+postcondition `result == x + 1`.
+
+## Local Proof Steps
+
+`#assert` is useful when a proof is true but not obvious from the immediate
+expression. It gives the verifier a named checkpoint.
+
+```silk
+#require x >= 0;
+fn double_non_negative (x: int) -> int {
+  let y: int = x + x;
+  #assert y >= 0;
+  return y;
+}
+```
+
+## Loops
+
+Loops need explicit facts because the verifier must reason across iterations:
+
+```silk
+fn count_to (limit: int) -> int {
+  let mut i: int = 0;
+  #invariant i >= 0;
+  #invariant i <= limit;
+  #variant limit - i;
+  while i < limit {
+    i += 1;
+  }
+  return i;
+}
+```
+
+- `#invariant` must hold before and after each iteration.
+- `#variant` proves termination by decreasing.
+- `#monovariant` proves a measure moves in one direction.
+
+## Struct Requirements
+
+Use struct `#require` when the fact belongs to the data shape:
+
+```silk
+#require len >= 0;
+#require cap >= len;
+struct Span {
+  ptr: u64,
+  len: int,
+  cap: int,
+}
+```
+
+Every verified construction of `Span` must prove those requirements. This is
+the right place for lengths, capacities, offsets, and other invariants that
+should travel with the type.
+
+## Mental Model
+
+Formal Silk code is ordinary Silk plus proof obligations:
+
+- no proof syntax: compile normally
+- proof syntax present: generate verification conditions
+- proof succeeds: compile continues
+- proof fails: compilation fails with a diagnostic
+
+The proof language is intentionally explicit. If a reader can see the
+requirement in the source, tooling can also report where it came from and which
+obligation failed.
+
 ## See also
 
-- Canonical doc: [formal verification](?p=language/formal-verification)
+- Reference: [formal verification](../docs/?p=language/formal-verification)
+- Struct requirements: [struct requirements](?p=language/struct-requirements)
+- Diagnostics: [diagnostics](../docs/?p=compiler/diagnostics)
 
 ==============================================================================
 WIKI: Dependent types (const parameters) (design) (language/dependent-types)
@@ -65689,19 +66575,73 @@ URL: /silk/wiki/?p=language/dependent-types
 This page covers Silk’s intended support for types that mention compile-time
 values (especially integers), such as dependent-length collections.
 
-Canonical design doc: [dependent types](?p=language/dependent-types).
+Reference: [dependent types](../docs/?p=language/dependent-types).
 
-## Example (Design)
+## The Basic Idea
+
+A dependent-type-like API carries values such as lengths, capacities, or
+protocol widths in the type. This lets the compiler preserve more information
+than it could with a plain runtime integer.
 
 ```silk
-// Design-only sketch: a vector type with a compile-time length `N`.
-struct VectorN(T, N: int) { /* ... */ }
+struct VectorN(T, N: int) {
+  data: T[N],
+}
 ```
+
+Here `T` is a type parameter and `N: int` is a const parameter. A value of
+`VectorN(u8, 32)` is not the same type as `VectorN(u8, 64)`.
+
+## Why It Matters
+
+Const parameters are useful when an API needs shape guarantees:
+
+- buffers with compile-time capacity
+- matrices with fixed dimensions
+- packet types with fixed header sizes
+- functions that preserve or transform lengths
+
+For example, a concatenation API can describe its result shape in the return
+type:
+
+```silk
+fn concat(T, M: int, N: int; a: VectorN(T, M), b: VectorN(T, N)) -> VectorN(T, M + N) {
+  // result length is part of the type
+}
+```
+
+The semicolon separates compile-time parameters (`T`, `M`, `N`) from runtime
+parameters (`a`, `b`).
+
+## Relationship To Generics
+
+Generics answer “what type is this?” Const parameters answer “which compile-time
+value is part of this type?” Silk keeps both in the same parameter list so APIs
+can express both:
+
+```silk
+struct Window(T, Width: int, Height: int) {
+  pixels: T[Width * Height],
+}
+```
+
+## Design Boundaries
+
+The design requires the compiler to define:
+
+- which expressions are const-evaluable in type positions
+- how overflow behaves in type-level arithmetic
+- how type inference handles const arguments
+- how monomorphized code is named and emitted
+
+When reading or writing examples, treat const-parameter APIs as a design surface
+unless the linked reference says a specific form is supported.
 
 ## See also
 
-- Canonical design doc: [dependent types](?p=language/dependent-types)
+- Reference: [dependent types](../docs/?p=language/dependent-types)
 - Generics: [generics](?p=language/generics)
+- Arrays: [types](?p=language/types)
 
 ==============================================================================
 WIKI: Conventions (language/conventions)
@@ -65711,11 +66651,13 @@ URL: /silk/wiki/?p=language/conventions
 # Conventions
 
 This page summarizes the conventions used throughout the Silk language docs:
-notation, naming, and the “implementation status” pattern.
+notation, naming, examples, and cross-linking.
 
-Canonical doc: [conventions](?p=language/conventions).
+Reference: [conventions](../docs/?p=language/conventions).
 
-## Example: typical formatting in Silk docs
+## Example Style
+
+Examples should be complete when possible and use two-space indentation:
 
 ```silk
 fn main () -> int {
@@ -65727,9 +66669,56 @@ fn main () -> int {
 }
 ```
 
+When an example needs multiple files, label each file with a comment:
+
+```silk
+// app/main.slk
+package app;
+
+import io from "std/io";
+
+fn main () -> int {
+  io::println("hello");
+  return 0;
+}
+```
+
+## Language Notation
+
+- Use `Type` for a type placeholder.
+- Use `T` for a generic type parameter.
+- Use `N` for a compile-time integer parameter.
+- Use `expr` for an expression.
+- Use `stmt` for a statement.
+- Use `module/path` for import specifiers and `package::symbol` for qualified
+ names.
+
+## Reader-Facing Rules
+
+Good language docs answer these questions quickly:
+
+- what the feature is for
+- what syntax is accepted
+- what it means at runtime or compile time
+- what errors are likely
+- where to go for the exact grammar
+
+Avoid pages that only say “see another page.” A wiki page should stand alone as
+a useful explanation, then link to the canonical reference for precision.
+
+## Cross-Linking
+
+Link to the nearest precise topic:
+
+- [grammar](?p=language/grammar) for syntax
+- [types](?p=language/types) for type behavior
+- [operators](?p=language/operators) for precedence
+- [diagnostics](../docs/?p=compiler/diagnostics) for error codes
+- [formal verification](?p=language/formal-verification) for proof syntax
+
 ## See also
 
-- Canonical doc: [conventions](?p=language/conventions)
+- Reference: [conventions](../docs/?p=language/conventions)
 - Grammar: [grammar](?p=language/grammar)
 
 ==============================================================================
@@ -65755,25 +66744,25 @@ Canonical doc: [overview](?p=std/overview).
 `std::` is available to import by default in normal `silk build` workflows.
 
 ```silk
-import std::io;
-import std::vector;
+import io from "std/io";
+import vector from "std/vector";
 ```
 
 ## Examples
 
 ### Example: a tiny “hello std” program
 ```silk
-import std::io;
-import std::vector;
+import io from "std/io";
+import vector from "std/vector";
 
-type VecInt = std::vector::Vector(int);
+type VecInt = vector::Vector(int);
 
 fn main () -> int {
   let mut v: VecInt = VecInt.init(4);
   v.push(10);
   v.push(32);
 
-  std::io::println("len={d} first_pop={d}", v.len() as int, v.pop() ?? 0);
+  io::println("len={d} first_pop={d}", v.len() as int, v.pop() ?? 0);
   v.drop();
   return 0;
 }
@@ -65804,7 +66793,7 @@ Canonical doc: [conventions](?p=std/conventions).
 
 ## Key conventions
 
-- **Naming**: packages are `std::area`; types are `PascalCase`; functions/methods are `snake_case`.
+- **Naming**: packages are `area`; types are `PascalCase`; functions/methods are `snake_case`.
 - **Ownership**: allocating APIs return owned containers (for example `std::strings::String`) and callers drop them.
 - **Errors**:
  - use `T?` for “absence” (`None`) without extra error information,
@@ -65815,8 +66804,8 @@ Canonical doc: [conventions](?p=std/conventions).
 
 ### Example: optionals + typed errors + dropping owned values
 ```silk
-import std::process;
-import std::strings;
+import process from "std/process";
+import strings from "std/strings";
 
 fn main () -> int {
   // Optional: `T?` indicates a value may be absent.
@@ -65825,10 +66814,10 @@ fn main () -> int {
   if v != 123 { return 1; }
 
   // Typed errors: handle `T | E` with `match`.
-  let mut cwd: std::strings::String = std::strings::String.empty();
-  match (std::process::getcwd()) {
+  let mut cwd: strings::String = strings::String.empty();
+  match (process::getcwd()) {
     s => { cwd = s; },
-    _: std::process::GetCwdFailed => { return 2; },
+    _: process::GetCwdFailed => { return 2; },
   }
 
   // Owned std values are explicitly dropped in the .
@@ -65856,12 +66845,12 @@ Canonical doc: [package structure](?p=std/package-structure).
 
 ## Notes
 
-- Design + implementation: std-root resolution and `std::...` import mapping are implemented.
+- Design + implementation: std-root resolution and `std/...` import mapping are implemented.
 - Details: [package structure](?p=std/package-structure)
 
 ## How `std::` resolves
 
-- `std::foo::bar` resolves to `<std_root>/foo/bar.slk`.
+- `foo::bar` resolves to `<std_root>/foo/bar.slk`.
 - The std root can be overridden per build (CLI flags) or via environment variables.
 - On supported hosted targets, a prebuilt std archive (`libsilk_std.a`) can be used to link std modules without recompiling them.
 
@@ -65869,12 +66858,12 @@ Canonical doc: [package structure](?p=std/package-structure).
 
 ### Example: import a std module
 ```silk
-import std::io;
-import std::strings;
+import io from "std/io";
+import strings from "std/strings";
 
 fn main () -> int {
-  if std::strings::eq("a", "a") {
-    std::io::println("ok");
+  if strings::eq("a", "a") {
+    io::println("ok");
     return 0;
   }
   return 1;
@@ -65908,7 +66897,7 @@ Canonical doc: [interfaces](?p=std/interfaces).
 
 ## Example: `Iterator(T)` and `next() -> T?`
 ```silk
-import std::interfaces;
+import interfaces from "std/interfaces";
 
 struct CounterIter {
   cur: int,
@@ -65921,7 +66910,7 @@ impl CounterIter {
   }
 }
 
-impl CounterIter as std::interfaces::Iterator(int) {
+impl CounterIter as interfaces::Iterator(int) {
   public fn next (mut self: &CounterIter) -> int? {
     if self.cur >= self.end {
       return None;
@@ -65945,7 +66934,7 @@ URL: /silk/wiki/?p=std/result
 
 # `std::result`
 
-`std::result` standardizes the common “success or error” return shape as
+`result` standardizes the common “success or error” return shape as
 `Result(T, E)` so APIs across `std::` compose cleanly.
 
 Canonical doc: [result](?p=std/result).
@@ -66008,17 +66997,17 @@ Canonical doc: [io](?p=std/io).
 ## Importing
 
 ```silk
-import std::io;
+import io from "std/io";
 ```
 
 ## Examples
 
 ### Example: formatted printing
 ```silk
-import std::io;
+import io from "std/io";
 
 fn main () -> int {
-  std::io::println("hello {s} answer={d}", "world", 42);
+  io::println("hello {s} answer={d}", "world", 42);
   return 0;
 }
 ```
@@ -66044,17 +67033,17 @@ Canonical doc: [fmt](?p=std/fmt).
 
 ## Notes
 
-- Supported forms is available to support `std::io` printing.
+- Supported forms is available to support `io` printing.
 - Details: [fmt](?p=std/fmt)
 
 ## Examples
 
 ### Example: `println` formatting
 ```silk
-import std::io;
+import io from "std/io";
 
 fn main () -> int {
-  std::io::println("name={s} ok={}", "silk", true);
+  io::println("name={s} ok={}", "silk", true);
   return 0;
 }
 ```
@@ -66085,7 +67074,7 @@ Canonical doc: [strings](?p=std/strings).
 ## Importing
 
 ```silk
-import std::strings;
+import strings from "std/strings";
 ```
 
 ## Exported API
@@ -66102,13 +67091,13 @@ export fn or_empty (s: string?) -> string;
 
 ### Example: equality + optionals
 ```silk
-import std::strings;
+import strings from "std/strings";
 
 fn main () -> int {
   let a: string = "hi";
   let b: string? = None;
 
-  if std::strings::eq(a, "hi") && std::strings::is_empty(std::strings::or_empty(b)) {
+  if strings::eq(a, "hi") && strings::is_empty(strings::or_empty(b)) {
     return 0;
   }
   return 1;
@@ -66141,15 +67130,15 @@ Canonical doc: [arrays](?p=std/arrays).
 ## Importing
 
 ```silk
-import std::arrays;
+import arrays from "std/arrays";
 ```
 
 ## Examples
 
 ### Example: `Slice(T)` + `SliceIter(T)`
 ```silk
-import std::arrays;
-import std::buffer;
+import arrays from "std/arrays";
+import { BufferU64 } from "std/buffer";
 
 fn main () -> int {
   let mut buf: BufferU64 = BufferU64.init(4);
@@ -66157,7 +67146,7 @@ fn main () -> int {
   buf.push(11);
   buf.push(12);
 
-  let s: std::arrays::Slice(u64) = { ptr: buf.ptr, len: buf.len() };
+  let s: arrays::Slice(u64) = { ptr: buf.ptr, len: buf.len() };
   let mut it = s.iter();
   let mut sum: u64 = 0;
   while true {
@@ -66201,16 +67190,16 @@ Canonical doc: [vector](?p=std/vector).
 ## Importing
 
 ```silk
-import std::vector;
+import vector from "std/vector";
 ```
 
 ## Examples
 
 ### Example: push/pop
 ```silk
-import std::vector;
+import vector from "std/vector";
 
-type Vec = std::vector::Vector(int);
+type Vec = vector::Vector(int);
 
 fn main () -> int {
   match (Vec.init(4)) {
@@ -66256,18 +67245,18 @@ Canonical doc: [map](?p=std/map).
 ## Importing
 
 ```silk
-import std::map;
+import map from "std/map";
 ```
 
 ## Examples
 
 ### Example: `HashMap(u64, int)` basic usage
 ```silk
-import std::map;
-import std::memory;
+import map from "std/map";
+import memory from "std/memory";
 
-type Map = std::map::HashMap(u64, int);
-type InitResult = Result(Map, std::memory::AllocFailed);
+type Map = map::HashMap(u64, int);
+type InitResult = Result(Map, memory::AllocFailed);
 
 fn main () -> int {
   match (Map.init(16)) {
@@ -66312,19 +67301,19 @@ Canonical doc: [set](?p=std/set).
 ## Importing
 
 ```silk
-import std::set;
+import set from "std/set";
 ```
 
 ## Examples
 
 ### Example: `SetMap(u64)` basic usage
 ```silk
-import std::set;
-import std::memory;
+import set from "std/set";
+import memory from "std/memory";
 
-type Set = std::set::SetMap(u64);
-type InitResult = Result(Set, std::memory::AllocFailed);
-type InsertResult = Result(bool, std::memory::OutOfMemory);
+type Set = set::SetMap(u64);
+type InitResult = Result(Set, memory::AllocFailed);
+type InsertResult = Result(bool, memory::OutOfMemory);
 
 fn main () -> int {
   match (Set.init(4)) {
@@ -66366,12 +67355,12 @@ Canonical doc: [buffer](?p=std/buffer).
 ## Importing
 
 ```silk
-import std::buffer;
+import { BufferU8 } from "std/buffer";
 ```
 
 ## Example: `BufferU8`
 ```silk
-import std::buffer;
+import { BufferU8 } from "std/buffer";
 
 fn main () -> int {
   match (BufferU8.init(4)) {
@@ -66413,29 +67402,29 @@ Canonical doc: [bits](?p=std/bits).
 Defined in `std/bits.slk`:
 
 - Byte swaps:
- - `std::bits::bswap_u16`
- - `std::bits::bswap_u32`
- - `std::bits::bswap_u64`
+ - `bits::bswap_u16`
+ - `bits::bswap_u32`
+ - `bits::bswap_u64`
 - Rotations:
- - `std::bits::rotl_u32`, `std::bits::rotr_u32`
- - `std::bits::rotl_u64`, `std::bits::rotr_u64`
+ - `bits::rotl_u32`, `bits::rotr_u32`
+ - `bits::rotl_u64`, `bits::rotr_u64`
 - Bit counts:
- - `std::bits::popcount_u32`, `std::bits::clz_u32`, `std::bits::ctz_u32`
- - `std::bits::popcount_u64`, `std::bits::clz_u64`, `std::bits::ctz_u64`
+ - `bits::popcount_u32`, `bits::clz_u32`, `bits::ctz_u32`
+ - `bits::popcount_u64`, `bits::clz_u64`, `bits::ctz_u64`
 
 ## Example
 
 ```silk
-import std::bits;
+import bits from "std/bits";
 
 fn main () -> int {
   let v: u32 = 1;
-  let r: u32 = std::bits::rotl_u32(v, 5);
+  let r: u32 = bits::rotl_u32(v, 5);
   if r != ((1 as u32) << 5) {
     return 1;
   }
 
-  if std::bits::popcount_u32(r) != 1 {
+  if bits::popcount_u32(r) != 1 {
     return 2;
   }
 
@@ -66458,16 +67447,16 @@ Canonical doc: [algorithms](?p=std/algorithms).
 ## Importing
 
 ```silk
-import std::algorithms;
+import algorithms from "std/algorithms";
 ```
 
 ## Example: `clamp_int`
 ```silk
-import std::algorithms;
+import algorithms from "std/algorithms";
 
 fn main () -> int {
-  if std::algorithms::clamp_int(10, 0, 5) != 5 { return 1; }
-  if std::algorithms::clamp_int(-1, 0, 5) != 0 { return 2; }
+  if algorithms::clamp_int(10, 0, 5) != 5 { return 1; }
+  if algorithms::clamp_int(-1, 0, 5) != 0 { return 2; }
   return 0;
 }
 ```
@@ -66490,16 +67479,16 @@ Canonical doc: [memory](?p=std/memory).
 ## Importing
 
 ```silk
-import std::memory;
+import memory from "std/memory";
 ```
 
 ## Example: alignment helpers
 ```silk
-import std::memory;
+import memory from "std/memory";
 
 fn main () -> int {
-  if !std::memory::is_power_of_two_u64(8) { return 1; }
-  if std::memory::align_up_u64(9, 8) != 16 { return 2; }
+  if !memory::is_power_of_two_u64(8) { return 1; }
+  if memory::align_up_u64(9, 8) != 16 { return 2; }
   return 0;
 }
 ```
@@ -66557,11 +67546,11 @@ Canonical doc: [env](?p=std/env).
 
 ## Example: `get`
 ```silk
-import std::env;
+import env from "std/env";
 import { println } from "std/io";
 
 fn main () -> int {
-  let v_opt = std::env::get("HOME");
+  let v_opt = env::get("HOME");
   match (v_opt) {
     Some(v) => println("HOME = {}", v),
     None => println("HOME is not set"),
@@ -66594,29 +67583,29 @@ Canonical doc: [process](?p=std/process).
 ## Importing
 
 ```silk
-import std::process;
-import std::strings;
+import process from "std/process";
+import strings from "std/strings";
 ```
 
 ## Examples
 
 ### Example: `getcwd` + `chdir` with recoverable errors
 ```silk
-import std::process;
-import std::strings;
+import process from "std/process";
+import strings from "std/strings";
 
 fn main () -> int {
-  match (std::process::getcwd()) {
-    std::process::GetCwdResult::Ok(cwd_value) => {
-      let mut cwd: std::strings::String = cwd_value;
+  match (process::getcwd()) {
+    process::GetCwdResult::Ok(cwd_value) => {
+      let mut cwd: strings::String = cwd_value;
 
-      let err1: std::process::ChdirFailed? = std::process::chdir("/");
+      let err1: process::ChdirFailed? = process::chdir("/");
       if err1 != None {
         cwd.drop();
         return 2;
       }
 
-      let err2: std::process::ChdirFailed? = std::process::chdir(cwd.as_string());
+      let err2: process::ChdirFailed? = process::chdir(cwd.as_string());
       if err2 != None {
         cwd.drop();
         return 3;
@@ -66625,7 +67614,7 @@ fn main () -> int {
       cwd.drop();
       return 0;
     },
-    std::process::GetCwdResult::Err(_) => {
+    process::GetCwdResult::Err(_) => {
       return 1;
     },
   }
@@ -66657,26 +67646,26 @@ Canonical doc: [path](?p=std/path).
 ## Importing
 
 ```silk
-import std::path;
-import std::strings;
+import path from "std/path";
+import strings from "std/strings";
 ```
 
 ## Examples
 
 ### Example: normalize + `PathBuf`
 ```silk
-import std::path;
-import std::strings;
+import path from "std/path";
+import strings from "std/strings";
 
 fn main () -> int {
-  let mut n: std::strings::String = std::path::normalize("/a//b/");
+  let mut n: strings::String = path::normalize("/a//b/");
   if n.as_string() != "/a/b" {
     n.drop();
     return 1;
   }
   n.drop();
 
-  let mut pb: std::path::PathBuf = std::path::PathBuf.empty();
+  let mut pb: path::PathBuf = path::PathBuf.empty();
   pb.push("a");
   pb.push("b");
   if pb.as_string() != "a/b" {
@@ -66717,12 +67706,12 @@ Canonical doc: [filesystem](?p=std/filesystem).
 
 ## Example: existence checks
 ```silk
-import std::fs;
+import fs from "std/fs";
 
 fn main () -> int {
-  if !std::fs::exists("docs") { return 1; }
-  if !std::fs::can_read("docs") { return 2; }
-  if std::fs::exists("this_file_should_not_exist___silk_std_fs") { return 3; }
+  if !fs::exists("docs") { return 1; }
+  if !fs::can_read("docs") { return 2; }
+  if fs::exists("this_file_should_not_exist___silk_std_fs") { return 3; }
   return 0;
 }
 ```
@@ -66752,30 +67741,33 @@ Canonical doc: [json](?p=std/json).
 ## Importing
 
 ```silk
-import std::json;
-import std::strings;
+import json from "std/json";
+import { Document } from "std/json";
+import memory from "std/memory";
+import strings from "std/strings";
 ```
 
 ## Exported API
 
-- `Document.parse(input: string) -> std::json::ParseResult` (borrowed views into `input`)
-- `Document.parse_owned(input: string) -> std::json::ParseResult` (owned copies)
+- `Document.parse(input: string) -> json::ParseResult` (borrowed views into `input`)
+- `Document.parse_owned(input: string) -> json::ParseResult` (owned copies)
 - `Document.object_get(obj: i64, key: string) -> i64?`
 - `Document.as_string(id: i64) -> string?`
 - `Document.as_number_lexeme(id: i64) -> string?`
-- `std::json::number_as_i64(doc: &Document, id: i64) -> i64?`
-- `std::json::stringify(doc: &Document, id: i64) -> Result(std::strings::String, std::memory::OutOfMemory)`
-- `std::json::stringify_pretty(doc: &Document, id: i64, indent: int) -> Result(std::strings::String, std::memory::OutOfMemory)`
+- `json::number_as_i64(doc: &Document, id: i64) -> i64?`
+- `json::stringify(doc: &Document, id: i64) -> Result(strings::String, memory::OutOfMemory)`
+- `json::stringify_pretty(doc: &Document, id: i64, indent: int) -> Result(strings::String, memory::OutOfMemory)`
 
 ## Examples
 
 ### Example: parse + query + stringify
 ```silk
-import std::json;
-import std::strings;
-import std::memory;
+import json from "std/json";
+import { Document } from "std/json";
+import strings from "std/strings";
+import memory from "std/memory";
 
-type StringAllocResult = Result(std::strings::String, std::memory::OutOfMemory);
+type StringAllocResult = Result(strings::String, memory::OutOfMemory);
 
 fn main () -> int {
   let mut doc: Document = Document{};
@@ -66810,7 +67802,7 @@ fn main () -> int {
         return 6;
       }
       let a_id: i64 = a_id_opt ?? 0 as i64;
-      let a_num_opt = std::json::number_as_i64(doc, a_id);
+      let a_num_opt = json::number_as_i64(doc, a_id);
       if a_num_opt == None {
         doc.drop();
         return 7;
@@ -66820,9 +67812,9 @@ fn main () -> int {
         return 8;
       }
 
-      match (std::json::stringify(doc, root)) {
+      match (json::stringify(doc, root)) {
         StringAllocResult::Ok(compact_value) => {
-          let mut compact: std::strings::String = compact_value;
+          let mut compact: strings::String = compact_value;
           let expected: string = `{"a":1,"b":true,"c":null,"d":["x","y"],"u":"A"}`;
           if compact.as_string() != expected {
             compact.drop();
@@ -66872,22 +67864,24 @@ Canonical doc: [toml](?p=std/toml).
 ## Importing
 
 ```silk
-import std::toml;
+import toml from "std/toml";
+import { Document } from "std/toml";
 ```
 
 ## Exported API
 
-- `Document.parse(input: string) -> std::toml::ParseResult` (borrowed views into `input`)
-- `Document.parse_owned(input: string) -> std::toml::ParseResult` (owned copies)
+- `Document.parse(input: string) -> toml::ParseResult` (borrowed views into `input`)
+- `Document.parse_owned(input: string) -> toml::ParseResult` (owned copies)
 - `Document.table_get(table: i64, key: string) -> i64?`
 - `Document.as_string(id: i64) -> string?`
-- `std::toml::int_as_i64(doc: &Document, id: i64) -> i64?`
+- `toml::int_as_i64(doc: &Document, id: i64) -> i64?`
 
 ## Examples
 
 ### Example: parse + query
 ```silk
-import std::toml;
+import toml from "std/toml";
+import { Document } from "std/toml";
 
 fn main () -> int {
   let mut doc: Document = Document{};
@@ -66924,7 +67918,7 @@ answer = 42
         return 6;
       }
       let answer_id: i64 = answer_id_opt ?? 0 as i64;
-      let answer_opt = std::toml::int_as_i64(doc, answer_id);
+      let answer_opt = toml::int_as_i64(doc, answer_id);
       if answer_opt == None {
         doc.drop();
         return 7;
@@ -66970,36 +67964,39 @@ Canonical doc: [url](?p=std/url).
 ## Importing
 
 ```silk
-import std::url;
-import std::strings;
+import url from "std/url";
+import { URL, URLResult, URLSearchParams } from "std/url";
+import memory from "std/memory";
+import strings from "std/strings";
 ```
 
 ## Exported API
 
-- `std::url::parse(input: string) -> URLResult`
-- `std::url::parse_with_base(input: string, base: &URL) -> URLResult`
-- `URL.href() -> Result(std::strings::String, std::memory::OutOfMemory)`
-- `URL.origin() -> Result(std::strings::String, std::memory::OutOfMemory)`
-- `URLSearchParams.from_string(s: string) -> Result(URLSearchParams, std::memory::OutOfMemory)`
-- `URLSearchParams.to_string() -> Result(std::strings::String, std::memory::OutOfMemory)`
-- `URLSearchParams.has(name: string) -> Result(bool, std::memory::OutOfMemory)`
-- `URLSearchParams.get(name: string) -> Result(std::strings::String?, std::memory::OutOfMemory)`
-- `URLSearchParams.append/delete/set/sort -> std::memory::OutOfMemory?`
+- `url::parse(input: string) -> URLResult`
+- `url::parse_with_base(input: string, base: &URL) -> URLResult`
+- `URL.href() -> Result(strings::String, memory::OutOfMemory)`
+- `URL.origin() -> Result(strings::String, memory::OutOfMemory)`
+- `URLSearchParams.from_string(s: string) -> Result(URLSearchParams, memory::OutOfMemory)`
+- `URLSearchParams.to_string() -> Result(strings::String, memory::OutOfMemory)`
+- `URLSearchParams.has(name: string) -> Result(bool, memory::OutOfMemory)`
+- `URLSearchParams.get(name: string) -> Result(strings::String?, memory::OutOfMemory)`
+- `URLSearchParams.append/delete/set/sort -> memory::OutOfMemory?`
 
 ## Examples
 
 ### Example: parse + resolve + query params
 ```silk
-import std::url;
-import std::strings;
+import url from "std/url";
+import { URL, URLResult, URLSearchParams } from "std/url";
+import strings from "std/strings";
 
 fn dummy_url () -> URL {
   return URL{
-    scheme: std::strings::String.empty(),
-    username: std::strings::String.empty(),
-    password: std::strings::String.empty(),
+    scheme: strings::String.empty(),
+    username: strings::String.empty(),
+    password: strings::String.empty(),
     host_kind: 0,
-    host_str: std::strings::String.empty(),
+    host_str: strings::String.empty(),
     ipv4: 0,
     ipv6_s0: 0,
     ipv6_s1: 0,
@@ -67010,17 +68007,17 @@ fn dummy_url () -> URL {
     ipv6_s6: 0,
     ipv6_s7: 0,
     port: None,
-    path: std::strings::String.empty(),
-    query: std::strings::String.empty(),
+    path: strings::String.empty(),
+    query: strings::String.empty(),
     has_query: false,
-    fragment: std::strings::String.empty(),
+    fragment: strings::String.empty(),
     has_fragment: false,
     cannot_be_a_base: false,
   };
 }
 
 fn main () -> int {
-  let abs: URLResult = std::url::parse("https://example.com:443/a/./b/../c?x=1#frag");
+  let abs: URLResult = url::parse("https://example.com:443/a/./b/../c?x=1#frag");
   if abs.value == None { return 1; }
 
   let mut url: URL = abs.value ?? dummy_url();
@@ -67030,7 +68027,7 @@ fn main () -> int {
     return 2;
   }
   href_r.err = None;
-  let mut href: std::strings::String = href_r.value ?? std::strings::String.empty();
+  let mut href: strings::String = href_r.value ?? strings::String.empty();
   href_r.value = None;
   if href.as_string() != "https://example.com/a/c?x=1#frag" {
     href.drop();
@@ -67039,13 +68036,13 @@ fn main () -> int {
   }
   href.drop();
 
-  let base_res: URLResult = std::url::parse("https://example.com/dir/file");
+  let base_res: URLResult = url::parse("https://example.com/dir/file");
   if base_res.value == None {
     url.drop();
     return 3;
   }
   let mut base: URL = base_res.value ?? dummy_url();
-  let rel_res: URLResult = std::url::parse_with_base("../x?y=z", base);
+  let rel_res: URLResult = url::parse_with_base("../x?y=z", base);
   base.drop();
   if rel_res.value == None {
     url.drop();
@@ -67060,7 +68057,7 @@ fn main () -> int {
     return 5;
   }
   href2_r.err = None;
-  let mut href2: std::strings::String = href2_r.value ?? std::strings::String.empty();
+  let mut href2: strings::String = href2_r.value ?? strings::String.empty();
   href2_r.value = None;
   if href2.as_string() != "https://example.com/x?y=z" {
     href2.drop();
@@ -67087,7 +68084,7 @@ fn main () -> int {
     return 6;
   }
   qs_r.err = None;
-  let mut qs: std::strings::String = qs_r.value ?? std::strings::String.empty();
+  let mut qs: strings::String = qs_r.value ?? strings::String.empty();
   qs_r.value = None;
   if qs.as_string() != "a=b+c&d=e" {
     qs.drop();
@@ -67104,7 +68101,7 @@ fn main () -> int {
     return 7;
   }
   v_r.err = None;
-  let mut v_opt: std::strings::String? = v_r.value ?? None;
+  let mut v_opt: strings::String? = v_r.value ?? None;
   v_r.value = None;
   if v_opt == None {
     params.drop();
@@ -67112,7 +68109,7 @@ fn main () -> int {
     return 7;
   }
 
-  let mut v: std::strings::String = v_opt ?? std::strings::String.empty();
+  let mut v: strings::String = v_opt ?? strings::String.empty();
   v_opt = None;
   if v.as_string() != "b c" {
     v.drop();
@@ -67135,7 +68132,7 @@ fn main () -> int {
     return 9;
   }
   qs2_r.err = None;
-  let mut qs2: std::strings::String = qs2_r.value ?? std::strings::String.empty();
+  let mut qs2: strings::String = qs2_r.value ?? strings::String.empty();
   qs2_r.value = None;
   if qs2.as_string() != "a=b+c" {
     qs2.drop();
@@ -67163,7 +68160,7 @@ URL: /silk/wiki/?p=std/semver
 
 # `std::semver`
 
-`std::semver` implements Semantic Versioning (SemVer 2.0.0):
+`semver` implements Semantic Versioning (SemVer 2.0.0):
 
 - strict parsing of `MAJOR.MINOR.PATCH[-PRERELEASE][+BUILD]`
 - SemVer precedence comparison (build metadata is ignored)
@@ -67173,15 +68170,15 @@ Canonical doc: [semver](?p=std/semver).
 ## Quick example
 
 ```silk
-import std::semver;
+import semver from "std/semver";
 
 fn main () -> int {
-  match (std::semver::parse("1.2.3-alpha.1+build.5")) {
+  match (semver::parse("1.2.3-alpha.1+build.5")) {
     Ok(_) => {
       // Precedence comparison ignores build metadata.
-      match (std::semver::parse("1.0.0-alpha")) {
+      match (semver::parse("1.0.0-alpha")) {
         Ok(a) => {
-          match (std::semver::parse("1.0.0")) {
+          match (semver::parse("1.0.0")) {
             Ok(b) => {
               if a.cmp(b) >= 0 { return 4; }
               return 0;
@@ -67222,25 +68219,25 @@ Canonical doc: [uuid](?p=std/uuid).
 ## Importing
 
 ```silk
-import std::uuid;
-import std::strings;
+import uuid from "std/uuid";
+import strings from "std/strings";
 ```
 
 ## Examples
 
 ### Example: parse + name-based UUID (v5)
 ```silk
-import std::uuid;
-import std::strings;
-import std::memory;
+import uuid from "std/uuid";
+import strings from "std/strings";
+import memory from "std/memory";
 
-type StringAllocResult = Result(std::strings::String, std::memory::OutOfMemory);
+type StringAllocResult = Result(strings::String, memory::OutOfMemory);
 
 fn uuid_string_eq (u: UUID, expected: string) -> bool {
   let r: StringAllocResult = u.to_string_lower();
   match (r) {
     Ok(value) => {
-      let mut s: std::strings::String = value;
+      let mut s: strings::String = value;
       let ok: bool = s.as_string() == expected;
       s.drop();
       return ok;
@@ -67253,12 +68250,12 @@ fn uuid_string_eq (u: UUID, expected: string) -> bool {
 
 fn main () -> int {
   let s0: string = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
-  match (std::uuid::parse(s0)) {
+  match (uuid::parse(s0)) {
     Ok(u0) => {
       if !uuid_string_eq(u0, s0) { return 2; }
 
-      let dns: UUID = std::uuid::namespace_dns();
-      match (std::uuid::v5(dns, "www.widgets.com")) {
+      let dns: UUID = uuid::namespace_dns();
+      match (uuid::v5(dns, "www.widgets.com")) {
         Ok(v5_dns) => {
           if !uuid_string_eq(v5_dns, "21f7f8de-8051-5b89-8680-0195ef798b6a") { return 4; }
 
@@ -67296,7 +68293,7 @@ Canonical doc: [networking](?p=std/networking).
 
 ## Example: IPv4 helpers
 ```silk
-import std::net;
+import net from "std/net";
 
 fn main () -> int {
   let a = ipv4(127, 0, 0, 1);
@@ -67329,39 +68326,39 @@ Canonical doc: [crypto](?p=std/crypto).
 ## Importing
 
 ```silk
-import std::arrays;
-import std::crypto;
-import std::crypto::hash;
-import std::buffer;
-import std::runtime::mem;
+import arrays from "std/arrays";
+import crypto from "std/crypto";
+import hash from "std/crypto/hash";
+import buffer from "std/buffer";
+import mem from "std/runtime/mem";
 ```
 
 ## Examples
 
 ### Example: init + memzero + blake2b
 ```silk
-import std::crypto;
-import std::crypto::hash;
-import std::buffer;
-import std::runtime::mem;
+import crypto from "std/crypto";
+import hash from "std/crypto/hash";
+import buffer from "std/buffer";
+import mem from "std/runtime/mem";
 
 fn main () -> int {
-  if std::crypto::init() != None {
+  if crypto::init() != None {
     return 1;
   }
 
   // memzero: wipe a buffer in place.
-  match (std::buffer::BufferU8.init(16)) {
+  match (buffer::BufferU8.init(16)) {
     Ok(buffer) => {
-      let mut wipe: std::buffer::BufferU8 = buffer;
+      let mut wipe: buffer::BufferU8 = buffer;
 
       var i: i64 = 0;
       while i < 16 {
-        wipe.push(std::runtime::mem::trunc_u8(100 + (i as int)));
+        wipe.push(mem::trunc_u8(100 + (i as int)));
         i = i + 1;
       }
 
-      let wipe_err: std::crypto::CryptoFailed? = std::crypto::memzero(wipe.as_bytes());
+      let wipe_err: crypto::CryptoFailed? = crypto::memzero(wipe.as_bytes());
       if wipe_err != None {
         wipe.drop();
         return 3;
@@ -67387,12 +68384,12 @@ fn main () -> int {
   let msg_ptr: u64 = msg as raw u64;
   let msg_len: i64 = (sizeof(msg)) as i64;
 
-  match (std::buffer::BufferU8.init(32)) {
+  match (buffer::BufferU8.init(32)) {
     Ok(out_buffer) => {
-      let mut out: std::buffer::BufferU8 = out_buffer;
-      match (std::buffer::BufferU8.init(32)) {
+      let mut out: buffer::BufferU8 = out_buffer;
+      match (buffer::BufferU8.init(32)) {
         Ok(expected_buffer) => {
-          let mut expected: std::buffer::BufferU8 = expected_buffer;
+          let mut expected: buffer::BufferU8 = expected_buffer;
 
           // Expected digest: bddd813c634239723171ef3fee98579b94964e3bb1cb3e427262c8c068d52319
           expected.push(189);
@@ -67428,18 +68425,18 @@ fn main () -> int {
           expected.push(35);
           expected.push(25);
 
-          let hash_err: std::crypto::CryptoError? = std::crypto::hash::blake2b(
+          let hash_err: crypto::CryptoError? = hash::blake2b(
             mut out,
             32,
-            std::arrays::ByteSlice{ ptr: msg_ptr, len: msg_len }
+            arrays::ByteSlice{ ptr: msg_ptr, len: msg_len }
           );
           if hash_err != None {
             out.drop();
             expected.drop();
             return 6;
           }
-          let eq_r: std::crypto::CryptoBoolResult = std::crypto::equal(out.as_bytes(), expected.as_bytes());
-          let eq_opt: bool? = std::crypto::CryptoBoolResult.ok_value(eq_r);
+          let eq_r: crypto::CryptoBoolResult = crypto::equal(out.as_bytes(), expected.as_bytes());
+          let eq_opt: bool? = crypto::CryptoBoolResult.ok_value(eq_r);
           if eq_opt == None {
             out.drop();
             expected.drop();
@@ -67494,7 +68491,7 @@ Canonical doc: [tls](?p=std/tls).
 ## Importing
 
 ```silk
-import std::tls;
+import { MemPipe, Session } from "std/tls";
 ```
 
 ## Examples
@@ -67505,8 +68502,8 @@ as `tests/silk/pass_std_tls_mem_handshake.slk`.
 
 ```silk
 import mem from "std/runtime/mem.slk";
-import std::arrays;
-import std::tls;
+import arrays from "std/arrays";
+import { MemPipe, Session } from "std/tls";
 
 fn test_cert () -> string {
   return `-----BEGIN CERTIFICATE-----
@@ -67605,7 +68602,7 @@ fn read_some (mut sess: &Session, ptr: u64, cap: u64) -> i32 {
   var tries: int = 0;
   while tries < 100000 {
     tries += 1;
-    let rc = sess.read(std::arrays::ByteSlice{ ptr: ptr, len: cap as i64 });
+    let rc = sess.read(arrays::ByteSlice{ ptr: ptr, len: cap as i64 });
     if rc > 0 {
       return rc;
     }
@@ -67739,36 +68736,36 @@ Canonical doc: [runtime](?p=std/runtime).
 ## Importing
 
 ```silk
-import std::runtime::build;
-import std::runtime::mem;
+import build from "std/runtime/build";
+import mem from "std/runtime/mem";
 ```
 
 ## Examples
 
 ### Example: build metadata + raw memory
 ```silk
-import std::runtime::build;
-import std::runtime::mem;
+import build from "std/runtime/build";
+import mem from "std/runtime/mem";
 
 fn main () -> int {
   // This reports whether the current artifact was built with `--debug` / `-g`.
-  if std::runtime::build::is_debug() {
+  if build::is_debug() {
     return 1;
   }
 
-  // `std::runtime::mem` provides low-level allocation and raw load/store.
-  let ptr: u64 = std::runtime::mem::alloc(4);
+  // `runtime::mem` provides low-level allocation and raw load/store.
+  let ptr: u64 = mem::alloc(4);
   if ptr == 0 { return 2; }
 
-  std::runtime::mem::store_u8(ptr, 0, std::runtime::mem::trunc_u8(65));
-  std::runtime::mem::store_u8(ptr, 1, std::runtime::mem::trunc_u8(66));
+  mem::store_u8(ptr, 0, mem::trunc_u8(65));
+  mem::store_u8(ptr, 1, mem::trunc_u8(66));
 
-  if std::runtime::mem::load_u8(ptr, 0) != 65 {
-    std::runtime::mem::free(ptr);
+  if mem::load_u8(ptr, 0) != 65 {
+    mem::free(ptr);
     return 3;
   }
 
-  std::runtime::mem::free(ptr);
+  mem::free(ptr);
   return 0;
 }
 ```
@@ -67793,7 +68790,7 @@ Canonical doc: [task](?p=std/task).
 
 ## Example
 ```silk
-import std::task;
+import task from "std/task";
 
 fn main () -> int {
   let n: int = available_parallelism();
@@ -67828,7 +68825,7 @@ Canonical doc: [sync](?p=std/sync).
 ## Importing
 
 ```silk
-import std::sync;
+import sync from "std/sync";
 ```
 
 ## Examples
@@ -67897,13 +68894,13 @@ Canonical doc: [temporal](?p=std/temporal).
 
 ## Example
 ```silk
-import std::temporal;
+import temporal from "std/temporal";
 
 fn main () -> int {
-  let z: Duration = std::temporal::duration_zero();
-  if !std::temporal::is_zero(z) { return 1; }
-  if std::temporal::is_negative(1s) { return 2; }
-  if !std::temporal::is_negative(-1s) { return 3; }
+  let z: Duration = temporal::duration_zero();
+  if !temporal::is_zero(z) { return 1; }
+  if temporal::is_negative(1s) { return 2; }
+  if !temporal::is_negative(-1s) { return 3; }
   return 0;
 }
 ```

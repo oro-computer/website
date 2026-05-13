@@ -341,7 +341,13 @@
     }
 
     const style = globalThis.getComputedStyle?.(document.documentElement);
-    const offset = Number.parseFloat(style?.getPropertyValue("--site-top-offset")) || 0;
+    const cssOffset = Number.parseFloat(style?.getPropertyValue("--site-top-offset")) || 0;
+    const header = document.querySelector(".site-top");
+    const headerOffset =
+      header && typeof header.getBoundingClientRect === "function"
+        ? header.getBoundingClientRect().height
+        : 0;
+    const offset = Math.max(cssOffset, headerOffset);
     const top = Math.max(0, target.getBoundingClientRect().top + globalThis.scrollY - offset - 24);
     globalThis.scrollTo({ top });
   }

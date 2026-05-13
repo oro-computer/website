@@ -107,11 +107,11 @@ interface Serialize(S = string) {
 }
 
 interface TrySerialize(E, S = std::strings::String) {
-  fn try_serialize () -> std::result::Result(S, E);
+  fn try_serialize () -> Result(S, E);
 }
 
 interface Parse(E, S = string) {
-  fn parse (value: S) -> std::result::Result(Self, E);
+  fn parse (value: S) -> Result(Self, E);
 }
 
 interface Deserialize(S = string) {

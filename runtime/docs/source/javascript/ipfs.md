@@ -16,11 +16,6 @@ const { cid } = await add('/absolute/path/to/report.txt')
 console.log(cid)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -33,8 +28,9 @@ oro:ipfs
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:ipfs</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:ipfs`
 
 ```ts
 declare module "oro:ipfs" {
@@ -172,6 +168,9 @@ declare module "oro:ipfs" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

@@ -107,12 +107,6 @@ Fallibility:
 `std::runtime::time::unix_now_ns` / `unix_now_ms` so callers can generate UUIDs
 without passing explicit timestamps.
 
-## See also
-
-- [`std::crypto`](?p=std/crypto)
-- [`std::temporal`](?p=std/temporal)
-- [`std::strings`](?p=std/strings)
-
 ## Design goals
 
 - Keep the implementation small and auditable, without external dependencies
@@ -121,3 +115,9 @@ without passing explicit timestamps.
 - Keep parse, format, and inspection helpers straightforward to embed into
  application code and tooling.
 - Attach Formal Silk contracts to buffer and shape preconditions where useful.
+
+## See also
+
+- [`std::crypto`](?p=std/crypto)
+- [`std::temporal`](?p=std/temporal)
+- [`std::strings`](?p=std/strings)

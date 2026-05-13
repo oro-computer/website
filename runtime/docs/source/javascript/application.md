@@ -2,6 +2,12 @@
 
 `oro:application` exposes application-level APIs: creating windows, querying windows, menus, and runtime metadata.
 
+## Related guides
+
+- [Windows and messaging](?p=guides/windows-and-messaging)
+- [Lifecycle hooks and deep links](?p=guides/lifecycle-hooks-and-deep-links)
+- [Desktop integrations](?p=guides/desktop-integrations)
+
 ## Import
 
 ```js
@@ -101,8 +107,9 @@ oro:application/update
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:application</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:application`
 
 ```ts
 declare module "oro:application" {
@@ -508,10 +515,7 @@ declare module "oro:application" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:application/client</code></summary>
+#### `oro:application/client`
 
 ```ts
 declare module "oro:application/client" {
@@ -580,10 +584,7 @@ declare module "oro:application/client" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:application/menu</code></summary>
+#### `oro:application/menu`
 
 ```ts
 declare module "oro:application/menu" {
@@ -740,10 +741,7 @@ declare module "oro:application/menu" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:application/update</code></summary>
+#### `oro:application/update`
 
 ```ts
 declare module "oro:application/update" {
@@ -1050,6 +1048,8 @@ declare module "oro:application/update" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

@@ -15,11 +15,6 @@ console.log(resolved?.url)
 console.log(resolved?.type)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -33,8 +28,9 @@ oro:npm/service-worker
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:npm/module</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:npm/module`
 
 ```ts
 declare module "oro:npm/module" {
@@ -71,10 +67,7 @@ declare module "oro:npm/module" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:npm/service-worker</code></summary>
+#### `oro:npm/service-worker`
 
 ```ts
 declare module "oro:npm/service-worker" {
@@ -97,6 +90,9 @@ declare module "oro:npm/service-worker" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

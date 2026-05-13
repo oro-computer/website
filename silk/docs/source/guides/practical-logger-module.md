@@ -1,18 +1,27 @@
 # Practical Logger Module Walkthrough
 
-This walkthrough builds a logger package that is small enough to study but
-structured enough to adapt:
+This walkthrough builds a small structured logger package that can be imported
+from Silk and exposed to C through a generated header. It starts with the normal
+Silk API in `src/lib.slk`, then adds `src/c_api.slk` for the narrow ABI wrapper.
 
-- a reusable package root with `silk.toml`,
-- a dependency module imported with `import logger from "logger";`,
-- levels, configuration, structured entries, optional metadata, and filtering,
-- a configurable writer function with a console implementation,
-- a sink interface for source-level conformance checks,
-- `Result` for parsing and `T?` for logging outcomes,
-- target-aware defaults with `attr(...)`,
-- package targets for demos, libraries, headers, and WASI,
-- an ABI wrapper for foreign callers,
-- and GitHub/npm publication.
+After the `logger_static` target emits `build/acme_logger.h` and
+`build/libacme_logger.a`, a C caller can drive the package with borrowed
+`SilkString` values:
+
+```c
+#include <silk/silk.h>
+#include "acme_logger.h"
+
+static SilkString silk_str(const char *ptr) {
+  SilkString s = { .ptr = (char *)ptr, .len = 0 };
+  while (ptr[s.len] != '\0') s.len++;
+  return s;
+}
+
+int main(void) {
+  return logger_write_c(20, silk_str("ffi"), silk_str("hello from C"));
+}
+```
 
 The manifest package name is `logger`. Source modules declare the symbol
 namespace with `package acme::logger;`. Downstream code imports the package's
@@ -624,6 +633,27 @@ fn level_from_int (level: int) -> Level {
   if level <= 20 { return Level::Info; }
   if level <= 30 { return Level::Warn; }
   return Level::Error;
+}
+```
+
+The generated header uses the ABI shapes from `silk/silk.h`. A minimal C caller
+can pass borrowed string views into the exported wrapper:
+
+```c
+#include <silk/silk.h>
+#include "acme_logger.h"
+
+static SilkString silk_str(const char *ptr) {
+  SilkString s = { .ptr = (char *)ptr, .len = 0 };
+  while (ptr[s.len] != '\0') s.len++;
+  return s;
+}
+
+int main(void) {
+  return logger_write_c(
+      20,
+      silk_str("ffi"),
+      silk_str("hello from C"));
 }
 ```
 

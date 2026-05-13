@@ -17,11 +17,6 @@ await store.run({ requestId: 'req-42' }, async () => {
 })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -40,8 +35,9 @@ oro:async/wrap
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:async</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:async`
 
 ```ts
 declare module "oro:async" {
@@ -61,10 +57,7 @@ declare module "oro:async" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:async/context</code></summary>
+#### `oro:async/context`
 
 ```ts
 declare module "oro:async/context" {
@@ -393,10 +386,7 @@ declare module "oro:async/context" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:async/deferred</code></summary>
+#### `oro:async/deferred`
 
 ```ts
 declare module "oro:async/deferred" {
@@ -485,10 +475,7 @@ declare module "oro:async/deferred" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:async/hooks</code></summary>
+#### `oro:async/hooks`
 
 ```ts
 declare module "oro:async/hooks" {
@@ -547,10 +534,7 @@ declare module "oro:async/hooks" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:async/resource</code></summary>
+#### `oro:async/resource`
 
 ```ts
 declare module "oro:async/resource" {
@@ -594,10 +578,7 @@ declare module "oro:async/resource" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:async/storage</code></summary>
+#### `oro:async/storage`
 
 ```ts
 declare module "oro:async/storage" {
@@ -659,10 +640,7 @@ declare module "oro:async/storage" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:async/wrap</code></summary>
+#### `oro:async/wrap`
 
 ```ts
 declare module "oro:async/wrap" {
@@ -697,6 +675,9 @@ declare module "oro:async/wrap" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

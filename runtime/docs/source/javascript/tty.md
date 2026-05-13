@@ -13,11 +13,6 @@ console.log(isatty(0))
 console.log(isatty(1))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -30,8 +25,9 @@ oro:tty
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:tty</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:tty`
 
 ```ts
 declare module "oro:tty" {
@@ -49,6 +45,9 @@ declare module "oro:tty" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

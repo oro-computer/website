@@ -14,7 +14,7 @@ Canonical doc: [strings](?p=std/strings).
 ## Importing
 
 ```silk
-import std::strings;
+import strings from "std/strings";
 ```
 
 ## Exported API
@@ -31,13 +31,13 @@ export fn or_empty (s: string?) -> string;
 
 ### Example: equality + optionals
 ```silk
-import std::strings;
+import strings from "std/strings";
 
 fn main () -> int {
   let a: string = "hi";
   let b: string? = None;
 
-  if std::strings::eq(a, "hi") && std::strings::is_empty(std::strings::or_empty(b)) {
+  if strings::eq(a, "hi") && strings::is_empty(strings::or_empty(b)) {
     return 0;
   }
   return 1;

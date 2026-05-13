@@ -74,7 +74,7 @@ struct FixedLIFOQueue(T) { ... }
 Common methods on all four queue structs:
 
 ```silk
-public fn init (cap: i64) -> std::result::Result(Self, std::memory::AllocFailed);
+public fn init (cap: i64) -> Result(Self, std::memory::AllocFailed);
 public fn try_init (cap: i64) -> Self?;
 public fn empty () -> Self;
 public fn push_back (mut self: &Self, value: T) -> std::memory::OutOfMemory?;

@@ -30,7 +30,7 @@ This module is intentionally strict and focused:
  - Legacy/explicit formatting helper; returns the same canonical output as
  `try_serialize()`.
 
-`ParseResult` is `std::result::Result(Version, ParseError)`.
+`ParseResult` is `Result(Version, ParseError)`.
 
 `ParseError.offset` is a **byte offset** into the original `input`.
 `ParseError.kind()` reports a stable error kind.

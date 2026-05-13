@@ -407,7 +407,7 @@ Rule because it is not a `T | ...` typed-error expression.
 The `match` expression also supports a small subset for
 recoverable “success or error” values. In the initial subset, this includes:
 
-- `std::result::Result(T, E)` (an `enum` with `Ok(T)` and `Err(E)` variants), and
+- `Result(T, E)` (an `enum` with `Ok(T)` and `Err(E)` variants), and
 - “Result-like” structs of the form `{ value: T?, err: E? }`.
 
 For the struct form, the runtime invariant is: exactly one of `value` and `err`

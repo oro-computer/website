@@ -2,6 +2,11 @@
 
 `oro:notification` provides an API to display desktop and mobile notifications and request permission to use them.
 
+## Related guides
+
+- [Desktop integrations](?p=guides/desktop-integrations)
+- [Lifecycle hooks and deep links](?p=guides/lifecycle-hooks-and-deep-links)
+
 ## Import
 
 ```js
@@ -51,8 +56,9 @@ oro:notification
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:notification</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:notification`
 
 ```ts
 declare module "oro:notification" {
@@ -470,6 +476,8 @@ declare module "oro:notification" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

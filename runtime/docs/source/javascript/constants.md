@@ -12,11 +12,6 @@ import { EACCES, SIGTERM } from 'oro:constants'
 console.log({ EACCES, SIGTERM })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -29,8 +24,9 @@ oro:constants
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:constants</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:constants`
 
 ```ts
 declare module "oro:constants" {
@@ -151,6 +147,9 @@ declare module "oro:constants" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

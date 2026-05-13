@@ -101,15 +101,15 @@ impl Window {
   public fn close (self: Window) -> CloseResult;
 }
 
-export type WindowResult = std::result::Result(Window, WindowFailed);
-export type EventResult = std::result::Result(Event, WindowFailed);
-export type PollResult = std::result::Result(bool, WindowFailed);
-export type CloseResult = std::result::Result(bool, WindowFailed);
-export type ActionResult = std::result::Result(bool, WindowFailed);
-export type BoolResult = std::result::Result(bool, WindowFailed);
-export type SizeResult = std::result::Result(Size, WindowFailed);
-export type PositionResult = std::result::Result(Position, WindowFailed);
-export type RunResult = std::result::Result(bool, WindowFailed);
+export type WindowResult = Result(Window, WindowFailed);
+export type EventResult = Result(Event, WindowFailed);
+export type PollResult = Result(bool, WindowFailed);
+export type CloseResult = Result(bool, WindowFailed);
+export type ActionResult = Result(bool, WindowFailed);
+export type BoolResult = Result(bool, WindowFailed);
+export type SizeResult = Result(Size, WindowFailed);
+export type PositionResult = Result(Position, WindowFailed);
+export type RunResult = Result(bool, WindowFailed);
 export type FrameCallback = fn (Window) -> int;
 
 export fn options (title: string, width: int, height: int) -> Options;

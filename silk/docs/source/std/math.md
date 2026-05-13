@@ -173,11 +173,11 @@ export struct VectorF64 {
   data: std::vector::Vector(f64),
 }
 
-export type VectorF32Result = std::result::Result(VectorF32, MathFailed);
-export type F32Result = std::result::Result(f32, MathFailed);
-export type VectorF64Result = std::result::Result(VectorF64, MathFailed);
-export type F64Result = std::result::Result(f64, MathFailed);
-export type BoolResult = std::result::Result(bool, MathFailed);
+export type VectorF32Result = Result(VectorF32, MathFailed);
+export type F32Result = Result(f32, MathFailed);
+export type VectorF64Result = Result(VectorF64, MathFailed);
+export type F64Result = Result(f64, MathFailed);
+export type BoolResult = Result(bool, MathFailed);
 
 impl VectorF32 {
   public fn empty () -> VectorF32;
@@ -296,8 +296,8 @@ export struct MatrixF64 {
   data: std::vector::Vector(f64), // length = rows * cols
 }
 
-export type MatrixF32Result = std::result::Result(MatrixF32, MathFailed);
-export type MatrixF64Result = std::result::Result(MatrixF64, MathFailed);
+export type MatrixF32Result = Result(MatrixF32, MathFailed);
+export type MatrixF64Result = Result(MatrixF64, MathFailed);
 
 impl MatrixF32 {
   public fn empty () -> MatrixF32;

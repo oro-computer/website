@@ -15,11 +15,6 @@ bus.on('ready', (value) => console.log(value))
 bus.emit('ready', { ok: true })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -32,8 +27,9 @@ oro:events
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:events</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:events`
 
 ```ts
 declare module "oro:events" {
@@ -115,6 +111,9 @@ declare module "oro:events" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

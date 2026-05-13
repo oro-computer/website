@@ -1,119 +1,124 @@
 # What Silk is for
 
-Silk is a high performance general purpose programming language with formal verification built in. Silk targets computer
-systems, mobile / tablet devices, WASM / WASI runtimes, and the web.
+Silk is for systems code that has to be understood, shipped, embedded, and trusted after it grows beyond a single file.
 
-Silk is developed as a coherent system: the language, standard library, compiler, and CLI are documented as the canonical
-reference, and the implementation is built to match that contract.
+It is a native programming language for tools, libraries, runtimes, services, protocol code, WASI modules, and platform-facing
+software where the boundaries are as important as the implementation. Silk keeps those boundaries visible: the package a file
+belongs to, the modules it imports, the values that can be missing, the failures that must be handled, the target assumptions
+behind a branch, and the invariants the compiler should prove.
 
-This matters because it keeps the language predictable as it grows:
+> Silk is for code where “it compiled” is not enough. The source should also say what it depends on, what can fail, what crosses
+> the ABI, and what must remain true.
 
-- The “meaning” of a construct lives in the docs, not in folklore.
-- Tooling can rely on stable concepts (packages, imports, diagnostics, CLI shapes).
-- The implementation can grow incrementally while staying predictable to users.
+## Why it exists
 
-If you’re new to Silk, this page gives you the mental model: what you write, what you get, and why the design looks the way
-it does.
+Most systems languages give you power, but they often leave the shape of the system to convention. Package boundaries live in
+build scripts. Foreign calls live in headers. Failure policy lives in team habits. Correctness arguments live in review comments
+or bug reports.
 
-## Design goals (practical)
+Silk pulls those concerns back into the program. Imports are explicit and path-like for normal user-space modules. Public exports
+are deliberate. `Result(T, E)` and `T?` make failure and absence part of the type a caller sees. `attr(...)` lets source code name
+the platform or target assumption behind a branch. Formal Silk directives let you attach local proofs to the parts of a program
+that are easiest to get wrong: bounds, invariants, preconditions, postconditions, and protocol rules.
 
-Silk is designed around a handful of constraints that show up everywhere:
+The result is not a language trying to hide systems programming. It is a language trying to make systems programming readable
+enough that humans, tooling, embedders, and verifiers can agree on what the program means.
 
-### Explicit structure
+## The shape of useful Silk
 
-Real systems code is easier to maintain when it is obvious where names come from and how code is organized.
-
-- Names are qualified with `::`.
-- Files declare a `package` or `module` header at the top.
-- Imports are explicit and live in a contiguous import block.
-
-That gives you codebases where “what depends on what” is visible without special tooling.
-
-### A language you can reason about
-
-Silk pushes toward **predictable semantics**:
-
-- Types matter most at boundaries (public APIs, FFI, storage formats). Silk keeps those boundaries explicit.
-- Error handling is explicit and typed, so you can see what can fail and what must be handled.
-- Verification is opt-in by syntax (Formal Silk): ordinary code stays ordinary.
-
-### A toolchain you can embed
-
-Silk is not only “a compiler binary”. It is also designed to be integrated as a library:
-
-- a C99 embedding ABI (`libsilk`) for host applications and build systems
-- a Zig embedding wrapper for Zig-native integrations
-
-This is useful when you want compilation as a component inside another program (editors, language servers, build
-orchestrators, analysis tools).
-
-## The basic programming model
-
-### Files form a module set
-
-When you run the compiler, you compile a **module set**: a set of `.slk` files that are type-checked together.
-
-You can provide that set explicitly (a list of files), or you can ask `silk` to load it from a package manifest
-(`silk.toml`). Either way, the idea is the same: *“these files form a unit.”*
-
-### Packages and imports keep boundaries obvious
-
-A simple file often begins like this:
+A Silk file should tell you its operating context before you read the body. In ordinary user-space code, imports use module
+specifier syntax, so dependency paths look like package and filesystem paths instead of ABI symbol paths.
 
 ```silk
-package app;
+package worker;
 
 import { println } from "std/io";
-```
+import fs from "std/fs";
 
-That header tells you the namespace (`app`) and the dependencies (here: `std/io`) before you read the rest of the
-file.
+struct Job {
+  path: string,
+  bytes: int,
+}
 
-### Programs are ordinary code
+interface Sink {
+  fn write(job: Job) -> int;
+}
 
-Executables use a conventional entry point: `fn main () -> int` (exit code).
+struct ConsoleSink {
+  label: string,
+}
 
-```silk
-import { println } from "std/io";
+impl ConsoleSink as Sink {
+  fn write (self: &ConsoleSink, job: Job) -> int {
+    println("[{s}] indexed {s} ({d} bytes)", self.label, job.path, job.bytes);
+    return 0;
+  }
+}
+
+fn default_path () -> string {
+  if attr(target="wasm32-wasi") { return "/data/input.txt"; }
+  if attr(os="linux") { return "/var/lib/app/input.txt"; }
+  return "./input.txt";
+}
+
+fn inspect (path: string, max_bytes: int) -> Job? {
+  match (fs::read_file_string(path)) {
+    Ok(body) => {
+      let bytes: int = body.len() as int;
+      if bytes > max_bytes {
+        return None;
+      }
+      return Some(Job{ path: path, bytes: bytes });
+    },
+    Err(_) => {
+      return None;
+    },
+  }
+}
 
 fn main () -> int {
-  println("hello from silk");
-  return 0;
+  let sink = ConsoleSink{ label: "silk" };
+  let path: string = default_path();
+  let job: Job = match (inspect(path, 1048576)) {
+    Some(v) => v,
+    None => Job{ path: path, bytes: -1 },
+  };
+
+  if job.bytes < 0 {
+    println("error: inspect failed");
+    return 1;
+  }
+
+  return sink.write(job);
 }
 ```
 
-Silk is designed so that “the smallest program” uses the same constructs you use at scale: packages, imports, types,
-functions, and explicit boundaries.
+The point of this example is not that Silk has structs, interfaces, imports, optionals, and attributes. The point
+is that those pieces serve one story: a small systems component can state its dependency surface, platform choice, error path,
+and public behavior without pushing that knowledge into prose or a separate build layer.
 
-## Where Silk fits well
+## Where it fits
 
-Silk is aimed at code where clarity and correctness matter:
+Silk is a good fit when you are writing code that will become someone else’s dependency. That might be a command-line tool, a
+runtime component, a parser, a network or storage library, a WASI module, a native library with a C ABI, or a package meant to be
+published and reused. In each case, the reader needs to know what is stable, what is private, what can fail, and what assumptions
+the build made.
 
-- tools and developer infrastructure
-- network services and protocol code
-- parsers, encoders, and data plumbing
-- libraries that need a stable ABI boundary
-- systems components that benefit from local verification (Formal Silk)
+Silk is also a good fit when correctness has local pressure points. You do not need to turn the whole program into a proof
+project. You can keep ordinary code ordinary, then add Formal Silk where a boundary check, loop invariant, structure requirement,
+or function contract earns its keep.
 
-If you want a language that is both *low-level enough* to express systems concerns and *structured enough* to keep large
-projects readable, Silk is built for that space.
+For embedders, Silk is meant to be more than a standalone compiler binary. The toolchain ships a documented C99 `libsilk` ABI,
+generated headers, explicit output kinds, and target-aware build behavior so hosts can treat compilation as a component in a
+larger system.
 
-## How to use this documentation
+## The payoff
 
-This site is organized into two layers:
+Silk’s value is strongest once a project has multiple modules, targets, and consumers. The language is designed so source files
+remain navigable, package APIs remain intentional, failure remains typed, native and WASI targets remain explicit, and proof
+obligations stay close to the code they justify.
 
-- **Guides**: reading order, “how to think”, and realistic examples.
-- **Reference**: precise language rules, standard library modules, and CLI/ABI details.
-
-The recommended flow:
-
-1. [Hello world](?p=guides/hello-world)
-2. [Language tour](?p=guides/language-tour)
-3. [Modules & packages](?p=guides/modules-and-packages)
-4. [Practical logger module](?p=guides/practical-logger-module)
-5. [Standard library](?p=guides/standard-library)
-6. [CLI and toolchain](?p=guides/cli)
-7. [Testing](?p=guides/testing)
-8. [Formal Silk](?p=guides/formal-silk)
-
-If you already know what you’re looking for, use search and the sidebar reference sections.
+If you are evaluating Silk, read this page as the thesis: Silk is for building systems software whose contracts should be visible
+in the same place as the code. From here, continue with [Hello world](?p=guides/hello-world), then the
+[Language tour](?p=guides/language-tour), [Modules, packages, and publication](?p=guides/modules-and-packages), and
+[Formal Silk](?p=guides/formal-silk).

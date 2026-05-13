@@ -73,6 +73,23 @@
     return `${base}docs/?p=${encoded}${hash}`;
   }
 
+  function getSpecPageParam() {
+    try {
+      const params = new URLSearchParams(globalThis.location.search || "");
+      return (params.get("p") || "").trim();
+    } catch {
+      return "";
+    }
+  }
+
+  function redirectDocsPageParam() {
+    const id = getSpecPageParam();
+    if (!id) return false;
+    const hash = globalThis.location.hash || "";
+    globalThis.location.replace(viewerHref("docs", id, hash));
+    return true;
+  }
+
   function getRepoPathRef(raw) {
     if (!githubRepo || !githubRef) return null;
     const path = normalizeRelPath(raw);
@@ -597,6 +614,38 @@
     }
   }
 
+  function rewriteContentLinks(container) {
+    const links = Array.from(container.querySelectorAll("a[href]"));
+    for (const a of links) {
+      const raw = String(a.getAttribute("href") || "").trim();
+      if (!raw) continue;
+
+      const [pathAndQuery, hashPart = ""] = raw.split("#", 2);
+      const hash = hashPart ? `#${hashPart}` : "";
+      let query = "";
+      if (pathAndQuery.startsWith("?")) {
+        query = pathAndQuery.slice(1);
+      } else if (pathAndQuery === "." || pathAndQuery === "./") {
+        query = "";
+      } else if (pathAndQuery.startsWith("./?")) {
+        query = pathAndQuery.slice(3);
+      } else {
+        continue;
+      }
+
+      let id = "";
+      try {
+        const params = new URLSearchParams(query);
+        id = (params.get("p") || "").trim();
+      } catch {
+        id = "";
+      }
+
+      if (!id) continue;
+      a.href = viewerHref("docs", id, hash);
+    }
+  }
+
   function addHeadingAnchors(container) {
     const headings = Array.from(container.querySelectorAll("h2, h3, h4, h5"));
     for (const h of headings) {
@@ -718,6 +767,7 @@
     }
 
     contentRoot.innerHTML = html;
+    rewriteContentLinks(contentRoot);
     addHeadingAnchors(contentRoot);
     registerLanguages();
     highlightContent(contentRoot);
@@ -758,5 +808,5 @@
     loadDocMaps().then((maps) => rewriteInlineDocRefs(contentRoot, maps));
   }
 
-  init();
+  if (!redirectDocsPageParam()) init();
 })();

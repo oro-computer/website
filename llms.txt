@@ -6,8 +6,13 @@ Use these packs to give an AI assistant a complete, self-contained view of a doc
 
 - Oro Runtime docs pack: `runtime/llms.txt`
 - Silk docs pack: `silk/llms.txt`
-- Sage docs pack: `sage/llms.txt`
-- slg docs pack: `slg/llms.txt`
 - Virtnosis docs pack: `virtnosis/llms.txt`
 
-Tip: for a single page, prefer the site’s “Ask AI → View Markdown / Copy Markdown”.
+Legacy packs remain available for direct access, but they are not promoted from
+the public navigation:
+
+- Sage docs pack: `sage/llms.txt`
+- slg docs pack: `slg/llms.txt`
+
+For a single documentation page, prefer the corresponding Markdown source under
+that product's `docs/source/` directory.

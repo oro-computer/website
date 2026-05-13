@@ -7,6 +7,11 @@ Most hooks:
 - register a callback
 - return a disposer function you can call to unsubscribe
 
+## Related guides
+
+- [Lifecycle hooks and deep links](?p=guides/lifecycle-hooks-and-deep-links)
+- [Windows and messaging](?p=guides/windows-and-messaging)
+
 ## Common hooks
 
 ```js
@@ -77,8 +82,9 @@ oro:hooks
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:hooks</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:hooks`
 
 ```ts
 declare module "oro:hooks" {
@@ -409,6 +415,8 @@ declare module "oro:hooks" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

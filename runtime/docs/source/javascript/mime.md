@@ -13,11 +13,6 @@ console.log(lookupSync('application/json'))
 console.log(lookupSync('.png'))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -33,8 +28,9 @@ oro:mime/type
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:mime</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:mime`
 
 ```ts
 declare module "oro:mime" {
@@ -44,10 +40,7 @@ declare module "oro:mime" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:mime/index</code></summary>
+#### `oro:mime/index`
 
 ```ts
 declare module "oro:mime/index" {
@@ -227,10 +220,7 @@ declare module "oro:mime/index" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:mime/params</code></summary>
+#### `oro:mime/params`
 
 ```ts
 declare module "oro:mime/params" {
@@ -244,10 +234,7 @@ declare module "oro:mime/params" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:mime/type</code></summary>
+#### `oro:mime/type`
 
 ```ts
 declare module "oro:mime/type" {
@@ -267,6 +254,9 @@ declare module "oro:mime/type" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

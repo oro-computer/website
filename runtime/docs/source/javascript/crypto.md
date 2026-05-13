@@ -2,6 +2,10 @@
 
 `oro:crypto` exposes hashing, random bytes, and bundled sodium-backed helpers.
 
+## Related guides
+
+- [Secure storage and sessions](?p=guides/secure-storage-and-sessions)
+
 ## Examples
 
 Generate random bytes and hash them with the runtime digest helper:
@@ -16,11 +20,6 @@ console.log(digest.toString('hex'))
 console.log(murmur3('hello-runtime'))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -34,8 +33,9 @@ oro:crypto/sodium
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:crypto</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:crypto`
 
 ```ts
 declare module "oro:crypto" {
@@ -107,10 +107,7 @@ declare module "oro:crypto" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:crypto/sodium</code></summary>
+#### `oro:crypto/sodium`
 
 ```ts
 declare module "oro:crypto/sodium" {
@@ -118,6 +115,9 @@ declare module "oro:crypto/sodium" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

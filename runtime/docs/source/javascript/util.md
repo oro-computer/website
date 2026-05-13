@@ -16,11 +16,6 @@ log('payload ready')
 console.log(isTypedArray(payload))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -34,8 +29,9 @@ oro:util/types
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:util</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:util`
 
 ```ts
 declare module "oro:util" {
@@ -117,10 +113,7 @@ declare module "oro:util" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:util/types</code></summary>
+#### `oro:util/types`
 
 ```ts
 declare module "oro:util/types" {
@@ -432,6 +425,9 @@ declare module "oro:util/types" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

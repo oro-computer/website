@@ -2,6 +2,10 @@
 
 `oro:https` provides HTTPS client and server APIs on top of the runtime TLS stack.
 
+## Related guides
+
+- [Calling HTTP APIs](?p=guides/calling-http-apis)
+
 ## Examples
 
 Issue an HTTPS request with the familiar client helper:
@@ -15,11 +19,6 @@ get('https://example.com', (res) => {
 })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -32,8 +31,9 @@ oro:https
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:https</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:https`
 
 ```ts
 declare module "oro:https" {
@@ -203,6 +203,9 @@ declare module "oro:https" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

@@ -52,7 +52,7 @@ export struct Bytes {
   handle: u64,
 }
 
-export type BytesResult = std::result::Result(Bytes, std::memory::AllocFailed);
+export type BytesResult = Result(Bytes, std::memory::AllocFailed);
 
 impl Bytes {
   public fn empty () -> Bytes;
@@ -83,7 +83,7 @@ export enum Read {
   Chunk(u64),
 }
 
-export type ReadResult = std::result::Result(Read, StreamFailed);
+export type ReadResult = Result(Read, StreamFailed);
 
 // Readable end.
 export struct ReadableStream {
@@ -126,7 +126,7 @@ export struct PassThroughStream {
   writable: WritableStream,
 }
 
-export type PassThroughResult = std::result::Result(PassThroughStream, StreamFailed);
+export type PassThroughResult = Result(PassThroughStream, StreamFailed);
 
 impl PassThroughStream {
   public fn init_default () -> PassThroughResult;
@@ -136,7 +136,7 @@ impl PassThroughStream {
 }
 
 // Transformer output.
-export type TransformBytesResult = std::result::Result(Bytes, StreamFailed);
+export type TransformBytesResult = Result(Bytes, StreamFailed);
 
 // A paired transform stage.
 export struct TransformStream {
@@ -146,7 +146,7 @@ export struct TransformStream {
   transform_writable: WritableStream,
 }
 
-export type TransformResult = std::result::Result(TransformStream, StreamFailed);
+export type TransformResult = Result(TransformStream, StreamFailed);
 
 impl TransformStream {
   public fn init_default () -> TransformResult;
@@ -159,14 +159,14 @@ impl TransformStream {
 }
 
 // Pipe a readable into a writable until done.
-export fn pipe_to (mut src: ReadableStream, mut dst: WritableStream) -> std::result::Result(int, StreamFailed);
+export fn pipe_to (mut src: ReadableStream, mut dst: WritableStream) -> Result(int, StreamFailed);
 
 // Pipe until done or until aborted.
 export fn pipe_to_abortable (
   mut src: ReadableStream,
   mut dst: WritableStream,
   sig: std::abort_controller::AbortSignalBorrow?
-) -> std::result::Result(int, StreamFailed);
+) -> Result(int, StreamFailed);
 ```
 
 ## Semantics

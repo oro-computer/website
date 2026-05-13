@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Results and Errors · Learn Silk</title>
+    <meta
+      name="description"
+      content="Chapter 5 of Learn Silk: use Result(T, E) for recoverable failure and typed errors for contract violations."
+    />
+    <meta name="theme-color" content="#11100f" />
+    <link rel="icon" type="image/png" href="../../../docs/branding/assets/logo-icon-small.png" sizes="32x32" />
+    <link rel="stylesheet" href="../../../assets/site.css" />
+    <link rel="stylesheet" href="../../../assets/highlight/highlight.css" />
+    <script src="../../../assets/highlight/highlight.min.js" defer></script>
+    <script src="../../../assets/highlight/languages/bash.min.js" defer></script>
+    <script src="../../../assets/highlight/languages/silk.js" defer></script>
+  </head>
+  <body class="site-dark product-page learn-page learn-lesson-page silk-learn-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-top" id="top">
+      <div class="container">
+        <div class="site-header">
+          <a class="brand" href="../../../">
+            <img
+              class="brand-mark"
+              src="../../../docs/branding/assets/logo-icon.png"
+              alt="Oro Computer logo"
+              width="32"
+              height="32"
+            />
+            <span class="brand-name">oro</span>
+          </a>
+          <nav class="nav" aria-label="Primary navigation">
+            <a href="../../../">Technology</a>
+            <a href="../../../blog/">Blog</a>
+            <a href="../../../docs/">Docs</a>
+          </nav>
+          <div class="site-subnav" aria-label="Silk section navigation">
+            <div class="site-subnav-label">Inside</div>
+            <div class="site-subnav-parent">Silk</div>
+            <nav class="site-subnav-links" aria-label="Silk pages">
+              <a href="../../">Overview</a>
+              <a href="../" aria-current="page">Learn</a>
+              <a href="../../docs/">Docs</a>
+              <a href="../../spec/2026/">Spec</a>
+              <a href="../../wiki/">Wiki</a>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="section">
+        <div class="container">
+          <article class="learn-lesson-shell">
+            <div class="learn-lesson-bar">
+              <a class="learn-lesson-menu" href="../" aria-label="Back to Learn Silk"></a>
+              <div class="learn-lesson-title">
+                <img src="../../../docs/branding/assets/logo-icon-small.png" alt="" width="30" height="30" />
+                <div>
+                  <strong>Chapter 5</strong>
+                  <span>Results and errors</span>
+                </div>
+              </div>
+              <nav class="learn-lesson-nav" aria-label="Lesson navigation">
+                <a href="../types-and-optionals/">Previous</a>
+                <span>5 / 5</span>
+                <a href="../../docs/?p=language/structs-impls-layout">Docs</a>
+              </nav>
+            </div>
+
+            <header class="learn-lesson-heading">
+              <div class="learn-lesson-number">5</div>
+              <div>
+                <small>Chapter 5</small>
+                <h1>Results and errors</h1>
+              </div>
+            </header>
+
+            <div class="prose learn-prose">
+              <p>
+                Silk separates two ideas that are often blurred together: recoverable failures are values, while typed
+                errors describe contract violations that must be declared.
+              </p>
+
+              <h2>Use Result for recoverable failure</h2>
+              <p>If the caller can continue normally, return data that describes success or failure.</p>
+
+              <div class="learn-code" data-code-block>
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/parse.slk</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-silk">package parse;
+
+type PortResult = Result(int, string);
+
+fn parse_port (text: string) -> PortResult {
+  if text == "" {
+    return Err("port is required");
+  }
+
+  if text == "8080" {
+    return Ok(8080);
+  }
+
+  return Err("unsupported port");
+}</code></pre>
+              </div>
+
+              <h2>Handle both cases</h2>
+              <p>A result keeps the caller honest because the failure value is part of the type.</p>
+
+              <div class="learn-code" data-code-block>
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/parse.slk</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-silk">fn port_or_default (text: string) -> int {
+  match (parse_port(text)) {
+    PortResult::Ok(port) => {
+      return port;
+    },
+    PortResult::Err(_) => {
+      return 3000;
+    },
+  }
+}</code></pre>
+              </div>
+
+              <h2>Declare contract errors separately</h2>
+              <p>Typed errors use <code>error</code>, <code>panic</code>, and a declared error contract.</p>
+
+              <div class="learn-code" data-code-block>
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/parse.slk</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-silk">error OutOfRange {
+  value: int,
+}
+
+fn require_user_port (port: int) -> int | OutOfRange {
+  if port < 1024 {
+    panic OutOfRange { value: port };
+  }
+
+  return port;
+}</code></pre>
+              </div>
+
+              <h2>Check the contract</h2>
+              <p>The compiler verifies that typed errors are declared and handled according to their signatures.</p>
+
+              <div class="learn-code" data-code-block data-code-kind="terminal">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">Terminal</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy command"></button>
+                </div>
+                <pre><code class="language-bash">silk check src/parse.slk
+silk test src/parse.slk</code></pre>
+              </div>
+
+              <div class="learn-callout">
+                <p>
+                  Use <code>Result(T, E)</code> for recoverable domain outcomes. Use typed errors for broken contracts
+                  that should not continue as ordinary control flow.
+                </p>
+              </div>
+
+              <h2>What changed</h2>
+              <ul>
+                <li><code>Result(int, string)</code> carried recoverable parse failure.</li>
+                <li><code>match</code> forced the caller to name both result cases.</li>
+                <li><code>error OutOfRange</code> declared a contract error shape.</li>
+                <li><code>-> int | OutOfRange</code> made the typed error contract visible.</li>
+              </ul>
+
+              <div class="learn-complete">
+                <h2>Chapter complete</h2>
+                <p>You now have the core Silk learning path. Continue into the docs for structs, interfaces, testing, ABI, and Formal Silk.</p>
+                <a class="button button-primary" href="../../docs/?p=language/structs-impls-layout">Continue in docs</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-inner">
+          <strong>Learn Silk</strong>
+          <span>&copy; <span data-year>2026</span> Oro Computer.</span>
+        </div>
+      </div>
+    </footer>
+    <script src="../../../assets/site.js" defer></script>
+  </body>
+</html>

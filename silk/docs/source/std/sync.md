@@ -63,7 +63,7 @@ struct ArcBorrow(T) {
   handle: u64,
 }
 
-type ArcResult(T) = std::result::Result(Arc(T), SyncFailed);
+type ArcResult(T) = Result(Arc(T), SyncFailed);
 
 impl Arc(T) {
   public fn invalid () -> Arc(T);
@@ -86,7 +86,7 @@ struct Mutex {
 impl Mutex {
   public fn invalid () -> Mutex;
   public fn is_valid (self: &Mutex) -> bool;
-  public fn init () -> std::result::Result(Mutex, SyncFailed);
+  public fn init () -> Result(Mutex, SyncFailed);
   public fn lock (self: &Mutex) -> SyncFailed?;
   public fn unlock (self: &Mutex) -> SyncFailed?;
   public fn destroy (mut self: &Mutex) -> void;
@@ -100,7 +100,7 @@ struct Condvar {
 impl Condvar {
   public fn invalid () -> Condvar;
   public fn is_valid (self: &Condvar) -> bool;
-  public fn init () -> std::result::Result(Condvar, SyncFailed);
+  public fn init () -> Result(Condvar, SyncFailed);
   public fn wait (self: &Condvar, m: &Mutex) -> SyncFailed?;
   public fn signal (self: &Condvar) -> SyncFailed?;
   public fn broadcast (self: &Condvar) -> SyncFailed?;
@@ -125,10 +125,10 @@ struct ChannelSender(T) {
 
 impl Channel(T) {
   public fn invalid () -> Channel(T);
-  public fn init_default () -> std::result::Result(Channel(T), SyncFailed);
-  public fn init (cap: int) -> std::result::Result(Channel(T), SyncFailed);
+  public fn init_default () -> Result(Channel(T), SyncFailed);
+  public fn init (cap: int) -> Result(Channel(T), SyncFailed);
   public fn borrow (self: &Channel(T)) -> ChannelBorrow(T);
-  public fn sender (self: &Channel(T)) -> std::result::Result(ChannelSender(T), SyncFailed);
+  public fn sender (self: &Channel(T)) -> Result(ChannelSender(T), SyncFailed);
   public fn cap (self: &Channel(T)) -> int;
   public fn is_closed (self: &Channel(T)) -> bool;
   public fn try_send (self: &Channel(T), value: T) -> SyncFailed?;
@@ -157,7 +157,7 @@ impl ChannelBorrow(T) {
 }
 
 impl ChannelSender(T) {
-  public fn clone (self: &ChannelSender(T)) -> std::result::Result(ChannelSender(T), SyncFailed);
+  public fn clone (self: &ChannelSender(T)) -> Result(ChannelSender(T), SyncFailed);
   public fn send (self: &ChannelSender(T), value: T) -> SyncFailed?;
 }
 
@@ -174,7 +174,7 @@ struct CancellationTokenBorrow {
 impl CancellationToken {
   public fn invalid () -> CancellationToken;
   public fn is_valid (self: &CancellationToken) -> bool;
-  public fn init () -> std::result::Result(CancellationToken, SyncFailed);
+  public fn init () -> Result(CancellationToken, SyncFailed);
   public fn borrow (self: &CancellationToken) -> CancellationTokenBorrow;
   public fn cancel (self: &CancellationToken) -> void;
   public fn is_cancelled (self: &CancellationToken) -> bool;

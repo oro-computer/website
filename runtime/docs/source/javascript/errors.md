@@ -2,6 +2,10 @@
 
 `oro:errors` exports DOM-style and runtime-specific error classes and constants.
 
+## Related guides
+
+- [Testing and diagnostics](?p=guides/testing-and-diagnostics)
+
 ## Examples
 
 Construct runtime error types directly when surfacing failures:
@@ -15,11 +19,6 @@ const missing = new NotFoundError('resource not found')
 console.log(abort.name, missing.name)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -32,8 +31,9 @@ oro:errors
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:errors</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:errors`
 
 ```ts
 declare module "oro:errors" {
@@ -367,6 +367,9 @@ declare module "oro:errors" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

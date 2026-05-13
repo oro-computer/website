@@ -62,10 +62,10 @@ export error Error {
   kind: int,
 }
 
-export type ClientResponseResult = std::result::Result(std::http::Response, Error);
+export type ClientResponseResult = Result(std::http::Response, Error);
 
 struct Connection { /* opaque */ }
-export type ConnectionResult = std::result::Result(Connection, Error);
+export type ConnectionResult = Result(Connection, Error);
 impl Connection {
   // Establish TCP, then perform a TLS client handshake.
   public fn connect (addr: std::net::SocketAddrV4) -> ConnectionResult;
@@ -85,7 +85,7 @@ impl Connection {
 }
 
 struct Server { /* opaque */ }
-export type ServerResult = std::result::Result(Server, Error);
+export type ServerResult = Result(Server, Error);
 impl Server {
   // Listen on TCP, accept, then perform a TLS server handshake with the provided
   // certificate and private key (PEM).

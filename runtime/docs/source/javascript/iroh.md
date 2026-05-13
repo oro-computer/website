@@ -19,11 +19,6 @@ console.log(await endpoint.nodeAddr())
 await endpoint.close()
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -36,8 +31,9 @@ oro:iroh
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:iroh</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:iroh`
 
 ```ts
 declare module "oro:iroh" {
@@ -159,6 +155,9 @@ declare module "oro:iroh" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

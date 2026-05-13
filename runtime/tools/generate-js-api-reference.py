@@ -10,6 +10,7 @@ from js_api_reference_content import (
     DEFAULT_SEE_ALSO,
     DESCRIPTION_BY_FAMILY,
     EXAMPLES_BY_FAMILY,
+    GUIDE_REFS_BY_FAMILY,
 )
 
 
@@ -19,6 +20,7 @@ MODULE_START = re.compile(r"^declare module ['\"](?P<name>oro:[^'\"]+)['\"]\s*\{
 CURATED_FAMILIES = {
     "oro:ai",
     "oro:application",
+    "oro:extension",
     "oro:fs",
     "oro:hooks",
     "oro:mcp",
@@ -29,15 +31,18 @@ CURATED_FAMILIES = {
 
 
 EXCLUDED_PUBLIC_FAMILIES = {
+    "oro:bootstrap",
     "oro:external",
     "oro:internal",
     "oro:node",
+    "oro:node-esm-loader",
 }
 
 
 CURATED_FILES_BY_FAMILY = {
     "oro:ai": "ai.md",
     "oro:application": "application.md",
+    "oro:extension": "extension.md",
     "oro:fs": "fs.md",
     "oro:hooks": "hooks.md",
     "oro:mcp": "mcp.md",
@@ -151,6 +156,18 @@ def render_see_also_section() -> str:
     return "\n".join(lines)
 
 
+def render_related_guides_section(family: str) -> str:
+    refs = GUIDE_REFS_BY_FAMILY.get(family, ())
+    if not refs:
+        return ""
+
+    lines = ["## Related guides", ""]
+    for label, doc_id in refs:
+        lines.append(f"- [{label}](?p={doc_id})")
+    lines.append("")
+    return "\n".join(lines)
+
+
 def render_reference_section(family: str, specs: list[str], blocks: dict[str, ModuleBlock]) -> str:
     specs_sorted = sort_specs_in_family(family, specs)
 
@@ -169,15 +186,14 @@ def render_reference_section(family: str, specs: list[str], blocks: dict[str, Mo
 
     lines.append("### TypeScript declarations")
     lines.append("")
+    lines.append("These declarations are generated from the runtime's published TypeScript surface.")
+    lines.append("")
     for s in specs_sorted:
-        lines.append("<details>")
-        lines.append(f"<summary><code>{s}</code></summary>")
+        lines.append(f"#### `{s}`")
         lines.append("")
         lines.append("```ts")
         lines.extend(blocks[s].block.rstrip().splitlines())
         lines.append("```")
-        lines.append("")
-        lines.append("</details>")
         lines.append("")
 
     lines.append(REF_END)
@@ -197,6 +213,9 @@ def update_curated_page(path: Path, family: str, specs: list[str], blocks: dict[
     else:
         next_text = text.rstrip() + "\n\n" + render_reference_section(family, specs, blocks)
 
+    if "\n## See also\n" not in next_text and not next_text.startswith("## See also\n"):
+        next_text = next_text.rstrip() + "\n\n" + render_see_also_section()
+
     # Ensure trailing newline
     next_text = next_text.rstrip() + "\n"
     return write_text_if_changed(path, next_text)
@@ -211,11 +230,15 @@ def render_generated_page(path: Path, family: str, specs: list[str], blocks: dic
     lines.append("")
     lines.append(family_intro(family).rstrip())
     lines.append("")
+    related = render_related_guides_section(family)
+    if related:
+        lines.append(related.rstrip())
+        lines.append("")
     lines.append(render_examples_section(family).rstrip())
     lines.append("")
-    lines.append(render_see_also_section().rstrip())
-    lines.append("")
     lines.append(render_reference_section(family, specs_sorted, blocks).rstrip())
+    lines.append("")
+    lines.append(render_see_also_section().rstrip())
     lines.append("")
     return "\n".join(lines).rstrip() + "\n"
 

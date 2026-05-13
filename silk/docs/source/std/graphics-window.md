@@ -44,7 +44,7 @@ export struct ClearColor {
   alpha: f64,
 }
 
-export type RenderResult = std::result::Result(bool, RenderFailed);
+export type RenderResult = Result(bool, RenderFailed);
 
 export fn failed (kind: RenderErrorKind) -> RenderFailed;
 export fn backend () -> Backend;

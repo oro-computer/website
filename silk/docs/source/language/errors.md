@@ -31,7 +31,7 @@ errors** (`error`, `panic`, and `T | ErrorType...`), specified in
 Silk distinguishes between:
 
 - **Recoverable errors** (invalid user input, I/O failures, parse failures): model
- these as normal values, typically using `std::result::Result(T, E)` or an
+ these as normal values, typically using `Result(T, E)` or an
  optional (`T?`).
 - **Typed errors** (`T | ErrorType...` + `panic`): reserved for unrecoverable
  contract violations and logic bugs that should not be silently ignored (see
@@ -43,7 +43,7 @@ Silk distinguishes between:
 tagged result (`std::url::URLResult`), so callers can report an error and keep
 going without aborting.
 
-A runnable example that wraps `URLResult` into `std::result::Result` and parses
+A runnable example that wraps `URLResult` into `Result` and parses
 all command-line arguments is in:
 
 - `examples/feature_errors_recoverable_url_parse.slk`

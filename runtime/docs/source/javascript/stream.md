@@ -21,11 +21,6 @@ const sink = new Writable({
 await pipelinePromise(source, sink)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -39,8 +34,9 @@ oro:stream/web
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:stream</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:stream`
 
 ```ts
 declare module "oro:stream" {
@@ -283,10 +279,7 @@ declare module "oro:stream" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:stream/web</code></summary>
+#### `oro:stream/web`
 
 ```ts
 declare module "oro:stream/web" {
@@ -325,6 +318,9 @@ declare module "oro:stream/web" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

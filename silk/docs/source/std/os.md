@@ -33,11 +33,11 @@ enum Platform { Linux, WASI, Unknown }
 export fn arch () -> Architecture;
 export fn platform () -> Platform;
 
-export type UptimeResult = std::result::Result(Duration, std::temporal::TemporalFailed);
+export type UptimeResult = Result(Duration, std::temporal::TemporalFailed);
 export fn uptime () -> UptimeResult;
 
 struct CPU { model: string }
-export type CPUsResult = std::result::Result(std::vector::Vector(CPU), std::memory::AllocFailed);
+export type CPUsResult = Result(std::vector::Vector(CPU), std::memory::AllocFailed);
 export fn cpus () -> CPUsResult;
 
 export fn cpu_count () -> int;

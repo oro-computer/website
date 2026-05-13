@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>First Runtime App · Learn Oro Runtime</title>
+    <meta
+      name="description"
+      content="Chapter 1 of Learn Oro Runtime: create a project, edit the first page, use oro:application, and run the app."
+    />
+    <meta name="theme-color" content="#11100f" />
+    <link rel="icon" type="image/png" href="../../../docs/branding/assets/logo-icon-small.png" sizes="32x32" />
+    <link rel="stylesheet" href="../../../assets/site.css" />
+    <link rel="stylesheet" href="../../../assets/highlight/highlight.css" />
+    <script src="../../../assets/highlight/highlight.min.js" defer></script>
+    <script src="../../../assets/highlight/languages/bash.min.js" defer></script>
+    <script src="../../../assets/highlight/languages/javascript.min.js" defer></script>
+    <script src="../../../assets/highlight/languages/toml.js" defer></script>
+    <script src="../../../assets/highlight/languages/xml.min.js" defer></script>
+  </head>
+  <body class="site-dark product-page learn-page learn-lesson-page runtime-learn-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-top" id="top">
+      <div class="container">
+        <div class="site-header">
+          <a class="brand" href="../../../">
+            <img
+              class="brand-mark"
+              src="../../../docs/branding/assets/logo-icon.png"
+              alt="Oro Computer logo"
+              width="32"
+              height="32"
+            />
+            <span class="brand-name">oro</span>
+          </a>
+          <nav class="nav" aria-label="Primary navigation">
+            <a href="../../../">Technology</a>
+            <a href="../../../blog/">Blog</a>
+            <a href="../../../docs/">Docs</a>
+          </nav>
+          <div class="site-subnav" aria-label="Runtime section navigation">
+            <div class="site-subnav-label">Inside</div>
+            <div class="site-subnav-parent">Runtime</div>
+            <nav class="site-subnav-links" aria-label="Runtime pages">
+              <a href="../../">Overview</a>
+              <a href="../" aria-current="page">Learn</a>
+              <a href="../../docs/">Docs</a>
+              <a href="../../docs/?p=javascript/overview">JavaScript APIs</a>
+              <a href="../../docs/?p=cli/oroc">CLI</a>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="section">
+        <div class="container">
+          <article class="learn-lesson-shell">
+            <div class="learn-lesson-bar">
+              <a class="learn-lesson-menu" href="../" aria-label="Back to Learn Runtime"></a>
+              <div class="learn-lesson-title">
+                <img src="../../../docs/branding/assets/logo-icon-small.png" alt="" width="30" height="30" />
+                <div>
+                  <strong>Chapter 1</strong>
+                  <span>First run</span>
+                </div>
+              </div>
+              <nav class="learn-lesson-nav" aria-label="Lesson navigation">
+                <a href="../">All chapters</a>
+                <span>1 / 5</span>
+                <a href="../project-layout/">Next</a>
+              </nav>
+            </div>
+
+            <header class="learn-lesson-heading">
+              <div class="learn-lesson-number">1</div>
+              <div>
+                <small>Chapter 1</small>
+                <h1>First run</h1>
+              </div>
+            </header>
+
+            <div class="prose learn-prose">
+              <p>
+                This chapter starts from a generated project, then replaces the starter page with a small native runtime
+                smoke test. The app remains ordinary HTML and JavaScript, with native capability coming from an explicit
+                <code>oro:application</code> import.
+              </p>
+
+              <h2>Create the project</h2>
+              <p><code>oroc init</code> creates the project config, web root, and starter files.</p>
+
+              <div class="learn-code" data-code-block data-code-kind="terminal">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">Terminal</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy command"></button>
+                </div>
+                <pre><code class="language-bash">oroc init field-notes
+cd field-notes</code></pre>
+              </div>
+
+              <h2>Set the bundle identity</h2>
+              <p>Bundle metadata is reused later by packaging, install, and update tooling.</p>
+
+              <div class="learn-code" data-code-block>
+                <div class="learn-code-header">
+                  <span class="learn-code-title">oro.toml</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-toml">[meta]
+bundle_identifier = "com.example.field-notes"
+title = "Field Notes"
+version = "0.1.0"
+description = "A small local-first notes app built on Oro Runtime."
+
+[build]
+name = "field-notes"</code></pre>
+              </div>
+
+              <h2>Replace the starter page</h2>
+              <p>The runtime serves web files. Keep the first page plain and make the script import explicit.</p>
+
+              <div class="learn-code" data-code-block>
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/index.html</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-html">&lt;!doctype html&gt;
+&lt;html lang="en"&gt;
+  &lt;meta charset="utf-8" /&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1" /&gt;
+  &lt;title&gt;Field Notes&lt;/title&gt;
+
+  &lt;main&gt;
+    &lt;h1&gt;Field Notes&lt;/h1&gt;
+    &lt;p id="status"&gt;Booting...&lt;/p&gt;
+    &lt;button id="capture" type="button"&gt;Capture note&lt;/button&gt;
+  &lt;/main&gt;
+
+  &lt;script type="module" src="./main.js"&gt;&lt;/script&gt;
+&lt;/html&gt;</code></pre>
+              </div>
+
+              <div class="learn-code" data-code-block>
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/main.js</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-javascript">import application from 'oro:application'
+
+const status = document.getElementById('status')
+const capture = document.getElementById('capture')
+const currentWindow = await application.getCurrentWindow()
+
+await currentWindow.setTitle('Field Notes')
+status.textContent = `Runtime ${application.runtimeVersion}`
+
+capture.addEventListener('click', () => {
+  status.textContent = `Captured at ${new Date().toLocaleTimeString()}`
+})</code></pre>
+              </div>
+
+              <h2>Run and inspect the build path</h2>
+              <p>Run locally first. Then confirm where build artifacts are written before the project grows.</p>
+
+              <div class="learn-code" data-code-block data-code-kind="terminal">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">Terminal</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy command"></button>
+                </div>
+                <pre><code class="language-bash">oroc run .
+oroc print-build-dir .
+oroc build .</code></pre>
+              </div>
+
+              <div class="learn-callout">
+                <p>
+                  At this point, the app is still a web app. The native part is explicit: the CLI owns the host shell, and
+                  <code>oro:application</code> owns the runtime capability used by the page.
+                </p>
+              </div>
+
+              <h2>What changed</h2>
+              <ul>
+                <li><code>oro.toml</code> named the app and gave it stable bundle metadata.</li>
+                <li><code>src/index.html</code> stayed portable HTML.</li>
+                <li><code>src/main.js</code> used <code>oro:application</code> for window and version information.</li>
+                <li><code>oroc run .</code> loaded the project through the same model used by builds.</li>
+              </ul>
+
+              <div class="learn-complete">
+                <h2>Chapter complete</h2>
+                <p>Next, connect these files to the full project layout and configuration model.</p>
+                <a class="button button-primary" href="../project-layout/">Continue to project layout</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-inner">
+          <strong>Learn Runtime</strong>
+          <span>&copy; <span data-year>2026</span> Oro Computer.</span>
+        </div>
+      </div>
+    </footer>
+    <script src="../../../assets/site.js" defer></script>
+  </body>
+</html>

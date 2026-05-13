@@ -167,7 +167,7 @@ WriteU8
 ```
 
 Use those names directly. For example, write `Result(T, E)` rather than
-importing `std/result` only to reach `std::result::Result`.
+importing `std/result` only to reach the defining module.
 
 ## Direct package and symbol imports
 

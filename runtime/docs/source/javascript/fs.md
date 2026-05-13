@@ -34,7 +34,11 @@ The runtime can restrict filesystem access via configuration. Common keys:
 - `filesystem.sandbox_enabled`
 - `filesystem.no_follow_symlinks`
 
-See: [Config reference](?p=config/reference).
+## Related guides
+
+- [Files and sandboxing](?p=guides/files-and-sandboxing)
+- [Project layout](?p=guides/project-layout)
+- [Config reference](?p=config/reference)
 
 ## API reference
 
@@ -60,8 +64,9 @@ oro:fs/web
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:fs</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:fs`
 
 ```ts
 declare module "oro:fs" {
@@ -71,10 +76,7 @@ declare module "oro:fs" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/bookmarks</code></summary>
+#### `oro:fs/bookmarks`
 
 ```ts
 declare module "oro:fs/bookmarks" {
@@ -93,10 +95,7 @@ declare module "oro:fs/bookmarks" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/constants</code></summary>
+#### `oro:fs/constants`
 
 ```ts
 declare module "oro:fs/constants" {
@@ -407,10 +406,7 @@ declare module "oro:fs/constants" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/dir</code></summary>
+#### `oro:fs/dir`
 
 ```ts
 declare module "oro:fs/dir" {
@@ -554,10 +550,7 @@ declare module "oro:fs/dir" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/fds</code></summary>
+#### `oro:fs/fds`
 
 ```ts
 declare module "oro:fs/fds" {
@@ -583,10 +576,7 @@ declare module "oro:fs/fds" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/flags</code></summary>
+#### `oro:fs/flags`
 
 ```ts
 declare module "oro:fs/flags" {
@@ -597,10 +587,7 @@ declare module "oro:fs/flags" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/handle</code></summary>
+#### `oro:fs/handle`
 
 ```ts
 declare module "oro:fs/handle" {
@@ -913,10 +900,7 @@ declare module "oro:fs/handle" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/index</code></summary>
+#### `oro:fs/index`
 
 ```ts
 declare module "oro:fs/index" {
@@ -1508,10 +1492,7 @@ declare module "oro:fs/index" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/promises</code></summary>
+#### `oro:fs/promises`
 
 ```ts
 declare module "oro:fs/promises" {
@@ -1768,10 +1749,7 @@ declare module "oro:fs/promises" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/stats</code></summary>
+#### `oro:fs/stats`
 
 ```ts
 declare module "oro:fs/stats" {
@@ -1851,10 +1829,7 @@ declare module "oro:fs/stats" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/stream</code></summary>
+#### `oro:fs/stream`
 
 ```ts
 declare module "oro:fs/stream" {
@@ -1971,10 +1946,7 @@ declare module "oro:fs/stream" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/watcher</code></summary>
+#### `oro:fs/watcher`
 
 ```ts
 declare module "oro:fs/watcher" {
@@ -2074,10 +2046,7 @@ declare module "oro:fs/watcher" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/web</code></summary>
+#### `oro:fs/web`
 
 ```ts
 declare module "oro:fs/web" {
@@ -2189,6 +2158,8 @@ declare module "oro:fs/web" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

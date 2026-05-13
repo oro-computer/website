@@ -2,6 +2,10 @@
 
 `oro:diagnostics` exposes channels, metrics, and runtime/window diagnostic queries.
 
+## Related guides
+
+- [Testing and diagnostics](?p=guides/testing-and-diagnostics)
+
 ## Examples
 
 Publish and subscribe to a diagnostics channel:
@@ -17,11 +21,6 @@ buildChannel.subscribe('step', (message) => {
 
 await buildChannel.publish('step', { step: 'bundle-ready' })
 ```
-
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -40,8 +39,9 @@ oro:diagnostics/window
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:diagnostics</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:diagnostics`
 
 ```ts
 declare module "oro:diagnostics" {
@@ -51,10 +51,7 @@ declare module "oro:diagnostics" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:diagnostics/channels</code></summary>
+#### `oro:diagnostics/channels`
 
 ```ts
 declare module "oro:diagnostics/channels" {
@@ -271,10 +268,7 @@ declare module "oro:diagnostics/channels" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:diagnostics/index</code></summary>
+#### `oro:diagnostics/index`
 
 ```ts
 declare module "oro:diagnostics/index" {
@@ -293,10 +287,7 @@ declare module "oro:diagnostics/index" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:diagnostics/metric</code></summary>
+#### `oro:diagnostics/metric`
 
 ```ts
 declare module "oro:diagnostics/metric" {
@@ -313,10 +304,7 @@ declare module "oro:diagnostics/metric" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:diagnostics/runtime</code></summary>
+#### `oro:diagnostics/runtime`
 
 ```ts
 declare module "oro:diagnostics/runtime" {
@@ -982,10 +970,7 @@ declare module "oro:diagnostics/runtime" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:diagnostics/window</code></summary>
+#### `oro:diagnostics/window`
 
 ```ts
 declare module "oro:diagnostics/window" {
@@ -1059,6 +1044,9 @@ declare module "oro:diagnostics/window" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

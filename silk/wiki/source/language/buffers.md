@@ -13,7 +13,7 @@ In the current toolchain, buffer-like functionality is provided via `std::`:
 
 ## Example: buffer aliases
 ```silk
-import std::buffer;
+import { BufferU8 } from "std/buffer";
 
 fn main () -> int {
   match (BufferU8.init(4)) {

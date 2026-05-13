@@ -12,26 +12,26 @@ Canonical doc: [path](?p=std/path).
 ## Importing
 
 ```silk
-import std::path;
-import std::strings;
+import path from "std/path";
+import strings from "std/strings";
 ```
 
 ## Examples
 
 ### Example: normalize + `PathBuf`
 ```silk
-import std::path;
-import std::strings;
+import path from "std/path";
+import strings from "std/strings";
 
 fn main () -> int {
-  let mut n: std::strings::String = std::path::normalize("/a//b/");
+  let mut n: strings::String = path::normalize("/a//b/");
   if n.as_string() != "/a/b" {
     n.drop();
     return 1;
   }
   n.drop();
 
-  let mut pb: std::path::PathBuf = std::path::PathBuf.empty();
+  let mut pb: path::PathBuf = path::PathBuf.empty();
   pb.push("a");
   pb.push("b");
   if pb.as_string() != "a/b" {

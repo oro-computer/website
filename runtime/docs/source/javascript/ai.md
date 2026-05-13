@@ -48,8 +48,9 @@ oro:ai/whisper
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:ai</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:ai`
 
 ```ts
 declare module "oro:ai" {
@@ -64,10 +65,7 @@ declare module "oro:ai" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:ai/ann</code></summary>
+#### `oro:ai/ann`
 
 ```ts
 declare module "oro:ai/ann" {
@@ -277,10 +275,7 @@ declare module "oro:ai/ann" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:ai/chat</code></summary>
+#### `oro:ai/chat`
 
 ```ts
 declare module "oro:ai/chat" {
@@ -460,10 +455,7 @@ declare module "oro:ai/chat" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:ai/llm</code></summary>
+#### `oro:ai/llm`
 
 ```ts
 declare module "oro:ai/llm" {
@@ -710,10 +702,7 @@ declare module "oro:ai/llm" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:ai/whisper</code></summary>
+#### `oro:ai/whisper`
 
 ```ts
 declare module "oro:ai/whisper" {
@@ -795,6 +784,8 @@ declare module "oro:ai/whisper" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

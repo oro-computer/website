@@ -29,7 +29,7 @@ an index-based DOM.
 module std::toml;
 
 export type ValueId = i64;
-export type ParseResult = std::result::Result(ValueId, ParseError);
+export type ParseResult = Result(ValueId, ParseError);
 
 error ParseError {
   kind: int,
@@ -94,12 +94,12 @@ impl Document {
   public fn member_value (self: &Document, member: ValueId) -> ValueId?;
   public fn member_next (self: &Document, member: ValueId) -> ValueId?;
   public fn table_get (self: &Document, table: ValueId, key: string) -> ValueId?;
-  public fn stringify (self: &Document, id: ValueId) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+  public fn stringify (self: &Document, id: ValueId) -> Result(std::strings::String, std::memory::OutOfMemory);
 }
 
 export fn int_as_i64 (doc: &Document, id: ValueId) -> i64?;
 export fn float_as_f64 (doc: &Document, id: ValueId) -> f64?;
-export fn stringify (doc: &Document, id: ValueId) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+export fn stringify (doc: &Document, id: ValueId) -> Result(std::strings::String, std::memory::OutOfMemory);
 export fn error_message (kind: int) -> string;
 ```
 

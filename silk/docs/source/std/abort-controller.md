@@ -51,7 +51,7 @@ export struct AbortSignalBorrow {
   handle: u64,
 }
 
-export type AbortControllerResult = std::result::Result(AbortController, std::memory::OutOfMemory);
+export type AbortControllerResult = Result(AbortController, std::memory::OutOfMemory);
 
 impl AbortController {
   public fn init () -> AbortControllerResult;

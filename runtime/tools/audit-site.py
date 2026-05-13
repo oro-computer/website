@@ -22,6 +22,7 @@ from site_audit_common import SiteAuditConfig, run_site_audit
 CURATED_FILES_BY_FAMILY = {
     "oro:ai": "ai.md",
     "oro:application": "application.md",
+    "oro:extension": "extension.md",
     "oro:fs": "fs.md",
     "oro:hooks": "hooks.md",
     "oro:mcp": "mcp.md",
@@ -32,9 +33,11 @@ CURATED_FILES_BY_FAMILY = {
 
 
 EXCLUDED_PUBLIC_FAMILIES = {
+    "oro:bootstrap",
     "oro:external",
     "oro:internal",
     "oro:node",
+    "oro:node-esm-loader",
 }
 
 
@@ -92,6 +95,11 @@ def parse_runtime_cli_sections() -> set[str]:
 def iter_runtime_doc_issues() -> list[str]:
     issues: list[str] = []
 
+    if (JAVASCRIPT_DOCS / "module-index.md").exists():
+        issues.append(
+            f"{(JAVASCRIPT_DOCS / 'module-index.md').relative_to(REPO_ROOT)}: remove this page; link JavaScript API entry points to javascript/overview."
+        )
+
     for path in sorted(JAVASCRIPT_DOCS.glob("*.md")):
         text = path.read_text(encoding="utf-8")
         rel = path.relative_to(REPO_ROOT)
@@ -100,7 +108,7 @@ def iter_runtime_doc_issues() -> list[str]:
             issues.append(f"{rel}: remove generic Object.keys(api) examples; document a real usage flow instead.")
 
         if (
-            path.stem not in {"overview", "module-index", "all-modules"}
+            path.stem not in {"overview", "all-modules"}
             and path.name not in set(CURATED_FILES_BY_FAMILY.values())
             and not EXAMPLE_HEADING_RE.search(text)
         ):
@@ -127,25 +135,16 @@ def iter_runtime_doc_issues() -> list[str]:
                     f"{excluded_path.relative_to(REPO_ROOT)}: excluded private module family {family} should not have a public docs page."
                 )
 
-        module_index = (JAVASCRIPT_DOCS / "module-index.md").read_text(encoding="utf-8")
         all_modules = (JAVASCRIPT_DOCS / "all-modules.md").read_text(encoding="utf-8")
 
         for family in sorted(EXCLUDED_PUBLIC_FAMILIES):
             family_ref = family_reference_re(family)
-            if family_ref.search(module_index):
-                issues.append(
-                    f"{(JAVASCRIPT_DOCS / 'module-index.md').relative_to(REPO_ROOT)}: excluded private module family {family} should not appear in the public module index."
-                )
             if family_ref.search(all_modules):
                 issues.append(
                     f"{(JAVASCRIPT_DOCS / 'all-modules.md').relative_to(REPO_ROOT)}: excluded private module family {family} should not appear in the public module listing."
                 )
 
         for spec in sorted(public_specifiers):
-            if spec.count("/") == 0 and spec not in module_index:
-                issues.append(
-                    f"{(JAVASCRIPT_DOCS / 'module-index.md').relative_to(REPO_ROOT)}: missing top-level module specifier {spec}."
-                )
             if spec not in all_modules:
                 issues.append(
                     f"{(JAVASCRIPT_DOCS / 'all-modules.md').relative_to(REPO_ROOT)}: missing published module specifier {spec}."

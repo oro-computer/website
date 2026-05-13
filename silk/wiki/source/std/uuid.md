@@ -12,25 +12,25 @@ Canonical doc: [uuid](?p=std/uuid).
 ## Importing
 
 ```silk
-import std::uuid;
-import std::strings;
+import uuid from "std/uuid";
+import strings from "std/strings";
 ```
 
 ## Examples
 
 ### Example: parse + name-based UUID (v5)
 ```silk
-import std::uuid;
-import std::strings;
-import std::memory;
+import uuid from "std/uuid";
+import strings from "std/strings";
+import memory from "std/memory";
 
-type StringAllocResult = Result(std::strings::String, std::memory::OutOfMemory);
+type StringAllocResult = Result(strings::String, memory::OutOfMemory);
 
 fn uuid_string_eq (u: UUID, expected: string) -> bool {
   let r: StringAllocResult = u.to_string_lower();
   match (r) {
     Ok(value) => {
-      let mut s: std::strings::String = value;
+      let mut s: strings::String = value;
       let ok: bool = s.as_string() == expected;
       s.drop();
       return ok;
@@ -43,12 +43,12 @@ fn uuid_string_eq (u: UUID, expected: string) -> bool {
 
 fn main () -> int {
   let s0: string = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
-  match (std::uuid::parse(s0)) {
+  match (uuid::parse(s0)) {
     Ok(u0) => {
       if !uuid_string_eq(u0, s0) { return 2; }
 
-      let dns: UUID = std::uuid::namespace_dns();
-      match (std::uuid::v5(dns, "www.widgets.com")) {
+      let dns: UUID = uuid::namespace_dns();
+      match (uuid::v5(dns, "www.widgets.com")) {
         Ok(v5_dns) => {
           if !uuid_string_eq(v5_dns, "21f7f8de-8051-5b89-8680-0195ef798b6a") { return 4; }
 

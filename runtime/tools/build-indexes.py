@@ -50,6 +50,7 @@ PINNED_ORDER = [
     "guides/custom-protocols-and-routing",
     "guides/lifecycle-hooks-and-deep-links",
     "guides/frontend-build-pipeline",
+    "guides/native-extensions",
     "guides/mobile-targets-and-device-installs",
     "guides/release-packaging-and-signed-updates",
     "guides/testing-and-diagnostics",
@@ -85,7 +86,6 @@ PINNED_ORDER = [
     "config/copy-map",
     # JavaScript APIs
     "javascript/overview",
-    "javascript/module-index",
     "javascript/all-modules",
     "javascript/application",
     "javascript/window",

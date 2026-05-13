@@ -14,11 +14,6 @@ await sleep(250)
 console.log('quarter second elapsed')
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -36,8 +31,9 @@ oro:timers/timer
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:timers</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:timers`
 
 ```ts
 declare module "oro:timers" {
@@ -47,10 +43,7 @@ declare module "oro:timers" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:timers/index</code></summary>
+#### `oro:timers/index`
 
 ```ts
 declare module "oro:timers/index" {
@@ -92,10 +85,7 @@ declare module "oro:timers/index" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:timers/platform</code></summary>
+#### `oro:timers/platform`
 
 ```ts
 declare module "oro:timers/platform" {
@@ -112,10 +102,7 @@ declare module "oro:timers/platform" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:timers/promises</code></summary>
+#### `oro:timers/promises`
 
 ```ts
 declare module "oro:timers/promises" {
@@ -131,10 +118,7 @@ declare module "oro:timers/promises" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:timers/scheduler</code></summary>
+#### `oro:timers/scheduler`
 
 ```ts
 declare module "oro:timers/scheduler" {
@@ -150,10 +134,7 @@ declare module "oro:timers/scheduler" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:timers/timer</code></summary>
+#### `oro:timers/timer`
 
 ```ts
 declare module "oro:timers/timer" {
@@ -190,6 +171,9 @@ declare module "oro:timers/timer" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

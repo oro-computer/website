@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Windows and Messaging · Learn Oro Runtime</title>
+    <meta
+      name="description"
+      content="Chapter 4 of Learn Oro Runtime: create a second native window and pass messages between windows."
+    />
+    <meta name="theme-color" content="#11100f" />
+    <link rel="icon" type="image/png" href="../../../docs/branding/assets/logo-icon-small.png" sizes="32x32" />
+    <link rel="stylesheet" href="../../../assets/site.css" />
+    <link rel="stylesheet" href="../../../assets/highlight/highlight.css" />
+    <script src="../../../assets/highlight/highlight.min.js" defer></script>
+    <script src="../../../assets/highlight/languages/javascript.min.js" defer></script>
+    <script src="../../../assets/highlight/languages/toml.js" defer></script>
+    <script src="../../../assets/highlight/languages/xml.min.js" defer></script>
+  </head>
+  <body class="site-dark product-page learn-page learn-lesson-page runtime-learn-page">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-top" id="top">
+      <div class="container">
+        <div class="site-header">
+          <a class="brand" href="../../../">
+            <img
+              class="brand-mark"
+              src="../../../docs/branding/assets/logo-icon.png"
+              alt="Oro Computer logo"
+              width="32"
+              height="32"
+            />
+            <span class="brand-name">oro</span>
+          </a>
+          <nav class="nav" aria-label="Primary navigation">
+            <a href="../../../">Technology</a>
+            <a href="../../../blog/">Blog</a>
+            <a href="../../../docs/">Docs</a>
+          </nav>
+          <div class="site-subnav" aria-label="Runtime section navigation">
+            <div class="site-subnav-label">Inside</div>
+            <div class="site-subnav-parent">Runtime</div>
+            <nav class="site-subnav-links" aria-label="Runtime pages">
+              <a href="../../">Overview</a>
+              <a href="../" aria-current="page">Learn</a>
+              <a href="../../docs/">Docs</a>
+              <a href="../../docs/?p=javascript/overview">JavaScript APIs</a>
+              <a href="../../docs/?p=cli/oroc">CLI</a>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="section">
+        <div class="container">
+          <article class="learn-lesson-shell">
+            <div class="learn-lesson-bar">
+              <a class="learn-lesson-menu" href="../" aria-label="Back to Learn Runtime"></a>
+              <div class="learn-lesson-title">
+                <img src="../../../docs/branding/assets/logo-icon-small.png" alt="" width="30" height="30" />
+                <div>
+                  <strong>Chapter 4</strong>
+                  <span>Windows and messaging</span>
+                </div>
+              </div>
+              <nav class="learn-lesson-nav" aria-label="Lesson navigation">
+                <a href="../configuration/">Previous</a>
+                <span>4 / 5</span>
+                <a href="../desktop-integrations/">Next</a>
+              </nav>
+            </div>
+
+            <header class="learn-lesson-heading">
+              <div class="learn-lesson-number">4</div>
+              <div>
+                <small>Chapter 4</small>
+                <h1>Windows and messaging</h1>
+              </div>
+            </header>
+
+            <div class="prose learn-prose">
+              <p>
+                Oro Runtime windows are native host windows that load bundled web paths. Use numeric window indexes to find,
+                focus, and message the windows your app owns.
+              </p>
+
+              <h2>Bundle a detail page</h2>
+              <p>A window path has to resolve inside the application bundle.</p>
+
+              <div class="learn-code" data-code-block>
+                <div class="learn-code-header">
+                  <span class="learn-code-title">copy-map.toml</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-toml">"./src/index.html" = "index.html"
+"./src/main.js" = "main.js"
+"./src/detail.html" = "detail.html"
+"./src/detail.js" = "detail.js"</code></pre>
+              </div>
+
+              <div class="learn-code" data-code-block>
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/detail.html</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-html">&lt;!doctype html&gt;
+&lt;html lang="en"&gt;
+  &lt;meta charset="utf-8" /&gt;
+  &lt;title&gt;Field note detail&lt;/title&gt;
+  &lt;main&gt;
+    &lt;h1&gt;Detail window&lt;/h1&gt;
+    &lt;pre id="payload"&gt;Waiting for a message...&lt;/pre&gt;
+  &lt;/main&gt;
+  &lt;script type="module" src="./detail.js"&gt;&lt;/script&gt;
+&lt;/html&gt;</code></pre>
+              </div>
+
+              <h2>Create or focus the window</h2>
+              <p>Look for the window first. Create it only when it is not already open.</p>
+
+              <div class="learn-code" data-code-block>
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/main.js</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-javascript">import application from 'oro:application'
+
+async function openDetailWindow(note) {
+  let detailWindow = await application.getWindow(1)
+
+  if (!detailWindow) {
+    detailWindow = await application.createWindow({
+      index: 1,
+      path: 'detail.html',
+      title: 'Field note detail',
+      width: 520,
+      height: 420,
+    })
+  }
+
+  await detailWindow.focus()
+  await detailWindow.postMessage({ type: 'note:selected', note })
+}</code></pre>
+              </div>
+
+              <h2>Receive the message</h2>
+              <p>Each window can listen for messages from other windows.</p>
+
+              <div class="learn-code" data-code-block>
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/detail.js</span>
+                  <button class="learn-copy" type="button" data-copy-code aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-javascript">const payload = document.getElementById('payload')
+
+globalThis.addEventListener('message', (event) => {
+  const message = event.detail ?? event.data
+  payload.textContent = JSON.stringify(message, null, 2)
+})</code></pre>
+              </div>
+
+              <div class="learn-callout">
+                <p>
+                  Window messaging keeps the capability boundary visible: the main window opens and addresses the detail
+                  window, while each page remains regular browser JavaScript.
+                </p>
+              </div>
+
+              <h2>What changed</h2>
+              <ul>
+                <li>The detail page was added to the bundle manifest.</li>
+                <li><code>application.getWindow(1)</code> avoided duplicate windows.</li>
+                <li><code>createWindow</code> opened a native host window.</li>
+                <li><code>postMessage</code> moved structured data between pages.</li>
+              </ul>
+
+              <div class="learn-complete">
+                <h2>Chapter complete</h2>
+                <p>Next, add user-visible desktop capabilities: notifications, clipboard, and menus.</p>
+                <a class="button button-primary" href="../desktop-integrations/">Continue to desktop integrations</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-inner">
+          <strong>Learn Runtime</strong>
+          <span>&copy; <span data-year>2026</span> Oro Computer.</span>
+        </div>
+      </div>
+    </footer>
+    <script src="../../../assets/site.js" defer></script>
+  </body>
+</html>

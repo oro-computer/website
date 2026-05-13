@@ -133,7 +133,7 @@ struct Vector(T) {
 }
 
 impl Vector(T) {
-  public fn init (cap: i64) -> std::result::Result(Vector(T), std::memory::AllocFailed);
+  public fn init (cap: i64) -> Result(Vector(T), std::memory::AllocFailed);
   public fn try_init (cap: i64) -> Vector(T)?;
   public fn empty () -> Vector(T);
   public fn push (mut self: &Vector(T), value: T) -> std::memory::OutOfMemory?;

@@ -16,11 +16,6 @@ console.log(bytes.length)
 console.log(payload.size)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -33,8 +28,9 @@ oro:buffer
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:buffer</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:buffer`
 
 ```ts
 declare module "oro:buffer" {
@@ -201,6 +197,9 @@ declare module "oro:buffer" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

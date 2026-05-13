@@ -15,8 +15,6 @@ The runtime’s JavaScript surface is broad, but it stays predictable:
 - **Data and formats** — `oro:url`, `oro:querystring`, `oro:buffer`, `oro:stream`, `oro:sqlite`, `oro:toml`, `oro:semver`
 - **Background work and automation** — `oro:worker`, `oro:worker_threads`, `oro:service-worker`, `oro:shared-worker`, `oro:background`, `oro:mcp`, `oro:ai`
 
-See: [Module index](?p=javascript/module-index).
-
 ## Importing `oro:*` modules
 
 Modules are standard ES modules:

@@ -22,9 +22,9 @@ module std::process;
   error GetCwdFailed { code: int, requested: i64 }
 
 export type GetCwdError = GetCwdFailed;
-export type GetCwdResult = std::result::Result(std::strings::String, GetCwdError);
+export type GetCwdResult = Result(std::strings::String, GetCwdError);
 export type ExecutablePathError = GetCwdFailed;
-export type ExecutablePathResult = std::result::Result(std::strings::String, ExecutablePathError);
+export type ExecutablePathResult = Result(std::strings::String, ExecutablePathError);
 
 export fn chdir (path: string) -> ChdirFailed?;
 export fn getcwd () -> GetCwdResult;
@@ -61,13 +61,13 @@ export enum Stdio { Inherit, Null, Pipe }
 export error Failed { code: int, stage: int, detail: int }
 
 export struct ExitStatus { /* opaque */ }
-export type WaitResult = std::result::Result(ExitStatus, Failed);
+export type WaitResult = Result(ExitStatus, Failed);
 
 export struct Child { /* opaque */ }
-export type ChildResult = std::result::Result(Child, Failed);
+export type ChildResult = Result(Child, Failed);
 
 export struct PtyChild { /* opaque */ }
-export type PtyChildResult = std::result::Result(PtyChild, Failed);
+export type PtyChildResult = Result(PtyChild, Failed);
 
 export struct Command { /* opaque */ }
 impl Command {

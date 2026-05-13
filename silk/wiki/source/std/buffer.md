@@ -9,12 +9,12 @@ Canonical doc: [buffer](?p=std/buffer).
 ## Importing
 
 ```silk
-import std::buffer;
+import { BufferU8 } from "std/buffer";
 ```
 
 ## Example: `BufferU8`
 ```silk
-import std::buffer;
+import { BufferU8 } from "std/buffer";
 
 fn main () -> int {
   match (BufferU8.init(4)) {

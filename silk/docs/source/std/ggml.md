@@ -138,7 +138,7 @@ Implications:
 
 ## Error model
 
-All fallible wrapper methods return `std::result::Result(..., GgmlFailed)`.
+All fallible wrapper methods return `Result(..., GgmlFailed)`.
 
 Public error-code constants:
 
@@ -206,14 +206,14 @@ impl GgmlFailed {
   public fn kind (self: &GgmlFailed) -> GgmlErrorKind;
 }
 
-type ContextResult = std::result::Result(Context, GgmlFailed);
-type TensorResult = std::result::Result(Tensor, GgmlFailed);
-type GraphResult = std::result::Result(Graph, GgmlFailed);
-type BoolResult = std::result::Result(bool, GgmlFailed);
-type F32Result = std::result::Result(f32, GgmlFailed);
-type IntResult = std::result::Result(i32, GgmlFailed);
-type I64Result = std::result::Result(i64, GgmlFailed);
-type U64Result = std::result::Result(u64, GgmlFailed);
+type ContextResult = Result(Context, GgmlFailed);
+type TensorResult = Result(Tensor, GgmlFailed);
+type GraphResult = Result(Graph, GgmlFailed);
+type BoolResult = Result(bool, GgmlFailed);
+type F32Result = Result(f32, GgmlFailed);
+type IntResult = Result(i32, GgmlFailed);
+type I64Result = Result(i64, GgmlFailed);
+type U64Result = Result(u64, GgmlFailed);
 
 struct Context {
   handle: u64,

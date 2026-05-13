@@ -48,7 +48,7 @@ Exported error constants:
 
 Helpers:
 
-- `ParseResult = std::result::Result(ValueId, ParseError)`
+- `ParseResult = Result(ValueId, ParseError)`
 - `error_message(kind: int) -> string`
 
 ### `Document`
@@ -100,15 +100,15 @@ Methods:
 
 - `doc.number_as_i64(id) -> i64?`
 - `doc.number_as_f64(id) -> f64?`
-- `doc.stringify(id) -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
-- `doc.stringify_pretty(id, indent: int) -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
+- `doc.stringify(id) -> Result(std::strings::String, std::memory::OutOfMemory)`
+- `doc.stringify_pretty(id, indent: int) -> Result(std::strings::String, std::memory::OutOfMemory)`
 
 Top-level wrappers:
 
 - `number_as_i64(doc: &Document, id: ValueId) -> i64?`
 - `number_as_f64(doc: &Document, id: ValueId) -> f64?`
-- `stringify(doc: &Document, id: ValueId) -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
-- `stringify_pretty(doc: &Document, id: ValueId, indent: int) -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
+- `stringify(doc: &Document, id: ValueId) -> Result(std::strings::String, std::memory::OutOfMemory)`
+- `stringify_pretty(doc: &Document, id: ValueId, indent: int) -> Result(std::strings::String, std::memory::OutOfMemory)`
 
 ## Examples
 

@@ -14,11 +14,6 @@ const topic = await sha256(new TextEncoder().encode('docs-demo'))
 console.log(topic)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -39,8 +34,9 @@ oro:latica/worker
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:latica</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:latica`
 
 ```ts
 declare module "oro:latica" {
@@ -50,10 +46,7 @@ declare module "oro:latica" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:latica/api</code></summary>
+#### `oro:latica/api`
 
 ```ts
 declare module "oro:latica/api" {
@@ -76,10 +69,7 @@ declare module "oro:latica/api" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:latica/cache</code></summary>
+#### `oro:latica/cache`
 
 ```ts
 declare module "oro:latica/cache" {
@@ -269,10 +259,7 @@ declare module "oro:latica/cache" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:latica/encryption</code></summary>
+#### `oro:latica/encryption`
 
 ```ts
 declare module "oro:latica/encryption" {
@@ -403,10 +390,7 @@ declare module "oro:latica/encryption" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:latica/index</code></summary>
+#### `oro:latica/index`
 
 ```ts
 declare module "oro:latica/index" {
@@ -903,10 +887,7 @@ declare module "oro:latica/index" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:latica/nat</code></summary>
+#### `oro:latica/nat`
 
 ```ts
 declare module "oro:latica/nat" {
@@ -1009,10 +990,7 @@ declare module "oro:latica/nat" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:latica/packets</code></summary>
+#### `oro:latica/packets`
 
 ```ts
 declare module "oro:latica/packets" {
@@ -1252,10 +1230,7 @@ declare module "oro:latica/packets" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:latica/proxy</code></summary>
+#### `oro:latica/proxy`
 
 ```ts
 declare module "oro:latica/proxy" {
@@ -1297,10 +1272,7 @@ declare module "oro:latica/proxy" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:latica/worker</code></summary>
+#### `oro:latica/worker`
 
 ```ts
 declare module "oro:latica/worker" {
@@ -1308,6 +1280,9 @@ declare module "oro:latica/worker" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

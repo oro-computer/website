@@ -53,8 +53,8 @@ export fn after (a: Instant, b: Instant) -> bool;
 
 enum TemporalErrorKind { OutOfMemory, NoMonotonicClock, InvalidInput, Overflow, Unknown }
 error TemporalFailed { code: int, requested: i64 }
-export type InstantResult = std::result::Result(Instant, TemporalFailed);
-export type TemporalStringResult = std::result::Result(std::strings::String, TemporalFailed);
+export type InstantResult = Result(Instant, TemporalFailed);
+export type TemporalStringResult = Result(std::strings::String, TemporalFailed);
 
 export fn now_monotonic () -> InstantResult;
 
@@ -85,9 +85,9 @@ export fn format_datetime_iso (dt: DateTime) -> TemporalStringResult;
 
 enum ParseErrorKind { InvalidInput, InvalidLength, InvalidDigit, InvalidSeparator, InvalidRange, TrailingInput, Unknown }
 error ParseError { code: int, offset: i64 }
-export type DateParseResult = std::result::Result(Date, ParseError);
-export type TimeParseResult = std::result::Result(TimeOfDay, ParseError);
-export type DateTimeParseResult = std::result::Result(DateTime, ParseError);
+export type DateParseResult = Result(Date, ParseError);
+export type TimeParseResult = Result(TimeOfDay, ParseError);
+export type DateTimeParseResult = Result(DateTime, ParseError);
 
 export fn parse_date_iso (s: string) -> DateParseResult;
 export fn parse_time_iso (s: string) -> TimeParseResult;

@@ -2,6 +2,11 @@
 
 `oro:ipc` exposes low-level runtime IPC helpers used to talk to the native host process.
 
+## Related guides
+
+- [Native extensions](?p=guides/native-extensions)
+- [Windows and messaging](?p=guides/windows-and-messaging)
+
 ## Examples
 
 Wait for the runtime IPC bridge and post a structured message:
@@ -15,11 +20,6 @@ await ready()
 postMessage({ type: 'docs-demo', at: Date.now() })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -32,8 +32,9 @@ oro:ipc
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:ipc</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:ipc`
 
 ```ts
 declare module "oro:ipc" {
@@ -674,6 +675,9 @@ declare module "oro:ipc" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

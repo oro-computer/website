@@ -4,7 +4,7 @@ Oro Runtime · LLMS Pack
 This file concatenates the full Oro Runtime documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-04-23T14:50:15+00:00
+Generated: 2026-05-13T19:35:52+00:00
 
 How to link:
 - Docs: /runtime/docs/?p=<id>
@@ -33,6 +33,7 @@ Runtime Docs
   - guides/custom-protocols-and-routing — Custom protocols and routing — /runtime/docs/?p=guides/custom-protocols-and-routing
   - guides/lifecycle-hooks-and-deep-links — Lifecycle hooks and deep links — /runtime/docs/?p=guides/lifecycle-hooks-and-deep-links
   - guides/frontend-build-pipeline — Frontend build pipeline — /runtime/docs/?p=guides/frontend-build-pipeline
+  - guides/native-extensions — Native extensions — /runtime/docs/?p=guides/native-extensions
   - guides/mobile-targets-and-device-installs — Mobile targets and device installs — /runtime/docs/?p=guides/mobile-targets-and-device-installs
   - guides/release-packaging-and-signed-updates — Release packaging and signed updates — /runtime/docs/?p=guides/release-packaging-and-signed-updates
   - guides/testing-and-diagnostics — Testing and diagnostics — /runtime/docs/?p=guides/testing-and-diagnostics
@@ -68,8 +69,7 @@ Runtime Docs
   - config/copy-map — `copy_map` — /runtime/docs/?p=config/copy-map
 - JavaScript APIs
   - javascript/overview — JavaScript APIs overview — /runtime/docs/?p=javascript/overview
-  - javascript/module-index — Module index — /runtime/docs/?p=javascript/module-index
-  - javascript/all-modules — All public module specifiers — /runtime/docs/?p=javascript/all-modules
+  - javascript/all-modules — JavaScript API modules — /runtime/docs/?p=javascript/all-modules
   - javascript/application — `oro:application` — /runtime/docs/?p=javascript/application
   - javascript/window — `oro:window` — /runtime/docs/?p=javascript/window
   - javascript/hooks — `oro:hooks` — /runtime/docs/?p=javascript/hooks
@@ -83,7 +83,6 @@ Runtime Docs
   - javascript/async_hooks — `oro:async_hooks` — /runtime/docs/?p=javascript/async_hooks
   - javascript/async — `oro:async` — /runtime/docs/?p=javascript/async
   - javascript/background — `oro:background` — /runtime/docs/?p=javascript/background
-  - javascript/bootstrap — `oro:bootstrap` — /runtime/docs/?p=javascript/bootstrap
   - javascript/buffer — `oro:buffer` — /runtime/docs/?p=javascript/buffer
   - javascript/cdp — `oro:cdp` — /runtime/docs/?p=javascript/cdp
   - javascript/child_process — `oro:child_process` — /runtime/docs/?p=javascript/child_process
@@ -122,7 +121,6 @@ Runtime Docs
   - javascript/navigation — `oro:navigation` — /runtime/docs/?p=javascript/navigation
   - javascript/net — `oro:net` — /runtime/docs/?p=javascript/net
   - javascript/network — `oro:network` — /runtime/docs/?p=javascript/network
-  - javascript/node-esm-loader — `oro:node-esm-loader` — /runtime/docs/?p=javascript/node-esm-loader
   - javascript/npm — `oro:npm/*` — /runtime/docs/?p=javascript/npm
   - javascript/os — `oro:os` — /runtime/docs/?p=javascript/os
   - javascript/path — `oro:path` — /runtime/docs/?p=javascript/path
@@ -311,7 +309,7 @@ oroc build .
 7. **Operate and automate** — [Release packaging and signed updates](?p=guides/release-packaging-and-signed-updates) → [Testing and diagnostics](?p=guides/testing-and-diagnostics) → [MCP and agent automation](?p=guides/mcp-and-agent-automation)
 8. **Reference** — [oroc](?p=cli/oroc) → [help](?p=cli/help) → [run](?p=cli/run) → [build](?p=cli/build) → [update](?p=cli/update)
 9. **Configuration** — [Overview](?p=config/overview) → [copy_map](?p=config/copy-map) → [reference](?p=config/reference)
-10. **JavaScript APIs** — [Overview](?p=javascript/overview) → [module index](?p=javascript/module-index) → [all module specifiers](?p=javascript/all-modules) → [application](?p=javascript/application) → [window](?p=javascript/window) → [hooks](?p=javascript/hooks)
+10. **JavaScript APIs** — [Overview](?p=javascript/overview) → [specifier reference](?p=javascript/all-modules) → [application](?p=javascript/application) → [window](?p=javascript/window) → [hooks](?p=javascript/hooks)
 
 ==============================================================================
 DOCS: From zero to first run (guides/from-zero-to-first-run)
@@ -1808,17 +1806,60 @@ URL: /runtime/docs/?p=guides/custom-protocols-and-routing
 Some apps need more than a single `https://`-style origin. Custom protocols let you give internal resources a stable
 shape and route them through service-worker logic instead of hard-coding filesystem paths or special-case branches in UI code.
 
-## 1) Declare the protocols you want the runtime to treat as app-safe
+## 1) Declare the protocol and enable service workers
+
+```toml
+[permissions]
+allow_service_worker = true
+
+[webview]
+url_protocols = "notes"
+protocol-handlers = "notes"
+```
+
+`url_protocols` teaches the JavaScript URL shim that `notes:` is part of the app’s URL model. `protocol-handlers`
+registers the scheme with the runtime protocol-handler table so navigation and fetch routing can treat it as app-owned.
+
+Use the hyphenated `protocol-handlers` TOML key for current Runtime builds; it maps to the flattened runtime key
+`webview_protocol-handlers`.
+
+## 2) Ship and register a service worker for that scheme
+
+`copy-map.toml`:
+
+```toml
+"./src/index.html" = "index.html"
+"./src/main.js" = "main.js"
+"./src/sw.js" = "sw.js"
+```
+
+`src/main.js`:
+
+```js
+if ('serviceWorker' in navigator) {
+  await navigator.serviceWorker.register('/sw.js', {
+    scope: '/',
+    scheme: 'notes',
+  })
+  await navigator.serviceWorker.ready
+}
+```
+
+The `scheme` option is the important part. Without it, the worker is registered for the default runtime scheme and will
+not receive `notes:` requests.
+
+If you want the runtime to bind the script from config instead of registering it from JavaScript, use a per-scheme
+handler entry instead of the scalar `protocol-handlers` list:
 
 ```toml
 [webview]
 url_protocols = "notes"
-protocol_handlers = "notes"
+
+[webview.protocol-handlers]
+notes = "/sw.js"
 ```
 
-This tells the runtime that `notes:` is part of the app’s URL model rather than an arbitrary external scheme.
-
-## 2) Route the protocol in a service worker
+## 3) Route the protocol in the service worker
 
 `src/sw.js`:
 
@@ -1837,11 +1878,18 @@ self.addEventListener('fetch', (event) => {
 })
 ```
 
-Now any request for `notes://123` can be handled in a controlled, testable place.
+Now a request for `notes://local/123` can be handled in a controlled, testable place. Use a stable host such as
+`local` when you want the identifier in the pathname; with `notes://123`, `123` is the URL host, not the path.
 
-## 3) Inspect the registered handler from app code
+```js
+const response = await fetch('notes://local/123')
+const note = await response.json()
+console.log(note.noteId)
+```
 
-`oro:protocol-handlers` lets you ask the runtime which service worker is currently bound to a scheme:
+## 4) Inspect the registered handler from app code
+
+`oro:protocol-handlers` lets you ask the runtime which service-worker registration is currently bound to a scheme:
 
 ```js
 import { getServiceWorker } from 'oro:protocol-handlers'
@@ -1852,7 +1900,7 @@ console.log(worker)
 
 That is useful when debugging route ownership and protocol bootstrapping.
 
-## 4) Use protocol handlers for clarity, not novelty
+## 5) Use protocol handlers for clarity, not novelty
 
 Good uses:
 
@@ -1866,7 +1914,7 @@ Bad uses:
 - hiding business logic behind clever URL tricks,
 - inventing new schemes when a normal route would do.
 
-## 5) Pair protocols with explicit window creation
+## 6) Pair protocols with explicit window creation
 
 If a secondary window needs the same protocol support, create it with the matching handler list:
 
@@ -1881,7 +1929,9 @@ await application.createWindow({
 })
 ```
 
-That keeps the routing model consistent across windows instead of only working in the primary one.
+That writes the window-local `webview_protocol-handlers_notes` config entry. The secondary window still needs a
+`navigator.serviceWorker.register('/sw.js', { scope: '/', scheme: 'notes' })` call in its startup path if it must own
+the route itself.
 
 ## Next
 
@@ -2108,6 +2158,204 @@ That keeps your web tooling choice independent from the runtime.
 
 - [Configure your runtime project](?p=guides/configure-your-runtime-project)
 - [Build and package](?p=guides/build-and-package)
+- [Configuration reference](?p=config/reference)
+
+==============================================================================
+DOCS: Native extensions (guides/native-extensions)
+URL: /runtime/docs/?p=guides/native-extensions
+==============================================================================
+
+# Native extensions
+
+Use a native extension when app code needs a capability that should not live in JavaScript: an existing C/C++ library,
+platform-specific code, long-running native work, or a Wasm module that should be loaded through the same runtime
+extension boundary as shared libraries.
+
+Extensions are loaded by name from the app bundle. They register themselves with the runtime, usually map IPC routes,
+and are then called from JavaScript with `oro:ipc`.
+
+## 1) Choose the extension shape
+
+| Shape | Use it for | Output |
+| --- | --- | --- |
+| C or C++ shared extension | Platform integration, existing native libraries, desktop and mobile native code | `<name>.so` on non-Windows, `<name>.dll` on Windows |
+| Wasm extension | Portable compute or a constrained native boundary | `<name>.wasm` |
+
+Both shapes use the same registration contract from `oro/extension.h`.
+
+## 2) Add the extension to the app build
+
+For a small single-file native extension, declare the source directly:
+
+```toml
+[build.extensions]
+image_tools = "native/image_tools/extension.c"
+```
+
+For a multi-file extension, point at a directory. The directory can carry its own `oro.toml` or `oro.ini` extension
+manifest.
+
+```toml
+[build.extensions.image_tools]
+source = "native/image_tools"
+```
+
+During build, the runtime stages the extension under `oro/extensions/<name>/` in the app resources. The loader then
+looks for `oro/extensions/<name>/<name>.wasm` first, then the shared-library filename for the current platform.
+
+## 3) Write a C extension
+
+`native/image_tools/extension.c`:
+
+```c
+#include <oro/extension.h>
+
+static void on_resize(
+  oapi_context_t* context,
+  oapi_ipc_message_t* message,
+  const oapi_ipc_router_t* router
+) {
+  (void) router;
+
+  const char* request = oapi_ipc_message_get_value(message);
+  oapi_ipc_result_t* result = oapi_ipc_result_create(context, message);
+  oapi_json_object_t* data = oapi_json_object_create(context);
+
+  oapi_json_object_set(
+    data,
+    "ok",
+    oapi_json_boolean_create(context, true)
+  );
+  oapi_json_object_set(
+    data,
+    "request",
+    oapi_json_string_create(context, request ? request : "")
+  );
+
+  oapi_ipc_result_set_json_data(result, oapi_json_any(data));
+  oapi_ipc_reply(result);
+}
+
+static bool initialize(oapi_context_t* context, const void* data) {
+  (void) data;
+
+  if (!oapi_extension_is_allowed(context, "ipc_router_map")) {
+    return false;
+  }
+
+  return oapi_ipc_router_map(context, "image_tools.resize", on_resize, NULL);
+}
+
+static bool deinitialize(oapi_context_t* context, const void* data) {
+  (void) data;
+
+  if (oapi_extension_is_allowed(context, "ipc_router_unmap")) {
+    oapi_ipc_router_unmap(context, "image_tools.resize");
+  }
+
+  return true;
+}
+
+ORO_RUNTIME_REGISTER_EXTENSION(
+  "image_tools",
+  initialize,
+  deinitialize,
+  "Image manipulation helpers",
+  "0.1.0"
+);
+```
+
+The important part is the final `ORO_RUNTIME_REGISTER_EXTENSION(...)` call. It exports the canonical
+`__oapi_extension_init` symbol that the runtime loader resolves when it opens the shared library.
+
+## 4) Write the same extension as Wasm
+
+Wasm extensions use the same header and registration macro. Set `target = "wasm32"` in the extension manifest:
+
+```toml
+[meta]
+name = "image_tools"
+type = "extension"
+
+[extension]
+target = "wasm32"
+sources = ["extension.c"]
+
+[extension.compiler]
+flags = ["-I ../../.."]
+```
+
+The build uses the runtime's Wasm extension mode: it defines `ORO_RUNTIME_EXTENSION_WASM`, imports memory from the
+host, exports the extension symbols, and writes `oro/extensions/image_tools/image_tools.wasm`.
+
+Keep Wasm extension code inside the exported `oapi_*` surface. That keeps the module portable across hosts and avoids
+depending on browser globals or a WASI surface that the extension loader may not provide.
+
+## 5) Load and call the extension from app code
+
+`src/main.js`:
+
+```js
+import extension from 'oro:extension'
+import ipc from 'oro:ipc'
+
+const imageTools = await extension.load('image_tools', {
+  allow: ['ipc'],
+})
+
+const result = await ipc.request('image_tools.resize', {
+  path: 'input/avatar.png',
+  width: 256,
+  height: 256,
+})
+
+if (result.err) throw result.err
+
+console.log(result.data)
+console.log(imageTools.name, imageTools.version, imageTools.type)
+
+await imageTools.unload()
+```
+
+`allow` is the extension policy. With no policy, the extension runs with the default extension API surface. With a policy,
+only matching API families are allowed. `ipc` covers route mapping and replies; use narrower policy names when you need a
+stricter boundary.
+
+## 6) Constrain production loading
+
+For production builds, restrict where native extensions may be loaded from:
+
+```toml
+[extensions]
+allowed_roots = "/Applications/FieldNotes.app/Contents/Resources/oro/extensions /opt/field-notes/extensions"
+```
+
+The runtime rejects extension names containing characters outside `A-Z`, `a-z`, `0-9`, `_`, and `-`. Keep that rule in
+your package names and route prefixes.
+
+The runtime also checks the extension ABI. Keep strict ABI checks enabled unless you are deliberately testing an older
+extension against a newer runtime:
+
+```toml
+[build]
+extensions_abi_strict = true
+```
+
+## 7) Debug the boundary
+
+Use these checks when an extension does not load:
+
+- confirm the staged file path is `oro/extensions/<name>/<name>.wasm` or the platform shared-library equivalent,
+- confirm the extension name in `ORO_RUNTIME_REGISTER_EXTENSION` matches the name passed to `extension.load(...)`,
+- confirm the extension exports `__oapi_extension_init`,
+- confirm the ABI in the extension matches the runtime ABI,
+- confirm the JavaScript `allow` policy includes the APIs used by the initializer and request handlers,
+- inspect `await extension.stats()` before and after loading.
+
+## See also
+
+- [`oro:extension`](?p=javascript/extension)
+- [`oro:ipc`](?p=javascript/ipc)
 - [Configuration reference](?p=config/reference)
 
 ==============================================================================
@@ -3762,13 +4010,17 @@ oroc config --describe build.copy_map
 | `build.env` | — | Space-separated environment variable names forwarded into the runtime. |
 | `build.script` | — | Script to run before the copy phase (common for web build steps). |
 | `build.script_after` | — | Script to run after the build lifecycle completes. |
+| `build.extensions.<name>` | — | Native extension source file or directory to build into the app bundle. |
+| `build.extensions.<name>.source` | — | Directory-style extension source declaration for multi-file extensions. |
+| `build.extensions_abi_strict` | `true` | Require native extensions to match the runtime extension ABI. |
 | `build.headless` | `false` | Start the application in headless mode (no visible window). |
 | `build.allow_exec` | `false` | Allow external command execution during builds (Gradle, NDK, scripts). |
 | `webview.root` | — | Root path under the app origin used as the default navigation base. |
 | `webview.default_index` | `/index.html` | Default index path for navigation. |
 | `webview.allow_any_route` | `false` | SPA-style fallback: unmatched routes resolve to `default_index`. |
 | `webview.url_protocols` | — | Space-separated protocol schemes treated as WebView-safe origins. |
-| `webview.protocol_handlers` | — | Space-separated protocol handlers registered for the URL shim. |
+| `webview.protocol-handlers` | — | Space-separated protocol handler schemes registered for URL and fetch routing. |
+| `webview.protocol-handlers.<scheme>` | — | Service-worker script path to auto-register for a custom protocol handler scheme. |
 | `webview.watch` | `false` | Watch files in development (emits change events). |
 | `webview.watch_reload` | `true` | Reload the page when a file change event is emitted. |
 | `window.width` | `80%` | Default window width (percentage or pixels). |
@@ -3776,6 +4028,7 @@ oroc config --describe build.copy_map
 | `window.resizable` | `true` | Whether the main window is resizable (desktop). |
 | `filesystem.sandbox_enabled` | `true` | Enable the filesystem sandbox (non-Apple platforms). |
 | `filesystem.no_follow_symlinks` | `true` | Disallow following symlinks for resource paths. |
+| `extensions.allowed_roots` | — | Space-separated absolute directories allowed for native extension loading. |
 
 ## Sections you’ll commonly see
 
@@ -3888,8 +4141,6 @@ The runtime’s JavaScript surface is broad, but it stays predictable:
 - **Data and formats** — `oro:url`, `oro:querystring`, `oro:buffer`, `oro:stream`, `oro:sqlite`, `oro:toml`, `oro:semver`
 - **Background work and automation** — `oro:worker`, `oro:worker_threads`, `oro:service-worker`, `oro:shared-worker`, `oro:background`, `oro:mcp`, `oro:ai`
 
-See: [Module index](?p=javascript/module-index).
-
 ## Importing `oro:*` modules
 
 Modules are standard ES modules:
@@ -3932,352 +4183,210 @@ If you’re looking for the TOML keys and defaults, see: [Configuration](?p=conf
 - Services: [`oro:mcp`](?p=javascript/mcp) · [`oro:ai`](?p=javascript/ai) · [`oro:notification`](?p=javascript/notification) · [`oro:secure-storage`](?p=javascript/secure-storage)
 
 ==============================================================================
-DOCS: Module index (javascript/module-index)
-URL: /runtime/docs/?p=javascript/module-index
-==============================================================================
-
-# Module index
-
-Oro Runtime exposes native capabilities as explicit ES modules under the `oro:*` namespace.
-
-## Core modules (start here)
-
-- [`oro:application`](?p=javascript/application) — app/window management, menus, runtime metadata
-- [`oro:window`](?p=javascript/window) — `ApplicationWindow` instances and per-window operations
-- [`oro:hooks`](?p=javascript/hooks) — lifecycle and runtime event subscriptions
-- [`oro:secure-storage`](?p=javascript/secure-storage) — origin-scoped secret storage
-- [`oro:notification`](?p=javascript/notification) — notifications and permissions
-- [`oro:fs`](?p=javascript/fs) — filesystem APIs (Node/POSIX-style)
-- [`oro:mcp`](?p=javascript/mcp) — register tools/resources and start the embedded MCP bridge
-- [`oro:ai`](?p=javascript/ai) — local AI helpers (LLM + chat)
-
-See also: [All module specifiers](?p=javascript/all-modules).
-
-## Public API families
-
-The runtime publishes many module families. The highest-traffic groups are:
-
-- **App shell and lifecycle** — [`oro:application`](?p=javascript/application), [`oro:window`](?p=javascript/window), [`oro:hooks`](?p=javascript/hooks), [`oro:navigation`](?p=javascript/navigation), [`oro:notification`](?p=javascript/notification)
-- **Filesystem, process, and platform** — [`oro:fs`](?p=javascript/fs), [`oro:path`](?p=javascript/path), [`oro:os`](?p=javascript/os), [`oro:process`](?p=javascript/process), [`oro:child_process`](?p=javascript/child_process), [`oro:clipboard`](?p=javascript/clipboard)
-- **Networking and transport** — [`oro:fetch`](?p=javascript/fetch), [`oro:http`](?p=javascript/http), [`oro:https`](?p=javascript/https), [`oro:net`](?p=javascript/net), [`oro:dns`](?p=javascript/dns), [`oro:tcp`](?p=javascript/tcp), [`oro:tls`](?p=javascript/tls), [`oro:network`](?p=javascript/network)
-- **Data, formats, and storage** — [`oro:buffer`](?p=javascript/buffer), [`oro:stream`](?p=javascript/stream), [`oro:url`](?p=javascript/url), [`oro:querystring`](?p=javascript/querystring), [`oro:sqlite`](?p=javascript/sqlite), [`oro:toml`](?p=javascript/toml), [`oro:semver`](?p=javascript/semver), [`oro:mime`](?p=javascript/mime)
-- **Security and identity** — [`oro:secure-storage`](?p=javascript/secure-storage), [`oro:crypto`](?p=javascript/crypto), [`oro:cookies`](?p=javascript/cookies), [`oro:did`](?p=javascript/did)
-- **Device and host integration** — [`oro:usb`](?p=javascript/usb), [`oro:hci`](?p=javascript/hci), [`oro:dbus`](?p=javascript/dbus), [`oro:xpc`](?p=javascript/xpc), [`oro:extension`](?p=javascript/extension)
-- **Workers, services, and automation** — [`oro:worker`](?p=javascript/worker), [`oro:worker_threads`](?p=javascript/worker_threads), [`oro:service-worker`](?p=javascript/service-worker), [`oro:shared-worker`](?p=javascript/shared-worker), [`oro:background`](?p=javascript/background), [`oro:mcp`](?p=javascript/mcp), [`oro:ai`](?p=javascript/ai)
-- **Advanced or compatibility surfaces** — [`oro:commonjs`](?p=javascript/commonjs), [`oro:module`](?p=javascript/module), [`oro:bootstrap`](?p=javascript/bootstrap), [`oro:diagnostics`](?p=javascript/diagnostics), and the `oro:npm/*` family
-
-## Importable top-level module specifiers
-
-Each module family has its own API reference page in this docs set. Use the sidebar search for `oro:<name>`.
-
-Many modules also have subpath imports (for example `oro:fs/promises`, `oro:url/index`, `oro:test/*`).
-
-Top-level `oro:*` specifiers you can import directly:
-
-```text
-oro:ai
-oro:application
-oro:asn1
-oro:assert
-oro:async
-oro:async_hooks
-oro:background
-oro:bootstrap
-oro:buffer
-oro:cdp
-oro:child_process
-oro:clipboard
-oro:commonjs
-oro:conduit
-oro:console
-oro:constants
-oro:cookies
-oro:crypto
-oro:dbus
-oro:dgram
-oro:diagnostics
-oro:did
-oro:dns
-oro:enumeration
-oro:errno
-oro:errors
-oro:events
-oro:extension
-oro:fetch
-oro:fs
-oro:gc
-oro:hci
-oro:hooks
-oro:http
-oro:https
-oro:i18n
-oro:ip
-oro:ipc
-oro:ipfs
-oro:iroh
-oro:language
-oro:latica
-oro:location
-oro:mcp
-oro:mime
-oro:module
-oro:navigation
-oro:net
-oro:network
-oro:node-esm-loader
-oro:notification
-oro:os
-oro:path
-oro:process
-oro:protocol-handlers
-oro:querystring
-oro:secure-storage
-oro:semver
-oro:service-worker
-oro:shared-worker
-oro:signal
-oro:sqlite
-oro:stream
-oro:string_decoder
-oro:tar
-oro:tcp
-oro:test
-oro:timers
-oro:tls
-oro:toml
-oro:tty
-oro:url
-oro:usb
-oro:util
-oro:vm
-oro:window
-oro:worker
-oro:worker_threads
-oro:xpc
-oro:zlib
-```
-
-## Subpath-only public module families
-
-Some public module families only exist as subpath imports (there is no `oro:<family>` top-level specifier):
-
-- `oro:npm/*` — NPM/module integration helpers
-
-See: [All module specifiers](?p=javascript/all-modules).
-
-==============================================================================
-DOCS: All public module specifiers (javascript/all-modules)
+DOCS: JavaScript API modules (javascript/all-modules)
 URL: /runtime/docs/?p=javascript/all-modules
 ==============================================================================
 
-# All public module specifiers
+# JavaScript API modules
 
-This page lists the public ES module specifiers documented on this site under the `oro:*` namespace.
+Oro Runtime exposes native capabilities as explicit ES module imports under the
+`oro:*` namespace. Treat those imports as the boundary between ordinary web code
+and host capabilities.
 
-If you’re new, start with the curated [Module index](?p=javascript/module-index) and the core modules it links to.
+Use this page when you need to find the right API family or confirm a public subpath import.
+
+## Start here
+
+| Need | Primary modules |
+| --- | --- |
+| App shell, windows, lifecycle | [`oro:application`](?p=javascript/application), [`oro:window`](?p=javascript/window), [`oro:hooks`](?p=javascript/hooks), [`oro:navigation`](?p=javascript/navigation) |
+| Files, paths, process state | [`oro:fs`](?p=javascript/fs), [`oro:path`](?p=javascript/path), [`oro:os`](?p=javascript/os), [`oro:process`](?p=javascript/process) |
+| User-facing desktop behavior | [`oro:notification`](?p=javascript/notification), [`oro:clipboard`](?p=javascript/clipboard), [`oro:secure-storage`](?p=javascript/secure-storage) |
+| Network and HTTP work | [`oro:fetch`](?p=javascript/fetch), [`oro:http`](?p=javascript/http), [`oro:https`](?p=javascript/https), [`oro:net`](?p=javascript/net), [`oro:tls`](?p=javascript/tls) |
+| Local data and formats | [`oro:sqlite`](?p=javascript/sqlite), [`oro:url`](?p=javascript/url), [`oro:buffer`](?p=javascript/buffer), [`oro:stream`](?p=javascript/stream), [`oro:toml`](?p=javascript/toml) |
+| Background work and automation | [`oro:worker`](?p=javascript/worker), [`oro:worker_threads`](?p=javascript/worker_threads), [`oro:service-worker`](?p=javascript/service-worker), [`oro:shared-worker`](?p=javascript/shared-worker), [`oro:mcp`](?p=javascript/mcp), [`oro:ai`](?p=javascript/ai) |
+
+## API families
+
+### Application shell and lifecycle
+
+- [`oro:application`](?p=javascript/application) — app/window management, menus, runtime metadata, and update hooks.
+- [`oro:window`](?p=javascript/window) — per-window operations and hotkeys.
+- [`oro:hooks`](?p=javascript/hooks) — lifecycle, notification, online/offline, and deep-link subscriptions.
+- [`oro:navigation`](?p=javascript/navigation) — runtime navigation state.
+- [`oro:notification`](?p=javascript/notification) — notifications and permissions.
+
+### Filesystem, process, and platform
+
+- [`oro:fs`](?p=javascript/fs) — filesystem APIs, including `oro:fs/promises`.
+- [`oro:path`](?p=javascript/path) — cross-platform path handling.
+- [`oro:os`](?p=javascript/os) — platform, CPU, temporary-directory, and system metadata.
+- [`oro:process`](?p=javascript/process) — runtime process state, env access, signals, and scheduling helpers.
+- [`oro:child_process`](?p=javascript/child_process) — subprocesses.
+- [`oro:clipboard`](?p=javascript/clipboard) — clipboard text operations.
+
+### Network and transport
+
+- [`oro:fetch`](?p=javascript/fetch) — fetch stack and request/response primitives.
+- [`oro:http`](?p=javascript/http), [`oro:https`](?p=javascript/https) — Node-compatible HTTP client/server APIs.
+- [`oro:net`](?p=javascript/net), [`oro:tcp`](?p=javascript/tcp), [`oro:dgram`](?p=javascript/dgram), [`oro:dns`](?p=javascript/dns), [`oro:tls`](?p=javascript/tls) — lower-level network APIs.
+- [`oro:network`](?p=javascript/network), [`oro:latica`](?p=javascript/latica), [`oro:iroh`](?p=javascript/iroh), [`oro:ipfs`](?p=javascript/ipfs) — higher-level transport and peer-to-peer surfaces.
+
+### Data, storage, and formats
+
+- [`oro:sqlite`](?p=javascript/sqlite) — SQLite databases.
+- [`oro:secure-storage`](?p=javascript/secure-storage) — origin-scoped secret storage.
+- [`oro:buffer`](?p=javascript/buffer), [`oro:stream`](?p=javascript/stream), [`oro:string_decoder`](?p=javascript/string_decoder) — byte and stream primitives.
+- [`oro:url`](?p=javascript/url), [`oro:querystring`](?p=javascript/querystring), [`oro:mime`](?p=javascript/mime), [`oro:toml`](?p=javascript/toml), [`oro:semver`](?p=javascript/semver), [`oro:tar`](?p=javascript/tar), [`oro:zlib`](?p=javascript/zlib) — data formats and encoding helpers.
+
+### Security, identity, and diagnostics
+
+- [`oro:crypto`](?p=javascript/crypto) — hashing, random bytes, and sodium-backed helpers.
+- [`oro:cookies`](?p=javascript/cookies), [`oro:did`](?p=javascript/did) — identity and web state helpers.
+- [`oro:assert`](?p=javascript/assert), [`oro:errors`](?p=javascript/errors), [`oro:errno`](?p=javascript/errno), [`oro:diagnostics`](?p=javascript/diagnostics), [`oro:console`](?p=javascript/console) — correctness and inspection surfaces.
+
+### Device and host integration
+
+- [`oro:usb`](?p=javascript/usb), [`oro:hci`](?p=javascript/hci), [`oro:dbus`](?p=javascript/dbus), [`oro:xpc`](?p=javascript/xpc) — platform and device integration.
+- [`oro:extension`](?p=javascript/extension), [`oro:cdp`](?p=javascript/cdp), [`oro:protocol-handlers`](?p=javascript/protocol-handlers) — host extension, inspection, and routing surfaces.
+
+### Workers, automation, and advanced runtime surfaces
+
+- [`oro:worker`](?p=javascript/worker), [`oro:worker_threads`](?p=javascript/worker_threads), [`oro:service-worker`](?p=javascript/service-worker), [`oro:shared-worker`](?p=javascript/shared-worker), [`oro:background`](?p=javascript/background) — background execution.
+- [`oro:mcp`](?p=javascript/mcp), [`oro:ai`](?p=javascript/ai), [`oro:test`](?p=javascript/test) — automation, local AI, and test harnesses.
+- [`oro:commonjs`](?p=javascript/commonjs), [`oro:module`](?p=javascript/module), [`oro:npm/module`](?p=javascript/npm), [`oro:npm/service-worker`](?p=javascript/npm), [`oro:vm`](?p=javascript/vm) — loader and compatibility APIs.
+
+## Complete public specifier reference
+
+The full public set is grouped below for search and exact subpath lookup. Most apps should use the primary family pages
+above instead of browsing this list line by line.
+
+<details>
+<summary>App shell and lifecycle</summary>
+
+- `oro:application`, `oro:application/client`, `oro:application/menu`, `oro:application/update`
+- `oro:window`, `oro:window/constants`, `oro:window/hotkey`
+- `oro:hooks`
+- `oro:navigation`, `oro:navigation/navigation`
+- `oro:notification`
+- `oro:background`
+- `oro:location`
+
+</details>
+
+<details>
+<summary>Filesystem, process, and platform</summary>
+
+- `oro:fs`, `oro:fs/bookmarks`, `oro:fs/constants`, `oro:fs/dir`, `oro:fs/fds`, `oro:fs/flags`, `oro:fs/handle`, `oro:fs/index`, `oro:fs/promises`, `oro:fs/stats`, `oro:fs/stream`, `oro:fs/watcher`, `oro:fs/web`
+- `oro:path`, `oro:path/index`, `oro:path/mounts`, `oro:path/path`, `oro:path/posix`, `oro:path/well-known`, `oro:path/win32`
+- `oro:os`, `oro:os/constants`
+- `oro:process`, `oro:process/signal`
+- `oro:child_process`, `oro:child_process/worker`
+- `oro:clipboard`
+- `oro:tty`
+- `oro:signal`
+- `oro:constants`
+
+</details>
+
+<details>
+<summary>Network and transport</summary>
+
+- `oro:fetch`, `oro:fetch/fetch`, `oro:fetch/index`
+- `oro:http`, `oro:http/adapters`
+- `oro:https`
+- `oro:net`
+- `oro:tcp`
+- `oro:dgram`
+- `oro:dns`, `oro:dns/constants`, `oro:dns/index`, `oro:dns/promises`, `oro:dns/utils`
+- `oro:tls`
+- `oro:network`
+- `oro:ip`
+- `oro:ipc`
+- `oro:ipfs`
+- `oro:iroh`
+- `oro:latica`, `oro:latica/api`, `oro:latica/cache`, `oro:latica/encryption`, `oro:latica/index`, `oro:latica/nat`, `oro:latica/packets`, `oro:latica/proxy`, `oro:latica/worker`
+- `oro:conduit`
+
+</details>
+
+<details>
+<summary>Data, storage, and formats</summary>
+
+- `oro:buffer`
+- `oro:stream`, `oro:stream/web`
+- `oro:string_decoder`
+- `oro:sqlite`
+- `oro:url`, `oro:url/index`, `oro:url/url/url`, `oro:url/urlpattern/urlpattern`
+- `oro:querystring`
+- `oro:mime`, `oro:mime/index`, `oro:mime/params`, `oro:mime/type`
+- `oro:toml`
+- `oro:semver`
+- `oro:tar`
+- `oro:zlib`
+- `oro:asn1`
+- `oro:enumeration`
+
+</details>
+
+<details>
+<summary>Security, identity, diagnostics, and correctness</summary>
+
+- `oro:secure-storage`
+- `oro:crypto`, `oro:crypto/sodium`
+- `oro:cookies`
+- `oro:did`, `oro:did/index`
+- `oro:assert`
+- `oro:errors`
+- `oro:errno`
+- `oro:events`
+- `oro:diagnostics`, `oro:diagnostics/channels`, `oro:diagnostics/index`, `oro:diagnostics/metric`, `oro:diagnostics/runtime`, `oro:diagnostics/window`
+- `oro:console`
+- `oro:gc`
+
+</details>
+
+<details>
+<summary>Device and host integration</summary>
+
+- `oro:usb`
+- `oro:hci`
+- `oro:dbus`
+- `oro:xpc`
+- `oro:extension`
+- `oro:cdp`
+- `oro:protocol-handlers`
+- `oro:language`
+- `oro:i18n`
+
+</details>
+
+<details>
+<summary>Workers, automation, loaders, and advanced runtime surfaces</summary>
+
+- `oro:ai`, `oro:ai/ann`, `oro:ai/chat`, `oro:ai/llm`, `oro:ai/whisper`
+- `oro:mcp`, `oro:mcp/index`
+- `oro:worker`
+- `oro:worker_threads`, `oro:worker_threads/init`
+- `oro:service-worker`, `oro:service-worker/clients`, `oro:service-worker/container`, `oro:service-worker/context`, `oro:service-worker/debug`, `oro:service-worker/env`, `oro:service-worker/events`, `oro:service-worker/global`, `oro:service-worker/init`, `oro:service-worker/instance`, `oro:service-worker/notification`, `oro:service-worker/registration`, `oro:service-worker/state`, `oro:service-worker/storage`, `oro:service-worker/worker`
+- `oro:shared-worker`, `oro:shared-worker/debug`, `oro:shared-worker/global`, `oro:shared-worker/index`, `oro:shared-worker/init`, `oro:shared-worker/state`, `oro:shared-worker/worker`
+- `oro:test`, `oro:test/context`, `oro:test/dom-helpers`, `oro:test/fast-deep-equal`, `oro:test/harness`, `oro:test/index`
+- `oro:timers`, `oro:timers/index`, `oro:timers/platform`, `oro:timers/promises`, `oro:timers/scheduler`, `oro:timers/timer`
+- `oro:async`, `oro:async/context`, `oro:async/deferred`, `oro:async/hooks`, `oro:async/resource`, `oro:async/storage`, `oro:async/wrap`, `oro:async_hooks`
+- `oro:commonjs`, `oro:commonjs/builtins`, `oro:commonjs/cache`, `oro:commonjs/loader`, `oro:commonjs/module`, `oro:commonjs/package`, `oro:commonjs/require`
+- `oro:module`
+- `oro:npm/module`, `oro:npm/service-worker`
+- `oro:vm`, `oro:vm/init`, `oro:vm/world`
+- `oro:util`, `oro:util/types`
+
+</details>
 
 ## Notes
 
-- Most apps should stick to the modules documented in this docs set (for example `oro:application`, `oro:window`,
-  `oro:hooks`, `oro:secure-storage`).
-- This list excludes private implementation families and bundled third-party shims that are not part of the
-  supported application-facing API.
-- The authoritative surface is the runtime’s published TypeScript declarations; this list is derived from those
-  declarations and filtered to the public application-facing modules.
-
-## Public `oro:*` module specifiers
-
-```text
-oro:ai
-oro:ai/ann
-oro:ai/chat
-oro:ai/llm
-oro:ai/whisper
-oro:application
-oro:application/client
-oro:application/menu
-oro:application/update
-oro:asn1
-oro:assert
-oro:async
-oro:async/context
-oro:async/deferred
-oro:async/hooks
-oro:async_hooks
-oro:async/resource
-oro:async/storage
-oro:async/wrap
-oro:background
-oro:bootstrap
-oro:buffer
-oro:cdp
-oro:child_process
-oro:child_process/worker
-oro:clipboard
-oro:commonjs
-oro:commonjs/builtins
-oro:commonjs/cache
-oro:commonjs/loader
-oro:commonjs/module
-oro:commonjs/package
-oro:commonjs/require
-oro:conduit
-oro:console
-oro:constants
-oro:cookies
-oro:crypto
-oro:crypto/sodium
-oro:dbus
-oro:dgram
-oro:diagnostics
-oro:diagnostics/channels
-oro:diagnostics/index
-oro:diagnostics/metric
-oro:diagnostics/runtime
-oro:diagnostics/window
-oro:did
-oro:did/index
-oro:dns
-oro:dns/constants
-oro:dns/index
-oro:dns/promises
-oro:dns/utils
-oro:enumeration
-oro:errno
-oro:errors
-oro:events
-oro:extension
-oro:fetch
-oro:fetch/fetch
-oro:fetch/index
-oro:fs
-oro:fs/bookmarks
-oro:fs/constants
-oro:fs/dir
-oro:fs/fds
-oro:fs/flags
-oro:fs/handle
-oro:fs/index
-oro:fs/promises
-oro:fs/stats
-oro:fs/stream
-oro:fs/watcher
-oro:fs/web
-oro:gc
-oro:hci
-oro:hooks
-oro:http
-oro:http/adapters
-oro:https
-oro:i18n
-oro:ip
-oro:ipc
-oro:ipfs
-oro:iroh
-oro:language
-oro:latica
-oro:latica/api
-oro:latica/cache
-oro:latica/encryption
-oro:latica/index
-oro:latica/nat
-oro:latica/packets
-oro:latica/proxy
-oro:latica/worker
-oro:location
-oro:mcp
-oro:mcp/index
-oro:mime
-oro:mime/index
-oro:mime/params
-oro:mime/type
-oro:module
-oro:navigation
-oro:navigation/navigation
-oro:net
-oro:network
-oro:node-esm-loader
-oro:notification
-oro:npm/module
-oro:npm/service-worker
-oro:os
-oro:os/constants
-oro:path
-oro:path/index
-oro:path/mounts
-oro:path/path
-oro:path/posix
-oro:path/well-known
-oro:path/win32
-oro:process
-oro:process/signal
-oro:protocol-handlers
-oro:querystring
-oro:secure-storage
-oro:semver
-oro:service-worker
-oro:service-worker/clients
-oro:service-worker/container
-oro:service-worker/context
-oro:service-worker/debug
-oro:service-worker/env
-oro:service-worker/events
-oro:service-worker/global
-oro:service-worker/init
-oro:service-worker/instance
-oro:service-worker/notification
-oro:service-worker/registration
-oro:service-worker/state
-oro:service-worker/storage
-oro:service-worker/worker
-oro:shared-worker
-oro:shared-worker/debug
-oro:shared-worker/global
-oro:shared-worker/index
-oro:shared-worker/init
-oro:shared-worker/state
-oro:shared-worker/worker
-oro:signal
-oro:sqlite
-oro:stream
-oro:stream/web
-oro:string_decoder
-oro:tar
-oro:tcp
-oro:test
-oro:test/context
-oro:test/dom-helpers
-oro:test/fast-deep-equal
-oro:test/harness
-oro:test/index
-oro:timers
-oro:timers/index
-oro:timers/platform
-oro:timers/promises
-oro:timers/scheduler
-oro:timers/timer
-oro:tls
-oro:toml
-oro:tty
-oro:url
-oro:url/index
-oro:url/urlpattern/urlpattern
-oro:url/url/url
-oro:usb
-oro:util
-oro:util/types
-oro:vm
-oro:vm/init
-oro:vm/world
-oro:window
-oro:window/constants
-oro:window/hotkey
-oro:worker
-oro:worker_threads
-oro:worker_threads/init
-oro:xpc
-oro:zlib
-```
+- The authoritative surface is the runtime’s published TypeScript declarations.
+- This page excludes private implementation families and bundled third-party shims that are not part of the supported
+  application-facing API.
+- If you know the module name, use the docs search box or open the matching family page from the sidebar.
 
 ==============================================================================
 DOCS: `oro:application` (javascript/application)
@@ -4287,6 +4396,12 @@ URL: /runtime/docs/?p=javascript/application
 # `oro:application`
 
 `oro:application` exposes application-level APIs: creating windows, querying windows, menus, and runtime metadata.
+
+## Related guides
+
+- [Windows and messaging](?p=guides/windows-and-messaging)
+- [Lifecycle hooks and deep links](?p=guides/lifecycle-hooks-and-deep-links)
+- [Desktop integrations](?p=guides/desktop-integrations)
 
 ## Import
 
@@ -4387,8 +4502,9 @@ oro:application/update
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:application</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:application`
 
 ```ts
 declare module "oro:application" {
@@ -4794,10 +4910,7 @@ declare module "oro:application" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:application/client</code></summary>
+#### `oro:application/client`
 
 ```ts
 declare module "oro:application/client" {
@@ -4866,10 +4979,7 @@ declare module "oro:application/client" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:application/menu</code></summary>
+#### `oro:application/menu`
 
 ```ts
 declare module "oro:application/menu" {
@@ -5026,10 +5136,7 @@ declare module "oro:application/menu" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:application/update</code></summary>
+#### `oro:application/update`
 
 ```ts
 declare module "oro:application/update" {
@@ -5336,9 +5443,11 @@ declare module "oro:application/update" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:window` (javascript/window)
@@ -5356,6 +5465,11 @@ import application from 'oro:application'
 
 const current = await application.getCurrentWindow()
 ```
+
+## Related guides
+
+- [Windows and messaging](?p=guides/windows-and-messaging)
+- [Desktop integrations](?p=guides/desktop-integrations)
 
 ## Common operations
 
@@ -5410,8 +5524,9 @@ oro:window/hotkey
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:window</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:window`
 
 ```ts
 declare module "oro:window" {
@@ -5790,10 +5905,7 @@ declare module "oro:window" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:window/constants</code></summary>
+#### `oro:window/constants`
 
 ```ts
 declare module "oro:window/constants" {
@@ -5817,10 +5929,7 @@ declare module "oro:window/constants" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:window/hotkey</code></summary>
+#### `oro:window/hotkey`
 
 ```ts
 declare module "oro:window/hotkey" {
@@ -6111,9 +6220,11 @@ declare module "oro:window/hotkey" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:hooks` (javascript/hooks)
@@ -6128,6 +6239,11 @@ Most hooks:
 
 - register a callback
 - return a disposer function you can call to unsubscribe
+
+## Related guides
+
+- [Lifecycle hooks and deep links](?p=guides/lifecycle-hooks-and-deep-links)
+- [Windows and messaging](?p=guides/windows-and-messaging)
 
 ## Common hooks
 
@@ -6199,8 +6315,9 @@ oro:hooks
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:hooks</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:hooks`
 
 ```ts
 declare module "oro:hooks" {
@@ -6531,9 +6648,11 @@ declare module "oro:hooks" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:fs` (javascript/fs)
@@ -6576,7 +6695,11 @@ The runtime can restrict filesystem access via configuration. Common keys:
 - `filesystem.sandbox_enabled`
 - `filesystem.no_follow_symlinks`
 
-See: [Config reference](?p=config/reference).
+## Related guides
+
+- [Files and sandboxing](?p=guides/files-and-sandboxing)
+- [Project layout](?p=guides/project-layout)
+- [Config reference](?p=config/reference)
 
 ## API reference
 
@@ -6602,8 +6725,9 @@ oro:fs/web
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:fs</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:fs`
 
 ```ts
 declare module "oro:fs" {
@@ -6613,10 +6737,7 @@ declare module "oro:fs" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/bookmarks</code></summary>
+#### `oro:fs/bookmarks`
 
 ```ts
 declare module "oro:fs/bookmarks" {
@@ -6635,10 +6756,7 @@ declare module "oro:fs/bookmarks" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/constants</code></summary>
+#### `oro:fs/constants`
 
 ```ts
 declare module "oro:fs/constants" {
@@ -6949,10 +7067,7 @@ declare module "oro:fs/constants" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/dir</code></summary>
+#### `oro:fs/dir`
 
 ```ts
 declare module "oro:fs/dir" {
@@ -7096,10 +7211,7 @@ declare module "oro:fs/dir" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/fds</code></summary>
+#### `oro:fs/fds`
 
 ```ts
 declare module "oro:fs/fds" {
@@ -7125,10 +7237,7 @@ declare module "oro:fs/fds" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/flags</code></summary>
+#### `oro:fs/flags`
 
 ```ts
 declare module "oro:fs/flags" {
@@ -7139,10 +7248,7 @@ declare module "oro:fs/flags" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/handle</code></summary>
+#### `oro:fs/handle`
 
 ```ts
 declare module "oro:fs/handle" {
@@ -7455,10 +7561,7 @@ declare module "oro:fs/handle" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/index</code></summary>
+#### `oro:fs/index`
 
 ```ts
 declare module "oro:fs/index" {
@@ -8050,10 +8153,7 @@ declare module "oro:fs/index" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/promises</code></summary>
+#### `oro:fs/promises`
 
 ```ts
 declare module "oro:fs/promises" {
@@ -8310,10 +8410,7 @@ declare module "oro:fs/promises" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/stats</code></summary>
+#### `oro:fs/stats`
 
 ```ts
 declare module "oro:fs/stats" {
@@ -8393,10 +8490,7 @@ declare module "oro:fs/stats" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/stream</code></summary>
+#### `oro:fs/stream`
 
 ```ts
 declare module "oro:fs/stream" {
@@ -8513,10 +8607,7 @@ declare module "oro:fs/stream" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/watcher</code></summary>
+#### `oro:fs/watcher`
 
 ```ts
 declare module "oro:fs/watcher" {
@@ -8616,10 +8707,7 @@ declare module "oro:fs/watcher" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fs/web</code></summary>
+#### `oro:fs/web`
 
 ```ts
 declare module "oro:fs/web" {
@@ -8731,9 +8819,11 @@ declare module "oro:fs/web" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:secure-storage` (javascript/secure-storage)
@@ -8743,6 +8833,10 @@ URL: /runtime/docs/?p=javascript/secure-storage
 # `oro:secure-storage`
 
 `oro:secure-storage` stores secrets scoped by origin (for example tokens, credentials, API keys).
+
+## Related guides
+
+- [Secure storage and sessions](?p=guides/secure-storage-and-sessions)
 
 ## Import
 
@@ -8793,8 +8887,9 @@ oro:secure-storage
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:secure-storage</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:secure-storage`
 
 ```ts
 declare module "oro:secure-storage" {
@@ -8866,9 +8961,11 @@ declare module "oro:secure-storage" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:notification` (javascript/notification)
@@ -8878,6 +8975,11 @@ URL: /runtime/docs/?p=javascript/notification
 # `oro:notification`
 
 `oro:notification` provides an API to display desktop and mobile notifications and request permission to use them.
+
+## Related guides
+
+- [Desktop integrations](?p=guides/desktop-integrations)
+- [Lifecycle hooks and deep links](?p=guides/lifecycle-hooks-and-deep-links)
 
 ## Import
 
@@ -8928,8 +9030,9 @@ oro:notification
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:notification</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:notification`
 
 ```ts
 declare module "oro:notification" {
@@ -9347,9 +9450,11 @@ declare module "oro:notification" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:mcp` (javascript/mcp)
@@ -9361,6 +9466,10 @@ URL: /runtime/docs/?p=javascript/mcp
 `oro:mcp` provides runtime MCP helpers for registering tools/resources and controlling the embedded HTTP/SSE bridge.
 
 If you want the CLI-hosted server for a workspace, see: [`oroc mcp`](?p=cli/mcp).
+
+## Related guides
+
+- [MCP and agent automation](?p=guides/mcp-and-agent-automation)
 
 ## Register a tool
 
@@ -9411,8 +9520,9 @@ oro:mcp/index
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:mcp</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:mcp`
 
 ```ts
 declare module "oro:mcp" {
@@ -9422,10 +9532,7 @@ declare module "oro:mcp" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:mcp/index</code></summary>
+#### `oro:mcp/index`
 
 ```ts
 declare module "oro:mcp/index" {
@@ -9681,9 +9788,11 @@ declare module "oro:mcp/index" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:ai` (javascript/ai)
@@ -9740,8 +9849,9 @@ oro:ai/whisper
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:ai</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:ai`
 
 ```ts
 declare module "oro:ai" {
@@ -9756,10 +9866,7 @@ declare module "oro:ai" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:ai/ann</code></summary>
+#### `oro:ai/ann`
 
 ```ts
 declare module "oro:ai/ann" {
@@ -9969,10 +10076,7 @@ declare module "oro:ai/ann" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:ai/chat</code></summary>
+#### `oro:ai/chat`
 
 ```ts
 declare module "oro:ai/chat" {
@@ -10152,10 +10256,7 @@ declare module "oro:ai/chat" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:ai/llm</code></summary>
+#### `oro:ai/llm`
 
 ```ts
 declare module "oro:ai/llm" {
@@ -10402,10 +10503,7 @@ declare module "oro:ai/llm" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:ai/whisper</code></summary>
+#### `oro:ai/whisper`
 
 ```ts
 declare module "oro:ai/whisper" {
@@ -10487,9 +10585,11 @@ declare module "oro:ai/whisper" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:asn1` (javascript/asn1)
@@ -10517,11 +10617,6 @@ console.log(document.modulesCount)
 console.log(document.modules[0]?.name)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -10534,8 +10629,9 @@ oro:asn1
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:asn1</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:asn1`
 
 ```ts
 declare module "oro:asn1" {
@@ -10658,9 +10754,12 @@ declare module "oro:asn1" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:assert` (javascript/assert)
@@ -10670,6 +10769,10 @@ URL: /runtime/docs/?p=javascript/assert
 # `oro:assert`
 
 `oro:assert` provides Node-compatible assertion helpers for tests, runtime checks, and invariants.
+
+## Related guides
+
+- [Testing and diagnostics](?p=guides/testing-and-diagnostics)
 
 ## Examples
 
@@ -10685,11 +10788,6 @@ strictEqual(payload.tags.length, 2)
 deepEqual(payload.tags, ['runtime', 'docs'])
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -10702,8 +10800,9 @@ oro:assert
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:assert</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:assert`
 
 ```ts
 declare module "oro:assert" {
@@ -10735,9 +10834,12 @@ declare module "oro:assert" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:async_hooks` (javascript/async_hooks)
@@ -10768,11 +10870,6 @@ queueMicrotask(() => {
 })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -10785,8 +10882,9 @@ oro:async_hooks
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:async_hooks</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:async_hooks`
 
 ```ts
 declare module "oro:async_hooks" {
@@ -10803,9 +10901,12 @@ declare module "oro:async_hooks" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:async` (javascript/async)
@@ -10831,11 +10932,6 @@ await store.run({ requestId: 'req-42' }, async () => {
 })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -10854,8 +10950,9 @@ oro:async/wrap
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:async</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:async`
 
 ```ts
 declare module "oro:async" {
@@ -10875,10 +10972,7 @@ declare module "oro:async" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:async/context</code></summary>
+#### `oro:async/context`
 
 ```ts
 declare module "oro:async/context" {
@@ -11207,10 +11301,7 @@ declare module "oro:async/context" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:async/deferred</code></summary>
+#### `oro:async/deferred`
 
 ```ts
 declare module "oro:async/deferred" {
@@ -11299,10 +11390,7 @@ declare module "oro:async/deferred" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:async/hooks</code></summary>
+#### `oro:async/hooks`
 
 ```ts
 declare module "oro:async/hooks" {
@@ -11361,10 +11449,7 @@ declare module "oro:async/hooks" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:async/resource</code></summary>
+#### `oro:async/resource`
 
 ```ts
 declare module "oro:async/resource" {
@@ -11408,10 +11493,7 @@ declare module "oro:async/resource" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:async/storage</code></summary>
+#### `oro:async/storage`
 
 ```ts
 declare module "oro:async/storage" {
@@ -11473,10 +11555,7 @@ declare module "oro:async/storage" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:async/wrap</code></summary>
+#### `oro:async/wrap`
 
 ```ts
 declare module "oro:async/wrap" {
@@ -11511,9 +11590,12 @@ declare module "oro:async/wrap" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:background` (javascript/background)
@@ -11536,11 +11618,6 @@ if (background.available) {
 }
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -11553,8 +11630,9 @@ oro:background
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:background</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:background`
 
 ```ts
 declare module "oro:background" {
@@ -11569,100 +11647,12 @@ declare module "oro:background" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
-
-==============================================================================
-DOCS: `oro:bootstrap` (javascript/bootstrap)
-URL: /runtime/docs/?p=javascript/bootstrap
-==============================================================================
-
-# `oro:bootstrap`
-
-`oro:bootstrap` downloads and verifies application payloads during bootstrap and update flows.
-
-## Examples
-
-Verify a downloaded artifact before handing it to the bootstrap helper:
-
-```js
-import { bootstrap, checkHash } from 'oro:bootstrap'
-
-const manifest = { url: 'https://updates.example/app.tar' }
-const expectedHash = '0123456789abcdef'
-
-const ok = await checkHash('./downloads/app.tar', expectedHash, 'sha256')
-if (!ok) throw new Error('artifact hash mismatch')
-
-const job = bootstrap({ url: manifest.url, dest: './downloads/app.tar' })
-await job.run()
-```
 
 ## See also
 
-- [Module index](?p=javascript/module-index)
+- [JavaScript APIs overview](?p=javascript/overview)
 - [All module specifiers](?p=javascript/all-modules)
-
-## API reference
-
-<!-- GENERATED: ORO_API_REFERENCE_START -->
-
-### Module specifiers
-
-```text
-oro:bootstrap
-```
-
-### TypeScript declarations
-
-<details>
-<summary><code>oro:bootstrap</code></summary>
-
-```ts
-declare module "oro:bootstrap" {
-    /**
-     * @param {string} dest - file path
-     * @param {string} hash - hash string
-     * @param {string} hashAlgorithm - hash algorithm
-     * @returns {Promise<boolean>}
-     */
-    export function checkHash(dest: string, hash: string, hashAlgorithm: string): Promise<boolean>;
-    export function bootstrap(options: any): Bootstrap;
-    namespace _default {
-        export { bootstrap };
-        export { checkHash };
-    }
-    export default _default;
-    class Bootstrap extends EventEmitter {
-        constructor(options: any);
-        options: any;
-        run(): Promise<void>;
-        /**
-         * @param {object} options
-         * @param {Uint8Array} options.fileBuffer
-         * @param {string} options.dest
-         * @returns {Promise<void>}
-         */
-        write({ fileBuffer, dest }: {
-            fileBuffer: Uint8Array;
-            dest: string;
-        }): Promise<void>;
-        /**
-         * @param {string} url - url to download
-         * @returns {Promise<Uint8Array>}
-         * @throws {Error} - if status code is not 200
-         */
-        download(url: string): Promise<Uint8Array>;
-        cleanup(): void;
-    }
-    import { EventEmitter } from "oro:events";
-}
-```
-
-</details>
-
-<!-- GENERATED: ORO_API_REFERENCE_END -->
 
 ==============================================================================
 DOCS: `oro:buffer` (javascript/buffer)
@@ -11687,11 +11677,6 @@ console.log(bytes.length)
 console.log(payload.size)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -11704,8 +11689,9 @@ oro:buffer
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:buffer</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:buffer`
 
 ```ts
 declare module "oro:buffer" {
@@ -11872,9 +11858,12 @@ declare module "oro:buffer" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:cdp` (javascript/cdp)
@@ -11884,6 +11873,10 @@ URL: /runtime/docs/?p=javascript/cdp
 # `oro:cdp`
 
 `oro:cdp` controls the runtime Chrome DevTools Protocol endpoint used for inspection and debugging.
+
+## Related guides
+
+- [Testing and diagnostics](?p=guides/testing-and-diagnostics)
 
 ## Examples
 
@@ -11900,11 +11893,6 @@ await listen({ host: '127.0.0.1', port: 9222 })
 await close()
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -11917,8 +11905,9 @@ oro:cdp
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:cdp</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:cdp`
 
 ```ts
 declare module "oro:cdp" {
@@ -11984,9 +11973,12 @@ declare module "oro:cdp" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:child_process` (javascript/child_process)
@@ -11996,6 +11988,11 @@ URL: /runtime/docs/?p=javascript/child_process
 # `oro:child_process`
 
 `oro:child_process` launches and manages subprocesses with a Node-compatible API.
+
+## Related guides
+
+- [Configure your runtime project](?p=guides/configure-your-runtime-project)
+- [Testing and diagnostics](?p=guides/testing-and-diagnostics)
 
 ## Examples
 
@@ -12016,11 +12013,6 @@ await new Promise((resolve, reject) => {
 })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -12034,8 +12026,9 @@ oro:child_process/worker
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:child_process</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:child_process`
 
 ```ts
 declare module "oro:child_process" {
@@ -12226,10 +12219,7 @@ declare module "oro:child_process" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:child_process/worker</code></summary>
+#### `oro:child_process/worker`
 
 ```ts
 declare module "oro:child_process/worker" {
@@ -12237,9 +12227,12 @@ declare module "oro:child_process/worker" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:clipboard` (javascript/clipboard)
@@ -12249,6 +12242,10 @@ URL: /runtime/docs/?p=javascript/clipboard
 # `oro:clipboard`
 
 `oro:clipboard` reads and writes clipboard text from the current application context.
+
+## Related guides
+
+- [Desktop integrations](?p=guides/desktop-integrations)
 
 ## Examples
 
@@ -12263,11 +12260,6 @@ if (canWriteText()) {
 }
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -12280,8 +12272,9 @@ oro:clipboard
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:clipboard</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:clipboard`
 
 ```ts
 declare module "oro:clipboard" {
@@ -12314,9 +12307,12 @@ declare module "oro:clipboard" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:commonjs` (javascript/commonjs)
@@ -12340,11 +12336,6 @@ console.log(isBuiltin('fs'))
 console.log(require('./package.json').name)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -12363,8 +12354,9 @@ oro:commonjs/require
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:commonjs</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:commonjs`
 
 ```ts
 declare module "oro:commonjs" {
@@ -12381,10 +12373,7 @@ declare module "oro:commonjs" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:commonjs/builtins</code></summary>
+#### `oro:commonjs/builtins`
 
 ```ts
 declare module "oro:commonjs/builtins" {
@@ -12425,10 +12414,7 @@ declare module "oro:commonjs/builtins" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:commonjs/cache</code></summary>
+#### `oro:commonjs/cache`
 
 ```ts
 declare module "oro:commonjs/cache" {
@@ -12781,10 +12767,7 @@ declare module "oro:commonjs/cache" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:commonjs/loader</code></summary>
+#### `oro:commonjs/loader`
 
 ```ts
 declare module "oro:commonjs/loader" {
@@ -13197,10 +13180,7 @@ declare module "oro:commonjs/loader" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:commonjs/module</code></summary>
+#### `oro:commonjs/module`
 
 ```ts
 declare module "oro:commonjs/module" {
@@ -13619,10 +13599,7 @@ declare module "oro:commonjs/module" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:commonjs/package</code></summary>
+#### `oro:commonjs/package`
 
 ```ts
 declare module "oro:commonjs/package" {
@@ -14007,10 +13984,7 @@ declare module "oro:commonjs/package" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:commonjs/require</code></summary>
+#### `oro:commonjs/require`
 
 ```ts
 declare module "oro:commonjs/require" {
@@ -14102,9 +14076,12 @@ declare module "oro:commonjs/require" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:conduit` (javascript/conduit)
@@ -14130,11 +14107,6 @@ console.log(await Conduit.status())
 await conduit.close()
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -14147,8 +14119,9 @@ oro:conduit
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:conduit</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:conduit`
 
 ```ts
 declare module "oro:conduit" {
@@ -14358,9 +14331,12 @@ declare module "oro:conduit" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:console` (javascript/console)
@@ -14370,6 +14346,10 @@ URL: /runtime/docs/?p=javascript/console
 # `oro:console`
 
 `oro:console` exposes the runtime console implementation and patch helpers.
+
+## Related guides
+
+- [Testing and diagnostics](?p=guides/testing-and-diagnostics)
 
 ## Examples
 
@@ -14383,11 +14363,6 @@ patchGlobalConsole(globalThis.console)
 console.info('runtime console is active')
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -14400,8 +14375,9 @@ oro:console
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:console</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:console`
 
 ```ts
 declare module "oro:console" {
@@ -14454,9 +14430,12 @@ declare module "oro:console" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:constants` (javascript/constants)
@@ -14477,11 +14456,6 @@ import { EACCES, SIGTERM } from 'oro:constants'
 console.log({ EACCES, SIGTERM })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -14494,8 +14468,9 @@ oro:constants
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:constants</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:constants`
 
 ```ts
 declare module "oro:constants" {
@@ -14616,9 +14591,12 @@ declare module "oro:constants" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:cookies` (javascript/cookies)
@@ -14641,11 +14619,6 @@ console.log(await get('https://app.example'))
 await remove('https://app.example', 'session')
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -14658,8 +14631,9 @@ oro:cookies
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:cookies</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:cookies`
 
 ```ts
 declare module "oro:cookies" {
@@ -14710,9 +14684,12 @@ declare module "oro:cookies" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:crypto` (javascript/crypto)
@@ -14722,6 +14699,10 @@ URL: /runtime/docs/?p=javascript/crypto
 # `oro:crypto`
 
 `oro:crypto` exposes hashing, random bytes, and bundled sodium-backed helpers.
+
+## Related guides
+
+- [Secure storage and sessions](?p=guides/secure-storage-and-sessions)
 
 ## Examples
 
@@ -14737,11 +14718,6 @@ console.log(digest.toString('hex'))
 console.log(murmur3('hello-runtime'))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -14755,8 +14731,9 @@ oro:crypto/sodium
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:crypto</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:crypto`
 
 ```ts
 declare module "oro:crypto" {
@@ -14828,10 +14805,7 @@ declare module "oro:crypto" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:crypto/sodium</code></summary>
+#### `oro:crypto/sodium`
 
 ```ts
 declare module "oro:crypto/sodium" {
@@ -14839,9 +14813,12 @@ declare module "oro:crypto/sodium" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:dbus` (javascript/dbus)
@@ -14868,11 +14845,6 @@ if (state.available) {
 }
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -14885,8 +14857,9 @@ oro:dbus
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:dbus</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:dbus`
 
 ```ts
 declare module "oro:dbus" {
@@ -15219,9 +15192,12 @@ declare module "oro:dbus" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:dgram` (javascript/dgram)
@@ -15250,11 +15226,6 @@ socket.bind(41234)
 socket.send(Buffer.from('ping'), 41235, '127.0.0.1')
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -15267,8 +15238,9 @@ oro:dgram
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:dgram</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:dgram`
 
 ```ts
 declare module "oro:dgram" {
@@ -15635,9 +15607,12 @@ declare module "oro:dgram" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:diagnostics` (javascript/diagnostics)
@@ -15647,6 +15622,10 @@ URL: /runtime/docs/?p=javascript/diagnostics
 # `oro:diagnostics`
 
 `oro:diagnostics` exposes channels, metrics, and runtime/window diagnostic queries.
+
+## Related guides
+
+- [Testing and diagnostics](?p=guides/testing-and-diagnostics)
 
 ## Examples
 
@@ -15663,11 +15642,6 @@ buildChannel.subscribe('step', (message) => {
 
 await buildChannel.publish('step', { step: 'bundle-ready' })
 ```
-
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -15686,8 +15660,9 @@ oro:diagnostics/window
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:diagnostics</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:diagnostics`
 
 ```ts
 declare module "oro:diagnostics" {
@@ -15697,10 +15672,7 @@ declare module "oro:diagnostics" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:diagnostics/channels</code></summary>
+#### `oro:diagnostics/channels`
 
 ```ts
 declare module "oro:diagnostics/channels" {
@@ -15917,10 +15889,7 @@ declare module "oro:diagnostics/channels" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:diagnostics/index</code></summary>
+#### `oro:diagnostics/index`
 
 ```ts
 declare module "oro:diagnostics/index" {
@@ -15939,10 +15908,7 @@ declare module "oro:diagnostics/index" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:diagnostics/metric</code></summary>
+#### `oro:diagnostics/metric`
 
 ```ts
 declare module "oro:diagnostics/metric" {
@@ -15959,10 +15925,7 @@ declare module "oro:diagnostics/metric" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:diagnostics/runtime</code></summary>
+#### `oro:diagnostics/runtime`
 
 ```ts
 declare module "oro:diagnostics/runtime" {
@@ -16628,10 +16591,7 @@ declare module "oro:diagnostics/runtime" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:diagnostics/window</code></summary>
+#### `oro:diagnostics/window`
 
 ```ts
 declare module "oro:diagnostics/window" {
@@ -16705,9 +16665,12 @@ declare module "oro:diagnostics/window" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:did` (javascript/did)
@@ -16732,11 +16695,6 @@ console.log(did.method)
 console.log(url.fragment)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -16750,8 +16708,9 @@ oro:did/index
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:did</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:did`
 
 ```ts
 declare module "oro:did" {
@@ -16761,10 +16720,7 @@ declare module "oro:did" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:did/index</code></summary>
+#### `oro:did/index`
 
 ```ts
 declare module "oro:did/index" {
@@ -16901,9 +16857,12 @@ declare module "oro:did/index" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:dns` (javascript/dns)
@@ -16927,11 +16886,6 @@ console.log(record.address)
 console.log(record.family)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -16948,8 +16902,9 @@ oro:dns/utils
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:dns</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:dns`
 
 ```ts
 declare module "oro:dns" {
@@ -16959,10 +16914,7 @@ declare module "oro:dns" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:dns/constants</code></summary>
+#### `oro:dns/constants`
 
 ```ts
 declare module "oro:dns/constants" {
@@ -16978,10 +16930,7 @@ declare module "oro:dns/constants" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:dns/index</code></summary>
+#### `oro:dns/index`
 
 ```ts
 declare module "oro:dns/index" {
@@ -17065,10 +17014,7 @@ declare module "oro:dns/index" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:dns/promises</code></summary>
+#### `oro:dns/promises`
 
 ```ts
 declare module "oro:dns/promises" {
@@ -17097,10 +17043,7 @@ declare module "oro:dns/promises" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:dns/utils</code></summary>
+#### `oro:dns/utils`
 
 ```ts
 declare module "oro:dns/utils" {
@@ -17127,9 +17070,12 @@ declare module "oro:dns/utils" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:enumeration` (javascript/enumeration)
@@ -17153,11 +17099,6 @@ console.log(states.has('ready'))
 console.log([...states])
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -17170,8 +17111,9 @@ oro:enumeration
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:enumeration</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:enumeration`
 
 ```ts
 declare module "oro:enumeration" {
@@ -17231,9 +17173,12 @@ declare module "oro:enumeration" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:errno` (javascript/errno)
@@ -17255,11 +17200,6 @@ console.log(getName(EACCES))
 console.log(getMessage(EACCES))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -17272,8 +17212,9 @@ oro:errno
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:errno</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:errno`
 
 ```ts
 declare module "oro:errno" {
@@ -17398,9 +17339,12 @@ declare module "oro:errno" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:errors` (javascript/errors)
@@ -17410,6 +17354,10 @@ URL: /runtime/docs/?p=javascript/errors
 # `oro:errors`
 
 `oro:errors` exports DOM-style and runtime-specific error classes and constants.
+
+## Related guides
+
+- [Testing and diagnostics](?p=guides/testing-and-diagnostics)
 
 ## Examples
 
@@ -17424,11 +17372,6 @@ const missing = new NotFoundError('resource not found')
 console.log(abort.name, missing.name)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -17441,8 +17384,9 @@ oro:errors
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:errors</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:errors`
 
 ```ts
 declare module "oro:errors" {
@@ -17776,9 +17720,12 @@ declare module "oro:errors" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:events` (javascript/events)
@@ -17802,11 +17749,6 @@ bus.on('ready', (value) => console.log(value))
 bus.emit('ready', { ok: true })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -17819,8 +17761,9 @@ oro:events
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:events</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:events`
 
 ```ts
 declare module "oro:events" {
@@ -17902,9 +17845,12 @@ declare module "oro:events" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:extension` (javascript/extension)
@@ -17913,27 +17859,54 @@ URL: /runtime/docs/?p=javascript/extension
 
 # `oro:extension`
 
-`oro:extension` loads native and wasm extensions and reports extension runtime state.
+`oro:extension` loads app-bundled native extensions and Wasm extensions, then exposes their registered runtime state to
+JavaScript.
 
-## Examples
+Use it when ordinary JavaScript modules are not the right boundary: platform-specific code, a C/C++ library that already
+exists, a small Wasm module, or a runtime route that needs to live beside native resources.
 
-Load a runtime extension and inspect the resulting binding:
+## Related guides
+
+- [Native extensions](?p=guides/native-extensions)
+
+Start with the guide when you need to write the C/C++ or Wasm extension itself.
+
+## Authoring contract
+
+At a high level:
+
+- extension names are filesystem-safe identifiers such as `image_tools` or `simple-ipc-ping`,
+- C/C++ extensions include `oro/extension.h` and export `__oapi_extension_init` through
+  `ORO_RUNTIME_REGISTER_EXTENSION`,
+- Wasm extensions use the same registration contract with `target = "wasm32"`,
+- extension code usually maps one or more IPC routes with `oapi_ipc_router_map`,
+- app code loads the extension with `oro:extension` and talks to those routes with `oro:ipc`,
+- production apps should constrain load locations with `extensions.allowed_roots`.
+
+## Example
 
 ```js
-import { load, stats } from 'oro:extension'
+import extension from 'oro:extension'
+import ipc from 'oro:ipc'
 
-const extension = await load('image-tools', { allow: ['resize'] })
+const imageTools = await extension.load('image_tools', {
+  allow: ['ipc'],
+})
 
-console.log(extension.type)
-console.log(await stats())
+const resized = await ipc.request('image_tools.resize', {
+  path: 'input/avatar.png',
+  width: 256,
+  height: 256,
+})
 
-await extension.unload()
+console.log(imageTools.type)
+console.log(resized.data)
+
+await imageTools.unload()
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
+`allow` is the extension capability policy. If the native initializer or a route handler calls an API that is not
+allowed, that call fails instead of silently expanding the extension's authority.
 
 ## API reference
 
@@ -17947,8 +17920,9 @@ oro:extension
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:extension</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:extension`
 
 ```ts
 declare module "oro:extension" {
@@ -18157,9 +18131,11 @@ declare module "oro:extension" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:fetch` (javascript/fetch)
@@ -18169,6 +18145,11 @@ URL: /runtime/docs/?p=javascript/fetch
 # `oro:fetch`
 
 `oro:fetch` exposes the runtime fetch stack and standard request/response primitives.
+
+## Related guides
+
+- [Calling HTTP APIs](?p=guides/calling-http-apis)
+- [Offline-first with service workers](?p=guides/offline-first-with-service-workers)
 
 ## Examples
 
@@ -18182,11 +18163,6 @@ const data = await response.json()
 
 console.log(data)
 ```
-
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -18202,8 +18178,9 @@ oro:fetch/index
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:fetch</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:fetch`
 
 ```ts
 declare module "oro:fetch" {
@@ -18213,10 +18190,7 @@ declare module "oro:fetch" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fetch/fetch</code></summary>
+#### `oro:fetch/fetch`
 
 ```ts
 declare module "oro:fetch/fetch" {
@@ -18290,10 +18264,7 @@ declare module "oro:fetch/fetch" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:fetch/index</code></summary>
+#### `oro:fetch/index`
 
 ```ts
 declare module "oro:fetch/index" {
@@ -18306,9 +18277,12 @@ declare module "oro:fetch/index" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:gc` (javascript/gc)
@@ -18336,11 +18310,6 @@ ref(resource)
 unref(resource)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -18353,8 +18322,9 @@ oro:gc
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:gc</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:gc`
 
 ```ts
 declare module "oro:gc" {
@@ -18434,9 +18404,12 @@ declare module "oro:gc" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:hci` (javascript/hci)
@@ -18462,11 +18435,6 @@ if (adapters.length > 0) {
 }
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -18479,8 +18447,9 @@ oro:hci
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:hci</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:hci`
 
 ```ts
 declare module "oro:hci" {
@@ -18592,9 +18561,12 @@ declare module "oro:hci" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:http` (javascript/http)
@@ -18604,6 +18576,10 @@ URL: /runtime/docs/?p=javascript/http
 # `oro:http`
 
 `oro:http` provides Node-compatible HTTP client and server APIs.
+
+## Related guides
+
+- [Calling HTTP APIs](?p=guides/calling-http-apis)
 
 ## Examples
 
@@ -18620,11 +18596,6 @@ const server = createServer((req, res) => {
 server.listen(8080, '127.0.0.1')
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -18638,8 +18609,9 @@ oro:http/adapters
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:http</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:http`
 
 ```ts
 declare module "oro:http" {
@@ -19413,10 +19385,7 @@ declare module "oro:http" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:http/adapters</code></summary>
+#### `oro:http/adapters`
 
 ```ts
 declare module "oro:http/adapters" {
@@ -19513,9 +19482,12 @@ declare module "oro:http/adapters" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:https` (javascript/https)
@@ -19525,6 +19497,10 @@ URL: /runtime/docs/?p=javascript/https
 # `oro:https`
 
 `oro:https` provides HTTPS client and server APIs on top of the runtime TLS stack.
+
+## Related guides
+
+- [Calling HTTP APIs](?p=guides/calling-http-apis)
 
 ## Examples
 
@@ -19539,11 +19515,6 @@ get('https://example.com', (res) => {
 })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -19556,8 +19527,9 @@ oro:https
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:https</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:https`
 
 ```ts
 declare module "oro:https" {
@@ -19727,9 +19699,12 @@ declare module "oro:https" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:i18n` (javascript/i18n)
@@ -19751,11 +19726,6 @@ console.log(getUILanguage())
 console.log(getMessage('menu.file.open'))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -19768,8 +19738,9 @@ oro:i18n
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:i18n</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:i18n`
 
 ```ts
 declare module "oro:i18n" {
@@ -19839,9 +19810,12 @@ declare module "oro:i18n" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:ip` (javascript/ip)
@@ -19865,11 +19839,6 @@ console.log(address)
 console.log(isIPv4(address))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -19882,8 +19851,9 @@ oro:ip
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:ip</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:ip`
 
 ```ts
 declare module "oro:ip" {
@@ -19907,9 +19877,12 @@ declare module "oro:ip" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:ipc` (javascript/ipc)
@@ -19919,6 +19892,11 @@ URL: /runtime/docs/?p=javascript/ipc
 # `oro:ipc`
 
 `oro:ipc` exposes low-level runtime IPC helpers used to talk to the native host process.
+
+## Related guides
+
+- [Native extensions](?p=guides/native-extensions)
+- [Windows and messaging](?p=guides/windows-and-messaging)
 
 ## Examples
 
@@ -19933,11 +19911,6 @@ await ready()
 postMessage({ type: 'docs-demo', at: Date.now() })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -19950,8 +19923,9 @@ oro:ipc
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:ipc</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:ipc`
 
 ```ts
 declare module "oro:ipc" {
@@ -20592,9 +20566,12 @@ declare module "oro:ipc" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:ipfs` (javascript/ipfs)
@@ -20619,11 +20596,6 @@ const { cid } = await add('/absolute/path/to/report.txt')
 console.log(cid)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -20636,8 +20608,9 @@ oro:ipfs
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:ipfs</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:ipfs`
 
 ```ts
 declare module "oro:ipfs" {
@@ -20775,9 +20748,12 @@ declare module "oro:ipfs" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:iroh` (javascript/iroh)
@@ -20805,11 +20781,6 @@ console.log(await endpoint.nodeAddr())
 await endpoint.close()
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -20822,8 +20793,9 @@ oro:iroh
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:iroh</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:iroh`
 
 ```ts
 declare module "oro:iroh" {
@@ -20945,9 +20917,12 @@ declare module "oro:iroh" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:language` (javascript/language)
@@ -20969,11 +20944,6 @@ console.log(lookup('en-US'))
 console.log(describe('English'))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -20986,8 +20956,9 @@ oro:language
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:language</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:language`
 
 ```ts
 declare module "oro:language" {
@@ -21136,9 +21107,12 @@ declare module "oro:language" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:latica` (javascript/latica)
@@ -21161,11 +21135,6 @@ const topic = await sha256(new TextEncoder().encode('docs-demo'))
 console.log(topic)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -21186,8 +21155,9 @@ oro:latica/worker
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:latica</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:latica`
 
 ```ts
 declare module "oro:latica" {
@@ -21197,10 +21167,7 @@ declare module "oro:latica" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:latica/api</code></summary>
+#### `oro:latica/api`
 
 ```ts
 declare module "oro:latica/api" {
@@ -21223,10 +21190,7 @@ declare module "oro:latica/api" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:latica/cache</code></summary>
+#### `oro:latica/cache`
 
 ```ts
 declare module "oro:latica/cache" {
@@ -21416,10 +21380,7 @@ declare module "oro:latica/cache" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:latica/encryption</code></summary>
+#### `oro:latica/encryption`
 
 ```ts
 declare module "oro:latica/encryption" {
@@ -21550,10 +21511,7 @@ declare module "oro:latica/encryption" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:latica/index</code></summary>
+#### `oro:latica/index`
 
 ```ts
 declare module "oro:latica/index" {
@@ -22050,10 +22008,7 @@ declare module "oro:latica/index" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:latica/nat</code></summary>
+#### `oro:latica/nat`
 
 ```ts
 declare module "oro:latica/nat" {
@@ -22156,10 +22111,7 @@ declare module "oro:latica/nat" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:latica/packets</code></summary>
+#### `oro:latica/packets`
 
 ```ts
 declare module "oro:latica/packets" {
@@ -22399,10 +22351,7 @@ declare module "oro:latica/packets" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:latica/proxy</code></summary>
+#### `oro:latica/proxy`
 
 ```ts
 declare module "oro:latica/proxy" {
@@ -22444,10 +22393,7 @@ declare module "oro:latica/proxy" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:latica/worker</code></summary>
+#### `oro:latica/worker`
 
 ```ts
 declare module "oro:latica/worker" {
@@ -22455,9 +22401,12 @@ declare module "oro:latica/worker" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:location` (javascript/location)
@@ -22467,6 +22416,10 @@ URL: /runtime/docs/?p=javascript/location
 # `oro:location`
 
 `oro:location` normalizes the current runtime location and origin semantics across platforms.
+
+## Related guides
+
+- [Lifecycle hooks and deep links](?p=guides/lifecycle-hooks-and-deep-links)
 
 ## Examples
 
@@ -22478,11 +22431,6 @@ import location from 'oro:location'
 console.log(location.href)
 console.log(location.origin)
 ```
-
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -22496,8 +22444,9 @@ oro:location
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:location</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:location`
 
 ```ts
 declare module "oro:location" {
@@ -22519,9 +22468,12 @@ declare module "oro:location" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:mime` (javascript/mime)
@@ -22543,11 +22495,6 @@ console.log(lookupSync('application/json'))
 console.log(lookupSync('.png'))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -22563,8 +22510,9 @@ oro:mime/type
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:mime</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:mime`
 
 ```ts
 declare module "oro:mime" {
@@ -22574,10 +22522,7 @@ declare module "oro:mime" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:mime/index</code></summary>
+#### `oro:mime/index`
 
 ```ts
 declare module "oro:mime/index" {
@@ -22757,10 +22702,7 @@ declare module "oro:mime/index" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:mime/params</code></summary>
+#### `oro:mime/params`
 
 ```ts
 declare module "oro:mime/params" {
@@ -22774,10 +22716,7 @@ declare module "oro:mime/params" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:mime/type</code></summary>
+#### `oro:mime/type`
 
 ```ts
 declare module "oro:mime/type" {
@@ -22797,9 +22736,12 @@ declare module "oro:mime/type" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:module` (javascript/module)
@@ -22825,11 +22767,6 @@ console.log(typeof Module)
 console.log(typeof require)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -22842,8 +22779,9 @@ oro:module
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:module</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:module`
 
 ```ts
 declare module "oro:module" {
@@ -22862,9 +22800,12 @@ declare module "oro:module" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:navigation` (javascript/navigation)
@@ -22874,6 +22815,11 @@ URL: /runtime/docs/?p=javascript/navigation
 # `oro:navigation`
 
 `oro:navigation` surfaces the Navigation API state that the runtime makes available to application code.
+
+## Related guides
+
+- [Lifecycle hooks and deep links](?p=guides/lifecycle-hooks-and-deep-links)
+- [Windows and messaging](?p=guides/windows-and-messaging)
 
 ## Examples
 
@@ -22889,11 +22835,6 @@ navigation.addEventListener('navigate', (event) => {
 })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -22907,8 +22848,9 @@ oro:navigation/navigation
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:navigation</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:navigation`
 
 ```ts
 declare module "oro:navigation" {
@@ -22919,10 +22861,7 @@ declare module "oro:navigation" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:navigation/navigation</code></summary>
+#### `oro:navigation/navigation`
 
 ```ts
 declare module "oro:navigation/navigation" {
@@ -22930,9 +22869,12 @@ declare module "oro:navigation/navigation" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:net` (javascript/net)
@@ -22957,11 +22899,6 @@ const server = createServer({}, (socket) => {
 server.listen(4040, '127.0.0.1')
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -22974,8 +22911,9 @@ oro:net
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:net</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:net`
 
 ```ts
 declare module "oro:net" {
@@ -23059,9 +22997,12 @@ declare module "oro:net" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:network` (javascript/network)
@@ -23085,11 +23026,6 @@ bus.on('error', console.error)
 bus.on('message', (message) => console.log(message))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -23102,8 +23038,9 @@ oro:network
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:network</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:network`
 
 ```ts
 declare module "oro:network" {
@@ -23119,61 +23056,12 @@ declare module "oro:network" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
-
-==============================================================================
-DOCS: `oro:node-esm-loader` (javascript/node-esm-loader)
-URL: /runtime/docs/?p=javascript/node-esm-loader
-==============================================================================
-
-# `oro:node-esm-loader`
-
-`oro:node-esm-loader` exposes the runtime’s ESM loader resolution hook.
-
-## Examples
-
-Reuse the runtime resolver from a custom ESM loader hook:
-
-```js
-import resolve from 'oro:node-esm-loader'
-
-export async function resolveHook(specifier, context, nextResolve) {
-  return resolve(specifier, context, nextResolve)
-}
-```
 
 ## See also
 
-- [Module index](?p=javascript/module-index)
+- [JavaScript APIs overview](?p=javascript/overview)
 - [All module specifiers](?p=javascript/all-modules)
-
-## API reference
-
-<!-- GENERATED: ORO_API_REFERENCE_START -->
-
-### Module specifiers
-
-```text
-oro:node-esm-loader
-```
-
-### TypeScript declarations
-
-<details>
-<summary><code>oro:node-esm-loader</code></summary>
-
-```ts
-declare module "oro:node-esm-loader" {
-    export function resolve(specifier: any, _ctx: any, next: any): Promise<any>;
-    export default resolve;
-}
-```
-
-</details>
-
-<!-- GENERATED: ORO_API_REFERENCE_END -->
 
 ==============================================================================
 DOCS: `oro:npm/*` (javascript/npm)
@@ -23197,11 +23085,6 @@ console.log(resolved?.url)
 console.log(resolved?.type)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -23215,8 +23098,9 @@ oro:npm/service-worker
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:npm/module</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:npm/module`
 
 ```ts
 declare module "oro:npm/module" {
@@ -23253,10 +23137,7 @@ declare module "oro:npm/module" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:npm/service-worker</code></summary>
+#### `oro:npm/service-worker`
 
 ```ts
 declare module "oro:npm/service-worker" {
@@ -23279,9 +23160,12 @@ declare module "oro:npm/service-worker" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:os` (javascript/os)
@@ -23304,11 +23188,6 @@ console.log(tmpdir())
 console.log(cpus().length)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -23322,8 +23201,9 @@ oro:os/constants
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:os</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:os`
 
 ```ts
 declare module "oro:os" {
@@ -23440,10 +23320,7 @@ declare module "oro:os" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:os/constants</code></summary>
+#### `oro:os/constants`
 
 ```ts
 declare module "oro:os/constants" {
@@ -23471,9 +23348,12 @@ declare module "oro:os/constants" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:path` (javascript/path)
@@ -23483,6 +23363,11 @@ URL: /runtime/docs/?p=javascript/path
 # `oro:path`
 
 `oro:path` provides cross-platform path manipulation utilities.
+
+## Related guides
+
+- [Files and sandboxing](?p=guides/files-and-sandboxing)
+- [Project layout](?p=guides/project-layout)
 
 ## Examples
 
@@ -23497,11 +23382,6 @@ console.log(absolute)
 console.log(dirname(absolute))
 console.log(basename(join('/tmp', 'report.txt')))
 ```
-
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -23521,8 +23401,9 @@ oro:path/win32
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:path</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:path`
 
 ```ts
 declare module "oro:path" {
@@ -23562,10 +23443,7 @@ declare module "oro:path" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:path/index</code></summary>
+#### `oro:path/index`
 
 ```ts
 declare module "oro:path/index" {
@@ -23593,10 +23471,7 @@ declare module "oro:path/index" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:path/mounts</code></summary>
+#### `oro:path/mounts`
 
 ```ts
 declare module "oro:path/mounts" {
@@ -23605,10 +23480,7 @@ declare module "oro:path/mounts" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:path/path</code></summary>
+#### `oro:path/path`
 
 ```ts
 declare module "oro:path/path" {
@@ -23817,10 +23689,7 @@ declare module "oro:path/path" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:path/posix</code></summary>
+#### `oro:path/posix`
 
 ```ts
 declare module "oro:path/posix" {
@@ -23927,10 +23796,7 @@ declare module "oro:path/posix" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:path/well-known</code></summary>
+#### `oro:path/well-known`
 
 ```ts
 declare module "oro:path/well-known" {
@@ -24019,10 +23885,7 @@ declare module "oro:path/well-known" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:path/win32</code></summary>
+#### `oro:path/win32`
 
 ```ts
 declare module "oro:path/win32" {
@@ -24129,9 +23992,12 @@ declare module "oro:path/win32" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:process` (javascript/process)
@@ -24141,6 +24007,10 @@ URL: /runtime/docs/?p=javascript/process
 # `oro:process`
 
 `oro:process` exposes runtime process state, env access, signals, and scheduling helpers.
+
+## Related guides
+
+- [Configure your runtime project](?p=guides/configure-your-runtime-project)
 
 ## Examples
 
@@ -24157,11 +24027,6 @@ nextTick(() => {
 })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -24175,8 +24040,9 @@ oro:process/signal
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:process</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:process`
 
 ```ts
 declare module "oro:process" {
@@ -24333,10 +24199,7 @@ declare module "oro:process" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:process/signal</code></summary>
+#### `oro:process/signal`
 
 ```ts
 declare module "oro:process/signal" {
@@ -24497,9 +24360,12 @@ declare module "oro:process/signal" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:protocol-handlers` (javascript/protocol-handlers)
@@ -24509,6 +24375,11 @@ URL: /runtime/docs/?p=javascript/protocol-handlers
 # `oro:protocol-handlers`
 
 `oro:protocol-handlers` exposes runtime helpers for custom protocol and service-worker routing.
+
+## Related guides
+
+- [Custom protocols and routing](?p=guides/custom-protocols-and-routing)
+- [Offline-first with service workers](?p=guides/offline-first-with-service-workers)
 
 ## Examples
 
@@ -24522,11 +24393,6 @@ const worker = await getServiceWorker({ scheme: 'npm' })
 console.log(worker)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -24539,8 +24405,9 @@ oro:protocol-handlers
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:protocol-handlers</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:protocol-handlers`
 
 ```ts
 declare module "oro:protocol-handlers" {
@@ -24565,9 +24432,12 @@ declare module "oro:protocol-handlers" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:querystring` (javascript/querystring)
@@ -24591,11 +24461,6 @@ console.log(query)
 console.log(parse(query))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -24608,8 +24473,9 @@ oro:querystring
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:querystring</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:querystring`
 
 ```ts
 declare module "oro:querystring" {
@@ -24632,9 +24498,12 @@ declare module "oro:querystring" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:semver` (javascript/semver)
@@ -24657,11 +24526,6 @@ console.log(compare('1.4.0', '1.3.9'))
 console.log(gt('2.0.0', '1.9.0'))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -24674,8 +24538,9 @@ oro:semver
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:semver</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:semver`
 
 ```ts
 declare module "oro:semver" {
@@ -24857,9 +24722,12 @@ declare module "oro:semver" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:service-worker` (javascript/service-worker)
@@ -24869,6 +24737,11 @@ URL: /runtime/docs/?p=javascript/service-worker
 # `oro:service-worker`
 
 `oro:service-worker/*` exposes the service-worker environment, lifecycle objects, and helpers.
+
+## Related guides
+
+- [Offline-first with service workers](?p=guides/offline-first-with-service-workers)
+- [Custom protocols and routing](?p=guides/custom-protocols-and-routing)
 
 ## Examples
 
@@ -24883,11 +24756,6 @@ if (env) {
   })
 }
 ```
-
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -24915,8 +24783,9 @@ oro:service-worker/worker
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:service-worker</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:service-worker`
 
 ```ts
 declare module "oro:service-worker" {
@@ -24942,10 +24811,7 @@ declare module "oro:service-worker" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/clients</code></summary>
+#### `oro:service-worker/clients`
 
 ```ts
 declare module "oro:service-worker/clients" {
@@ -24977,10 +24843,7 @@ declare module "oro:service-worker/clients" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/container</code></summary>
+#### `oro:service-worker/container`
 
 ```ts
 declare module "oro:service-worker/container" {
@@ -25018,10 +24881,7 @@ declare module "oro:service-worker/container" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/context</code></summary>
+#### `oro:service-worker/context`
 
 ```ts
 declare module "oro:service-worker/context" {
@@ -25085,10 +24945,7 @@ declare module "oro:service-worker/context" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/debug</code></summary>
+#### `oro:service-worker/debug`
 
 ```ts
 declare module "oro:service-worker/debug" {
@@ -25097,10 +24954,7 @@ declare module "oro:service-worker/debug" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/env</code></summary>
+#### `oro:service-worker/env`
 
 ```ts
 declare module "oro:service-worker/env" {
@@ -25219,10 +25073,7 @@ declare module "oro:service-worker/env" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/events</code></summary>
+#### `oro:service-worker/events`
 
 ```ts
 declare module "oro:service-worker/events" {
@@ -25383,10 +25234,7 @@ declare module "oro:service-worker/events" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/global</code></summary>
+#### `oro:service-worker/global`
 
 ```ts
 declare module "oro:service-worker/global" {
@@ -25415,10 +25263,7 @@ declare module "oro:service-worker/global" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/init</code></summary>
+#### `oro:service-worker/init`
 
 ```ts
 declare module "oro:service-worker/init" {
@@ -25458,10 +25303,7 @@ declare module "oro:service-worker/init" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/instance</code></summary>
+#### `oro:service-worker/instance`
 
 ```ts
 declare module "oro:service-worker/instance" {
@@ -25490,10 +25332,7 @@ declare module "oro:service-worker/instance" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/notification</code></summary>
+#### `oro:service-worker/notification`
 
 ```ts
 declare module "oro:service-worker/notification" {
@@ -25507,10 +25346,7 @@ declare module "oro:service-worker/notification" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/registration</code></summary>
+#### `oro:service-worker/registration`
 
 ```ts
 declare module "oro:service-worker/registration" {
@@ -25534,10 +25370,7 @@ declare module "oro:service-worker/registration" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/state</code></summary>
+#### `oro:service-worker/state`
 
 ```ts
 declare module "oro:service-worker/state" {
@@ -25547,10 +25380,7 @@ declare module "oro:service-worker/state" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/storage</code></summary>
+#### `oro:service-worker/storage`
 
 ```ts
 declare module "oro:service-worker/storage" {
@@ -25882,10 +25712,7 @@ declare module "oro:service-worker/storage" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:service-worker/worker</code></summary>
+#### `oro:service-worker/worker`
 
 ```ts
 declare module "oro:service-worker/worker" {
@@ -25909,9 +25736,12 @@ declare module "oro:service-worker/worker" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:shared-worker` (javascript/shared-worker)
@@ -25921,6 +25751,11 @@ URL: /runtime/docs/?p=javascript/shared-worker
 # `oro:shared-worker`
 
 `oro:shared-worker/*` exposes the shared-worker environment and runtime helpers.
+
+## Related guides
+
+- [Shared workers across windows](?p=guides/shared-workers-across-windows)
+- [Windows and messaging](?p=guides/windows-and-messaging)
 
 ## Examples
 
@@ -25934,11 +25769,6 @@ const worker = new SharedWorker(new URL('./shared.js', import.meta.url))
 worker.port.start()
 worker.port.postMessage({ type: 'warmup' })
 ```
-
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -25958,8 +25788,9 @@ oro:shared-worker/worker
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:shared-worker</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:shared-worker`
 
 ```ts
 declare module "oro:shared-worker" {
@@ -25975,10 +25806,7 @@ declare module "oro:shared-worker" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:shared-worker/debug</code></summary>
+#### `oro:shared-worker/debug`
 
 ```ts
 declare module "oro:shared-worker/debug" {
@@ -25987,10 +25815,7 @@ declare module "oro:shared-worker/debug" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:shared-worker/global</code></summary>
+#### `oro:shared-worker/global`
 
 ```ts
 declare module "oro:shared-worker/global" {
@@ -26004,10 +25829,7 @@ declare module "oro:shared-worker/global" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:shared-worker/index</code></summary>
+#### `oro:shared-worker/index`
 
 ```ts
 declare module "oro:shared-worker/index" {
@@ -26044,10 +25866,7 @@ declare module "oro:shared-worker/index" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:shared-worker/init</code></summary>
+#### `oro:shared-worker/init`
 
 ```ts
 declare module "oro:shared-worker/init" {
@@ -26078,10 +25897,7 @@ declare module "oro:shared-worker/init" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:shared-worker/state</code></summary>
+#### `oro:shared-worker/state`
 
 ```ts
 declare module "oro:shared-worker/state" {
@@ -26090,10 +25906,7 @@ declare module "oro:shared-worker/state" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:shared-worker/worker</code></summary>
+#### `oro:shared-worker/worker`
 
 ```ts
 declare module "oro:shared-worker/worker" {
@@ -26111,9 +25924,12 @@ declare module "oro:shared-worker/worker" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:signal` (javascript/signal)
@@ -26136,11 +25952,6 @@ signal.addEventListener('SIGTERM', (event) => {
 })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -26153,8 +25964,9 @@ oro:signal
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:signal</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:signal`
 
 ```ts
 declare module "oro:signal" {
@@ -26164,9 +25976,12 @@ declare module "oro:signal" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:sqlite` (javascript/sqlite)
@@ -26176,6 +25991,11 @@ URL: /runtime/docs/?p=javascript/sqlite
 # `oro:sqlite`
 
 `oro:sqlite` opens SQLite databases and exposes sync and async query helpers.
+
+## Related guides
+
+- [Local data with SQLite](?p=guides/local-data-with-sqlite)
+- [Files and sandboxing](?p=guides/files-and-sandboxing)
 
 ## Examples
 
@@ -26192,11 +26012,6 @@ db.exec("insert into notes (title) values ('hello')")
 console.log(db.query('select * from notes'))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -26209,8 +26024,9 @@ oro:sqlite
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:sqlite</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:sqlite`
 
 ```ts
 declare module "oro:sqlite" {
@@ -26345,9 +26161,12 @@ declare module "oro:sqlite" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:stream` (javascript/stream)
@@ -26377,11 +26196,6 @@ const sink = new Writable({
 await pipelinePromise(source, sink)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -26395,8 +26209,9 @@ oro:stream/web
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:stream</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:stream`
 
 ```ts
 declare module "oro:stream" {
@@ -26639,10 +26454,7 @@ declare module "oro:stream" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:stream/web</code></summary>
+#### `oro:stream/web`
 
 ```ts
 declare module "oro:stream/web" {
@@ -26681,9 +26493,12 @@ declare module "oro:stream/web" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:string_decoder` (javascript/string_decoder)
@@ -26709,11 +26524,6 @@ console.log(decoder.write(chunks[0]))
 console.log(decoder.write(chunks[1]))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -26726,8 +26536,9 @@ oro:string_decoder
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:string_decoder</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:string_decoder`
 
 ```ts
 declare module "oro:string_decoder" {
@@ -26764,9 +26575,12 @@ declare module "oro:string_decoder" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:tar` (javascript/tar)
@@ -26793,11 +26607,6 @@ await archive.finalize()
 console.log(await archive.entries())
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -26810,8 +26619,9 @@ oro:tar
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:tar</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:tar`
 
 ```ts
 declare module "oro:tar" {
@@ -27088,9 +26898,12 @@ declare module "oro:tar" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:tcp` (javascript/tcp)
@@ -27115,11 +26928,6 @@ const server = createServer((socket) => {
 server.listen({ port: 5050, host: '127.0.0.1' })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -27132,8 +26940,9 @@ oro:tcp
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:tcp</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:tcp`
 
 ```ts
 declare module "oro:tcp" {
@@ -27214,9 +27023,12 @@ declare module "oro:tcp" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:test` (javascript/test)
@@ -27226,6 +27038,10 @@ URL: /runtime/docs/?p=javascript/test
 # `oro:test`
 
 `oro:test` provides the runtime test harness used by application and module tests.
+
+## Related guides
+
+- [Testing and diagnostics](?p=guides/testing-and-diagnostics)
 
 ## Examples
 
@@ -27238,11 +27054,6 @@ test('querystring roundtrip', async (t) => {
   t.equal('a=1', new URLSearchParams({ a: '1' }).toString())
 })
 ```
-
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -27261,8 +27072,9 @@ oro:test/index
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:test</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:test`
 
 ```ts
 declare module "oro:test" {
@@ -27272,10 +27084,7 @@ declare module "oro:test" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:test/context</code></summary>
+#### `oro:test/context`
 
 ```ts
 declare module "oro:test/context" {
@@ -27283,10 +27092,7 @@ declare module "oro:test/context" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:test/dom-helpers</code></summary>
+#### `oro:test/dom-helpers`
 
 ```ts
 declare module "oro:test/dom-helpers" {
@@ -27376,10 +27182,7 @@ declare module "oro:test/dom-helpers" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:test/fast-deep-equal</code></summary>
+#### `oro:test/fast-deep-equal`
 
 ```ts
 declare module "oro:test/fast-deep-equal" {
@@ -27387,10 +27190,7 @@ declare module "oro:test/fast-deep-equal" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:test/harness</code></summary>
+#### `oro:test/harness`
 
 ```ts
 declare module "oro:test/harness" {
@@ -27511,10 +27311,7 @@ declare module "oro:test/harness" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:test/index</code></summary>
+#### `oro:test/index`
 
 ```ts
 declare module "oro:test/index" {
@@ -28126,9 +27923,12 @@ declare module "oro:test/index" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:timers` (javascript/timers)
@@ -28151,11 +27951,6 @@ await sleep(250)
 console.log('quarter second elapsed')
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -28173,8 +27968,9 @@ oro:timers/timer
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:timers</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:timers`
 
 ```ts
 declare module "oro:timers" {
@@ -28184,10 +27980,7 @@ declare module "oro:timers" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:timers/index</code></summary>
+#### `oro:timers/index`
 
 ```ts
 declare module "oro:timers/index" {
@@ -28229,10 +28022,7 @@ declare module "oro:timers/index" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:timers/platform</code></summary>
+#### `oro:timers/platform`
 
 ```ts
 declare module "oro:timers/platform" {
@@ -28249,10 +28039,7 @@ declare module "oro:timers/platform" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:timers/promises</code></summary>
+#### `oro:timers/promises`
 
 ```ts
 declare module "oro:timers/promises" {
@@ -28268,10 +28055,7 @@ declare module "oro:timers/promises" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:timers/scheduler</code></summary>
+#### `oro:timers/scheduler`
 
 ```ts
 declare module "oro:timers/scheduler" {
@@ -28287,10 +28071,7 @@ declare module "oro:timers/scheduler" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:timers/timer</code></summary>
+#### `oro:timers/timer`
 
 ```ts
 declare module "oro:timers/timer" {
@@ -28327,9 +28108,12 @@ declare module "oro:timers/timer" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:tls` (javascript/tls)
@@ -28352,11 +28136,6 @@ console.log(await getTlsPins())
 await clearTlsPins()
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -28369,8 +28148,9 @@ oro:tls
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:tls</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:tls`
 
 ```ts
 declare module "oro:tls" {
@@ -28745,9 +28525,12 @@ declare module "oro:tls" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:toml` (javascript/toml)
@@ -28771,11 +28554,6 @@ config.debug = true
 console.log(stringify(config))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -28788,8 +28566,9 @@ oro:toml
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:toml</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:toml`
 
 ```ts
 declare module "oro:toml" {
@@ -28874,9 +28653,12 @@ declare module "oro:toml" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:tty` (javascript/tty)
@@ -28898,11 +28680,6 @@ console.log(isatty(0))
 console.log(isatty(1))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -28915,8 +28692,9 @@ oro:tty
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:tty</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:tty`
 
 ```ts
 declare module "oro:tty" {
@@ -28934,9 +28712,12 @@ declare module "oro:tty" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:url` (javascript/url)
@@ -28960,11 +28741,6 @@ console.log(url.pathname)
 console.log(url.searchParams.get('project'))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -28980,8 +28756,9 @@ oro:url/urlpattern/urlpattern
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:url</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:url`
 
 ```ts
 declare module "oro:url" {
@@ -28991,10 +28768,7 @@ declare module "oro:url" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:url/index</code></summary>
+#### `oro:url/index`
 
 ```ts
 declare module "oro:url/index" {
@@ -29079,10 +28853,7 @@ declare module "oro:url/index" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:url/url/url</code></summary>
+#### `oro:url/url/url`
 
 ```ts
 declare module "oro:url/url/url" {
@@ -29091,10 +28862,7 @@ declare module "oro:url/url/url" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:url/urlpattern/urlpattern</code></summary>
+#### `oro:url/urlpattern/urlpattern`
 
 ```ts
 declare module "oro:url/urlpattern/urlpattern" {
@@ -29126,9 +28894,12 @@ declare module "oro:url/urlpattern/urlpattern" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:usb` (javascript/usb)
@@ -29154,11 +28925,6 @@ if (usb) {
 }
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -29171,8 +28937,9 @@ oro:usb
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:usb</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:usb`
 
 ```ts
 declare module "oro:usb" {
@@ -29204,9 +28971,12 @@ declare module "oro:usb" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:util` (javascript/util)
@@ -29231,11 +29001,6 @@ log('payload ready')
 console.log(isTypedArray(payload))
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -29249,8 +29014,9 @@ oro:util/types
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:util</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:util`
 
 ```ts
 declare module "oro:util" {
@@ -29332,10 +29098,7 @@ declare module "oro:util" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:util/types</code></summary>
+#### `oro:util/types`
 
 ```ts
 declare module "oro:util/types" {
@@ -29647,9 +29410,12 @@ declare module "oro:util/types" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:vm` (javascript/vm)
@@ -29673,11 +29439,6 @@ const result = await runInContext('answer + 1', context)
 console.log(result)
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -29692,8 +29453,9 @@ oro:vm/world
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:vm</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:vm`
 
 ```ts
 declare module "oro:vm" {
@@ -30101,10 +29863,7 @@ declare module "oro:vm" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:vm/init</code></summary>
+#### `oro:vm/init`
 
 ```ts
 declare module "oro:vm/init" {
@@ -30112,10 +29871,7 @@ declare module "oro:vm/init" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:vm/world</code></summary>
+#### `oro:vm/world`
 
 ```ts
 declare module "oro:vm/world" {
@@ -30123,9 +29879,12 @@ declare module "oro:vm/world" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:worker_threads` (javascript/worker_threads)
@@ -30135,6 +29894,10 @@ URL: /runtime/docs/?p=javascript/worker_threads
 # `oro:worker_threads`
 
 `oro:worker_threads` exposes worker-thread primitives, ports, and environment data helpers.
+
+## Related guides
+
+- [Worker threads for heavy work](?p=guides/worker-threads-for-heavy-work)
 
 ## Examples
 
@@ -30150,11 +29913,6 @@ port1.onmessage = (event) => console.log(event.data)
 port2.postMessage({ ok: true })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -30168,8 +29926,9 @@ oro:worker_threads/init
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:worker_threads</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:worker_threads`
 
 ```ts
 declare module "oro:worker_threads" {
@@ -30351,10 +30110,7 @@ declare module "oro:worker_threads" {
 }
 ```
 
-</details>
-
-<details>
-<summary><code>oro:worker_threads/init</code></summary>
+#### `oro:worker_threads/init`
 
 ```ts
 declare module "oro:worker_threads/init" {
@@ -30376,9 +30132,12 @@ declare module "oro:worker_threads/init" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:worker` (javascript/worker)
@@ -30388,6 +30147,11 @@ URL: /runtime/docs/?p=javascript/worker
 # `oro:worker`
 
 `oro:worker` re-exports the runtime worker classes for dedicated, shared, and service workers.
+
+## Related guides
+
+- [Worker threads for heavy work](?p=guides/worker-threads-for-heavy-work)
+- [Shared workers across windows](?p=guides/shared-workers-across-windows)
 
 ## Examples
 
@@ -30403,11 +30167,6 @@ const worker = new Worker(new URL('./worker.js', import.meta.url), {
 worker.postMessage({ type: 'start' })
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -30420,8 +30179,9 @@ oro:worker
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:worker</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:worker`
 
 ```ts
 declare module "oro:worker" {
@@ -30433,9 +30193,12 @@ declare module "oro:worker" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:xpc` (javascript/xpc)
@@ -30462,11 +30225,6 @@ if (state.available) {
 }
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -30479,8 +30237,9 @@ oro:xpc
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:xpc</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:xpc`
 
 ```ts
 declare module "oro:xpc" {
@@ -30577,9 +30336,12 @@ declare module "oro:xpc" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)
 
 ==============================================================================
 DOCS: `oro:zlib` (javascript/zlib)
@@ -30603,11 +30365,6 @@ const restored = await gunzip(compressed)
 console.log(restored.toString())
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -30620,8 +30377,9 @@ oro:zlib
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:zlib</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:zlib`
 
 ```ts
 declare module "oro:zlib" {
@@ -30749,6 +30507,9 @@ declare module "oro:zlib" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

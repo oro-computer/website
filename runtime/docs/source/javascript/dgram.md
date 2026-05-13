@@ -20,11 +20,6 @@ socket.bind(41234)
 socket.send(Buffer.from('ping'), 41235, '127.0.0.1')
 ```
 
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
-
 ## API reference
 
 <!-- GENERATED: ORO_API_REFERENCE_START -->
@@ -37,8 +32,9 @@ oro:dgram
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:dgram</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:dgram`
 
 ```ts
 declare module "oro:dgram" {
@@ -405,6 +401,9 @@ declare module "oro:dgram" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

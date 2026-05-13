@@ -152,4 +152,4 @@ oroc build .
 7. **Operate and automate** — [Release packaging and signed updates](?p=guides/release-packaging-and-signed-updates) → [Testing and diagnostics](?p=guides/testing-and-diagnostics) → [MCP and agent automation](?p=guides/mcp-and-agent-automation)
 8. **Reference** — [oroc](?p=cli/oroc) → [help](?p=cli/help) → [run](?p=cli/run) → [build](?p=cli/build) → [update](?p=cli/update)
 9. **Configuration** — [Overview](?p=config/overview) → [copy_map](?p=config/copy-map) → [reference](?p=config/reference)
-10. **JavaScript APIs** — [Overview](?p=javascript/overview) → [module index](?p=javascript/module-index) → [all module specifiers](?p=javascript/all-modules) → [application](?p=javascript/application) → [window](?p=javascript/window) → [hooks](?p=javascript/hooks)
+10. **JavaScript APIs** — [Overview](?p=javascript/overview) → [specifier reference](?p=javascript/all-modules) → [application](?p=javascript/application) → [window](?p=javascript/window) → [hooks](?p=javascript/hooks)

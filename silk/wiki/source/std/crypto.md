@@ -13,39 +13,39 @@ Canonical doc: [crypto](?p=std/crypto).
 ## Importing
 
 ```silk
-import std::arrays;
-import std::crypto;
-import std::crypto::hash;
-import std::buffer;
-import std::runtime::mem;
+import arrays from "std/arrays";
+import crypto from "std/crypto";
+import hash from "std/crypto/hash";
+import buffer from "std/buffer";
+import mem from "std/runtime/mem";
 ```
 
 ## Examples
 
 ### Example: init + memzero + blake2b
 ```silk
-import std::crypto;
-import std::crypto::hash;
-import std::buffer;
-import std::runtime::mem;
+import crypto from "std/crypto";
+import hash from "std/crypto/hash";
+import buffer from "std/buffer";
+import mem from "std/runtime/mem";
 
 fn main () -> int {
-  if std::crypto::init() != None {
+  if crypto::init() != None {
     return 1;
   }
 
   // memzero: wipe a buffer in place.
-  match (std::buffer::BufferU8.init(16)) {
+  match (buffer::BufferU8.init(16)) {
     Ok(buffer) => {
-      let mut wipe: std::buffer::BufferU8 = buffer;
+      let mut wipe: buffer::BufferU8 = buffer;
 
       var i: i64 = 0;
       while i < 16 {
-        wipe.push(std::runtime::mem::trunc_u8(100 + (i as int)));
+        wipe.push(mem::trunc_u8(100 + (i as int)));
         i = i + 1;
       }
 
-      let wipe_err: std::crypto::CryptoFailed? = std::crypto::memzero(wipe.as_bytes());
+      let wipe_err: crypto::CryptoFailed? = crypto::memzero(wipe.as_bytes());
       if wipe_err != None {
         wipe.drop();
         return 3;
@@ -71,12 +71,12 @@ fn main () -> int {
   let msg_ptr: u64 = msg as raw u64;
   let msg_len: i64 = (sizeof(msg)) as i64;
 
-  match (std::buffer::BufferU8.init(32)) {
+  match (buffer::BufferU8.init(32)) {
     Ok(out_buffer) => {
-      let mut out: std::buffer::BufferU8 = out_buffer;
-      match (std::buffer::BufferU8.init(32)) {
+      let mut out: buffer::BufferU8 = out_buffer;
+      match (buffer::BufferU8.init(32)) {
         Ok(expected_buffer) => {
-          let mut expected: std::buffer::BufferU8 = expected_buffer;
+          let mut expected: buffer::BufferU8 = expected_buffer;
 
           // Expected digest: bddd813c634239723171ef3fee98579b94964e3bb1cb3e427262c8c068d52319
           expected.push(189);
@@ -112,18 +112,18 @@ fn main () -> int {
           expected.push(35);
           expected.push(25);
 
-          let hash_err: std::crypto::CryptoError? = std::crypto::hash::blake2b(
+          let hash_err: crypto::CryptoError? = hash::blake2b(
             mut out,
             32,
-            std::arrays::ByteSlice{ ptr: msg_ptr, len: msg_len }
+            arrays::ByteSlice{ ptr: msg_ptr, len: msg_len }
           );
           if hash_err != None {
             out.drop();
             expected.drop();
             return 6;
           }
-          let eq_r: std::crypto::CryptoBoolResult = std::crypto::equal(out.as_bytes(), expected.as_bytes());
-          let eq_opt: bool? = std::crypto::CryptoBoolResult.ok_value(eq_r);
+          let eq_r: crypto::CryptoBoolResult = crypto::equal(out.as_bytes(), expected.as_bytes());
+          let eq_opt: bool? = crypto::CryptoBoolResult.ok_value(eq_r);
           if eq_opt == None {
             out.drop();
             expected.drop();

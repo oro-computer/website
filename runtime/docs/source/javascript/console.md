@@ -2,6 +2,10 @@
 
 `oro:console` exposes the runtime console implementation and patch helpers.
 
+## Related guides
+
+- [Testing and diagnostics](?p=guides/testing-and-diagnostics)
+
 ## Examples
 
 Patch the global console so application logs use the runtime console implementation:
@@ -13,11 +17,6 @@ patchGlobalConsole(globalThis.console)
 
 console.info('runtime console is active')
 ```
-
-## See also
-
-- [Module index](?p=javascript/module-index)
-- [All module specifiers](?p=javascript/all-modules)
 
 ## API reference
 
@@ -31,8 +30,9 @@ oro:console
 
 ### TypeScript declarations
 
-<details>
-<summary><code>oro:console</code></summary>
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### `oro:console`
 
 ```ts
 declare module "oro:console" {
@@ -85,6 +85,9 @@ declare module "oro:console" {
 }
 ```
 
-</details>
-
 <!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](?p=javascript/overview)
+- [All module specifiers](?p=javascript/all-modules)

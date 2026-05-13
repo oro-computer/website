@@ -99,17 +99,17 @@ struct PosU64 { index: i64 }
 
 struct ParsedArgs { ... }
 
-export type ParseResult = std::result::Result(ParsedArgs, FlagFailed);
-export type BoolFlagResult = std::result::Result(BoolFlag, FlagFailed);
-export type IntFlagResult = std::result::Result(IntFlag, FlagFailed);
-export type I64FlagResult = std::result::Result(I64Flag, FlagFailed);
-export type U64FlagResult = std::result::Result(U64Flag, FlagFailed);
-export type StringFlagResult = std::result::Result(StringFlag, FlagFailed);
+export type ParseResult = Result(ParsedArgs, FlagFailed);
+export type BoolFlagResult = Result(BoolFlag, FlagFailed);
+export type IntFlagResult = Result(IntFlag, FlagFailed);
+export type I64FlagResult = Result(I64Flag, FlagFailed);
+export type U64FlagResult = Result(U64Flag, FlagFailed);
+export type StringFlagResult = Result(StringFlag, FlagFailed);
 
-export type PosStringResult = std::result::Result(PosString, FlagFailed);
-export type PosIntResult = std::result::Result(PosInt, FlagFailed);
-export type PosI64Result = std::result::Result(PosI64, FlagFailed);
-export type PosU64Result = std::result::Result(PosU64, FlagFailed);
+export type PosStringResult = Result(PosString, FlagFailed);
+export type PosIntResult = Result(PosInt, FlagFailed);
+export type PosI64Result = Result(PosI64, FlagFailed);
+export type PosU64Result = Result(PosU64, FlagFailed);
 
 impl FlagSet {
   public fn get_flag_name (self: &FlagSet, index: i64) -> string;
