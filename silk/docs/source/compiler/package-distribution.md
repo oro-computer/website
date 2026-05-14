@@ -69,16 +69,12 @@ release asset is only a transport for that package root.
 
 ### 2. Package identity is always Silk-native
 
-The canonical package identity is the identifier-style `package.name` from
+The canonical package identity is `package.name` from
 `silk.toml`, for example:
 
 - `http`
-- `oro_http`
-- `std_io`
-
-Source modules still declare symbol namespaces with `package oro::http;` or
-`package std::io;`. The manifest string is the package-root identity and must
-not contain `/`, `::`, `-`, `.`, or other punctuation.
+- `oro::http`
+- `std::io`
 
 External names used by GitHub, npm, distro repositories, or other ecosystems
 must not replace Silk package identity.
@@ -263,6 +259,7 @@ package descriptor for the current authoring and distribution model.
 - `[sources]`
 - `[dependencies]`
 - `[[target]]`
+- `[[native]]`
 - `[build]`
 - `[package].definitions`
 
@@ -313,7 +310,9 @@ This solves a different problem from `[sources]`:
 
 ### Artifact metadata should be explicit
 
-`[[target]]` remains the build recipe surface. Published binaries and shipped
+`[[target]]` remains the build recipe surface. Package-level native source,
+object, archive, and linker requirements that should travel with a source or
+hybrid dependency are described by `[[native]]`. Published binaries and shipped
 manual pages are described by `[[artifact]]`.
 
 The `[[artifact]]` table describes shipped outputs, for example:
@@ -366,10 +365,11 @@ The dependency model should separate package identity from transport:
  - third-party-managed install tree,
  - system-installed package.
 
-This keeps a dependency on `oro_http` stable regardless of where the package
-came from. The dependency key is the manifest package name, so it is a single
-identifier. Source files inside that package may still declare a separate symbol
-namespace such as `package oro::http;`.
+This keeps a dependency on `oro::http` stable regardless of where the package
+came from. The dependency key is the importing manifest's local import root; it
+may be a simple identifier such as `oro_http` or a dotted key such as
+`oro.http`. The dependency package's own `package.name` remains authoritative
+for unquoted package-path imports.
 
 ### Version requirements
 
@@ -514,9 +514,11 @@ The intended authoring flow for a reusable package is:
 2. Keep distributable implementation under `src/`.
 3. Keep public prototype/interface modules under `defs/`.
 4. Use `[[target]]` to define how artifacts are built.
-5. When distributing prebuilt libraries, record them as explicit package
+5. Use `[[native]]` for target-scoped native requirements that should be linked
+   when a source or hybrid package is imported as a dependency.
+6. When distributing prebuilt libraries, record them as explicit package
  artifacts with target metadata.
-6. Publish the same package root through one or more channels:
+7. Publish the same package root through one or more channels:
  - GitHub release archive,
  - third-party package manager publication managed by the author,
  - distro package source or binary package,
@@ -538,13 +540,21 @@ channel-agnostic:
  object first, then static library, then shared library,
  - ambiguous compatible artifacts currently fail with a diagnostic rather than
  guessing,
+- dependency native requirement consumption
+ - matching dependency `[[native]]` entries are linked when the dependency is
+ present in the loaded module set,
+ - native source inputs are compiled for the active target, and `.o`, `.a`,
+ shared-library, `needed`, `runpath`, and supported `ldflags` entries are
+ merged into the consuming output,
 - package inspection
- - `silk package inspect` prints resolved package metadata, artifacts,
- dependency constraints, the current package hash, and any installed Formal
- Silk bundles discovered under `share/silk/formal/<artifact-relative-path>/...`,
+ - `silk package inspect` prints resolved package metadata, native
+ requirements, artifacts, dependency constraints, the current package hash,
+ and any installed Formal Silk bundles discovered under
+ `share/silk/formal/<artifact-relative-path>/...`,
 - manifest linting
- - `silk package lint` validates that `silk.toml`, `[dist]`, `[[artifact]]`,
- and `[package].definitions` describe a coherent distributable package.
+ - `silk package lint` validates that `silk.toml`, `[dist]`, `[[native]]`,
+ `[[artifact]]`, and `[package].definitions` describe a coherent
+ distributable package.
 
 Archive creation and publication are intentionally external concerns. Because
 the package root is the canonical unit of distribution, authors may use
@@ -575,6 +585,13 @@ Out of scope for the package model itself:
  surface field. Per-artifact `definitions` may narrow that surface when
  needed, but Silk does not currently need a separate `[exports]` table.
 
+For a runnable package root that exercises package-owned native code in a useful
+program, see the [Project dependencies](?p=guides/project-dependencies) guide.
+It follows `examples/projects/cove/`, a static HTTP file server with a local
+`docroot` path dependency, a pathless `access_log` dependency resolved from the
+package's default `packages/` directory, and a target-gated native C helper
+declared by the docroot package.
+
 ## Current Operational Limits
 
 - Dependency artifact auto-consumption is currently implemented for
@@ -584,8 +601,9 @@ Out of scope for the package model itself:
  equally compatible artifacts are treated as an authoring error rather than
  being guessed at runtime.
 - `silk test --package` consumes the selected code target’s manifest native
- inputs directly: `.c` / `.h` / supported `.m` sources are compiled to
- temporary objects for the generated test harness, while `.o`, `.a`, shared
- libraries, `needed`, and `runpath` entries are linked as declared. Hosted
- vendored native-input auto-linking for libsodium, mbedTLS, SQLite, and
- libssh2 follows the same supported-target rules as package builds.
+ inputs plus matching package/dependency `[[native]]` entries directly:
+ `.c` / `.h` / supported `.m` sources are compiled to temporary objects for the
+ generated test harness, while `.o`, `.a`, shared libraries, `needed`, and
+ `runpath` entries are linked as declared. Hosted vendored native-input
+ auto-linking for libsodium, mbedTLS, SQLite, and libssh2 follows the same
+ supported-target rules as package builds.

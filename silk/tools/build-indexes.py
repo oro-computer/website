@@ -46,6 +46,7 @@ GUIDE_ORDER = [
     "guides/hello-world",
     "guides/language-tour",
     "guides/modules-and-packages",
+    "guides/project-dependencies",
     "guides/practical-logger-module",
     "guides/standard-library",
     "guides/cli",

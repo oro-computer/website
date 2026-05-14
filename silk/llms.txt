@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-05-13T19:03:06+00:00
+Generated: 2026-05-14T01:13:03+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -21,6 +21,7 @@ Silk Docs
   - guides/hello-world — Hello world — /silk/docs/?p=guides/hello-world
   - guides/language-tour — Language tour — /silk/docs/?p=guides/language-tour
   - guides/modules-and-packages — Modules, Packages, and Publication — /silk/docs/?p=guides/modules-and-packages
+  - guides/project-dependencies — Project Dependencies — /silk/docs/?p=guides/project-dependencies
   - guides/practical-logger-module — Practical Logger Module Walkthrough — /silk/docs/?p=guides/practical-logger-module
   - guides/standard-library — Standard library — /silk/docs/?p=guides/standard-library
   - guides/cli — CLI and toolchain — /silk/docs/?p=guides/cli
@@ -443,11 +444,12 @@ If you’re new to Silk, this is a good order:
 2. **Hello world**: the smallest working program and the `check → test → build` loop.
 3. **Language tour**: the shape of real programs (types, functions, control flow, errors).
 4. **Modules & packages**: how code is organized and how imports/exports create clean dependency boundaries.
-5. **Practical logger module**: a reusable logging package walkthrough with configuration, sinks, targets, ABI notes, and publication.
-6. **Standard library**: what lives in `std::` and the common patterns it uses.
-7. **CLI and toolchain**: module sets, build targets, package manifests, package distribution, docs/man, and diagnostics.
-8. **Testing**: language-level tests and TAP output for CI and tooling.
-9. **Formal Silk**: opt-in proofs with Z3; how to write verified code with zero runtime cost.
+5. **Project dependencies**: how to build an application with path and package-search dependencies, using Cove as the reference layout.
+6. **Practical logger module**: a reusable logging package walkthrough with configuration, sinks, targets, ABI notes, and publication.
+7. **Standard library**: what lives in `std::` and the common patterns it uses.
+8. **CLI and toolchain**: module sets, build targets, package manifests, package distribution, docs/man, and diagnostics.
+9. **Testing**: language-level tests and TAP output for CI and tooling.
+10. **Formal Silk**: opt-in proofs with Z3; how to write verified code with zero runtime cost.
 
 Start here:
 
@@ -456,7 +458,7 @@ Start here:
 - Reference: [Package manifests](?p=compiler/package-manifests) · [Package distribution](?p=compiler/package-distribution)
 - Reference: [`silk` CLI](?p=compiler/cli-silk) · [`silk-package` (1)](?p=man/silk-package.1)
 - Guides: [What Silk is for](?p=guides/purpose)
-- Guides: [Hello world](?p=guides/hello-world) · [Language tour](?p=guides/language-tour) · [Modules & packages](?p=guides/modules-and-packages)
+- Guides: [Hello world](?p=guides/hello-world) · [Language tour](?p=guides/language-tour) · [Modules & packages](?p=guides/modules-and-packages) · [Project dependencies](?p=guides/project-dependencies)
 - Guides: [Practical logger module](?p=guides/practical-logger-module) · [Standard library](?p=guides/standard-library) · [CLI and toolchain](?p=guides/cli)
 - Guides: [Testing](?p=guides/testing) · [Formal Silk](?p=guides/formal-silk)
 - Tutorials: [Concurrency basics](?p=usage/tutorials/05-concurrency) · [Async I/O + Streams + Abort Signals](?p=usage/tutorials/06-async-io-streams-abort) · [Formal Silk in real code](?p=usage/tutorials/07-formal-silk)
@@ -1396,8 +1398,8 @@ Rules that keep tooling simple:
 - Imports form one contiguous block immediately after the package/module header.
 - Exports are explicit.
 - Source package declarations use `::` namespaces.
-- Manifest package names are simple identifiers such as `logger` or
- `oro_logger`.
+- Manifest package names are Silk package paths such as `logger` or
+ `oro::logger`.
 - Quoted import specifiers use filesystem-style paths such as `logger` or
  `logger/sinks`.
 
@@ -1595,10 +1597,11 @@ How loading works:
 - `silk build --package .` reads `silk.toml` and loads files selected by
  `[sources]`.
 - A dependency with `path = "../logger"` is loaded from that directory.
-- A dependency without `path` is searched through `SILK_PACKAGE_PATH` and the
- installed package roots.
-- Manifest package names are identifiers; `logger` maps to
- `logger/silk.toml` under each search root.
+- A dependency without `path` is searched through contextual `packages/` roots,
+ `SILK_PACKAGE_PATH`, and installed package roots.
+- The dependency key maps to a directory under each search root; a key such as
+ `logger` maps to `logger/silk.toml`, while `oro.logger` maps to
+ `oro/logger/silk.toml`.
 - Quoted imports use dependency-rooted module paths: `import logger from
  "logger";` loads the dependency's default module, and `import sinks from
  "logger/sinks";` loads a submodule.
@@ -1626,8 +1629,10 @@ fn main () -> int {
 }
 ```
 
-For local development, prefer `path`. For published packages, use a version
-requirement plus a package root materialized by your chosen distribution system.
+For local development, prefer `path`. For vendored dependencies inside a
+project, place the package under `packages/<dependency-key>/` and omit `path`.
+For published packages, use a version requirement plus a package root
+materialized by your chosen distribution system.
 
 ## Publishing through GitHub
 
@@ -1775,8 +1780,261 @@ import logger from "logger";
 
 ## Next
 
+- [Project dependencies](?p=guides/project-dependencies)
 - [Practical logger module walkthrough](?p=guides/practical-logger-module)
 - [Standard library](?p=guides/standard-library)
+- [Package manifests](?p=compiler/package-manifests)
+- [Package distribution](?p=compiler/package-distribution)
+
+==============================================================================
+DOCS: Project Dependencies (guides/project-dependencies)
+URL: /silk/docs/?p=guides/project-dependencies
+==============================================================================
+
+# Project Dependencies
+
+Silk projects build dependencies from package roots on disk. A dependency can be
+an explicit local path, a package found under a `packages/` search root, or an
+installed package root. The `examples/projects/cove/` project in the Silk
+compiler checkout is the concrete model for this workflow.
+
+## Cove layout
+
+Cove is a static file server with two user-space dependencies:
+
+```text
+cove/
+  silk.toml
+  src/
+    main.slk
+  public/
+    index.html
+  deps/
+    docroot/
+      silk.toml
+      src/lib.slk
+      native/path_guard.c
+  packages/
+    access_log/
+      silk.toml
+      src/lib.slk
+```
+
+The root package owns the executable. `deps/docroot/` owns document-root path
+resolution and its native helper. `packages/access_log/` owns small logging
+functions and is discovered from the package search path.
+
+## Root manifest
+
+Cove's root `silk.toml` keeps both dependency forms visible. This excerpt omits
+secondary metadata so the dependency structure stays prominent:
+
+```toml
+[package]
+name = "cove"
+version = "0.1.0"
+description = "Async static HTTP file server with std::flag, std::mime, std::fs, access logging, and native C path containment."
+license = "MIT"
+readme = "README.md"
+
+[sources]
+include = ["src/**/*.slk"]
+
+[dist]
+include = [
+  "silk.toml",
+  "README.md",
+  "src/**/*.slk",
+  "public/**/*",
+  "deps/docroot/silk.toml",
+  "deps/docroot/**/*.slk",
+  "deps/docroot/native/path_guard.c",
+  "deps/docroot/**/*.md",
+  "packages/access_log/silk.toml",
+  "packages/access_log/**/*.slk",
+  "packages/access_log/**/*.md",
+]
+
+[dependencies]
+docroot = { path = "deps/docroot", version = "^0.1.0" }
+access_log = { version = "^0.1.0" }
+
+[[target]]
+name = "cove"
+kind = "executable"
+entry = "src/main.slk"
+```
+
+`docroot` is explicit: the `path` is resolved relative to Cove's manifest
+directory. `access_log` omits `path`, so the compiler searches contextual
+package roots and finds `packages/access_log/silk.toml` next to the root
+package. No network fetch or registry lookup is involved.
+
+The root `[dist]` includes the vendored dependency roots because Cove is meant
+to travel as one self-contained example. A dependency that is published on its
+own should also define its own `[dist]` payload.
+
+## Importing dependencies
+
+Source imports use the dependency key, not necessarily the dependency package's
+full `package.name`:
+
+```silk
+package cove;
+
+import { error as log_error } from "access_log";
+import { listening as log_listening } from "access_log";
+import { request as log_request } from "access_log";
+import { FileStore, ResponseDoc } from "docroot";
+```
+
+The dependency key is local to the importing manifest. In Cove:
+
+- `docroot` maps to `deps/docroot` because the manifest declares `path`.
+- `access_log` maps to `packages/access_log` because the key is searched under
+  contextual `packages/` roots.
+- The dependency packages may still use namespaced package identities such as
+  `cove::docroot` and `cove::access_log` inside their own manifests and source
+  files.
+
+Quoted import strings use `/` paths. Use `::` for Silk package namespaces and
+qualified names in source code.
+
+## Authoring a source dependency
+
+A user-space source dependency is just another package root. For a small
+package-search dependency, create this shape:
+
+```text
+packages/access_log/
+  silk.toml
+  README.md
+  src/
+    lib.slk
+```
+
+The dependency manifest declares its package identity and source set:
+
+```toml
+[package]
+name = "cove::access_log"
+version = "0.1.0"
+description = "Tiny access-log package used by the Cove file server."
+license = "MIT"
+readme = "README.md"
+
+[sources]
+include = ["src/**/*.slk"]
+```
+
+The implementation exports the names downstream code may import:
+
+```silk
+package cove::access_log;
+
+import { eprintln, println } from "std/io";
+
+export fn listening (host: string, port: int, dir: string) -> void {
+  println("[info] listening on http://{}:{} serving {}", host, port, dir);
+}
+
+export fn request (method: string, target: string, status: int) -> void {
+  println("[request] {} {} -> {}", method, target, status);
+}
+
+export fn error (message: string) -> void {
+  eprintln("[error] {}", message);
+}
+```
+
+Then add the dependency to the application manifest:
+
+```toml
+[dependencies]
+access_log = { version = "^0.1.0" }
+```
+
+Use a `path` field instead when the dependency lives outside a searched
+`packages/` root:
+
+```toml
+[dependencies]
+access_log = { path = "../access_log", version = "^0.1.0" }
+```
+
+## Dependencies with native helpers
+
+If the dependency's Silk code calls package-owned native code through `ext`,
+put that native requirement in the dependency manifest. Cove's `docroot`
+package does this:
+
+```toml
+[package]
+name = "cove::docroot"
+version = "0.1.0"
+description = "Static-file serving abstraction with native path-containment validation."
+license = "MIT"
+readme = "README.md"
+
+[sources]
+include = ["src/**/*.slk"]
+
+[[native]]
+target = "linux-x86_64"
+inputs = ["native/path_guard.c"]
+```
+
+The Silk module declares the native symbol it calls:
+
+```silk
+package cove::docroot;
+
+ext cove_path_is_within = fn (u64, i64, u64, i64) -> bool;
+```
+
+Prefer `[[native]]` for package-level native code that should travel with a
+source or hybrid dependency. Use `[[target]].inputs` for native files that
+belong only to one root package output.
+
+## Build and verify
+
+From the Cove package root:
+
+```bash
+silk package lint --package packages/access_log
+silk package lint --package deps/docroot
+silk package lint --package .
+silk build --package .
+```
+
+The build produces `build/cove`. Run it with a document root:
+
+```bash
+./build/cove --host 127.0.0.1 --port 8080 --dir public
+```
+
+From the Silk compiler checkout root, use the same commands with
+`examples/projects/cove/...` paths.
+
+## Rules of thumb
+
+- Keep dependency roots real and buildable on disk; Silk does not fetch remote
+  packages during `silk build`.
+- Use `path` for active local development and vendored paths outside
+  `packages/`.
+- Use `packages/<dependency-key>/` for pathless dependencies you want the
+  package graph to find automatically.
+- Keep the dependency key stable for imports, even if the dependency's
+  `package.name` is namespaced.
+- Export only the names downstream packages should call.
+- Add definition files under `defs/` when a dependency may be consumed as a
+  binary or interface-only package.
+- Use `[dist]` to make the package payload explicit before publishing or
+  vendoring it.
+
+## Next
+
+- [Modules, Packages, and Publication](?p=guides/modules-and-packages)
 - [Package manifests](?p=compiler/package-manifests)
 - [Package distribution](?p=compiler/package-distribution)
 
@@ -38827,25 +39085,20 @@ version = "0.1.0"
 
 ### `package.name` (required)
 
-The package name used for package metadata, package-search-path lookup, and as
-the default package namespace for modules that omit an explicit
-`package ...;` declaration.
+The package name used for package imports (for example `import ui;` or
+`import ui from ui;`) and as the default package name for modules that omit an
+explicit `package ...;` declaration.
 
-`name` MUST be a single Silk identifier:
+`name` MUST be a valid Silk package path:
 
-- the identifier matches `[A-Za-z_][A-Za-z0-9_]*`
-- the string MUST NOT contain `/`, `::`, `-`, `.`, or other punctuation
+- one or more identifiers separated by `::`
+- each identifier matches `[A-Za-z_][A-Za-z0-9_]*`
 
 Examples:
 
 - `ui`
 - `my_app`
-- `acme_logger`
-
-Source package declarations may still use namespace syntax such as
-`package acme::logger;`. In that case the explicit source namespace is
-authoritative; `package.name` remains the package-root identity and does not
-need to repeat the namespace.
+- `my_app::core`
 
 ### `package.version` (optional)
 
@@ -39021,22 +39274,34 @@ Rules:
 
 ## Dependencies (`[dependencies]`)
 
-Dependencies are a table mapping dependency keys to dependency specs:
+Dependencies are a table mapping dependency import names to dependency specs:
 
 ```toml
 [dependencies]
 ui = { path = "../libs/silk-ui", version = "^1.4.0", sha256 = "sha256:0123456789abcdef...", features = ["tui"] }
+my.dep.b = { version = "^0.1.0" }
 ```
 
 Fields:
 
-- The dependency key (`ui` above) is the manifest-local import root used by
- quoted dependency module specifiers such as `import ui from "ui";` or
- `import widgets from "ui/widgets";`. It MUST be a single Silk identifier.
+- The dependency key (`ui` above) is a local dependency import root used by
+ quoted POSIX module specifiers. An exact root import such as
+ `import ui from "ui";` resolves to the dependency's default source module
+ (`src/lib.slk`) or, for a binary-only dependency, to its single definition
+ file. Subpath imports such as `import form from "ui/form";` resolve under the
+ dependency's source-module directory. The key MUST be a Silk identifier or
+ dot-separated identifier path and MUST NOT contain `::` or `/`.
+- Dotted dependency keys provide package-style namespacing for dependency roots:
+ `my.dep.b` maps to quoted dependency paths rooted at `"my/dep/b"` and to a
+ search-path candidate directory named `my/dep/b`.
+- The dependency key does not need to match the dependency's own manifest
+ `package.name`. Quoted imports use the local dependency key; unquoted
+ package-path imports use the dependency manifest's `package.name`.
 - `path` (optional): local filesystem path to the dependency package root,
  resolved relative to the importing manifest directory when not absolute.
- When `path` is omitted, the dependency is resolved from the package search
- path (see “Dependency discovery via `SILK_PACKAGE_PATH`” below).
+ When `path` is omitted, the dependency is resolved from contextual package
+ roots and the package search path (see “Dependency discovery via contextual
+ package roots and `SILK_PACKAGE_PATH`” below).
 - `version` (optional): SemVer requirement string checked against the
  dependency’s `package.version`.
  Supported forms:
@@ -39085,35 +39350,57 @@ Dependency resolution + verification:
 
 Limitations:
 
-- Only local-path dependencies are supported (no remote fetch).
+- Only on-disk dependencies are supported (no remote fetch).
 - Dependency features are currently selected only via the importer’s manifest
  (`[dependencies].<dep>.features`) and the CLI. A dependency’s own
  `[build].features` are applied only when that dependency is built as the root
  package.
 
-## Dependency discovery via `SILK_PACKAGE_PATH`
+## Dependency discovery via contextual package roots and `SILK_PACKAGE_PATH`
 
 When a dependency entry omits `path`, the compiler resolves it by searching a
 PATH-like list of package roots.
 
 Rules:
 
-- The primary search path is `SILK_PACKAGE_PATH` when set (a list of
- directories separated by `:` on POSIX).
-- When `SILK_PACKAGE_PATH` is not set, the compiler uses a small default set:
- - `./packages` when it exists (development convenience),
+- During package-graph loading, search roots are contextual to the importing
+ package:
+ - relative entries from `SILK_PACKAGE_PATH` are resolved from the importing
+ package root and then from each parent package root up to the graph root,
+ - when `SILK_PACKAGE_PATH` is not set, `packages/` is searched using that same
+ importer-to-graph-root walk.
+ This means a dependency manifest can declare its own pathless dependencies and
+ find packages in `packages/` next to the dependency, or in `packages/`
+ directories between that dependency and the root package being built.
+- Absolute entries in `SILK_PACKAGE_PATH` are searched as written. Relative
+ entries also retain the historical current-working-directory fallback after
+ the contextual importer roots.
+- When `SILK_PACKAGE_PATH` is not set, the compiler also uses these install/user
+ roots after contextual `packages/` roots and the historical `./packages`
+ fallback:
  - `../share/silk/packages` relative to the `silk` executable (installed layout),
  - `$HOME/.local/share/silk/packages` when it exists (user-local installs).
 - Finally, the compiler appends a system library root at `PREFIX/lib/silk`
  (default `PREFIX=/usr/local`) as the last search path entry when it exists.
-- For a dependency named `my_api`, each root directory contributes a
- candidate package root:
- - `<root>/my_api`
+- For a dependency key named `my_api`, each root directory contributes the
+ candidate package root `<root>/my_api`.
+- For a dotted dependency key named `my.dep.b`, dots are path separators and
+ each root directory contributes the candidate package root:
+ - `<root>/my/dep/b`
  - and the manifest is `<candidate>/silk.toml`.
 - The compiler searches roots in order and uses the first candidate that exists.
-- The discovered manifest MUST declare `package.name` exactly matching the
- dependency package name being resolved, and the dependency is still subject to
- the `sha256` verification rules above.
+- The discovered manifest's `package.name` may be namespaced and may differ from
+ the dependency key. The dependency is still subject to the `version` and
+ `sha256` verification rules above.
+- Explicit dependency `path` entries remain resolved relative to the importing
+ manifest directory, so nested dependency manifests may use `path = "../peer"`
+ or omit `path` and rely on contextual package roots.
+
+For a runnable companion to these rules, see the
+[Project dependencies](?p=guides/project-dependencies) guide. It follows
+`examples/projects/cove/`, a static HTTP file server that uses an explicit local
+`path` dependency for its document-root abstraction and a pathless `access_log`
+dependency resolved from the root package's default `packages/` directory.
 
 ## Distributed Artifacts (`[[artifact]]`)
 
@@ -39166,6 +39453,58 @@ Example:
 [dependencies]
 my_api = { sha256 = "sha256:0123456789abcdef..." }
 ```
+
+## Package Native Requirements (`[[native]]`)
+
+Packages may declare native code and link requirements that should be applied
+when that package participates in a build:
+
+```toml
+[[native]]
+target = "linux-x86_64"
+inputs = ["native/portable.c", "lib/linux-x86_64/libhelper.a"]
+cflags = ["-Inative/include"]
+ldflags = ["-lm"]
+runpath = ["$ORIGIN/../lib/linux-x86_64"]
+```
+
+Fields:
+
+- `target` (optional): target triple that gates this native requirement. When
+ omitted, the requirement applies to every target that can consume the listed
+ native inputs. When present, the requirement applies only when the active
+ compiler target exactly matches the triple.
+- `inputs` (optional): native input paths using the same file-kind rules as
+ `[[target]].inputs` (`.c`, `.h`, supported `.m`, `.o`, `.a`, `.so`, and
+ versioned `.so.*`; `@vendored/<name>.a` is also accepted).
+- `cflags` (optional): native compiler arguments used for `.c` / `.h` /
+ supported `.m` inputs from this requirement. Relative `-I` and `-isystem`
+ paths are resolved relative to the owning package root.
+- `ldflags` (optional): linker arguments using the same supported forms as
+ `[[target]].ldflags`. Relative `-L` paths are resolved relative to the owning
+ package root.
+- `needed` (optional): dynamic-library sonames to add to the consuming link.
+- `runpath` (optional): runtime search-path entries to add to the consuming
+ executable or shared-library link.
+
+Rules:
+
+- At least one of `inputs`, `cflags`, `ldflags`, `needed`, or `runpath` must be
+ present.
+- Matching root-package `[[native]]` entries are merged into `silk build
+ --package` and `silk test --package` for the selected code target.
+- Matching dependency-package `[[native]]` entries are merged when the imported
+ dependency package is present in the loaded module set. This is the preferred
+ manifest surface for source or hybrid dependencies whose Silk implementation
+ calls package-owned native helpers through `ext`.
+- `[[artifact]]` remains the distribution surface for prebuilt package outputs.
+ Binary-only/interface-only dependencies should continue to expose native
+ payloads as `[[artifact]]` entries paired with definition files.
+- `[[target]].inputs` remains available for native files that belong only to a
+ specific artifact recipe. Prefer `[[native]]` for package-level native code
+ that dependencies should carry with them.
+- `silk package lint` validates declared native input files and `[dist]`
+ coverage for non-`@vendored/...` inputs.
 
 ## Build Targets (`[[target]]`)
 
@@ -39527,16 +39866,12 @@ release asset is only a transport for that package root.
 
 ### 2. Package identity is always Silk-native
 
-The canonical package identity is the identifier-style `package.name` from
+The canonical package identity is `package.name` from
 `silk.toml`, for example:
 
 - `http`
-- `oro_http`
-- `std_io`
-
-Source modules still declare symbol namespaces with `package oro::http;` or
-`package std::io;`. The manifest string is the package-root identity and must
-not contain `/`, `::`, `-`, `.`, or other punctuation.
+- `oro::http`
+- `std::io`
 
 External names used by GitHub, npm, distro repositories, or other ecosystems
 must not replace Silk package identity.
@@ -39721,6 +40056,7 @@ package descriptor for the current authoring and distribution model.
 - `[sources]`
 - `[dependencies]`
 - `[[target]]`
+- `[[native]]`
 - `[build]`
 - `[package].definitions`
 
@@ -39771,7 +40107,9 @@ This solves a different problem from `[sources]`:
 
 ### Artifact metadata should be explicit
 
-`[[target]]` remains the build recipe surface. Published binaries and shipped
+`[[target]]` remains the build recipe surface. Package-level native source,
+object, archive, and linker requirements that should travel with a source or
+hybrid dependency are described by `[[native]]`. Published binaries and shipped
 manual pages are described by `[[artifact]]`.
 
 The `[[artifact]]` table describes shipped outputs, for example:
@@ -39824,10 +40162,11 @@ The dependency model should separate package identity from transport:
  - third-party-managed install tree,
  - system-installed package.
 
-This keeps a dependency on `oro_http` stable regardless of where the package
-came from. The dependency key is the manifest package name, so it is a single
-identifier. Source files inside that package may still declare a separate symbol
-namespace such as `package oro::http;`.
+This keeps a dependency on `oro::http` stable regardless of where the package
+came from. The dependency key is the importing manifest's local import root; it
+may be a simple identifier such as `oro_http` or a dotted key such as
+`oro.http`. The dependency package's own `package.name` remains authoritative
+for unquoted package-path imports.
 
 ### Version requirements
 
@@ -39972,9 +40311,11 @@ The intended authoring flow for a reusable package is:
 2. Keep distributable implementation under `src/`.
 3. Keep public prototype/interface modules under `defs/`.
 4. Use `[[target]]` to define how artifacts are built.
-5. When distributing prebuilt libraries, record them as explicit package
+5. Use `[[native]]` for target-scoped native requirements that should be linked
+   when a source or hybrid package is imported as a dependency.
+6. When distributing prebuilt libraries, record them as explicit package
  artifacts with target metadata.
-6. Publish the same package root through one or more channels:
+7. Publish the same package root through one or more channels:
  - GitHub release archive,
  - third-party package manager publication managed by the author,
  - distro package source or binary package,
@@ -39996,13 +40337,21 @@ channel-agnostic:
  object first, then static library, then shared library,
  - ambiguous compatible artifacts currently fail with a diagnostic rather than
  guessing,
+- dependency native requirement consumption
+ - matching dependency `[[native]]` entries are linked when the dependency is
+ present in the loaded module set,
+ - native source inputs are compiled for the active target, and `.o`, `.a`,
+ shared-library, `needed`, `runpath`, and supported `ldflags` entries are
+ merged into the consuming output,
 - package inspection
- - `silk package inspect` prints resolved package metadata, artifacts,
- dependency constraints, the current package hash, and any installed Formal
- Silk bundles discovered under `share/silk/formal/<artifact-relative-path>/...`,
+ - `silk package inspect` prints resolved package metadata, native
+ requirements, artifacts, dependency constraints, the current package hash,
+ and any installed Formal Silk bundles discovered under
+ `share/silk/formal/<artifact-relative-path>/...`,
 - manifest linting
- - `silk package lint` validates that `silk.toml`, `[dist]`, `[[artifact]]`,
- and `[package].definitions` describe a coherent distributable package.
+ - `silk package lint` validates that `silk.toml`, `[dist]`, `[[native]]`,
+ `[[artifact]]`, and `[package].definitions` describe a coherent
+ distributable package.
 
 Archive creation and publication are intentionally external concerns. Because
 the package root is the canonical unit of distribution, authors may use
@@ -40033,6 +40382,13 @@ Out of scope for the package model itself:
  surface field. Per-artifact `definitions` may narrow that surface when
  needed, but Silk does not currently need a separate `[exports]` table.
 
+For a runnable package root that exercises package-owned native code in a useful
+program, see the [Project dependencies](?p=guides/project-dependencies) guide.
+It follows `examples/projects/cove/`, a static HTTP file server with a local
+`docroot` path dependency, a pathless `access_log` dependency resolved from the
+package's default `packages/` directory, and a target-gated native C helper
+declared by the docroot package.
+
 ## Current Operational Limits
 
 - Dependency artifact auto-consumption is currently implemented for
@@ -40042,11 +40398,12 @@ Out of scope for the package model itself:
  equally compatible artifacts are treated as an authoring error rather than
  being guessed at runtime.
 - `silk test --package` consumes the selected code target’s manifest native
- inputs directly: `.c` / `.h` / supported `.m` sources are compiled to
- temporary objects for the generated test harness, while `.o`, `.a`, shared
- libraries, `needed`, and `runpath` entries are linked as declared. Hosted
- vendored native-input auto-linking for libsodium, mbedTLS, SQLite, and
- libssh2 follows the same supported-target rules as package builds.
+ inputs plus matching package/dependency `[[native]]` entries directly:
+ `.c` / `.h` / supported `.m` sources are compiled to temporary objects for the
+ generated test harness, while `.o`, `.a`, shared libraries, `needed`, and
+ `runpath` entries are linked as declared. Hosted vendored native-input
+ auto-linking for libsodium, mbedTLS, SQLite, and libssh2 follows the same
+ supported-target rules as package builds.
 
 ==============================================================================
 DOCS: Build Modules (`build.slk`) (compiler/build-scripts)

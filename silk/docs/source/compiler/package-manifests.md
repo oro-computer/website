@@ -59,25 +59,20 @@ version = "0.1.0"
 
 ### `package.name` (required)
 
-The package name used for package metadata, package-search-path lookup, and as
-the default package namespace for modules that omit an explicit
-`package ...;` declaration.
+The package name used for package imports (for example `import ui;` or
+`import ui from ui;`) and as the default package name for modules that omit an
+explicit `package ...;` declaration.
 
-`name` MUST be a single Silk identifier:
+`name` MUST be a valid Silk package path:
 
-- the identifier matches `[A-Za-z_][A-Za-z0-9_]*`
-- the string MUST NOT contain `/`, `::`, `-`, `.`, or other punctuation
+- one or more identifiers separated by `::`
+- each identifier matches `[A-Za-z_][A-Za-z0-9_]*`
 
 Examples:
 
 - `ui`
 - `my_app`
-- `acme_logger`
-
-Source package declarations may still use namespace syntax such as
-`package acme::logger;`. In that case the explicit source namespace is
-authoritative; `package.name` remains the package-root identity and does not
-need to repeat the namespace.
+- `my_app::core`
 
 ### `package.version` (optional)
 
@@ -254,22 +249,34 @@ Rules:
 
 ## Dependencies (`[dependencies]`)
 
-Dependencies are a table mapping dependency keys to dependency specs:
+Dependencies are a table mapping dependency import names to dependency specs:
 
 ```toml
 [dependencies]
 ui = { path = "../libs/silk-ui", version = "^1.4.0", sha256 = "sha256:0123456789abcdef...", features = ["tui"] }
+my.dep.b = { version = "^0.1.0" }
 ```
 
 Fields:
 
-- The dependency key (`ui` above) is the manifest-local import root used by
- quoted dependency module specifiers such as `import ui from "ui";` or
- `import widgets from "ui/widgets";`. It MUST be a single Silk identifier.
+- The dependency key (`ui` above) is a local dependency import root used by
+ quoted POSIX module specifiers. An exact root import such as
+ `import ui from "ui";` resolves to the dependency's default source module
+ (`src/lib.slk`) or, for a binary-only dependency, to its single definition
+ file. Subpath imports such as `import form from "ui/form";` resolve under the
+ dependency's source-module directory. The key MUST be a Silk identifier or
+ dot-separated identifier path and MUST NOT contain `::` or `/`.
+- Dotted dependency keys provide package-style namespacing for dependency roots:
+ `my.dep.b` maps to quoted dependency paths rooted at `"my/dep/b"` and to a
+ search-path candidate directory named `my/dep/b`.
+- The dependency key does not need to match the dependency's own manifest
+ `package.name`. Quoted imports use the local dependency key; unquoted
+ package-path imports use the dependency manifest's `package.name`.
 - `path` (optional): local filesystem path to the dependency package root,
  resolved relative to the importing manifest directory when not absolute.
- When `path` is omitted, the dependency is resolved from the package search
- path (see “Dependency discovery via `SILK_PACKAGE_PATH`” below).
+ When `path` is omitted, the dependency is resolved from contextual package
+ roots and the package search path (see “Dependency discovery via contextual
+ package roots and `SILK_PACKAGE_PATH`” below).
 - `version` (optional): SemVer requirement string checked against the
  dependency’s `package.version`.
  Supported forms:
@@ -318,35 +325,57 @@ Dependency resolution + verification:
 
 Current limitations:
 
-- Only local-path dependencies are supported (no remote fetch).
+- Only on-disk dependencies are supported (no remote fetch).
 - Dependency features are currently selected only via the importer’s manifest
  (`[dependencies].<dep>.features`) and the CLI. A dependency’s own
  `[build].features` are applied only when that dependency is built as the root
  package.
 
-## Dependency discovery via `SILK_PACKAGE_PATH`
+## Dependency discovery via contextual package roots and `SILK_PACKAGE_PATH`
 
 When a dependency entry omits `path`, the compiler resolves it by searching a
 PATH-like list of package roots.
 
 Rules:
 
-- The primary search path is `SILK_PACKAGE_PATH` when set (a list of
- directories separated by `:` on POSIX).
-- When `SILK_PACKAGE_PATH` is not set, the compiler uses a small default set:
- - `./packages` when it exists (development convenience),
+- During package-graph loading, search roots are contextual to the importing
+ package:
+ - relative entries from `SILK_PACKAGE_PATH` are resolved from the importing
+ package root and then from each parent package root up to the graph root,
+ - when `SILK_PACKAGE_PATH` is not set, `packages/` is searched using that same
+ importer-to-graph-root walk.
+ This means a dependency manifest can declare its own pathless dependencies and
+ find packages in `packages/` next to the dependency, or in `packages/`
+ directories between that dependency and the root package being built.
+- Absolute entries in `SILK_PACKAGE_PATH` are searched as written. Relative
+ entries also retain the historical current-working-directory fallback after
+ the contextual importer roots.
+- When `SILK_PACKAGE_PATH` is not set, the compiler also uses these install/user
+ roots after contextual `packages/` roots and the historical `./packages`
+ fallback:
  - `../share/silk/packages` relative to the `silk` executable (installed layout),
  - `$HOME/.local/share/silk/packages` when it exists (user-local installs).
 - Finally, the compiler appends a system library root at `PREFIX/lib/silk`
  (default `PREFIX=/usr/local`) as the last search path entry when it exists.
-- For a dependency named `my_api`, each root directory contributes a
- candidate package root:
- - `<root>/my_api`
+- For a dependency key named `my_api`, each root directory contributes the
+ candidate package root `<root>/my_api`.
+- For a dotted dependency key named `my.dep.b`, dots are path separators and
+ each root directory contributes the candidate package root:
+ - `<root>/my/dep/b`
  - and the manifest is `<candidate>/silk.toml`.
 - The compiler searches roots in order and uses the first candidate that exists.
-- The discovered manifest MUST declare `package.name` exactly matching the
- dependency package name being resolved, and the dependency is still subject to
- the `sha256` verification rules above.
+- The discovered manifest's `package.name` may be namespaced and may differ from
+ the dependency key. The dependency is still subject to the `version` and
+ `sha256` verification rules above.
+- Explicit dependency `path` entries remain resolved relative to the importing
+ manifest directory, so nested dependency manifests may use `path = "../peer"`
+ or omit `path` and rely on contextual package roots.
+
+For a runnable companion to these rules, see the
+[Project dependencies](?p=guides/project-dependencies) guide. It follows
+`examples/projects/cove/`, a static HTTP file server that uses an explicit local
+`path` dependency for its document-root abstraction and a pathless `access_log`
+dependency resolved from the root package's default `packages/` directory.
 
 ## Distributed Artifacts (`[[artifact]]`)
 
@@ -399,6 +428,58 @@ Example:
 [dependencies]
 my_api = { sha256 = "sha256:0123456789abcdef..." }
 ```
+
+## Package Native Requirements (`[[native]]`)
+
+Packages may declare native code and link requirements that should be applied
+when that package participates in a build:
+
+```toml
+[[native]]
+target = "linux-x86_64"
+inputs = ["native/portable.c", "lib/linux-x86_64/libhelper.a"]
+cflags = ["-Inative/include"]
+ldflags = ["-lm"]
+runpath = ["$ORIGIN/../lib/linux-x86_64"]
+```
+
+Fields:
+
+- `target` (optional): target triple that gates this native requirement. When
+ omitted, the requirement applies to every target that can consume the listed
+ native inputs. When present, the requirement applies only when the active
+ compiler target exactly matches the triple.
+- `inputs` (optional): native input paths using the same file-kind rules as
+ `[[target]].inputs` (`.c`, `.h`, supported `.m`, `.o`, `.a`, `.so`, and
+ versioned `.so.*`; `@vendored/<name>.a` is also accepted).
+- `cflags` (optional): native compiler arguments used for `.c` / `.h` /
+ supported `.m` inputs from this requirement. Relative `-I` and `-isystem`
+ paths are resolved relative to the owning package root.
+- `ldflags` (optional): linker arguments using the same supported forms as
+ `[[target]].ldflags`. Relative `-L` paths are resolved relative to the owning
+ package root.
+- `needed` (optional): dynamic-library sonames to add to the consuming link.
+- `runpath` (optional): runtime search-path entries to add to the consuming
+ executable or shared-library link.
+
+Rules:
+
+- At least one of `inputs`, `cflags`, `ldflags`, `needed`, or `runpath` must be
+ present.
+- Matching root-package `[[native]]` entries are merged into `silk build
+ --package` and `silk test --package` for the selected code target.
+- Matching dependency-package `[[native]]` entries are merged when the imported
+ dependency package is present in the loaded module set. This is the preferred
+ manifest surface for source or hybrid dependencies whose Silk implementation
+ calls package-owned native helpers through `ext`.
+- `[[artifact]]` remains the distribution surface for prebuilt package outputs.
+ Binary-only/interface-only dependencies should continue to expose native
+ payloads as `[[artifact]]` entries paired with definition files.
+- `[[target]].inputs` remains available for native files that belong only to a
+ specific artifact recipe. Prefer `[[native]]` for package-level native code
+ that dependencies should carry with them.
+- `silk package lint` validates declared native input files and `[dist]`
+ coverage for non-`@vendored/...` inputs.
 
 ## Build Targets (`[[target]]`)
 

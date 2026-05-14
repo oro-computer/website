@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-05-12T01:05:17+00:00",
+  "generatedAt": "2026-05-14T01:10:33+00:00",
   "kind": "docs",
-  "count": 286,
+  "count": 287,
   "sections": [
     {
       "name": "overview",
@@ -35,6 +35,11 @@
           "id": "guides/modules-and-packages",
           "title": "Modules, Packages, and Publication",
           "file": "guides/modules-and-packages.md"
+        },
+        {
+          "id": "guides/project-dependencies",
+          "title": "Project Dependencies",
+          "file": "guides/project-dependencies.md"
         },
         {
           "id": "guides/practical-logger-module",

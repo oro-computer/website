@@ -75,8 +75,8 @@ Rules that keep tooling simple:
 - Imports form one contiguous block immediately after the package/module header.
 - Exports are explicit.
 - Source package declarations use `::` namespaces.
-- Manifest package names are simple identifiers such as `logger` or
- `oro_logger`.
+- Manifest package names are Silk package paths such as `logger` or
+ `oro::logger`.
 - Quoted import specifiers use filesystem-style paths such as `logger` or
  `logger/sinks`.
 
@@ -274,10 +274,11 @@ How loading works:
 - `silk build --package .` reads `silk.toml` and loads files selected by
  `[sources]`.
 - A dependency with `path = "../logger"` is loaded from that directory.
-- A dependency without `path` is searched through `SILK_PACKAGE_PATH` and the
- installed package roots.
-- Manifest package names are identifiers; `logger` maps to
- `logger/silk.toml` under each search root.
+- A dependency without `path` is searched through contextual `packages/` roots,
+ `SILK_PACKAGE_PATH`, and installed package roots.
+- The dependency key maps to a directory under each search root; a key such as
+ `logger` maps to `logger/silk.toml`, while `oro.logger` maps to
+ `oro/logger/silk.toml`.
 - Quoted imports use dependency-rooted module paths: `import logger from
  "logger";` loads the dependency's default module, and `import sinks from
  "logger/sinks";` loads a submodule.
@@ -305,8 +306,10 @@ fn main () -> int {
 }
 ```
 
-For local development, prefer `path`. For published packages, use a version
-requirement plus a package root materialized by your chosen distribution system.
+For local development, prefer `path`. For vendored dependencies inside a
+project, place the package under `packages/<dependency-key>/` and omit `path`.
+For published packages, use a version requirement plus a package root
+materialized by your chosen distribution system.
 
 ## Publishing through GitHub
 
@@ -455,6 +458,7 @@ import logger from "logger";
 
 ## Next
 
+- [Project dependencies](?p=guides/project-dependencies)
 - [Practical logger module walkthrough](?p=guides/practical-logger-module)
 - [Standard library](?p=guides/standard-library)
 - [Package manifests](?p=compiler/package-manifests)
