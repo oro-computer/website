@@ -78,16 +78,14 @@
 
             <div class="panel" aria-label="Runtime workflow">
               <div class="panel-header">
-                <div class="panel-title">Start with the obvious commands</div>
+                <div class="panel-title">Project workflow</div>
                 <a class="button button-quiet" href="./docs/?p=guides/from-zero-to-first-run">Guide</a>
               </div>
               <div class="panel-body">
-                <pre><code class="language-bash">oroc run .
-oroc run src/index.html
-oroc config --describe window.width
-oroc build . --platform=macos-aarch64
-oroc install-app build/app</code></pre>
-                <p>Start from a project, a single HTML file, or a JavaScript entry point. Add configuration when the app needs it.</p>
+                <pre><code class="language-bash">oroc init field-notes
+oroc build .
+oroc run .</code></pre>
+                <p>Create a project, build it, and run it locally.</p>
               </div>
             </div>
           </div>
