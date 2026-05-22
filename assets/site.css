@@ -3745,6 +3745,10 @@ pre code {
   padding-top: 2.2rem;
 }
 
+.learn-lesson-page {
+  --learn-lesson-bar-top: 126px;
+}
+
 .learn-lesson-shell {
   max-width: 920px;
   margin: 0 auto;
@@ -3752,7 +3756,7 @@ pre code {
 
 .learn-lesson-bar {
   position: sticky;
-  top: calc(var(--site-top-offset) + 12px);
+  top: var(--learn-lesson-bar-top);
   z-index: 80;
   display: flex;
   gap: 0.75rem;
@@ -3984,12 +3988,12 @@ pre code {
 .learn-copy {
   position: relative;
   flex: 0 0 auto;
-  width: 34px;
-  height: 34px;
-  border: 1px solid rgba(250, 248, 244, 0.12);
-  border-radius: 8px;
-  background: transparent;
-  color: rgba(247, 243, 234, 0.74);
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(250, 248, 244, 0.28);
+  border-radius: 6px;
+  background: rgba(250, 248, 244, 0.08);
+  color: rgba(250, 248, 244, 0.92);
   cursor: pointer;
   -webkit-appearance: none;
   appearance: none;
@@ -4001,14 +4005,14 @@ pre code {
   position: absolute;
   width: 11px;
   height: 13px;
-  border: 1.5px solid currentColor;
+  border: 2px solid currentColor;
   border-radius: 2px;
 }
 
 .learn-copy::before {
   left: 10px;
   top: 8px;
-  opacity: 0.55;
+  opacity: 0.72;
 }
 
 .learn-copy::after {
@@ -4019,9 +4023,9 @@ pre code {
 
 .learn-copy:hover,
 .learn-copy:focus-visible {
-  border-color: rgba(246, 201, 69, 0.42);
-  background: rgba(250, 248, 244, 0.06);
-  color: var(--color-fg);
+  border-color: rgba(246, 201, 69, 0.62);
+  background: rgba(250, 248, 244, 0.14);
+  color: #fffdf9;
 }
 
 .learn-copy[data-copy-state="copied"] {
@@ -4525,6 +4529,7 @@ pre code {
   }
 
   .learn-lesson-bar {
+    position: static;
     flex-wrap: wrap;
     border-radius: 8px;
   }
@@ -5551,4 +5556,236 @@ body:not(.editorial-layout) .learn-code pre {
   body:not(.editorial-layout) .section {
     padding: 3.5rem 0;
   }
+}
+
+/* Light-theme contrast cleanup for components inherited from the dark presentation. */
+body:not(.editorial-layout) .card-title,
+body:not(.editorial-layout) .list-title,
+body:not(.editorial-layout) .panel-title,
+body:not(.editorial-layout) .docs-hub-tech-copy h2,
+body:not(.editorial-layout) .docs-link-group h3,
+body:not(.editorial-layout) .docs-flow div,
+body:not(.editorial-layout) .runtime-command,
+body:not(.editorial-layout) .docs-landing-content h1,
+body:not(.editorial-layout) .docs-landing-content h2,
+body:not(.editorial-layout) .docs-tech-heading h2,
+body:not(.editorial-layout) .docs-quick-select span,
+body:not(.editorial-layout) .docs-link-block h3,
+body:not(.editorial-layout) .docs-link-block span,
+body:not(.editorial-layout) .learn-section-heading h2,
+body:not(.editorial-layout) .learn-course-panel h2,
+body:not(.editorial-layout) .learn-current-row strong,
+body:not(.editorial-layout) .learn-chapter strong,
+body:not(.editorial-layout) .learn-info h3,
+body:not(.editorial-layout) .learn-lesson-heading h1,
+body:not(.editorial-layout) .learn-lesson-title strong,
+body:not(.editorial-layout) .learn-prose h2,
+body:not(.editorial-layout) .learn-prose h3,
+body:not(.editorial-layout) .learn-complete h2,
+body:not(.editorial-layout).docs-page .docs-sidebar-title,
+body:not(.editorial-layout).docs-page .docs-toc-title,
+body:not(.editorial-layout).docs-page .docs-search-result-title,
+body:not(.editorial-layout).docs-page .docs-prevnext-title,
+body:not(.editorial-layout).docs-page .docs-content h1,
+body:not(.editorial-layout).docs-page .docs-content h2,
+body:not(.editorial-layout).docs-page .docs-content h3,
+body:not(.editorial-layout).docs-page .docs-content h4,
+body:not(.editorial-layout).docs-page .spec-prose h1,
+body:not(.editorial-layout).docs-page .spec-prose h2,
+body:not(.editorial-layout).docs-page .spec-prose h3,
+body:not(.editorial-layout).docs-page .spec-prose h4 {
+  color: var(--color-fg);
+}
+
+body:not(.editorial-layout) .card-meta,
+body:not(.editorial-layout) .list-desc,
+body:not(.editorial-layout) .panel-body p,
+body:not(.editorial-layout) .blog-lanes p,
+body:not(.editorial-layout) .blog-placeholder p,
+body:not(.editorial-layout) .docs-hub-tech-copy p,
+body:not(.editorial-layout) .runtime-command span,
+body:not(.editorial-layout) .docs-landing-content p,
+body:not(.editorial-layout) .docs-tech-summary,
+body:not(.editorial-layout) .docs-quick-select small,
+body:not(.editorial-layout) .docs-link-block small,
+body:not(.editorial-layout) .learn-hero .lede,
+body:not(.editorial-layout) .learn-section-heading p,
+body:not(.editorial-layout) .learn-course-panel p,
+body:not(.editorial-layout) .learn-current-row span,
+body:not(.editorial-layout) .learn-chapter > span:not(.learn-chapter-number) > span,
+body:not(.editorial-layout) .learn-info p,
+body:not(.editorial-layout) .learn-lesson-title span,
+body:not(.editorial-layout) .learn-lesson-heading small,
+body:not(.editorial-layout) .learn-prose p,
+body:not(.editorial-layout) .learn-prose li,
+body:not(.editorial-layout) .learn-callout,
+body:not(.editorial-layout) .learn-callout p,
+body:not(.editorial-layout) .learn-complete p,
+body:not(.editorial-layout).docs-page .docs-content p,
+body:not(.editorial-layout).docs-page .docs-content li,
+body:not(.editorial-layout).docs-page .docs-content dd,
+body:not(.editorial-layout).docs-page .spec-prose p,
+body:not(.editorial-layout).docs-page .spec-prose li,
+body:not(.editorial-layout).docs-page .spec-prose dd,
+body:not(.editorial-layout).docs-page .docs-search-result-summary {
+  color: var(--color-muted);
+}
+
+body:not(.editorial-layout).docs-page .docs-nav-section,
+body:not(.editorial-layout).docs-page .docs-search-result-meta,
+body:not(.editorial-layout).docs-page .docs-breadcrumb,
+body:not(.editorial-layout).docs-page .docs-prevnext-label,
+body:not(.editorial-layout).docs-page .spec-toc-title {
+  color: rgba(31, 31, 31, 0.48);
+}
+
+body:not(.editorial-layout).docs-page .docs-nav a,
+body:not(.editorial-layout).docs-page .docs-toc-list a,
+body:not(.editorial-layout).docs-page .spec-toc a,
+body:not(.editorial-layout) .learn-lesson-top,
+body:not(.editorial-layout) .learn-lesson-nav a,
+body:not(.editorial-layout) .learn-lesson-nav span {
+  color: rgba(31, 31, 31, 0.64);
+}
+
+body:not(.editorial-layout).docs-page .docs-nav a:hover,
+body:not(.editorial-layout).docs-page .docs-nav a:focus-visible,
+body:not(.editorial-layout).docs-page .docs-nav a[data-active="true"],
+body:not(.editorial-layout).docs-page .docs-toc-list a:hover,
+body:not(.editorial-layout).docs-page .docs-toc-list a:focus-visible,
+body:not(.editorial-layout).docs-page .spec-toc a:hover,
+body:not(.editorial-layout).docs-page .spec-toc a:focus-visible,
+body:not(.editorial-layout).docs-page .spec-toc a[data-active="true"],
+body:not(.editorial-layout) .learn-lesson-top:hover,
+body:not(.editorial-layout) .learn-lesson-top:focus-visible,
+body:not(.editorial-layout) .learn-lesson-nav a:hover,
+body:not(.editorial-layout) .learn-lesson-nav a:focus-visible {
+  background: rgba(31, 31, 31, 0.05);
+  color: var(--color-fg);
+}
+
+body:not(.editorial-layout).docs-page .docs-search::placeholder {
+  color: rgba(31, 31, 31, 0.44);
+}
+
+body:not(.editorial-layout).product-page .hero,
+body:not(.editorial-layout).product-page .section,
+body:not(.editorial-layout) .docs-landing-intro,
+body:not(.editorial-layout) .docs-tech-section,
+body:not(.editorial-layout) .docs-link-block,
+body:not(.editorial-layout) .learn-hero-art,
+body:not(.editorial-layout) .learn-lesson-heading,
+body:not(.editorial-layout) .learn-lesson-top,
+body:not(.editorial-layout) .learn-lesson-nav,
+body:not(.editorial-layout).docs-page .docs-sidebar-header,
+body:not(.editorial-layout).docs-page .docs-prevnext {
+  border-color: rgba(31, 31, 31, 0.1);
+}
+
+body:not(.editorial-layout) .runtime-command,
+body:not(.editorial-layout) .technology-links a,
+body:not(.editorial-layout) .docs-selector a,
+body:not(.editorial-layout) .docs-link-group,
+body:not(.editorial-layout) .docs-link-group a,
+body:not(.editorial-layout) .blog-lanes article,
+body:not(.editorial-layout) .blog-placeholder,
+body:not(.editorial-layout) .docs-flow div,
+body:not(.editorial-layout) .learn-course-panel,
+body:not(.editorial-layout) .learn-current-row,
+body:not(.editorial-layout) .learn-chapter,
+body:not(.editorial-layout) .learn-info,
+body:not(.editorial-layout) .learn-lesson-bar,
+body:not(.editorial-layout) .learn-lesson-menu,
+body:not(.editorial-layout) .learn-lesson-nav a,
+body:not(.editorial-layout) .learn-complete,
+body:not(.editorial-layout).docs-page .docs-search,
+body:not(.editorial-layout).docs-page .docs-search-result,
+body:not(.editorial-layout).docs-page .docs-prevnext-link,
+body:not(.editorial-layout).docs-page .prose details {
+  border-color: rgba(31, 31, 31, 0.12);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+body:not(.editorial-layout) .learn-lesson-menu::before,
+body:not(.editorial-layout) .learn-lesson-menu::after {
+  background: rgba(31, 31, 31, 0.72);
+}
+
+body:not(.editorial-layout) .learn-lesson-menu::before {
+  box-shadow: 0 5px 0 rgba(31, 31, 31, 0.72);
+}
+
+body:not(.editorial-layout) .learn-lesson-title img {
+  border-color: rgba(31, 31, 31, 0.12);
+  background: rgba(255, 255, 255, 0.56);
+}
+
+body:not(.editorial-layout) .learn-code {
+  border-color: rgba(246, 201, 69, 0.22);
+  background: linear-gradient(180deg, #171513 0%, #241d31 100%);
+  color: rgba(250, 248, 244, 0.94);
+}
+
+body:not(.editorial-layout) .learn-code-header {
+  border-bottom-color: rgba(250, 248, 244, 0.1);
+  background: rgba(250, 248, 244, 0.035);
+}
+
+body:not(.editorial-layout) .learn-code-title,
+body:not(.editorial-layout) .learn-copy {
+  color: rgba(250, 248, 244, 0.72);
+}
+
+body:not(.editorial-layout) .learn-copy {
+  border-color: rgba(250, 248, 244, 0.28);
+  background: rgba(250, 248, 244, 0.08);
+}
+
+body:not(.editorial-layout) .learn-copy::after {
+  background: #171513;
+}
+
+body:not(.editorial-layout) .learn-copy:hover,
+body:not(.editorial-layout) .learn-copy:focus-visible {
+  background: rgba(250, 248, 244, 0.06);
+  color: rgba(250, 248, 244, 0.94);
+}
+
+body:not(.editorial-layout).docs-page .docs-layout .prose li,
+body:not(.editorial-layout).docs-page .spec-prose li {
+  border-color: rgba(31, 31, 31, 0.1);
+  border-left-color: rgba(246, 201, 69, 0.46);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+body:not(.editorial-layout).docs-page .docs-layout .prose li > ul > li,
+body:not(.editorial-layout).docs-page .docs-layout .prose li > ol > li,
+body:not(.editorial-layout).docs-page .spec-prose li > ul > li,
+body:not(.editorial-layout).docs-page .spec-prose li > ol > li {
+  background: rgba(31, 31, 31, 0.035);
+}
+
+body:not(.editorial-layout).docs-page .docs-inline-code,
+body:not(.editorial-layout).docs-page .prose code {
+  background: rgba(246, 201, 69, 0.16);
+  color: #6d4d0e;
+}
+
+body:not(.editorial-layout).docs-page .prose table {
+  border-color: rgba(31, 31, 31, 0.12);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+body:not(.editorial-layout).docs-page .prose th,
+body:not(.editorial-layout).docs-page .prose td {
+  border-color: rgba(31, 31, 31, 0.1);
+}
+
+body:not(.editorial-layout).docs-page .prose th {
+  background: rgba(246, 201, 69, 0.12);
+  color: var(--color-fg);
+}
+
+body:not(.editorial-layout).docs-page .prose tbody tr:nth-child(even) td {
+  background: rgba(31, 31, 31, 0.035);
 }
