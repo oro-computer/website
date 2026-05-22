@@ -4,7 +4,7 @@ Silk · LLMS Pack
 This file concatenates the full Silk documentation hosted on this website,
 so an LLM can answer questions using the same source of truth as readers.
 
-Generated: 2026-05-14T01:13:03+00:00
+Generated: 2026-05-22T04:14:22+00:00
 
 How to link:
 - Docs: /silk/docs/?p=<id>
@@ -12750,9 +12750,9 @@ The compiler does not currently enforce this at compile time.
 
 #### ABI and Lowering
 
-In Silk, an `&Opaque` value is lowered as a single pointer
-scalar (`u64` on the current `linux/x86_64` target), rather than as a
-struct-of-pointers like `&struct` borrows.
+In Silk, an `&Opaque` value is lowered as a single
+pointer-width scalar, rather than as a struct-of-pointers like `&struct`
+borrows.
 
 ### Memory Layout (Intended Contract)
 
@@ -12768,7 +12768,7 @@ rules for the corresponding field types on the target:
  struct’s alignment (typically the maximum alignment of its fields), so arrays
  of the struct keep each element correctly aligned.
 
-Example (typical C layout on `linux/x86_64`):
+Example (typical C layout on common 64-bit targets):
 
 ```silk
 struct Frame {
@@ -53546,9 +53546,9 @@ The compiler does not currently enforce this at compile time.
 
 ##### ABI and Lowering
 
-In Silk, an `&Opaque` value is lowered as a single pointer
-scalar (`u64` on the current `linux/x86_64` target), rather than as a
-struct-of-pointers like `&struct` borrows.
+In Silk, an `&Opaque` value is lowered as a single
+pointer-width scalar, rather than as a struct-of-pointers like `&struct`
+borrows.
 
 #### Memory Layout (Intended Contract)
 
@@ -53564,7 +53564,7 @@ rules for the corresponding field types on the target:
  struct’s alignment (typically the maximum alignment of its fields), so arrays
  of the struct keep each element correctly aligned.
 
-Example (typical C layout on `linux/x86_64`):
+Example (typical C layout on common 64-bit targets):
 
 ```silk
 struct Frame {
