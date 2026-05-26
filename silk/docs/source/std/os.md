@@ -18,9 +18,10 @@ See also:
 ```silk
 module std::os;
 
-import memory from "std/memory";
-import temporal from "std/temporal";
-import vector from "std/vector";
+import std::memory;
+import std::result;
+import std::temporal;
+import std::vector;
 
 export const PLATFORM_NAME: string;
 export const ARCH_NAME: string;
@@ -33,11 +34,11 @@ enum Platform { Linux, WASI, Unknown }
 export fn arch () -> Architecture;
 export fn platform () -> Platform;
 
-export type UptimeResult = Result(Duration, std::temporal::TemporalFailed);
+export type UptimeResult = std::result::Result(Duration, std::temporal::TemporalFailed);
 export fn uptime () -> UptimeResult;
 
 struct CPU { model: string }
-export type CPUsResult = Result(std::vector::Vector(CPU), std::memory::AllocFailed);
+export type CPUsResult = std::result::Result(std::vector::Vector(CPU), std::memory::AllocFailed);
 export fn cpus () -> CPUsResult;
 
 export fn cpu_count () -> int;

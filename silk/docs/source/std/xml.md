@@ -5,8 +5,8 @@ DOM-style XML parsing and traversal API backed by libxml2.
 
 ## Vendored Dependencies + Linking
 
-On the hosted `linux/x86_64` baseline, `std::xml` relies on a vendored libxml2
-build produced by the Silk compiler repository’s vendored dependency workflow.
+On supported hosted Linux x86_64 target layouts, `std::xml` relies on a
+vendored libxml2 build produced by the Silk compiler repository’s vendored dependency workflow.
 
 - libxml2 tag `v2.15.1`
 
@@ -16,21 +16,29 @@ Run:
 zig build deps
 ```
 
+For musl outputs, build the matching dependency layout first:
+
+```sh
+zig build deps -Dtarget=x86_64-linux-musl
+```
+
 When the vendored archives are present, `silk build` auto-links:
 
-- `vendor/lib/<host-layout>/libxml2.a`
-- `vendor/lib/<host-layout>/libsilk_xml_shims.a`
+- `vendor/lib/<target-layout>/libxml2.a`
+- `vendor/lib/<target-layout>/libsilk_xml_shims.a`
 
 In staged/installed toolchains, these archives are expected under the compiler
 prefix:
 
-- `build/lib/silk/vendor/lib/<host-layout>/` (repo build prefix)
-- `<prefix>/lib/silk/vendor/lib/<host-layout>/` (installed)
+- `build/lib/silk/vendor/lib/<target-layout>/` (repo build prefix)
+- `<prefix>/lib/silk/vendor/lib/<target-layout>/` (installed)
 
 when `std::xml` is present in the module set, and also when linking `.o`/`.a`
 inputs that reference the shim symbols.
 
-Note: libxml2 requires libm at link/runtime (typically `libm.so.6`).
+Note: the vendored libxml2 path currently auto-links on `linux/x86_64` glibc
+and musl and requires the target libc math provider at link/runtime
+(`libm.so.6` on glibc, `libc.so` on musl).
 
 ## API Summary
 - `Document.parse(xml: string) -> Result(Document, XmlFailed)`

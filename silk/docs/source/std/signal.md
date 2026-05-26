@@ -42,11 +42,11 @@ signals early keeps delivery consistent.
 This pattern avoids polling terminal size in a loop:
 
 ```silk
-import io from "std/io";
-import event_loop from "std/runtime/event_loop";
-import runtime_io from "std/runtime/io";
-import mem from "std/runtime/mem";
-import signal from "std/signal";
+import std::io;
+import std::runtime::event_loop;
+import std::runtime::io;
+import std::runtime::mem;
+import std::signal;
 
 async fn main () -> int {
   let sfd_r: std::signal::SignalFDResult = std::signal::SignalFD.open(std::signal::SIGWINCH);

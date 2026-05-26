@@ -27,13 +27,13 @@ ext errno = i32;
 
 ### Example: call a C symbol
 ```silk
-import io from "std/io";
+import std::io;
 
 ext puts = fn (string) -> i32;
 
 fn main () -> int {
   puts("hello from ext");
-  io::println("ok");
+  std::io::println("ok");
   return 0;
 }
 ```

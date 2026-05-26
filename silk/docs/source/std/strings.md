@@ -36,9 +36,9 @@ export fn trim (s: string) -> string;
 export fn trim_start (s: string) -> string;
 export fn trim_end (s: string) -> string;
 
-export fn pad_left (s: string, min_len: i64, pad: string) -> Result(String, std::memory::OutOfMemory);
-export fn pad_right (s: string, min_len: i64, pad: string) -> Result(String, std::memory::OutOfMemory);
-export fn pad_center (s: string, min_len: i64, pad: string) -> Result(String, std::memory::OutOfMemory);
+export fn pad_left (s: string, min_len: i64, pad: string) -> std::result::Result(String, std::memory::OutOfMemory);
+export fn pad_right (s: string, min_len: i64, pad: string) -> std::result::Result(String, std::memory::OutOfMemory);
+export fn pad_center (s: string, min_len: i64, pad: string) -> std::result::Result(String, std::memory::OutOfMemory);
 ```
 
 Notes:
@@ -60,14 +60,14 @@ struct StringBuilder {
 }
 
 impl StringBuilder {
-  public fn init (cap: i64) -> Result(StringBuilder, std::memory::AllocFailed);
+  public fn init (cap: i64) -> std::result::Result(StringBuilder, std::memory::AllocFailed);
   public fn empty () -> StringBuilder;
   public fn push_u8 (mut self: &StringBuilder, value: u8) -> std::memory::OutOfMemory?;
   public fn push_char (mut self: &StringBuilder, value: char) -> std::memory::OutOfMemory?;
   public fn pop_u8 (mut self: &StringBuilder) -> u8?;
   public fn get_u8 (self: &StringBuilder, index: i64) -> u8;
   public fn set_u8 (mut self: &StringBuilder, index: i64, value: u8) -> void;
-  public fn into_string (mut self: &StringBuilder) -> Result(String, std::memory::OutOfMemory);
+  public fn into_string (mut self: &StringBuilder) -> std::result::Result(String, std::memory::OutOfMemory);
 }
 
 impl StringBuilder as std::interfaces::ReserveAdditional {
@@ -104,9 +104,9 @@ struct String {
 
 impl String {
   public fn empty () -> String;
-  public fn from_string (s: string) -> Result(String, std::memory::OutOfMemory);
-  public fn from_buffer_u8 (mut v: &std::buffer::BufferU8) -> Result(String, std::memory::OutOfMemory);
-  public fn from_chars (chars: std::arrays::Slice(char)) -> Result(String, std::memory::OutOfMemory);
+  public fn from_string (s: string) -> std::result::Result(String, std::memory::OutOfMemory);
+  public fn from_buffer_u8 (mut v: &std::buffer::BufferU8) -> std::result::Result(String, std::memory::OutOfMemory);
+  public fn from_chars (chars: std::arrays::Slice(char)) -> std::result::Result(String, std::memory::OutOfMemory);
   public fn as_string (self: &String) -> string;
 
   public fn push_u8 (mut self: &String, value: u8) -> std::memory::OutOfMemory?;
@@ -161,7 +161,7 @@ Notes:
 Example:
 
 ```silk
-import strings from "std/strings";
+import std::strings;
 
 fn main () -> int {
   let owned_r = std::strings::String.from_string("hello");
@@ -199,8 +199,8 @@ fn main () -> int {
 Example: converting scalar values requires UTF-8 encoding, not a pointer cast:
 
 ```silk
-import arrays from "std/arrays";
-import strings from "std/strings";
+import std::arrays;
+import std::strings;
 
 fn main () -> int {
   let chars: char[5] = ['h', 'e', 'l', 'l', 'o'];

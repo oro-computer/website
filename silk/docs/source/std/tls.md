@@ -14,15 +14,19 @@ The initial goals are:
 
 ## Linkage and Toolchain Integration
 
-On `linux/x86_64`, `silk build` auto-links the vendored mbedTLS static archives
-(`libmbedtls.a`, `libmbedx509.a`, `libmbedcrypto.a`) from:
+On supported hosted target layouts, `silk build` auto-links the vendored mbedTLS
+static archives (`libmbedtls.a`, `libmbedx509.a`, `libmbedcrypto.a`) from:
 
-- the repo checkout: `vendor/lib/<host-layout>/`, or
-- an installed prefix: `<prefix>/lib/silk/vendor/lib/<host-layout>/`.
+- the repo checkout: `vendor/lib/<target-layout>/`, or
+- an installed prefix: `<prefix>/lib/silk/vendor/lib/<target-layout>/`.
+
+The current target layouts are `x64-linux` for glibc Linux x86_64,
+`x64-linux-musl` for musl Linux x86_64, and `aarch64-macos` for Apple Silicon
+macOS.
 
 This avoids a runtime `DT_NEEDED` dependency on system mbedTLS shared libraries.
 When the vendored archives are missing, `silk build` reports an error that
-instructs the user to run `zig build deps`.
+instructs the user to run `zig build deps` for the selected target.
 
 The vendored mbedTLS in the Silk compiler repository is pinned (currently **Mbed TLS 4.0.0**).
 In mbedTLS 4.x, TLS depends on the PSA crypto subsystem for randomness and
@@ -36,7 +40,7 @@ API is not present in mbedTLS 4.x).
 ## Exported API
 ### Error model
 
-The current `std::tls` API uses `Result(T, E)` and a stable
+The current `std::tls` API uses `std::result::Result(T, E)` and a stable
 `TLSFailed` error value instead of exposing raw mbedTLS error codes.
 
 TLS I/O is transport-driven: when using a non-blocking transport (such as
@@ -56,6 +60,9 @@ Public error/value types in the Supported forms:
 
 ```silk
 module std::tls;
+
+import std::result;
+
 enum TLSErrorKind {
   OutOfMemory,
   InvalidInput,
@@ -73,8 +80,8 @@ export error TLSFailed {
   code: int,
 }
 
-export type TLSIntResult = Result(int, TLSFailed);
-export type SessionResult = Result(Session, TLSFailed);
+export type TLSIntResult = std::result::Result(int, TLSFailed);
+export type SessionResult = std::result::Result(Session, TLSFailed);
 ```
 
 ### `Session`

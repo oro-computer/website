@@ -13,10 +13,10 @@ This wiki page is a reading guide, not a replacement for the grammar itself.
 
 ## Example
 ```silk
-import io from "std/io";
+import std::io;
 
 fn main () -> int {
-  io::println("hello {s}", "world");
+  std::io::println("hello {s}", "world");
   return 0;
 }
 ```

@@ -7,7 +7,7 @@ writers, iterators, and allocators.
 When the standard library is enabled (the default), the compiler provides a
 small implicit std prelude (see [packages imports exports](?p=language/packages-imports-exports)).
 In particular, the interface names from `std::interfaces` are available without
-an explicit `import interfaces from "std/interfaces";`. This prelude is specified by the stdlib
+an explicit `import std::interfaces;`. This prelude is specified by the stdlib
 module `std::runtime::globals`.
 
 Key components:
@@ -159,7 +159,7 @@ Conformance rules (implementation):
  - `impl T as std::interfaces::Deserialize(S)` provides
  `fn deserialize(value: S) -> Self` (no `self` parameter),
  - `impl T as std::interfaces::Parse(E, S)` provides
- `fn parse(value: S) -> Result(Self, E)` (no `self`
+ `fn parse(value: S) -> std::result::Result(Self, E)` (no `self`
  parameter),
  - calls use `T.deserialize(value)`.
  - and `Parse` calls use `T.parse(value)`.

@@ -7,16 +7,16 @@ Canonical doc: [memory](?p=std/memory).
 ## Importing
 
 ```silk
-import memory from "std/memory";
+import std::memory;
 ```
 
 ## Example: alignment helpers
 ```silk
-import memory from "std/memory";
+import std::memory;
 
 fn main () -> int {
-  if !memory::is_power_of_two_u64(8) { return 1; }
-  if memory::align_up_u64(9, 8) != 16 { return 2; }
+  if !std::memory::is_power_of_two_u64(8) { return 1; }
+  if std::memory::align_up_u64(9, 8) != 16 { return 2; }
   return 0;
 }
 ```

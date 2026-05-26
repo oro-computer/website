@@ -7,7 +7,7 @@ Canonical doc: [task](?p=std/task).
 
 ## Example
 ```silk
-import task from "std/task";
+import std::task;
 
 fn main () -> int {
   let n: int = available_parallelism();

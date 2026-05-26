@@ -5,7 +5,9 @@ Silk’s CLI is designed around a small number of commands that compose well:
 1. **check** — parse, resolve imports, type-check, and optionally verify
 2. **test** — compile and run language-level tests
 3. **build** — produce executables, libraries, or object files
-4. **package/doc/man/env/format** — package authoring, documentation, environment inspection, and formatting
+4. **targets/graph/size** — inspect target support, module graphs, and artifacts
+5. **package/cache/doc/man/env/format** — package authoring, cache maintenance, documentation, environment inspection,
+   and formatting
 
 This guide stays CLI-first: what each command is for, what inputs it accepts, and how the commands fit together in real
 workflows.
@@ -109,13 +111,33 @@ silk build --package . vendor/libsqlite3.so
 Use `--target` for an exact target triple, or `--arch` as shorthand:
 
 ```bash
-silk build src/main.slk --target x86_64-linux-gnu -o build/app
+silk build src/main.slk --target linux-x86_64 -o build/app
+silk build src/main.slk --target linux-x86_64-musl -o build/app-musl
 silk build src/main.slk --arch wasm32 --kind executable -o build/app.wasm
-silk build --list-targets
+silk targets
+silk targets --json
 silk build --list-archs
 ```
 
 For shared and executable outputs, the CLI also exposes link metadata such as `--needed`, `--runpath`, and `--soname`.
+
+## Inspection commands for tools and CI
+
+Several commands have schema-versioned JSON output so editors, CI jobs, and
+automation do not need to scrape terminal prose:
+
+```bash
+silk check --json src/main.slk
+silk targets --json
+silk graph --json --package .
+silk size --json build/app
+silk package inspect --json --package .
+silk cache inspect --json
+```
+
+Use these when you need stable facts about diagnostics, target capabilities,
+the loaded module graph, output artifact size, package metadata, or cache
+state.
 
 ## Package workflow: `silk.toml`, `silk package`, install/uninstall
 
@@ -176,6 +198,8 @@ silk doc src/main.slk -o build/api.md
 silk doc --man --package . my_pkg::client::connect -o build/connect.3
 silk man std::io::println
 silk man --search println
+silk guide read file
+silk error E2028
 silk env
 silk fmt src
 silk fmt --check .
@@ -185,8 +209,13 @@ References:
 
 - [`silk-doc` (1)](?p=man/silk-doc.1)
 - [`silk-man` (1)](?p=man/silk-man.1)
+- [`silk-guide` (1)](?p=man/silk-guide.1)
+- [`silk-error` (1)](?p=man/silk-error.1)
 - [`silk-env` (1)](?p=man/silk-env.1)
 - [`silk-format` (1)](?p=man/silk-format.1)
+- [`silk-targets` (1)](?p=man/silk-targets.1)
+- [`silk-graph` (1)](?p=man/silk-graph.1)
+- [`silk-size` (1)](?p=man/silk-size.1)
 
 ## Embedding and `silk cc`
 

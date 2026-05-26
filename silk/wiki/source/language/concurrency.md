@@ -59,4 +59,4 @@ async fn main () -> int {
 ## See also
 
 - Canonical spec: [concurrency](?p=language/concurrency)
-- `task` and `sync`: [task](?p=std/task), [sync](?p=std/sync)
+- `std::task` and `std::sync`: [task](?p=std/task), [sync](?p=std/sync)

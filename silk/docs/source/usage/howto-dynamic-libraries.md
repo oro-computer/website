@@ -18,9 +18,10 @@ From the Silk compiler repository root:
 The example opens the current process image, resolves `strlen`, casts the raw
 symbol address to a typed `c_fn`, and calls it.
 
-On `linux/x86_64`, `silk build` automatically adds `libdl.so.2` when
-`std::dylib` is imported. On macOS, the loader functions are provided by
-`libSystem`, so no extra framework or library flag is needed.
+On `linux/x86_64`, `silk build` automatically adds the libc component that
+provides `dlopen` when `std::dylib` is imported (`libdl.so.2` on glibc,
+`libc.so` on musl). On macOS, the loader functions are provided by `libSystem`,
+so no extra framework or library flag is needed.
 
 ## The Shape of a Dynamic Call
 

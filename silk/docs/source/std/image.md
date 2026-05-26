@@ -19,8 +19,8 @@ work with the current `ext` / C ABI subset.
 
 ## Vendored Dependencies + Linking
 
-On the hosted `linux/x86_64` baseline, the codec modules rely on vendored C
-libraries that are built via the Silk compiler repository’s vendored dependency workflow:
+On supported hosted Linux x86_64 target layouts, the codec modules rely on
+vendored C libraries that are built via the Silk compiler repository’s vendored dependency workflow:
 
 - libpng `v1.6.54`
 - libjpeg-turbo `3.1.3`
@@ -29,6 +29,12 @@ Run:
 
 ```sh
 zig build deps
+```
+
+For musl outputs, build the matching dependency layout first:
+
+```sh
+zig build deps -Dtarget=x86_64-linux-musl
 ```
 
 When the vendored archives are present, `silk build` auto-links them when
@@ -41,9 +47,12 @@ toolchain builds shim archives that provide scalar-ABI-friendly functions.
 
 Notes:
 
-- The PNG path requires zlib and libm at link/runtime (typically `libz.so.1`
- and `libm.so.6`).
-- The JPEG path requires libm at link/runtime (typically `libm.so.6`).
+- The PNG path currently auto-links on `linux/x86_64` glibc and musl and
+ requires zlib plus the target libc math provider at link/runtime
+ (`libm.so.6` on glibc, `libc.so` on musl).
+- The JPEG path currently auto-links on `linux/x86_64` glibc and musl and
+ requires the target libc math provider at link/runtime (`libm.so.6` on glibc,
+ `libc.so` on musl).
 
 ## Ownership + Safety
 

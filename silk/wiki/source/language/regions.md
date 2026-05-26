@@ -39,4 +39,4 @@ fn main () -> int {
 
 - Canonical spec: [regions](?p=language/regions)
 - Memory model and `new`: [memory model](?p=language/memory-model)
-- `--noheap` and `runtime::mem`: [runtime](?p=std/runtime)
+- `--noheap` and `std::runtime::mem`: [runtime](?p=std/runtime)

@@ -48,8 +48,10 @@ Not implemented (yet):
 ```silk
 module std::https;
 
-import http from "std/http";
-import net from "std/net";
+import std::http;
+import std::net;
+import std::result;
+
 export let ERR_CONNECT: int = 1;
 export let ERR_TLS: int = 2;
 export let ERR_IO: int = 3;
@@ -62,10 +64,10 @@ export error Error {
   kind: int,
 }
 
-export type ClientResponseResult = Result(std::http::Response, Error);
+export type ClientResponseResult = std::result::Result(std::http::Response, Error);
 
 struct Connection { /* opaque */ }
-export type ConnectionResult = Result(Connection, Error);
+export type ConnectionResult = std::result::Result(Connection, Error);
 impl Connection {
   // Establish TCP, then perform a TLS client handshake.
   public fn connect (addr: std::net::SocketAddrV4) -> ConnectionResult;
@@ -85,7 +87,7 @@ impl Connection {
 }
 
 struct Server { /* opaque */ }
-export type ServerResult = Result(Server, Error);
+export type ServerResult = std::result::Result(Server, Error);
 impl Server {
   // Listen on TCP, accept, then perform a TLS server handshake with the provided
   // certificate and private key (PEM).

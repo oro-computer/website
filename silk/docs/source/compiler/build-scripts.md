@@ -193,10 +193,12 @@ export async fn run (package_root: string, action: string) -> int {
 
 ## Vendored C deps (headers + archives)
 
-When a build module emits a manifest target with native `.c`/`.h` inputs, the
-`silk` driver compiles those inputs with the host C toolchain for the native
-host executable target (`linux/x86_64` on Linux hosts, `macos/aarch64` on Apple
-Silicon macOS hosts). This keeps build modules portable across:
+When a build module emits a manifest target with native `.c`/`.h` inputs, or
+emits package-level `[[native]]` entries, the `silk` driver compiles those
+inputs with the host C toolchain for the active supported target (`linux/x86_64`
+on Linux hosts, `macos/aarch64` on Apple Silicon macOS hosts, plus the
+documented Apple host-backed iOS executable targets where supported). This keeps
+build modules portable across:
 
 - a repo checkout (vendored headers under `vendor/include/`), and
 - an installed prefix (canonical vendored headers under `<prefix>/include/silk/`).
@@ -227,6 +229,6 @@ pin a specific vendored archive, for example:
 - `@vendored/libmbedtls.a`
 
 See [package manifests](?p=compiler/package-manifests) for the full `inputs` rules and the
-`@vendored/...` syntax. Explicit vendored archive references resolve from the
-active compiler host layout under `vendor/lib/<host-layout>/` or the installed
-prefix equivalent.
+`[[native]]` / `@vendored/...` syntax. Explicit vendored archive references
+resolve from the active compiler host layout under `vendor/lib/<host-layout>/`
+or the installed prefix equivalent.

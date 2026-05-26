@@ -60,8 +60,9 @@ version = "0.1.0"
 ### `package.name` (required)
 
 The package name used for package imports (for example `import ui;` or
-`import ui from ui;`) and as the default package name for modules that omit an
-explicit `package ...;` declaration.
+`import ui from ui;`) and as
+the default package name for modules that omit an explicit `package ...;`
+declaration.
 
 `name` MUST be a valid Silk package path:
 
@@ -182,8 +183,7 @@ Rules:
  without scanning arbitrary source files.
 - `silk build install` uses this list when installing libraries into
  `PREFIX/lib/silk/<package>/...` so that the installed package remains
- importable (for
- example `import my_lib from "my_lib";`) via the system package search root.
+ importable (for example `import my_lib;`) via the system package search root.
 - Executable-only and manpage-only packages do not need
  `[package].definitions`; this field matters only when an installed package
  must expose a Silk import surface for library-style targets.
@@ -271,12 +271,12 @@ Fields:
  search-path candidate directory named `my/dep/b`.
 - The dependency key does not need to match the dependency's own manifest
  `package.name`. Quoted imports use the local dependency key; unquoted
- package-path imports use the dependency manifest's `package.name`.
+ package-path imports such as `import ui from vendor::ui;` use the dependency
+ manifest's `package.name`.
 - `path` (optional): local filesystem path to the dependency package root,
  resolved relative to the importing manifest directory when not absolute.
- When `path` is omitted, the dependency is resolved from contextual package
- roots and the package search path (see “Dependency discovery via contextual
- package roots and `SILK_PACKAGE_PATH`” below).
+ When `path` is omitted, the dependency is resolved from the package search
+ path (see “Dependency discovery via `SILK_PACKAGE_PATH`” below).
 - `version` (optional): SemVer requirement string checked against the
  dependency’s `package.version`.
  Supported forms:
@@ -325,7 +325,7 @@ Dependency resolution + verification:
 
 Current limitations:
 
-- Only on-disk dependencies are supported (no remote fetch).
+- Only local-path dependencies are supported (no remote fetch).
 - Dependency features are currently selected only via the importer’s manifest
  (`[dependencies].<dep>.features`) and the CLI. A dependency’s own
  `[build].features` are applied only when that dependency is built as the root
@@ -344,8 +344,8 @@ Rules:
  package root and then from each parent package root up to the graph root,
  - when `SILK_PACKAGE_PATH` is not set, `packages/` is searched using that same
  importer-to-graph-root walk.
- This means a dependency manifest can declare its own pathless dependencies and
- find packages in `packages/` next to the dependency, or in `packages/`
+ This means a dependency manifest can declare its own pathless dependencies
+ and find packages in `packages/` next to the dependency, or in `packages/`
  directories between that dependency and the root package being built.
 - Absolute entries in `SILK_PACKAGE_PATH` are searched as written. Relative
  entries also retain the historical current-working-directory fallback after
@@ -371,11 +371,228 @@ Rules:
  manifest directory, so nested dependency manifests may use `path = "../peer"`
  or omit `path` and rely on contextual package roots.
 
-For a runnable companion to these rules, see the
-[Project dependencies](?p=guides/project-dependencies) guide. It follows
-`examples/projects/cove/`, a static HTTP file server that uses an explicit local
-`path` dependency for its document-root abstraction and a pathless `access_log`
-dependency resolved from the root package's default `packages/` directory.
+## Worked Dependency Mapping Example
+
+This layout demonstrates the four dependency shapes that are expected to work
+together:
+
+```text
+workspace/
+  app/
+    silk.toml
+    src/main.slk
+  libs/
+    logger/
+      silk.toml
+      src/lib.slk
+    local-math/
+      silk.toml
+      src/lib.slk
+  packages/
+    my/dep/a/
+      silk.toml
+      src/lib.slk
+    my/dep/b/
+      silk.toml
+      defs/api.slk
+      lib/linux-x86_64/libdep_b.a
+  libs/logger/packages/
+    log_backend/
+      silk.toml
+      src/lib.slk
+```
+
+The root package declares explicit path dependencies and package-search
+dependencies in the same `[dependencies]` table:
+
+```toml
+# workspace/app/silk.toml
+[package]
+name = "app"
+version = "0.1.0"
+
+[sources]
+include = ["src/**/*.slk"]
+
+[dependencies]
+logger = { path = "../libs/logger", version = "^0.1.0" }
+local.math = { path = "../libs/local-math", version = "0.3.0" }
+my.dep.a = { version = "^1.2.0" }
+my.dep.b = { version = "^2.0.0" }
+
+[[target]]
+name = "app"
+kind = "executable"
+entry = "src/main.slk"
+```
+
+The meaning of each dependency key is:
+
+- `logger` is a path-based dependency rooted at `../libs/logger`. Quoted
+ dependency module imports use the key (`"logger"` for `src/lib.slk`, or a
+ subpath such as `"logger/api"`), while unquoted package imports use the
+ dependency package's own `package.name`.
+- `local.math` is also path-based. Its quoted dependency root is
+ `"local/math"` because dots in dependency keys map to slashes in quoted
+ module paths.
+- `my.dep.a` has no `path`, so the package search path is used. With
+ `SILK_PACKAGE_PATH=../packages`, the package root is
+ `../packages/my/dep/a`.
+- `my.dep.b` also has no `path`, so the package root is
+ `../packages/my/dep/b`. This example is binary-only: it ships definitions and
+ a compatible native archive instead of implementation sources.
+- If `logger` declares `log_backend = { version = "^0.1.0" }`, that nested
+ pathless dependency is resolved from `workspace/libs/logger/packages/` before
+ the search walks upward toward `workspace/app` and then falls back to the
+ configured global/install roots.
+
+The path dependency may expose a package namespace that differs from the local
+dependency key:
+
+```toml
+# workspace/libs/logger/silk.toml
+[package]
+name = "oro::logger"
+version = "0.1.2"
+
+[sources]
+include = ["src/**/*.slk"]
+```
+
+```silk
+// workspace/libs/logger/src/lib.slk
+package oro::logger;
+
+export fn info () -> int {
+  return 1;
+}
+```
+
+The dotted path dependency maps quoted `"local/math"` imports to its source
+root:
+
+```toml
+# workspace/libs/local-math/silk.toml
+[package]
+name = "local::math"
+version = "0.3.0"
+
+[sources]
+include = ["src/**/*.slk"]
+```
+
+```silk
+// workspace/libs/local-math/src/lib.slk
+package local::math;
+
+export fn add (a: int, b: int) -> int {
+  return a + b;
+}
+```
+
+The package-search dependency is stored under the package root path. Its
+manifest path is discovered from the dependency key:
+
+```toml
+# workspace/packages/my/dep/a/silk.toml
+[package]
+name = "my::dep::a"
+version = "1.2.3"
+
+[sources]
+include = ["src/**/*.slk"]
+```
+
+```silk
+// workspace/packages/my/dep/a/src/lib.slk
+package my::dep::a;
+
+export fn transform (value: int) -> int {
+  return value + 10;
+}
+```
+
+The binary-only dependency ships a definition file plus a native archive:
+
+```toml
+# workspace/packages/my/dep/b/silk.toml
+[package]
+name = "my::dep::b"
+version = "2.0.1"
+definitions = ["defs/api.slk"]
+
+[sources]
+include = ["defs/**/*.slk"]
+
+[dist]
+include = ["defs/**/*.slk", "lib/linux-x86_64/*.a"]
+
+[[artifact]]
+name = "dep_b_static"
+kind = "static"
+path = "lib/linux-x86_64/libdep_b.a"
+target = "linux-x86_64"
+definitions = ["defs/api.slk"]
+```
+
+```silk
+// workspace/packages/my/dep/b/defs/api.slk
+package my::dep::b;
+
+export fn some_function () -> int;
+```
+
+The consuming source can mix quoted dependency-rooted imports and unquoted
+package-namespace imports:
+
+```silk
+// workspace/app/src/main.slk
+import log_file from "logger";
+import log_pkg from oro::logger;
+import { add } from "local/math";
+import my::dep::a::transform;
+import my::dep::b::some_function;
+import { some_function as some_function_from_defs } from "my/dep/b";
+
+fn main () -> int {
+  return log_file::info()
+    + log_pkg::info()
+    + add(20, 1)
+    + transform(10)
+    + some_function()
+    + some_function_from_defs();
+}
+```
+
+Important resolution rules shown by this example:
+
+- Quoted strings use POSIX-style dependency paths and MUST NOT contain `::`.
+- An exact quoted dependency-key import such as `"logger"` or `"local/math"`
+ resolves to that dependency's root module (`src/lib.slk`) even when the
+ dependency manifest declares a different `package.name`.
+- Unquoted package paths use `::` and resolve by the package graph's
+ `package.name` values.
+- Dotted dependency keys map to slash prefixes for quoted imports:
+ `local.math` -> `"local/math"`, `my.dep.b` -> `"my/dep/b"`.
+- The longest dependency key wins. If both `my` and `my.dep.b` are declared,
+ `"my/dep/b"` resolves through `my.dep.b`, while `"my/other"` can still
+ resolve through `my` when that key exists.
+- A pathless dependency is resolved from the package search path only; it is
+ not fetched remotely.
+- `version` and `sha256` checks apply to the resolved dependency manifest, not
+ to the local dependency key.
+- A binary-only dependency root can satisfy unquoted package-symbol imports
+ through its definition file and auto-link a compatible native artifact. When
+ the package has one definition file and no default source module, an exact
+ quoted dependency-root import such as `"my/dep/b"` can bind named imports from
+ that definition file.
+
+A checked-in runnable companion for these rules lives at
+`examples/projects/cove/`. It is a static HTTP file server that
+uses an explicit local `path` dependency for its document-root abstraction and a
+pathless `access_log` dependency resolved from the root package's default
+`packages/` directory. The docroot dependency owns a target-gated
+`[[native]]` C helper for POSIX `realpath(3)` containment checks.
 
 ## Distributed Artifacts (`[[artifact]]`)
 
@@ -399,7 +616,9 @@ Fields:
 - `path` (required): relative path inside the package root.
 - `target` (optional): target triple for the artifact payload.
 - `libc` / `libc_min` (optional): structured compatibility metadata for native
- libraries.
+ libraries. Supported `libc` values are `glibc`/`gnu` and `musl`; this is used
+ when selecting artifacts for Linux targets such as `linux-x86_64` and
+ `linux-x86_64-musl`.
 - `definitions` (optional): definition files associated with this artifact.
 - `c_header` (optional): C header shipped with this artifact.
 
@@ -418,7 +637,8 @@ Current uses:
  `[dist]`,
 - `silk build` and `silk test --package` auto-consume one compatible artifact
  for imported binary-only/interface-only dependencies (currently on
- `linux/x86_64`, preferring object, then static, then shared payloads),
+ `linux/x86_64` glibc or musl, preferring object, then static, then shared
+ payloads),
 - and `silk build install` emits installed `[[artifact]]` records for built
  package targets.
 
@@ -537,6 +757,9 @@ Fields:
  of the query corpus.
  Exactly one of `source` or `query` must be set for `kind = "man"`.
 - `inputs` (optional): additional non-`.slk` build inputs for this target:
+ - for package-level native code that should travel with a source/hybrid
+ dependency, prefer `[[native]]`; `inputs` is for files specific to this one
+ build target,
  - entries are paths (relative to the manifest directory when not absolute),
  - entries may also use a toolchain-relative vendored archive reference:
  - `@vendored/<name>.a` — resolves to the vendored static archive under the
@@ -607,6 +830,10 @@ Fields:
  `needed = ["libfoo.so"]`,
  - when the selected dynamic loader looks like glibc (`ld-linux`), `silk` maps common system libraries
  to their versioned runtime sonames (for example `-lm` → `needed = ["libm.so.6"]`, `-lpthread` → `needed = ["libpthread.so.0"]`),
+ - when the selected dynamic loader looks like musl (`ld-musl`), `silk` maps
+ musl's libc component libraries (`-lc`, `-lm`, `-lpthread`, `-ldl`,
+ `-lrt`, `-lutil`, `-lresolv`, `-lcrypt`, `-lxnet`) to
+ `needed = ["libc.so"]`,
  - note: some distros ship `libfoo.so` only in `*-dev`
  packages, so prefer `-l:libfoo.so.<ver>` or an explicit `needed = ["libfoo.so.<ver>"]` when targeting
  versioned shared libraries),
@@ -693,8 +920,8 @@ Rules:
  target:
  - package-graph entry ordering prefers that target’s `entry`,
  - `silk test --package` uses that target’s `inputs`, `cflags`, `ldflags`,
- `needed`, and `runpath` as the manifest native/link metadata for the test
- harness.
+ `needed`, and `runpath`, plus matching package `[[native]]` entries, as the
+ manifest native/link metadata for the test harness.
 - For `silk test --package`:
  - `build.default_target` must name a code target (one with `entry = "..."`);
  pointing it at `kind = "man"` is an error,
@@ -748,9 +975,9 @@ Rules:
 
 ## Interaction With `package` Declarations
 
-- If a module contains an explicit `package name;` declaration, that source
- namespace is authoritative.
-- If a module omits `package`, the compiler assigns it to manifest
+- If a module contains an explicit `package name;` declaration, that name is
+ authoritative.
+- If a module omits `package`, the compiler assigns it to the manifest
  `package.name` (for files under that package root).
 
 This defaulting behavior exists to support small projects that do not want to

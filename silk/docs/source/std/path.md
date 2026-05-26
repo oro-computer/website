@@ -17,7 +17,7 @@ Design goals (modeled after Rust `std::path` and Node.js `path`):
 ```silk
 module std::path;
 
-import strings from "std/strings";
+import std::strings;
 
 export let SEP: string = "/";
 export let DELIMITER: string = ":";
@@ -51,9 +51,9 @@ impl Path {
   public fn extname (self: &Path) -> string;
   public fn stem (self: &Path) -> string;
   public fn parent (self: &Path) -> string;
-  public fn join (self: &Path, part: string) -> Result(std::strings::String, std::memory::OutOfMemory);
-  public fn normalize (self: &Path) -> Result(std::strings::String, std::memory::OutOfMemory);
-  public fn to_path_buf (self: &Path) -> Result(PathBuf, std::memory::OutOfMemory);
+  public fn join (self: &Path, part: string) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+  public fn normalize (self: &Path) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+  public fn to_path_buf (self: &Path) -> std::result::Result(PathBuf, std::memory::OutOfMemory);
 }
 
 // Owned path buffer (like Rust `PathBuf`).
@@ -64,8 +64,8 @@ struct PathBuf {
 }
 
 impl PathBuf {
-  public fn empty () -> Result(PathBuf, std::memory::OutOfMemory);
-  public fn from_string (s: string) -> Result(PathBuf, std::memory::OutOfMemory);
+  public fn empty () -> std::result::Result(PathBuf, std::memory::OutOfMemory);
+  public fn from_string (s: string) -> std::result::Result(PathBuf, std::memory::OutOfMemory);
   public fn as_string (self: &PathBuf) -> string;
   public fn as_slice (self: &PathBuf) -> std::arrays::ByteSlice;
   public fn as_view (self: &PathBuf) -> PathView;
@@ -89,19 +89,19 @@ impl PathBuf as std::interfaces::Serialize(string) {
 }
 
 impl PathBuf as std::interfaces::TrySerialize(std::memory::OutOfMemory) {
-  public fn try_serialize (self: &PathBuf) -> Result(std::strings::String, std::memory::OutOfMemory);
+  public fn try_serialize (self: &PathBuf) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
 }
 
 impl PathBuf as std::interfaces::Parse(std::memory::OutOfMemory) {
-  public fn parse (value: string) -> Result(PathBuf, std::memory::OutOfMemory);
+  public fn parse (value: string) -> std::result::Result(PathBuf, std::memory::OutOfMemory);
 }
 
 // Inspection.
 export fn is_absolute (path: string) -> bool;
 
 // Building and normalization.
-export fn join (a: string, b: string) -> Result(std::strings::String, std::memory::OutOfMemory);
-export fn normalize (path: string) -> Result(std::strings::String, std::memory::OutOfMemory);
+export fn join (a: string, b: string) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+export fn normalize (path: string) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
 export fn realpath (path: string) -> std::fs::FSStringResult;
 
 // Inspection helpers (views into the input string).
@@ -143,8 +143,8 @@ Functions that return `std::strings::String` allocate an owned buffer.
 Callers must drop returned owned strings when finished:
 
 ```silk
-import path from "std/path";
-import strings from "std/strings";
+import std::path;
+import std::strings;
 
 fn main () -> int {
   match std::path::join("/tmp", "file.txt") {
@@ -161,7 +161,7 @@ fn main () -> int {
 Borrowing a `PathBuf` as `string` is allocation-free:
 
 ```silk
-import path from "std/path";
+import std::path;
 
 fn main () -> int {
   let pb_r = std::path::PathBuf.from_string("/tmp/demo");

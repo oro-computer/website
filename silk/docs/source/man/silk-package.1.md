@@ -8,8 +8,8 @@
 
 ## Synopsis
 
-- `silk package inspect [--package <dir|manifest>]`
-- `silk package lint [--package <dir|manifest>]`
+- `silk package inspect [--json] [--package <dir|manifest>]`
+- `silk package lint [--json] [--package <dir|manifest>]`
 
 ## Description
 
@@ -20,24 +20,41 @@ roots.
  - package metadata from `[package]`,
  - public definition files from `[package].definitions`,
  - dependency constraints from `[dependencies]`,
+ - package native requirements from `[[native]]`,
  - declared shipped artifacts from `[[artifact]]`,
  - installed Formal Silk bundle paths discovered under
  `share/silk/formal/<artifact-relative-path>/...`,
  - and the current package `sha256:...` hash.
 - `lint` validates that:
  - definition files exist,
+ - declared native input files exist,
  - declared artifact files and headers exist,
  - artifact-local `definitions` remain within `[package].definitions`,
- - and `[dist]` covers the public surface and declared shipped artifacts.
+ - and `[dist]` covers the public surface, native inputs, and declared shipped
+ artifacts.
 
 When `--package` is omitted and `./silk.toml` exists, the current directory is
 used.
 
+Use `--json` for tooling that needs stable package facts without scraping
+terminal text.
+
 ## Options
 
 - `--help`, `-h` — show command help and exit.
+- `--json` — emit newline-terminated, schema-versioned package metadata or
+ lint result JSON on stdout.
 - `--package <dir|manifest>`, `--pkg <dir|manifest>` — inspect or lint the
  selected package root/manifest.
+
+## JSON Output
+
+`inspect --json` emits `schemaVersion`, `command`, `mode`, `root`, `sha256`,
+and a structured `manifest` object containing definitions, dist patterns,
+dependencies, artifacts, native requirements, and Formal Silk bundles.
+
+`lint --json` emits `ok`, `issueCount`, and `issues`. Lint failures still exit
+non-zero.
 
 ## Examples
 
@@ -47,6 +64,9 @@ silk package inspect
 
 # Lint a package manifest in another directory.
 silk package lint --package ../my-lib
+
+# Inspect package metadata as JSON.
+silk package inspect --json
 ```
 
 ## See Also

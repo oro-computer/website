@@ -25,8 +25,8 @@ In other words, these forms are intended to be interchangeable in the current
 subset:
 
 ```silk
-import ssh from "std/ssh";
-import ssh2 from "std/ssh2";
+import std::ssh;
+import std::ssh2;
 
 let a: std::ssh::Session = std::ssh::Session.invalid();
 let b: std::ssh2::Session = std::ssh2::Session.invalid();

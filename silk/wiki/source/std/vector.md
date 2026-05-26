@@ -13,16 +13,16 @@ Canonical doc: [vector](?p=std/vector).
 ## Importing
 
 ```silk
-import vector from "std/vector";
+import std::vector;
 ```
 
 ## Examples
 
 ### Example: push/pop
 ```silk
-import vector from "std/vector";
+import std::vector;
 
-type Vec = vector::Vector(int);
+type Vec = std::vector::Vector(int);
 
 fn main () -> int {
   match (Vec.init(4)) {

@@ -69,8 +69,7 @@ release asset is only a transport for that package root.
 
 ### 2. Package identity is always Silk-native
 
-The canonical package identity is `package.name` from
-`silk.toml`, for example:
+The canonical package identity is `package.name` from `silk.toml`, for example:
 
 - `http`
 - `oro::http`
@@ -260,6 +259,7 @@ package descriptor for the current authoring and distribution model.
 - `[dependencies]`
 - `[[target]]`
 - `[[native]]`
+- `[[artifact]]`
 - `[build]`
 - `[package].definitions`
 
@@ -311,9 +311,9 @@ This solves a different problem from `[sources]`:
 ### Artifact metadata should be explicit
 
 `[[target]]` remains the build recipe surface. Package-level native source,
-object, archive, and linker requirements that should travel with a source or
-hybrid dependency are described by `[[native]]`. Published binaries and shipped
-manual pages are described by `[[artifact]]`.
+object, archive, shared-library, and link requirements that should follow a
+source or hybrid dependency are described by `[[native]]`. Published binaries
+and shipped manual pages are described by `[[artifact]]`.
 
 The `[[artifact]]` table describes shipped outputs, for example:
 
@@ -366,10 +366,7 @@ The dependency model should separate package identity from transport:
  - system-installed package.
 
 This keeps a dependency on `oro::http` stable regardless of where the package
-came from. The dependency key is the importing manifest's local import root; it
-may be a simple identifier such as `oro_http` or a dotted key such as
-`oro.http`. The dependency package's own `package.name` remains authoritative
-for unquoted package-path imports.
+came from.
 
 ### Version requirements
 
@@ -378,10 +375,10 @@ in the manifest, for example:
 
 ```toml
 [dependencies]
-oro_http = { version = "^1.4.0" }
-oro_tls = { version = ">=1.2.0, <2.0.0" }
-oro_local = { path = "../oro-local" }
-oro_vendored = { path = "vendor/oro-vendored", sha256 = "sha256:..." }
+oro::http = { version = "^1.4.0" }
+oro::tls = { version = ">=1.2.0, <2.0.0" }
+oro::local = { path = "../oro-local" }
+oro::vendored = { path = "vendor/oro-vendored", sha256 = "sha256:..." }
 ```
 
 The initial supported forms should be:
@@ -391,6 +388,19 @@ The initial supported forms should be:
 - tilde ranges: `~1.2.3`
 - wildcard ranges: `1.2.*`
 - comparator sets: `>=1.2.0, <2.0.0`
+
+Pathless dependencies are resolved from contextual package search roots during
+package graph loading. A dependency manifest may itself declare nested
+pathless dependencies; relative `SILK_PACKAGE_PATH` entries and the default
+`packages/` root are interpreted from that dependency root and then from each
+parent root up to the root package being built, before install/user roots are
+searched.
+
+The local dependency key is also the root for quoted module-path imports. For
+example, `leaf = { version = "^1.0.0" }` allows
+`import { leaf_value } from "leaf";`, which resolves the dependency's
+`src/lib.slk` or its single public definition file. The dependency's own
+`package.name` remains authoritative for unquoted package-path imports.
 
 This keeps version selection expressive without tying Silk to any one package
 manager’s resolver.
@@ -515,7 +525,7 @@ The intended authoring flow for a reusable package is:
 3. Keep public prototype/interface modules under `defs/`.
 4. Use `[[target]]` to define how artifacts are built.
 5. Use `[[native]]` for target-scoped native requirements that should be linked
-   when a source or hybrid package is imported as a dependency.
+ when a source or hybrid package is imported as a dependency.
 6. When distributing prebuilt libraries, record them as explicit package
  artifacts with target metadata.
 7. Publish the same package root through one or more channels:
@@ -586,11 +596,10 @@ Out of scope for the package model itself:
  needed, but Silk does not currently need a separate `[exports]` table.
 
 For a runnable package root that exercises package-owned native code in a useful
-program, see the [Project dependencies](?p=guides/project-dependencies) guide.
-It follows `examples/projects/cove/`, a static HTTP file server with a local
-`docroot` path dependency, a pathless `access_log` dependency resolved from the
-package's default `packages/` directory, and a target-gated native C helper
-declared by the docroot package.
+program, see `examples/projects/cove/`. It is a static HTTP file
+server with a local `docroot` path dependency, a pathless `access_log`
+dependency resolved from the package's default `packages/` directory, and a
+target-gated native C helper declared by the docroot package.
 
 ## Current Operational Limits
 
@@ -602,8 +611,8 @@ declared by the docroot package.
  being guessed at runtime.
 - `silk test --package` consumes the selected code target’s manifest native
  inputs plus matching package/dependency `[[native]]` entries directly:
- `.c` / `.h` / supported `.m` sources are compiled to temporary objects for the
- generated test harness, while `.o`, `.a`, shared libraries, `needed`, and
+ `.c` / `.h` / supported `.m` sources are compiled to temporary objects for
+ the generated test harness, while `.o`, `.a`, shared libraries, `needed`, and
  `runpath` entries are linked as declared. Hosted vendored native-input
  auto-linking for libsodium, mbedTLS, SQLite, and libssh2 follows the same
  supported-target rules as package builds.

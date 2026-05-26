@@ -74,7 +74,7 @@ alternate stdlib root without changing higher-level `std::...` modules.
 - The `std::runtime::...` surface is allowed to be low-level and `unsafe`:
  raw pointers, integer error codes, and OS-specific constants are acceptable.
 - When an operation can fail, prefer returning the error code *as a value*
- (via `Result(T, int)` or an optional error `int?`) so callers do
+ (via `std::result::Result(T, int)` or an optional error `int?`) so callers do
  not need to pair a sentinel return with a separate `errno()` query.
 - Higher-level, ergonomic, and allocation-aware APIs belong in `std::...`
  modules (for example `std::fs::File.read_to_end`).
@@ -184,7 +184,9 @@ Implemented runtime areas in the shipped stdlib:
 - `std::runtime::net` — hosted networking primitives used by `std::net`
  (IPv4/IPv6 TCP + UDP sockets plus hostname resolution used by
  `std::net::resolve_host`; delegates to `std::runtime::posix::net` in the shipped stdlib).
-- `std::runtime::z3` — low-level `ext` bindings for the Z3 C API (vendored on hosted `linux/x86_64`).
+- `std::runtime::z3` — low-level `ext` bindings for the Z3 C API (vendored on
+ the glibc hosted layout; musl targets require an explicit downstream Z3
+ library).
 - `std::runtime::regex` / `std::runtime::unicode` / `std::runtime::number` / `std::runtime::readline` —
  non-OS-specific runtime helpers used by `std::{regex,unicode,number,readline}`. These
  are implemented via `ext` bindings to a small bundled runtime support library
@@ -292,7 +294,7 @@ by `std::process::child` such as `dup2`, `pipe`, `poll`, and `set_cloexec`).
 
 Fallible operations should return errors directly:
 
-- value-returning operations use `Result(T, int)` where `Err(int)`
+- value-returning operations use `std::result::Result(T, int)` where `Err(int)`
  is a stable, area-specific error code consumed by higher-level `std::...`
  wrappers (for example `std::io::IOFailed.code`),
 - status operations use optional errors (`int?`), returning `None` on success

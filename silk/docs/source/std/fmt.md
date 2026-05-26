@@ -143,9 +143,11 @@ so output precision is limited to `f64` precision in the Supported forms.
 ```silk
 import { println } from "std/io";
 import format from "std/fmt";
-import fmt from "std/fmt";
-import strings from "std/strings";
-type StringAllocResult = Result(std::strings::String, std::fmt::Error);
+import std::fmt;
+import std::strings;
+import std::result;
+
+type StringAllocResult = std::result::Result(std::strings::String, std::fmt::Error);
 
 fn main () -> int {
   const a = 1;
@@ -179,7 +181,7 @@ fn main () -> int {
 Signature:
 
 ```silk
-export default fn format (fmt: string, ...args: Arg) -> Result(std::strings::String, std::fmt::Error);
+export default fn format (fmt: string, ...args: Arg) -> std::result::Result(std::strings::String, std::fmt::Error);
 ```
 
 Notes (Supported forms):

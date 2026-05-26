@@ -33,10 +33,16 @@ When verification syntax is not present, compilation does not require proofs.
 ## Z3 linkage and overrides
 
 On supported native hosts, Silk links the vendored Z3 static library and its
-headers (`vendor/include`) directly into the compiler:
+headers (`vendor/include`) directly into the compiler when the host archive is
+present:
 
 - `linux/x86_64` -> `vendor/lib/x64-linux/libz3.a`
-- `macos/aarch64` -> `vendor/lib/aarch64-macos/libz3.a`
+- `macos/aarch64` -> `vendor/lib/aarch64-macos/libz3.a` (optional until the
+ native archive workflow is tracked in-repo)
+
+If no static host archive is present, the compiler still builds, but Formal
+Silk verification reports Z3 as unavailable unless a dynamic library override is
+provided.
 
 To override the Z3 library at runtime (for example to test against a different
 Z3 build), provide a dynamic library path:
@@ -599,7 +605,7 @@ The manifest records, for each entry:
 - a stable entry id
 - whether it is a `theory`, `function`, or `method`
 - the originating module path
-- the package namespace
+- the package name
 - the exported symbol name
 - the owner type for methods
 - the normalized signature string

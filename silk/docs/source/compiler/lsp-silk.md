@@ -34,8 +34,7 @@ The `silk-lsp` binary is built and installed alongside the `silk` CLI:
 - Editor and IDE integrations should launch `silk-lsp` as a stdio-based LSP server, without extra arguments, and then speak JSON-RPC 2.0 over its stdin/stdout.
 - The server writes protocol messages to stdout and may emit diagnostic logs to stderr; LSP clients must not treat stderr as protocol traffic.
 - Optional flags:
- - `--std-root <path>` overrides the stdlib root used for resolving
- `from "std/..."` imports and direct std ABI imports.
+ - `--std-root <path>` overrides the stdlib root used for resolving `import std::...;`.
  - `--std <path>` is an accepted alias of `--std-root <path>`.
  - `--nostd` disables stdlib auto-loading entirely.
  - `-h` / `--help` prints the current usage text.
@@ -123,10 +122,9 @@ workspace module set.
  - field and method accesses (`value.field`, `value.method`) report the field type for known struct or error receivers, and report method signatures for known struct receivers,
  - chained field receivers (`box.value.field`) are resolved by walking the known struct/error field path, including applied generic structs where direct field type parameters can be substituted before rendering the hover type,
  - imported names are resolved across the module set:
- - module-specifier imports (`import { name } from "ns/pkg";`,
- `import { name as alias } from "ns/pkg";`, `import alias from "ns/pkg";`),
- - direct package imports (`import ns::pkg;`),
- - direct symbol imports (`import ns::pkg::name;`, `import ::malloc;`),
+ - package imports (`import ns::pkg;`, `import ns::pkg as alias;`),
+ - qualified symbol imports (`import ns::pkg::name;`, `import ns::pkg::name as alias;`, `import ::malloc;`),
+ - JS-style imports (`import { name } from "dep/path";`, `import { name as alias } from "dep/path";`, `import alias from ns::pkg;`),
  - and module-scope `using` aliases for imported or local names,
  - when an `ext` declaration resolves to a locally indexed native C symbol, hover includes the native C declaration/prototype in an additional `c` code block,
  - native C lookup is filtered by the `ext` shape (`fn` / `c_fn` externs prefer C functions; non-function externs prefer C variables), so common C tag/function collisions like `struct stat` vs `stat(...)` do not override the callable symbol.
@@ -155,9 +153,9 @@ The server provides `textDocument/definition` for open documents.
  - a default/namespace import,
  - or a module-scope `using` alias.
 - Package and import resolution covers:
- - module-specifier imports from dependency-rooted module specifiers and file specifiers,
- - direct package imports (`import ns::pkg;`),
- - direct symbol imports (`import ns::pkg::name;`, `import ::name;`),
+ - package imports (`import ns::pkg;`, `import ns::pkg as alias;`),
+ - qualified symbol imports (`import ns::pkg::name;`, `import ns::pkg::name as alias;`, `import ::name;`),
+ - JS-style imports from package specifiers and file specifiers,
  - and `using` aliases for both value names and namespace aliases.
 - Local scopes are then consulted to resolve:
  - function parameters,
@@ -215,14 +213,19 @@ module set.
  - symbol-aware suggestions from the current package and imported packages (functions, lets, ext, structs, enums, interfaces, errors),
  - imported names from:
  - package imports and qualified symbol imports,
- - JS-style named/default imports from file, std, or dependency module specifiers,
+ - JS-style named/default imports from file or package specifiers,
  - and module-scope `using` aliases,
  - unqualified local-package and named imported functions in
  statement-position buffers that are temporarily incomplete while typing
  (for example before `(` or `;` has been inserted),
  - import specifier path completion inside `from "..."` strings:
- - file specifiers (`"./..."`, `"../..."`, and absolute paths) suggest `.slk` files and subdirectories,
- - std-root module specifiers (`"std/..."`) suggest stdlib module paths (omitting the `.slk` extension),
+ - relative file specifiers (`"./..."` and `"../..."`) suggest `.slk` files and subdirectories,
+ - std package specifiers (`"std/..."`) suggest stdlib package paths (omitting the `.slk` extension),
+ - unquoted package-path completion inside import specifiers, including
+ package imports such as `import oro::logger;` and JS-style imports such
+ as `import logger from oro::logger;`,
+ - named-import member completion from unquoted package paths, such as
+ `import { format_ } from std::fmt;`,
  - `#embed("path", "...")` encoding completion in the optional second
  argument, offering exactly `"utf8"`, `"utf16"`, `"u8"`, `"u16"`, and
  `"u32"`; omitting the argument is equivalent to `"utf8"`,
@@ -424,10 +427,12 @@ The workspace cache is manifest-aware:
 - for each open document with a filesystem path, the server walks upward to the
  nearest owning `silk.toml`,
 - it loads the full package graph rooted there, including dependency packages,
+ using the same contextual package search roots as the CLI for nested
+ pathless dependencies,
 - it adds manifest-declared definition files to the indexed module set,
-- it applies the manifest package name as the default package namespace for
- source or definition files that omit an explicit
- `package ...;` / `module ...;` declaration,
+- it applies the manifest package name as the default package for source or
+ definition files that omit an explicit `package ...;` / `module ...;`
+ declaration,
 - and it collects manifest-owned `.c` / `.h` / `.m` sources from target inputs
  and shipped C headers for the native symbol index.
 
@@ -444,10 +449,7 @@ File-backed URI handling note:
 
 ### Standard Library Integration
 
-By default, the language server will load standard library packages referenced
-by `from "std/..."` imports and direct std ABI imports when a stdlib root is
-available. The stdlib root is selected using the same rules as the compiler,
-with an additional workspace-root fallback:
+By default, the language server will load standard library packages referenced by `import std::...` or quoted std path imports such as `import { f } from "std/fmt";` when a stdlib root is available. The stdlib root is selected using the same rules as the compiler, with an additional workspace-root fallback:
 
 - `--std-root <path>` passed to `silk-lsp` (highest priority),
 - `SILK_STD_ROOT` when set,

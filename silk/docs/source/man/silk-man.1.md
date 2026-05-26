@@ -51,7 +51,7 @@ Notes:
  - package manual roots are discovered from common in-package man source trees
  and installed `share/man/man{1,3,7}` layouts.
 - Shorthands:
- - `silk man build` opens `silk-build(1)` (same for `check`, `test`, `doc`, `man`, `guide`, `error`, `proto`, `cc`, `env`, `format` / `fmt`).
+ - `silk man build` opens `silk-build(1)` (same for `check`, `targets`, `graph`, `size`, `test`, `doc`, `man`, `guide`, `error`, `proto`, `cc`, `env`, `format` / `fmt`).
  - when no package is selected/resolvable, `silk man fs` is treated as `silk man std::fs` (and similarly for other top-level std modules).
  - when no package is selected/resolvable, `silk man io println` is treated as `silk man std::io::println`.
  - when a package root is selected/resolved, `silk man readme`, `silk man overview`, `silk man <package-name>`, and qualified aliases such as `silk man <package-name> readme` prefer the package overview page when a local `package.readme` exists.

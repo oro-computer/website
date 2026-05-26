@@ -8,9 +8,9 @@
 
 ## Synopsis
 
-- `silk error <code>`
-- `silk error --list`
-- `silk error -l`
+- `silk error [--json] <code>`
+- `silk error [--json] --list`
+- `silk error [--json] -l`
 
 ## Description
 
@@ -30,6 +30,10 @@ The lookup accepts copied forms:
 `silk error --list` and `silk error -l` print every stable compiler error code
 and its short description in deterministic order.
 
+Use `--json` for editor, CI, and agent workflows that need structured
+diagnostic metadata. Lookup mode emits one `diagnostic` object; list mode emits
+a `diagnostics` array.
+
 ## Output
 
 For a single code, output includes:
@@ -45,12 +49,22 @@ For a single code, output includes:
 Examples are syntax-highlighted when stdout is a color-capable TTY. Piped
 output, `NO_COLOR`, and `TERM=dumb` remain plain text.
 
+JSON output is newline-terminated and includes:
+
+- `schemaVersion`
+- `command`
+- `mode`
+- `diagnostic` or `diagnostics`
+- `guideStatus` for lookup mode
+
 ## Examples
 
 ```sh
 silk error E2028
 silk error error[E2028]
 silk error --list
+silk error --json E2028
+silk error --json --list
 ```
 
 ## See Also

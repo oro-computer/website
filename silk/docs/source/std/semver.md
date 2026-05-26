@@ -30,7 +30,7 @@ This module is intentionally strict and focused:
  - Legacy/explicit formatting helper; returns the same canonical output as
  `try_serialize()`.
 
-`ParseResult` is `Result(Version, ParseError)`.
+`ParseResult` is `std::result::Result(Version, ParseError)`.
 
 `ParseError.offset` is a **byte offset** into the original `input`.
 `ParseError.kind()` reports a stable error kind.
@@ -96,7 +96,7 @@ Notes:
 ## Example
 
 ```silk
-import semver from "std/semver";
+import std::semver;
 
 fn main () -> int {
   match (std::semver::parse("1.2.3-alpha.1+build.5")) {

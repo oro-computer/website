@@ -40,6 +40,7 @@ for setting:
 
 - `[package]` fields (`name`, `version`, `definitions`),
 - `[build]` fields (`default_target`),
+- package-level `[[native]]` entries for target-scoped native requirements,
 - and `[[target]]` entries (including native `inputs`, `cflags`, `ldflags`, and
  dynamic linkage fields like `needed`/`runpath`/`soname`).
 
@@ -53,6 +54,21 @@ hosts, common vendored dependency families (`libsodium`, `mbedTLS`,
 `libsqlite3`, `libssh2`) are also auto-linked when native `.c` / `.h` / `.m` /
 `.o` / `.a` inputs reference their symbol families, so explicit `@vendored/...`
 entries are optional for those common cases.
+
+For package-owned native code that should be linked whenever the package is
+imported as a dependency, build modules should emit `[[native]]` entries via:
+
+- `Build.add_native(target) -> NativeId` (`target = ""` means no target gate),
+- `Build.native_add_input(id, path)`,
+- `Build.native_add_cflag(id, arg)`,
+- `Build.native_add_ldflag(id, arg)`,
+- `Build.native_add_needed(id, soname)`,
+- `Build.native_add_runpath(id, path)`.
+
+The emitted `[[native]]` table follows the package-manifest rules: paths are
+relative to the owning package root, `target` is a compiler target triple, and
+matching entries are consumed by root package builds and by imported
+dependencies.
 
 For native header inputs, `Build.target_add_input(...)` follows the same rule
 as direct manifest/CLI builds:
@@ -199,6 +215,6 @@ This module is expected to grow toward a Zig-like build system:
 
 - programmatic installation/uninstallation hooks,
 - and richer native build configuration beyond the current `cflags`/`ldflags`
- fields (additional include path kinds, link search paths, and platform selection).
+ fields (additional include path kinds and structured link search paths).
 
 When those features are introduced, they will be specified here first.

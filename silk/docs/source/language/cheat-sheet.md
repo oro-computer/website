@@ -178,10 +178,10 @@ See `structs-impls-layout.md` and `interfaces.md` for details.
 ## Concurrency
 
 - Function modifiers:
-  - `fn` — normal.
-  - `async fn` — `await`-able; calling yields `Promise(T)`.
-  - `task fn` — runs in parallel on a worker thread; calling yields `Task(T)`.
-  - `async task fn` — `async` + `task`; calling yields `Promise(Task(T))`.
+ - `fn` — normal.
+ - `async fn` — `await`-able; calling yields `Promise(T)`.
+ - `task fn` — runs in parallel on a worker thread; calling yields `Task(T)`.
+ - `async task fn` — `async` + `task`; calling yields `Promise(Task(T))`.
 - Structured block:
 
 ```silk

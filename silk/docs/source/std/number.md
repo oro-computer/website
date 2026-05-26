@@ -29,13 +29,13 @@ export error ParseFailed {
   offset: int,
 }
 
-export type AtodResult = Result(f64, ParseFailed);
-export type Atou64Result = Result(u64, ParseFailed);
-export type Atoi64Result = Result(i64, ParseFailed);
-export type Atou32Result = Result(u32, ParseFailed);
-export type Atoi32Result = Result(i32, ParseFailed);
-export type Atou128Result = Result(u128, ParseFailed);
-export type Atoi128Result = Result(i128, ParseFailed);
+export type AtodResult = std::result::Result(f64, ParseFailed);
+export type Atou64Result = std::result::Result(u64, ParseFailed);
+export type Atoi64Result = std::result::Result(i64, ParseFailed);
+export type Atou32Result = std::result::Result(u32, ParseFailed);
+export type Atoi32Result = std::result::Result(i32, ParseFailed);
+export type Atou128Result = std::result::Result(u128, ParseFailed);
+export type Atoi128Result = std::result::Result(i128, ParseFailed);
 
 export fn atod (s: string) -> AtodResult;
 export fn atou64 (s: string) -> Atou64Result;
@@ -61,15 +61,15 @@ Notes:
 Formatting functions allocate and return owned `std::strings::String` values.
 
 ```silk
-export fn dtoa (value: f64) -> Result(std::strings::String, std::memory::OutOfMemory);
+export fn dtoa (value: f64) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
 
-export fn u64toa (value: u64) -> Result(std::strings::String, std::memory::OutOfMemory);
-export fn i64toa (value: i64) -> Result(std::strings::String, std::memory::OutOfMemory);
-export fn u32toa (value: u32) -> Result(std::strings::String, std::memory::OutOfMemory);
-export fn i32toa (value: i32) -> Result(std::strings::String, std::memory::OutOfMemory);
+export fn u64toa (value: u64) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+export fn i64toa (value: i64) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+export fn u32toa (value: u32) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+export fn i32toa (value: i32) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
 
-export fn u128toa (value: u128) -> Result(std::strings::String, std::memory::OutOfMemory);
-export fn i128toa (value: i128) -> Result(std::strings::String, std::memory::OutOfMemory);
+export fn u128toa (value: u128) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
+export fn i128toa (value: i128) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
 ```
 
 ### Boxed `Number`
@@ -86,7 +86,7 @@ export struct Number {
   float: f64,
 }
 
-export type ParseNumberResult = Result(Number, ParseFailed);
+export type ParseNumberResult = std::result::Result(Number, ParseFailed);
 
 impl Number {
   public fn from_i8 (value: i8) -> Number;
@@ -112,7 +112,7 @@ impl Number {
   public fn to_i128_exact (self: &Number) -> i128?;
   public fn to_u128_exact (self: &Number) -> u128?;
   public fn eq (self: &Number, other: &Number) -> bool;
-  public fn to_string (self: &Number) -> Result(std::strings::String, std::memory::OutOfMemory);
+  public fn to_string (self: &Number) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
 }
 ```
 

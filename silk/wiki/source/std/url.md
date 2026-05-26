@@ -13,39 +13,36 @@ Canonical doc: [url](?p=std/url).
 ## Importing
 
 ```silk
-import url from "std/url";
-import { URL, URLResult, URLSearchParams } from "std/url";
-import memory from "std/memory";
-import strings from "std/strings";
+import std::url;
+import std::strings;
 ```
 
 ## Exported API
 
-- `url::parse(input: string) -> URLResult`
-- `url::parse_with_base(input: string, base: &URL) -> URLResult`
-- `URL.href() -> Result(strings::String, memory::OutOfMemory)`
-- `URL.origin() -> Result(strings::String, memory::OutOfMemory)`
-- `URLSearchParams.from_string(s: string) -> Result(URLSearchParams, memory::OutOfMemory)`
-- `URLSearchParams.to_string() -> Result(strings::String, memory::OutOfMemory)`
-- `URLSearchParams.has(name: string) -> Result(bool, memory::OutOfMemory)`
-- `URLSearchParams.get(name: string) -> Result(strings::String?, memory::OutOfMemory)`
-- `URLSearchParams.append/delete/set/sort -> memory::OutOfMemory?`
+- `std::url::parse(input: string) -> URLResult`
+- `std::url::parse_with_base(input: string, base: &URL) -> URLResult`
+- `URL.href() -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
+- `URL.origin() -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
+- `URLSearchParams.from_string(s: string) -> std::result::Result(URLSearchParams, std::memory::OutOfMemory)`
+- `URLSearchParams.to_string() -> std::result::Result(std::strings::String, std::memory::OutOfMemory)`
+- `URLSearchParams.has(name: string) -> std::result::Result(bool, std::memory::OutOfMemory)`
+- `URLSearchParams.get(name: string) -> std::result::Result(std::strings::String?, std::memory::OutOfMemory)`
+- `URLSearchParams.append/delete/set/sort -> std::memory::OutOfMemory?`
 
 ## Examples
 
 ### Example: parse + resolve + query params
 ```silk
-import url from "std/url";
-import { URL, URLResult, URLSearchParams } from "std/url";
-import strings from "std/strings";
+import std::url;
+import std::strings;
 
 fn dummy_url () -> URL {
   return URL{
-    scheme: strings::String.empty(),
-    username: strings::String.empty(),
-    password: strings::String.empty(),
+    scheme: std::strings::String.empty(),
+    username: std::strings::String.empty(),
+    password: std::strings::String.empty(),
     host_kind: 0,
-    host_str: strings::String.empty(),
+    host_str: std::strings::String.empty(),
     ipv4: 0,
     ipv6_s0: 0,
     ipv6_s1: 0,
@@ -56,17 +53,17 @@ fn dummy_url () -> URL {
     ipv6_s6: 0,
     ipv6_s7: 0,
     port: None,
-    path: strings::String.empty(),
-    query: strings::String.empty(),
+    path: std::strings::String.empty(),
+    query: std::strings::String.empty(),
     has_query: false,
-    fragment: strings::String.empty(),
+    fragment: std::strings::String.empty(),
     has_fragment: false,
     cannot_be_a_base: false,
   };
 }
 
 fn main () -> int {
-  let abs: URLResult = url::parse("https://example.com:443/a/./b/../c?x=1#frag");
+  let abs: URLResult = std::url::parse("https://example.com:443/a/./b/../c?x=1#frag");
   if abs.value == None { return 1; }
 
   let mut url: URL = abs.value ?? dummy_url();
@@ -76,7 +73,7 @@ fn main () -> int {
     return 2;
   }
   href_r.err = None;
-  let mut href: strings::String = href_r.value ?? strings::String.empty();
+  let mut href: std::strings::String = href_r.value ?? std::strings::String.empty();
   href_r.value = None;
   if href.as_string() != "https://example.com/a/c?x=1#frag" {
     href.drop();
@@ -85,13 +82,13 @@ fn main () -> int {
   }
   href.drop();
 
-  let base_res: URLResult = url::parse("https://example.com/dir/file");
+  let base_res: URLResult = std::url::parse("https://example.com/dir/file");
   if base_res.value == None {
     url.drop();
     return 3;
   }
   let mut base: URL = base_res.value ?? dummy_url();
-  let rel_res: URLResult = url::parse_with_base("../x?y=z", base);
+  let rel_res: URLResult = std::url::parse_with_base("../x?y=z", base);
   base.drop();
   if rel_res.value == None {
     url.drop();
@@ -106,7 +103,7 @@ fn main () -> int {
     return 5;
   }
   href2_r.err = None;
-  let mut href2: strings::String = href2_r.value ?? strings::String.empty();
+  let mut href2: std::strings::String = href2_r.value ?? std::strings::String.empty();
   href2_r.value = None;
   if href2.as_string() != "https://example.com/x?y=z" {
     href2.drop();
@@ -133,7 +130,7 @@ fn main () -> int {
     return 6;
   }
   qs_r.err = None;
-  let mut qs: strings::String = qs_r.value ?? strings::String.empty();
+  let mut qs: std::strings::String = qs_r.value ?? std::strings::String.empty();
   qs_r.value = None;
   if qs.as_string() != "a=b+c&d=e" {
     qs.drop();
@@ -150,7 +147,7 @@ fn main () -> int {
     return 7;
   }
   v_r.err = None;
-  let mut v_opt: strings::String? = v_r.value ?? None;
+  let mut v_opt: std::strings::String? = v_r.value ?? None;
   v_r.value = None;
   if v_opt == None {
     params.drop();
@@ -158,7 +155,7 @@ fn main () -> int {
     return 7;
   }
 
-  let mut v: strings::String = v_opt ?? strings::String.empty();
+  let mut v: std::strings::String = v_opt ?? std::strings::String.empty();
   v_opt = None;
   if v.as_string() != "b c" {
     v.drop();
@@ -181,7 +178,7 @@ fn main () -> int {
     return 9;
   }
   qs2_r.err = None;
-  let mut qs2: strings::String = qs2_r.value ?? strings::String.empty();
+  let mut qs2: std::strings::String = qs2_r.value ?? std::strings::String.empty();
   qs2_r.value = None;
   if qs2.as_string() != "a=b+c" {
     qs2.drop();

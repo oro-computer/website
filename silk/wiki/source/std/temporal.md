@@ -7,13 +7,13 @@ Canonical doc: [temporal](?p=std/temporal).
 
 ## Example
 ```silk
-import temporal from "std/temporal";
+import std::temporal;
 
 fn main () -> int {
-  let z: Duration = temporal::duration_zero();
-  if !temporal::is_zero(z) { return 1; }
-  if temporal::is_negative(1s) { return 2; }
-  if !temporal::is_negative(-1s) { return 3; }
+  let z: Duration = std::temporal::duration_zero();
+  if !std::temporal::is_zero(z) { return 1; }
+  if std::temporal::is_negative(1s) { return 2; }
+  if !std::temporal::is_negative(-1s) { return 3; }
   return 0;
 }
 ```

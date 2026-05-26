@@ -15,18 +15,19 @@ Canonical doc: [map](?p=std/map).
 ## Importing
 
 ```silk
-import map from "std/map";
+import std::map;
 ```
 
 ## Examples
 
 ### Example: `HashMap(u64, int)` basic usage
 ```silk
-import map from "std/map";
-import memory from "std/memory";
+import std::map;
+import std::result;
+import std::memory;
 
-type Map = map::HashMap(u64, int);
-type InitResult = Result(Map, memory::AllocFailed);
+type Map = std::map::HashMap(u64, int);
+type InitResult = std::result::Result(Map, std::memory::AllocFailed);
 
 fn main () -> int {
   match (Map.init(16)) {

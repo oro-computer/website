@@ -38,7 +38,8 @@ In terms of concrete targets and file formats, the back-end MUST eventually supp
 Current snapshot (Silk (ABI) 0.1.0):
 
 - `src/backend_const.zig` provides a **target-aware const-main stub backend** that emits minimal executables for a fully-constant executable entrypoint (`main` reduces to a constant integer or a `void` main falls through; supports `fn main () -> int`, `fn main () -> void`, and the standard `fn main(argc: int, argv: u64) -> int` / `fn main(argc: int, argv: u64) -> void` forms when arguments are unused):
- - ELF64: `linux-x86_64`, `linux-aarch64`, `android-aarch64`
+ - ELF64: `linux-x86_64`, `linux-x86_64-musl`, `linux-aarch64`,
+ `linux-aarch64-musl`, `android-aarch64`
  - Mach-O 64-bit: `macos-x86_64`, `macos-aarch64`, `ios-aarch64`, `ios-simulator-aarch64`, `ios-simulator-x86_64`
  - PE32+: `windows-x86_64`, `windows-aarch64`
  This backend does not link the full runtime/stdlib; it only encodes “exit with this integer”.
@@ -78,8 +79,13 @@ Current snapshot (Silk (ABI) 0.1.0):
  it),
  - and is an explicit bring-up step until the non-const Mach-O executable path
  is emitted fully by Silk-owned codegen.
-- `src/backend_ir_elf.zig` provides an **IR→ELF backend** for `linux-x86_64` outputs (a growing subset of the language, including multi-function programs, rodata, and link-input builds).
- This backend is host-agnostic for `linux-x86_64` outputs: it can emit Linux ELF artifacts even when the compiler itself is running on a non-`linux/x86_64` host.
+- `src/backend_ir_elf.zig` provides an **IR→ELF backend** for `linux-x86_64`
+ and `linux-x86_64-musl` outputs (a growing subset of the language, including
+ multi-function programs, rodata, and link-input builds). This backend is
+ host-agnostic for x86_64 Linux ELF outputs: it can emit Linux ELF artifacts
+ even when the compiler itself is running on a non-`linux/x86_64` host. The
+ driver selects glibc or musl loader/libc defaults from the explicit target,
+ `--elf-interp`, manifest `elf_interp`, or `SILK_ELF_INTERP`.
 - `src/backend_wasm_ir.zig` provides the IR-backed backend for `wasm32-unknown-unknown` and `wasm32-wasi` outputs.
 
 Mach-O and PE/COFF IR-backed object/static/shared library emission, and additional IR-backed architectures (notably AArch64) are explicit future requirements and MUST be planned and implemented as the back-end matures.

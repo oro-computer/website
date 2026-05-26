@@ -36,7 +36,8 @@ A canonical target platform/OS name string.
 
 Current compiler target set and values:
 
-- `linux-x86_64` and `linux-aarch64`:
+- `linux-x86_64`, `linux-x86_64-musl`, `linux-aarch64`, and
+ `linux-aarch64-musl`:
  - `OS_PLATFORM == "linux"`
 - `macos-x86_64` and `macos-aarch64`:
  - `OS_PLATFORM == "macos"`
@@ -57,9 +58,11 @@ A canonical target CPU architecture name string.
 
 Current compiler target set and values:
 
-- `linux-x86_64`, `macos-x86_64`, `ios-simulator-x86_64`, and `windows-x86_64`:
+- `linux-x86_64`, `linux-x86_64-musl`, `macos-x86_64`,
+ `ios-simulator-x86_64`, and `windows-x86_64`:
  - `OS_ARCH == "x86_64"`
-- `linux-aarch64`, `macos-aarch64`, `ios-aarch64`, `ios-simulator-aarch64`, `android-aarch64`, and `windows-aarch64`:
+- `linux-aarch64`, `linux-aarch64-musl`, `macos-aarch64`, `ios-aarch64`,
+ `ios-simulator-aarch64`, `android-aarch64`, and `windows-aarch64`:
  - `OS_ARCH == "aarch64"`
  - Formal Silk comparisons also accept the ARM64 aliases `"arm64"` and `"aarch"` in any letter case, including through compile-time string constants, even though the canonical `OS_ARCH` value remains `"aarch64"`.
 - `wasm32-unknown-unknown` and `wasm32-wasi`:
@@ -72,7 +75,9 @@ Whether the compilation target is a UNIX family target.
 Current compiler target set:
 
 - `linux-x86_64`: `true`
+- `linux-x86_64-musl`: `true`
 - `linux-aarch64`: `true`
+- `linux-aarch64-musl`: `true`
 - `macos-x86_64`: `true`
 - `macos-aarch64`: `true`
 - `ios-aarch64`: `true`
@@ -91,7 +96,9 @@ Whether the compilation target is a POSIX target.
 Current compiler target set:
 
 - `linux-x86_64`: `true`
+- `linux-x86_64-musl`: `true`
 - `linux-aarch64`: `true`
+- `linux-aarch64-musl`: `true`
 - `macos-x86_64`: `true`
 - `macos-aarch64`: `true`
 - `ios-aarch64`: `true`
@@ -115,7 +122,7 @@ to `Unknown`).
 ### Target-gated behavior
 
 ```silk
-import os from "std/os";
+import std::os;
 import { println } from "std/io";
 
 fn main () -> int {
@@ -123,10 +130,10 @@ fn main () -> int {
     println("posix");
   }
 
-  match (os::platform()) {
-    os::Platform::Linux => println("linux"),
-    os::Platform::WASI => println("wasi"),
-    os::Platform::Unknown => println("unknown"),
+  match (std::os::platform()) {
+    std::os::Platform::Linux => println("linux"),
+    std::os::Platform::WASI => println("wasi"),
+    std::os::Platform::Unknown => println("unknown"),
   };
 
   return 0;

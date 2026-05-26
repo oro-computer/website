@@ -6,10 +6,10 @@ Silk has explicit module/package structure:
 - imports come next as a contiguous block,
 - then declarations (`fn`, `let`, `struct`, `enum`, `impl`, ...).
 
-Silk user-space code should use module specifier imports:
+Silk supports both:
 
-- namespace imports (`import io from "std/io";`, `import ui from "ui";`),
-- named imports (`import { Name } from "./module.slk";`).
+- package imports (`import std::io;`, `import ui;`),
+- file imports (`import { Name } from "./module.slk";`).
 
 Canonical spec: [packages imports exports](?p=language/packages-imports-exports).
 
@@ -21,7 +21,7 @@ Canonical spec: [packages imports exports](?p=language/packages-imports-exports)
 ```silk
 package my_app;
 
-import io from "std/io";
+import std::io;
 import { add } from "./math.slk";
 import helpers from "./helpers.slk"; // default import / namespace import
 

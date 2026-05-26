@@ -28,6 +28,9 @@ reaches `std::window`.
 
 ```silk
 module std::window;
+
+import std::result;
+
 export enum Backend { Unsupported, MacOS, IOS, GTK }
 export enum WindowErrorKind {
   UnsupportedPlatform,
@@ -101,15 +104,15 @@ impl Window {
   public fn close (self: Window) -> CloseResult;
 }
 
-export type WindowResult = Result(Window, WindowFailed);
-export type EventResult = Result(Event, WindowFailed);
-export type PollResult = Result(bool, WindowFailed);
-export type CloseResult = Result(bool, WindowFailed);
-export type ActionResult = Result(bool, WindowFailed);
-export type BoolResult = Result(bool, WindowFailed);
-export type SizeResult = Result(Size, WindowFailed);
-export type PositionResult = Result(Position, WindowFailed);
-export type RunResult = Result(bool, WindowFailed);
+export type WindowResult = std::result::Result(Window, WindowFailed);
+export type EventResult = std::result::Result(Event, WindowFailed);
+export type PollResult = std::result::Result(bool, WindowFailed);
+export type CloseResult = std::result::Result(bool, WindowFailed);
+export type ActionResult = std::result::Result(bool, WindowFailed);
+export type BoolResult = std::result::Result(bool, WindowFailed);
+export type SizeResult = std::result::Result(Size, WindowFailed);
+export type PositionResult = std::result::Result(Position, WindowFailed);
+export type RunResult = std::result::Result(bool, WindowFailed);
 export type FrameCallback = fn (Window) -> int;
 
 export fn options (title: string, width: int, height: int) -> Options;
@@ -183,7 +186,7 @@ declare or import `silk_rt_window_*` provider symbols.
 window application imports only `std::window`:
 
 ```silk
-import window from "std/window";
+import std::window;
 
 fn main () -> int {
   let options = std::window::Options{
@@ -234,8 +237,8 @@ inside the frame callback. Examples and applications should not call
 `std::runtime::window` directly.
 
 ```silk
-import task from "std/task";
-import window from "std/window";
+import std::task;
+import std::window;
 
 fn frame (window: std::window::Window) -> int {
   let title_code = match (window.set_title("Ready - close the window to exit")) {
@@ -295,8 +298,8 @@ For frame-rendering demos, use `run_loop(options, frame)`. The stdlib owns the
 provider lifecycle and the application provides only per-frame behavior:
 
 ```silk
-import graphics_window from "std/graphics/window";
-import window from "std/window";
+import std::graphics::window;
+import std::window;
 
 fn draw_frame (window: std::window::Window) -> int {
   let color = std::graphics::window::ClearColor{
@@ -408,8 +411,8 @@ targets, the compiler links the matching provider framework:
 
 When reachable code calls the `std::window` runtime on Linux/x86_64, the
 compiler statically links the bundled runtime archive and adds the dynamic
-loader library needed by the GTK shim (`libdl.so.2` on glibc targets,
-`libdl.so` on musl targets). GTK itself remains a runtime-loaded provider:
+loader API provider needed by the GTK shim (`libdl.so.2` on glibc targets,
+`libc.so` on musl targets). GTK itself remains a runtime-loaded provider:
 missing GTK libraries or a missing display connection make
 `backend() == Backend::Unsupported`.
 

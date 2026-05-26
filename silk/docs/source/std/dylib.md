@@ -12,8 +12,9 @@ The shipped hosted backend is based on the platform dynamic loader:
 - POSIX/macOS: `dlopen(3)`, `dlsym(3)`, `dlclose(3)`, and `dlerror(3)`.
 - Unsupported targets return ordinary `Result` failures with
  `ErrorKind::Unsupported`.
-- On `linux/x86_64`, importing `std::dylib` automatically adds `libdl.so.2` for
- executable/shared-library outputs. macOS resolves the dynamic-loader APIs
+- On `linux/x86_64`, importing `std::dylib` automatically adds the libc
+ component that provides `dlopen` (`libdl.so.2` on glibc, `libc.so` on musl)
+ for executable/shared-library outputs. macOS resolves the dynamic-loader APIs
  through `libSystem`.
 
 ## Exported API
@@ -175,9 +176,9 @@ environment or package manifest.
 When distributing applications:
 
 - On Linux, ensure the target system has the library you open and that the path
- or loader search path is correct. `std::dylib` adds `libdl.so.2`
- automatically for the dynamic-loader API itself; it does not add the library
- you choose at runtime.
+ or loader search path is correct. `std::dylib` adds the libc component needed
+ for the dynamic-loader API itself; it does not add the library you choose at
+ runtime.
 - On macOS, use absolute framework/library paths when the symbol provider is a
  system framework, or package private libraries beside the app and open the
  path your app controls.

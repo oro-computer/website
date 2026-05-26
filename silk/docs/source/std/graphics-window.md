@@ -17,8 +17,9 @@ module unless a future provider is added and reached.
 ```silk
 module std::graphics::window;
 
-import metal from "std/graphics/metal";
-import window from "std/window";
+import std::graphics::metal;
+import std::result;
+import std::window;
 
 export enum Backend {
   Unsupported,
@@ -44,7 +45,7 @@ export struct ClearColor {
   alpha: f64,
 }
 
-export type RenderResult = Result(bool, RenderFailed);
+export type RenderResult = std::result::Result(bool, RenderFailed);
 
 export fn failed (kind: RenderErrorKind) -> RenderFailed;
 export fn backend () -> Backend;

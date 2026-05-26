@@ -46,14 +46,14 @@ Default helper functions are provided for these element types:
 `SetMap(T)` provides:
 
 - `fn empty () -> SetMap(T);` (only for default element types)
-- `fn init (cap: i64) -> Result(SetMap(T), std::memory::AllocFailed);` (only for default element types)
+- `fn init (cap: i64) -> std::result::Result(SetMap(T), std::memory::AllocFailed);` (only for default element types)
 - `fn empty_with (hash: fn(T) -> u64, eq: fn(T, T) -> bool) -> SetMap(T);`
-- `fn init_with (cap: i64, hash: fn(T) -> u64, eq: fn(T, T) -> bool) -> Result(SetMap(T), std::memory::AllocFailed);`
+- `fn init_with (cap: i64, hash: fn(T) -> u64, eq: fn(T, T) -> bool) -> std::result::Result(SetMap(T), std::memory::AllocFailed);`
 - `fn len (self: &SetMap(T)) -> i64;`
 - `fn is_empty (self: &SetMap(T)) -> bool;`
 - `fn capacity (self: &SetMap(T)) -> i64;`
 - `fn contains (self: &SetMap(T), key: T) -> bool;`
-- `fn insert (mut self: &SetMap(T), key: T) -> Result(bool, std::memory::OutOfMemory);`
+- `fn insert (mut self: &SetMap(T), key: T) -> std::result::Result(bool, std::memory::OutOfMemory);`
  Returns `true` when `key` was not already present.
 - `fn remove (mut self: &SetMap(T), key: T) -> bool;`
  Returns `true` when `key` was present and removed.
@@ -86,7 +86,7 @@ Complexity expectations:
 - `fn len (self: &TreeSet(T)) -> i64;`
 - `fn is_empty (self: &TreeSet(T)) -> bool;`
 - `fn contains (self: &TreeSet(T), key: T) -> bool;`
-- `fn insert (mut self: &TreeSet(T), key: T) -> Result(bool, std::memory::OutOfMemory);`
+- `fn insert (mut self: &TreeSet(T), key: T) -> std::result::Result(bool, std::memory::OutOfMemory);`
 - `fn remove (mut self: &TreeSet(T), key: T) -> bool;`
 - `fn iter (self: &TreeSet(T)) -> TreeSetIter(T);`
 - `fn clear (mut self: &TreeSet(T)) -> void;`

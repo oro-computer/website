@@ -1,9 +1,9 @@
 # `std::ssh2`
 
 `std::ssh2` provides the current
-libssh2-backed SSH2 implementation for the hosted POSIX baseline. On
-`linux/x86_64`, `silk build` auto-links the vendored `libssh2.a` so outputs do
-not depend on a system `libssh2` shared object at runtime.
+libssh2-backed SSH2 implementation for the hosted POSIX baseline. On supported
+hosted target layouts, `silk build` auto-links the vendored `libssh2.a` so
+outputs do not depend on a system `libssh2` shared object at runtime.
 
 Downstream code that wants a stable stdlib-facing import path should prefer
 `std::ssh`, which forwards this same surface through a compatibility facade.
@@ -21,13 +21,17 @@ The initial goals are:
 
 ## Linkage and Toolchain Integration
 
-On `linux/x86_64`, when a program imports `std::ssh2` (or the compatibility
-facade `std::ssh`), `silk build` automatically links the vendored `libssh2.a`
+When a program imports `std::ssh2` (or the compatibility facade `std::ssh`),
+`silk build` automatically links the target-matched vendored `libssh2.a`
 archive from:
 
-- repo builds: `vendor/lib/<host-layout>/libssh2.a`
-- staged toolchains: `build/lib/silk/vendor/lib/<host-layout>/libssh2.a`
-- installed toolchains: `<prefix>/lib/silk/vendor/lib/<host-layout>/libssh2.a`
+- repo builds: `vendor/lib/<target-layout>/libssh2.a`
+- staged toolchains: `build/lib/silk/vendor/lib/<target-layout>/libssh2.a`
+- installed toolchains: `<prefix>/lib/silk/vendor/lib/<target-layout>/libssh2.a`
+
+The current target layouts are `x64-linux` for glibc Linux x86_64,
+`x64-linux-musl` for musl Linux x86_64, and `aarch64-macos` for Apple Silicon
+macOS.
 
 The hosted deps workflow builds libssh2 against the vendored mbedTLS archives,
 so `std::ssh2` does not require system OpenSSL headers/libraries or a system
@@ -40,12 +44,12 @@ resolvable by the dynamic loader on the target system.
 In staged/installed toolchains, the vendored archive is expected under the
 compiler prefix:
 
-- `build/lib/silk/vendor/lib/<host-layout>/` (repo build prefix)
-- `<prefix>/lib/silk/vendor/lib/<host-layout>/` (installed)
+- `build/lib/silk/vendor/lib/<target-layout>/` (repo build prefix)
+- `<prefix>/lib/silk/vendor/lib/<target-layout>/` (installed)
 
 ## Error Model
 
-The `std::ssh2` API uses `Result(T, E)` and a stable `SSH2Failed`
+The `std::ssh2` API uses `std::result::Result(T, E)` and a stable `SSH2Failed`
 error value. The underlying libssh2 error code is retained as structured detail
 (`SSH2Failed.detail`) for debugging and telemetry.
 
@@ -56,6 +60,9 @@ Public error/value types in the Supported forms:
 
 ```silk
 module std::ssh2;
+
+import std::result;
+
 enum SSH2ErrorKind {
   OutOfMemory,
   InvalidInput,
@@ -76,13 +83,13 @@ export error SSH2Failed {
   detail: int,
 }
 
-export type SSH2IntResult = Result(int, SSH2Failed);
-export type SSH2I64Result = Result(i64, SSH2Failed);
+export type SSH2IntResult = std::result::Result(int, SSH2Failed);
+export type SSH2I64Result = std::result::Result(i64, SSH2Failed);
 
-export type SessionResult = Result(Session, SSH2Failed);
-export type ChannelResult = Result(Channel, SSH2Failed);
-export type SftpResult = Result(Sftp, SSH2Failed);
-export type SftpHandleResult = Result(SftpHandle, SSH2Failed);
+export type SessionResult = std::result::Result(Session, SSH2Failed);
+export type ChannelResult = std::result::Result(Channel, SSH2Failed);
+export type SftpResult = std::result::Result(Sftp, SSH2Failed);
+export type SftpHandleResult = std::result::Result(SftpHandle, SSH2Failed);
 
 enum KnownHostCheck {
   Match,
@@ -90,10 +97,10 @@ enum KnownHostCheck {
   NotFound,
 }
 
-export type KnownHostCheckResult = Result(KnownHostCheck, SSH2Failed);
+export type KnownHostCheckResult = std::result::Result(KnownHostCheck, SSH2Failed);
 
 // Agent iteration uses `Ok(Some(identity))` and `Ok(None)` for end-of-list.
-export type AgentNextIdentityResult = Result(AgentIdentity?, SSH2Failed);
+export type AgentNextIdentityResult = std::result::Result(AgentIdentity?, SSH2Failed);
 ```
 
 ## Byte Buffers and Formal Silk

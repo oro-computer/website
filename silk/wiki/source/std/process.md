@@ -12,29 +12,29 @@ Canonical doc: [process](?p=std/process).
 ## Importing
 
 ```silk
-import process from "std/process";
-import strings from "std/strings";
+import std::process;
+import std::strings;
 ```
 
 ## Examples
 
 ### Example: `getcwd` + `chdir` with recoverable errors
 ```silk
-import process from "std/process";
-import strings from "std/strings";
+import std::process;
+import std::strings;
 
 fn main () -> int {
-  match (process::getcwd()) {
-    process::GetCwdResult::Ok(cwd_value) => {
-      let mut cwd: strings::String = cwd_value;
+  match (std::process::getcwd()) {
+    std::process::GetCwdResult::Ok(cwd_value) => {
+      let mut cwd: std::strings::String = cwd_value;
 
-      let err1: process::ChdirFailed? = process::chdir("/");
+      let err1: std::process::ChdirFailed? = std::process::chdir("/");
       if err1 != None {
         cwd.drop();
         return 2;
       }
 
-      let err2: process::ChdirFailed? = process::chdir(cwd.as_string());
+      let err2: std::process::ChdirFailed? = std::process::chdir(cwd.as_string());
       if err2 != None {
         cwd.drop();
         return 3;
@@ -43,7 +43,7 @@ fn main () -> int {
       cwd.drop();
       return 0;
     },
-    process::GetCwdResult::Err(_) => {
+    std::process::GetCwdResult::Err(_) => {
       return 1;
     },
   }

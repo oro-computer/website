@@ -125,15 +125,46 @@ The implementation is intentionally smaller and focuses on:
  - `$SILK_WORK_DIR/repl_history` (default: `.silk/repl_history` under the
  nearest package root or current directory),
  - `Ctrl-R` searches that in-memory history during interactive editing,
-- `silk check [--verify|--no-verify] [--nostd] [--std-root <path>] [--z3-lib <path>] [--debug] [--feature <spec> ...] [--arch <arch>] [--target <triple>] [--package <dir|manifest>] <file> [<file> ...]` — parse and type-check one or more Silk source files as a unit, exiting with:
+- `silk check [--json] [--verify|--no-verify] [--nostd] [--std-root <path>] [--z3-lib <path>] [--debug] [--feature <spec> ...] [--arch <arch>] [--target <triple>] [--package <dir|manifest>] <file> [<file> ...]` — parse and type-check one or more Silk source files as a unit, exiting with:
  - code `0` on success,
  - non-zero on error, printing a human-readable diagnostic (format specified in [diagnostics](?p=compiler/diagnostics)).
+ - `--json` writes a newline-terminated, schema-versioned JSON result packet
+ to stdout instead of the human success line, and compiler diagnostics
+ emitted through the standard diagnostic path are written as JSON diagnostic
+ packets.
  - when `<file> ...` inputs are omitted and `--package` / `--pkg` is also omitted, but `./silk.toml` exists, `silk check` behaves as if `--package .` was provided.
  - when `--package` is provided and the root manifest enables a build module
  via `[build].build_module = true`, the compiler runs that build module and
  type-checks the emitted manifest/module set instead of the raw `silk.toml`;
  for compatibility, the build module currently receives the action string
  `build`.
+- `silk targets [--json]` — inspect target triples and architecture aliases:
+ - human output matches the target/architecture lists used by
+ `silk build --list-targets` and `silk build --list-archs`; target lines
+ show current-host output kinds and call out Apple Silicon macOS host-backed
+ support when it is not available on the current host,
+ - `--json` emits a packet with `schemaVersion`, `command`, `host`,
+ `targets`, `architectures`, and per-target capability facts including
+ baseline output kinds, current-host output kinds, native-input support,
+ POSIX/Unix/WASM shape, and current async-runtime availability.
+- `silk graph [--json] [--nostd] [--std-root <path>] [--feature <spec> ...] [--arch <arch>] [--target <triple>] [--package <dir|manifest>] <file> [<file> ...]` — inspect the module/package/import graph loaded by the CLI:
+ - accepts the same stdlib, feature, package, and target selectors as
+ `silk check`,
+ - when inputs are omitted and `./silk.toml` exists, behaves as if
+ `--package .` was provided,
+ - loads the module set but does not type-check, lower, or emit code,
+ - `--json` emits `schemaVersion`, `command`, `target`, module counts,
+ package roots, and module entries with origin (`user`, `package`, or
+ `std`) plus parsed import declarations.
+- `silk size [--json] <artifact>` — inspect an output artifact:
+ - human output prints file size and available section sizes,
+ - `--json` emits `schemaVersion`, `command`, `path`, `fileSize`, `format`,
+ and `sections`,
+ - ELF64 little-endian artifacts report section names, offsets, sizes, and
+ allocation/write/execute flags; other artifact formats currently report
+ `format: "unknown"` with an empty section list,
+ - very large artifacts still report `fileSize` from filesystem metadata even
+ when section parsing is skipped.
 - `silk test [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [--debug] [--feature <spec> ...] [-O <0-3>] [--noheap] [--jobs <n>] [--filter <pattern>] [--package <dir|manifest>] <file> [<file> ...]` — compile and run language-level `test` declarations found in the module set, emitting TAP output:
  - uses TAP version 13 formatting (`TAP version 13`, `1..N`, `ok`/`not ok` lines),
  - each test runs in its own process, so a failing `assert` (panic/abort) does not stop the whole suite,
@@ -157,7 +188,9 @@ The implementation is intentionally smaller and focuses on:
  - manifest-native link metadata for the test harness (`[[target]].inputs`, `cflags`, `ldflags`, `needed`, and `runpath`) is taken from:
  - `[build].default_target` when it names a code target,
  - otherwise the first declared code target,
- - while `kind = "man"` targets are ignored for this purpose,
+ - matching package and dependency `[[native]]` entries are merged as
+ package-level native requirements,
+ - while `kind = "man"` targets are ignored for target metadata,
  - raw `.c`, `.h`, and supported `.m` source inputs are compiled to
  temporary objects before the harness is linked,
  - hosted vendored native-input auto-linking for libsodium, mbedTLS,
@@ -210,7 +243,7 @@ The implementation is intentionally smaller and focuses on:
  directly, `silk man` falls back to the configured pager (`MANPAGER` /
  `PAGER`).
  - shorthands:
- - `silk man build` opens `silk-build(1)` (same for `package`, `check`, `test`, `doc`, `man`, `guide`, `error`, `cc`, `env`, `format`),
+ - `silk man build` opens `silk-build(1)` (same for `package`, `check`, `targets`, `graph`, `size`, `test`, `doc`, `man`, `guide`, `error`, `cc`, `env`, `format`),
  - when no package is selected/resolvable, `silk man fs` is treated as `silk man std::fs` (and similarly for other top-level std modules).
  - when no package is selected/resolvable, `silk man io println` (or `silk man 3 io println`) is treated as `silk man std::io::println`.
  - when a package root is selected/resolved, `silk man readme`, `silk man overview`, `silk man <package-name>`, and qualified aliases such as `silk man <package-name> readme` prefer the package overview page when a local `package.readme` exists.
@@ -247,10 +280,12 @@ The implementation is intentionally smaller and focuses on:
  - `--printer <cmd>` chooses the source printer for `--show`; if omitted, `SILK_GUIDE_PRINTER` is used, then `bat`, then `cat`,
  - `SILK_GUIDE_DB` overrides the installed database path when `--db` is not provided,
  - `SILK_GUIDE_PRINTER` overrides the `--show` source printer when `--printer` is not provided.
-- `silk error <code>` — look up a stable compiler diagnostic code:
+- `silk error [--json] <code>` — look up a stable compiler diagnostic code:
  - prints the canonical code, category, short description, documentation
  references, any bundled example, and a guide lookup hint only when the
  installed guide catalog links that diagnostic code,
+ - `--json` emits `schemaVersion`, `command`, `mode`, and a structured
+ `diagnostic` object for lookup, or a `diagnostics` array for `--list`,
  - examples are syntax-highlighted when stdout is a color-capable TTY; piped
  output, `NO_COLOR`, and `TERM=dumb` stay plain,
  - accepted code forms include `E2028`, `2028`, `diag:E2028`, and
@@ -294,16 +329,22 @@ The implementation is intentionally smaller and focuses on:
  helpers,
  - generated modules type-check, build as object code, and can be imported by
  Silk programs that construct, encode, decode, and inspect messages.
-- `silk package inspect|lint [--package <dir|manifest>]`:
+- `silk package inspect|lint [--json] [--package <dir|manifest>]`:
  - `inspect` prints package metadata, public definitions, dependency
  constraints, declared artifacts, the current package hash, and any
  installed Formal Silk bundle paths discovered under
  `share/silk/formal/<artifact-relative-path>/...`,
+ - `inspect --json` emits `schemaVersion`, `command`, `mode`, `root`,
+ `sha256`, and a structured `manifest` object with definitions, dist
+ patterns, dependencies, artifacts, native requirements, and Formal Silk
+ bundles,
  - `lint` validates that `[package].definitions`, `[dist]`, and `[[artifact]]`
  describe a coherent distributable package root,
+ - `lint --json` emits `ok`, `issueCount`, and an `issues` array while keeping
+ the same exit-code behavior as human output,
  - when `--package` is omitted and `./silk.toml` exists, the current
  directory is used.
-- `silk cache [subcommand] [--package <dir|manifest>] [--cache-dir <path>]`:
+- `silk cache [subcommand] [--json] [--package <dir|manifest>] [--cache-dir <path>]`:
  - the managed cache root is `<work_root>/cache` where `<work_root>` defaults
  to `.silk` and can be overridden via `SILK_WORK_DIR`,
  - current recognized managed entry types include:
@@ -311,6 +352,13 @@ The implementation is intentionally smaller and focuses on:
  - and `std::build` generated-file blobs under `cache/build/<fnv1a64>.blob`,
  - the default `silk cache` form prints a cache-root summary (same as
  `silk cache inspect`),
+ - `--json` emits `schemaVersion`, `command`, `mode`, `cacheRoot`, and
+ subcommand-specific fields:
+ - `path`: the resolved cache root,
+ - `list`: `summary` plus sorted `entries`,
+ - `inspect`: root `summary`/`policy` or a single `entry`,
+ - `prune`/`compact`/`clear`: `dryRun`, `healedEntries`,
+ `removedEntries`, and `reclaimedBytes`,
  - subcommands:
  - `path` — print the effective cache root path,
  - `list` — list recognized managed cache entries with type/size/health,
@@ -335,11 +383,16 @@ The implementation is intentionally smaller and focuses on:
  - `SILK_CACHE_MAX_BYTES`
  - `SILK_CACHE_MAX_AGE`
  - `SILK_CACHE_KEEP_RECENT`
-- `silk env` — print key environment variables consulted by the `silk` CLI (stdlib resolution, Formal Silk verification, paging, build scratch dirs, C compiler selection).
+- `silk env [--json]` — print key environment variables consulted by the `silk` CLI (stdlib resolution, Formal Silk verification, paging, build scratch dirs, C compiler selection).
+ - `--json` emits `schemaVersion`, `command`, and `vars`, where each entry
+ records `name`, `state` (`unset`, `empty`, or `set`), and `value`.
  - includes `SILK_GUIDE_DB`, which overrides the installed `share/silk/guide.db` path used by `silk guide`.
  - includes the cache-maintenance environment variables that control the
  managed cache policy (`SILK_CACHE_*`).
-- `silk format [--check] <path> [<path> ...]` (alias: `silk fmt`) — format Silk source files (`.slk` / `.silk`) using project configuration from `.silk/format.toml` (discovered by walking upward from each formatted file’s directory).
+- `silk format [--json] [--check] <path> [<path> ...]` (alias: `silk fmt`) — format Silk source files (`.slk` / `.silk`) using project configuration from `.silk/format.toml` (discovered by walking upward from each formatted file’s directory).
+ - `--json` emits `schemaVersion`, `command`, `ok`, `check`, `status`,
+ `changedCount`, and `changedFiles`; in `--check` mode, files that would
+ change still produce a non-zero exit code with `ok: false`,
  - recursive directory walks honor `.gitignore`, including parent repository
  ignore files when you format a subdirectory,
  - explicitly named file paths still format even when ignored, so targeted
@@ -366,14 +419,20 @@ The implementation is intentionally smaller and focuses on:
  - emits a single primary error diagnostic on error,
  - includes a stable error code for known error kinds,
  - includes a file/line/column location and caret snippet when available,
+ - source and module read failures describe common filesystem problems in
+ user-facing terms, such as a directory being provided where a file is
+ expected, rather than exposing implementation error tags,
  - when stderr is a TTY, diagnostics are decorated with ANSI colors unless disabled via `NO_COLOR` or `TERM=dumb`,
+ - `silk check --json` emits schema-versioned JSON packets with
+ `ok`, `diagnostics`, and `summary` fields; diagnostic entries contain
+ `severity`, `code`, `message`, optional `span`, optional `detail`, `notes`,
+ and `helps`,
  - `silk error <code>` explains a diagnostic code after the fact, and
  `silk error --list` lists the stable catalog,
  - the diagnostic format and initial error code set are specified in [diagnostics](?p=compiler/diagnostics).
 - standard library import resolution (first slice):
- - when a module contains a module-specifier import such as
- `import { println } from "std/io";` or direct ABI import such as
- `import std::io::println;`, the CLI automatically loads the
+ - when a module contains `import std::...;` or a module-specifier import such
+ as `import { println } from "std/io";`, the CLI automatically loads the
  referenced `std::...` package modules from a configured stdlib root, so
  downstream users do **not** need to pass std source files explicitly on the
  command line,
@@ -395,22 +454,30 @@ The implementation is intentionally smaller and focuses on:
  package normalization,
  - named imports bind against the package export surface and can participate
  in prebuilt std archive linking.
- - package search path import resolution (non-`std/`):
- - when a module imports a dependency-rooted module specifier (for example
- `import api from "my_api";` or `import widgets from "my_api/widgets";`),
+- package search path import resolution (non-`std::`):
+ - when a module imports an unquoted package path (for example `import api from my_api;`),
  the CLI may load that package from a package search path:
  - when `SILK_PACKAGE_PATH` is set, it is the primary search path (PATH-like list of roots separated by `:` on POSIX, `;` on Windows),
+ - for package graph work, relative entries are resolved from the
+ importing package root and then from parent package roots up to the
+ graph root, with the historical current-working-directory fallback
+ checked afterward,
  - when `SILK_PACKAGE_PATH` is not set, the CLI uses a small default set:
- - `./packages` when it exists (development convenience),
+ - `packages/` relative to the importing package and each parent package
+ root up to the graph root,
+ - `./packages` from the current working directory,
  - `../share/silk/packages` relative to the `silk` executable (installed layout),
  - `$HOME/.local/share/silk/packages` when it exists (user-local installs),
  - finally, the CLI appends a system library root at `PREFIX/lib/silk` (default `PREFIX=/usr/local`) as the last search path entry when it exists,
- - package-to-path mapping is deterministic: package name `my_api` resolves to
- candidate directory `<root>/my_api` and manifest `<candidate>/silk.toml`,
+ - package-to-path mapping is deterministic: `my_api::core` resolves to the candidate
+ directory `<root>/my_api/core` and the manifest `<candidate>/silk.toml`,
  - qualified symbol imports resolve the longest package prefix that exists (for example
  `my_api::core::Thing` loads `my_api::core` if present, otherwise `my_api`),
  - the same search path is used when loading manifest dependencies that omit a `path`
- field (see [package manifests](?p=compiler/package-manifests)).
+ field; in that case the dependency key, not a quoted `from` package name, is
+ the search candidate, and dot-separated dependency keys map to slash
+ directories (`my.dep.b` -> `<root>/my/dep/b`) (see
+ [package manifests](?p=compiler/package-manifests)).
 - standard library archive linking (`linux/x86_64`, current archive layout):
  - `make stdlib` builds a target-specific static archive (`libsilk_std.a`)
  containing one ELF object per std module (repo default:
@@ -424,8 +491,9 @@ The implementation is intentionally smaller and focuses on:
  - for `-O1`+ builds, `silk build` prefers compiling std sources into the
  executable so unreachable std code can be pruned,
  - `--std-lib` / `--std <path>.a` forces archive linking regardless of `-O`,
- - std modules auto-loaded via `from "std/..."` module specifiers and direct
- std ABI imports participate in this external/archive path,
+ - std modules auto-loaded via `import std::...;` and package-shaped
+ `from "std/..."` module specifiers participate in this external/archive
+ path,
  - archive discovery (in order):
  - `--std-lib <path>` (or `--std <path>.a` / `-std <path>.a`) when provided, otherwise
  - `SILK_STD_LIB` when set, otherwise
@@ -473,7 +541,8 @@ The implementation is intentionally smaller and focuses on:
  - when no input files are provided and `--package` / `--pkg` is omitted, but `./silk.toml` exists, the compiler behaves as if `--package .` was provided (package builds from the current directory by default),
  - on interactive TTY stderr, `silk build` renders a single animated progress
  line while it walks source files, import/package traversal, dependency
- artifact scans, vendored external auto-link passes, and later
+ artifact scans, dependency native requirements, vendored external auto-link
+ passes, and later
  `resolve` / `check` / `codegen` / `link` phases,
  - this line is transient and is cleared before diagnostics or other stderr
  output so build errors remain readable,
@@ -499,6 +568,8 @@ The implementation is intentionally smaller and focuses on:
  `-o/--out`, `--kind`, `--emit`, `--arch`, `--target`, `--c-header`, `--cflag`, `-I`, `-isystem`, `--ldflag`, `-l`, `-L`, `--framework`, `-F`, `-Wl`, `--needed`, `--runpath`, `--soname`, `--elf-interp`,
  - `-o/--out` is optional only when building a single target (defaults to the target’s `output` or a computed default under `build/`),
  - package dependencies are loaded from the manifest’s `[dependencies]` table,
+ and matching dependency `[[native]]` entries are linked when the imported
+ dependency is present in the loaded module set,
  - see [package manifests](?p=compiler/package-manifests),
  - `silk build install` installs package artifacts (package builds only):
  - prefix selection:
@@ -572,12 +643,15 @@ The implementation is intentionally smaller and focuses on:
  - by default, builds an executable (`--kind executable`),
  - when `--kind object`, `--kind static`, or `--kind shared` is provided:
  - on `linux/x86_64`, attempts to emit an ELF64 relocatable object, static library, or shared library (`.so`) for the same supported IR subset,
- - on `macos/aarch64` hosts, `--kind object` attempts to emit a Mach-O 64-bit relocatable object for the same supported IR subset,
+ - on Apple Silicon macOS hosts, `--kind object --target macos-aarch64`
+ attempts to emit a Mach-O 64-bit relocatable object for the same
+ supported IR subset,
  - and otherwise exits non-zero with `E4001` (unsupported construct) or `E4002` (backend failure) diagnostics that explain the exact limitation,
  - when lowering cannot isolate a narrower statement / expression span, `E4001` falls back to the offending function declaration and names that function directly,
  - attempts to emit an executable using:
- - for `--target linux-x86_64` (the default; also accepts common `x86_64-*-linux-*` triples such as `x86_64-linux-gnu`), an IR→ELF backend for `linux-x86_64` outputs (host-agnostic) for a growing scalar subset, and a constant‑expression backend (with a tiny ELF64 stub) for purely constant `main` bodies,
- - for `--target linux-aarch64` and `--target android-aarch64`, a constant‑expression backend (with a tiny ELF64 stub) for purely constant `main` bodies (non-constant programs are rejected with `E4001`),
+ - for `--target linux-x86_64` (the default; also accepts common `x86_64-*-linux-gnu` triples), an IR→ELF backend for `linux-x86_64` outputs (host-agnostic) for a growing scalar subset, and a constant‑expression backend (with a tiny ELF64 stub) for purely constant `main` bodies,
+ - for `--target linux-x86_64-musl` (also accepts common `x86_64-*-linux-musl` triples), the same x86_64 IR→ELF backend with musl defaults (`PT_INTERP` `/lib/ld-musl-x86_64.so.1`, default hosted libc dependency `libc.so`, and libc-aware package artifact selection),
+ - for `--target linux-aarch64`, `--target linux-aarch64-musl`, and `--target android-aarch64`, a constant‑expression backend (with a tiny ELF64 stub) for purely constant `main` bodies (non-constant programs are rejected with `E4001`),
  - for Apple targets, a constant‑expression backend that emits a minimal Mach-O 64-bit `exit(code)` executable:
  - `macos-x86_64`
  - `macos-aarch64`
@@ -600,7 +674,8 @@ The implementation is intentionally smaller and focuses on:
  - and `ios-simulator-x86_64`,
  - for `macos-aarch64`, that path also links bundled runtime-backed
  executables by expanding `libsilk_rt*.a` into object members for the
- host linker,
+ host linker, and `--kind object` can emit a Mach-O 64-bit
+ relocatable object for the supported IR subset,
  - for `ios-aarch64`, `ios-simulator-aarch64`, and
  `ios-simulator-x86_64`, the supported subset is
  intentionally narrower than `macos-aarch64`, but now includes:
@@ -624,6 +699,8 @@ The implementation is intentionally smaller and focuses on:
  diagnostics instead of being reported as uniformly const-main-only
  - outside that Apple Silicon host-only subset, non-constant Apple-target
  programs are still rejected with `E4001`
+ - `--kind static` and `--kind shared` remain Linux x86_64-only today;
+ macOS does not yet have full artifact-kind parity with Linux.
  - for Windows targets, a constant‑expression backend that emits a minimal PE32+ `ExitProcess(code)` executable (non-constant programs are rejected with `E4001`):
  - `windows-x86_64`
  - `windows-aarch64`
@@ -639,7 +716,7 @@ The implementation is intentionally smaller and focuses on:
  - also supports export-only modules for embedding (export-only modules do not include `_start`),
  - for both wasm targets, a smaller constant-only wasm backend remains as a fallback for programs that fit the constant subset,
  - other targets are not implemented yet (see [backend wasm](?p=compiler/backend-wasm)),
- - the *constant* subset (available on `linux-x86_64`, `linux-aarch64`, `android-aarch64`, `macos-x86_64`, `macos-aarch64`, `ios-aarch64`, `ios-simulator-aarch64`, `ios-simulator-x86_64`, `windows-x86_64`, `windows-aarch64`, and the initial `wasm32` targets) consists of:
+ - the *constant* subset (available on `linux-x86_64`, `linux-x86_64-musl`, `linux-aarch64`, `linux-aarch64-musl`, `android-aarch64`, `macos-x86_64`, `macos-aarch64`, `ios-aarch64`, `ios-simulator-aarch64`, `ios-simulator-x86_64`, `windows-x86_64`, `windows-aarch64`, and the initial `wasm32` targets) consists of:
  - a single `fn main() -> int` whose body is:
  - zero or more `let` statements with constant integer initializers, followed by exactly one `return` of a constant integer expression, or
  - the same, with a final `if` whose condition is a compile‑time boolean literal (`true` / `false`) and whose branches each satisfy the “constant lets + return constant expression” rule, and
@@ -728,15 +805,17 @@ The implementation is intentionally smaller and focuses on:
  - runtime search paths for those dependencies can be provided via `--runpath <path>` (repeatable), which is emitted as a single `DT_RUNPATH` entry (joined with ':'), and
  - for shared library outputs, the library soname can be set via `--soname <soname>` (emitted as `DT_SONAME`),
  - on `linux/x86_64` with the glibc dynamic loader (`ld-linux`), when an executable or shared library imports any external symbols, `silk` automatically adds `libc.so.6` as a `DT_NEEDED` dependency (so hosted `std::` modules do not require `--needed libc.so.6`),
- - on the same supported native-host baseline, when `std::crypto` and/or `std::tls` are imported, or when linked native `.c` / `.h` / `.m` / `.o` / `.a` inputs reference common libsodium / mbedTLS symbol families, `silk` auto-links the vendored static archives (`libsodium.a` and the mbedTLS archives) from `vendor/lib/<host-layout>/` (or an installed prefix) so executables do not depend on system `libsodium` / `mbedTLS` shared libraries at runtime,
- - on `linux/x86_64`, when `std::sqlite` is imported, or when linked native `.c` / `.h` / `.m` / `.o` / `.a` inputs reference `sqlite3_*` symbols, `silk` auto-links the vendored `libsqlite3.a` archive so executables do not depend on a system SQLite shared library at runtime,
- - on the same supported native-host baseline, when `std::ssh` or `std::ssh2` is imported, or when linked native `.c` / `.h` / `.m` / `.o` / `.a` inputs reference `libssh2_*` symbols, `silk` auto-links the vendored `libssh2.a` archive (and its vendored crypto dependencies) so executables do not depend on a system `libssh2` shared library at runtime,
- - on `linux/x86_64`, when `std::dylib` is imported, or when linked native `.o` / `.a` inputs reference bundled `silk_rt_dylib_*` runtime symbols, `silk` automatically adds `libdl.so.2` as a `DT_NEEDED` dependency,
- - on supported native hosts (`linux/x86_64`, `macos/aarch64`), when `std::ggml` is imported (or when linked `.o`/`.a` inputs reference `silk_ggml_init`) and the vendored ggml static archives are present, `silk` links them automatically; on `linux/x86_64` it also adds `libstdc++.so.6`, `libgcc_s.so.1`, `libm.so.6`, and `libdl.so.2` as `DT_NEEDED` dependencies, while on Apple Silicon macOS hosts it adds `-lc++` to the native link (see [ggml](?p=std/ggml) and [vendored deps](?p=compiler/vendored-deps)),
- - on the same baseline, when `std::image::png`/`std::image::jpeg` are imported (or when linked `.o`/`.a` inputs reference the shim symbols) and the vendored archives are present, `silk` links them automatically and adds `libz.so.1` and/or `libm.so.6` as `DT_NEEDED` dependencies (see [image](?p=std/image) and [vendored deps](?p=compiler/vendored-deps)),
- - on the same baseline, when `std::xml` is imported (or when linked `.o`/`.a` inputs reference `silk_xml_node_name_ptr`) and the vendored libxml2 archives are present, `silk` links them automatically and adds `libm.so.6` as a `DT_NEEDED` dependency (see [xml](?p=std/xml) and [vendored deps](?p=compiler/vendored-deps)),
- - on `linux/x86_64`, when `std::window` is imported and reaches the bundled runtime, `silk` links the bundled runtime archive and adds the dynamic-loader library used by the runtime-loaded GTK provider (`libdl.so.2` on glibc targets, `libdl.so` on musl targets); GTK itself is loaded at runtime, so GTK libraries are not recorded as `DT_NEEDED` dependencies,
- - on the same baseline, when bundled runtime support symbols are imported (for example via `import regex from "std/regex";`, `import unicode from "std/unicode";`, or `import number from "std/number";`), `silk` statically links the bundled runtime support archive into the output (`libsilk_rt.a`, or `libsilk_rt_noheap.a` when building with `--noheap`); the produced executable/shared library does not depend on `libsilk_rt*.so` at runtime,
+ - on `linux/x86_64` with the musl dynamic loader (`ld-musl`), the same hosted external-symbol path automatically adds musl's unified `libc.so` dependency; `-lm`, `-lpthread`, `-ldl`, `-lrt`, `-lutil`, `-lresolv`, `-lcrypt`, and `-lxnet` also map to `libc.so` when no matching `-L` library is found,
+ - on supported hosted target layouts (`linux/x86_64` glibc, `linux/x86_64` musl, and `macos/aarch64`), when `std::crypto` and/or `std::tls` are imported, or when linked native `.c` / `.h` / `.m` / `.o` / `.a` inputs reference common libsodium / mbedTLS symbol families, `silk` auto-links the target-matched vendored static archives (`libsodium.a` and the mbedTLS archives) from `vendor/lib/<target-layout>/` (or an installed prefix) so executables do not depend on system `libsodium` / `mbedTLS` shared libraries at runtime,
+ - on `linux/x86_64` glibc or musl, when `std::sqlite` is imported, or when linked native `.c` / `.h` / `.m` / `.o` / `.a` inputs reference `sqlite3_*` symbols, `silk` auto-links the target-matched vendored `libsqlite3.a` archive so executables do not depend on a system SQLite shared library at runtime,
+ - on supported hosted target layouts (`linux/x86_64` glibc, `linux/x86_64` musl, and `macos/aarch64`), when `std::ssh` or `std::ssh2` is imported, or when linked native `.c` / `.h` / `.m` / `.o` / `.a` inputs reference `libssh2_*` symbols, `silk` auto-links the target-matched vendored `libssh2.a` archive (and its vendored crypto dependencies) so executables do not depend on a system `libssh2` shared library at runtime,
+ - on `linux/x86_64` glibc, when `std::runtime::z3` is imported or linked native inputs reference `Z3_*` symbols, `silk` auto-links the vendored glibc `libz3.a`; on `linux/x86_64` musl the same use is accepted only when the build explicitly supplies a musl-built `libz3.a` input or a `libz3` dynamic dependency such as `--needed libz3.so.0`,
+ - on `linux/x86_64`, when `std::dylib` is imported, or when linked native `.o` / `.a` inputs reference bundled `silk_rt_dylib_*` runtime symbols, `silk` automatically adds the libc component that provides `dlopen` (`libdl.so.2` on glibc, `libc.so` on musl),
+ - on supported hosted target layouts (`linux/x86_64` glibc, `linux/x86_64` musl, and `macos/aarch64`), when `std::ggml` is imported (or when linked `.o`/`.a` inputs reference `silk_ggml_init`) and the vendored ggml static archives are present, `silk` links them automatically; on Linux it also adds `libstdc++.so.6`, `libgcc_s.so.1`, and the target libc math/dynamic-loader providers, while on Apple Silicon macOS hosts it adds `-lc++` to the native link (see [ggml](?p=std/ggml) and [vendored deps](?p=compiler/vendored-deps)),
+ - on `linux/x86_64` glibc or musl, when `std::image::png`/`std::image::jpeg` are imported (or when linked `.o`/`.a` inputs reference the shim symbols) and the vendored archives are present, `silk` links them automatically and adds `libz.so.1` and/or the target libc math provider as `DT_NEEDED` dependencies (see [image](?p=std/image) and [vendored deps](?p=compiler/vendored-deps)),
+ - on `linux/x86_64` glibc or musl, when `std::xml` is imported (or when linked `.o`/`.a` inputs reference `silk_xml_node_name_ptr`) and the vendored libxml2 archives are present, `silk` links them automatically and adds the target libc math provider as a `DT_NEEDED` dependency (see [xml](?p=std/xml) and [vendored deps](?p=compiler/vendored-deps)),
+ - on `linux/x86_64`, when `std::window` is imported and reaches the bundled runtime, `silk` links the bundled runtime archive and adds the dynamic-loader API provider used by the runtime-loaded GTK provider (`libdl.so.2` on glibc targets, `libc.so` on musl targets); GTK itself is loaded at runtime, so GTK libraries are not recorded as `DT_NEEDED` dependencies,
+ - on the same baseline, when bundled runtime support symbols are imported (for example via `import std::regex;`, `import std::unicode;`, or `import std::number;`), `silk` statically links the bundled runtime support archive into the output (`libsilk_rt.a`, or `libsilk_rt_noheap.a` when building with `--noheap`); the produced executable/shared library does not depend on `libsilk_rt*.so` at runtime,
  - additional non-libc dependencies still must be declared via `--needed <soname>` (or otherwise be available in the process global scope at load time, for example via `LD_PRELOAD`),
  - bundled runtime archive discovery:
  - the compiler locates `libsilk_rt.a` / `libsilk_rt_noheap.a` via (in order):
@@ -857,7 +936,7 @@ Top-level commands:
  - Compiles and runs each test, emitting TAP version 13 output.
  - Each test runs in its own process, so a failing `assert` (panic/abort) does not stop the whole suite.
  - Top-level test bodies that contain `await` are run through async test wrappers and awaited by the generated runner.
- - Test executables use the native host target when Silk has a host-backed executable backend for it, and otherwise fall back to `linux-x86_64`. Formal Silk target metadata in `silk test` reflects that selected execution target.
+ - Test executables use the native host target when Silk has a host-backed executable backend for it, and otherwise fall back to `linux-x86_64` (or `linux-x86_64-musl` on musl x86_64 Linux hosts). Formal Silk target metadata in `silk test` reflects that selected execution target.
  - Optimization:
  - `-O <0-3>` selects the optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`).
  - `-O1`+ prunes unused extern symbols before code generation (typically reducing output size and stdlib linkage).
@@ -878,6 +957,8 @@ Top-level commands:
  - `.c`, `.h`, and supported `.m` entries in `[[target]].inputs` are
  compiled to temporary objects and linked with the generated test harness,
  using that target’s `cflags`,
+ - matching package and dependency `[[native]]` entries are also compiled and
+ linked when their target gate matches the test execution target,
  - `.o`, `.a`, shared-library inputs, `needed`, `runpath`, and supported
  `ldflags` are linked as they are for package builds.
 - `silk build [--nostd] [--std-root <path>] [--std-lib <path>] [--z3-lib <path>] [-Wz <spec> ...] [--debug] [--feature <spec> ...] [-f <spec> ...] [-O <0-3>] [--noheap] [--strip-unused] [--package <dir|manifest>] [--build-module] [--package-target <name> ...] <file> [<file> ...] -o <path> [--kind executable|object|static|shared] [--emit bin|asm] [--arch <arch>] [--target <triple>] [--c-header <path>] [--cflag <arg> ...] [-I <path> ...] [-isystem <path> ...] [-L <path> ...] [-l <name> ...] [-Wl <arg> ...] [--ldflag <arg> ...] [--needed <soname> ...] [--runpath <path> ...] [--soname <soname>] [--elf-interp <path>]` (or `--out <path>`):
@@ -896,6 +977,8 @@ Top-level commands:
  - explicit `.slk` inputs must be omitted (the module set is loaded from the package manifest),
  - native build inputs (`.c`, `.h`, `.m`, `.o`, `.a`, `.so`) may still be provided:
  - per-target via `[[target]].inputs` in `silk.toml`,
+ - package-wide via target-gated `[[native]]` entries in the root package
+ and imported dependencies,
  - and, when building a single target, on the command line (merged with the manifest inputs),
  - `.h` follows the same safer rule as direct CLI builds:
  - sibling `.c` wins when present,
@@ -918,7 +1001,9 @@ Top-level commands:
  - when building a single target, `-o/--out` is optional (defaults to that target’s `output` or a computed default under `build/`).
  - Target selection:
  - `--arch <arch>` and `--target <triple>` are mutually exclusive; omit both to use the default target.
- - `--list-targets` prints the recognized `--target` triples (including supported output kinds and const-main-only notes) and exits.
+ - `--list-targets` prints the recognized `--target` triples, current-host
+ output kinds, current-host const-main-only notes, and Apple Silicon macOS
+ host-backed notes for targets with that extra support, then exits.
  - `--list-archs` prints the recognized `--arch` values and exits.
  - Entrypoint rules:
  - for `--kind executable` (the default), there must be exactly one `main`, using either `fn main() -> int`, `fn main() -> void`, `async fn main() -> int`, `async fn main() -> void`, `fn main(argc: int, argv: u64) -> int`, or `fn main(argc: int, argv: u64) -> void`,
@@ -929,7 +1014,8 @@ Top-level commands:
  - default: build an executable (`--kind executable`),
  - `--kind object`: build a relocatable object (`.o`):
  - ELF64 on `linux/x86_64`,
- - Mach-O 64-bit relocatable on `macos/aarch64` hosts,
+ - Mach-O 64-bit relocatable for `--target macos-aarch64` on Apple
+ Silicon macOS hosts,
  - `--kind static`: build a static library (`.a`) on `linux/x86_64`,
  - `--kind shared`: build a shared library (`.so`) on `linux/x86_64`.
  - Emission:
@@ -951,19 +1037,22 @@ Top-level commands:
  - `--soname <soname>` sets the shared library soname recorded as `DT_SONAME` for shared outputs (an empty string clears it),
  - `--elf-interp <path>` overrides the `PT_INTERP` dynamic loader path used for `linux/x86_64` executable outputs (this also influences glibc/musl linkage defaults for `-l...` mapping).
  - This option is rejected for non-`linux/x86_64` targets.
- - When omitted, `silk` probes common loader paths when running on `linux/x86_64`, and otherwise falls back to `/lib64/ld-linux-x86-64.so.2` for cross-compilation.
+ - For `linux-x86_64-musl`, the default is `/lib/ld-musl-x86_64.so.1`; explicit glibc loader paths are rejected for that target.
+ - For generic `linux-x86_64`, when omitted, `silk` probes common loader paths when running on `linux/x86_64`, and otherwise falls back to `/lib64/ld-linux-x86-64.so.2` for cross-compilation.
  - Override sources (highest priority first): `--elf-interp`, manifest `[[target]].elf_interp`, `SILK_ELF_INTERP`.
  - for object and static library outputs, `--ldflag`, `--needed`, `--runpath`, `--soname`, and `--elf-interp` are ignored.
  - on `linux/x86_64` with the glibc dynamic loader (`ld-linux`), `silk` automatically adds:
  - `libc.so.6` as a `DT_NEEDED` dependency when external symbols are present (so hosted `std::` modules do not require `--needed libc.so.6`), and
  - `libpthread.so.0` when `pthread_*` symbols are imported.
- - on supported native hosts (`linux/x86_64`, `macos/aarch64`), when `std::crypto` and/or `std::tls` are imported, or when linked native `.c` / `.h` / `.m` / `.o` / `.a` inputs reference common libsodium / mbedTLS symbol families, `silk` auto-links the vendored static archives (`libsodium.a` and the mbedTLS archives) from `vendor/lib/<host-layout>/` (or an installed prefix) so executables do not depend on system `libsodium` / `mbedTLS` shared libraries at runtime.
- - on `linux/x86_64`, when `std::sqlite` is imported, or when linked native `.c` / `.h` / `.m` / `.o` / `.a` inputs reference `sqlite3_*` symbols, `silk` auto-links the vendored `libsqlite3.a` archive so executables do not depend on a system SQLite shared library at runtime.
- - on supported native hosts (`linux/x86_64`, `macos/aarch64`), when `std::ssh` or `std::ssh2` is imported, or when linked native `.c` / `.h` / `.m` / `.o` / `.a` inputs reference `libssh2_*` symbols, `silk` auto-links the vendored `libssh2.a` archive (and its vendored crypto dependencies) so executables do not depend on a system `libssh2` shared library at runtime.
- - on `linux/x86_64`, when `std::dylib` is imported, or when linked native `.o` / `.a` inputs reference bundled `silk_rt_dylib_*` runtime symbols, `silk` automatically adds `libdl.so.2` as a `DT_NEEDED` dependency.
- - on supported native hosts (`linux/x86_64`, `macos/aarch64`), when `std::ggml` is imported, or when linked native `.o` / `.a` inputs reference `silk_ggml_init`, `silk` auto-links the vendored ggml archives; on `linux/x86_64` it also adds `libstdc++.so.6`, `libgcc_s.so.1`, `libm.so.6`, and `libdl.so.2`, while on Apple Silicon macOS hosts it adds `-lc++` for the native link.
- - on `linux/x86_64`, when `std::window` reaches the bundled runtime, `silk` adds the dynamic-loader dependency used by the runtime-loaded GTK provider (`libdl.so.2` on glibc targets, `libdl.so` on musl targets); GTK remains runtime-loaded rather than a required `DT_NEEDED` entry.
- - when bundled runtime support symbols are imported (for example via `import regex from "std/regex";`), `silk` statically links `libsilk_rt.a` (or `libsilk_rt_noheap.a` when building with `--noheap`) into the output; no runtime `DT_NEEDED` entry is emitted for `libsilk_rt*`.
+ - on `linux/x86_64` with the musl dynamic loader (`ld-musl`), `silk` automatically adds musl's unified `libc.so` dependency when external symbols are present; common libc component link names such as `-lm`, `-lpthread`, and `-ldl` also map to `libc.so`.
+ - on supported hosted target layouts (`linux/x86_64` glibc, `linux/x86_64` musl, and `macos/aarch64`), when `std::crypto` and/or `std::tls` are imported, or when linked native `.c` / `.h` / `.m` / `.o` / `.a` inputs reference common libsodium / mbedTLS symbol families, `silk` auto-links the target-matched vendored static archives (`libsodium.a` and the mbedTLS archives) from `vendor/lib/<target-layout>/` (or an installed prefix) so executables do not depend on system `libsodium` / `mbedTLS` shared libraries at runtime.
+ - on `linux/x86_64` glibc or musl, when `std::sqlite` is imported, or when linked native `.c` / `.h` / `.m` / `.o` / `.a` inputs reference `sqlite3_*` symbols, `silk` auto-links the target-matched vendored `libsqlite3.a` archive so executables do not depend on a system SQLite shared library at runtime.
+ - on supported hosted target layouts (`linux/x86_64` glibc, `linux/x86_64` musl, and `macos/aarch64`), when `std::ssh` or `std::ssh2` is imported, or when linked native `.c` / `.h` / `.m` / `.o` / `.a` inputs reference `libssh2_*` symbols, `silk` auto-links the target-matched vendored `libssh2.a` archive (and its vendored crypto dependencies) so executables do not depend on a system `libssh2` shared library at runtime.
+ - on `linux/x86_64` glibc, when `std::runtime::z3` is imported or linked native inputs reference `Z3_*` symbols, `silk` auto-links the vendored glibc `libz3.a`; on `linux/x86_64` musl the same use is accepted only when the build explicitly supplies a musl-built `libz3.a` input or a `libz3` dynamic dependency such as `--needed libz3.so.0`.
+ - on `linux/x86_64`, when `std::dylib` is imported, or when linked native `.o` / `.a` inputs reference bundled `silk_rt_dylib_*` runtime symbols, `silk` automatically adds the libc component that provides `dlopen` (`libdl.so.2` on glibc, `libc.so` on musl).
+ - on supported hosted target layouts (`linux/x86_64` glibc, `linux/x86_64` musl, and `macos/aarch64`), when `std::ggml` is imported, or when linked native `.o` / `.a` inputs reference `silk_ggml_init`, `silk` auto-links the vendored ggml archives; on Linux it also adds `libstdc++.so.6`, `libgcc_s.so.1`, and the target libc math/dynamic-loader providers, while on Apple Silicon macOS hosts it adds `-lc++` for the native link.
+ - on `linux/x86_64`, when `std::window` reaches the bundled runtime, `silk` adds the dynamic-loader API provider used by the runtime-loaded GTK provider (`libdl.so.2` on glibc targets, `libc.so` on musl targets); GTK remains runtime-loaded rather than a required `DT_NEEDED` entry.
+ - when bundled runtime support symbols are imported (for example via `import std::regex;`), `silk` statically links `libsilk_rt.a` (or `libsilk_rt_noheap.a` when building with `--noheap`) into the output; no runtime `DT_NEEDED` entry is emitted for `libsilk_rt*`.
  - `--needed` entries starting with `libsilk_rt` are rejected; the bundled runtime support layer is always linked from the static archives.
  - Debug builds:
  - `--debug` (or `-g`) enables runtime stack traces for failed `assert` statements on `linux/x86_64` by printing a stack trace to stderr before aborting, and preserves internal function symbols in `.dynsym` for better symbolization.

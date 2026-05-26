@@ -173,9 +173,9 @@ The compiler does not currently enforce this at compile time.
 
 #### ABI and Lowering
 
-In the current backend subset, an `&Opaque` value is lowered as a single
-pointer-width scalar, rather than as a struct-of-pointers like `&struct`
-borrows.
+In the current backend subset, an `&Opaque` value is lowered as a single pointer
+scalar (`u64` on the current `linux/x86_64` target), rather than as a
+struct-of-pointers like `&struct` borrows.
 
 ### Memory Layout (Intended Contract)
 
@@ -191,7 +191,7 @@ rules for the corresponding field types on the target:
  struct’s alignment (typically the maximum alignment of its fields), so arrays
  of the struct keep each element correctly aligned.
 
-Example (typical C layout on common 64-bit targets):
+Example (typical C layout on `linux/x86_64`):
 
 ```silk
 struct Frame {
@@ -413,7 +413,7 @@ Static-method receiver sugar (Supported forms):
  compiler may resolve it as a call to a visible static method of the receiver
  type by inserting the receiver as the first argument: `Type.method(value, ...)`.
 - This supports fluent chaining for value-consuming helper APIs like
- `Result.unwrap_or`:
+ `std::result::Result.unwrap_or`:
 
   ```silk
   let r: R = /* ... */;

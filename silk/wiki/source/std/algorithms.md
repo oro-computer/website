@@ -8,16 +8,16 @@ Canonical doc: [algorithms](?p=std/algorithms).
 ## Importing
 
 ```silk
-import algorithms from "std/algorithms";
+import std::algorithms;
 ```
 
 ## Example: `clamp_int`
 ```silk
-import algorithms from "std/algorithms";
+import std::algorithms;
 
 fn main () -> int {
-  if algorithms::clamp_int(10, 0, 5) != 5 { return 1; }
-  if algorithms::clamp_int(-1, 0, 5) != 0 { return 2; }
+  if std::algorithms::clamp_int(10, 0, 5) != 5 { return 1; }
+  if std::algorithms::clamp_int(-1, 0, 5) != 0 { return 2; }
   return 0;
 }
 ```

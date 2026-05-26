@@ -12,7 +12,7 @@ Canonical doc: [tls](?p=std/tls).
 ## Importing
 
 ```silk
-import { MemPipe, Session } from "std/tls";
+import std::tls;
 ```
 
 ## Examples
@@ -23,8 +23,8 @@ as `tests/silk/pass_std_tls_mem_handshake.slk`.
 
 ```silk
 import mem from "std/runtime/mem.slk";
-import arrays from "std/arrays";
-import { MemPipe, Session } from "std/tls";
+import std::arrays;
+import std::tls;
 
 fn test_cert () -> string {
   return `-----BEGIN CERTIFICATE-----
@@ -123,7 +123,7 @@ fn read_some (mut sess: &Session, ptr: u64, cap: u64) -> i32 {
   var tries: int = 0;
   while tries < 100000 {
     tries += 1;
-    let rc = sess.read(arrays::ByteSlice{ ptr: ptr, len: cap as i64 });
+    let rc = sess.read(std::arrays::ByteSlice{ ptr: ptr, len: cap as i64 });
     if rc > 0 {
       return rc;
     }

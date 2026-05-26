@@ -36,6 +36,9 @@ requiring repository spelunking:
 - `silk cache` summarizes the managed cache root and helps prune or compact it
  without deleting unknown files under that root; managed cache mutations are
  lock-coordinated with normal builds,
+- inspection/reporting commands such as `check`, `targets`, `graph`, `size`,
+ `error`, `package`, `cache`, `env`, and `format` support `--json` where a
+ stable machine-readable result is useful,
 - `silk proto` compiles proto3 schema files to Silk modules without invoking
  `protoc`, uses `std::protobuf` for wire-format helpers, and can emit complete
  versioned descriptor JSON for tooling,
@@ -76,7 +79,7 @@ The currently implemented coverage is documented in:
 
 - Silk source files use the `.slk` extension.
 - Package builds are driven by a manifest file named `silk.toml` (see [package manifests](?p=compiler/package-manifests)).
-- The default stdlib implementation is a directory tree rooted at `std/` and is imported via `from "std/..."` module specifiers or direct std ABI imports.
+- The default stdlib implementation is a directory tree rooted at `std/` and is imported via `import std::...;`.
 
 ## Standard Library
 
@@ -123,6 +126,7 @@ silk man docs
 # Inspect and preview managed cache cleanup.
 silk cache
 silk cache prune --dry-run
+silk cache list --json
 
 # Write a generated manpage to a file.
 silk doc --man std::fs -o std_fs.3
@@ -131,7 +135,7 @@ silk doc --man std::fs -o std_fs.3
 ## See Also
 
 - [`silk(1)`](?p=man/silk.1)
-- [`silk-build(1)`](?p=man/silk-build.1), [`silk-package(1)`](?p=man/silk-package.1), [`silk-cache(1)`](?p=man/silk-cache.1), [`silk-check(1)`](?p=man/silk-check.1), [`silk-test(1)`](?p=man/silk-test.1), [`silk-doc(1)`](?p=man/silk-doc.1), [`silk-man(1)`](?p=man/silk-man.1), [`silk-guide(1)`](?p=man/silk-guide.1), [`silk-error(1)`](?p=man/silk-error.1), [`silk-proto(1)`](?p=man/silk-proto.1), [`silk-cc(1)`](?p=man/silk-cc.1)
+- [`silk-build(1)`](?p=man/silk-build.1), [`silk-package(1)`](?p=man/silk-package.1), [`silk-cache(1)`](?p=man/silk-cache.1), [`silk-check(1)`](?p=man/silk-check.1), [`silk-targets(1)`](?p=man/silk-targets.1), [`silk-graph(1)`](?p=man/silk-graph.1), [`silk-size(1)`](?p=man/silk-size.1), [`silk-test(1)`](?p=man/silk-test.1), [`silk-doc(1)`](?p=man/silk-doc.1), [`silk-man(1)`](?p=man/silk-man.1), [`silk-guide(1)`](?p=man/silk-guide.1), [`silk-error(1)`](?p=man/silk-error.1), [`silk-proto(1)`](?p=man/silk-proto.1), [`silk-cc(1)`](?p=man/silk-cc.1)
 - [`silk_compiler(3)`](?p=man/silk_compiler.3), [`silk_error(3)`](?p=man/silk_error.3), [`silk_bytes(3)`](?p=man/silk_bytes.3), [`silk_abi_get_version(3)`](?p=man/silk_abi_get_version.3)
 - [`libsilk(7)`](?p=man/libsilk.7)
 - `https://oro.computer/silk`

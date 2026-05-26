@@ -48,13 +48,13 @@ Practical consequence:
 Embedders should prefer `#include <silk/silk.h>`. The flat `include/silk.h`
 wrapper remains available for compatibility during the transition.
 
-### Linking on `linux/x86_64` (vendored Z3)
+### Linking When Static Z3 Is Bundled
 
-On supported native hosts, `libsilk.a` vendors Z3 (via the host-native
-`vendor/lib/<host-layout>/libz3.a`) to
-support Formal Silk verification. The vendored Z3 static library is built as
-**C++**, so downstream embedders linking against `libsilk.a` MUST also link the
-system C++ runtime and any required system libraries:
+When the host-native `vendor/lib/<host-layout>/libz3.a` archive is present,
+`libsilk.a` vendors Z3 to support Formal Silk verification without requiring a
+runtime Z3 dynamic library. The vendored Z3 static library is built as **C++**,
+so downstream embedders linking against `libsilk.a` MUST also link the system
+C++ runtime and any required system libraries:
 
 ```sh
 cc -std=c99 -Wall -Wextra \
@@ -65,6 +65,10 @@ cc -std=c99 -Wall -Wextra \
 
 The `silk cc` wrapper adds these flags automatically when linking on
 `linux/x86_64`.
+
+If the static host archive is absent, `libsilk.a` still builds. Formal Silk
+verification then requires a dynamic Z3 override via
+`silk_compiler_set_z3_lib` or `SILK_Z3_LIB`.
 
 The header must define:
 
@@ -197,13 +201,12 @@ The initial C header provided in the Silk compiler repository defines:
   ```
 
  `silk_compiler_set_std_root` configures the filesystem stdlib root directory used
- to auto-load `std::...` packages when modules contain `from "std/..."`
- module specifiers or direct std ABI imports. The
+ to auto-load `std::...` packages when modules contain `import std::...;`. The
  `std_root` string is copied. When set, it overrides `SILK_STD_ROOT` and the
  working-directory/default search behavior described below.
 
  `silk_compiler_set_nostd` disables this stdlib auto-loading behavior when set
- to `true`. When `nostd` is enabled, std imports must be
+ to `true`. When `nostd` is enabled, `import std::...;` declarations must be
  satisfied by explicitly adding the corresponding std sources as modules (for
  example via `silk_compiler_add_source_buffer`); the compiler will not consult
  `SILK_STD_ROOT` or the filesystem std root search paths.
@@ -225,7 +228,7 @@ The initial C header provided in the Silk compiler repository defines:
  builds, it also prunes unreachable functions from the executable entrypoint
  (function-level dead-code elimination), typically reducing output size and
  over-linking when using the prebuilt `libsilk_std.a` archive to satisfy
- auto-loaded std modules.
+ auto-loaded `import std::...;` modules.
  The CLI also exposes `silk build --strip-unused` to force analogous
  reachability-based pruning at `-O0` for executable/static/shared outputs; the
  current C ABI does not yet expose a separate setter for that flag.
@@ -285,12 +288,12 @@ The initial C header provided in the Silk compiler repository defines:
  `DT_NEEDED` entries starting with `libsilk_rt` are rejected: bundled runtime
  helpers are linked statically from `libsilk_rt.a` / `libsilk_rt_noheap.a` and
  must not become runtime loader dependencies.
- On `linux/x86_64` with the glibc dynamic loader (`ld-linux`), when an
- executable or shared library imports any external symbols, the compiler
- automatically adds `libc.so.6` as a `DT_NEEDED` dependency (so embedders do
- not need to manually add libc when using hosted `std::` modules like
- `std::io` and `std::fs`). Additional non-libc dependencies must still be
- declared via `silk_compiler_add_needed_library`.
+ On `linux/x86_64`, when an executable or shared library imports any external
+ symbols, the compiler automatically adds the selected libc as a `DT_NEEDED`
+ dependency (`libc.so.6` for glibc, `libc.so` for musl), so embedders do not
+ need to manually add libc when using hosted `std::` modules like `std::io`
+ and `std::fs`. Additional non-libc dependencies must still be declared via
+ `silk_compiler_add_needed_library`.
 
  `silk_compiler_add_runpath` records a dynamic loader search path element for
  executable and shared library outputs (emitted as `DT_RUNPATH`). The `path`
@@ -391,8 +394,8 @@ The initial C header provided in the Silk compiler repository defines:
  `#assert`, `#invariant`, `#variant`, `#monovariant`, `#const`), it also runs the Z3-backed verifier
  and fails the build if verification fails (`E3001`..`E3008`),
  - the verifier is currently skipped for stdlib modules (`std::...`),
- - on supported native hosts, Z3 is linked from the vendored static archive
- `vendor/lib/<host-layout>/libz3.a`,
+ - when the host-native archive is present, Z3 is linked from the vendored
+ static archive `vendor/lib/<host-layout>/libz3.a`,
  - the verifier honors `SILK_Z3_LIB` (environment variable) to override
  the Z3 dynamic library at runtime,
  - it fails fast on the first front‑end error.
@@ -413,8 +416,7 @@ The initial C header provided in the Silk compiler repository defines:
  - duplicate exported names within a single package are reported as a
  resolver error (`"duplicate exported symbol"`).
  - standard library import resolution (first slice):
- - when a module contains `from "std/..."` module specifiers or direct std ABI
- imports, the compiler will attempt to
+ - when a module contains `import std::...;`, the compiler will attempt to
  auto-load the referenced `std::...` package modules from a configured
  stdlib root so embedders do **not** need to provide std sources
  explicitly in the common case,

@@ -32,8 +32,8 @@ See also:
 ```silk
 module std::buffer;
 
-import arrays from "std/arrays";
-import memory from "std/memory";
+import std::arrays;
+import std::memory;
 
 struct Buffer(T) {
   ptr: u64,
@@ -41,7 +41,7 @@ struct Buffer(T) {
 }
 
 impl Buffer(T) {
-  public fn init (cap: i64) -> Result(Buffer(T), std::memory::AllocFailed);
+  public fn init (cap: i64) -> std::result::Result(Buffer(T), std::memory::AllocFailed);
   public fn empty () -> Buffer(T);
   public fn read (self: &Buffer(T), index: i64) -> T;
   public fn write (mut self: &Buffer(T), index: i64, value: T) -> void;
@@ -51,7 +51,7 @@ impl Buffer(T) {
 }
 
 // Module-level wrappers (synonyms for the methods above).
-export fn alloc (T; cap: i64) -> Result(Buffer(T), std::memory::AllocFailed);
+export fn alloc (T; cap: i64) -> std::result::Result(Buffer(T), std::memory::AllocFailed);
 export fn capacity (T; buf: &Buffer(T)) -> i64;
 export fn drop (T; mut buf: &Buffer(T)) -> void;
 export fn read (T; buf: &Buffer(T), index: i64) -> T;
@@ -65,8 +65,8 @@ export fn slice (T; buf: &Buffer(T), start: i64, end: i64) -> std::arrays::Slice
 ```silk
 module std::buffer;
 
-import arrays from "std/arrays";
-import memory from "std/memory";
+import std::arrays;
+import std::memory;
 
 struct BufferU8 {
   ptr: u64,
@@ -75,7 +75,7 @@ struct BufferU8 {
 }
 
 impl BufferU8 {
-  public fn init (cap: i64) -> Result(BufferU8, std::memory::AllocFailed);
+  public fn init (cap: i64) -> std::result::Result(BufferU8, std::memory::AllocFailed);
   public fn empty () -> BufferU8;
   public fn push (mut self: &BufferU8, value: u8) -> std::memory::OutOfMemory?;
   public fn push_u8 (mut self: &BufferU8, value: u8) -> std::memory::OutOfMemory?;
@@ -102,7 +102,7 @@ impl BufferU8 {
 ```silk
 module std::buffer;
 
-import vector from "std/vector";
+import std::vector;
 
 // Signed integers.
 export type BufferI8 = std::vector::Vector(i8);

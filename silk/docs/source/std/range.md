@@ -30,7 +30,7 @@ impl Range {
   public fn is_inclusive (self: &Range) -> bool;
   public fn shift (self: &Range, offset: int) -> Range;
   public fn is_empty_known (self: &Range) -> bool;
-  public fn to_string (self: &Range) -> Result(std::strings::String, std::memory::OutOfMemory);
+  public fn to_string (self: &Range) -> std::result::Result(std::strings::String, std::memory::OutOfMemory);
 }
 ```
 

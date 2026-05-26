@@ -58,7 +58,7 @@ bit width (`32` or `64`).
 ## Example
 
 ```silk
-import bits from "std/bits";
+import std::bits;
 
 fn main () -> int {
   let x: u32 = std::bits::rotl_u32(1, 5);

@@ -7,7 +7,7 @@ Canonical doc: [interfaces](?p=std/interfaces).
 
 ## Example: `Iterator(T)` and `next() -> T?`
 ```silk
-import interfaces from "std/interfaces";
+import std::interfaces;
 
 struct CounterIter {
   cur: int,
@@ -20,7 +20,7 @@ impl CounterIter {
   }
 }
 
-impl CounterIter as interfaces::Iterator(int) {
+impl CounterIter as std::interfaces::Iterator(int) {
   public fn next (mut self: &CounterIter) -> int? {
     if self.cur >= self.end {
       return None;

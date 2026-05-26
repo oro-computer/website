@@ -40,7 +40,7 @@ export const INT_MAX: int;
 Validating that a host-facing length fits in `i32`:
 
 ```silk
-import limits from "std/limits";
+import std::limits;
 
 fn validate_len (len: i64) -> bool {
   return len >= 0 && len <= (std::limits::I32_MAX as i64);

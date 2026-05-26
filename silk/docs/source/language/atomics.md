@@ -57,13 +57,13 @@ Atomic operations have operation-specific ordering contracts:
 Invalid statically visible orderings are rejected by the checker with `E2127`.
 
 ```silk
-import atomic from "std/atomic";
+import std::atomic;
 
 fn main () -> int {
-  let mut value = atomic::AtomicU64.init(1);
+  let mut value = std::atomic::AtomicU64.init(1);
 
   // error[E2127]: atomic loads cannot use Release or AcqRel
-  let current = value.load(atomic::Ordering::Release);
+  let current = value.load(std::atomic::Ordering::Release);
   return current as int;
 }
 ```

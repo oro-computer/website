@@ -24,8 +24,10 @@ Thread-safety:
 ```silk
 module std::abort_controller;
 
-import interfaces from "std/interfaces";
-import memory from "std/memory";
+import std::interfaces;
+import std::memory;
+import std::result;
+
 export enum AbortReasonKind {
   Aborted,
   Message,
@@ -51,7 +53,7 @@ export struct AbortSignalBorrow {
   handle: u64,
 }
 
-export type AbortControllerResult = Result(AbortController, std::memory::OutOfMemory);
+export type AbortControllerResult = std::result::Result(AbortController, std::memory::OutOfMemory);
 
 impl AbortController {
   public fn init () -> AbortControllerResult;

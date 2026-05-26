@@ -27,7 +27,7 @@ third-party protobuf runtime.
 - `Key` is the decoded `(field_number, wire_type)` record key returned by
  `Reader.read_key()`.
 - `Reader` is a borrowing binary reader over `std::arrays::ByteSlice`.
-- `Decode*Result` aliases are `Result(..., DecodeError)` shapes
+- `Decode*Result` aliases are `std::result::Result(..., DecodeError)` shapes
  used by reader methods.
 
 Strings and byte slices decoded by `Reader` borrow from the input byte slice.

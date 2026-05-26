@@ -63,11 +63,12 @@ Default helper functions are provided for these key types:
 Example (using `std::map` defaults via `HashMap.init(cap)` / `HashMap.empty()`):
 
 ```silk
-import map from "std/map";
-import memory from "std/memory";
+import std::map;
+import std::result;
+import std::memory;
 
 type Map = std::map::HashMap(u64, int);
-type InitResult = Result(Map, std::memory::AllocFailed);
+type InitResult = std::result::Result(Map, std::memory::AllocFailed);
 
 fn main () -> int {
   match (Map.init(16)) {
@@ -90,11 +91,12 @@ fn main () -> int {
 Example (custom hashing/equality):
 
 ```silk
-import map from "std/map";
-import memory from "std/memory";
+import std::map;
+import std::result;
+import std::memory;
 
 type Map = std::map::HashMap(u64, int);
-type InitResult = Result(Map, std::memory::AllocFailed);
+type InitResult = std::result::Result(Map, std::memory::AllocFailed);
 
 fn hash_u64 (k: u64) -> u64 { return k; }
 fn eq_u64 (a: u64, b: u64) -> bool { return a == b; }
@@ -124,15 +126,15 @@ fn main () -> int {
 `HashMap(K, V)` provides:
 
 - `fn empty () -> HashMap(K, V);` (only for default key types)
-- `fn init (cap: i64) -> Result(HashMap(K, V), std::memory::AllocFailed);` (only for default key types)
+- `fn init (cap: i64) -> std::result::Result(HashMap(K, V), std::memory::AllocFailed);` (only for default key types)
 - `fn empty_with (hash: fn(K) -> u64, eq: fn(K, K) -> bool) -> HashMap(K, V);`
-- `fn init_with (cap: i64, hash: fn(K) -> u64, eq: fn(K, K) -> bool) -> Result(HashMap(K, V), std::memory::AllocFailed);`
+- `fn init_with (cap: i64, hash: fn(K) -> u64, eq: fn(K, K) -> bool) -> std::result::Result(HashMap(K, V), std::memory::AllocFailed);`
 - `fn len (self: &HashMap(K, V)) -> i64;`
 - `fn is_empty (self: &HashMap(K, V)) -> bool;`
 - `fn capacity (self: &HashMap(K, V)) -> i64;`
 - `fn contains_key (self: &HashMap(K, V), key: K) -> bool;`
 - `fn get (self: &HashMap(K, V), key: K) -> V?;`
-- `fn put (mut self: &HashMap(K, V), key: K, value: V) -> Result(V?, std::memory::OutOfMemory);`
+- `fn put (mut self: &HashMap(K, V), key: K, value: V) -> std::result::Result(V?, std::memory::OutOfMemory);`
  Inserts or replaces and returns the previous value, if present.
 - `fn remove (mut self: &HashMap(K, V), key: K) -> V?;`
 - `fn iter (self: &HashMap(K, V)) -> HashMapIter(K, V);`
@@ -160,7 +162,7 @@ Complexity expectations:
 - `fn is_empty (self: &TreeMap(K, V)) -> bool;`
 - `fn contains_key (self: &TreeMap(K, V), key: K) -> bool;`
 - `fn get (self: &TreeMap(K, V), key: K) -> V?;`
-- `fn put (mut self: &TreeMap(K, V), key: K, value: V) -> Result(V?, std::memory::OutOfMemory);`
+- `fn put (mut self: &TreeMap(K, V), key: K, value: V) -> std::result::Result(V?, std::memory::OutOfMemory);`
 - `fn remove (mut self: &TreeMap(K, V), key: K) -> V?;`
 - `fn iter (self: &TreeMap(K, V)) -> TreeMapIter(K, V);`
 - `fn clear (mut self: &TreeMap(K, V)) -> void;`

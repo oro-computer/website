@@ -210,6 +210,9 @@ The command resolves one cache root in this order:
 
 - `--package <dir|manifest>`, `--pkg <dir|manifest>`
  - resolve the cache root relative to the selected package root
+- `--json`
+ - emit newline-terminated, schema-versioned cache data for
+ `path`, `list`, `inspect`, `prune`, `compact`, or `clear`
 - `--cache-dir <path>`
  - operate on an explicit cache root path
 - `--dry-run`
@@ -252,3 +255,8 @@ Recommended workflow:
 
 Use `path` when you need to inspect the cache manually in a shell or attach the
 path to a bug report.
+
+Use `--json` when a script, editor, CI job, or agent needs structured cache
+facts. Mutation commands keep the same side effects and exit codes; JSON reports
+the result with `dryRun`, `healedEntries`, `removedEntries`, and
+`reclaimedBytes`.

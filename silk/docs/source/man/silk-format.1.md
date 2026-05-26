@@ -48,9 +48,19 @@ This header reordering pass is intentionally conservative. If the leading header
 
 ## Options
 
+- `--json` — emit newline-terminated, schema-versioned changed-file results
+ on stdout.
 - `--check` — do not write any files; exit non-zero if any file would change.
 - `--help`, `-h` — show command usage and exit.
 - `--` — end of options (treat following args as paths, even if they begin with `-`).
+
+## JSON Output
+
+`--json` emits `schemaVersion`, `command`, `ok`, `check`, `status`,
+`changedCount`, and `changedFiles`.
+
+In `--check --json` mode, files that would change produce `ok: false`,
+`"needs-formatting"`, and the same non-zero exit code as human output.
 
 ## Configuration (`.silk/format.toml`)
 
@@ -83,15 +93,16 @@ indent_width = 2
 ```sh
 silk fmt src
 silk format --check .
+silk format --check --json .
 ```
 
 ```silk
-import util from "pkg/util";
+import util from pkg::util;
 import { Delta, Alpha, Beta, Gamma } from "./local.slk";
 import "./a.slk";
-import io from "std/io";
-import { Zebra, Beta, Alpha, Gamma } from "pkg/names";
-import fs from "std/fs";
+import std::io;
+import { Zebra, Beta, Alpha, Gamma } from pkg::names;
+import std::fs;
 
 fn main () -> int { let x: int = 1; if x == 1 { return 0; } return 1; }
 ```
@@ -99,16 +110,16 @@ fn main () -> int { let x: int = 1; if x == 1 { return 0; } return 1; }
 becomes:
 
 ```silk
-import fs from "std/fs";
-import io from "std/io";
+import std::fs;
+import std::io;
 
 import {
   Alpha,
   Beta,
   Gamma,
   Zebra,
-} from "pkg/names";
-import util from "pkg/util";
+} from pkg::names;
+import util from pkg::util;
 
 import "./a.slk";
 import {

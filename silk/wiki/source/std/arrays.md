@@ -13,15 +13,15 @@ Canonical doc: [arrays](?p=std/arrays).
 ## Importing
 
 ```silk
-import arrays from "std/arrays";
+import std::arrays;
 ```
 
 ## Examples
 
 ### Example: `Slice(T)` + `SliceIter(T)`
 ```silk
-import arrays from "std/arrays";
-import { BufferU64 } from "std/buffer";
+import std::arrays;
+import std::buffer;
 
 fn main () -> int {
   let mut buf: BufferU64 = BufferU64.init(4);
@@ -29,7 +29,7 @@ fn main () -> int {
   buf.push(11);
   buf.push(12);
 
-  let s: arrays::Slice(u64) = { ptr: buf.ptr, len: buf.len() };
+  let s: std::arrays::Slice(u64) = { ptr: buf.ptr, len: buf.len() };
   let mut it = s.iter();
   let mut sum: u64 = 0;
   while true {

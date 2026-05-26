@@ -151,7 +151,9 @@ supported patterns are the same refutable subset already implemented by
 Example:
 
 ```silk
-type R = Result(int, int);
+import std::result;
+
+type R = std::result::Result(int, int);
 
 fn main () -> int {
   let xs: R[4] = [R.ok(2), R.err(7), R.ok(3), R.err(9)];

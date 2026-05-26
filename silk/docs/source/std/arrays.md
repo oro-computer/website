@@ -20,7 +20,7 @@ non-owning, FFI-friendly slice representation for early bridging:
 ```silk
 module std::arrays;
 
-import interfaces from "std/interfaces";
+import std::interfaces;
 
 struct Slice(T) {
   ptr: u64,

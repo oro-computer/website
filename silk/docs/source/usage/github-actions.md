@@ -8,7 +8,8 @@ Current support:
 - runner OS/arch:
  - `linux-x86_64`,
  - `macos-arm64`,
-- source of truth: GitHub Release assets produced by this repo’s tag CI,
+- source of truth: GitHub Release assets uploaded from the repo’s release
+ distribution target,
 - installed payload: the staged-prefix distribution tarball (`bin/`, `lib/`,
  `include/`, `share/`).
 
@@ -137,6 +138,10 @@ the asset tag explicitly:
 DIST_VERSION=v0.1.1 make dist
 ```
 
+Default branch CI does not publish GitHub Release assets. Its scheduled nightly
+path may upload short-retention distribution artifacts for inspection, but those
+artifacts are separate from release publication.
+
 The archive contains the release-required installed `bin/`, `lib/`,
 `include/`, and `share/` prefix payloads, plus a dedicated release-root `Makefile`
 that supports `make install PREFIX=/usr/local`, staged
@@ -154,11 +159,14 @@ intermediate object files, source-only Markdown manpage copies, editor build
 metadata, cache directories, dependency build trees, `node_modules`, and
 editor scratch files are not included.
 
-## Relationship to This Repo’s Release CI
+## Relationship to This Repo’s CI
 
 This action does not build Silk. It consumes the same staged-prefix tarball that
-the tag release workflow already publishes to GitHub Releases. That keeps
-release CI as the single packaging path for downstream GitHub Actions usage.
-The release workflow should use `make dist` on both Linux and macOS runners,
-and macOS release packages are built from the macOS-native dependency layout
-instead of reusing Linux dependency archives.
+the Silk compiler repository publishes as release assets.
+
+The default CI workflow keeps artifact publication on the scheduled nightly
+path only. Pull requests, branch pushes, tag pushes, and manual dispatches run
+correctness checks without uploading staged-prefix artifacts. Release
+publication should use the same `make dist` outputs described above and publish
+them deliberately to GitHub Releases; macOS release packages are built from the
+macOS-native dependency layout instead of reusing Linux dependency archives.

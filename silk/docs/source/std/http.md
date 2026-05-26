@@ -53,10 +53,11 @@ Not implemented (yet):
 ```silk
 module std::http;
 
-import net from "std/net";
-import strings from "std/strings";
-import map from "std/map";
-import set from "std/set";
+import std::net;
+import std::result;
+import std::strings;
+import std::map;
+import std::set;
 
 export let DEFAULT_MAX_HEADER_BYTES: i64 = 16384;
 
@@ -76,7 +77,7 @@ export error Error {
 
 export type HeaderMap = std::map::HashMap(string, string);
 export type HeaderSet = std::set::SetMap(string);
-export type HeadersMapResult = Result(HeadersMap, Error);
+export type HeadersMapResult = std::result::Result(HeadersMap, Error);
 
 // Request header carrier. Keys and values are borrowed string views.
 export struct HeadersMap { /* opaque */ }
@@ -96,7 +97,7 @@ impl HeadersMap {
 
 // Parsed HTTP request backed by owned bytes.
 struct Request { /* opaque */ }
-export type RequestResult = Result(Request, Error);
+export type RequestResult = std::result::Result(Request, Error);
 impl Request {
   public fn parse (input: string) -> RequestResult;
   public fn method (self: &Request) -> string;
@@ -109,7 +110,7 @@ impl Request {
 
 // Parsed HTTP response backed by owned bytes.
 struct Response { /* opaque */ }
-export type ResponseResult = Result(Response, Error);
+export type ResponseResult = std::result::Result(Response, Error);
 impl Response {
   public fn parse (input: string) -> ResponseResult;
   public fn version (self: &Response) -> string;
@@ -136,6 +137,7 @@ impl Connection {
   // Server helpers.
   public fn read_request (mut self: &Connection) -> RequestResult;
   public fn write_response (self: &Connection, status: int, reason: string, body: string) -> Error?;
+  public fn write_response_with_headers (self: &Connection, status: int, reason: string, headers: &HeadersMap, body: string) -> Error?;
 }
 
 // One-shot client helpers.
@@ -194,6 +196,10 @@ Notes:
 - Header-aware request helpers append user headers after the generated `Host`
  header. `Host`, `Connection`, and `Content-Length` remain controlled by the
  transport and are not emitted from `HeadersMap`.
+- Header-aware response helpers append user headers after the status line.
+ `Connection` and `Content-Length` remain controlled by the transport and are
+ not emitted from `HeadersMap`; use this for response metadata such as
+ `Content-Type` or `ETag`.
 - Async header-aware helpers take ownership of the `HeadersMap` value passed to
  the task worker and drop its backing storage before returning.
 - Stream helpers map `std::stream` failures to `ERR_STREAM`, except allocation
@@ -207,8 +213,8 @@ Notes:
 ## Example (Client)
 
 ```silk
-import http from "std/http";
-import net from "std/net";
+import std::http;
+import std::net;
 
 export fn main () -> int {
   // Plain HTTP to a loopback server (no DNS in the current stdlib).

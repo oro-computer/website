@@ -31,15 +31,16 @@ buffer accessors.
 
 ## Platform and linking
 
-`std::ggml` is currently supported on the native hosted baselines:
+`std::ggml` is currently supported on these hosted target layouts:
 
-- `linux/x86_64`
+- `linux/x86_64` with glibc
+- `linux/x86_64` with musl
 - `macos/aarch64` on Apple Silicon hosts
 
-On those supported native hosts:
+On those supported target layouts:
 
 - `zig build deps` stages the required upstream archives and the Silk shim
- archive under `vendor/lib/<host-layout>/`,
+ archive under `vendor/lib/<target-layout>/`,
 - the deps workflow pins ggml to the current CPU-only bring-up configuration:
  `GGML_OPENMP=OFF`, `GGML_ACCELERATE=OFF`, `GGML_BLAS=OFF`, and
  `GGML_METAL=OFF`,
@@ -59,8 +60,10 @@ The current auto-linked archives are:
 Because ggml is built as C++ on the hosted baseline, `silk build` also adds
 the required host runtime link dependencies automatically:
 
-- on `linux/x86_64`: `libstdc++.so.6`, `libgcc_s.so.1`, `libm.so.6`, and
- `libdl.so.2`,
+- on `linux/x86_64` glibc: `libstdc++.so.6`, `libgcc_s.so.1`,
+ `libm.so.6`, and `libdl.so.2`,
+- on `linux/x86_64` musl: `libstdc++.so.6`, `libgcc_s.so.1`, and musl's
+ unified `libc.so` for math and dynamic-loader APIs,
 - on `macos/aarch64`: `-lc++` for the native Mach-O host linker.
 
 See also:
@@ -71,8 +74,8 @@ See also:
 
 ## Quick Start Guide
 
-On a supported native host, build the vendored ggml archives first, then build
-and run the training example:
+On a supported native target layout, build the vendored ggml archives first,
+then build and run the training example:
 
 ```sh
 zig build deps
@@ -138,7 +141,7 @@ Implications:
 
 ## Error model
 
-All fallible wrapper methods return `Result(..., GgmlFailed)`.
+All fallible wrapper methods return `std::result::Result(..., GgmlFailed)`.
 
 Public error-code constants:
 
@@ -169,6 +172,9 @@ contract violations such as:
 ## Exported API
 ```silk
 module std::ggml;
+
+import std::result;
+
 type Type = i32;
 
 let TYPE_F32: i32;
@@ -206,14 +212,14 @@ impl GgmlFailed {
   public fn kind (self: &GgmlFailed) -> GgmlErrorKind;
 }
 
-type ContextResult = Result(Context, GgmlFailed);
-type TensorResult = Result(Tensor, GgmlFailed);
-type GraphResult = Result(Graph, GgmlFailed);
-type BoolResult = Result(bool, GgmlFailed);
-type F32Result = Result(f32, GgmlFailed);
-type IntResult = Result(i32, GgmlFailed);
-type I64Result = Result(i64, GgmlFailed);
-type U64Result = Result(u64, GgmlFailed);
+type ContextResult = std::result::Result(Context, GgmlFailed);
+type TensorResult = std::result::Result(Tensor, GgmlFailed);
+type GraphResult = std::result::Result(Graph, GgmlFailed);
+type BoolResult = std::result::Result(bool, GgmlFailed);
+type F32Result = std::result::Result(f32, GgmlFailed);
+type IntResult = std::result::Result(i32, GgmlFailed);
+type I64Result = std::result::Result(i64, GgmlFailed);
+type U64Result = std::result::Result(u64, GgmlFailed);
 
 struct Context {
   handle: u64,
@@ -316,7 +322,7 @@ impl Graph {
 ## Example: elementwise graph
 
 ```silk
-import ggml from "std/ggml";
+import std::ggml;
 
 fn main () -> int {
   let ctx = match std::ggml::Context.init(16 * 1024 * 1024) {
@@ -378,7 +384,7 @@ Because `Tensor.set_f32(...)` fills an entire tensor with one value, it is easy
 to build a smoke-test matrix multiply with a predictable result:
 
 ```silk
-import ggml from "std/ggml";
+import std::ggml;
 
 fn main () -> int {
   let ctx = match std::ggml::Context.init(16 * 1024 * 1024) {

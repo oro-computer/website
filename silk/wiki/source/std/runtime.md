@@ -14,36 +14,36 @@ Canonical doc: [runtime](?p=std/runtime).
 ## Importing
 
 ```silk
-import build from "std/runtime/build";
-import mem from "std/runtime/mem";
+import std::runtime::build;
+import std::runtime::mem;
 ```
 
 ## Examples
 
 ### Example: build metadata + raw memory
 ```silk
-import build from "std/runtime/build";
-import mem from "std/runtime/mem";
+import std::runtime::build;
+import std::runtime::mem;
 
 fn main () -> int {
   // This reports whether the current artifact was built with `--debug` / `-g`.
-  if build::is_debug() {
+  if std::runtime::build::is_debug() {
     return 1;
   }
 
-  // `runtime::mem` provides low-level allocation and raw load/store.
-  let ptr: u64 = mem::alloc(4);
+  // `std::runtime::mem` provides low-level allocation and raw load/store.
+  let ptr: u64 = std::runtime::mem::alloc(4);
   if ptr == 0 { return 2; }
 
-  mem::store_u8(ptr, 0, mem::trunc_u8(65));
-  mem::store_u8(ptr, 1, mem::trunc_u8(66));
+  std::runtime::mem::store_u8(ptr, 0, std::runtime::mem::trunc_u8(65));
+  std::runtime::mem::store_u8(ptr, 1, std::runtime::mem::trunc_u8(66));
 
-  if mem::load_u8(ptr, 0) != 65 {
-    mem::free(ptr);
+  if std::runtime::mem::load_u8(ptr, 0) != 65 {
+    std::runtime::mem::free(ptr);
     return 3;
   }
 
-  mem::free(ptr);
+  std::runtime::mem::free(ptr);
   return 0;
 }
 ```

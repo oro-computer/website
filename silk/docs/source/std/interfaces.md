@@ -107,11 +107,11 @@ interface Serialize(S = string) {
 }
 
 interface TrySerialize(E, S = std::strings::String) {
-  fn try_serialize () -> Result(S, E);
+  fn try_serialize () -> std::result::Result(S, E);
 }
 
 interface Parse(E, S = string) {
-  fn parse (value: S) -> Result(Self, E);
+  fn parse (value: S) -> std::result::Result(Self, E);
 }
 
 interface Deserialize(S = string) {
@@ -325,10 +325,10 @@ impl Counter as Len {
 
 ```silk
 import c_owned from "std/ffi/c_owned";
-import path from "std/path";
-import strings from "std/strings";
-import url from "std/url";
-import mem from "std/runtime/mem";
+import std::path;
+import std::strings;
+import std::url;
+import std::runtime::mem;
 
 fn main () -> int {
   let owned_r = std::strings::String.from_string("hello");
@@ -384,8 +384,8 @@ fn main () -> int {
 ## Example (`TrySerialize` for owned text output)
 
 ```silk
-import semver from "std/semver";
-import uuid from "std/uuid";
+import std::semver;
+import std::uuid;
 
 fn main () -> int {
   match (std::semver::Version.parse("1.2.3-alpha+build.5")) {
@@ -426,10 +426,10 @@ fn main () -> int {
 ## Example (`Parse` in the stdlib)
 
 ```silk
-import path from "std/path";
-import semver from "std/semver";
-import url from "std/url";
-import uuid from "std/uuid";
+import std::path;
+import std::semver;
+import std::url;
+import std::uuid;
 
 fn main () -> int {
   match (std::semver::Version.parse("1.2.3")) {

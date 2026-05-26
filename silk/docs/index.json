@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-05-14T01:10:33+00:00",
+  "generatedAt": "2026-05-24T02:57:20+00:00",
   "kind": "docs",
-  "count": 287,
+  "count": 291,
   "sections": [
     {
       "name": "overview",
@@ -520,6 +520,11 @@
           "id": "std/url",
           "title": "`std::url`",
           "file": "std/url.md"
+        },
+        {
+          "id": "std/mime",
+          "title": "`std::mime`",
+          "file": "std/mime.md"
         },
         {
           "id": "std/semver",
@@ -1385,6 +1390,21 @@
           "id": "man/silk-check.1",
           "title": "[`silk-check(1)`](?p=man/silk-check.1) \u2014 Parse and Type-Check",
           "file": "man/silk-check.1.md"
+        },
+        {
+          "id": "man/silk-targets.1",
+          "title": "[`silk-targets(1)`](?p=man/silk-targets.1) - Inspect Target Capabilities",
+          "file": "man/silk-targets.1.md"
+        },
+        {
+          "id": "man/silk-graph.1",
+          "title": "[`silk-graph(1)`](?p=man/silk-graph.1) - Inspect Module Graphs",
+          "file": "man/silk-graph.1.md"
+        },
+        {
+          "id": "man/silk-size.1",
+          "title": "[`silk-size(1)`](?p=man/silk-size.1) - Inspect Artifact Sizes",
+          "file": "man/silk-size.1.md"
         },
         {
           "id": "man/silk-test.1",

@@ -9,7 +9,7 @@ module, and provides a high-level `Context` / `Frame` workflow for rendering
 into `std::window` AppKit windows.
 
 The shipped implementation currently supports macOS. Linux exposes the same
-public package namespaces for import/type-checking, but runtime-facing operations
+public package names for import/type-checking, but runtime-facing operations
 return `Err(MetalFailed{ code: UnsupportedPlatform })` without declaring Metal
 runtime externs for that target. Other non-macOS targets keep the documented
 capability checks and high-level unsupported results.
@@ -18,9 +18,11 @@ capability checks and high-level unsupported results.
 
 ```silk
 module std::graphics::metal;
-import runtime_metal from "std/runtime/graphics/metal";
-import mem from "std/runtime/mem";
-import window from "std/window";
+
+import std::result;
+import std::runtime::graphics::metal;
+import std::runtime::mem;
+import std::window;
 
 export type Handle = u64;
 export type PixelFormat = u64;
@@ -108,22 +110,22 @@ export struct Frame {
   encoder: RenderCommandEncoder,
 }
 
-export type RenderResult = Result(bool, MetalFailed);
-export type DeviceResult = Result(Device, MetalFailed);
-export type CommandQueueResult = Result(CommandQueue, MetalFailed);
-export type CommandBufferResult = Result(CommandBuffer, MetalFailed);
-export type LayerResult = Result(Layer, MetalFailed);
-export type DrawableResult = Result(Drawable, MetalFailed);
-export type TextureResult = Result(Texture, MetalFailed);
-export type RenderPassDescriptorResult = Result(RenderPassDescriptor, MetalFailed);
-export type RenderCommandEncoderResult = Result(RenderCommandEncoder, MetalFailed);
-export type BufferResult = Result(Buffer, MetalFailed);
-export type LibraryResult = Result(Library, MetalFailed);
-export type FunctionResult = Result(Function, MetalFailed);
-export type RenderPipelineDescriptorResult = Result(RenderPipelineDescriptor, MetalFailed);
-export type RenderPipelineStateResult = Result(RenderPipelineState, MetalFailed);
-export type ContextResult = Result(Context, MetalFailed);
-export type FrameResult = Result(Frame, MetalFailed);
+export type RenderResult = std::result::Result(bool, MetalFailed);
+export type DeviceResult = std::result::Result(Device, MetalFailed);
+export type CommandQueueResult = std::result::Result(CommandQueue, MetalFailed);
+export type CommandBufferResult = std::result::Result(CommandBuffer, MetalFailed);
+export type LayerResult = std::result::Result(Layer, MetalFailed);
+export type DrawableResult = std::result::Result(Drawable, MetalFailed);
+export type TextureResult = std::result::Result(Texture, MetalFailed);
+export type RenderPassDescriptorResult = std::result::Result(RenderPassDescriptor, MetalFailed);
+export type RenderCommandEncoderResult = std::result::Result(RenderCommandEncoder, MetalFailed);
+export type BufferResult = std::result::Result(Buffer, MetalFailed);
+export type LibraryResult = std::result::Result(Library, MetalFailed);
+export type FunctionResult = std::result::Result(Function, MetalFailed);
+export type RenderPipelineDescriptorResult = std::result::Result(RenderPipelineDescriptor, MetalFailed);
+export type RenderPipelineStateResult = std::result::Result(RenderPipelineState, MetalFailed);
+export type ContextResult = std::result::Result(Context, MetalFailed);
+export type FrameResult = std::result::Result(Frame, MetalFailed);
 
 export fn failed (kind: MetalErrorKind) -> MetalFailed;
 export fn default_context_options (width: int, height: int) -> ContextOptions;

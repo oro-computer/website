@@ -2,8 +2,7 @@
 
 The `docs/std/` directory specifies the
 intended API and structure. A minimal in-tree stdlib source tree also
-exists under `std/` (used by the toolchain to satisfy `from "std/..."` imports
-and direct std ABI imports).
+exists under `std/` (used by the toolchain to satisfy `import std::...;`).
 
 As of the current compiler/backend subset, the in-tree stdlib includes a
 small but functional set of utilities implemented purely in Silk (including

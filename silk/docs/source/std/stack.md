@@ -34,7 +34,7 @@ struct FixedStack(T) { ... }
 Common methods:
 
 ```silk
-public fn init (cap: i64) -> Result(Self, std::memory::AllocFailed);
+public fn init (cap: i64) -> std::result::Result(Self, std::memory::AllocFailed);
 public fn try_init (cap: i64) -> Self?;
 public fn empty () -> Self;
 public fn push (mut self: &Self, value: T) -> std::memory::OutOfMemory?;

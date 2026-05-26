@@ -15,19 +15,20 @@ Canonical doc: [set](?p=std/set).
 ## Importing
 
 ```silk
-import set from "std/set";
+import std::set;
 ```
 
 ## Examples
 
 ### Example: `SetMap(u64)` basic usage
 ```silk
-import set from "std/set";
-import memory from "std/memory";
+import std::set;
+import std::result;
+import std::memory;
 
-type Set = set::SetMap(u64);
-type InitResult = Result(Set, memory::AllocFailed);
-type InsertResult = Result(bool, memory::OutOfMemory);
+type Set = std::set::SetMap(u64);
+type InitResult = std::result::Result(Set, std::memory::AllocFailed);
+type InsertResult = std::result::Result(bool, std::memory::OutOfMemory);
 
 fn main () -> int {
   match (Set.init(4)) {

@@ -99,10 +99,10 @@ The dependency key is local to the importing manifest. In Cove:
 
 - `docroot` maps to `deps/docroot` because the manifest declares `path`.
 - `access_log` maps to `packages/access_log` because the key is searched under
-  contextual `packages/` roots.
+ contextual `packages/` roots.
 - The dependency packages may still use namespaced package identities such as
-  `cove::docroot` and `cove::access_log` inside their own manifests and source
-  files.
+ `cove::docroot` and `cove::access_log` inside their own manifests and source
+ files.
 
 Quoted import strings use `/` paths. Use `::` for Silk package namespaces and
 qualified names in source code.
@@ -226,18 +226,18 @@ From the Silk compiler checkout root, use the same commands with
 ## Rules of thumb
 
 - Keep dependency roots real and buildable on disk; Silk does not fetch remote
-  packages during `silk build`.
+ packages during `silk build`.
 - Use `path` for active local development and vendored paths outside
-  `packages/`.
+ `packages/`.
 - Use `packages/<dependency-key>/` for pathless dependencies you want the
-  package graph to find automatically.
+ package graph to find automatically.
 - Keep the dependency key stable for imports, even if the dependency's
-  `package.name` is namespaced.
+ `package.name` is namespaced.
 - Export only the names downstream packages should call.
 - Add definition files under `defs/` when a dependency may be consumed as a
-  binary or interface-only package.
+ binary or interface-only package.
 - Use `[dist]` to make the package payload explicit before publishing or
-  vendoring it.
+ vendoring it.
 
 ## Next
 

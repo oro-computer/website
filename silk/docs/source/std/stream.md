@@ -24,10 +24,12 @@ See also:
 ```silk
 module std::stream;
 
-import arrays from "std/arrays";
-import buffer from "std/buffer";
-import interfaces from "std/interfaces";
-import memory from "std/memory";
+import std::arrays;
+import std::buffer;
+import std::interfaces;
+import std::memory;
+import std::result;
+
 export enum StreamErrorKind {
   OutOfMemory,
   InvalidInput,
@@ -52,7 +54,7 @@ export struct Bytes {
   handle: u64,
 }
 
-export type BytesResult = Result(Bytes, std::memory::AllocFailed);
+export type BytesResult = std::result::Result(Bytes, std::memory::AllocFailed);
 
 impl Bytes {
   public fn empty () -> Bytes;
@@ -83,7 +85,7 @@ export enum Read {
   Chunk(u64),
 }
 
-export type ReadResult = Result(Read, StreamFailed);
+export type ReadResult = std::result::Result(Read, StreamFailed);
 
 // Readable end.
 export struct ReadableStream {
@@ -126,7 +128,7 @@ export struct PassThroughStream {
   writable: WritableStream,
 }
 
-export type PassThroughResult = Result(PassThroughStream, StreamFailed);
+export type PassThroughResult = std::result::Result(PassThroughStream, StreamFailed);
 
 impl PassThroughStream {
   public fn init_default () -> PassThroughResult;
@@ -136,7 +138,7 @@ impl PassThroughStream {
 }
 
 // Transformer output.
-export type TransformBytesResult = Result(Bytes, StreamFailed);
+export type TransformBytesResult = std::result::Result(Bytes, StreamFailed);
 
 // A paired transform stage.
 export struct TransformStream {
@@ -146,7 +148,7 @@ export struct TransformStream {
   transform_writable: WritableStream,
 }
 
-export type TransformResult = Result(TransformStream, StreamFailed);
+export type TransformResult = std::result::Result(TransformStream, StreamFailed);
 
 impl TransformStream {
   public fn init_default () -> TransformResult;
@@ -159,14 +161,14 @@ impl TransformStream {
 }
 
 // Pipe a readable into a writable until done.
-export fn pipe_to (mut src: ReadableStream, mut dst: WritableStream) -> Result(int, StreamFailed);
+export fn pipe_to (mut src: ReadableStream, mut dst: WritableStream) -> std::result::Result(int, StreamFailed);
 
 // Pipe until done or until aborted.
 export fn pipe_to_abortable (
   mut src: ReadableStream,
   mut dst: WritableStream,
   sig: std::abort_controller::AbortSignalBorrow?
-) -> Result(int, StreamFailed);
+) -> std::result::Result(int, StreamFailed);
 ```
 
 ## Semantics
@@ -216,7 +218,7 @@ transform loop in a `task` and rely on backpressure to bound memory.
 ### Producer → consumer (tasks)
 
 ```silk
-import stream from "std/stream";
+import std::stream;
 
 task fn producer (w: std::stream::WritableStream) -> int { ... }
 task fn consumer (r: std::stream::ReadableStream) -> int { ... }
@@ -261,9 +263,9 @@ Typical wiring:
 `std::fs` provides task-based helpers for piping files into/out of streams:
 
 ```silk
-import fs from "std/fs";
-import fs_stream from "std/fs/stream";
-import stream from "std/stream";
+import std::fs;
+import std::fs::stream;
+import std::stream;
 
 async fn main () -> int {
   task {
@@ -307,7 +309,7 @@ observed between read/write steps; they do not yet interrupt a blocking
 `ReadableStream.read()` call.
 
 ```silk
-import stream from "std/stream";
+import std::stream;
 
 fn run_pipeline (src: std::stream::ReadableStream, dst: std::stream::WritableStream) -> int {
   let r = std::stream::pipe_to(src, dst);

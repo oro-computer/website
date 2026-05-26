@@ -22,13 +22,13 @@ Test executables use the native host target when Silk has a host-backed executab
 
 When `--jobs` is greater than `1`, `silk test` runs test processes in parallel but keeps TAP output deterministic by buffering per-test output and printing results in the original selection order.
 
-When explicit input files are used (no `--package`), the `silk` CLI may load additional packages into the module set by resolving bare-specifier package imports (for example `import util from "util";`) from the package search path (`SILK_PACKAGE_PATH`).
+When explicit input files are used (no `--package`), the `silk` CLI may load additional packages into the module set by resolving unquoted package imports (for example `import util;` or `import util from util;`) from the package search path (`SILK_PACKAGE_PATH`).
 
 ## Options
 
 - `--help`, `-h` — show command help and exit.
-- `--nostd`, `-nostd` — disable stdlib auto-loading for std imports.
-- `--std-root <path>` — override the stdlib root directory used to resolve `from "std/..."` module specifiers and direct std ABI imports.
+- `--nostd`, `-nostd` — disable stdlib auto-loading for `import std::...;`.
+- `--std-root <path>` — override the stdlib root directory used to resolve `import std::...;`.
 - `--std-lib <path>` — select a stdlib archive path for linking hosted builds.
 - `--std <path>` — alias of `--std-root` when `<path>` does not end in `.a`.
 - `--std <path>.a` — alias of `--std-lib`.
@@ -45,8 +45,8 @@ When explicit input files are used (no `--package`), the `silk` CLI may load add
 - `--package <dir|manifest>`, `--pkg <dir|manifest>` — load the module set from a `silk.toml` manifest instead of explicit input files. When `<file> ...` inputs are omitted and `--package` / `--pkg` is also omitted, but `./silk.toml` exists, `silk test` behaves as if `--package .` was provided.
  - when the root manifest enables a build module via `[build].build_module = true`, `silk test --package` runs that build module and uses the emitted manifest/module set for package tests,
  - for compatibility, package tests currently invoke the build module with the action string `build`,
- - manifest-native link metadata for the test harness (`[[target]].inputs`, `cflags`, `ldflags`, `needed`, and `runpath`) is taken from `[build].default_target` when it names a code target, otherwise the first declared code target; `kind = "man"` targets are ignored for this purpose.
- - raw manifest native sources (`.c`, `.h`, and supported `.m`) are compiled to temporary objects for the generated test harness; `.o`, `.a`, shared libraries, needed libraries, and runpaths are linked as declared.
+ - manifest-native link metadata for the test harness (`[[target]].inputs`, `cflags`, `ldflags`, `needed`, and `runpath`) is taken from `[build].default_target` when it names a code target, otherwise the first declared code target; matching package and dependency `[[native]]` entries are merged as package-level native requirements; `kind = "man"` targets are ignored for target metadata.
+ - raw manifest native sources (`.c`, `.h`, and supported `.m`) are compiled to temporary objects for the generated test harness; `.o`, `.a`, shared libraries, needed libraries, runpaths, and supported `ldflags` entries are linked as declared.
  - hosted vendored native-input auto-linking for libsodium, mbedTLS, SQLite, and libssh2 follows the same supported-target rules as `silk build --package`.
  - if a package has no code targets, tests still run from the package source set but no manifest link metadata is applied.
 - `--` — end of options; treat following args as file paths (even if they begin with `-`).
@@ -70,7 +70,7 @@ silk test --package . --filter url
 ## Environment
 
 - `PREFIX` — installation prefix used for the system package search root at `PREFIX/lib/silk` (searched last when it exists). Default: `/usr/local`.
-- `SILK_PACKAGE_PATH` — primary package search path for bare-specifier imports (entries separated by `:` on POSIX, `;` on Windows). The compiler appends `PREFIX/lib/silk` as the last search path entry when it exists.
+- `SILK_PACKAGE_PATH` — primary package search path for bare-specifier imports and pathless manifest dependencies (entries separated by `:` on POSIX, `;` on Windows). During package graph work, relative entries are resolved from the importing package root and then upward to the graph root. The compiler appends `PREFIX/lib/silk` as the last search path entry when it exists; dotted dependency keys such as `my.dep.b` map to slash directories such as `my/dep/b`.
 - `SILK_Z3_LIB` — path to a dynamic Z3 library used by the Formal Silk verifier.
 - `SILK_VERIFY_JOBS` — override the number of worker threads used for Formal Silk verification (default: auto; capped at 8).
 - `SILK_TEST_TIMEOUT_MS` — per-top-level-test process timeout in milliseconds (default: `30000`).

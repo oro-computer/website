@@ -8,11 +8,14 @@
 
 ## Synopsis
 
-- `silk env`
+- `silk env [--json]`
 
 ## Description
 
 `silk env` prints a list of key environment variables consulted by the `silk` CLI for configuration and debugging. The output is intended to be easy to paste into bug reports.
+
+Use `--json` for tooling that needs the same environment facts without parsing
+`NAME=value` lines.
 
 ## Output format
 
@@ -20,17 +23,24 @@
 - Unset variables are printed as `NAME=<unset>`.
 - Variables set to an empty string are printed as `NAME=<empty>`.
 
+JSON output is newline-terminated and contains `schemaVersion`, `command`, and
+`vars`. Each variable entry includes `name`, `state` (`unset`, `empty`, or
+`set`), and `value` (`null` when unset).
+
 ## Variables
 
 The output includes, at minimum:
 
 - `SILK_DEBUG_BACKEND` — enable backend debug output when set to a non-empty, non-`0` value.
 - `SILK_DEBUG_BACKEND_ENUMS` — enable enum-lowering debug output.
-- `SILK_STD_ROOT` — override stdlib root used to resolve `from "std/..."` module specifiers and direct std ABI imports.
+- `SILK_STD_ROOT` — override stdlib root used to resolve `import std::...;`.
 - `SILK_STD_LIB` — override stdlib archive used for linking (`libsilk_std.a`).
 - `SILK_Z3_LIB` — override Z3 dynamic library path used for Formal Silk verification.
 - `SILK_VERIFY_JOBS` — override the number of worker threads used for Formal Silk verification (default: auto; capped at 8).
-- `SILK_PACKAGE_PATH` — package search path for bare-specifier imports.
+- `SILK_PACKAGE_PATH` — package search path for bare-specifier imports and
+ pathless manifest dependencies; dotted dependency keys map to slash
+ directories. During package graph work, relative entries are resolved from
+ the importing package root and then upward to the graph root.
 - `SILK_GUIDE_DB` — override the guide database path used by `silk guide`.
 - `SILK_GUIDE_PRINTER` — override the source printer command used by `silk guide --show` when `--printer` is not provided.
 - `SILK_ELF_INTERP` — override the ELF `PT_INTERP` dynamic loader path used for `linux-x86_64` outputs when emitting dynamically-linked executables/shared libraries.
@@ -53,6 +63,7 @@ The output includes, at minimum:
 
 ```sh
 silk env
+silk env --json
 ```
 
 ## See Also

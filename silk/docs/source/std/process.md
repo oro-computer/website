@@ -5,7 +5,7 @@
 `std::process` provides access to process-level operations that are not tied to
 environment variables, such as the current working directory.
 
-This module targets a hosted POSIX baseline (Linux/glibc) and is
+This module targets a hosted POSIX baseline (Linux with glibc or musl) and is
 implemented on top of the pluggable `std::runtime::process` interface. WASI
 support is Implemented (see “Platform notes”).
 
@@ -13,7 +13,9 @@ support is Implemented (see “Platform notes”).
 
 ```silk
 module std::process;
-  import strings from "std/strings";
+
+  import std::result;
+  import std::strings;
 
   enum ChdirErrorKind { InvalidInput, NotFound, NotADirectory, PermissionDenied, Unknown }
   error ChdirFailed { code: int }
@@ -22,9 +24,9 @@ module std::process;
   error GetCwdFailed { code: int, requested: i64 }
 
 export type GetCwdError = GetCwdFailed;
-export type GetCwdResult = Result(std::strings::String, GetCwdError);
+export type GetCwdResult = std::result::Result(std::strings::String, GetCwdError);
 export type ExecutablePathError = GetCwdFailed;
-export type ExecutablePathResult = Result(std::strings::String, ExecutablePathError);
+export type ExecutablePathResult = std::result::Result(std::strings::String, ExecutablePathError);
 
 export fn chdir (path: string) -> ChdirFailed?;
 export fn getcwd () -> GetCwdResult;
@@ -41,7 +43,7 @@ For convenience, `std::process` re-exports the high-level `std::process::child`
 surface so downstream users can write:
 
 ```silk
-import process from "std/process";
+import std::process;
 
 let mut cmd = std::process::Command.init("/bin/echo");
 cmd.arg("hello");
@@ -61,13 +63,13 @@ export enum Stdio { Inherit, Null, Pipe }
 export error Failed { code: int, stage: int, detail: int }
 
 export struct ExitStatus { /* opaque */ }
-export type WaitResult = Result(ExitStatus, Failed);
+export type WaitResult = std::result::Result(ExitStatus, Failed);
 
 export struct Child { /* opaque */ }
-export type ChildResult = Result(Child, Failed);
+export type ChildResult = std::result::Result(Child, Failed);
 
 export struct PtyChild { /* opaque */ }
-export type PtyChildResult = Result(PtyChild, Failed);
+export type PtyChildResult = std::result::Result(PtyChild, Failed);
 
 export struct Command { /* opaque */ }
 impl Command {

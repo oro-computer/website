@@ -74,7 +74,7 @@ available to user programs.
   module std::strings;
   ```
 
-The compiler treats module/package namespaces (including `std::...`) as part of the
+The compiler treats module/package names (including `std::...`) as part of the
 module set dependency graph, as specified in [packages imports exports](?p=language/packages-imports-exports).
 
 ## `std::runtime` (Runtime Interface Layer)
@@ -104,7 +104,7 @@ This layering is specified in [runtime](?p=std/runtime).
  path during builds, so that:
 
   ```silk
-  import strings from "std/strings";
+  import std::strings;
   ```
 
  resolves without the user having to explicitly pass the stdlib source files
@@ -112,9 +112,9 @@ This layering is specified in [runtime](?p=std/runtime).
 
 Notes:
 
-- This does **not** imply an implicit import of all std modules. Imports remain
- explicit. Linking-by-default means `std::` is available through
- `from "std/..."` imports and direct std ABI imports.
+- This does **not** imply an implicit `import std::...;` of all std modules;
+ importing remains explicit. Linking-by-default means “`std::` is available to
+ import”.
 - When the standard library is enabled (the default), the compiler provides a
  small implicit std prelude of selected symbols (for example `Result` and the
  `std::interfaces` interface names) as specified by `std::runtime::globals`.

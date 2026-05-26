@@ -91,7 +91,7 @@ references are rejected at task boundaries. Pass `AtomicU64Borrow` or
 `AtomicBoolBorrow` instead:
 
 ```silk
-import atomic from "std/atomic";
+import std::atomic;
 
 task fn worker (counter: std::atomic::AtomicU64Borrow) -> int {
   counter.fetch_add(1, std::atomic::Ordering::AcqRel);

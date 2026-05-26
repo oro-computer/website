@@ -7,12 +7,12 @@ Canonical doc: [package structure](?p=std/package-structure).
 
 ## Notes
 
-- Design + implementation: std-root resolution and `std/...` import mapping are implemented.
+- Design + implementation: std-root resolution and `std::...` import mapping are implemented.
 - Details: [package structure](?p=std/package-structure)
 
 ## How `std::` resolves
 
-- `foo::bar` resolves to `<std_root>/foo/bar.slk`.
+- `std::foo::bar` resolves to `<std_root>/foo/bar.slk`.
 - The std root can be overridden per build (CLI flags) or via environment variables.
 - On supported hosted targets, a prebuilt std archive (`libsilk_std.a`) can be used to link std modules without recompiling them.
 
@@ -20,12 +20,12 @@ Canonical doc: [package structure](?p=std/package-structure).
 
 ### Example: import a std module
 ```silk
-import io from "std/io";
-import strings from "std/strings";
+import std::io;
+import std::strings;
 
 fn main () -> int {
-  if strings::eq("a", "a") {
-    io::println("ok");
+  if std::strings::eq("a", "a") {
+    std::io::println("ok");
     return 0;
   }
   return 1;

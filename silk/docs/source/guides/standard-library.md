@@ -130,8 +130,10 @@ Silk includes parsers for data formats used in real programs:
 
 - `std::toml` for configuration (including `silk.toml` manifests)
 - `std::json` for interoperability and structured data exchange
+- `std::mime` for file-extension and content-type lookups in static servers,
+ package publication helpers, and indexing tools
 
-Reference: `std::toml`, `std::json`.
+Reference: `std::toml`, `std::json`, `std::mime`.
 
 ### `std::task`, `std::sync`, `std::temporal`
 

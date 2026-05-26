@@ -65,7 +65,7 @@ fn main () -> int {
       return value;
     },
     err: Boom => {
-      abort();
+      std::abort();
     },
   }
 }

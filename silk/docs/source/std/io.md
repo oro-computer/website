@@ -46,11 +46,11 @@ struct IOFailed { code: int, requested: i64 }
 struct TTYSize { rows: int, cols: int }
 struct TTYRawMode { handle: u64 }
 struct BufferedWriter { fd: int, buf: std::buffer::BufferU8, flush_threshold: i64 }
-export type IOResult = Result(int, IOFailed);
+export type IOResult = std::result::Result(int, IOFailed);
 export type IOError = IOFailed;
-export type IOErrorIntResult = Result(int, IOError);
-export type TTYRawModeResult = Result(TTYRawMode, IOFailed);
-export type BufferedWriterResult = Result(BufferedWriter, IOFailed);
+export type IOErrorIntResult = std::result::Result(int, IOError);
+export type TTYRawModeResult = std::result::Result(TTYRawMode, IOFailed);
+export type BufferedWriterResult = std::result::Result(BufferedWriter, IOFailed);
 
 export fn read (fd: int, buf: std::arrays::ByteSlice) -> IOResult;
 export fn write (fd: int, buf: std::arrays::ByteSlice) -> IOResult;
@@ -132,10 +132,11 @@ Notes:
  expectations in bindings and plain `string` parameters, so explicit
  `.as_string()` is no longer required solely to call helpers that take
  `string`.
-- Executable outputs import external libc symbols. On `linux/x86_64` with the
- glibc dynamic loader (`ld-linux`), `silk` automatically adds `libc.so.6` as a
- `DT_NEEDED` dependency when external symbols are present, so `--needed libc.so.6`
- is not required for typical hosted `std::io` use.
+- Executable outputs import external libc symbols. On `linux/x86_64`, `silk`
+ automatically adds the selected libc as a `DT_NEEDED` dependency when
+ external symbols are present (`libc.so.6` for glibc, `libc.so` for musl), so
+ a manual libc `--needed` entry is not required for typical hosted `std::io`
+ use.
 - `string` parameters in `ext` calls are lowered as C-string pointers in the
  current backend subset (the backing bytes include a trailing NUL terminator;
  Silk `string` length excludes it).
@@ -157,7 +158,7 @@ Notes:
 Example (formatted printing):
 
 ```silk
-import io from "std/io";
+import std::io;
 
 fn main () -> int {
   std::io::println("hello {s} answer={d}", "world", 42);
@@ -168,10 +169,10 @@ fn main () -> int {
 Example (stdin → stdout echo using unbuffered reads/writes):
 
 ```silk
-import io from "std/io";
-import arrays from "std/arrays";
-import runtime_io from "std/runtime/io";
-import mem from "std/runtime/mem";
+import std::io;
+import std::arrays;
+import std::runtime::io;
+import std::runtime::mem;
 
 fn main () -> int {
   let buf: u64 = std::runtime::mem::alloc(64);

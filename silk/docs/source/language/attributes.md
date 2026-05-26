@@ -131,7 +131,8 @@ conditional compilation contexts:
 - `os`: `"linux"`, `"macos"`, `"ios"`, `"android"`, `"windows"`, `"wasi"`, or `"unknown"`
  - `os` comparisons accept those names in any letter case.
 - `target`:
- - `"linux-x86_64"` or `"linux-aarch64"`
+ - `"linux-x86_64"`, `"linux-x86_64-musl"`, `"linux-aarch64"`, or
+ `"linux-aarch64-musl"`
  - `"macos-x86_64"` or `"macos-aarch64"`
  - `"ios-aarch64"`, `"ios-simulator-aarch64"`, or `"ios-simulator-x86_64"`
  - `"android-aarch64"`

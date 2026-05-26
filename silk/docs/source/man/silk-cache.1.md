@@ -8,13 +8,13 @@
 
 ## Synopsis
 
-- `silk cache [--package <dir|manifest>] [--cache-dir <path>]`
-- `silk cache path [--package <dir|manifest>] [--cache-dir <path>]`
-- `silk cache list [--package <dir|manifest>] [--cache-dir <path>]`
-- `silk cache inspect [--package <dir|manifest>] [--cache-dir <path>] [<entry>]`
-- `silk cache prune [--package <dir|manifest>] [--cache-dir <path>] [--max-age <age>] [--max-size <bytes>] [--keep-recent <n>] [--dry-run]`
-- `silk cache compact [--package <dir|manifest>] [--cache-dir <path>] [--max-age <age>] [--max-size <bytes>] [--keep-recent <n>] [--dry-run]`
-- `silk cache clear [--package <dir|manifest>] [--cache-dir <path>] [--dry-run]`
+- `silk cache [--json] [--package <dir|manifest>] [--cache-dir <path>]`
+- `silk cache path [--json] [--package <dir|manifest>] [--cache-dir <path>]`
+- `silk cache list [--json] [--package <dir|manifest>] [--cache-dir <path>]`
+- `silk cache inspect [--json] [--package <dir|manifest>] [--cache-dir <path>] [<entry>]`
+- `silk cache prune [--json] [--package <dir|manifest>] [--cache-dir <path>] [--max-age <age>] [--max-size <bytes>] [--keep-recent <n>] [--dry-run]`
+- `silk cache compact [--json] [--package <dir|manifest>] [--cache-dir <path>] [--max-age <age>] [--max-size <bytes>] [--keep-recent <n>] [--dry-run]`
+- `silk cache clear [--json] [--package <dir|manifest>] [--cache-dir <path>] [--dry-run]`
 
 ## Description
 
@@ -65,6 +65,7 @@ commands.
 ## Options
 
 - `--help`, `-h` — show command help and exit.
+- `--json` — emit newline-terminated, schema-versioned cache data on stdout.
 - `--package <dir|manifest>`, `--pkg <dir|manifest>` — resolve the cache root
  relative to the selected package root.
 - `--cache-dir <path>` — operate on an explicit cache root path.
@@ -91,6 +92,17 @@ commands.
 
 This allows cache maintenance without assuming the command owns every file under
 the cache root.
+
+## JSON Output
+
+All cache JSON packets include `schemaVersion`, `command`, `mode`, and
+`cacheRoot`.
+
+- `path` adds `path`.
+- `list` adds `present`, `buildRootPresent`, `summary`, and sorted `entries`.
+- `inspect` adds root `summary` and `policy`, or one `entry` and `policy`.
+- `prune`, `compact`, and `clear` add `dryRun`, `healedEntries`,
+ `removedEntries`, and `reclaimedBytes`.
 
 ## Automatic Maintenance
 
@@ -131,6 +143,9 @@ silk cache path
 
 # List recognized managed cache entries.
 silk cache list
+
+# List recognized entries as JSON.
+silk cache list --json
 
 # Inspect one build-cache entry or one std::build blob.
 silk cache inspect build/0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef

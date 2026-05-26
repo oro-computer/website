@@ -55,6 +55,7 @@ page:
 - `std::map` -> [map](?p=std/map)
 - `std::math` -> [math](?p=std/math)
 - `std::memory` -> [memory](?p=std/memory)
+- `std::mime` -> [mime](?p=std/mime)
 - `std::net` -> [net](?p=std/net)
 - `std::number` -> [number](?p=std/number)
 - `std::optional` -> [optional](?p=std/optional)

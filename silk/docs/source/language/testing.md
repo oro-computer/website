@@ -47,8 +47,8 @@ Rules:
 
 `silk test` executable runners use the native host target when Silk has a
 host-backed executable backend for it, and otherwise fall back to
-`linux-x86_64`. Formal Silk target metadata in `silk test` reflects that
-selected execution target.
+`linux-x86_64` (or `linux-x86_64-musl` on musl x86_64 Linux hosts). Formal
+Silk target metadata in `silk test` reflects that selected execution target.
 
 Doc comments:
 

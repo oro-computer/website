@@ -1,9 +1,9 @@
 # `std::sqlite`
 
 `std::sqlite` provides SQLite database
-primitives for the hosted POSIX baseline. On `linux/x86_64`, `silk build`
-auto-links the vendored `libsqlite3.a` so outputs do not depend on a system
-SQLite shared library at runtime.
+primitives for the hosted POSIX baseline. On supported hosted target layouts,
+`silk build` auto-links the vendored `libsqlite3.a` so outputs do not depend on
+a system SQLite shared library at runtime.
 
 The initial goals are:
 
@@ -15,12 +15,16 @@ The initial goals are:
 
 ## Linkage and Toolchain Integration
 
-On `linux/x86_64`, when a program imports `std::sqlite`, `silk build`
-automatically links the vendored `libsqlite3.a` archive from:
+When a program imports `std::sqlite`, `silk build` automatically links the
+target-matched vendored `libsqlite3.a` archive from:
 
-- repo builds: `vendor/lib/<host-layout>/libsqlite3.a`
-- staged toolchains: `build/lib/silk/vendor/lib/<host-layout>/libsqlite3.a`
-- installed toolchains: `<prefix>/lib/silk/vendor/lib/<host-layout>/libsqlite3.a`
+- repo builds: `vendor/lib/<target-layout>/libsqlite3.a`
+- staged toolchains: `build/lib/silk/vendor/lib/<target-layout>/libsqlite3.a`
+- installed toolchains: `<prefix>/lib/silk/vendor/lib/<target-layout>/libsqlite3.a`
+
+The current target layouts are `x64-linux` for glibc Linux x86_64,
+`x64-linux-musl` for musl Linux x86_64, and `aarch64-macos` for Apple Silicon
+macOS.
 
 This keeps `std::sqlite` runnable without requiring `libsqlite3.so.*` at
 runtime.
@@ -36,12 +40,13 @@ amalgamation source:
 - upstream: `https://www.sqlite.org/2026/sqlite-amalgamation-3510200.zip`
 - output staging (hosted baseline):
  - `vendor/deps/sqlite-amalgamation-3510200/` (source; ignored),
- - `vendor/lib/<host-layout>/libsqlite3.a` (static library; ignored),
- - `vendor/include/sqlite3.h` + `vendor/include/sqlite3ext.h` (headers; ignored).
+ - `vendor/lib/<target-layout>/libsqlite3.a` (static library; ignored),
+ - `vendor/include/<target-layout>/sqlite3.h` +
+ `vendor/include/<target-layout>/sqlite3ext.h` (headers; ignored).
 
 ## Error Model
 
-`std::sqlite` uses `Result(T, E)` and optional-error returns for
+`std::sqlite` uses `std::result::Result(T, E)` and optional-error returns for
 fallible operations that do not return a value.
 
 The stable error value is `SqliteFailed`:

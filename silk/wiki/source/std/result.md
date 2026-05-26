@@ -1,6 +1,6 @@
 # `std::result`
 
-`result` standardizes the common “success or error” return shape as
+`std::result` standardizes the common “success or error” return shape as
 `Result(T, E)` so APIs across `std::` compose cleanly.
 
 Canonical doc: [result](?p=std/result).
@@ -9,20 +9,20 @@ Canonical doc: [result](?p=std/result).
 
 - Implemented (current representation is a tagged union enum).
 - Details: [result](?p=std/result)
-- `Result` is available without an import through the std prelude module
- `std::runtime::globals`.
 
 ## Importing
 
-No import is needed to use `Result(T, E)` in normal user code. If you need to
-refer to the defining module itself, use a module-specifier import such as
-`import result from "std/result";`.
+```silk
+import std::result;
+```
 
 ## Examples
 
 ### Example: create and inspect a `Result`
 ```silk
-type R = Result(int, string);
+import std::result;
+
+type R = std::result::Result(int, string);
 
 fn main () -> int {
   let check: R = R.ok(123);

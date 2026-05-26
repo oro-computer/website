@@ -7,11 +7,11 @@ Canonical doc: [env](?p=std/env).
 
 ## Example: `get`
 ```silk
-import env from "std/env";
+import std::env;
 import { println } from "std/io";
 
 fn main () -> int {
-  let v_opt = env::get("HOME");
+  let v_opt = std::env::get("HOME");
   match (v_opt) {
     Some(v) => println("HOME = {}", v),
     None => println("HOME is not set"),
