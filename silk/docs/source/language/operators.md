@@ -145,9 +145,24 @@ Rules:
  - a `mut` borrowed reference parameter (`mut name: &Struct`).
  In the current backend subset, nested field assignment is supported only
  when the **leaf field** lowers to a single scalar slot (for example `bool`,
- integer scalars, and `f32`/`f64`).
+ integer scalars, `f32`/`f64`, and unit-only enum tags). Direct field
+ assignment also supports the complete hosted enum layout, including
+ payload-carrying enums, through both mutable local aggregates and `mut`
+ borrowed aggregate parameters.
 - Identifier lvalues must refer to `let mut` local bindings.
 - The type of `expr` must match the binding’s type.
+- When a direct field stores an ownership-tracked value, `name.field = source`
+ consumes the source binding, drops the old field value exactly once, and
+ installs the new owner. This applies to mutable local aggregates and
+ `mut &Struct` parameters.
+- A direct owned field on the right-hand side is consumed under the same rule
+ whether it initializes a new local or replaces an existing local. Thus
+ `target = owner.field; owner.field = empty;` is a valid take/reinitialize
+ sequence and the sentinel assignment does not destroy `target`.
+- If that exact field was previously moved out, it has no displaced owner to
+ destroy. Assignment installs the replacement directly and marks the field
+ initialized again; reading the field between the move and reinitialization
+ is a use-after-move error.
 - The assignment expression has type `void`.
 
 ### Compound assignment (`+=`, `-=`, `*=`, `/=`)

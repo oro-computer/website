@@ -24,7 +24,7 @@ move through ordinary distribution systems.
  and consumption.
 - Make the package unit portable across:
  - local source checkouts,
- - vendored directories in a repo,
+ - bundled directories in a repo,
  - unpacked GitHub release/source archives,
  - filesystem trees populated by third-party package managers,
  - and system package manager installs.
@@ -360,7 +360,7 @@ The dependency model should separate package identity from transport:
  - target conditions,
 - transport/materialization:
  - local path,
- - vendored checkout,
+ - bundled checkout,
  - unpacked tarball,
  - third-party-managed install tree,
  - system-installed package.
@@ -378,7 +378,7 @@ in the manifest, for example:
 oro::http = { version = "^1.4.0" }
 oro::tls = { version = ">=1.2.0, <2.0.0" }
 oro::local = { path = "../oro-local" }
-oro::vendored = { path = "vendor/oro-vendored", sha256 = "sha256:..." }
+oro::bundled = { path = "vendor/oro-bundled", sha256 = "sha256:..." }
 ```
 
 The initial supported forms should be:
@@ -426,7 +426,7 @@ The older manifest model:
 
 was a useful starting point but too narrow for distributed packages. The
 manifest now supports version-aware dependency descriptions, with
-integrity checks reserved for vendored snapshots, tarballs, or other
+integrity checks reserved for bundled snapshots, tarballs, or other
 content-addressed package materializations.
 
 ## Consumption Model
@@ -613,6 +613,6 @@ target-gated native C helper declared by the docroot package.
  inputs plus matching package/dependency `[[native]]` entries directly:
  `.c` / `.h` / supported `.m` sources are compiled to temporary objects for
  the generated test harness, while `.o`, `.a`, shared libraries, `needed`, and
- `runpath` entries are linked as declared. Hosted vendored native-input
+ `runpath` entries are linked as declared. Hosted built-in native-input
  auto-linking for libsodium, mbedTLS, SQLite, and libssh2 follows the same
  supported-target rules as package builds.

@@ -56,19 +56,6 @@ KEEP_DOCS_FILES = {
     "compiler/testing-strategy.md",
     "compiler/libsilk-quickstart.md",
     "compiler/zig-api.md",
-    "language/conventions.md",
-    "language/cheat-sheet.md",
-    "language/buffers.md",
-    "language/flow-overview.md",
-    "language/grammar.md",
-    "language/memory-model.md",
-    "language/packages-imports-exports.md",
-    "language/syntax-tour.md",
-    "language/typed-errors.md",
-    "std/crypto.md",
-    "std/json.md",
-    "std/url.md",
-    "std/uuid.md",
 }
 
 
@@ -120,6 +107,11 @@ def normalize_shared_markdown(markdown: str) -> str:
     markdown = markdown.replace("?p=docs/", "?p=")
     markdown = markdown.replace("docs/?p=", "?p=")
     markdown = markdown.replace("?p=wiki/", "wiki/?p=")
+    markdown = re.sub(
+        r"(?m)^(\s*//\s*)Works today\b",
+        r"\1Supported",
+        markdown,
+    )
 
     markdown = re.sub(r"(?m)^(\s*#{2,6}\s+)Syntax\s+\(Selected\)\s*$", r"\1Syntax", markdown)
     markdown = re.sub(
@@ -154,6 +146,9 @@ def normalize_user_facing_links(markdown: str) -> str:
             if target.startswith(prefix):
                 target = target[len(prefix):]
         target = {
+            "language/README": "start",
+            "usage/README": "start",
+            "usage/tutorials/README": "start",
             "std/runtime-event-loop": "std/runtime",
         }.get(target, target)
         if target in {"std/foo", "std/foo-bar", "man/my-app.7"}:
@@ -535,12 +530,32 @@ def sanitize_docs_markdown(rel: str, markdown: str) -> str:
         return out
 
     markdown = normalize_shared_markdown(markdown)
+    markdown = markdown.replace(
+        "`STATUS.md`",
+        "[implementation status](?p=compiler/implementation-status)",
+    )
+    markdown = markdown.replace(
+        "[implementation status](?p=compiler/implementation-status) (implementation status)",
+        "[implementation status](?p=compiler/implementation-status)",
+    )
+    markdown = re.sub(
+        r"\s*\(tracked[^)]*`PLAN\.md`\)",
+        "",
+        markdown,
+        flags=re.I,
+    )
     markdown = drop_named_section(markdown, "Arenas")
     markdown = drop_named_section(markdown, "Tests")
     if rel.startswith("std/"):
         markdown = sanitize_std_markdown(markdown)
     if rel == "spec/2026.md":
         markdown = sanitize_spec_markdown(markdown)
+    if rel == "compiler/vendored-deps.md":
+        markdown = markdown.replace(
+            "# Built-In Dependencies\n",
+            "# Built-In Dependencies (Legacy Link)\n",
+            1,
+        )
 
     out_lines: list[str] = []
     in_code = False

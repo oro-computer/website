@@ -51,8 +51,8 @@ wrapper remains available for compatibility during the transition.
 ### Linking When Static Z3 Is Bundled
 
 When the host-native `vendor/lib/<host-layout>/libz3.a` archive is present,
-`libsilk.a` vendors Z3 to support Formal Silk verification without requiring a
-runtime Z3 dynamic library. The vendored Z3 static library is built as **C++**,
+`libsilk.a` includes built-in Z3 to support Formal Silk verification without requiring a
+runtime Z3 dynamic library. The built-in Z3 static library is built as **C++**,
 so downstream embedders linking against `libsilk.a` MUST also link the system
 C++ runtime and any required system libraries:
 
@@ -79,6 +79,7 @@ The header must define:
  - configuring compilation (target triple, stdlib name, optimization level),
  - adding source buffers,
  - compiling Silk source to executables, libraries, or object files,
+ - serializing AMDGPU AQL dispatch packets for embedder-owned runtime paths,
  - interacting with diagnostics and error reporting.
 
 ### Initial C Header Shape (`include/silk/silk.h`)
@@ -148,6 +149,37 @@ The initial C header provided in the Silk compiler repository defines:
  - These types are passed and returned as two integer-like 8-byte slots in the
  current `linux/x86_64` backend subset.
 
+- Package export symbol helpers for C/Objective-C bridge headers:
+
+  ```c
+  SILK_C_ABI_EXPORT_FN(lumen_trail, silk_ios_daily_score)
+  /* expands to lumen_trail_silk_ios_daily_score */
+
+  SILK_PACKAGE_EXPORT_FN(lumen_trail, silk_ios_daily_score)
+  /* expands to __silk_export_fn__lumen_trail__silk_ios_daily_score */
+
+  SILK_PACKAGE_EXPORT_DATA(my_pkg, answer)
+  /* expands to __silk_export_data__my_pkg__answer */
+  ```
+
+ Notes:
+ - The macro arguments must be C identifier tokens.
+ - For nested Silk packages, pass the spelling that matches the selected
+ symbol family. `SILK_C_ABI_EXPORT_FN` uses the clean C ABI package spelling
+ with namespace separators collapsed to one `_`, so package `ui::model` is
+ passed as `ui_model`. `SILK_PACKAGE_EXPORT_FN` and
+ `SILK_PACKAGE_EXPORT_DATA` use the reserved default Silk package spelling
+ where each `:` becomes `_`, so the same package is passed as `ui__model`.
+ - `SILK_C_ABI_EXPORT_FN` matches exported functions declared as
+ `export attr(abi=c) fn ...` or `attr(abi=c) export fn ...` in a named
+ package.
+ - `SILK_PACKAGE_EXPORT_FN` and `SILK_PACKAGE_EXPORT_DATA` match the default
+ Silk package export symbols that keep the reserved `__silk_export_*__`
+ prefixes.
+ - These helpers are spelling aids for named-package bridge headers. They do
+ not change Silk import/export semantics, and they do not make named-package
+ exports part of the generated `--c-header` surface.
+
 - Opaque handles:
 
   ```c
@@ -173,6 +205,41 @@ The initial C header provided in the Silk compiler repository defines:
   void silk_abi_get_version(int *out_major,
                             int *out_minor,
                             int *out_patch);
+  ```
+
+- AMDGPU AQL packet helpers:
+
+  ```c
+  #define SILK_AMDGPU_AQL_DISPATCH_PACKET_SIZE 64
+
+  typedef enum SilkAmdGpuAqlFenceScope {
+      SILK_AMDGPU_AQL_FENCE_SCOPE_NONE = 0,
+      SILK_AMDGPU_AQL_FENCE_SCOPE_AGENT = 1,
+      SILK_AMDGPU_AQL_FENCE_SCOPE_SYSTEM = 2,
+  } SilkAmdGpuAqlFenceScope;
+
+  typedef struct SilkAmdGpuAqlDispatchPacketConfig {
+      uint16_t dimensions;
+      uint16_t workgroup_size_x;
+      uint16_t workgroup_size_y;
+      uint16_t workgroup_size_z;
+      uint32_t grid_size_x;
+      uint32_t grid_size_y;
+      uint32_t grid_size_z;
+      uint32_t private_segment_size;
+      uint32_t group_segment_size;
+      uint32_t max_flat_workgroup_size;
+      uint64_t kernel_object;
+      uint64_t kernarg_address;
+      uint64_t completion_signal;
+      uint8_t  barrier;
+      int32_t  acquire_fence_scope;
+      int32_t  release_fence_scope;
+  } SilkAmdGpuAqlDispatchPacketConfig;
+
+  bool silk_amdgpu_aql_dispatch_packet_build(
+      const SilkAmdGpuAqlDispatchPacketConfig *config,
+      uint8_t                                *out_packet);
   ```
 
 - Compiler lifecycle:
@@ -249,12 +316,35 @@ The initial C header provided in the Silk compiler repository defines:
  - `windows-x86_64`,
  - `windows-aarch64`,
  - `wasm32-unknown-unknown`,
- - `wasm32-wasi` (and other `wasm32` triples containing `wasi`).
+ - `wasm32-wasi` (and other `wasm32` triples containing `wasi`),
+ - `amdgcn-amd-amdhsa-gfx942`,
+ - `amdgcn-amd-amdhsa-gfx1100`,
+ - `amdgcn-amd-amdhsa-gfx1151`.
 
  For `wasm32` targets, only `SILK_OUTPUT_EXECUTABLE` is supported. The output
  bytes are a final WebAssembly module (`.wasm`) produced by the IR-backed wasm
  backend (`src/backend_wasm_ir.zig`), with a smaller constant-only fallback for
  programs that fit the constant subset.
+
+ For AMDGPU targets, `SILK_OUTPUT_OBJECT` emits an AMDHSA `.hsaco` code object
+ for the current source-kernel subset: exactly one exported root-package
+ void function with up to 32 immutable `u64` parameters whose body is empty or
+ contains only supported compiler-backed GPU call statements. Low-level
+ `__silk_amdgpu_*` calls retain integer-literal operands; the semantic
+ `std::gpu::device::store_u32_at_global_x` and
+ `std::gpu::device::classify_u32_at_global_x` helpers accept direct kernel
+ parameter names.
+ Dependency-package exports do not count as kernels. The function name becomes
+ the AMDHSA kernel metadata name and the descriptor symbol is `kernel_name.kd`.
+ Metadata register counts are derived from the highest SGPR/VGPR referenced by
+ the accepted source intrinsics, with 32 SGPRs and 64 VGPRs as minimum values.
+ [backend amdgpu](?p=compiler/backend-amdgpu) documents the canonical source-intrinsic
+ declaration sets and authoring diagnostics.
+
+ The provider-neutral mixed CPU/GPU executable option is currently a `silk
+ build --gpu-target` CLI surface, not a `libsilk` compiler-setting function.
+ This GPU-v1 work does not change the C99 ABI. Embedders retain the documented
+ standalone AMDGPU object and AQL packet APIs.
 
  The wasm backend is still early-stage, but it is no longer limited
  to single-module constant programs:
@@ -351,7 +441,8 @@ The initial C header provided in the Silk compiler repository defines:
   ```
 
  The returned bytes are target-specific: for example an ELF64 binary on
- `linux-x86_64`, or a `.wasm` module on `wasm32` targets.
+ `linux-x86_64`, a `.wasm` module on `wasm32` targets, or an AMDHSA `.hsaco`
+ code object on AMDGPU object outputs.
 
  Ownership rules:
 
@@ -366,17 +457,40 @@ The initial C header provided in the Silk compiler repository defines:
  Note: the compiler may still consult the filesystem to auto-load `std::...`
  modules unless `silk_compiler_set_nostd(compiler, true)` has been set.
 
+ AMDGPU runtime packet helper:
+
+ - `silk_amdgpu_aql_dispatch_packet_build` serializes a host-endian
+ `SilkAmdGpuAqlDispatchPacketConfig` into a 64-byte HSA AQL
+ kernel-dispatch packet.
+ - The packet bytes use the HSA field offsets documented in
+ [backend amdgpu](?p=compiler/backend-amdgpu): header at `0..2`, setup at `2..4`,
+ workgroup sizes at `4..10`, grid sizes at `12..24`, segment sizes at
+ `24..32`, `kernel_object` at `32..40`, `kernarg_address` at `40..48`,
+ and `completion_signal` at `56..64`.
+ - The function returns `false` for null pointers, invalid fence-scope values,
+ dimensions outside `1..3`, zero workgroup or grid sizes, grids smaller than
+ workgroups, non-1 unused dimensions, or flat work-group sizes larger than
+ `max_flat_workgroup_size`. A zero `max_flat_workgroup_size` in the C config
+ selects the conservative default of 1024 work-items. When `out_packet` is
+ non-null, it is zeroed before validation, so failed calls leave no stale
+ packet bytes.
+ - The helper is independent of `SilkCompiler` and does not read or write the
+ compiler last-error state.
+ - The helper only builds the packet. Queue creation, executable loading,
+ signal allocation, and doorbell submission remain the embedder or future
+ ROCR runtime driver's responsibility.
+
  Current Apple host-backed note:
 
  - the CLI / driver now supports non-const `ios-aarch64`,
- `ios-simulator-aarch64`, and `ios-simulator-x86_64` executable builds on
- Apple Silicon macOS for the current pure-Silk scalar subset, including
- reachable float-to-int lowering and portable bundled runtime helper
- families
+ `ios-simulator-aarch64`, and `ios-simulator-x86_64` executable, object,
+ static-library, and shared-library builds on Apple Silicon macOS for the
+ current pure-Silk scalar/library subset, including reachable float-to-int
+ lowering and portable bundled runtime helper families
  (number / regex / unicode / filesystem / dns / process / signal / term /
  pty / readline / task-pool / async),
  - `silk_compiler_build(...)` and `silk_compiler_build_to_bytes(...)` now
- support that same iOS host-backed subset on Apple Silicon macOS,
+ support that same iOS host-backed artifact subset on Apple Silicon macOS,
  - the remaining explicit `E4001` iOS limitation is narrower:
  it now applies only to narrower unsupported bundled runtime-internal
  helper families, while portable bundled helpers, hosted async/task
@@ -387,6 +501,11 @@ The initial C header provided in the Silk compiler repository defines:
  - `silk_compiler_build` always performs full front‑end validation for all modules
  added via `silk_compiler_add_source_buffer`:
  - it lexes and parses each module into an internal representation,
+ - it applies `attr(...)` declarations against the selected target before
+ monomorphization and type checking, matching the CLI pipeline; this is
+ required for `attr(device=gpu)` functions and target-gated declarations
+ to retain their intended execution contract through both filesystem and
+ in-memory output APIs,
  - it then type‑checks the *set* of modules as a unit, taking into account
  package/import relationships and exported constants, according to the
  language grammar and semantics documented under `docs/language/`,
@@ -394,7 +513,7 @@ The initial C header provided in the Silk compiler repository defines:
  `#assert`, `#invariant`, `#variant`, `#monovariant`, `#const`), it also runs the Z3-backed verifier
  and fails the build if verification fails (`E3001`..`E3008`),
  - the verifier is currently skipped for stdlib modules (`std::...`),
- - when the host-native archive is present, Z3 is linked from the vendored
+ - when the host-native archive is present, Z3 is linked from the built-in
  static archive `vendor/lib/<host-layout>/libz3.a`,
  - the verifier honors `SILK_Z3_LIB` (environment variable) to override
  the Z3 dynamic library at runtime,
@@ -501,9 +620,31 @@ The initial C header provided in the Silk compiler repository defines:
  - within the current `linux/x86_64` IR subset, a limited `struct` subset is supported at ABI boundaries:
  - within function bodies and internal helper calls, `struct` declarations with 0+ fields of supported value types are supported (scalar primitives, `string`, nested structs, and supported optionals),
  - at ABI boundaries for exported/FFI functions, only ABI-safe structs are currently supported: after slot-flattening, all scalar slots must be `i64`/`u64`/`f64` (until packed ABI mapping for smaller fields is implemented),
- - ordinary borrowed references/slices are rejected up front on `ext` declarations and unnamed/global-package `export fn` signatures; only opaque handle references (`&Handle` where `Handle` is `struct Name;`) may cross the external ABI boundary,
+ - ordinary borrowed references/slices are rejected up front on `ext` declarations and unnamed C-facing root-package `export fn` signatures; only opaque handle references (`&Handle` where `Handle` is `struct Name;`) may cross the external ABI boundary,
+ - named-package Silk object exports may accept slice parameters (`T[]`) in the compiler-owned package ABI; these lower to two integer-like scalars (`u64` pointer, then `i64` element count) and are not emitted through C header generation,
  - at the C ABI surface, exported function *parameters* support 1+ slot ABI-safe structs by lowering the struct to its scalar slots in order; downstream C callers should declare separate parameters for 3+ slot structs (by-value C struct parameters are ABI-compatible only for the 1–2 slot cases), while exported function *returns* support 1+ slot ABI-safe structs (3+ slot returns use the native backend’s sret return path and are ABI-compatible with returning an equivalent C struct by value),
  - in all cases, the compiler lowers a struct value into N scalar slots in field order and assigns argument/result locations according to System V AMD64 integer/SSE classification for those slots.
+ - named-package exported functions use the default package-qualified
+ symbol `__silk_export_fn__pkg__name` unless the declaration uses
+ `export attr(abi=c) fn ...` / `attr(abi=c) export fn ...`; C ABI
+ exports omit the reserved prefix and emit clean C symbols by collapsing
+ package `::` namespace separators to `_` and placing a single `_`
+ between the package namespace and function name; declaration-level
+ `attr(abi=c)` is currently supported only on top-level exported
+ functions, with functions nested inside inline `module Name { ... }`
+ blocks rejected until that export path is implemented end to end;
+ clean C ABI symbols that collide with another C ABI export or any other
+ function symbol emitted for the selected output are rejected before
+ object or library emission; library outputs apply this check to the root
+ package's public C ABI symbols and the dependency functions as they are
+ actually emitted into that output, including internal raw dependency
+ symbols,
+ - named-package exported data currently uses the default
+ package-qualified symbol `__silk_export_data__pkg__name`,
+ - C/Objective-C bridge headers should spell those symbols through
+ `SILK_C_ABI_EXPORT_FN(pkg, name)`, `SILK_PACKAGE_EXPORT_FN(pkg, name)`,
+ or `SILK_PACKAGE_EXPORT_DATA(pkg, name)` from `silk/silk.h` instead of
+ hardcoding generated spellings,
  - within the current `linux/x86_64` IR subset, optionals (`T?`) are supported at ABI boundaries for the supported payload subset (scalar payloads, `string?`, and optionals of ABI-safe structs):
  - an optional lowers to a `Bool` tag followed by the payload scalar slots: `(tag, payload0, payload1, ...)` with `tag=0` for `None` and `tag=1` for `Some(...)`,
  - nested optionals (`T??`) lower by treating the payload slots as the full inner optional representation (for example `int??` lowers as `(tag0, tag1, i64 payload)`),
@@ -511,7 +652,10 @@ The initial C header provided in the Silk compiler repository defines:
  - optional results return as the same scalar slots (1–2 slots in registers; 3+ slots via a hidden sret pointer as described above).
  - for object outputs (`SILK_OUTPUT_OBJECT`):
  - on `linux/x86_64`, the compiler can emit an ELF64 relocatable object
- (`ET_REL`) for the supported IR subset, emitting supported functions
+ (`ET_REL`) for the supported IR subset; on Apple Silicon macOS hosts,
+ `macos-aarch64`, `ios-aarch64`, `ios-simulator-aarch64`, and
+ `ios-simulator-x86_64` can emit a Mach-O 64-bit relocatable object for
+ the same current host-backed library subset, emitting supported functions
  (scalar-returning, `void`-returning, and a limited `string` subset) and supported exported constants
  (`export let`/`export const`; scalar exports require an explicit type annotation and a literal initializer, and string exports may omit `: string` when the initializer is a string literal), and marking `export fn`
  declarations, supported exported constants, and a valid executable `main`
@@ -523,12 +667,22 @@ The initial C header provided in the Silk compiler repository defines:
  - for programs outside that subset (or on unsupported targets),
  `silk_compiler_build` returns `false` with an `E4001` / `E4002` formatted diagnostic (via `silk_compiler_last_error` / `silk_error_format`)
  and does not write an output file.
+ - on `amdgcn-amd-amdhsa-gfx942`, `amdgcn-amd-amdhsa-gfx1100`, and
+ `amdgcn-amd-amdhsa-gfx1151`, the compiler emits an AMDHSA `.hsaco` for
+ exactly one exported source kernel in the AMDGPU intrinsic-call subset.
+ The intrinsic declarations and user-facing diagnostics are documented in
+ [backend amdgpu](?p=compiler/backend-amdgpu). Arbitrary Silk IR lowering is not
+ part of this C ABI output path yet.
  - when lowering cannot isolate a narrower statement / expression span,
  that `E4001` diagnostic falls back to the offending function
  declaration and names that function directly.
  - for static library outputs (`SILK_OUTPUT_STATIC_LIBRARY`):
  - on `linux/x86_64`, the compiler can emit a static library archive
- (`.a`) containing an object file for the supported IR subset, emitting
+ (`.a`) containing an object file for the supported IR subset; on Apple
+ Silicon macOS hosts, `macos-aarch64`, `ios-aarch64`,
+ `ios-simulator-aarch64`, and `ios-simulator-x86_64` can emit a Mach-O
+ static archive via Apple `libtool -static` for the same current
+ host-backed library subset, emitting
  supported functions (scalar-returning, `void`-returning, and a limited `string` subset) and supported
  exported constants (`export let`/`export const`; scalar exports require an explicit type annotation and a literal initializer, and string exports may omit `: string` when the initializer is a string literal), and
  marking `export fn` declarations, supported exported constants, and a
@@ -542,7 +696,10 @@ The initial C header provided in the Silk compiler repository defines:
  and does not write an output file.
  - for shared library outputs (`SILK_OUTPUT_SHARED_LIBRARY`):
  - on `linux/x86_64`, the compiler can emit an ELF64 shared library
- (`ET_DYN`, typically with a `.so` filename) for the supported IR subset,
+ (`ET_DYN`, typically with a `.so` filename) for the supported IR subset;
+ on Apple Silicon macOS hosts, `macos-aarch64`, `ios-aarch64`,
+ `ios-simulator-aarch64`, and `ios-simulator-x86_64` can emit a Mach-O
+ dylib for the same current host-backed library subset,
  emitting supported functions (scalar-returning, `void`-returning, and a limited `string` subset) and
  supported exported constants (`export let`/`export const`; scalar exports require an explicit type annotation and a literal initializer, and string exports may omit `: string` when the initializer is a string literal), and
  marking `export fn` declarations, supported exported constants, and a

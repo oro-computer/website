@@ -8,6 +8,7 @@ enforce it.
 
 This document specifies the surface syntax and checker rules for typed errors.
 
+
 The compiler supports `error` declarations, `panic` statements, error-aware
 return types (`T | ErrorType...`), and the `match` *statement* form for handling
 typed errors (including the Terminal Arm Rule), plus the postfix `?`
@@ -17,7 +18,7 @@ propagation operator for error-producing calls.
 
 - An `error` represents an unrecoverable logic bug or contract violation.
 - A function that can `panic` must declare that in its return type using `|`:
- - `fn get_at(xs: &u8[], index: int) -> u8 | OutOfBounds;`
+ - `fn get_at(xs: u8[], index: int) -> u8 | OutOfBounds;`
 - A typed error is triggered with `panic`, which terminates the current function
  and propagates the error to the caller.
 - Typed errors are handled explicitly via `match` (statement form), and any arm
@@ -35,14 +36,20 @@ failures such as:
 - parsing failures,
 - I/O failures.
 
-Those should typically be modeled as ordinary values using `Result`
+Those should typically be modeled as ordinary values using `std::result::Result`
 or optionals (`T?`) so callers can handle them and continue normal execution.
 
 See:
 
 - [errors](?p=language/errors) (overview),
 - [result](?p=std/result) (recoverable `Result(T, E)`),
-- [url](?p=std/url) (recoverable URL parsing example).
+- [url](?p=std/url) and `examples/feature_errors_recoverable_url_parse.slk`
+ (recoverable URL parsing example).
+
+For ergonomic one-branch recovery over recoverable values, prefer `if let`,
+`let ... else`, `while let`, or the recoverable `??` operator on optionals,
+`Result` values, and other two-variant success/fallback enums rather than
+`is_err()` / `is_none()` plus a second extraction step.
 
 ## Declaring Error Types (`error`)
 
@@ -78,8 +85,8 @@ its success type using `|`.
 Examples:
 
 ```silk
-fn get_at(xs: &u8[], index: int) -> u8 | OutOfBounds { ... }
-fn parse() -> Packet? | PacketTooLarge { ... }
+fn get_at(xs: u8[], index: int) -> u8 | OutOfBounds { ... }
+fn parse() -> Frame? | FrameTooLarge { ... }
 fn init() -> void | InitFailure { ... }
 ```
 
@@ -113,9 +120,12 @@ Syntax:
 ```silk
 panic OutOfBounds {
   index: index,
-  len: std::length(xs)
+  len: len
 };
 ```
+
+In a real implementation, the `len` value typically comes from the relevant
+container/view (for example a `.len()` method via `std::interfaces::Len`).
 
 Rules:
 
@@ -126,7 +136,7 @@ Rules:
 
 Implementation notes:
 
-- `panic` is a statement (not an expression) in the current compiler.
+- `panic` is a statement (not an expression) in Silk currently.
 
 ## Propagating Typed Errors (`?`)
 
@@ -163,6 +173,50 @@ Implementation notes:
  error return the appropriate error payload; on success yield the value”,
  using the same encoding as the `match` statement lowering.
 
+### Async Calls and `await`
+
+Typed-error propagation already composes with async calls in the current
+subset, but the fallible expression is still the async **call** rather than the
+`await` operator.
+
+For example:
+
+```silk
+error OpenFailed {
+  code: int,
+}
+
+async fn open_value () -> int | OpenFailed {
+  return 1;
+}
+```
+
+In the Supported forms:
+
+- `open_value()` is treated as an error-producing call whose success value is
+ `Promise(int)`.
+- `let p: Promise(int) = open_value()?;` is valid inside a caller whose error
+ contract includes `OpenFailed`.
+- `let v: int = await open_value()?;` is valid and is the supported shorthand
+ when the caller wants the resolved success value directly.
+- `await open_value()` without `?` or an explicit `match` on `open_value()` is
+ rejected with `E2023`.
+
+If you need explicit handling, match on the async call and await the promise in
+the success arm:
+
+```silk
+match (open_value()) {
+  p => {
+    let v: int = await p;
+    return v;
+  },
+  err: OpenFailed => {
+    panic OpenFailed { code: err.code };
+  }
+}
+```
+
 ## Handling Typed Errors (`match` statement + Terminal Arm Rule)
 
 When the scrutinee expression of a `match` statement may `panic` (i.e. its
@@ -171,15 +225,15 @@ signature includes `|`), the compiler activates a special rule for error arms.
 ### Match statement form
 
 ```silk
-match (create_packet(user_size)) {
-  Some(packet) => {
+match (create_frame(user_size)) {
+  Some(frame) => {
     io::println("ok");
   },
   None => {
-    io::println("no packet");
+    io::println("no frame");
   },
-  err: PacketTooLarge => {
-    log::critical("invalid packet size requested", err);
+  err: FrameTooLarge => {
+    log::critical("invalid frame size requested", err);
     std::abort();
   }
 }
@@ -220,10 +274,10 @@ If a function returns an `error` type as a normal value (no `|` in its
 signature), the special rule does not apply:
 
 ```silk
-fn inspect_issues() -> PacketTooLarge;
+fn inspect_issues() -> FrameTooLarge;
 
 match (inspect_issues()) {
-  err: PacketTooLarge => {
+  err: FrameTooLarge => {
     log::warn("non-critical issue", err);
     // Allowed to complete normally because the scrutinee is not a `T | ...`.
   }
@@ -233,19 +287,20 @@ match (inspect_issues()) {
 ### `match` statements over Result-like values (recoverable)
 
 The `match` **statement** form can also be used to destructure common
-recoverable result shapes such as `Result(T, E)`.
+recoverable result shapes such as `std::result::Result(T, E)`.
 
-When the scrutinee expression has a recoverable result type such as:
+When the scrutinee expression is a **call expression** whose result type is
+either:
 
-- `Result(T, E)` (an `enum` with `Ok(T)` and `Err(E)` variants), or
+- `std::result::Result(T, E)` (an `enum` with `Ok(T)` and `Err(E)` variants), or
 - a “Result-like” struct with fields:
  - `value: T?`
  - `err: E?` where `E` is an `error` type,
 
-then the checker accepts result-style patterns of the form:
+then the checker accepts binder patterns of the form:
 
-- `Ok(name) => { ... }` / `Ok(_) => { ... }` for the success payload,
-- `Err(err) => { ... }` / `Err(_) => { ... }` for the error payload.
+- `name => { ... }` / `_ => { ... }` for the success payload (binds `name` as `T`),
+- `err: E => { ... }` for the error payload (binds `err` as `E`).
 
 The Terminal Arm Rule does **not** apply in this form because the scrutinee is
 not a `T | ErrorType...` typed-error expression; the error is a normal returned
@@ -256,14 +311,11 @@ Runtime invariant (struct form, current backend): exactly one of `value` and
 
 Implementation notes:
 
-- Recoverable result matching is part of the ordinary-value statement subset
- documented in [flow match](?p=language/flow-match).
-- One-arm statement matches are allowed for optionals and recoverable results,
- so these forms are valid:
- - `match (res) { Ok(v) => { ... } }`
- - `match (res) { Err(err) => { ... } }`
-- Typed error handling remains the separate `T | ErrorType...` statement form
- described in this page.
+- The current compiler supports a match subset for optionals as an
+ *expression* (`match x { None => expr, Some(v) => expr }`).
+- The `match` expression also supports `Ok(...)` / `Err(...)` patterns for
+ `Result` values (see [flow match](?p=language/flow-match)).
+- Typed error handling uses the *statement* form of `match` with block arms.
 
 ## Restrictions
 
@@ -274,7 +326,7 @@ Implementation notes:
 - `pure fn` may not have a `|` in its return type.
 - `pure fn` may not contain `panic` statements.
 
-The checker enforces these rules in the current compiler (see
+The checker enforces these rules in Silk currently (see
 [diagnostics](?p=compiler/diagnostics)).
 
 ### `ext` boundary
@@ -287,8 +339,9 @@ typed errors into:
 - explicit error structs/enums,
 - or a terminal action appropriate for the platform.
 
-the compiler rejects `ext` declarations whose function types use `|`
-(and rejects exported C ABI surfaces with `|`).
+the current compiler rejects `ext` declarations whose function types use
+`|` (and rejects exported C ABI surfaces with `|`) in the current
+implementation.
 
 ## Related proposals (not implemented)
 

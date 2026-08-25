@@ -21,6 +21,18 @@ This document exists to keep `std::` APIs consistent across modules.
 - Types use `PascalCase` (`String`, `Vector(T)`, `Path`, `File`).
 - Functions and methods use `snake_case` (`read_all`, `push`, `starts_with`).
 - Constants use `SCREAMING_SNAKE_CASE`.
+- Public parameter names must describe the role of the value. Avoid
+ underscore-prefixed public parameters such as `_fd` or `_value`; if a backend
+ stub ignores a value today, keep the public spelling meaningful and explain
+ the unsupported behavior in the function documentation.
+- Internal names should favor domain words over placeholders. Short loop
+ counters are acceptable in tight numeric loops, but cross-block temporaries,
+ buffers, handles, and results should use names such as `scratch_buffer`,
+ `read_result`, `bytes_read`, `write_cursor`, or `append_error` instead of
+ `tmp`, `r`, `n`, `p`, or numbered variants.
+- Names that encode accident rather than meaning, such as `_2`, `foo`, `bar`,
+ or `tmp2`, are not acceptable in stdlib code unless they appear inside a
+ documented example where those exact names are part of the teaching context.
 
 ## Documentation
 
@@ -40,6 +52,21 @@ Documentation coverage rules:
  `std::formal`).
 - Every **public method** on a type must have a non-empty doc comment:
  - instance and static methods declared `public fn ...` inside `impl`.
+
+Source comments are expected to be useful to a reader:
+
+- Do not stop at placeholder comments that only repeat the declaration kind and
+ name, such as `Function read`, `Method drop`, `Struct File`, or `Type alias
+ Result`.
+- Public API comments should state what the API does, what it owns or borrows,
+ what happens on failure, and any platform/runtime limitations that affect
+ callers.
+- Runtime shim comments should explain whether the function is implemented for
+ the target or intentionally returns an unsupported/error sentinel.
+- Low-level helpers that use raw pointers, byte lengths, file descriptors, or
+ manually packed data should carry enough comment context for a maintainer to
+ audit the safety invariant without reverse-engineering the surrounding
+ module.
 
 This is enforced by the test suite so the stdlib can be fully documented via
 `silk doc` and surfaced consistently in editor tooling.

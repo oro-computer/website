@@ -20,4 +20,11 @@ Use the following owning docs for the substantive API/design context for this mo
 
 - The shipped source for this module is `std/runtime/posix/time.slk`.
 - The canonical module name is `std::runtime::posix::time`.
+- Hosted clock reads use the bundled `silk_rt_clock_now_ns` implementation
+ helper. The helper stores `struct timespec` on the calling thread's C stack,
+ validates `tv_sec`, `tv_nsec`, and the final signed-nanosecond range, and
+ reports failure as `-1`.
+- Clock reads do not allocate from Silk's active region. They are therefore
+ reentrant across task-pool workers and remain available in `--noheap`
+ programs.
 - This page is intentionally implementation-oriented. Downstream users should usually start with the higher-level std module docs listed above unless they are working on the runtime layer itself.

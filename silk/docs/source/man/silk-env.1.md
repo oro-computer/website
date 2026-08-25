@@ -41,6 +41,9 @@ The output includes, at minimum:
  pathless manifest dependencies; dotted dependency keys map to slash
  directories. During package graph work, relative entries are resolved from
  the importing package root and then upward to the graph root.
+- `SILK_SECURITY_PROVIDER` — default security provider mode for `silk build`,
+ `silk check`, and `silk test` when `--security-provider` is omitted. Accepted
+ values are `auto`, `platform`, and `builtin`.
 - `SILK_GUIDE_DB` — override the guide database path used by `silk guide`.
 - `SILK_GUIDE_PRINTER` — override the source printer command used by `silk guide --show` when `--printer` is not provided.
 - `SILK_ELF_INTERP` — override the ELF `PT_INTERP` dynamic loader path used for `linux-x86_64` outputs when emitting dynamically-linked executables/shared libraries.

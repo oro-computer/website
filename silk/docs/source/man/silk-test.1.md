@@ -36,9 +36,17 @@ When explicit input files are used (no `--package`), the `silk` CLI may load add
 - `--debug`, `-g` — enable debug build mode (also enables extra Formal Silk debug output when verification fails).
 - `--feature <spec>`, `-F<spec>` — enable a build feature for `attr(feature="...")` queries and declaration gating. Repeatable.
  - Spec forms: `NAME` or `NAME=VALUE` (see [attributes](?p=language/attributes)).
+ - Feature names start with a letter or `_` and may contain letters, digits,
+ `_`, and `-`.
  - For package builds, you may target a specific package with `PKG/NAME` or
  `PKG/NAME=VALUE` (for example `ui/tui` or `ui/tui=false`).
-- `-O <0-3>` — set optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`). `-O1`+ prunes unused extern symbols before code generation and prunes unreachable functions in executable builds (typically reducing output size).
+- `--security-provider <auto|platform|builtin>` — select the security provider
+ used for test-harness code generation and native auto-linking. CLI wins over
+ `SILK_SECURITY_PROVIDER` and `[build] security_provider`; `auto` selects
+ platform-backed APIs first on Apple targets and falls back to built-in
+ archives for std APIs that do not yet have an Apple platform mapping. Other
+ targets use built-in.
+- `-O <0-3>` — set optimization level (default: `-O2`; when `--debug` is set and `-O` is omitted, defaults to `-O0`). Test executables lower and emit only harness-reachable functions at every level; `-O1`+ additionally prunes unused extern symbols before code generation.
 - `--noheap` — reject heap allocation in the supported subset.
 - `--jobs <n>`, `-j <n>` — run up to `<n>` test processes in parallel. Default: `1`. `0` means “auto” (based on CPU count). Jobs are capped at `8`.
 - `--filter <pattern>` — run only tests whose test path contains `<pattern>` (substring match). The test path is the nested test name stack joined with `/` (for example `suite/case`).
@@ -47,7 +55,9 @@ When explicit input files are used (no `--package`), the `silk` CLI may load add
  - for compatibility, package tests currently invoke the build module with the action string `build`,
  - manifest-native link metadata for the test harness (`[[target]].inputs`, `cflags`, `ldflags`, `needed`, and `runpath`) is taken from `[build].default_target` when it names a code target, otherwise the first declared code target; matching package and dependency `[[native]]` entries are merged as package-level native requirements; `kind = "man"` targets are ignored for target metadata.
  - raw manifest native sources (`.c`, `.h`, and supported `.m`) are compiled to temporary objects for the generated test harness; `.o`, `.a`, shared libraries, needed libraries, runpaths, and supported `ldflags` entries are linked as declared.
- - hosted vendored native-input auto-linking for libsodium, mbedTLS, SQLite, and libssh2 follows the same supported-target rules as `silk build --package`.
+ - built-in provider native-input auto-linking for libsodium, mbedTLS, and
+ libssh2, plus built-in SQLite auto-linking, follows the same
+ supported-target rules as `silk build --package`.
  - if a package has no code targets, tests still run from the package source set but no manifest link metadata is applied.
 - `--` — end of options; treat following args as file paths (even if they begin with `-`).
 
@@ -71,6 +81,8 @@ silk test --package . --filter url
 
 - `PREFIX` — installation prefix used for the system package search root at `PREFIX/lib/silk` (searched last when it exists). Default: `/usr/local`.
 - `SILK_PACKAGE_PATH` — primary package search path for bare-specifier imports and pathless manifest dependencies (entries separated by `:` on POSIX, `;` on Windows). During package graph work, relative entries are resolved from the importing package root and then upward to the graph root. The compiler appends `PREFIX/lib/silk` as the last search path entry when it exists; dotted dependency keys such as `my.dep.b` map to slash directories such as `my/dep/b`.
+- `SILK_SECURITY_PROVIDER` — default security provider mode (`auto`,
+ `platform`, or `builtin`) when the CLI flag is omitted.
 - `SILK_Z3_LIB` — path to a dynamic Z3 library used by the Formal Silk verifier.
 - `SILK_VERIFY_JOBS` — override the number of worker threads used for Formal Silk verification (default: auto; capped at 8).
 - `SILK_TEST_TIMEOUT_MS` — per-top-level-test process timeout in milliseconds (default: `30000`).

@@ -51,6 +51,9 @@ Current compiler target set and values:
  - `OS_PLATFORM == "unknown"`
 - `wasm32-wasi`:
  - `OS_PLATFORM == "wasi"`
+- `amdgcn-amd-amdhsa-gfx942`, `amdgcn-amd-amdhsa-gfx1100`, and
+ `amdgcn-amd-amdhsa-gfx1151`:
+ - `OS_PLATFORM == "amdhsa"`
 
 ### `OS_ARCH`
 
@@ -67,6 +70,9 @@ Current compiler target set and values:
  - Formal Silk comparisons also accept the ARM64 aliases `"arm64"` and `"aarch"` in any letter case, including through compile-time string constants, even though the canonical `OS_ARCH` value remains `"aarch64"`.
 - `wasm32-unknown-unknown` and `wasm32-wasi`:
  - `OS_ARCH == "wasm32"`
+- `amdgcn-amd-amdhsa-gfx942`, `amdgcn-amd-amdhsa-gfx1100`, and
+ `amdgcn-amd-amdhsa-gfx1151`:
+ - `OS_ARCH == "amdgcn"`
 
 ### `OS_IS_UNIX`
 
@@ -88,6 +94,9 @@ Current compiler target set:
 - `windows-aarch64`: `false`
 - `wasm32-unknown-unknown`: `false`
 - `wasm32-wasi`: `false`
+- `amdgcn-amd-amdhsa-gfx942`: `false`
+- `amdgcn-amd-amdhsa-gfx1100`: `false`
+- `amdgcn-amd-amdhsa-gfx1151`: `false`
 
 ### `OS_IS_POSIX`
 
@@ -109,6 +118,9 @@ Current compiler target set:
 - `windows-aarch64`: `false`
 - `wasm32-unknown-unknown`: `false`
 - `wasm32-wasi`: `false`
+- `amdgcn-amd-amdhsa-gfx942`: `false`
+- `amdgcn-amd-amdhsa-gfx1100`: `false`
+- `amdgcn-amd-amdhsa-gfx1151`: `false`
 
 ## Relationship to `std::os`
 

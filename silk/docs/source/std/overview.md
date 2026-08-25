@@ -58,6 +58,11 @@ distribution:
 - `std::graphics` — low-level graphics API bindings and focused platform
  facades (OpenGL, OpenGL ES, Vulkan, macOS Metal handle/window-context API,
  and provider-neutral window clear facade; see [graphics](?p=std/graphics)).
+- `std::gpu` — pure-Silk GPU discovery, device buffers, embedded-kernel launch,
+ and synchronization, with register-independent device operations in
+ `std::gpu::device` and the low-level AMDGPU instruction surface in
+ `std::gpu::isa` (see [gpu](?p=std/gpu), [gpu device](?p=std/gpu-device), and
+ [gpu isa](?p=std/gpu-isa)).
 - `std::dylib` — opt-in dynamic-library loading and symbol lookup with explicit
  `c_fn` function-pointer conversion from symbol addresses (see
  [dylib](?p=std/dylib)).

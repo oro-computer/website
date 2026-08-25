@@ -32,13 +32,13 @@ When verification syntax is not present, compilation does not require proofs.
 
 ## Z3 linkage and overrides
 
-On supported native hosts, Silk links the vendored Z3 static library and its
+On supported native hosts, Silk links the built-in Z3 static library and its
 headers (`vendor/include`) directly into the compiler when the host archive is
 present:
 
 - `linux/x86_64` -> `vendor/lib/x64-linux/libz3.a`
-- `macos/aarch64` -> `vendor/lib/aarch64-macos/libz3.a` (optional until the
- native archive workflow is tracked in-repo)
+- `macos/aarch64` -> `vendor/lib/aarch64-macos/libz3.a` (optional and staged
+ when present)
 
 If no static host archive is present, the compiler still builds, but Formal
 Silk verification reports Z3 as unavailable unless a dynamic library override is
@@ -352,6 +352,9 @@ Implemented end-to-end (Z3-backed, Supported forms):
  Silk annotations of their own, the verifier proves the callee’s
  preconditions (explicit `#require` and any attached-theory `#require`) under
  the caller’s current path condition; errors report `E3007`,
+ - the caller path condition begins with its own explicit and attached-theory
+ preconditions plus inherited requirements on aggregate parameters, so a
+ contracted wrapper may delegate every input obligation it declares,
  - after the call, the verifier assumes the callee’s postconditions (explicit
  `#assure` plus attached-theory `#assure`/`#invariant`) into verified
  callers' symbolic state so subsequent proofs can use them,

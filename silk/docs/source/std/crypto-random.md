@@ -19,4 +19,7 @@ Use the following owning docs for the substantive API/design context for this mo
 
 - The shipped source for this module is `std/crypto/random.slk`.
 - The canonical module name is `std::crypto::random`.
+- Provider behavior follows [crypto](?p=std/crypto): Apple `auto` and `platform`
+ builds use Security-backed random bytes, while `builtin` builds use
+ libsodium `randombytes_*`.
 - Family-wide semantics, examples, and cross-module relationships live in the owning docs listed above.

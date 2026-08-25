@@ -89,7 +89,7 @@ Build-mode and verification configuration:
 Target, linkage, and header emission:
 
 - `silk_compiler_set_target` selects the code generation target triple.
-- `silk_compiler_add_needed_library` / `silk_compiler_add_runpath` / `silk_compiler_set_soname` configure dynamic linker metadata for ELF outputs (when applicable).
+- `silk_compiler_add_needed_library` / `silk_compiler_add_runpath` / `silk_compiler_set_soname` configure dynamic linker metadata for ELF outputs and host-backed `macos-aarch64` dylib outputs when applicable.
 - `silk_compiler_set_c_header` requests generated C header output for object/static/shared builds, matching CLI `--c-header`.
 
 Optimization:
@@ -112,12 +112,14 @@ The `name` parameter is used for diagnostics and does not need to correspond to 
 
 If `silk_compiler_set_c_header` is configured, the header is only emitted for filesystem builds of `object`, `static`, or `shared` outputs. In-memory `silk_compiler_build_to_bytes` calls reject `c_header` output.
 
+On Apple Silicon macOS hosts, `macos-aarch64` filesystem and in-memory builds can emit the current host-backed Mach-O executable, object, static-library, and shared-library subset. Other non-Linux targets remain limited to the documented executable subsets.
+
 ## Thread safety
 
 The `SilkCompiler` object is not currently specified as thread-safe. Confine it to one thread or synchronize access.
 
 ## See Also
 
-- [`silk_error(3)`](?p=man/silk_error.3), [`silk_bytes(3)`](?p=man/silk_bytes.3), [`silk_abi_get_version(3)`](?p=man/silk_abi_get_version.3)
+- [`silk_error(3)`](?p=man/silk_error.3), [`silk_bytes(3)`](?p=man/silk_bytes.3), [`silk_abi_get_version(3)`](?p=man/silk_abi_get_version.3), [`silk_amdgpu_aql_dispatch_packet_build(3)`](?p=man/silk_amdgpu_aql_dispatch_packet_build.3)
 - [`libsilk(7)`](?p=man/libsilk.7)
 - [abi libsilk](?p=compiler/abi-libsilk)

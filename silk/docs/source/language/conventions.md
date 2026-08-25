@@ -1,12 +1,12 @@
 # Language Spec Conventions
 
-This document defines conventions used across the Silk language reference on this site. It exists to
+This document defines conventions used across `docs/language/`. It exists to
 keep the language specification consistent and easy to navigate for both:
 
 - first-time readers learning Silk, and
 - returning readers looking up precise rules.
 
-See also: [language tour](?p=guides/language-tour) for a recommended reading path.
+See also: [start](?p=start) for recommended reading paths.
 
 ## Document Structure (Recommended)
 
@@ -15,12 +15,12 @@ Concept documents should be structured so readers can answer, quickly:
 - “What is this feature for?”
 - “What syntax does the compiler accept?”
 - “What are the rules and edge cases?”
-- “What does the compiler accept?”
+- “What works in the current compiler today?”
 
 Recommended sections:
 
 1. **One-paragraph summary**
-2. **Notes** or **Supported forms** (when the page needs to call out active boundaries)
+2. **Implementation status** (if the concept is Implemented)
 3. **Surface syntax**
 4. **Semantics** (evaluation order, scoping, control-flow behavior)
 5. **Type checking rules** (static requirements and diagnostics)
@@ -29,15 +29,15 @@ Recommended sections:
  - realistic examples (how the feature is used in real code)
 7. **Common pitfalls**
 8. **Related documents**
-9. **References** (cross-links to the most relevant docs and, when available, runnable examples)
+9. **Relevant tests** (links to `tests/silk/pass_*.slk` and `tests/silk/fail_*.slk`)
 
 Not every concept needs every section, but the goal is that a reader should
 never have to infer critical rules from examples.
 
-## Notes / Supported Forms
+## “Implementation status” Format
 
-When a feature needs boundary notes, the concept doc should use a neutral
-section name such as `Notes` or `Supported forms` near the top.
+When a feature is not fully implemented end-to-end, the concept doc should
+include an explicit “Implementation status” section near the top.
 
 Use concrete statements, not vague language. Prefer describing support in
 these layers:
@@ -47,7 +47,7 @@ these layers:
 - Lowering/backends: which forms code-generate end-to-end on supported targets.
 - C ABI / FFI: whether the feature is permitted at exported boundaries.
 
-When something is rejected by the compiler, include the diagnostic code
+When something is rejected in the Supported forms, include the diagnostic code
 from [diagnostics](?p=compiler/diagnostics) when one exists.
 
 ## Examples
@@ -82,8 +82,8 @@ These terms are used consistently across the spec:
 - **Block**: `{ stmt* }`, a scope boundary and the unit of structured control
  flow. (Whether blocks are also expressions depends on the concept; docs must
  be explicit.)
-- **Supported surface**: the set of features that parse, type-check, and
- code-generate end-to-end in the compiler.
+- **current implementation**: the set of features that parse, type-check, and
+ code-generate end-to-end today.
 
 ## Cross-References
 
@@ -94,4 +94,4 @@ restating it everywhere. Common cross-links include:
 - [types](?p=language/types) for type-system rules and special cases,
 - [mutability](?p=language/mutability) for `mut` and borrowing rules,
 - [diagnostics](?p=compiler/diagnostics) for error codes,
-- “notes sections near the top of concept docs.
+- [implementation status](?p=compiler/implementation-status) for a high-level implementation snapshot.

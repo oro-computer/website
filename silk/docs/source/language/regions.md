@@ -34,6 +34,15 @@ Limitations (Supported forms):
 
 - The region backing store is currently restricted to `u8[N]` (a fixed-size
  byte array type annotation).
+- Hosted native lowering currently keeps the active-region selector
+ process-global, and the backing bytes/cursor generated for each anonymous
+ `with <bytes>` site are static. Overlapping `with` dynamic extents on
+ multiple OS threads are therefore unsupported, even when the source sites
+ or named regions differ. Programs must not enter `with` concurrently from
+ task workers; use thread-safe heap/runtime operations or serialize the whole
+ region extent. A future backend change must make both the selector and
+ anonymous storage invocation-local or thread-local before this restriction
+ can be removed.
 - Only the existing `new` subset is affected (non-opaque `struct` allocations
  that produce `&Struct`).
 - Region-backed `new` allocations are still reference-counted:

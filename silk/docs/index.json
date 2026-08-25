@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-05-24T02:57:20+00:00",
+  "generatedAt": "2026-08-25T18:49:27+00:00",
   "kind": "docs",
-  "count": 291,
+  "count": 309,
   "sections": [
     {
       "name": "overview",
@@ -290,6 +290,16 @@
           "id": "language/concurrency",
           "title": "Concurrency",
           "file": "language/concurrency.md"
+        },
+        {
+          "id": "language/gpu-execution",
+          "title": "GPU execution placement",
+          "file": "language/gpu-execution.md"
+        },
+        {
+          "id": "language/gpu-launch-blocks",
+          "title": "GPU launch blocks",
+          "file": "language/gpu-launch-blocks.md"
         },
         {
           "id": "language/function-disciplines",
@@ -670,6 +680,26 @@
           "id": "std/wasm",
           "title": "WebAssembly Runtime (`std::wasm`)",
           "file": "std/wasm.md"
+        },
+        {
+          "id": "std/gpu",
+          "title": "`std::gpu`",
+          "file": "std/gpu.md"
+        },
+        {
+          "id": "std/gpu-device",
+          "title": "`std::gpu::device`",
+          "file": "std/gpu-device.md"
+        },
+        {
+          "id": "std/gpu-isa",
+          "title": "`std::gpu::isa`",
+          "file": "std/gpu-isa.md"
+        },
+        {
+          "id": "std/runtime-gpu",
+          "title": "`std::runtime::gpu`",
+          "file": "std/runtime-gpu.md"
         },
         {
           "id": "std/graphics",
@@ -1202,14 +1232,39 @@
           "file": "usage/cli-examples.md"
         },
         {
+          "id": "usage/guide-examples",
+          "title": "`silk guide`",
+          "file": "usage/guide-examples.md"
+        },
+        {
           "id": "usage/howto-custom-stdlib-root",
           "title": "How-To: Use a Custom Stdlib Root (and Runtime)",
           "file": "usage/howto-custom-stdlib-root.md"
         },
         {
+          "id": "usage/howto-dynamic-libraries",
+          "title": "How To Load Dynamic Libraries",
+          "file": "usage/howto-dynamic-libraries.md"
+        },
+        {
           "id": "usage/howto-run-wasi-node",
           "title": "How-To: Run `wasm32-wasi` Output in Node.js",
           "file": "usage/howto-run-wasi-node.md"
+        },
+        {
+          "id": "usage/pure-silk-gpu",
+          "title": "Pure-Silk CPU/GPU program",
+          "file": "usage/pure-silk-gpu.md"
+        },
+        {
+          "id": "usage/pure-silk-gpu-ml",
+          "title": "Pure-Silk learned-threshold GPU classifier",
+          "file": "usage/pure-silk-gpu-ml.md"
+        },
+        {
+          "id": "usage/howto-lumen-trail",
+          "title": "Build LumenTrail, an iOS Objective-C App With Silk Stdlib Code",
+          "file": "usage/howto-lumen-trail.md"
         },
         {
           "id": "usage/github-linguist",
@@ -1237,19 +1292,9 @@
           "file": "usage/editor-textmate.md"
         },
         {
-          "id": "usage/guide-examples",
-          "title": "`silk guide`",
-          "file": "usage/guide-examples.md"
-        },
-        {
           "id": "usage/github-actions",
           "title": "GitHub Actions: Install Released `silk`",
           "file": "usage/github-actions.md"
-        },
-        {
-          "id": "usage/howto-dynamic-libraries",
-          "title": "How To Load Dynamic Libraries",
-          "file": "usage/howto-dynamic-libraries.md"
         }
       ]
     },
@@ -1272,6 +1317,11 @@
           "file": "compiler/cli-silk.md"
         },
         {
+          "id": "compiler/cache-silk",
+          "title": "`silk` Cache Management",
+          "file": "compiler/cache-silk.md"
+        },
+        {
           "id": "compiler/libsilk-quickstart",
           "title": "`libsilk` quickstart",
           "file": "compiler/libsilk-quickstart.md"
@@ -1292,9 +1342,29 @@
           "file": "compiler/build-scripts.md"
         },
         {
+          "id": "compiler/builtin-deps",
+          "title": "Built-In Dependencies",
+          "file": "compiler/builtin-deps.md"
+        },
+        {
           "id": "compiler/stdlib-integration",
           "title": "Standard Library Integration",
           "file": "compiler/stdlib-integration.md"
+        },
+        {
+          "id": "compiler/backend-gpu",
+          "title": "Target-neutral GPU compilation",
+          "file": "compiler/backend-gpu.md"
+        },
+        {
+          "id": "compiler/backend-amdgpu",
+          "title": "AMDGPU Backend",
+          "file": "compiler/backend-amdgpu.md"
+        },
+        {
+          "id": "compiler/backend-nvidia",
+          "title": "NVIDIA GPU backend",
+          "file": "compiler/backend-nvidia.md"
         },
         {
           "id": "compiler/backend-wasm",
@@ -1343,13 +1413,8 @@
         },
         {
           "id": "compiler/vendored-deps",
-          "title": "Vendored Dependencies",
+          "title": "Built-In Dependencies (Legacy Link)",
           "file": "compiler/vendored-deps.md"
-        },
-        {
-          "id": "compiler/cache-silk",
-          "title": "`silk` Cache Management",
-          "file": "compiler/cache-silk.md"
         }
       ]
     },
@@ -1372,9 +1437,29 @@
           "file": "man/slcc.1.md"
         },
         {
+          "id": "man/silk-help.1",
+          "title": "[`silk-help(1)`](?p=man/silk-help.1) - Show Silk CLI Help",
+          "file": "man/silk-help.1.md"
+        },
+        {
+          "id": "man/silk-repl.1",
+          "title": "[`silk-repl(1)`](?p=man/silk-repl.1) - Interactive Silk REPL",
+          "file": "man/silk-repl.1.md"
+        },
+        {
           "id": "man/silk-build.1",
           "title": "[`silk-build(1)`](?p=man/silk-build.1) \u2014 Build Silk Artifacts",
           "file": "man/silk-build.1.md"
+        },
+        {
+          "id": "man/silk-devices.1",
+          "title": "[`silk-devices(1)`](?p=man/silk-devices.1) - Manage Platform Devices And App Lifecycles",
+          "file": "man/silk-devices.1.md"
+        },
+        {
+          "id": "man/silk-codesign.1",
+          "title": "[`silk-codesign(1)`](?p=man/silk-codesign.1) - Sign And Verify Platform Artifacts",
+          "file": "man/silk-codesign.1.md"
         },
         {
           "id": "man/silk-package.1",
@@ -1485,6 +1570,11 @@
           "id": "man/silk_abi_get_version.3",
           "title": "[`silk_abi_get_version(3)`](?p=man/silk_abi_get_version.3) \u2014 Query the `libsilk` ABI Version",
           "file": "man/silk_abi_get_version.3.md"
+        },
+        {
+          "id": "man/silk_amdgpu_aql_dispatch_packet_build.3",
+          "title": "[`silk_amdgpu_aql_dispatch_packet_build(3)`](?p=man/silk_amdgpu_aql_dispatch_packet_build.3) \u2014 Serialize AMDGPU AQL Dispatch Packets",
+          "file": "man/silk_amdgpu_aql_dispatch_packet_build.3.md"
         }
       ]
     },

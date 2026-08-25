@@ -22,4 +22,9 @@ Use the following owning docs for the substantive API/design context for this mo
 - The canonical module name is `std::runtime::wasi::process`.
 - WASI Preview 1 does not expose an OS executable-path query in this module;
  argv-backed views are available through `std::args`.
+- WASI Preview 1 also has no POSIX effective-user identity; its
+ `effective_user_id` implementation returns the documented zero placeholder.
+- WASI Preview 1 has no process-group primitive. Its `setpgid` compatibility
+ stub fails, so the high-level hosted child API reports process-group setup as
+ unsupported instead of claiming isolation.
 - This page is intentionally implementation-oriented. Downstream users should usually start with the higher-level std module docs listed above unless they are working on the runtime layer itself.

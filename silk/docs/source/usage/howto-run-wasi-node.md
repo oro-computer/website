@@ -3,7 +3,8 @@
 This guide shows how to:
 
 - compile a Silk program to `wasm32-wasi`, and
-- run it under Node’s built-in WASI runtime (`node:wasi`).
+- run it under Node’s built-in WASI runtime (`node:wasi`), and
+- forward process arguments into Silk.
 
 The `wasm32-wasi` backend emits a `_start () -> void` entrypoint that calls Silk
 `fn main () -> int` and then calls `wasi_snapshot_preview1.proc_exit(exit_code)`.
@@ -17,7 +18,7 @@ import io from "std/io";
 
 fn main () -> int {
   io::println("hello from silk wasm wasi");
-  return 7;
+  return 0;
 }
 ```
 
@@ -37,7 +38,8 @@ const { WASI } = require('node:wasi');
 
 async function main() {
   const wasmPath = process.argv[2];
-  const wasi = new WASI({ version: 'preview1', args: [wasmPath], env: {}, preopens: {} });
+  const userArgs = process.argv.slice(3);
+  const wasi = new WASI({ version: 'preview1', args: [wasmPath, ...userArgs], env: {}, preopens: {} });
   const bytes = fs.readFileSync(wasmPath);
   const { instance } = await WebAssembly.instantiate(bytes, wasi.getImportObject());
 
@@ -68,12 +70,43 @@ echo $?
 Expected output:
 
 - stdout contains `hello from silk wasm wasi`
-- exit code is `7`
+- exit code is `0`
+
+## 3) Access argv from `fn main () -> int`
+
+The WASI entrypoint remains parameterless. Read arguments through `std::args`
+inside `main`:
+
+```silk
+import { current } from "std/args";
+import { println } from "std/io";
+
+fn main () -> int {
+  let args = current();
+  println("argc={}", args.count());
+  if args.count() > 1 {
+    println("argv[1]={}", args.get(1));
+  }
+  return 0;
+}
+```
+
+Pass user arguments after the `.wasm` path:
+
+```sh
+node --no-warnings run.js out.wasm alpha beta
+```
+
+Silk then sees `out.wasm`, `alpha`, and `beta` as `argv[0]`, `argv[1]`, and
+`argv[2]`.
 
 ## Troubleshooting
 
 - If you see missing-import errors mentioning `wasi_snapshot_preview1`, confirm
  you built with `--target wasm32-wasi` (not `wasm32-unknown-unknown`).
-- If your program relies on OS-specific APIs (filesystem, processes): WASI is a constrained environment. Prefer
- stdlib APIs that are designed for WASI, or build for a hosted target.
+- `task` / `yield` and `async` / `await` do not yet have a WASM concurrency
+ runtime.
+- WASI is a constrained environment. Shipped modules such as `std::args`,
+ `std::env`, and parts of `std::fs` use the WASI runtime surface; unsupported
+ OS facilities can still fail code generation or return runtime errors.
 - For deeper backend details and entrypoint behavior, see: [WASM backend](?p=compiler/backend-wasm).

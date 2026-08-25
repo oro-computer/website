@@ -145,6 +145,21 @@ For concurrent and time-aware programs, `std::` provides:
 
 Reference: `std::task`, `std::sync`, `std::temporal`.
 
+### `std::gpu` — portable device execution
+
+`std::gpu` provides runtime discovery, device selection, buffers, transfers,
+streams, launch, and synchronization for mixed CPU/GPU executables. Portable
+device functions use `std::gpu::device` operations and the same source can
+target the documented AMD/HIP and NVIDIA/CUDA providers.
+
+Use the checked `gpu (...) { ... }` form when launch and synchronization should
+remain one typed operation. Use the separate manual APIs when GPU work must
+overlap with host work.
+
+Reference: [`std::gpu`](?p=std/gpu), [`std::gpu::device`](?p=std/gpu-device),
+[GPU launch blocks](?p=language/gpu-launch-blocks), and [Pure-Silk CPU/GPU
+program](?p=usage/pure-silk-gpu).
+
 ## How to keep `std::` code readable
 
 Two patterns pay off quickly:

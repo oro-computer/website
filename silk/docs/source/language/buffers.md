@@ -1,6 +1,8 @@
 # Buffers
 
-`Buffer(T)` is an intrinsic type providing low-level access to a contiguous block of memory. It is intentionally unsafe and used as a foundation for higher-level collections and strings.
+`Buffer(T)` provides low-level access to a contiguous block of memory. It is
+intentionally unsafe and used as a foundation for higher-level collections and
+strings.
 
 Key points:
 
@@ -8,72 +10,35 @@ Key points:
  - a raw pointer to the start of the memory block,
  - a capacity (number of elements that can be stored).
 - `Buffer(T)` does **not** track the number of initialized elements (length).
-- The intrinsic API includes operations such as:
- - `std::buffer::alloc`
- - `std::buffer::write`
- - `std::buffer::read`
- - `std::buffer::capacity`
- - `std::buffer::drop`
- - `std::buffer::view`
- - `std::buffer::slice`
-- The safety model is layered:
- - Layer 1: unsafe `Buffer(T)` primitive.
- - Layer 2: compile-time safety via the verifier.
- - Layer 3: provable safety via Formal Silk (contracts, invariants, and struct requirements).
+- `Buffer(T)` uses the current compiler’s **scalar-slot** layout (for example
+ `sizeof(u8) == 8`). For packed bytes suitable for OS/FFI byte APIs, use
+ `std::buffer::BufferU8`.
+- The current API includes operations such as:
+ - allocation: `std::buffer::Buffer(T).init(cap)` / `std::buffer::alloc(T; cap)`
+ - reads/writes: `buf.read(i)` / `buf.write(i, v)` and module-level wrappers
+ - views: `buf.view(len)` / `buf.slice(start, end)` returning `std::arrays::Slice(T)`
 
-## Role in the language
+Safety model (layered):
 
-- Treat `Buffer(T)` as an intrinsic type with special semantics.
-- Ensure the verifier has enough information to reason about buffer safety.
-- Coordinate with the standard library so that safe collections are built on top of `Buffer(T)`.
+- Layer 1: unsafe `Buffer(T)` primitive (`ptr + cap`, no tracked initialization).
+- Layer 2: verifier checks (borrow/ownership rules in the language subset).
+- Layer 3: Formal Silk proofs (contracts, invariants, and struct requirements).
 
 ## Notes
 
-Silk defines `Buffer(T)` as the low-level storage primitive for contiguous
-memory. In practice, downstream code currently uses the concrete `std::buffer`
-and `std::vector` surfaces below:
 
-- `std::vector::Vector(T)` provides growable, contiguous storage for scalar
- element types.
-- `std::buffer` provides width-oriented buffer helpers:
- - `BufferU8` is an owning packed byte buffer (byte-addressed `ptr`, with
- `len`/`cap` in bytes),
- - the remaining width buffers are `std::vector::Vector(T)`-backed aliases in
- the Supported forms.
-- Raw allocation and low-level memory intrinsics remain confined to
- `std::runtime::mem`.
 
-This keeps raw allocation details in runtime helpers while higher-level
-collections remain explicit in the standard library.
+The shipped stdlib provides `std::buffer::Buffer(T)` as an owning, fixed-capacity
+buffer for scalar-slot `T` values, backed by `std::runtime::mem::{alloc,free}`.
+The buffer surface is written so it can be used in verified code:
 
-## Practical Today: `std::buffer` and `std::vector`
+- structural invariants are captured in `std::formal::buffer_well_formed(ptr, cap)`,
+- bounds checks are expressed via `std::formal::bounds_i64` / `slice_range_i64`,
+- and higher-level containers can layer length tracking and element lifecycle
+ rules on top.
 
-Until the full intrinsic surface lands, downstream code should usually reach
-for the current stdlib layers directly:
+`std::buffer` also continues to provide:
 
-```silk
-import buffer from "std/buffer";
-import vector from "std/vector";
-
-fn main () -> int {
-  let mut bytes = match buffer::BufferU8.init(4) {
-    Ok(v) => v,
-    Err(_) => return 1,
-  };
-  if bytes.push(1 as u8) != None { bytes.drop(); return 2; }
-  if bytes.push(2 as u8) != None { bytes.drop(); return 3; }
-
-  let mut values = vector::Vector(int).empty();
-  if values.push(10) != None { values.drop(); bytes.drop(); return 4; }
-  if values.push(20) != None { values.drop(); bytes.drop(); return 5; }
-
-  values.drop();
-  bytes.drop();
-  return 0;
-}
-```
-
-- Use `std::buffer::BufferU8` when you need explicit packed-byte ownership.
-- Use `std::vector::Vector(T)` for typed, growable storage.
-- Keep raw allocation details inside `std::runtime::mem` and stdlib helpers
- rather than open-coding them in application code.
+- `BufferU8`: a packed, growable byte buffer for OS/FFI byte APIs (byte-addressed
+ `ptr`, with `len`/`cap` in bytes), and
+- width-oriented aliases backed by `std::vector::Vector(T)` for convenience.

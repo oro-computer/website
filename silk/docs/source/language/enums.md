@@ -128,6 +128,10 @@ fn main () -> int {
 Notes:
 
 - `E::A()` and `A()` are invalid in the Supported forms (unit variants are not callable).
+- A unit variant is an ordinary value of its enum type. It may initialize a
+ binding or aggregate field, be returned or passed to a function, and be
+ assigned to an existing mutable binding or struct field. These value uses
+ accept both the qualified `E::A` form and the type-directed `A` shorthand.
 
 ## Two-Variant `??` Shortcut
 

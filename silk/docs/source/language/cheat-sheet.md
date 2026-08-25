@@ -1,18 +1,26 @@
 # Language Cheat Sheet
 
-This document summarizes the key syntax and concepts from the Silk language in a condensed form. It is meant as a quick reference; detailed semantics live in the linked language pages throughout this site.
+This document summarizes the key syntax and concepts from the Silk language in a condensed form. It is meant as a quick reference; detailed semantics live in the other `docs/language/` files.
 
-## Scope
+## Notes
 
-This cheat sheet is intentionally compact. Use the linked language pages for
-precise semantics, diagnostics, and edge cases.
+This cheat sheet includes **both**:
 
-Important boundaries:
+- the full language design (where some features are still evolving), and
+- the **currently implemented compiler subset**.
 
-- Regions cover the shipped `with` + `new` allocation model; see [regions](?p=language/regions).
-- Concurrency covers the shipped `Task(T)` / `Promise(T)` plus `yield` / `await` surface; see [concurrency](?p=language/concurrency).
+For the authoritative “current implementation notes”, prefer:
 
-Key notes:
+- [implementation status](?p=compiler/implementation-status), and
+- any “notes sections inside the relevant concept documents.
+
+In particular, features such as regions (beyond the current `with` + `new`
+subset), concurrency runtime (scheduler/event loop), and
+dependent types are **not** implemented end-to-end yet. Value constraints are
+expressed via Formal Silk (`#require` / `#assure`, including `#require` on
+`struct` declarations).
+
+In Silk currently:
 
 - Runtime `let`/`var` bindings and compile-time `const` bindings must have an initializer ([diagnostics](?p=compiler/diagnostics), `E2015`).
 - Destructuring `let` bindings from structs are supported:
@@ -22,18 +30,17 @@ Key notes:
  - arrays/slices: `let [a, b] = xs;`
 - Enum destructuring is supported:
  - variants: `let Ok(v) = expr;`, `let Pair(a, b) = expr;`, `let E::Variant(x) = expr;` (traps on non-matching variants)
+- Refutable `let` bindings are supported:
+ - `let <pattern> = <expr> else { ... };` (the `else` block must be terminal)
 - `const` initializers must be compile-time evaluable ([diagnostics](?p=compiler/diagnostics), `E2041`); in the Supported forms this is restricted to scalar expressions and calls to `const fn` functions (still no `/` or `%`), plus string literals / `const` string aliases.
-- Monomorphized generics are supported for `struct`/`interface`/`enum`/`impl`,
- applied types (`Name(args...)`, including const arguments), and generic
- functions / methods.
- - inference failures report `E2091`; unsupported generic forms outside the
- shipped subset still report `E2016`,
+- Monomorphized generics are supported for `struct`/`interface`/`impl` and applied types (`Name(args...)`):
+ - const parameters/arguments and generic functions are still rejected (`E2016`),
 - A small concurrency subset is implemented (`Task(T)` / `Promise(T)` plus `yield`/`await`; see [concurrency](?p=language/concurrency)).
-- Maps / dictionaries use `std::map::{HashMap, TreeMap}`.
+- The builtin `map(K, V)` type form is removed; use `std::map::{HashMap, TreeMap}` instead (`E2017`).
 - Function expressions are implemented as first-class function values:
  - non-capturing: inferred `pure` — `let add = fn (x: int, y: int) -> x + y;`
  - capturing closures: may capture immutable scalar locals/parameters by value;
- capturing closures are not `pure` in the Supported forms.
+ forming captures inside `pure` code is rejected in the Supported forms.
 
 ## Types (Surface Forms)
 
@@ -52,6 +59,7 @@ Key notes:
 - Function expressions (non-capturing, inferred `pure`):
  - expression body: `fn (x: int, y: int) -> x + y`
  - block body: `fn (x: int, y: int) -> int { return x + y; }`
+ - block body `void` shorthand: `fn (x: int, y: int) { ... }` (implicit `void`)
  - capturing closures are supported as a subset; see [types](?p=language/types).
 - Structs / enums / interfaces:
  - `struct Name { ... }`, `struct Name extends Base { ... }`
@@ -92,10 +100,13 @@ Operator precedence and associativity follow the rules in [operators](?p=languag
 ## Flow Control
 
 - `if cond { ... } else { ... }` (statement form)
+- `if let [mut] <pattern> = <expr> { ... } else { ... }` (refutable pattern statement form; supports `else if let` / `else let` chains and chained `&& let [mut]`)
 - `let v = if cond { a } else { b };` (`if` expression)
 - `loop { ... }` (infinite loop; exits via `break`/`return`).
 - `while (cond) { ... }`
-- `for pattern in iterable { ... }` (ranges, builtin arrays/slices).
+- `while let [mut] <pattern> = <expr> { ... }`
+- `for pattern in iterable { ... }` (ordinary binder form for ranges, builtin arrays/slices, and iterators).
+- `for let [mut] pattern in iterable { ... }` (pattern-filtered iteration; matching elements run the body, non-matching elements are skipped).
 - `for (init; cond; step) { ... }` (C-style loop header).
 - `async loop { ... }` / `task loop { ... }` (loop forms in async context).
 - `match value { ... }` — pattern matching.
@@ -103,12 +114,16 @@ Operator precedence and associativity follow the rules in [operators](?p=languag
 - `assert expr;` or `assert(expr, "message");`
 - `break;`
 - `continue;`
+- `gpu (grid=<u64>, workspace=<u64>) { kernel(args...); }` (checked,
+ automatically synchronized GPU dispatch; returns
+ `std::gpu::DispatchResult` in value position and is discardable in statement
+ position; see `gpu-launch-blocks.md`).
 - Blocks: `{ stmt* }`.
 - Expression statements: `expr;` (where allowed).
 
-See the linked flow-control reference pages for details.
+See `docs/language/flow-*.md` for details.
 
-Executable entrypoint (current rule):
+Executable entrypoint (initial rule):
 
 - A minimal executable module defines exactly one top-level function:
 
@@ -120,14 +135,6 @@ Executable entrypoint (current rule):
 
 - This `main` function takes no parameters and returns `int`. The front-end
  enforces this shape for executable builds before code generation.
-
-## Attributes & Conditional Compilation
-
-- Annotate declarations: `attr(os="linux") fn platform () -> string { ... }`
-- Compile-time branching: `if attr(target="wasm32-wasi") { ... } else { ... }`
-- Built-in keys (Supported forms): `arch`, `os`, `target`, `feature` (+ `abi=c` in type positions)
-
-See [attributes](?p=language/attributes) for the full reference and examples.
 
 ## Optionals & Mutability
 
@@ -166,8 +173,8 @@ See `structs-impls-layout.md` and `interfaces.md` for details.
 ## Regions & Buffers
 
 - Regions (fixed-size allocation context):
- - declare: `const region scratch: u8[1024];`
- - use: `with scratch { let p: &Frame = new Frame{ ... }; }`
+ - declare: `const region region_buf: u8[1024];`
+ - use: `with region_buf { let p: &Frame = new Frame{ ... }; }`
  - anonymous: `with 1024 { let p: &Frame = new Frame{ ... }; }`
 - Buffers:
  - intrinsic `Buffer(T)` with `(ptr, capacity)`,
@@ -184,37 +191,37 @@ See `structs-impls-layout.md` and `interfaces.md` for details.
  - `async task fn` — `async` + `task`; calling yields `Promise(Task(T))`.
 - Structured block:
 
-```silk
-async fn get_dashboard_data() -> Dashboard {
-  // Note: the scheduler-backed `async { ... }` semantics are still design work,
-  // but the compiler implements `Task(T)`/`Promise(T)` handles, `yield`, and `await`.
-  let mut user: User;
-  let mut orders: Order[];
+	  ```silk
+	  async fn get_dashboard_data() -> Dashboard {
+	    // Note: the scheduler-backed `async { ... }` semantics are still design work,
+	    // but the compiler implements `Task(T)`/`Promise(T)` handles, `yield`, and `await`.
+	    let mut user: User;
+	    let mut orders: Order[];
 
-  async {
-    let user_promise = fetch_user_profile(123);
-    let orders_promise = fetch_recent_orders(123);
-    user = await user_promise;
-    orders = await orders_promise;
+	    async {
+	      let user_promise = fetch_user_profile(123);
+	      let orders_promise = fetch_recent_orders(123);
+	      user = await user_promise;
+	      orders = await orders_promise;
+	    }
+
+	    return Dashboard(user, orders);
+	  }
+	  ```
+
+ To receive task values, use `yield` inside a task context (`task { ... }` or `task fn`):
+
+  ```silk
+  task fn worker () -> int { return 42; }
+
+  async fn main () -> int {
+    let h = worker();
+    task {
+      let value: int = yield h;
+      return value;
+    }
   }
-
-  return Dashboard(user, orders);
-}
-```
-
-To receive task values, use `yield` inside a task context (`task { ... }` or `task fn`):
-
-```silk
-task fn worker () -> int { return 42; }
-
-async fn main () -> int {
-  let h = worker();
-  task {
-    let value: int = yield h;
-    return value;
-  }
-}
-```
+  ```
 
 See `concurrency.md` for deeper semantics.
 

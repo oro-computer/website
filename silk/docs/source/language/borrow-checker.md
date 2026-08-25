@@ -212,8 +212,11 @@ rejected:
 
 - `ext` declarations may not use ordinary references or slices in parameters
  or results,
-- unnamed/global-package top-level `export fn` declarations are subject to the same
- rule because they define the compiler’s C-facing symbol surface,
+- unnamed C-facing root-package top-level `export fn` declarations are subject
+ to the same rule because they define the compiler’s C-facing symbol surface,
+- named-package Silk object exports may accept slice parameters in the
+ compiler-owned package ABI; that does not make slices part of the external C
+ ABI surface,
 - only opaque handle references (`&Handle` where `Handle` is `struct Name;`)
  may cross that boundary.
 
@@ -280,6 +283,39 @@ In the Supported forms, ownership transfer is intentionally conservative:
  assignment from a name are also treated as moves:
  - `let y = x;` consumes `x`,
  - `y = x;` consumes `x`.
+- Passing an ownership-tracked value as an enum payload consumes that value.
+ This applies equally to qualified constructors such as `Result::Ok(value)`
+ and type-directed constructors such as `Ok(value)`, including constructors
+ of monomorphized generic enums. Returning the constructed enum transfers the
+ payload to the caller; function-scope cleanup must not destroy the consumed
+ local after its slots have been copied into the return value.
+- Assignment of a value into a struct field, including through a mutable
+ reference parameter (`owner.field = value`), follows the same rule when the
+ field type requires ownership tracking. The source binding is consumed, the
+ old field value is released exactly once, and the installed value becomes
+ the aggregate's owned field.
+- Reading a direct ownership-tracked field in an ownership-consuming position
+ moves that field. For example, both `let item = owner.item;` and
+ `item = owner.item;` transfer the field out of `owner`; `owner.item` cannot
+ be read or moved again until that exact field is reinitialized. This applies
+ equally when `owner` is a mutable local or a mutable reference parameter and
+ includes transfers nested inside a newly constructed struct, enum payload,
+ optional, or other aggregate. This supports explicit take operations that
+ immediately install an empty or invalid value in the source aggregate.
+ Ownership classification is
+ transparent through named aliases, applied generic aliases such as
+ `Vector(Item)`, and optional wrappers around an owning type.
+- Reinitializing a moved-out field does not run `Drop` for the field's stale
+ storage, because ownership has already transferred. Once the replacement is
+ installed, the field is initialized again and later overwrites release the
+ then-current value normally.
+- A partially moved aggregate must be reinitialized before it is otherwise
+ used or leaves the current block/function. The Supported forms deliberately
+ rejects other aggregate access while a direct field is moved, which keeps a
+ custom aggregate `Drop` implementation from observing stale field storage.
+- Consequently, `return owner.item;` is rejected when `item` requires
+ ownership tracking. A function that transfers the field must first take it
+ into a local, reinitialize `owner.item`, and then return that local.
 - `let move` / `var move` are the equivalent binding-level spellings for an
  explicit initialization-time move:
  - `let move y = x;` and `var move y = x;` consume `x` when `x` requires

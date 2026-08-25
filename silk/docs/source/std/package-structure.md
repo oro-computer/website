@@ -44,6 +44,9 @@ available to user programs.
  - `std::optional`
  - `std::range`
  - `std::function`
+ - `std::gpu` (pure-Silk host GPU facade)
+ - `std::gpu::device` (register-independent GPU device operations)
+ - `std::gpu::isa` (low-level AMDGPU device instruction surface)
  - `std::dylib`
  - `std::semver`
  - `std::protobuf` (Protocol Buffers wire helpers and `silk proto` runtime

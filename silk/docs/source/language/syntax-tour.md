@@ -7,20 +7,27 @@ expressions, and the Formal Silk verification directives.
 This guide complements (not replaces):
 
 - [grammar](?p=language/grammar) (the exact grammar the parser accepts),
-- the linked language concept pages (semantics and checker rules),
+- the concept documents under `docs/language/` (semantics and checker rules),
+- [implementation status](?p=compiler/implementation-status) (what works end-to-end today),
 - and [diagnostics](?p=compiler/diagnostics) (error codes for unsupported forms).
 
-## How to use this guide
+## Notes
 
-Silk’s `docs/` are the canonical reference. This tour stays example-first and
-points back to the detailed language and compiler pages when exact semantics or
-diagnostics matter.
+Silk’s `docs/` are the canonical specification, and many documents describe both:
+
+- the full language design, and
+- Silk currently (what parses, type-checks, and code-generates today).
+
+This tour follows the same approach:
+
+- examples labeled “Example” are intended to compile in the Supported forms,
+- examples labeled “Design” illustrate planned syntax and are not necessarily implemented.
 
 When in doubt, prefer:
 
 - [grammar](?p=language/grammar) for syntax,
-- [diagnostics](?p=compiler/diagnostics) for unsupported forms and error codes,
-- the runnable examples embedded throughout the linked language pages.
+- [implementation status](?p=compiler/implementation-status) for current end-to-end support,
+- `tests/silk/pass_*.slk` for working example programs.
 
 ## 0. Minimal Executable Module
 
@@ -38,6 +45,22 @@ Notes:
 - Blocks are `{ stmt* }`.
 - The entrypoint for an executable build is `main` returning `int` (see
  [cli silk](?p=compiler/cli-silk) for the CLI rules and supported targets).
+
+GPU-capable mixed executables may use a checked launch form in host code:
+
+```silk
+gpu (grid=8, workspace=8) {
+  fill(output.address, 42);
+}
+```
+
+The body is exactly one direct call to a launchable `attr(device=gpu)`
+function. The form launches and synchronizes before leaving the block. In value
+position it returns `std::gpu::DispatchResult`, which exposes separate launch
+and synchronization statuses; statement position discards that value. It is
+valid in ordinary, async, and task host functions. See
+[gpu launch blocks](?p=language/gpu-launch-blocks); use separate manual `std::gpu` calls when
+overlapping execution is required.
 
 ## 1. Lexical Basics
 
@@ -74,10 +97,10 @@ Names are often qualified with `::`:
 ```silk
 package my_app::core;
 
-import strings from "std/strings";
+import std::strings;
 
 fn main () -> int {
-  let s: string = strings::trim(" hi ");
+  let s: string = std::strings::trim(" hi ");
   return 0;
 }
 ```
@@ -95,28 +118,6 @@ fn inc (x: int) -> int {
   return x + 1;
 }
 ```
-
-### Attributes (`attr(...)`) and conditional compilation
-
-Silk supports first-class **attributes** that can annotate declarations and can
-also be queried at compile time for conditional compilation:
-
-```silk
-attr(os="linux") fn platform () -> string { return "linux"; }
-
-fn main () -> int {
-  if attr(target="wasm32-wasi") {
-    // compiled only for the WASI target
-    return 0;
-  } else {
-    // compiled otherwise
-    return 0;
-  }
-}
-```
-
-See [attributes](?p=language/attributes) for the full reference, built-in keys, and
-patterns for feature/target detection.
 
 ## 2. Source File Structure: `package`/`module`, `import`, then declarations
 
@@ -155,15 +156,16 @@ module drivers::uart as Device;
 
 See [packages imports exports](?p=language/packages-imports-exports) for the full import/export model.
 
-### Module-specifier imports
+### Package imports
 
 ```silk
 package app;
 
-import strings from "std/strings";
+import std::strings;
 
 fn main () -> int {
-  let s: string = strings::trim(" hi ");
+  let s: string = trim(" hi "); // may be visible unqualified in the current subset
+  let t: string = std::strings::trim(" hi ");
   return 0;
 }
 ```
@@ -234,7 +236,7 @@ This section shows the core top-level declaration forms:
 
 ### 4.1 Bindings: `const`, `let`, `let mut`, `var`
 
-Supported (Supported forms requires initializers; see `E2015`):
+Supported forms (Supported forms requires initializers; see `E2015`):
 
 ```silk
 fn main () -> int {
@@ -275,8 +277,10 @@ Notes:
  Enum destructuring is also supported:
 
   ```silk
+  import std::result;
+
   fn main () -> int {
-    type R = Result(int, int);
+    type R = std::result::Result(int, int);
     let Ok(value) = R.ok(7);
     return value;
   }
@@ -351,19 +355,20 @@ fn log (fmt: string, ...args: std::fmt::Arg) -> void {
 }
 ```
 
-#### Generic function parameter split (`;`)
+#### Generic function parameter split (`;`) (Design, parsed but rejected)
 
 Generic functions use `;` to separate compile-time parameters from value parameters:
 
 ```silk
-fn get_first(T, N: usize; xs: &T[N]) -> T {
+// Design (currently rejected with `E2016`).
+fn get_first(T, N: int; xs: &T[N]) -> T {
   return xs[0];
 }
 ```
 
 ### 4.3 Function expressions (lambdas)
 
-Supported (non-capturing expression body):
+Supported forms (non-capturing expression body):
 
 ```silk
 fn main () -> int {
@@ -372,7 +377,7 @@ fn main () -> int {
 }
 ```
 
-Supported (block body with explicit return type):
+Supported forms (block body with explicit return type):
 
 ```silk
 fn main () -> int {
@@ -517,20 +522,22 @@ See [interfaces](?p=language/interfaces).
 Error type declaration:
 
 ```silk
+import std::arrays;
+
 error OutOfBounds {
-  index: int,
-  len: int
+  index: i64,
+  len: i64
 }
 ```
 
 Error-producing signatures use `|`:
 
 ```silk
-fn get_at (xs: &u8[], index: int) -> u8 | OutOfBounds {
-  if index < 0 || index >= std::length(xs) {
-    panic OutOfBounds { index: index, len: std::length(xs) };
+fn get_at (xs: std::arrays::Slice(u8), index: i64) -> u8 | OutOfBounds {
+  if index < 0 || index >= xs.len() {
+    panic OutOfBounds { index: index, len: xs.len() };
   }
-  return xs[index];
+  return xs.get(index);
 }
 ```
 
@@ -538,7 +545,10 @@ Handling typed errors uses the `match` **statement** form:
 
 ```silk
 fn main () -> int {
-  match (get_at([1, 2, 3], 10)) {
+  let xs_arr: u8[3] = [1, 2, 3];
+  let xs: std::arrays::Slice(u8) = { ptr: xs_arr as u64, len: 3 };
+
+  match (get_at(xs, 10)) {
     value => {
       return value as int;
     },
@@ -554,7 +564,10 @@ Propagating errors from calls uses postfix `?`:
 ```silk
 // Supported when `main` declares a compatible error set.
 fn main () -> int | OutOfBounds {
-  let x: u8 = get_at([1, 2, 3], 0)?;
+  let xs_arr: u8[3] = [1, 2, 3];
+  let xs: std::arrays::Slice(u8) = { ptr: xs_arr as u64, len: 3 };
+
+  let x: u8 = get_at(xs, 0)?;
   return x as int;
 }
 ```
@@ -574,7 +587,7 @@ export ext errno "errno" = int;
 Note: C variadics (`printf`-style `...`) via `ext` are not implemented yet; see
 [varargs](?p=language/varargs) and [ext](?p=language/ext).
 
-See also: [abi libsilk](?p=compiler/abi-libsilk) (C ABI) and `include/silk.h`.
+See also: [abi libsilk](?p=compiler/abi-libsilk) (C ABI) and `include/silk/silk.h`.
 
 ### 4.10 Tests: `test`
 
@@ -721,13 +734,13 @@ fn main () -> int {
 }
 ```
 
-See [generics](?p=language/generics) for the current monomorphized subset and the
-remaining unsupported generic forms that still report `E2016`.
+See [generics](?p=language/generics) for Supported forms limits (notably `E2016` for
+const parameters/arguments and generic functions).
 
 ## 6. Statements (Inside Blocks)
 
 The statement grammar is summarized in [grammar](?p=language/grammar) and detailed
-in the dedicated flow-control reference pages.
+in `docs/language/flow-*.md`.
 
 ### `if` / `else`
 
@@ -810,11 +823,10 @@ fn main () -> int {
 panic OutOfBounds { index: 1, len: 0 };
 ```
 
-### `match` statement (block arms)
+### `match` statement (typed errors)
 
-See [flow match](?p=language/flow-match) for ordinary value matching and
-[typed errors](?p=language/typed-errors) for the Terminal Arm Rule when the scrutinee
-has a typed-error contract.
+See [typed errors](?p=language/typed-errors) for the Terminal Arm Rule and the supported
+pattern forms.
 
 ### `async { ... }` and `task { ... }`
 
@@ -891,7 +903,7 @@ productions, see [grammar](?p=language/grammar).
 
 ### Literals and other primary expressions
 
-See the dedicated literals reference pages for precise rules.
+See the `docs/language/literals-*.md` concept documents for precise rules.
 
 ```silk
 fn main () -> int {
@@ -1091,7 +1103,7 @@ If you want more detail on a specific construct, jump to:
 - Syntax: [grammar](?p=language/grammar)
 - Types: [types](?p=language/types), [generics](?p=language/generics)
 - Operators: [operators](?p=language/operators)
-- Flow control: [flow overview](?p=language/flow-overview), [flow if else](?p=language/flow-if-else), [flow for](?p=language/flow-for), [flow while](?p=language/flow-while), and [flow match](?p=language/flow-match)
+- Flow control: [flow overview](?p=language/flow-overview) and `docs/language/flow-*.md`
 - Modules/imports/exports: [packages imports exports](?p=language/packages-imports-exports)
 - Optionals: [optional](?p=language/optional)
 - Typed errors: [typed errors](?p=language/typed-errors)

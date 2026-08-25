@@ -70,6 +70,8 @@ export let ERR_BAD_CONTENT_LENGTH: int = 5;
 export let ERR_OUT_OF_MEMORY: int = 6;
 export let ERR_BAD_URL: int = 7;
 export let ERR_STREAM: int = 8;
+export let ERR_DEADLINE_EXCEEDED: int = 9;
+export let ERR_BODY_TOO_LARGE: int = 10;
 
 export error Error {
   kind: int,
@@ -249,8 +251,14 @@ export fn main () -> int {
 
 ## Validation Rules
 
-- `Content-Length` must parse as a non-negative decimal value.
+- `Content-Length` must parse as a non-negative decimal value representable by
+ `i64`. Decimal or message-extent overflow is rejected as an invalid message;
+ it is never interpreted as an absent length or allowed to wrap an offset.
 - When `Transfer-Encoding` is present, only `"identity"` and `"chunked"` are
  accepted; other encodings fail with `ERR_UNSUPPORTED_TRANSFER_ENCODING`.
+- Chunk sizes, decoded lengths, framing offsets, and owned-buffer capacity
+ calculations are checked before addition, multiplication, or alignment.
+ Overflow fails with `ERR_BAD_MESSAGE`, `ERR_BAD_CONTENT_LENGTH`, or
+ `ERR_OUT_OF_MEMORY` according to the operation that could not be represented.
 - Request/response header blocks are limited by `DEFAULT_MAX_HEADER_BYTES`
  (and per-connection configuration where applicable).

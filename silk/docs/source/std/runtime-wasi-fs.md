@@ -24,6 +24,10 @@ Use the following owning docs for the substantive API/design context for this mo
  raw-stat layout used by `std::runtime::fs::{stat,lstat,fstat}` and
  `std::fs::Stats`, with documented zero/fallback fields where preview1 lacks
  POSIX metadata.
+- `fstat_size(fd)` reads the preview1 descriptor filestat directly without
+ changing the descriptor offset. It returns `-1` and records a mapped errno
+ when the syscall fails, the descriptor is invalid, allocation fails, or the
+ unsigned WASI size cannot be represented as a Silk `i64`.
 - It exposes the same borrowed directory-entry fill surface as the POSIX
  backend for `std::fs::Dir.next_view()`, backed by the per-directory WASI
  `fd_readdir` buffer.

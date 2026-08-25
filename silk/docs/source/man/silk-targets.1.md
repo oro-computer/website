@@ -19,7 +19,9 @@ the compiler. The human output matches the target lists used by
 `silk build --list-targets` and `silk build --list-archs`. Output-kind labels
 describe what the current compiler host can emit for that target. When a target
 has extra Apple Silicon macOS host-backed support that is not available on the
-current host, the text calls out that host requirement explicitly.
+current host, the text calls out that host requirement explicitly. AMDGPU
+targets are listed with object-output support for the current source-intrinsic
+`.hsaco` path, but are not yet general Silk IR-to-GPU lowering targets.
 
 Use `--json` for editor, CI, release, and agent workflows that need stable
 target capability facts without scraping terminal output.
@@ -42,9 +44,9 @@ Per-target capabilities include:
 - current-host supported output kinds for the same artifact kinds,
 - whether executable output is currently const-main-only on this host,
 - whether the target has a current-host-backed non-constant executable path or
- object-output path,
+ object/static/shared library-output path,
 - whether Apple Silicon macOS hosts can provide host-backed non-constant
- executable or object-output support for the target,
+ executable or object/static/shared library-output support for the target,
 - native and Objective-C native-input support,
 - Unix/POSIX/WASM classification,
 - async-runtime availability.

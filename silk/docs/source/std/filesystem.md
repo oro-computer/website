@@ -67,6 +67,9 @@ export enum FSErrorKind {
   IsADirectory,
   InvalidInput,
   UnexpectedEof,
+  WouldBlock,
+  Interrupted,
+  Unsupported,
   Unknown,
 }
 
@@ -172,6 +175,11 @@ export enum SeekWhence {
   End,
 }
 
+export enum FileLockMode {
+  Shared,
+  Exclusive,
+}
+
 // A file descriptor wrapper.
 export struct File {
   fd: int,
@@ -231,6 +239,8 @@ impl File {
   public fn mmap_readonly_range (self: &File, offset: i64, len: i64) -> MMapResult;
   public fn sync (self: &File) -> FSFailed?;
   public fn truncate (self: &File, len: i64) -> FSFailed?;
+  public fn lock (self: &File, mode: FileLockMode, nonblocking: bool) -> FSFailed?;
+  public fn unlock (self: &File) -> FSFailed?;
 
   // Convenience helpers.
   public fn read_to_end (self: &File, mut out: &std::buffer::BufferU8) -> FSErrorIntResult;
@@ -301,6 +311,9 @@ export using readdir = read_dir;
 export fn unlink (path: string) -> FSFailed?;
 export fn rename (old_path: string, new_path: string) -> FSFailed?;
 export fn mkdir (path: string, mode: int) -> FSFailed?;
+export fn chmod (path: string, mode: int) -> FSFailed?;
+export fn flock (file: &File, mode: FileLockMode, nonblocking: bool) -> FSFailed?;
+export fn funlock (file: &File) -> FSFailed?;
 export fn rmdir (path: string) -> FSFailed?;
 export fn mkdir_all (path: string, mode: int) -> FSError?;
 export using mkdirp = mkdir_all;
@@ -345,6 +358,19 @@ Notes:
  hosted subset it treats `EEXIST` as success and does not distinguish an
  existing directory from an existing non-directory at the same path.
  - `mkdirp` is an exported compatibility alias for `mkdir_all`.
+ - `chmod(path, mode)` replaces the permission bits of an existing filesystem
+ object using explicit hosted mode bits. It works for regular files,
+ directories, and sockets when the host permits the operation.
+ - `flock(file, mode, nonblocking)` acquires a shared or exclusive advisory
+ lock on the open file description. A nonblocking conflict reports
+ `FSErrorKind::WouldBlock`; an interrupted wait reports `Interrupted`; and a
+ target without this locking facility reports `Unsupported`.
+ - `funlock(file)` releases a held advisory lock. Closing or dropping the last
+ descriptor for the open file description also releases its locks, so
+ `File.close()` and scope-exit `Drop` are release paths. Locks are advisory:
+ cooperating processes must use the same locking protocol.
+ - `File.lock(...)` and `File.unlock()` are method forms of `flock(...)` and
+ `funlock(...)`.
  - `read_dir` returns a `Dir` handle for iteration. `Dir.next()` yields
  `Some(Ok(DirEntry))` for entries, `Some(Err(FSFailed))` on error, and
  `None` on end-of-directory. `std::fs` skips `"."` and `".."`.
@@ -354,6 +380,10 @@ Notes:
  directory is closed. The current implementation keeps the small runtime
  output record inside the `Dir` owner, so `next_view()` itself does not
  allocate per entry.
+ - This API has the same hosted lowering support in manifest-enabled
+ `build.slk` modules as in ordinary executables. A build module may bind
+ and inspect the optional `DirEntryViewResult` returned by `next_view()`
+ while computing an emitted manifest.
  - `readdir` is an exported compatibility alias for `read_dir`.
  - `path_kind(path)` classifies the resolved filesystem object as
  `RegularFile`, `Directory`, or `Other`.

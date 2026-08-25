@@ -50,6 +50,10 @@ To refresh the website copy from the sibling Silk compiler checkout:
 
 ```bash
 python3 website/silk/tools/sync-from-silk-docs.py
+python3 website/silk/tools/build-indexes.py
+python3 website/silk/tools/build-llms-txt.py
+python3 website/silk/tools/audit-site.py
+python3 website/silk/tools/audit-stdlib-docs.py
 ```
 
 ## Virtnosis docs

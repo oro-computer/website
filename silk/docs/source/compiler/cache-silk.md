@@ -47,6 +47,15 @@ cacheable. The cache key covers the relevant build inputs and options, including
 Silk sources, native inputs, linker-affecting settings, toolchain identity, and
 selected stdlib overrides.
 
+For a package target, "Silk sources" means the complete local file-module
+closure resolved from every declared target root, not only the paths listed in
+the manifest's `[sources]` table. Both the normalized path and file contents of
+each transitively imported local module participate in the key. The effective
+root and dependency feature selections participate as well. Consequently, an
+edit to an imported `.slk` file or a feature change that can alter checked or
+generated code must invalidate the target entry even when the manifest itself
+is unchanged.
+
 Managed build-cache updates are coordinated through an internal advisory lock
 file under the cache root. Cache hits, cache repopulation, and explicit cache
 maintenance commands all use that lock so `silk` does not delete or rewrite a

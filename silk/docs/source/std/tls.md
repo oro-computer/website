@@ -1,8 +1,7 @@
 # `std::tls`
 
 `std::tls` provides TLS client/server
-primitives for the hosted POSIX baseline using vendored `mbedTLS` static
-archives.
+primitives for the hosted POSIX baseline using the built-in mbedTLS provider.
 
 The initial goals are:
 
@@ -12,10 +11,17 @@ The initial goals are:
 - end-to-end runnable tests that do not depend on real sockets (to keep the
  test suite runnable in sandboxed environments).
 
-## Linkage and Toolchain Integration
+## Provider, Linkage, and Toolchain Integration
 
-On supported hosted target layouts, `silk build` auto-links the vendored mbedTLS
-static archives (`libmbedtls.a`, `libmbedx509.a`, `libmbedcrypto.a`) from:
+In default `auto` mode, Apple builds fall back to the built-in mbedTLS provider
+for `std::tls` because the Network/Security-backed TLS implementation is not
+wired yet. Explicit `platform` builds are strict and reject `std::tls` for now
+with a diagnostic that names the missing provider mapping. Explicit `builtin`
+builds use mbedTLS directly.
+
+When the built-in provider path is active, `silk build` auto-links the built-in
+mbedTLS static archives (`libmbedtls.a`, `libmbedx509.a`,
+`libmbedcrypto.a`) from:
 
 - the repo checkout: `vendor/lib/<target-layout>/`, or
 - an installed prefix: `<prefix>/lib/silk/vendor/lib/<target-layout>/`.
@@ -25,10 +31,10 @@ The current target layouts are `x64-linux` for glibc Linux x86_64,
 macOS.
 
 This avoids a runtime `DT_NEEDED` dependency on system mbedTLS shared libraries.
-When the vendored archives are missing, `silk build` reports an error that
+When the built-in archives are missing, `silk build` reports an error that
 instructs the user to run `zig build deps` for the selected target.
 
-The vendored mbedTLS in the Silk compiler repository is pinned (currently **Mbed TLS 4.0.0**).
+The built-in mbedTLS in the Silk compiler repository is pinned (currently **Mbed TLS 4.0.0**).
 In mbedTLS 4.x, TLS depends on the PSA crypto subsystem for randomness and
 cryptographic operations.
 

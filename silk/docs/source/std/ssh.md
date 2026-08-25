@@ -39,7 +39,7 @@ source of the underlying behavior and linkage notes.
 ## Linkage and Toolchain Integration
 
 On `linux/x86_64`, importing either `std::ssh` or `std::ssh2` causes
-`silk build` to auto-link the vendored `libssh2.a` archive and its vendored
+`silk build` to auto-link the built-in `libssh2.a` archive and its built-in
 mbedTLS dependencies, matching the `std::ssh2` behavior described in
 [ssh2](?p=std/ssh2).
 

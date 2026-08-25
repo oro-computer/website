@@ -202,6 +202,8 @@ pointing at the opcode.
 ## Ownership Rules
 
 - A `Module` owns the wasm bytes and parsed metadata.
+- `Module.drop()` delegates destruction of its owned byte buffer to
+ `BufferU8.drop()` and then releases the remaining metadata exactly once.
 - An `Instance` owns its own runtime state and takes ownership of the module’s
  owned allocations during instantiation.
  - `Module.instantiate(mut self: &Module)` consumes the module by moving its

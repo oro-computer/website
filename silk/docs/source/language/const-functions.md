@@ -42,7 +42,12 @@ Notes:
  - it may be called only from compile-time contexts (for example `const`
  initializers and Formal Silk specifications),
  - it is not emitted as a runtime/linkable symbol in executable, object, or
- library outputs.
+ library outputs,
+ - GPU placement does not change this rule. Device code may consume a value
+ produced by const evaluation, but it may not make a runtime call to a
+ `const fn` or `const pure fn`. Use an ordinary `pure fn` for a helper that
+ must execute on both CPU and GPU, or `attr(device=gpu)` for a device-only
+ helper.
 
 ## Compile-Time Values
 

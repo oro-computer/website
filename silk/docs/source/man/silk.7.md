@@ -136,6 +136,6 @@ silk doc --man std::fs -o std_fs.3
 
 - [`silk(1)`](?p=man/silk.1)
 - [`silk-build(1)`](?p=man/silk-build.1), [`silk-package(1)`](?p=man/silk-package.1), [`silk-cache(1)`](?p=man/silk-cache.1), [`silk-check(1)`](?p=man/silk-check.1), [`silk-targets(1)`](?p=man/silk-targets.1), [`silk-graph(1)`](?p=man/silk-graph.1), [`silk-size(1)`](?p=man/silk-size.1), [`silk-test(1)`](?p=man/silk-test.1), [`silk-doc(1)`](?p=man/silk-doc.1), [`silk-man(1)`](?p=man/silk-man.1), [`silk-guide(1)`](?p=man/silk-guide.1), [`silk-error(1)`](?p=man/silk-error.1), [`silk-proto(1)`](?p=man/silk-proto.1), [`silk-cc(1)`](?p=man/silk-cc.1)
-- [`silk_compiler(3)`](?p=man/silk_compiler.3), [`silk_error(3)`](?p=man/silk_error.3), [`silk_bytes(3)`](?p=man/silk_bytes.3), [`silk_abi_get_version(3)`](?p=man/silk_abi_get_version.3)
+- [`silk_compiler(3)`](?p=man/silk_compiler.3), [`silk_error(3)`](?p=man/silk_error.3), [`silk_bytes(3)`](?p=man/silk_bytes.3), [`silk_abi_get_version(3)`](?p=man/silk_abi_get_version.3), [`silk_amdgpu_aql_dispatch_packet_build(3)`](?p=man/silk_amdgpu_aql_dispatch_packet_build.3)
 - [`libsilk(7)`](?p=man/libsilk.7)
 - `https://oro.computer/silk`

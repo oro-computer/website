@@ -17,10 +17,10 @@ work with the current `ext` / C ABI subset.
 - `std::image::png` — PNG decode/encode (`RGBA8`) via libpng.
 - `std::image::jpeg` — JPEG decode/encode (`RGBA8`) via libjpeg-turbo.
 
-## Vendored Dependencies + Linking
+## Built-In Dependencies + Linking
 
 On supported hosted Linux x86_64 target layouts, the codec modules rely on
-vendored C libraries that are built via the Silk compiler repository’s vendored dependency workflow:
+built-in C libraries that are built via the Silk compiler repository’s vendored dependency workflow:
 
 - libpng `v1.6.54`
 - libjpeg-turbo `3.1.3`
@@ -37,7 +37,7 @@ For musl outputs, build the matching dependency layout first:
 zig build deps -Dtarget=x86_64-linux-musl
 ```
 
-When the vendored archives are present, `silk build` auto-links them when
+When the built-in archives are present, `silk build` auto-links them when
 `std::image::png` / `std::image::jpeg` are present in the module set, and also
 when linking `.o`/`.a` inputs that reference the shim symbols.
 
@@ -57,6 +57,9 @@ Notes:
 ## Ownership + Safety
 
 - Decoders return owned pixel buffers; callers must `drop` them when finished.
+- `ImageRGBA8.drop()` delegates pixel destruction to the owning `BufferU8`;
+ replacing or destroying an image therefore releases the pixel allocation
+ exactly once.
 - Inputs are treated as borrowed byte slices; they must remain valid for the
  duration of a call.
 - These modules do not provide sandboxing: decoding untrusted data can be

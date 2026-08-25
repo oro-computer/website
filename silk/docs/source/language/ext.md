@@ -111,9 +111,12 @@ Currently supported:
  reference (`&Name`) in `ext` function parameters and results,
  - ordinary references (`&T`) and slices (`T[]`) are rejected at `ext`
  boundaries,
- - and the same ordinary-borrow restriction also applies to global-package
- `export fn` signatures because they participate in the same external ABI
- surface.
+ - the same ordinary-borrow restriction also applies to unnamed-package
+ C-facing `export fn` signatures because they participate in the external
+ ABI surface,
+ - named-package Silk object exports may use slice parameters inside the
+ compiler-owned package ABI; those parameters lower as `{ ptr: u64,
+ len: i64 }` and are not part of the C `ext`/header surface.
 - lowering calls to `ext` functions when building:
  - `silk build --kind object`, and
  - `silk build --kind static`,
@@ -136,7 +139,7 @@ Not implemented yet (documented design, future work):
 
 - writing to `ext` variables (they are read-only in the Supported forms),
 - `ext` variables of non-scalar types (strings, structs, optionals, arrays),
-- richer string and aggregate marshalling (for example: returning `string` from `ext` calls as an owned Silk value, passing/returning user-defined structs by value beyond the current ABI-safe POD subset, and array/slice bridging).
+- richer string and aggregate marshalling (for example: returning `string` from `ext` calls as an owned Silk value, passing/returning user-defined structs by value beyond the current ABI-safe POD subset, and C-facing array/slice bridging).
 - calling back into Silk from foreign code with capturing closures or richer
  closure environments (only plain non-capturing function pointers are
  supported as `ext` parameters in the Supported forms).

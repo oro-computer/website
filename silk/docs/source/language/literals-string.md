@@ -50,6 +50,10 @@ Not implemented yet (or not specified as stable):
  escape forms (notably `\xNN`) can construct byte sequences that are not valid
  UTF-8. Avoid this unless you are intentionally working with raw bytes.
 - String literals are immutable.
+- Literal storage has static program lifetime. Evaluating a comparison does not
+ consume, clear, or otherwise invalidate either string operand, and the same
+ literal or string binding may be compared again after short-circuit boolean
+ expressions and value-position conditionals.
 - Unless otherwise specified for a particular FFI surface, string literals do
  not implicitly include a trailing `\0` byte; length is carried explicitly.
 

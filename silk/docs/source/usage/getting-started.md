@@ -62,28 +62,32 @@ The reference Silk compiler/toolchain is built with Zig.
 From the Silk compiler repository root:
 
 ```bash
-zig build
-```
-
-This produces (among other artifacts):
-
-- `zig-out/bin/silk` (the CLI)
-- `zig-out/lib/libsilk.a` (the C ABI library)
-
-If you use the Make wrapper:
-
-```bash
 make build
 ```
 
-Some features use pinned vendored dependencies (for example crypto/TLS on hosted targets). To fetch/build them for the
-supported host platform:
+This builds missing hosted dependencies on supported native hosts and stages a
+repo-local toolchain. Among its outputs are:
+
+- `build/bin/silk` (the CLI)
+- `build/bin/silk-lsp` (the language server)
+- `build/lib/libsilk.a` (the C ABI library)
+- `build/lib/silk/std/libsilk_std.a` (the prebuilt stdlib archive on supported native hosts)
+- `build/share/silk/std/` and `build/share/man/` (stdlib sources and manpages)
+
+For a compiler-only Zig build or a custom staging prefix, use:
+
+```bash
+zig build
+zig build install --prefix build
+```
+
+To fetch or rebuild only the pinned hosted dependency archives:
 
 ```bash
 make deps
 ```
 
-Reference: [Vendored deps](?p=compiler/vendored-deps)
+Reference: [Built-in dependencies](?p=compiler/builtin-deps)
 
 ## Troubleshooting
 
@@ -96,5 +100,7 @@ Reference: [Vendored deps](?p=compiler/vendored-deps)
 - Formal verification: [Formal Silk](?p=guides/formal-silk) · [Tutorial 7: Formal Silk in real code](?p=usage/tutorials/07-formal-silk)
 - Language quick reference: [Cheat sheet](?p=language/cheat-sheet)
 - Standard library: [Overview](?p=std/overview)
+- GPU: [Pure-Silk CPU/GPU program](?p=usage/pure-silk-gpu) · [`std::gpu`](?p=std/gpu)
+- Platform apps: [Build LumenTrail for iOS](?p=usage/howto-lumen-trail) · [`silk-devices(1)`](?p=man/silk-devices.1)
 - Embedding: [C ABI (`libsilk`)](?p=compiler/abi-libsilk) · [Zig embedding API](?p=compiler/zig-api)
 - Spec: [Silk Spec (2026)](/silk/spec/2026/)

@@ -51,6 +51,8 @@ Free-text search:
 silk guide monotonic sleep
 silk guide channel send receive
 silk guide http request
+silk guide mime content type
+silk guide atomic counter
 silk guide protobuf schema roundtrip
 ```
 
@@ -61,8 +63,13 @@ silk guide tags:concurrency
 silk guide module:std::task
 silk guide tags:reference-guide
 silk guide language types
+silk guide language atomics
 silk guide std io overview
+silk guide module:std::mime
 silk guide std::http::request
+silk guide std::mime::content_type_with
+silk guide std::atomic::AtomicU64.fetch_add
+silk guide std::dylib::open_self
 silk guide ByteSlice.find_bytes
 silk guide std::protobuf::Reader.read_key
 silk guide GL_TEXTURE_2D

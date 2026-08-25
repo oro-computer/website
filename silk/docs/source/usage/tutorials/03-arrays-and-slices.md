@@ -62,3 +62,8 @@ fn main () -> int {
 ```
 
 This rule keeps `[]` unambiguous: the compiler needs to know what element type you meant.
+
+Important lifetime limit: a slice literal such as
+`let values: int[] = [1, 2, 3];` is a non-owning view over a
+compiler-generated backing array. Silk does not yet enforce that lifetime, so
+do not let the slice outlive the scope where it was created.

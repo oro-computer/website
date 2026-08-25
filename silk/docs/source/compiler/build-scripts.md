@@ -85,10 +85,22 @@ Rules:
  source set for subsequent compilation steps (even when the manifest omits
  `[sources]`).
 - The build module may write logs to stderr; they are forwarded by the driver.
+- Successful compilation or cache restoration of the compiler-generated
+ build-module runner does not emit a `build: ...` artifact summary. Those
+ summaries describe user-requested package targets only. Runner diagnostics
+ and build-module stderr are still forwarded normally.
 
 ## Module Contract
 
 Build modules are normal Silk modules.
+
+They use the same hosted checking and lowering rules as ordinary hosted
+executables. In particular, a build module may open a directory with
+`std::fs::read_dir`, iterate it with `Dir.next()` or the borrowed
+`Dir.next_view()` form, inspect the optional entry result, and close or drop the
+directory before emitting its manifest. The compiler-generated wrapper around
+`run` does not restrict those ordinary stdlib calls or their optional/result
+value shapes.
 
 The required contract is exporting an entrypoint matching the `Builder`
 interface:

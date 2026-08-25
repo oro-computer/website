@@ -42,6 +42,8 @@ If you’re new to Silk, this is a good order:
 8. **CLI and toolchain**: module sets, build targets, package manifests, package distribution, docs/man, and diagnostics.
 9. **Testing**: language-level tests and TAP output for CI and tooling.
 10. **Formal Silk**: opt-in proofs with Z3; how to write verified code with zero runtime cost.
+11. **GPU programming**: portable device functions, checked launch blocks, `std::gpu`, and AMD/NVIDIA backends.
+12. **Platform applications**: manifest-driven iOS bundles plus device and signing workflows.
 
 Start here:
 
@@ -54,4 +56,6 @@ Start here:
 - Guides: [Practical logger module](?p=guides/practical-logger-module) · [Standard library](?p=guides/standard-library) · [CLI and toolchain](?p=guides/cli)
 - Guides: [Testing](?p=guides/testing) · [Formal Silk](?p=guides/formal-silk)
 - Tutorials: [Concurrency basics](?p=usage/tutorials/05-concurrency) · [Async I/O + Streams + Abort Signals](?p=usage/tutorials/06-async-io-streams-abort) · [Formal Silk in real code](?p=usage/tutorials/07-formal-silk)
+- GPU: [Execution placement](?p=language/gpu-execution) · [Launch blocks](?p=language/gpu-launch-blocks) · [`std::gpu`](?p=std/gpu) · [Pure-Silk CPU/GPU program](?p=usage/pure-silk-gpu)
+- Platform apps: [Build LumenTrail for iOS](?p=usage/howto-lumen-trail) · [`silk-devices(1)`](?p=man/silk-devices.1) · [`silk-codesign(1)`](?p=man/silk-codesign.1)
 - Spec: [Silk Spec (2026)](/silk/spec/2026/)

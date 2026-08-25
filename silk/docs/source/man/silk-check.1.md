@@ -37,10 +37,17 @@ When explicit input files are used (no `--package`), the `silk` CLI may load add
 - `--std <path>.a` — accepted for consistency; ignored by `check`.
 - `--arch <arch>` — shorthand target selector (mutually exclusive with `--target`). This affects `OS_PLATFORM` / `OS_ARCH` and `attr(...)` conditional compilation during checking.
 - `--target <triple>` — target triple (mutually exclusive with `--arch`). This affects `OS_PLATFORM` / `OS_ARCH` and `attr(...)` conditional compilation during checking.
+- `--security-provider <auto|platform|builtin>` — select the security provider
+ feature exposed during checking. CLI wins over `SILK_SECURITY_PROVIDER` and
+ `[build] security_provider`; `auto` selects platform-backed APIs first on
+ Apple targets and falls back to built-in archives for std APIs that do not
+ yet have an Apple platform mapping. Other targets use built-in.
 - `--z3-lib <path>` — override the Z3 dynamic library used for Formal Silk verification (also honors `SILK_Z3_LIB`; valid only with `--verify`).
 - `--debug`, `-g` — emit Z3 debug output and write `.smt2` dumps for failing Formal Silk obligations (valid only with `--verify`).
 - `--feature <spec>`, `-F<spec>` — enable a build feature for `attr(feature="...")` queries and declaration gating. Repeatable.
  - Spec forms: `NAME` or `NAME=VALUE` (see [attributes](?p=language/attributes)).
+ - Feature names start with a letter or `_` and may contain letters, digits,
+ `_`, and `-`.
  - For package builds, you may target a specific package with `PKG/NAME` or
  `PKG/NAME=VALUE` (for example `ui/tui` or `ui/tui=false`).
 - `--package <dir|manifest>`, `--pkg <dir|manifest>` — load the module set from a `silk.toml` manifest instead of explicit input files.
@@ -83,6 +90,8 @@ shape with `ok: false` and one or more diagnostic entries. Each entry includes
 
 - `PREFIX` — installation prefix used for the system package search root at `PREFIX/lib/silk` (searched last when it exists). Default: `/usr/local`.
 - `SILK_PACKAGE_PATH` — primary package search path for bare-specifier imports and pathless manifest dependencies (entries separated by `:` on POSIX, `;` on Windows). During package graph work, relative entries are resolved from the importing package root and then upward to the graph root. The compiler appends `PREFIX/lib/silk` as the last search path entry when it exists; dotted dependency keys such as `my.dep.b` map to slash directories such as `my/dep/b`.
+- `SILK_SECURITY_PROVIDER` — default security provider mode (`auto`,
+ `platform`, or `builtin`) when the CLI flag is omitted.
 - `SILK_Z3_LIB` — path to a dynamic Z3 library used by the Formal Silk verifier when `--verify` is enabled.
 - `SILK_VERIFY_JOBS` — override the number of worker threads used for Formal Silk verification (default: auto; capped at 8).
 

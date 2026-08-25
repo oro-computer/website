@@ -17,9 +17,9 @@
 It selects the underlying compiler via `SILK_CC` (fallback: `CC`, default: `cc`) and:
 
 - adds `-I <install>/include` automatically,
-- adds `-I <install>/include/silk` automatically so vendored headers such as `mbedtls/error.h` resolve from the staged toolchain prefix,
+- adds `-I <install>/include/silk` automatically so built-in headers such as `mbedtls/error.h` resolve from the staged toolchain prefix,
 - unless you pass `-c`/`-E`/`-S`/`-M`/`-MM`, also adds `-L <install>/lib -lsilk`,
-- on `linux/x86_64`, also adds `-lstdc++ -lpthread -lm` (vendored Z3 is built as C++).
+- on `linux/x86_64`, also adds `-lstdc++ -lpthread -lm` (built-in Z3 is built as C++).
 
 ## Environment
 

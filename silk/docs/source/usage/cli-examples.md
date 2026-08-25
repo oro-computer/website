@@ -111,11 +111,27 @@ This is a practical bridge between “Silk as a language” and “Silk as a com
 Cross compilation and alternate backends are selected explicitly:
 
 ```bash
-silk build src/main.slk --target x86_64-linux-gnu -o build/app
+silk build src/main.slk --target linux-x86_64 -o build/app
 silk build src/main.slk --arch wasm32 --kind executable -o build/app.wasm
+silk targets
+silk build --list-gpu-targets
 ```
 
 Explicit targets keep builds readable: you can tell from the command line what you’re producing.
+
+### Mixed CPU/GPU executable
+
+On Linux x86_64, select the host and device targets independently:
+
+```bash
+silk build src/gpu_app.slk -o build/gpu-app \
+  --target linux-x86_64 \
+  --gpu-target amdgcn-amd-amdhsa-gfx1151
+```
+
+The same portable device source can select `nvptx64-nvidia-cuda-sm80` for the
+NVIDIA/CUDA provider. See [Pure-Silk CPU/GPU program](?p=usage/pure-silk-gpu)
+for a complete buffer, launch, download, and verification example.
 
 ## Standard library selection (`--std-root`, `--nostd`, `--std-lib`)
 
@@ -164,3 +180,26 @@ silk cc -std=c99 -Wall -Wextra my_program.c -o build/my_program
 ```
 
 Reference: [libsilk (7)](?p=man/libsilk.7).
+
+## Platform SDK workflows
+
+Inspect platform device and signing tools before delegating lifecycle actions:
+
+```bash
+silk devices doctor --json
+silk devices list --json
+silk codesign doctor --json
+```
+
+On a host with the matching SDK, install and run an app bundle or verify its
+signature:
+
+```bash
+silk devices install --kind ios-simulator --app build/MyApp.app
+silk devices run --kind ios-simulator --app build/MyApp.app
+silk codesign verify --platform ios --input build/MyApp.app
+```
+
+References: [`silk-devices(1)`](?p=man/silk-devices.1),
+[`silk-codesign(1)`](?p=man/silk-codesign.1), and [Build LumenTrail for
+iOS](?p=usage/howto-lumen-trail).

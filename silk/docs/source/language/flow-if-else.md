@@ -2,9 +2,8 @@
 
 The `if` / `else` construct provides branching based on a boolean condition.
 
-In Silk currently, `if` is a **statement** that selects which
-block of statements executes. The broader language design also includes
-expression-oriented forms; those are documented as planned where relevant.
+`if` is available both as a statement and as a value expression. Both forms
+evaluate the condition once and execute only the selected branch.
 
 ## Surface Syntax
 
@@ -25,6 +24,30 @@ if <condition> {
   ...
 }
 ```
+
+## Value expression
+
+A value-position conditional has an expression at the end of each branch:
+
+```silk
+let label = if ready {
+  "ready"
+} else {
+  "not ready"
+};
+```
+
+An expression form requires `else`, and both branch values must have one
+compatible type. The selected value becomes the result; the other expression
+is not evaluated. This contract applies to strings, scalars, optionals,
+results, and the other value categories accepted by the checker and hosted
+lowerer.
+
+Lowering a value-position conditional is type-directed before it emits either
+branch. Type classification must not evaluate the condition or leave partial
+control flow behind. The condition is therefore evaluated exactly once even
+when the result binding omits an explicit type annotation, and values borrowed
+by the condition (including string views) remain valid after the conditional.
 
 ## `if let` (Pattern-Destructuring Statement Form)
 

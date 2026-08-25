@@ -308,7 +308,7 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2116` — invalid inline assembly (inline asm failed to assemble, or uses unsupported features in the current implementation).
 - `E2117` — `let ... else { ... };` requires the `else` block to end with a terminal statement.
 - `E2118` — borrowed-view type may not appear in an `async fn` result.
-- `E2119` — borrowed-view type may not cross an `ext` / unnamed/global-package `export fn` boundary.
+- `E2119` — borrowed-view type may not cross an `ext` / unnamed C-facing `export fn` boundary.
 - `E2120` — local borrow may not remain live across `await`.
 - `E2121` — cannot mutate local storage while it is borrowed.
 - `E2122` — borrowed control-flow expression is ambiguous.
@@ -379,6 +379,26 @@ Notes:
  collector context and, when available, the rejected field or payload type
  shape so users do not have to infer it from a generic carrier such as
  `Result`.
+- GPU execution-boundary violations use `E4001` with a precise message. A host
+ function cannot call an `attr(device=gpu)` function or a public/compiler-owned
+ portable GPU device operation directly, and a GPU function cannot call an
+ impure host function. A GPU function may call another GPU function or a pure
+ host function; a `const fn` remains compile-time-only and is not a runtime
+ GPU helper. Raw `__silk_amdgpu_*` declarations remain accepted only as input
+ to the documented standalone AMDGPU source-intrinsic object path, whose
+ target-specific selector validates them.
+- GPU launch-block violations also use `E4001` and identify the rejected
+ contract directly: malformed `grid`/`workspace` headers and non-call bodies
+ are parse diagnostics; semantic diagnostics distinguish unknown targets,
+ known non-GPU functions, non-launchable GPU helper signatures,
+ dependency-package targets outside the executable bundle, argument mismatch,
+ use from device code, and use without an available standard library. A
+ launch-block diagnostic must point at the target call or rejected option
+ rather than the compiler-generated `std::gpu::launch_and_synchronize` call.
+- A mixed executable requested with `--gpu-target` requires at least one
+ launchable root-package `attr(device=gpu)` entry. If the package contains
+ only non-entry GPU helpers, the diagnostic must say that no launchable entry
+ exists; it must not incorrectly claim that the package has no GPU function.
 
 ## Tooling Integration Notes
 

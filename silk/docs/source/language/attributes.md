@@ -8,6 +8,10 @@ Attributes come in two forms:
 - **Tags**: `attr(one, two, three)`
 - **Key/value pairs**: `attr(arch="x86_64", feature="tui")`
 
+`attr(device=gpu)` is a key/value execution-placement attribute. It marks a
+function for GPU compilation without conditionally removing the declaration.
+See [gpu execution](?p=language/gpu-execution).
+
 Values may be:
 
 - booleans (`true` / `false`)
@@ -38,17 +42,31 @@ Implemented in Silk currently:
  - The pruned branch is not type-checked and is not lowered/code-generated.
 - `attr(abi=c) fn (...) -> ...` in type positions is accepted as a synonym for
  `c_fn (...) -> ...` (C ABI callback pointer types).
+- `export attr(abi=c) fn ...` and `attr(abi=c) export fn ...` select the
+ C-facing object symbol spelling for an exported function while preserving
+ normal Silk package import/export semantics.
 - Task scheduling hints on `task` functions:
  - `attr(task=pool)` / `attr(task="pool")` schedules the task on the global
  task pool (see “Task scheduling” below),
  - `attr(task_pool)` is accepted as a tag-form synonym for `attr(task=pool)`.
  - `attr(task=thread)` / `attr(task="thread")` forces a dedicated OS thread
  for each call instead of the default task-pool schedule.
+- GPU function placement:
+ - `attr(device=gpu)` marks a normal function as GPU-resident device code; a
+ function matching the current entry ABI is launchable, while other
+ reachable annotated functions are device-only helpers,
+ - the placement is preserved after attribute normalization so mixed builds
+ can type-check the declaration, emit device code, and omit it from host
+ machine code.
 
 Not yet fully implemented:
 
 - Objective-C / FFM / WASI-component / other ABI selectors beyond the initial
  `abi=c` support.
+- Arbitrary declaration attributes that override the C-visible symbol name,
+ such as a future `attr(c_name="...")` design. The implemented
+ declaration-level C ABI spelling is limited to `export attr(abi=c) fn` /
+ `attr(abi=c) export fn` and derives the C symbol from the Silk namespace.
 
 ## Syntax
 
@@ -82,7 +100,16 @@ Attributes may prefix most declarations:
 attr(one) fn hello () -> int { return 0; }
 attr(feature="tui") struct TTY { /* ... */ }
 attr(arch="x86_64", os="linux") interface Builder { /* ... */ }
+attr(device=gpu) fn device_work () {}
 ```
+
+`device` is valid only on function declarations. Its only current value is
+`gpu`, its operator must be `=`, and duplicate or conflicting device placement
+attributes are invalid. Unlike `arch`, `os`, `target`, and `feature`, it does
+not conditionally remove the declaration. Host code launches a suitable entry
+with a checked `gpu (grid=..., workspace=...) { function(args...); }` block or
+through the manual `std::gpu::launch` API; it cannot call the function as an
+ordinary host function.
 
 Attributes may also prefix statements inside blocks:
 
@@ -152,6 +179,48 @@ This is intended for C callback pointer types:
 type InfoCb = attr(abi=c) fn (u64, u64) -> void;
 type InfoCb2 = c_fn (u64, u64) -> void; // equivalent
 ```
+
+On exported function declarations, `attr(abi=c)` selects a C-facing object
+symbol spelling:
+
+```silk
+export attr(abi=c) fn add_i64 (a: i64, b: i64) -> i64 {
+  return a + b;
+}
+```
+
+`attr(abi=c) export fn ...` is accepted as the equivalent prefix form. The
+function remains a normal Silk export, so Silk code imports and calls it by its
+package-qualified Silk name. The attribute changes only the emitted object
+symbol used by C, Objective-C, Swift, linkers, and dynamic loaders.
+
+Symbol names are derived as follows:
+
+- in the global package, the object symbol is the function name exactly, for
+ example `add_i64`;
+- in a package or module namespace, Silk namespace separators are collapsed to
+ one `_` and the function name is separated from that namespace by one `_`,
+ for example package `ui::model` function `add_i64` emits
+ `ui_model_add_i64`.
+
+Because this spelling is intentionally clean and C-like, different Silk package
+and function names can normalize to the same object symbol. The compiler
+rejects `attr(abi=c)` export symbols that collide with another C ABI export or
+with any other function symbol emitted for the selected output before object or
+library emission. Library outputs validate the root package's exported C ABI
+symbols against the dependency functions as they are actually emitted into that
+output, including dependency functions that become internal raw symbols rather
+than public package-qualified exports.
+
+Declaration-level `attr(abi=c)` currently applies only to top-level exported
+functions. A top-level `package` or `module` declaration participates in the
+namespace-derived C symbol spelling above, but functions nested inside
+`module Name { ... }` inline module blocks are rejected until inline-module C
+ABI symbol export is implemented end to end.
+
+The C ABI selection does not relax the supported exported-function ABI rules.
+C-facing signatures must still use types that the selected target backend can
+marshal at a C call boundary.
 
 ## Task scheduling (`task=pool` / `task=thread`)
 
@@ -226,6 +295,13 @@ if attr(feature="tui") {
 }
 ```
 
+The query is a compile-time condition. Before hosted code generation, the
+compiler removes the unselected branch and retains the selected branch's full
+call/type/resource environment. A selected branch may call an enabled helper
+that owns a `Drop` value or participates in a mixed CPU/GPU program; disabling
+the feature removes that reference rather than asking the backend to lower an
+unreachable call.
+
 ### Feature scoping (package builds)
 
 When building a package graph (via `silk build/check/test --package ...`),
@@ -261,6 +337,8 @@ if attr(feature=enable_this_feature) {
 Rules (Supported forms):
 
 - Feature specs are of the form `NAME` or `NAME=VALUE`.
+ - `NAME` starts with a letter or `_` and may contain letters, digits, `_`,
+ and `-`; this permits user-facing names such as `security-provider`.
  - When `VALUE` is omitted, the feature is treated as boolean `true`.
  - When `VALUE` is present:
  - `true` / `false` are parsed as booleans,

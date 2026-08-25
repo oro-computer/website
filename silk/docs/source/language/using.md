@@ -34,7 +34,10 @@ canonical type constructors while keeping the stdlib source on namespace
 imports.
 
 The alias is transparent: using `Alias` is equivalent to using the target
-symbol directly.
+symbol directly. For functions this includes purity, `const fn` discipline,
+execution placement such as `attr(device=gpu)`, compiler-recognized device
+intrinsic status, and the target's lexical/package identity. A function cannot
+be made host-callable, runtime-callable, or launchable merely by aliasing it.
 
 Name conflicts are errors, except when the alias already refers to the same
 symbol as the target (a redundant alias). In that case the `using` declaration
@@ -46,6 +49,17 @@ Module-scope aliases may also be exported:
 export using Alias = QualifiedName;
 public using Alias = QualifiedName;
 ```
+
+Package-qualified function targets use the same form:
+
+```silk
+import std::io;
+using sayln = std::io::println;
+```
+
+`sayln(...)` has the exact callable contract and metadata of
+`std::io::println(...)`; it is not interpreted as a type alias merely because
+the target is package-qualified.
 
 - `export using` and `public using` are equivalent at module scope.
 - Exported aliases participate in the module/package surface just like other

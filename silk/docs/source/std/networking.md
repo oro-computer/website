@@ -19,6 +19,12 @@ Async integration (current implementation):
 
 `std::net` provides networking primitives on POSIX systems.
 
+Apple provider note: when the active security provider is `auto` or `platform`
+and the target is an Apple platform, `silk build` links `Network.framework` for
+`std::net` users. The current `std::net` implementation still exposes the
+hosted socket API below; Network-backed TCP/UDP and TLS transport mappings are
+tracked as follow-up stdlib work.
+
 Hostname resolution (DNS) integration (current implementation):
 
 - `std::net` provides `resolve_host(...)` and `TCPStream.connect_host(...)` helpers
@@ -169,6 +175,8 @@ impl TCPStream {
   public fn is_valid (self: &TCPStream) -> bool;
   public fn connect (addr: SocketAddrV4) -> TCPStreamResult;
   public fn connect_v6 (addr: SocketAddrV6) -> TCPStreamResult;
+  public fn connect_timeout (addr: SocketAddrV4, timeout_ms: int) -> TCPStreamResult;
+  public fn connect_v6_timeout (addr: SocketAddrV6, timeout_ms: int) -> TCPStreamResult;
   public async fn connect_async (addr: SocketAddrV4) -> TCPStreamResult;
   public async fn connect_v6_async (addr: SocketAddrV6) -> TCPStreamResult;
 
@@ -199,6 +207,7 @@ enum ResolveIpMode {
 export type ResolveAddrsResult = std::result::Result(std::vector::Vector(SocketAddr), NetFailed);
 
 export fn resolve_host (host: string, port: int, mode: ResolveIpMode) -> ResolveAddrsResult;
+export fn resolve_host_timeout (host: string, port: int, mode: ResolveIpMode, timeout_ms: int) -> ResolveAddrsResult;
 
 struct TCPListener {
   fd: int,
@@ -219,6 +228,13 @@ impl TCPListener {
 }
 ```
 
+A positive `timeout_ms` covers both admission to the bounded resolver-worker
+set and the resolver operation itself under one absolute deadline. If all
+worker slots are occupied, the caller waits for a slot only until that same
+deadline; capacity pressure is reported as `TimedOut`, not an immediate
+`WouldBlock`. Runtime initialization or thread-creation failures remain
+ordinary resource failures.
+
 Notes:
 
 - This API is currently **mostly blocking** (only `connect_async` and
@@ -228,6 +244,9 @@ Notes:
  stubs return error values.
 - `TCPStream`/`TCPListener` wrap raw file descriptors; avoid copying these
  values until the language has move-only handle types.
+- The timeout variants use a finite hosted resolver/connect wait and report
+ `NetErrorKind::TimedOut`. A successfully connected stream is restored to
+ blocking mode with matching send/receive timeouts installed.
 - `TCPListener.accept_async()` duplicates the listener fd and returns
  `Promise(TCPStreamResult)`. That keeps stack-local listeners usable with
  stored promise handles in the current async lowering model.
@@ -354,4 +373,4 @@ model is implemented, `std::net` should provide:
  `task fn` wrapper around blocking calls).
 
 ## Considerations
-- DNS resolution, TLS integration (as optional packages).
+- TLS integration beyond the shipped HTTP-oriented clients.

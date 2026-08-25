@@ -2,12 +2,13 @@
 
 Silk’s CLI is designed around a small number of commands that compose well:
 
-1. **check** — parse, resolve imports, type-check, and optionally verify
-2. **test** — compile and run language-level tests
-3. **build** — produce executables, libraries, or object files
-4. **targets/graph/size** — inspect target support, module graphs, and artifacts
-5. **package/cache/doc/man/env/format** — package authoring, cache maintenance, documentation, environment inspection,
-   and formatting
+1. **repl** — evaluate Silk interactively
+2. **check** — parse, resolve imports, type-check, and optionally verify
+3. **test** — compile and run language-level tests
+4. **build** — produce executables, libraries, objects, or mixed CPU/GPU programs
+5. **targets/graph/size** — inspect target support, module graphs, and artifacts
+6. **devices/codesign** — delegate platform lifecycle and signing operations
+7. **package/cache/doc/man/env/format** — author packages, maintain the cache, generate documentation, inspect the environment, and format source
 
 This guide stays CLI-first: what each command is for, what inputs it accepts, and how the commands fit together in real
 workflows.
@@ -32,6 +33,21 @@ That one idea explains most CLI behavior:
 - imports only resolve within the active module/package graph
 - package boundaries are explicit
 - CI and editors get deterministic answers
+
+## `silk repl`: interactive exploration
+
+Use the REPL for quick expressions, declarations, multiline blocks, and
+compile-and-run feedback without creating a project first:
+
+```bash
+silk repl
+```
+
+The full compile-and-run REPL is currently a Linux x86_64 host surface. On
+Apple Silicon macOS, session startup and non-printing declaration/state lines
+are available while executable evaluation catches up. Use `silk check`,
+`silk test`, and `silk build` for repeatable module or package workflows. See
+[`silk-repl(1)`](?p=man/silk-repl.1).
 
 ## `silk check`: fast feedback
 
@@ -116,10 +132,25 @@ silk build src/main.slk --target linux-x86_64-musl -o build/app-musl
 silk build src/main.slk --arch wasm32 --kind executable -o build/app.wasm
 silk targets
 silk targets --json
+silk build --list-targets
+silk build --list-gpu-targets
 silk build --list-archs
 ```
 
 For shared and executable outputs, the CLI also exposes link metadata such as `--needed`, `--runpath`, and `--soname`.
+
+Linux x86_64 executables can select a separate AMD or NVIDIA device target for
+root-package `attr(device=gpu)` functions:
+
+```bash
+silk build src/main.slk -o build/app \
+  --target linux-x86_64 \
+  --gpu-target nvptx64-nvidia-cuda-sm80
+```
+
+The host code remains native x86_64 while device functions are embedded in the
+same executable. See [Target-neutral GPU compilation](?p=compiler/backend-gpu)
+and [Pure-Silk CPU/GPU program](?p=usage/pure-silk-gpu).
 
 ## Inspection commands for tools and CI
 
@@ -133,6 +164,8 @@ silk graph --json --package .
 silk size --json build/app
 silk package inspect --json --package .
 silk cache inspect --json
+silk devices doctor --json
+silk codesign doctor --json
 ```
 
 Use these when you need stable facts about diagnostics, target capabilities,
@@ -167,6 +200,28 @@ silk build --package . --build-module
 See [Package manifests](?p=compiler/package-manifests), [Package distribution](?p=compiler/package-distribution), and
 [`silk-package` (1)](?p=man/silk-package.1).
 
+## Platform devices and signing
+
+`silk devices` discovers installed platform SDKs and delegates device or app
+lifecycle actions. `silk codesign` does the same for signing and verification
+tools:
+
+```bash
+silk devices doctor --json
+silk devices list --json
+silk devices install --kind ios-simulator --app build/MyApp.app
+silk devices run --kind ios-simulator --app build/MyApp.app
+
+silk codesign doctor --json
+silk codesign verify --platform ios --input build/MyApp.app
+```
+
+Exact behavior depends on the SDK tools installed on the host; Silk reports
+their paths and delegated output instead of inventing platform state. See
+[`silk-devices(1)`](?p=man/silk-devices.1),
+[`silk-codesign(1)`](?p=man/silk-codesign.1), and [Build LumenTrail for
+iOS](?p=usage/howto-lumen-trail).
+
 ## Features and conditional compilation
 
 Feature detection is shared across the manifest format and the CLI:
@@ -200,6 +255,7 @@ silk man std::io::println
 silk man --search println
 silk guide read file
 silk error E2028
+silk help build
 silk env
 silk fmt src
 silk fmt --check .
@@ -213,6 +269,7 @@ References:
 - [`silk-error` (1)](?p=man/silk-error.1)
 - [`silk-env` (1)](?p=man/silk-env.1)
 - [`silk-format` (1)](?p=man/silk-format.1)
+- [`silk-help` (1)](?p=man/silk-help.1)
 - [`silk-targets` (1)](?p=man/silk-targets.1)
 - [`silk-graph` (1)](?p=man/silk-graph.1)
 - [`silk-size` (1)](?p=man/silk-size.1)

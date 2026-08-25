@@ -18,7 +18,9 @@ modules from the compiler IR, plus a smaller constant-only fallback path:
  - `wasm32-wasi`:
  - emits a `.wasm` module exporting `memory` and `_start () -> void`,
  - imports `wasi_snapshot_preview1.proc_exit (exit_code: i32) -> void`,
- - `_start` calls Silk `main` and then calls `proc_exit` with the wrapped exit code.
+ - `_start` calls Silk `main` and then calls `proc_exit` with the wrapped exit code,
+ - process arguments are read inside parameterless `main()` through
+ `std::args::{argc,argv,current}`, backed by WASI `args_sizes_get` / `args_get`.
 - Export-only modules (no `main`):
  - emit a `.wasm` module exporting `memory` plus each supported `export fn` in
  the root package (suitable for JS/Node-style embedding).
@@ -89,7 +91,9 @@ We need two distinct entrypoint conventions:
 - `wasm32-wasi`:
  - emit a `_start` function (no parameters, no results),
  - `_start` calls Silk `fn main () -> int` and then imports/calls WASI
- `proc_exit(exit_code)`.
+ `proc_exit(exit_code)`,
+ - argv access stays inside `main()` through `std::args`; `_start` does not
+ receive Silk parameters.
 - `wasm32-unknown-unknown`:
  - export an Silk `main` function for embedder use.
  - Silk `int` lowers as wasm `i64`, so `main`’s return type is `i64` unless
@@ -174,23 +178,23 @@ The module/name convention and supported import surface must be documented in
 
 ### WASI integration
 
-For `wasm32-wasi`, stdlib facilities such as `std::io` and `std::fs` use a
-target-specific hosted surface rather than the POSIX libc-facing runtime used
-on native targets. This implies:
-
-- The hosted stdlib for WASI is a separate std distribution from the POSIX
- `std/` used for `linux/x86_64`.
-- The stdlib archive must be target-specific (one archive per target ABI), and
- swapping stdlib roots should remain supported (`--std` / `--nostd` etc.).
+For `wasm32-wasi`, shipped facilities such as `std::io`, `std::args`,
+`std::env`, and supported `std::fs` operations dispatch through the
+target-specific `std::runtime::wasi::*` modules rather than the POSIX
+libc-facing runtime used on native targets. Filesystem access follows WASI
+preopen rules. Alternate stdlib roots remain supported through `--std-root` /
+`--nostd`; any prebuilt stdlib archive is target-ABI-specific.
 
 ## Tooling and Testing Strategy
 
-- Add a small set of WASM end-to-end tests once codegen exists:
- - compile a program to `.wasm`,
- - run it with a runtime appropriate to the target (`wasmtime` for WASI, a JS
- harness for unknown-unknown),
- - assert exit code or exported return value.
-- Keep tests target-scoped and avoid requiring network access.
+- Zig tests cover constant and IR-backed final modules, imports/exports,
+ control flow, static data, and WASI entrypoint structure.
+- Node’s WASI runtime executes end-to-end tests for stdout and exit status,
+ process arguments, environment access, preopened filesystem round trips,
+ metadata, and working-directory behavior when Node is available.
+- C99 embedding tests cover in-memory WebAssembly output and export-only
+ modules through `libsilk`.
+- Tests stay target-scoped and do not require network access.
 
 ## Design goals
 

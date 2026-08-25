@@ -17,11 +17,12 @@ scoping, and diagnostics).
 - blocks and statement composition
 - expression statements
 
-Each construct has defined syntax, typing, and evaluation semantics.
+Each construct has defined syntax, typing, and evaluation semantics which the
+compiler must implement.
 
-## Supported forms
+## Notes
 
-Includes:
+Implemented end-to-end in the current compiler:
 
 - `if` / `else` as statement forms ([flow if else](?p=language/flow-if-else))
 - `loop` loops ([flow loop](?p=language/flow-loop))
@@ -31,24 +32,21 @@ Includes:
  [flow continue](?p=language/flow-continue))
 - `return` statements, including “all paths must return” checking for non-`void`
  functions ([flow return](?p=language/flow-return))
-- `match` as an expression for optionals, primitive integers, enums, type
- unions, and recoverable `Result`-style values
- ([flow match](?p=language/flow-match))
-- `match` as a statement for ordinary values in the supported subset and for
- typed errors ([flow match](?p=language/flow-match),
- [typed errors](?p=language/typed-errors))
+- `match` as an expression for optionals and enums ([flow match](?p=language/flow-match))
+- `match` as a statement for typed errors ([typed errors](?p=language/typed-errors))
 - Expression statements for calls and assignments only
  ([flow expression statements](?p=language/flow-expression-statements))
 
-Additional notes:
+Not implemented yet (design exists, but the current parser/checker do not
+accept these end-to-end):
 
-- `if` as a value-producing expression form is implemented for the documented
- subset; see [flow if else](?p=language/flow-if-else).
+- `if` as a value-producing expression form
 
 When in doubt, consult:
 
+- [implementation status](?p=compiler/implementation-status) (implementation snapshot)
 - [diagnostics](?p=compiler/diagnostics) (error codes)
-- the runnable examples embedded throughout the linked language pages
+- `tests/silk/pass_*.slk` (working examples)
 
 ## Principles
 

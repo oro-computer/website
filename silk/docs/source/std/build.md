@@ -39,21 +39,22 @@ A `Build` is a programmatic builder for a package manifest. It exposes methods
 for setting:
 
 - `[package]` fields (`name`, `version`, `definitions`),
-- `[build]` fields (`default_target`),
+- `[build]` fields (`default_target`, `security_provider`),
 - package-level `[[native]]` entries for target-scoped native requirements,
 - and `[[target]]` entries (including native `inputs`, `cflags`, `ldflags`, and
  dynamic linkage fields like `needed`/`runpath`/`soname`).
 
 `std::build` emits TOML in a deterministic, canonical form.
 
-Note: for toolchain-shipped vendored static archives (for example the mbedTLS
-archives used by `std::tls` on `linux/x86_64`), `[[target]].inputs` supports
-`@vendored/<name>.a` entries (see [package manifests](?p=compiler/package-manifests)). Build
-modules may emit these via `Build.target_add_input(...)`. On supported native
-hosts, common vendored dependency families (`libsodium`, `mbedTLS`,
-`libsqlite3`, `libssh2`) are also auto-linked when native `.c` / `.h` / `.m` /
-`.o` / `.a` inputs reference their symbol families, so explicit `@vendored/...`
-entries are optional for those common cases.
+Note: for toolchain-shipped built-in static archives (for example the mbedTLS
+archives used by `std::tls` with the `builtin` security provider),
+`[[target]].inputs` supports `@builtin/<name>.a` entries (see
+[package manifests](?p=compiler/package-manifests)). Build modules may emit these via
+`Build.target_add_input(...)`. On supported native hosts, common built-in
+dependency families (`libsodium`, `mbedTLS`, `libsqlite3`, `libssh2`) are also
+auto-linked when the active provider and native `.c` / `.h` / `.m` / `.o` /
+`.a` inputs require them, so explicit `@builtin/...` entries are optional for
+those common cases.
 
 For package-owned native code that should be linked whenever the package is
 imported as a dependency, build modules should emit `[[native]]` entries via:
@@ -68,7 +69,9 @@ imported as a dependency, build modules should emit `[[native]]` entries via:
 The emitted `[[native]]` table follows the package-manifest rules: paths are
 relative to the owning package root, `target` is a compiler target triple, and
 matching entries are consumed by root package builds and by imported
-dependencies.
+dependencies. Emit one `[[native]]` entry per target when a helper is portable
+across a specific set of hosted targets, such as `linux-x86_64` and
+`macos-aarch64`.
 
 For native header inputs, `Build.target_add_input(...)` follows the same rule
 as direct manifest/CLI builds:
@@ -123,6 +126,14 @@ Notes:
  `Context`.
 - `build::run(argc, argv, callback)` remains available for older callback-style
  build modules.
+
+Current manifest-builder methods include:
+
+- `Build.init() -> Build`
+- `package(name, version)`
+- `set_default_target(name)`
+- `set_security_provider(provider)` where `provider` is `auto`, `platform`, or
+ `builtin`
 
 ### Step graph (`StepGraph`)
 

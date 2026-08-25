@@ -277,6 +277,22 @@ fn main () -> int {
  without introducing a binder.
 - The result type of a `match` expression is the common type of its arms; all
  arms must type-check to the same result type in the initial subset.
+- Pattern binders for ownership-tracked payloads are owners, not borrowed
+ aliases. When an arm consumes such a binder as its result, including by
+ wrapping it in another enum or optional constructor, ownership transfers to
+ the result and the selected payload in the scrutinee becomes uninitialized.
+ Cleanup therefore destroys the returned owner exactly once and does not
+ destroy the transferred source payload. Arms that do not consume their
+ binder leave the selected payload owned by the scrutinee.
+- A tuple variant may contain multiple ownership-tracked payloads. If an arm
+ transfers only some payload binders, the selected arm destroys every
+ unconsumed payload before invalidating the source variant; transferred
+ payloads remain live only in the arm result. An `_` payload binder is
+ unconsumed and follows the same destruction rule.
+- This path-sensitive transfer rule applies uniformly to user enums,
+ `Some(T)`, and the `Ok(T)` / `Err(E)` payloads of recoverable results. It is
+ preserved across nested compositions such as an enum payload returned as an
+ optional or an optional payload returned as another enum.
 
 ## `match` Statement (Block Arms)
 

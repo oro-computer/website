@@ -146,6 +146,11 @@ From the spec:
 
 - It “coalesces” the optional’s value and the default into a single, non‑optional result.
 - The expression `opt ?? default_value` has type `T` when `opt` has type `T?`.
+- When `T` is a struct, the left operand supplies the contextual type for an
+ anonymous aggregate fallback. For example, `failed_opt ?? { code: 0 }` is
+ equivalent to `failed_opt ?? Failed{ code: 0 }` when `failed_opt` has type
+ `Failed?`; an explicit type annotation on the surrounding `let` is not
+ required.
 - When `opt` has type `T??`, the expression `opt ?? default_value` has type
  `T?` (it unwraps one optional layer).
 - It composes naturally with optional chaining.

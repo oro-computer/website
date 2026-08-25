@@ -291,6 +291,8 @@ Fields:
  - an inline table mapping `NAME = <bool|int|string>`.
  - `NAME = true` is equivalent to `NAME`.
  - otherwise it is equivalent to `NAME=VALUE`.
+ - Feature names start with a letter or `_` and may contain letters, digits,
+ `_`, and `-`.
  - These features populate the enabled feature set queried by
  `attr(feature="...")` within the dependency package’s modules (see
  [attributes](?p=language/attributes)).
@@ -586,13 +588,20 @@ Important resolution rules shown by this example:
  the package has one definition file and no default source module, an exact
  quoted dependency-root import such as `"my/dep/b"` can bind named imports from
  that definition file.
+- Compiler and LSP module graphs resolve that exact quoted dependency-root
+ import to the same definition-file identity. This applies to named imports
+ and default/namespace imports, including dotted dependency keys matched
+ through their slash-separated spelling.
 
 A checked-in runnable companion for these rules lives at
 `examples/projects/cove/`. It is a static HTTP file server that
 uses an explicit local `path` dependency for its document-root abstraction and a
 pathless `access_log` dependency resolved from the root package's default
 `packages/` directory. The docroot dependency owns a target-gated
-`[[native]]` C helper for POSIX `realpath(3)` containment checks.
+`[[native]]` C helper for POSIX `realpath(3)` containment checks on
+`linux-x86_64` and `macos-aarch64`; the root package owns a target-gated native
+socket helper that detects idle browser preconnects and bounds request reads on
+the same hosted POSIX example targets.
 
 ## Distributed Artifacts (`[[artifact]]`)
 
@@ -671,7 +680,7 @@ Fields:
  compiler target exactly matches the triple.
 - `inputs` (optional): native input paths using the same file-kind rules as
  `[[target]].inputs` (`.c`, `.h`, supported `.m`, `.o`, `.a`, `.so`, and
- versioned `.so.*`; `@vendored/<name>.a` is also accepted).
+ versioned `.so.*`; `@builtin/<name>.a` is also accepted).
 - `cflags` (optional): native compiler arguments used for `.c` / `.h` /
  supported `.m` inputs from this requirement. Relative `-I` and `-isystem`
  paths are resolved relative to the owning package root.
@@ -699,7 +708,7 @@ Rules:
  specific artifact recipe. Prefer `[[native]]` for package-level native code
  that dependencies should carry with them.
 - `silk package lint` validates declared native input files and `[dist]`
- coverage for non-`@vendored/...` inputs.
+ coverage for non-`@builtin/...` inputs.
 
 ## Build Targets (`[[target]]`)
 
@@ -761,18 +770,19 @@ Fields:
  dependency, prefer `[[native]]`; `inputs` is for files specific to this one
  build target,
  - entries are paths (relative to the manifest directory when not absolute),
- - entries may also use a toolchain-relative vendored archive reference:
- - `@vendored/<name>.a` — resolves to the vendored static archive under the
- active Silk prefix (for example `@vendored/libmbedtls.a`),
+ - entries may also use a toolchain-relative built-in archive reference:
+ - `@builtin/<name>.a` — resolves to the built-in static archive under the
+ active Silk prefix (for example `@builtin/libmbedtls.a`),
  - this form is supported only for `.a` inputs and only on supported native
  hosts (`linux/x86_64`, `macos/aarch64`) in the current toolchain,
- - explicit `@vendored/...` entries remain supported when a package wants to
- pin a specific vendored archive input, but common vendored dependency
+ - explicit `@builtin/...` entries remain supported when a package wants to
+ pin a specific built-in archive input, but common built-in dependency
  families are also auto-linked for executable/shared targets:
- - `libsodium`, `mbedTLS`, and `libssh2` are auto-linked on supported native
- hosts (`linux/x86_64`, `macos/aarch64`) when the Silk module set imports
- `std::crypto` / `std::tls` / `std::ssh` / `std::ssh2`, or when native
- `.c` / `.h` / `.m` / `.o` / `.a` inputs reference their symbol families,
+ - `libsodium`, `mbedTLS`, and `libssh2` are auto-linked by the `builtin`
+ security provider on supported native hosts (`linux/x86_64`,
+ `macos/aarch64`) when the Silk module set imports `std::crypto` /
+ `std::tls` / `std::ssh` / `std::ssh2`, or when native `.c` / `.h` /
+ `.m` / `.o` / `.a` inputs reference their symbol families,
  - `libsqlite3` is auto-linked on `linux/x86_64` when the Silk module set
  imports `std::sqlite`, or when native `.c` / `.h` / `.m` / `.o` / `.a` inputs
  reference `sqlite3_*` symbols,
@@ -793,13 +803,14 @@ Fields:
  - `.so` / `*.so.<ver>` — treated as a dynamic dependency (equivalent to
  adding a `needed` entry for the library’s basename),
  - `.slk` entries are rejected (use `[sources]` instead),
- - note: non-`.slk` inputs are supported for `linux/x86_64` native targets and
- for `macos-aarch64` / iOS device/simulator executable targets on Apple
- Silicon macOS hosts (same limitation as `silk build` CLI inputs).
+ - note: non-`.slk` inputs are supported for `linux/x86_64` native targets
+ and for `macos-aarch64` plus iOS device/simulator executable/object/static/shared outputs on
+ Apple Silicon macOS hosts (same limitation as `silk build` CLI inputs).
  - note: Objective-C `.m` inputs are supported only for `macos-aarch64`,
  `ios-aarch64`, `ios-simulator-aarch64`, and
- `ios-simulator-x86_64` on Apple Silicon macOS hosts; supported executable
- outputs that include `.m` inputs link the Objective-C runtime automatically.
+ `ios-simulator-x86_64` on Apple Silicon macOS hosts; supported
+ executable/shared outputs that include `.m` inputs link the Objective-C
+ runtime automatically.
 - `cflags` (optional): additional native compiler arguments used when compiling
  any `.c`/`.h`/`.m` inputs for this target (from `inputs` and/or CLI native
  inputs when building a single target).
@@ -808,7 +819,7 @@ Fields:
  `-isystem<rel>` / `-isystem`, `<rel>` are resolved relative to the
  manifest directory.
  - On `linux/x86_64`, when compiling `.c`/`.h` inputs, `silk` also adds the
- active toolchain’s vendored include directory to the native compiler’s
+ active toolchain’s built-in include directory to the native compiler’s
  include search path, so C sources can include headers like
  `#include <mbedtls/net_sockets.h>` without hardcoding a repo-relative
  `-I.../vendor/include` path.
@@ -855,6 +866,24 @@ Fields:
  - `arch` and `target` MUST NOT both be set for the same target.
 - `c_header` (optional): emit a C header when building this target (only valid
  for `kind = object|static|shared`).
+- iOS app bundle fields (optional; only valid for `kind = executable`):
+ - `ios_app_bundle = true` tells `silk build --package` to materialize an
+ iOS `.app` directory next to the executable output for
+ `ios-aarch64`, `ios-simulator-aarch64`, or `ios-simulator-x86_64`
+ targets.
+ - `ios_info_plist = "Info.plist"` copies a package-root-relative
+ `Info.plist` into the bundle. If omitted, `ios_bundle_identifier` is
+ required and Silk writes a small generated plist.
+ - `ios_bundle_identifier = "com.example.app"` and
+ `ios_bundle_name = "ExampleApp"` provide metadata for the generated plist.
+ `ios_bundle_name` defaults to the executable basename.
+ - `ios_codesign = "ad-hoc"` signs the app bundle with an ad-hoc identity on
+ macOS after the executable and `Info.plist` are copied. This is the default
+ when `ios_app_bundle = true`; use `ios_codesign = "none"` to leave the
+ bundle unsigned.
+ - The executable output path remains the `output` field. The app bundle path
+ is `<output>.app`, and the executable is copied into that bundle under its
+ basename.
 - Dynamic linkage fields (optional; passed through to the backend):
  - `needed = ["libc.so.6", "..."]` (repeatable `DT_NEEDED` entries),
  - `runpath = ["$ORIGIN", "..."]` (joined with `:` for `DT_RUNPATH`),
@@ -868,7 +897,8 @@ Additional rules for `kind = "man"`:
 - `name` may be omitted; when omitted, the compiler derives the internal target
  name from `source` or `query` using the rules above.
 - `entry`, `inputs`, `cflags`, `ldflags`, `arch`, `target`, `c_header`,
- `needed`, `runpath`, `soname`, and `elf_interp` are invalid.
+ iOS app-bundle fields, `needed`, `runpath`, `soname`, and `elf_interp` are
+ invalid.
 - Static Markdown sources are rendered to roff at build time.
 - Static roff sources are copied into the target output and normalized to the
  filename-derived page name and section.
@@ -904,6 +934,7 @@ build-module execution.
 ```toml
 [build]
 default_target = "my_app"
+security_provider = "auto"     # optional: auto, platform, or builtin
 build_module = true            # optional opt-in (default: false)
 build_module_path = "build.slk" # optional; default "build.slk"
 features = ["tui", "MY_FEATURE=123", "enable_this_feature=true"] # optional
@@ -914,6 +945,18 @@ features = ["tui", "MY_FEATURE=123", "enable_this_feature=true"] # optional
 Rules:
 
 - If `build.default_target` is set, it MUST name an existing `[[target]]`.
+- `build.security_provider` (optional) selects the package default for
+ security-sensitive stdlib primitives and auto-linking. Accepted values are:
+ - `auto` — Apple targets use platform-backed APIs first and fall back to
+ built-in archives for std APIs that do not yet have an Apple platform
+ mapping; other targets use the built-in provider,
+ - `platform` — Apple targets use Apple Security-backed `std::crypto`
+ core/random helpers and Apple framework linkage, and reject fallback-only
+ std/native security APIs,
+ - `builtin` — use the toolchain-built libsodium, mbedTLS, and libssh2 static
+ archives.
+ CLI `--security-provider` wins over this field, and
+ `SILK_SECURITY_PROVIDER` wins when the CLI flag is absent.
 - `silk build --package` builds every manifest `[[target]]` by default when
  `--package-target` is omitted.
 - `build.default_target` is still used by contexts that need one code-bearing
@@ -930,8 +973,9 @@ Rules:
  - raw manifest native source inputs (`.c`, `.h`, and supported `.m`) are
  compiled to temporary objects and linked with the generated test harness,
  using that target’s `cflags`,
- - hosted vendored native-input auto-linking for libsodium, mbedTLS, SQLite,
- and libssh2 follows the same supported-target rules as package builds,
+ - built-in provider native-input auto-linking for libsodium, mbedTLS, and
+ libssh2, plus built-in SQLite auto-linking, follows the same
+ supported-target rules as package builds,
  - when no code targets exist, tests still run from the package source set but
  no manifest link metadata is applied.
 - `build.build_module` (optional; default `false`) enables build module
@@ -969,9 +1013,17 @@ Rules:
  - an inline table mapping `NAME = <bool|int|string>`.
  - `NAME = true` is equivalent to `NAME`.
  - otherwise it is equivalent to `NAME=VALUE`.
+ - Feature names start with a letter or `_` and may contain letters, digits,
+ `_`, and `-`.
  - These features populate the enabled feature set queried by `attr(feature="...")`
  (see [attributes](?p=language/attributes)).
  - CLI `--feature` / `-F` entries override manifest features of the same name.
+ - The effective feature selection participates in package target cache keys.
+ Changing a selected feature invalidates artifacts whose checked or emitted
+ declarations may differ.
+ - Target cache keys also include the complete resolved local file-import
+ closure, including modules reached from a declared source but not listed
+ separately in `[sources]`.
 
 ## Interaction With `package` Declarations
 

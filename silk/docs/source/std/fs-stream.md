@@ -21,3 +21,8 @@ Use the following owning docs for the substantive API/design context for this mo
 - The shipped source for this module is `std/fs/stream.slk`.
 - The canonical module name is `std::fs::stream`.
 - Family-wide semantics, examples, and cross-module relationships live in the owning docs listed above.
+- Filesystem failures are translated exhaustively into stream failures:
+ out-of-memory and invalid-input retain their corresponding stream kinds;
+ path, permission, end-of-file, lock-contention, interruption, and unsupported
+ operation failures become `RuntimeFailed`; an unknown filesystem failure
+ remains `Unknown`. This mapping must be updated whenever `FSErrorKind` grows.

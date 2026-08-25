@@ -2,7 +2,7 @@
 
 `std::ssh2` provides the current
 libssh2-backed SSH2 implementation for the hosted POSIX baseline. On supported
-hosted target layouts, `silk build` auto-links the vendored `libssh2.a` so
+hosted target layouts, `silk build` auto-links the built-in `libssh2.a` so
 outputs do not depend on a system `libssh2` shared object at runtime.
 
 Downstream code that wants a stable stdlib-facing import path should prefer
@@ -22,7 +22,7 @@ The initial goals are:
 ## Linkage and Toolchain Integration
 
 When a program imports `std::ssh2` (or the compatibility facade `std::ssh`),
-`silk build` automatically links the target-matched vendored `libssh2.a`
+`silk build` automatically links the target-matched built-in `libssh2.a`
 archive from:
 
 - repo builds: `vendor/lib/<target-layout>/libssh2.a`
@@ -33,7 +33,7 @@ The current target layouts are `x64-linux` for glibc Linux x86_64,
 `x64-linux-musl` for musl Linux x86_64, and `aarch64-macos` for Apple Silicon
 macOS.
 
-The hosted deps workflow builds libssh2 against the vendored mbedTLS archives,
+The hosted deps workflow builds libssh2 against the built-in mbedTLS archives,
 so `std::ssh2` does not require system OpenSSL headers/libraries or a system
 `libssh2.so.*` at runtime.
 
@@ -41,7 +41,7 @@ To link dynamically (system libssh2), pass `--needed libssh2.so.1` (or set
 `[[target]].needed = ["libssh2.so.1"]` in `silk.toml`) and ensure the SONAME is
 resolvable by the dynamic loader on the target system.
 
-In staged/installed toolchains, the vendored archive is expected under the
+In staged/installed toolchains, the built-in archive is expected under the
 compiler prefix:
 
 - `build/lib/silk/vendor/lib/<target-layout>/` (repo build prefix)

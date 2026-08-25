@@ -60,6 +60,8 @@ In the shipped stdlib today:
 - `std::runtime::unicode` is implemented via bundled runtime support (`libsilk_rt`) and is used by `std::unicode`,
 - `std::runtime::number` is implemented via bundled runtime support (`libsilk_rt`) and is used by `std::number`,
 - `std::runtime::readline` is implemented via bundled runtime support (`libsilk_rt`) and is used by `std::readline`,
+- `std::runtime::gpu` is implemented via bundled runtime support (`libsilk_rt`),
+ dynamically discovers HIP on Linux, and is used by `std::gpu`,
 - `std::runtime::window` uses bundled runtime support (`libsilk_rt`) on
  macOS/iOS and local unsupported-provider stubs on targets without a current
  window provider; it is used only by the opt-in `std::window` facade.
@@ -126,6 +128,9 @@ Implemented runtime areas in the shipped stdlib:
  - `requires_static_kind()`
  - `requires_shared_kind()`
  - `build_version_at_least(...)`
+- `std::runtime::gpu` — Linux host-side GPU discovery, tracked device memory,
+ bounded copies, packed explicit-kernarg kernel launch, synchronization, and
+ last-error access used by `std::gpu`; see [runtime gpu](?p=std/runtime-gpu).
 - `std::runtime::fs` — filesystem primitives used by `std::fs` (hosted baseline;
  on `wasm32-wasi` the shipped backend supports a small subset using the first
  preopened directory as a sandbox root, and resolves relative paths against a
@@ -167,7 +172,10 @@ Implemented runtime areas in the shipped stdlib:
  other std modules:
  - monotonic clock reads (`monotonic_now_ns`),
  - Unix wall-clock timestamp reads (`unix_now_ns` / `unix_now_ms`),
- - delegates to `std::runtime::posix::time` in the shipped stdlib.
+ - delegates to `std::runtime::posix::time` in the shipped stdlib,
+ - the POSIX implementation reads into a calling-thread stack `timespec`
+ through the bundled runtime, so clock reads are allocation-free,
+ reentrant across task workers, and supported by `--noheap` builds.
 - `std::runtime::env` — hosted environment primitives used by `std::env`
  (process environment variables; delegates to `std::runtime::posix::env` in the
  shipped stdlib on hosted targets. On `wasm32-wasi` the compiler rewrites the
@@ -184,7 +192,11 @@ Implemented runtime areas in the shipped stdlib:
 - `std::runtime::net` — hosted networking primitives used by `std::net`
  (IPv4/IPv6 TCP + UDP sockets plus hostname resolution used by
  `std::net::resolve_host`; delegates to `std::runtime::posix::net` in the shipped stdlib).
-- `std::runtime::z3` — low-level `ext` bindings for the Z3 C API (vendored on
+- Apple Security runtime helpers — bundled `silk_rt_apple_crypto_*` symbols
+ used by the Apple `platform` security provider for `std::crypto` core/random
+ operations. These helpers are statically linked when referenced and require
+ `Security.framework` on Apple targets.
+- `std::runtime::z3` — low-level `ext` bindings for the Z3 C API (built-in on
  the glibc hosted layout; musl targets require an explicit downstream Z3
  library).
 - `std::runtime::regex` / `std::runtime::unicode` / `std::runtime::number` / `std::runtime::readline` —
@@ -321,10 +333,11 @@ runtime is done by selecting a custom stdlib root:
 When no suitable std archive is provided, the compiler can fall back to
 compiling the reachable std sources as part of the build on supported targets.
 
-### Building a Custom Std Archive (linux/x86_64)
+### Building a Custom Std Archive
 
-For `linux/x86_64` in the current toolchain, a prebuilt stdlib archive
-(`libsilk_std.a`) contains one ELF object per std module.
+For supported native hosted archive targets in the current toolchain
+(`linux/x86_64` and `macos/aarch64`), a prebuilt stdlib archive
+(`libsilk_std.a`) contains one object per std module.
 
 Archive member naming requirement (current scheme):
 

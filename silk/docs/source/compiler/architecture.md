@@ -22,6 +22,13 @@ The compiler is implemented in Zig and organized into three major layers:
  - Emission of object files and archives that can be linked into executables and libraries.
  - C99 ABI mappings for interop with `libsilk.a`.
 
+The driver gives each type-check invocation an isolated scratch lifetime. A
+recycling allocator services the checker's frequent short-lived allocations
+and is backed by a per-invocation arena; after checker diagnostics have released
+their owned state, the arena reclaims any scratch intentionally retained until
+the phase boundary. Repeated in-process checks therefore do not accumulate
+checker memory or report phase-owned scratch as application leaks.
+
 In terms of concrete targets and file formats, the back-end MUST eventually support:
 
 - ELF for Unix-like systems:
@@ -35,7 +42,7 @@ In terms of concrete targets and file formats, the back-end MUST eventually supp
  - initially `x86_64`, with other architectures considered later as needed,
  - DLLs for dynamic loading.
 
-Current snapshot (Silk (ABI) 0.1.0):
+Current snapshot (Silk (ABI) 0.1.1):
 
 - `src/backend_const.zig` provides a **target-aware const-main stub backend** that emits minimal executables for a fully-constant executable entrypoint (`main` reduces to a constant integer or a `void` main falls through; supports `fn main () -> int`, `fn main () -> void`, and the standard `fn main(argc: int, argv: u64) -> int` / `fn main(argc: int, argv: u64) -> void` forms when arguments are unused):
  - ELF64: `linux-x86_64`, `linux-x86_64-musl`, `linux-aarch64`,
@@ -50,7 +57,7 @@ Current snapshot (Silk (ABI) 0.1.0):
  `macos-aarch64`, the driver still performs an ad hoc host `codesign -s -`
  pass so the generated executable is runnable immediately on macOS hosts.
 - `src/backend_macho_aarch64_host.zig` provides a **temporary Apple Silicon
- host-backed Mach-O executable backend**:
+ host-backed Mach-O backend**:
  - it currently covers the validated scalar IR executable subset on
  `macos/aarch64` hosts for:
  - `macos-aarch64`,
@@ -58,10 +65,16 @@ Current snapshot (Silk (ABI) 0.1.0):
  - `ios-simulator-aarch64`,
  - and `ios-simulator-x86_64`,
  - emits target-specific arm64 or x86_64 assembly, assembles it with host
- `clang -c`, and links it with host `ld`,
+ `clang -c`, links executables and dylibs with host `ld`, and builds
+ static archives with Apple `libtool -static`,
  - `macos-aarch64` also expands bundled `libsilk_rt*.a` archives into
  temporary object members before host linking so runtime-backed scalar
  executables build on Apple Silicon,
+ - `macos-aarch64`, `ios-aarch64`, `ios-simulator-aarch64`, and
+ `ios-simulator-x86_64` also reuse the same host-backed object emitter to
+ produce Mach-O relocatable objects, static library archives via Apple
+ `libtool -static`, and Mach-O dylibs via the Apple linker for the current
+ supported library IR subset,
  - `ios-aarch64`, `ios-simulator-aarch64`, and `ios-simulator-x86_64` are
  intentionally narrower than `macos-aarch64`, but now include:
  - pure-Silk scalar executables,
@@ -69,11 +82,15 @@ Current snapshot (Silk (ABI) 0.1.0):
  compiled from `src/silk_rt_f128.c`,
  - and portable bundled runtime helpers compiled on demand for the
  requested iOS SDK target (number / regex / unicode / filesystem / dns /
- process / signal / term / pty / readline / task-pool / async),
- - mixed `.slk` + native `.c` / `.h` / `.m` / `.o` / `.a` executable
- inputs, with `.m` compiled as Objective-C and linked against `libobjc`,
- - and native-input-only executables whose `main` comes from linked
- objects or archives,
+ bounded socket networking / process / signal / term / pty / readline /
+ task-pool / async),
+ - mixed `.slk` + native `.c` / `.h` / `.m` / `.o` / `.a` executable,
+ static-library, and shared-library inputs, with `.m` compiled as
+ Objective-C and linked against `libobjc` for executable/shared outputs,
+ - native-input-only executables whose `main` comes from linked objects or
+ archives,
+ - and object/static/shared library outputs for the supported
+ library IR subset,
  - this host-backed subset is now wired through the `silk` CLI / driver path
  (with the same host `codesign -s -` post-pass on macOS targets that need
  it),
@@ -86,9 +103,52 @@ Current snapshot (Silk (ABI) 0.1.0):
  even when the compiler itself is running on a non-`linux/x86_64` host. The
  driver selects glibc or musl loader/libc defaults from the explicit target,
  `--elf-interp`, manifest `elf_interp`, or `SILK_ELF_INTERP`.
+ Shared IR type resolution preserves the language's transparent-alias rule:
+ a named import of an exported type alias resolves through that alias to its
+ concrete struct or enum carrier, including a monomorphized generic carrier,
+ in both expression- and statement-position lowering.
 - `src/backend_wasm_ir.zig` provides the IR-backed backend for `wasm32-unknown-unknown` and `wasm32-wasi` outputs.
+- `src/lower_gpu_ir.zig` builds target-neutral device `ir.Program` graphs from
+ launchable GPU entries and their eligible direct helper call graphs. Portable
+ device primitives are represented as compiler-owned semantic externs in IR;
+ they never become link imports. [backend gpu](?p=compiler/backend-gpu) defines the
+ shared contract consumed by AMDGPU and the GPU-v1 NVIDIA PTX selector.
+- `src/backend_amdgpu.zig` provides the first standalone AMDGPU backend
+ encoder. It recognizes AMDHSA code-object targets for `gfx942`, `gfx1100`,
+ and `gfx1151`, emits dependency-light ELF64
+ AMDGPU code-object bytes plus
+ MessagePack metadata, and serializes 64-byte HSA AQL kernel-dispatch packets.
+ `silk build --kind object --target amdgcn-*` can emit an AMDHSA `.hsaco` for
+ exactly one exported root-package void source kernel with up to 32 immutable
+ `u64` parameters whose body is empty or contains only supported
+ compiler-backed GPU call statements. This is not yet a general
+ Silk IR-to-GPU lowering path. Linux x86_64 executable builds may also use
+ `--gpu-target amdgcn-*`: `attr(device=gpu)` functions are compiled into
+ individual code objects, removed from host lowering, and appended in a
+ provider-tagged versioned bundle consumed by `std::gpu` through the bundled
+ GPU runtime. The same path accepts NVIDIA `sm80` and embeds Silk-emitted PTX
+ for the CUDA Driver API.
+ The checked `gpu (grid=..., workspace=...) { kernel(args...); }` form
+ resolves the entry name at compile time and dispatches through
+ `std::gpu::launch_and_synchronize`. It returns both phase statuses as
+ `std::gpu::DispatchResult` in value position and discards them in statement
+ position; separate manual functions remain available for overlapping
+ execution. Launch blocks are accepted in ordinary, async, and task host
+ functions, with synchronization acting as a blocking host call.
+ `std::gpu::launch` automatically packs the explicit `u64` arguments, and
+ `std::gpu::device` provides target-neutral global-index and packed-`u32`
+ load/store operations. The earlier fill and threshold-classification
+ operations remain compatibility helpers.
+ See [backend gpu](?p=compiler/backend-gpu), [backend amdgpu](?p=compiler/backend-amdgpu), and
+ [backend nvidia](?p=compiler/backend-nvidia) for the portable and provider contracts.
+- `src/backend_nvidia.zig` is the GPU-v1 NVIDIA selector. It emits
+ null-terminated PTX directly from the same target-neutral `ir.Program`, and
+ the provider-neutral bundle records CUDA plus its PTX target tag. The hosted
+ runtime loads that text through the CUDA Driver API without a link-time CUDA
+ dependency or an external compilation command. See
+ [backend nvidia](?p=compiler/backend-nvidia).
 
-Mach-O and PE/COFF IR-backed object/static/shared library emission, and additional IR-backed architectures (notably AArch64) are explicit future requirements and MUST be planned and implemented as the back-end matures.
+Portable Silk-owned Mach-O and PE/COFF IR-backed object/static/shared library emission, and additional IR-backed architectures (notably AArch64) are explicit future requirements and MUST be planned and implemented as the back-end matures. The current Apple target object/static/shared support is Apple Silicon host-backed bring-up, not the final portable Mach-O backend.
 
 An initial IR-driven, native backend is being prototyped alongside the existing constant-expression emitter:
 
@@ -167,6 +227,8 @@ This is a draft module layout for the Zig implementation. Exact file names may c
  - `src/z3_api.zig` — Z3 C API shim (static-by-default, optional dynamic override).
  - `src/ir.zig` — core intermediate representation.
  - `src/codegen.zig` — target-independent code generation logic.
+ - `src/backend_amdgpu.zig` — standalone AMDHSA ELF code-object and AQL
+ packet encoder for the initial AMD GPU backend surface.
  - `src/abi.zig` — C99 ABI and FFI glue for `libsilk.a`.
  - `src/std_integration.zig` — integration with the `std::` package and stdlib selection.
  - `src/cli/` (optional breakdown):

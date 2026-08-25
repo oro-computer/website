@@ -43,20 +43,27 @@ Each guide entry contains:
  - `silk guide read file`
  - `silk guide tcp loopback`
  - `silk guide http request`
+ - `silk guide mime content type`
+ - `silk guide atomic counter`
  - `silk guide protobuf schema roundtrip`
 - Exact tag filter:
  - `silk guide tags:concurrency`
 - Exact std-module filter:
  - `silk guide module:std::task`
  - `silk guide std::task`
+ - `silk guide module:std::mime`
 - Exact public std symbol lookup:
  - `silk guide std::http::request`
+ - `silk guide std::mime::content_type_with`
+ - `silk guide std::atomic::AtomicU64.fetch_add`
+ - `silk guide std::dylib::open_self`
  - `silk guide ByteSlice.find_bytes`
  - `silk guide std::protobuf::Reader.read_key`
  - `silk guide GL_TEXTURE_2D`
 - Documentation-backed references:
  - `silk guide tags:reference-guide`
  - `silk guide language types`
+ - `silk guide language atomics`
  - `silk guide std io overview`
 - Exact diagnostic-code filter:
  - `silk guide diag:E2034`

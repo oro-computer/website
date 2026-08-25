@@ -1,13 +1,17 @@
 # `std::crypto`
 
-`std::crypto` provides cryptographic primitives backed by the system
-`libsodium` library on the hosted `linux/x86_64` baseline.
+`std::crypto` provides
+cryptographic primitives through a selectable security provider. The `builtin`
+provider uses target-matched built-in `libsodium` archives on the hosted POSIX
+baseline; the Apple `platform` provider uses Security-backed runtime helpers
+for the currently wired core/random subset.
 
-Design goals:
+The long-term goal is:
 
 - a cohesive, ergonomic `std::crypto` API surface that is suitable for Silk
  programs,
-- a thin, auditable mapping to libsodium primitives (no bespoke crypto),
+- a thin, auditable mapping to platform or libsodium primitives (no bespoke
+ crypto),
 - pervasive use of Formal Silk contracts/theories to document and verify:
  - buffer shape invariants (`len >= 0`, non-null when non-empty),
  - constant-size requirements (keys/nonces/MAC sizes),
@@ -18,15 +22,47 @@ Security note:
 - Formal Silk can help specify *shape* invariants and prevent a large class of
  memory/length bugs, but it does **not** prove cryptographic security.
 
-## Linkage and Toolchain Integration
+## Provider and Linkage Integration
 
-On `linux/x86_64` with the glibc dynamic loader (`ld-linux`), `silk build`
-automatically adds `libsodium.so.23` as a `DT_NEEDED` dependency when a program
-imports libsodium-backed extern symbols (for example via
-`import crypto from "std/crypto";`).
+Provider selection is shared by `silk build`, `silk check`, and `silk test`:
 
-This mirrors the existing behavior for `libc.so.6` so downstream users do not
-have to pass `--needed libsodium.so.23` for normal hosted builds.
+- `auto` selects platform-backed APIs first on Apple targets and falls back to
+ built-in archives for std APIs that do not yet have an Apple platform mapping;
+ it selects the built-in provider elsewhere,
+- `platform` is valid only for Apple targets and is strict: it rejects APIs that
+ still need the built-in libsodium/mbedTLS/libssh2 fallback,
+- `builtin` uses the toolchain-built libsodium archive.
+
+Override sources are, in priority order: `--security-provider`, then
+`SILK_SECURITY_PROVIDER`, then `[build] security_provider`, then `auto`.
+
+On Apple targets with the `auto` or `platform` provider, `std::crypto::init`,
+`std::crypto::memzero`, `std::crypto::equal`, and `std::crypto::random` route
+through bundled runtime helpers backed by the Security framework. Builds that
+use those helpers link `Security.framework`.
+
+With the `builtin` provider on supported hosted target layouts, `silk build`
+auto-links the built-in `libsodium.a` archive from:
+
+- the repo checkout: `vendor/lib/<target-layout>/`, or
+- an installed prefix: `<prefix>/lib/silk/vendor/lib/<target-layout>/`.
+
+The current target layouts are `x64-linux` for glibc Linux x86_64,
+`x64-linux-musl` for musl Linux x86_64, and `aarch64-macos` for Apple Silicon
+macOS.
+
+This avoids a runtime `DT_NEEDED` dependency on a system `libsodium` shared
+library. When the built-in archive is missing, `silk build` reports an error
+that instructs the user to run `zig build deps` for the selected target.
+
+In `auto` mode on Apple targets, the advanced nested modules
+(`std::crypto::hash`, `std::crypto::aead`, `std::crypto::secretbox`,
+`std::crypto::box`, and `std::crypto::sign`) fall back to the built-in
+libsodium archive while shared `std::crypto` core/random helpers still use
+Security where they are referenced. Fallback module operations initialize the
+built-in libsodium provider before calling libsodium primitives. Explicit
+`platform` builds reject those advanced modules until Apple platform mappings
+for the higher-level primitives are specified and implemented.
 
 ## Byte Buffers
 
@@ -49,11 +85,13 @@ The underlying raw allocation and load/store operations are provided by
 
 ## Exported API
 
-The current `std::crypto` module is organized as:
+The initial `std::crypto` module is organized as:
 
-- `std::crypto` (core helpers and libsodium init)
-- `std::crypto::random` (CSPRNG)
-- `std::crypto::hash` (generic hashing)
+- `std::crypto` (core helpers and provider init)
+- `std::crypto::random` (CSPRNG; Security on Apple platform, libsodium on
+ builtin)
+- `std::crypto::hash` (variable-length BLAKE2b, keyed BLAKE2b, and fixed
+ 32-byte SHA-256 hashing)
 - `std::crypto::aead` (AEAD: ChaCha20-Poly1305 IETF and XChaCha20-Poly1305 IETF)
 - `std::crypto::secretbox` (secret-key authenticated encryption)
 - `std::crypto::box` (public-key authenticated encryption)
@@ -71,50 +109,19 @@ Key design rules:
  returned `len`),
 - functions return recoverable error values:
  - `ErrorType?` where `None` is success,
- - `Result(T, ErrorType)` where `Ok(T)` is success and `Err(ErrorType)` is failure
+ - `std::result::Result(T, ErrorType)` where `Ok(T)` is success and `Err(ErrorType)` is failure
  (use `Result(bool, ErrorType)` for fallible predicates).
 
-## Example: init, hash, wipe
+### Hashing (`std::crypto::hash`)
 
-```silk
-import arrays from "std/arrays";
-import buffer from "std/buffer";
-import crypto from "std/crypto";
-import hash from "std/crypto/hash";
-import mem from "std/runtime/mem";
+The hash module exposes `blake2b`, `blake2b_keyed`, and `sha256`. Each accepts
+an owning mutable `BufferU8` output plus checked byte-slice input, initializes
+libsodium, grows the output as required, and returns `CryptoError?`. SHA-256 has
+a fixed 32-byte output and is suitable for interoperable protocols that
+specifically require SHA-256; it is not substituted with BLAKE2b.
 
-fn main () -> int {
-  if std::crypto::init() != None {
-    return 1;
-  }
-
-  let msg = "hello from silk";
-  let mut out = match std::buffer::BufferU8.init(32) {
-    Ok(v) => v,
-    Err(_) => return 2,
-  };
-
-  let err = std::crypto::hash::blake2b(
-    mut out,
-    32,
-    std::arrays::ByteSlice{
-      ptr: std::runtime::mem::string_ptr(msg),
-      len: std::runtime::mem::string_len(msg),
-    }
-  );
-  if err != None {
-    out.drop();
-    return 3;
-  }
-
-  let wipe = std::crypto::memzero(out.as_bytes());
-  out.drop();
-  if wipe != None {
-    return 4;
-  }
-  return 0;
-}
-```
+See [crypto hash](?p=std/crypto-hash) for exact signatures and
+output ownership.
 
 ### AEAD (`std::crypto::aead`)
 
@@ -137,7 +144,7 @@ For each construction:
 
 Associated data is optional: callers may pass `ad = { ptr: 0, len: 0 }`.
 
-## Design goals
+Planned expansion:
 
 - key derivation (`kdf`, `pwhash`),
 - streaming (`secretstream`),

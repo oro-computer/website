@@ -75,6 +75,19 @@ Silk’s concurrency keywords are intentionally explicit because they communicat
 - If a function is `task`, callers know they’re spawning work that must be joined/drained.
 - `yield`/`await` make synchronization points visible in code review (no hidden “maybe blocks here”).
 
+## Current boundaries
+
+- `await` and structured `async { ... }` / `task { ... }` blocks are allowed
+ only inside `async` functions.
+- `Promise(T)` handles are consumed by `await`; `Task(T)` handles are
+ drained/joined by `yield *`. Handles are single-use and cannot be copied.
+- On hosted Linux x86_64, `await` uses the single-threaded fiber executor and
+ can suspend without blocking its OS thread. `yield` and `yield *` are
+ task-context-only operations and remain blocking OS-thread waits.
+
+The full ownership, suspension-safety, and structured-cleanup rules are in
+[Concurrency](?p=language/concurrency).
+
 ## Next
 
 - Reference: `std::task` and `std::sync` (sidebar → standard library)

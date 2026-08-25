@@ -1,8 +1,9 @@
 # `std::https`
 
 `std::https` provides a
-small HTTPS client/server connection API on top of `std::tls` (mbedTLS) and
-`std::net::TCPStream`, plus URL and stream convenience helpers.
+small HTTPS client/server connection API on top of `std::tls` (currently the
+built-in mbedTLS provider) and `std::net::TCPStream`, plus URL and stream
+convenience helpers.
 
 See also:
 
@@ -13,6 +14,11 @@ See also:
 - RFC 2818 (HTTP over TLS)
 
 ## Scope
+Provider note: because this module depends on `std::tls`, default Apple `auto`
+builds currently fall back to the built-in mbedTLS provider for TLS. Explicit
+`platform` builds reject `std::https` until the Network/Security-backed TLS
+surface is specified and implemented.
+
 Implemented:
 
 - Blocking TLS handshake using `std::tls::Session`.
@@ -59,6 +65,9 @@ export let ERR_HTTP: int = 4;
 export let ERR_OUT_OF_MEMORY: int = 5;
 export let ERR_BAD_URL: int = 6;
 export let ERR_STREAM: int = 7;
+export let ERR_DEADLINE_EXCEEDED: int = 8;
+export let ERR_RESPONSE_TOO_LARGE: int = 9;
+export let ERR_INVALID_LIMITS: int = 10;
 
 export error Error {
   kind: int,
@@ -76,7 +85,10 @@ impl Connection {
   // Like `connect`, but configures SNI + hostname verification (recommended).
   public fn connect_host (addr: std::net::SocketAddrV4, hostname: string) -> ConnectionResult;
   public fn connect_host_v6 (addr: std::net::SocketAddrV6, hostname: string) -> ConnectionResult;
+  public fn connect_host_until (addr: std::net::SocketAddrV4, hostname: string, deadline_ns: i64) -> ConnectionResult;
+  public fn connect_host_v6_until (addr: std::net::SocketAddrV6, hostname: string, deadline_ns: i64) -> ConnectionResult;
   public fn is_valid (self: &Connection) -> bool;
+  public fn set_response_limits (mut self: &Connection, timeout_ms: int, max_response_body_bytes: i64) -> Error?;
   public fn close (mut self: &Connection) -> Error?;
 
   public fn write_request (self: &Connection, method: string, target: string, host: string, body: string) -> Error?;
@@ -111,21 +123,21 @@ export async fn request_host_v6_with_headers_async (addr: std::net::SocketAddrV6
 
 // URL and stream client helpers.
 export fn request_url (url: string, method: string, body: string) -> ClientResponseResult;
-export fn request_url_with_headers (url: string, method: string, headers: &std::http::HeadersMap, body: string) -> ClientResponseResult;
+export fn request_url_with_headers (url: string, method: string, headers: &std::http::HeadersMap, body: string, timeout_ms: int = 0, max_response_body_bytes: i64 = 0) -> ClientResponseResult;
 export fn request_url_from_stream (url: string, method: string, body: std::stream::ReadableStream) -> ClientResponseResult;
-export fn request_url_from_stream_with_headers (url: string, method: string, headers: &std::http::HeadersMap, body: std::stream::ReadableStream) -> ClientResponseResult;
+export fn request_url_from_stream_with_headers (url: string, method: string, headers: &std::http::HeadersMap, body: std::stream::ReadableStream, timeout_ms: int = 0, max_response_body_bytes: i64 = 0) -> ClientResponseResult;
 export fn request_url_to_stream (url: string, method: string, body: string, dst: std::stream::WritableStream) -> ClientResponseResult;
-export fn request_url_to_stream_with_headers (url: string, method: string, headers: &std::http::HeadersMap, body: string, dst: std::stream::WritableStream) -> ClientResponseResult;
+export fn request_url_to_stream_with_headers (url: string, method: string, headers: &std::http::HeadersMap, body: string, dst: std::stream::WritableStream, timeout_ms: int = 0, max_response_body_bytes: i64 = 0) -> ClientResponseResult;
 export fn request_url_stream (url: string, method: string, body: std::stream::ReadableStream, dst: std::stream::WritableStream) -> ClientResponseResult;
-export fn request_url_stream_with_headers (url: string, method: string, headers: &std::http::HeadersMap, body: std::stream::ReadableStream, dst: std::stream::WritableStream) -> ClientResponseResult;
+export fn request_url_stream_with_headers (url: string, method: string, headers: &std::http::HeadersMap, body: std::stream::ReadableStream, dst: std::stream::WritableStream, timeout_ms: int = 0, max_response_body_bytes: i64 = 0) -> ClientResponseResult;
 export async fn request_url_async (url: string, method: string, body: string) -> ClientResponseResult;
-export async fn request_url_with_headers_async (url: string, method: string, headers: std::http::HeadersMap, body: string) -> ClientResponseResult;
+export async fn request_url_with_headers_async (url: string, method: string, headers: std::http::HeadersMap, body: string, timeout_ms: int = 0, max_response_body_bytes: i64 = 0) -> ClientResponseResult;
 export async fn request_url_from_stream_async (url: string, method: string, body: std::stream::ReadableStream) -> ClientResponseResult;
-export async fn request_url_from_stream_with_headers_async (url: string, method: string, headers: std::http::HeadersMap, body: std::stream::ReadableStream) -> ClientResponseResult;
+export async fn request_url_from_stream_with_headers_async (url: string, method: string, headers: std::http::HeadersMap, body: std::stream::ReadableStream, timeout_ms: int = 0, max_response_body_bytes: i64 = 0) -> ClientResponseResult;
 export async fn request_url_to_stream_async (url: string, method: string, body: string, dst: std::stream::WritableStream) -> ClientResponseResult;
-export async fn request_url_to_stream_with_headers_async (url: string, method: string, headers: std::http::HeadersMap, body: string, dst: std::stream::WritableStream) -> ClientResponseResult;
+export async fn request_url_to_stream_with_headers_async (url: string, method: string, headers: std::http::HeadersMap, body: string, dst: std::stream::WritableStream, timeout_ms: int = 0, max_response_body_bytes: i64 = 0) -> ClientResponseResult;
 export async fn request_url_stream_async (url: string, method: string, body: std::stream::ReadableStream, dst: std::stream::WritableStream) -> ClientResponseResult;
-export async fn request_url_stream_with_headers_async (url: string, method: string, headers: std::http::HeadersMap, body: std::stream::ReadableStream, dst: std::stream::WritableStream) -> ClientResponseResult;
+export async fn request_url_stream_with_headers_async (url: string, method: string, headers: std::http::HeadersMap, body: std::stream::ReadableStream, dst: std::stream::WritableStream, timeout_ms: int = 0, max_response_body_bytes: i64 = 0) -> ClientResponseResult;
 ```
 
 Notes:
@@ -152,3 +164,31 @@ Notes:
  the task worker and drop its backing storage before returning.
 - Stream helpers map `std::stream` failures to `ERR_STREAM`, except allocation
  failures which map to `ERR_OUT_OF_MEMORY`.
+- Every `request_url_*_with_headers` helper, including synchronous and async
+ stream compositions, accepts two trailing resource limits. A positive
+ `timeout_ms` is one monotonic deadline covering hostname resolution, TCP
+ connection, TLS negotiation, request writing, response headers, and response
+ body reads. Request-stream helpers finish reading their generic input stream
+ before this network deadline begins because `ReadableStream` has no timed
+ read contract. A positive
+ `max_response_body_bytes` limits the decoded body for `Content-Length`,
+ chunked, and connection-close responses. Zero disables the corresponding
+ limit; negative values return `ERR_INVALID_LIMITS` before a request stream is
+ consumed. Trailing defaults preserve every legacy call form.
+- Deadline expiry returns `ERR_DEADLINE_EXCEEDED`; a body limit returns
+ `ERR_RESPONSE_TOO_LARGE`. Both paths close the temporary TLS connection
+ before returning. The body limit counts chunk payload bytes rather than
+ chunk framing and trailers. While that limit is active, aggregate chunk
+ framing and trailers may exceed the decoded-body limit by at most the
+ connection's header-byte limit; exceeding that framing allowance also
+ returns `ERR_RESPONSE_TOO_LARGE` so a tiny decoded response cannot force
+ unbounded buffering.
+- Remaining deadline durations are rounded up without signed overflow. Each
+ resolver or socket operation receives at most the positive C `int` timeout
+ maximum; the absolute monotonic deadline is retained and recalculated for
+ every later operation, so larger caller timeouts remain valid.
+- HTTPS rejects decimal `Content-Length`, chunk-size, message-extent, and
+ connection-buffer capacity overflow before performing the unsafe arithmetic.
+- `Connection.set_response_limits(...)` applies the same read deadline/body
+ accounting to an already connected session. Its timeout starts when the
+ method is called; one-shot helpers start their deadline before resolution.

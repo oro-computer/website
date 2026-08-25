@@ -31,6 +31,8 @@ export fn ge (a: string, b: string) -> bool;
 
 export fn is_empty (s: string) -> bool;
 export fn or_empty (s: string?) -> string;
+export fn starts_with (s: string, prefix: string) -> bool;
+export fn ends_with (s: string, suffix: string) -> bool;
 
 export fn trim (s: string) -> string;
 export fn trim_start (s: string) -> string;
@@ -46,6 +48,9 @@ Notes:
 - These are simple wrappers over the language’s built-in string comparisons and
  optional-coalesce operator (`??`), chosen because they are implementable in
  Silk currently.
+- `starts_with` and `ends_with` compare the UTF-8 byte sequences carried by
+ `string`. They do not normalize Unicode or compare grapheme clusters. An empty
+ prefix or suffix matches every string.
 - This surface will grow alongside language/runtime features
  required for richer string operations (slicing, iteration, allocation, etc.).
 

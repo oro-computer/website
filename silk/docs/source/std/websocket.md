@@ -119,8 +119,13 @@ impl WebSocketServer {
 Notes:
 
 - This API is currently **blocking**.
-- Handle types wrap OS resources; avoid copying `WebSocket` / `WebSocketServer`
- values until the language has move-only handles.
+- `accept` consumes its `TCPStream`, and a successful `WebSocket` owns that
+ stream until `close` or `Drop` invalidates it.
+- Handshake computation and writes borrow the stream retained inside the
+ `WebSocket`; they do not create a second owning stream handle. Consequently,
+ every handshake error path can close the original owner exactly once.
+- `WebSocket` and `WebSocketServer` are ownership-tracked handles. Moving one
+ transfers its wrapped OS resources, and copying an owning handle is rejected.
 
 ## Protocol Rules Enforced
 

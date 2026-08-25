@@ -137,6 +137,10 @@ In Silk currently:
 - Shared mutable state must be synchronized explicitly (for example via
  `std::sync` primitives, `std::atomic` atomics, or by communicating through
  channels).
+- The current hosted region backend is not reentrant across OS threads. Do not
+ overlap `with` region extents across task workers; see
+ [regions](?p=language/regions). Thread-safe stdlib worker APIs must not use that
+ process-global region path internally.
 - To share a runtime handle across tasks without transferring ownership, prefer
  stdlib APIs that follow the `T` / `TBorrow` pattern (for example
  `Channel(T)` + `ChannelBorrow(T)` and `AbortSignal` + `AbortSignalBorrow`).

@@ -20,6 +20,8 @@ typedef struct SilkModule   SilkModule;
 typedef struct SilkError    SilkError;
 
 typedef enum SilkOutputKind SilkOutputKind;
+typedef enum SilkAmdGpuAqlFenceScope SilkAmdGpuAqlFenceScope;
+typedef struct SilkAmdGpuAqlDispatchPacketConfig SilkAmdGpuAqlDispatchPacketConfig;
 
 /* Version */
 void silk_abi_get_version(int *out_major,
@@ -72,6 +74,12 @@ bool silk_compiler_build_to_bytes(SilkCompiler   *compiler,
                                   SilkBytes      *out_bytes);
 void silk_bytes_free(SilkBytes *bytes);
 
+/* AMDGPU AQL */
+#define SILK_AMDGPU_AQL_DISPATCH_PACKET_SIZE 64
+bool silk_amdgpu_aql_dispatch_packet_build(
+  const SilkAmdGpuAqlDispatchPacketConfig *config,
+  uint8_t                                *out_packet);
+
 /* Errors */
 SilkError *silk_compiler_last_error(SilkCompiler *compiler);
 size_t     silk_error_format(const SilkError *error,
@@ -79,7 +87,7 @@ size_t     silk_error_format(const SilkError *error,
                              size_t           buffer_len);
 ```
 
-Link with (on `linux/x86_64`, `libsilk.a` vendors Z3 which is built as C++):
+Link with (on `linux/x86_64`, `libsilk.a` includes built-in Z3, which is built as C++):
 
 ```sh
 cc -std=c99 -Wall -Wextra \
@@ -113,7 +121,9 @@ For terminal-driven discovery:
 
 - use `man 7 libsilk` for the embedding overview,
 - use `man 3 silk_compiler`, `man 3 silk_error`, `man 3 silk_bytes`, and
- `man 3 silk_abi_get_version` for the section 3 ABI entrypoints,
+ `man 3 silk_abi_get_version` for the core section 3 ABI entrypoints,
+- use `man 3 silk_amdgpu_aql_dispatch_packet_build` for the AMDGPU AQL packet
+ serializer,
 - use `silk env` and `silk cc` when you need the toolchain’s embedder-facing
  environment and default compiler/linker flags,
 - and use the hosted ABI specification at
@@ -150,6 +160,26 @@ typedef struct SilkBytes {
 - `ptr` may be `NULL` when `len == 0`.
 - Buffers returned by `silk_compiler_build_to_bytes` must be freed with
  `silk_bytes_free`.
+
+### Package export helpers
+
+Named Silk packages mangle exported symbols so package exports do not collide.
+C and Objective-C bridge headers should use the public helper macros instead of
+spelling the reserved mangled prefix directly:
+
+```c
+SILK_C_ABI_EXPORT_FN(lumen_trail, silk_ios_daily_score)
+SILK_PACKAGE_EXPORT_FN(lumen_trail, silk_ios_daily_score)
+SILK_PACKAGE_EXPORT_DATA(my_pkg, answer)
+```
+
+The macro arguments are C identifier tokens. The C ABI function helper expands
+to `lumen_trail_silk_ios_daily_score`; use it for Silk functions declared
+as `export attr(abi=c) fn ...` or `attr(abi=c) export fn ...`. For nested Silk
+packages, pass the clean C package spelling with namespace separators collapsed
+to `_`, for example `ui_model` for package `ui::model`. The default package
+function helper expands to
+`__silk_export_fn__lumen_trail__silk_ios_daily_score`.
 
 ### `SilkRange`
 
@@ -200,7 +230,7 @@ The header defines:
 ```c
 #define SILK_ABI_VERSION_MAJOR 0
 #define SILK_ABI_VERSION_MINOR 1
-#define SILK_ABI_VERSION_PATCH 0
+#define SILK_ABI_VERSION_PATCH 1
 ```
 
 and the function:
@@ -217,6 +247,53 @@ Callers should:
 - reject or warn on mismatches as appropriate for their integration.
 
 The ABI is versioned so that future incompatible changes can be detected at runtime.
+
+## AMDGPU AQL Packets
+
+```c
+typedef enum SilkAmdGpuAqlFenceScope {
+  SILK_AMDGPU_AQL_FENCE_SCOPE_NONE = 0,
+  SILK_AMDGPU_AQL_FENCE_SCOPE_AGENT = 1,
+  SILK_AMDGPU_AQL_FENCE_SCOPE_SYSTEM = 2,
+} SilkAmdGpuAqlFenceScope;
+
+typedef struct SilkAmdGpuAqlDispatchPacketConfig {
+  uint16_t dimensions;
+  uint16_t workgroup_size_x;
+  uint16_t workgroup_size_y;
+  uint16_t workgroup_size_z;
+  uint32_t grid_size_x;
+  uint32_t grid_size_y;
+  uint32_t grid_size_z;
+  uint32_t private_segment_size;
+  uint32_t group_segment_size;
+  uint32_t max_flat_workgroup_size;
+  uint64_t kernel_object;
+  uint64_t kernarg_address;
+  uint64_t completion_signal;
+  uint8_t  barrier;
+  int32_t  acquire_fence_scope;
+  int32_t  release_fence_scope;
+} SilkAmdGpuAqlDispatchPacketConfig;
+
+bool silk_amdgpu_aql_dispatch_packet_build(
+  const SilkAmdGpuAqlDispatchPacketConfig *config,
+  uint8_t                                *out_packet);
+```
+
+`silk_amdgpu_aql_dispatch_packet_build` writes one 64-byte HSA AQL
+kernel-dispatch packet. It validates dimensions, workgroup/grid sizes, unused
+dimensions, flat work-group size, and fence-scope values. Set
+`max_flat_workgroup_size` to zero to use the conservative 1024 work-item
+default. The fence-scope fields are fixed-width `int32_t` values containing one
+of the `SilkAmdGpuAqlFenceScope` constants. The function returns `false` for
+invalid inputs or null pointers; when `out_packet` is non-null, it is zeroed
+before validation. The helper is independent of `SilkCompiler` and does not
+update compiler last-error state.
+
+The helper only serializes the packet. ROCR executable loading, HSA queue
+creation, signal allocation, and doorbell submission remain the caller's
+runtime responsibility.
 
 ## Lifecycle
 
@@ -342,8 +419,21 @@ bool silk_compiler_set_target(SilkCompiler *compiler,
  - `windows-x86_64`,
  - `windows-aarch64`,
  - `wasm32-unknown-unknown` (IR-backed wasm32 mode; emits a final `.wasm` module exporting `memory` and exported functions, including `main` when present; `ext` declarations become imports under `env.<name>`; also supports export-only modules with no `main` for JS/Node-style embedding),
- - `wasm32-wasi` (IR-backed wasm32 WASI mode; emits `memory` and `_start () -> void`, imports `wasi_snapshot_preview1.proc_exit`, and calls Silk `fn main () -> int`; also supports export-only modules for embedding, which do not include `_start`).
+ - `wasm32-wasi` (IR-backed wasm32 WASI mode; emits `memory` and `_start () -> void`, imports `wasi_snapshot_preview1.proc_exit`, and calls Silk `fn main () -> int`; also supports export-only modules for embedding, which do not include `_start`),
+ - `amdgcn-amd-amdhsa-gfx942`, `amdgcn-amd-amdhsa-gfx1100`, and
+ `amdgcn-amd-amdhsa-gfx1151` (AMDHSA object output for source-intrinsic kernels).
 - Note: for `wasm32` targets, only `SILK_OUTPUT_EXECUTABLE` is supported. `wasm32-wasi` currently supports only `fn main () -> int` (no argv).
+- Note: for AMDGPU targets, `SILK_OUTPUT_OBJECT` emits a `.hsaco` only when
+ the input contains exactly one exported root-package void source kernel with
+ up to 32 immutable `u64` parameters whose body is empty or contains only
+ supported compiler-backed GPU calls, including semantic global-X fill and
+ threshold-classification operations. Dependency-package
+ exports do not count as kernels. The canonical source-intrinsic declarations
+ and diagnostics are documented in `silk-build(1)` and the
+ [AMDGPU backend guide](?p=compiler/backend-amdgpu).
+- The provider-neutral mixed CPU/GPU executable option remains a `silk build
+ --gpu-target` CLI surface. This release adds no corresponding `libsilk`
+ compiler setting and does not change the C99 ABI.
 
 ### Z3 dynamic library override (`z3_lib`)
 
@@ -519,9 +609,12 @@ Return value:
 - On success of front‑end validation:
  - for non‑executable outputs (`SILK_OUTPUT_STATIC_LIBRARY`,
  `SILK_OUTPUT_SHARED_LIBRARY`, `SILK_OUTPUT_OBJECT`):
- - on supported targets/backends (currently `linux/x86_64`), the compiler
- attempts code generation for the documented backend subset and returns
- `true` after writing the requested artifact on success,
+ - on supported targets/backends (currently `linux/x86_64`, plus
+ Apple Silicon host-backed `macos-aarch64` and iOS device/simulator
+ object/static/shared outputs, plus AMDGPU `.hsaco` source-intrinsic
+ object output), the compiler attempts code generation for the documented
+ backend subset and returns `true` after writing the requested artifact
+ on success,
  - for front‑end valid programs outside that subset (or on unsupported
  targets), the call returns `false` and records either an `E4001` / `E4002`
  formatted diagnostic (unsupported construct / backend failure) or a more
@@ -564,13 +657,14 @@ Return value:
  - PE32+ for `windows-x86_64` and `windows-aarch64`,
  - returns `true` on success and leaves the last error unset,
  - on Apple Silicon macOS hosts, the current temporary host-backed
- non-const executable subset used by the CLI is also available through
+ non-const executable and Apple Mach-O library-output subset used by the CLI is also available through
  the C ABI:
  - this path emits target-specific arm64 or x86_64 assembly, assembles
- it with host `clang -c`, links it with host `ld`, ad hoc-signs
- macOS Mach-O executables when needed, and currently covers the
- implemented scalar IR subset,
- - for `macos-aarch64`, the same subset is available through
+ it with host `clang -c`, links executables and dylibs with host
+ `ld`, builds static archives with Apple `libtool -static`, ad
+ hoc-signs macOS Mach-O executables when needed, and currently covers
+ the implemented scalar IR subset,
+ - for `macos-aarch64` and the three iOS device/simulator targets, the same subset is available through
  `silk_compiler_build(...)` because that ABI entrypoint writes a
  filesystem artifact at the requested `output_path`,
  - the CLI / driver also supports `ios-aarch64`,
@@ -579,8 +673,8 @@ Return value:
  reachable float-to-int lowering and the portable bundled runtime
  helper families for number / regex / unicode / filesystem / dns /
  process / signal / term / pty / readline / task-pool / async support,
- - the C ABI executable entrypoints now support that same non-const iOS
- host-backed subset as well,
+ - the C ABI entrypoints now support that same non-const iOS
+ host-backed executable/object/static/shared subset as well,
  - the remaining explicit `E4001` iOS limitation is only for
  lowered programs that still need narrower unsupported bundled
  runtime-internal helper families,
@@ -633,15 +727,17 @@ writing to a filesystem path.
 
 - Behavior and supported subsets match `silk_compiler_build` for the same
  `kind`:
- - this now includes the Apple Silicon macOS `macos-aarch64` host-backed
- executable subset as well; `silk_compiler_build_to_bytes(...)` bridges that
- path through a temporary signed filesystem artifact and then returns the
- produced Mach-O bytes to the caller,
+ - this now includes the Apple Silicon macOS `macos-aarch64` and iOS
+ device/simulator host-backed executable/object/static/shared subset as
+ well; `silk_compiler_build_to_bytes(...)` bridges that
+ path through a temporary filesystem artifact (signed for executables) and
+ then returns the produced Mach-O/archive bytes to the caller,
  - for `ios-aarch64`, `ios-simulator-aarch64`, and
  `ios-simulator-x86_64`, that same non-const pure-Silk scalar executable
- subset, including reachable float-to-int lowering and the same portable
- bundled runtime helper families, is now available through
- `silk_compiler_build_to_bytes(...)` on Apple Silicon macOS hosts as well,
+ subset and library-output subset, including reachable float-to-int lowering
+ and the same portable bundled runtime helper families, is now available
+ through `silk_compiler_build_to_bytes(...)` on Apple Silicon macOS hosts as
+ well,
  - the remaining explicit `E4001` iOS limitation applies only when the
  lowered program actually needs narrower unsupported bundled
  runtime-internal helper families.
@@ -760,6 +856,12 @@ compiler:
  modules for the current IR-backed wasm32 subset documented in
  [abi libsilk](?p=compiler/abi-libsilk) (including multi-module builds, export-only
  modules, and `ext` imports under `env.<name>`).
+- On `amdgcn-amd-amdhsa-gfx942`, `amdgcn-amd-amdhsa-gfx1100`, and
+ `amdgcn-amd-amdhsa-gfx1151`, object builds emit AMDHSA `.hsaco` code objects
+ for the current source-intrinsic subset; see
+ `silk-build(1)` and the
+ [AMDGPU backend guide](?p=compiler/backend-amdgpu)
+ for the canonical declaration sets.
 - On other targets, no code generation backend is available yet.
 - For well‑typed programs outside these subsets, `silk_compiler_build` fails
  with `E4001` / `E4002` diagnostics (or a more specific build error) until the
@@ -781,13 +883,13 @@ covers the full std surface.
  `std::...` modules as external and resolve their exported functions from this
  archive.
 - `SILK_Z3_LIB` — path to a dynamic Z3 library used by the Formal Silk verifier.
- When set, it overrides the default vendored Z3 linkage for verification.
+ When set, it overrides the default built-in Z3 linkage for verification.
 - `SILK_VERIFY_JOBS` — override the number of worker threads used for Formal Silk verification (default: auto; capped at 8).
 
 ## See Also
 
 - [`silk(1)`](?p=man/silk.1) — Silk language compiler CLI.
-- [`silk_abi_get_version(3)`](?p=man/silk_abi_get_version.3), [`silk_compiler(3)`](?p=man/silk_compiler.3), [`silk_error(3)`](?p=man/silk_error.3), [`silk_bytes(3)`](?p=man/silk_bytes.3)
+- [`silk_abi_get_version(3)`](?p=man/silk_abi_get_version.3), [`silk_compiler(3)`](?p=man/silk_compiler.3), [`silk_error(3)`](?p=man/silk_error.3), [`silk_bytes(3)`](?p=man/silk_bytes.3), [`silk_amdgpu_aql_dispatch_packet_build(3)`](?p=man/silk_amdgpu_aql_dispatch_packet_build.3)
 - [`silk(7)`](?p=man/silk.7)
 - [abi libsilk](?p=compiler/abi-libsilk) — normative ABI spec.
 - `silk/silk.h` — canonical C99 ABI header in the source tree.

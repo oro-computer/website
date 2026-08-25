@@ -68,13 +68,13 @@ the required host runtime link dependencies automatically:
 
 See also:
 
-- [vendored deps](?p=compiler/vendored-deps)
+- [builtin deps](?p=compiler/builtin-deps)
 - [cli silk](?p=compiler/cli-silk)
 - [silk build.1](?p=man/silk-build.1)
 
 ## Quick Start Guide
 
-On a supported native target layout, build the vendored ggml archives first,
+On a supported native target layout, build the built-in ggml archives first,
 then build and run the training example:
 
 ```sh

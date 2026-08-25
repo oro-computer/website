@@ -28,7 +28,10 @@ The IR is structured in three main layers:
 - `IrBlock`
  - represents a basic block:
  - a straight-line sequence of instructions,
- - terminated by a control-flow instruction (e.g. `Return` or branch).
+ - terminated by exactly one control-flow instruction (e.g. `Return` or a
+ branch), which must be the final instruction in the block.
+ - Native backend validation rejects instructions appended after a terminator
+ rather than emitting unreachable bytes that another branch could enter.
 - `IrInstr`
  - represents a single instruction:
  - scalar constants (integers and floats represented as raw bits),
@@ -37,6 +40,14 @@ The IR is structured in three main layers:
  - direct calls between functions in the same program,
  - calls to external functions declared in the program,
  - (later) memory operations, aggregates, etc.
+
+GPU lowering reuses this IR rather than defining an AMD-specific source IR.
+`src/lower_gpu_ir.zig` produces an `IrProgram` for each launchable device entry
+and its reachable helpers. Portable GPU operations initially appear as
+compiler-owned `CallExtern` entries with reserved semantic names. GPU selectors
+must consume those calls; they are not linker imports. Direct calls between
+eligible Silk helpers remain ordinary `IrInstr::Call` instructions until a
+selector or optimization chooses to inline them.
 
 Values are referenced by small integer IDs (`ValueId`). IR is not yet in full
 SSA form, but the representation is compatible with an SSA-style design.
@@ -108,8 +119,9 @@ Concretely:
 - `Call` has `dests` as a slice of `ValueId`s whose length and element types
  must match the callee’s `result_types`.
 
-The first multi-scalar boundary use case is `string` at ABI boundaries,
-represented as two scalars in order:
+The first multi-scalar boundary use cases are `string` values and Silk slice
+parameters at supported package ABI boundaries. `string` is represented as two
+scalars in order:
 
 - `ptr: u64` (address of UTF-8 bytes)
 - `len: i64` (byte length, excluding any trailing `\\0`)
@@ -117,6 +129,12 @@ represented as two scalars in order:
 Within the current back-end subset, this allows exported functions to accept
 and return `string` values in a C-friendly `SilkString` layout without adding a
 dedicated “string pointer” ABI.
+
+Named-package exported Silk object functions may also accept `T[]` slice
+parameters. A slice parameter is lowered as `ptr: u64` followed by
+`len: i64`, where `len` is an element count. This is the compiler-owned Silk
+package ABI used for object/static/shared builds; C-facing `ext` calls and
+unnamed-package header exports still reject ordinary borrowed slices.
 
 ## Minimal Instruction Set
 
@@ -135,6 +153,10 @@ lowering a single surface-language value into multiple scalar slots:
 
 - `string` is lowered as `{ ptr: u64, len: i64 }` and returns via `rax`/`rdx` on
  `linux/x86_64` (see [ext](?p=language/ext) and [abi libsilk](?p=compiler/abi-libsilk)).
+- `T[]` parameters on named-package exported Silk object functions are lowered
+ as `{ ptr: u64, len: i64 }`, with `len` as an element count. This currently
+ applies to parameters only; slice results and C-facing slice parameters remain
+ outside the supported ABI.
 - For the initial `struct` subset (see [structs impls layout](?p=language/structs-impls-layout)),
  a struct value is lowered as 1+ scalar slots in source field order. Each
  field may contribute one or more slots (for example, `string` contributes

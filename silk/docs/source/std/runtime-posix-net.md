@@ -21,3 +21,6 @@ Use the following owning docs for the substantive API/design context for this mo
 - The shipped source for this module is `std/runtime/posix/net.slk`.
 - The canonical module name is `std::runtime::posix::net`.
 - This page is intentionally implementation-oriented. Downstream users should usually start with the higher-level std module docs listed above unless they are working on the runtime layer itself.
+- Bounded DNS and TCP connection operations are implemented by
+ `src/silk_rt_dns.c` and `src/silk_rt_net.c`; stable error-code mapping remains
+ in `std::runtime::net`.

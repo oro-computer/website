@@ -49,6 +49,14 @@ language or stdlib feature.
  - disassemble with `objdump` using a stable format (no addresses / no raw bytes),
  - and compare instruction counts + stack frame sizes against a C reference built with the host `cc`,
  so obvious regressions (exploding instruction counts, excessive spills) are caught early.
+- For GPU output, keep byte-structure and ABI regressions in the normal Zig and
+ C99 suites. Deterministic fake HIP and CUDA providers run the maintained
+ vector-fill, learned-threshold, and async/task launch programs without
+ requiring GPU hardware. Installed-hardware checks remain explicit opt-in
+ acceptance tests.
+- Run host-executable checks on the host-backed Mach-O path as well as the
+ Linux ELF path, including signed Apple Silicon artifacts that actually launch
+ and return the expected result.
 - When a bug is found:
  - add a regression test in Zig and, where relevant, in C,
  - record any observed differences or limitations in the docs,
@@ -87,3 +95,13 @@ the Silk compiler repository.
 Silk fixtures keep the implementation grounded in real programs, not just unit
 tests. Every new language feature should, where practical, land with at least
 one Silk fixture in addition to Zig and C tests.
+
+## Repository test entry points
+
+- `make test` runs the Zig unit/integration suite, C99 ABI harnesses, Silk
+ fixtures, and deterministic fake-provider GPU workflows.
+- `make leak-check` rebuilds the public runtime/ABI harnesses with
+ AddressSanitizer and LeakSanitizer for ownership and cleanup regressions.
+- Hardware-dependent GPU checks are separate: `make amdgpu-rocr-check` for
+ AMDHSA loading and `make pure-silk-gpu-check` for an installed AMD or NVIDIA
+ provider selected through `PURE_SILK_GPU_TARGET`.
