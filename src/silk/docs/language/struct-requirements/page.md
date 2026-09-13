@@ -1,0 +1,52 @@
+---
+layout: "docs"
+title: "Struct Requirements (#require)"
+description: "Use #require on a struct to state requirements that must hold for all values constructed for that struct type."
+docsCollection: "silk"
+section: "language"
+order: 44
+sourcePath: "language/struct-requirements.md"
+githubRepo: "oro-computer/silk"
+githubRef: "master"
+---
+
+# Struct Requirements (`#require`)
+
+Use `#require` on a `struct` to state requirements that must hold for all
+values constructed for that struct type.
+
+Example:
+
+```silk
+#require id > 0;
+struct User {
+  id: int,
+}
+
+#assure result > 0;
+fn get_id () -> int {
+  return 1;
+}
+
+fn main () -> int {
+  // This fails verification:
+  // let bad = User{ id: 0 };
+
+  let user = User{ id: get_id() };
+  return user.id;
+}
+```
+
+Rules (Supported forms):
+
+- `#require` expressions on a `struct` may reference that struct's fields by
+ name.
+- When Formal Silk syntax is present in the compiled module set, the verifier
+ proves these requirements at struct literal construction sites (`Type{ ... }`
+ and `new Type{ ... }`). If any requirement cannot be proven, compilation
+ fails with `E3006`.
+- Failed struct-requirement diagnostics include the rejected predicate and the
+ referenced field initializers/defaults that were used for the construction
+ proof.
+
+See [formal verification](/silk/docs/language/formal-verification/).

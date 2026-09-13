@@ -118,6 +118,9 @@ def resolve_doclike_target_from_roots(
     if not looks_like_doc:
         return None
 
+    if raw.startswith("/"):
+        return repo_root / raw.lstrip("/")
+
     for prefix, root in source_roots.items():
         if raw.startswith(f"{prefix}/"):
             rel = normalize_rel_path(raw.removeprefix(f"{prefix}/"))

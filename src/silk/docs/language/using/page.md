@@ -1,0 +1,162 @@
+---
+layout: "docs"
+title: "using (Aliases and Method Reuse)"
+description: "using introduces a local alias to an existing symbol, and (in interface / impl bodies) can import method signatures/implementations under a new name."
+docsCollection: "silk"
+section: "language"
+order: 28
+sourcePath: "language/using.md"
+githubRepo: "oro-computer/silk"
+githubRef: "master"
+---
+
+# `using` (Aliases and Method Reuse)
+
+`using` introduces a local alias to an existing symbol, and (in `interface` /
+`impl` bodies) can import method signatures/implementations under a new name.
+
+This feature is intended to make large module trees ergonomic (short local
+names) and to enable explicit, audited method reuse across types.
+
+## Syntax
+
+At any supported scope, `using` has two surface forms:
+
+```silk
+using Alias = QualifiedName;
+using QualifiedName;
+using QualifiedName as Alias;
+```
+
+Where `QualifiedName` uses the normal `::`-separated name syntax (including the
+global-prefix form `::name`).
+
+## Module / Package Scope
+
+At module scope, `using` introduces a local alias for an in-scope symbol:
+
+- types (`struct` / `enum` / `error` / `interface` / `type` aliases),
+- functions (`fn` and `ext` function bindings),
+- Formal Silk theories (`theory`).
+
+For type aliases, the target may be a package-qualified generic type
+declaration made visible through a namespace/package import, for example
+`using Result = std::result::Result;`. This is how a stdlib prelude can expose
+canonical type constructors while keeping the stdlib source on namespace
+imports.
+
+The alias is transparent: using `Alias` is equivalent to using the target
+symbol directly. For functions this includes purity, `const fn` discipline,
+execution placement such as `attr(device=gpu)`, compiler-recognized device
+intrinsic status, and the target's lexical/package identity. A function cannot
+be made host-callable, runtime-callable, or launchable merely by aliasing it.
+
+Name conflicts are errors, except when the alias already refers to the same
+symbol as the target (a redundant alias). In that case the `using` declaration
+is accepted as a no-op.
+
+Module-scope aliases may also be exported:
+
+```silk
+export using Alias = QualifiedName;
+public using Alias = QualifiedName;
+```
+
+Package-qualified function targets use the same form:
+
+```silk
+import std::io;
+using sayln = std::io::println;
+```
+
+`sayln(...)` has the exact callable contract and metadata of
+[`std::io::println(...)`](/silk/docs/std/io/); it is not interpreted as a type alias merely because
+the target is package-qualified.
+
+- `export using` and `public using` are equivalent at module scope.
+- Exported aliases participate in the module/package surface just like other
+ exported declarations:
+ - file imports may name the alias directly,
+ - package imports may name the alias directly,
+ - package-qualified access may use the alias name,
+ - and `export default Alias;` may target a module-scope `using` alias.
+- Exported type aliases remain transparent at import sites: importing the alias
+ introduces the alias name as a real type name in the importing module.
+
+## `interface` Scope
+
+Inside an `interface { ... }` body, `using` may import method **signatures**
+from another interface:
+
+```silk
+interface Read {
+  fn read() -> u8;
+}
+
+interface ReadAndPeek {
+  using Read::read;
+  fn peek() -> u8;
+}
+```
+
+- `using Other::name;` is equivalent to copying the corresponding `fn name(...);`
+ signature from `Other`.
+- `using Other::name as alias;` imports it under the new name `alias`.
+- Name conflicts (including conflicts with inherited `extends` members) are
+ errors.
+
+Note: interface method signatures omit the receiver parameter. The receiver is
+introduced only in `impl` method declarations (see [interfaces](/silk/docs/language/interfaces/)).
+
+## `impl` Scope
+
+Inside an `impl Type { ... }` body, `using` may import a method implementation
+from another impl:
+
+```silk
+impl Foo {
+  fn id(self: &Foo) -> int { return 1; }
+}
+
+impl Bar {
+  using Foo::id;
+}
+```
+
+This makes the imported method available as if it were declared in the target
+impl, including as a candidate for interface conformance checking.
+
+### Visibility
+
+Imported methods inherit the source method’s visibility:
+
+- importing a `public fn` method produces a `public` method in the target impl,
+- importing a private method produces a private method in the target impl.
+
+Since `using` does not accept visibility modifiers in the Supported forms, this
+inheritance rule is the only way to control whether an imported method is
+callable outside the target `impl { ... }` block.
+
+### `Self` and Layout Compatibility
+
+When the imported method’s signature depends on `Self` (for example
+`self: &Self`, parameters of type `Self`, or returning `Self`), importing it
+across distinct struct types requires that the underlying layouts are
+compatible.
+
+In Silk currently, a pair of non-opaque, non-`error` structs are
+considered compatible when they have the same number of fields and the same
+field types in the same order (field names do not matter).
+
+If the source and target struct layouts are not compatible, the `using`
+declaration is rejected.
+
+This layout rule applies equally to immutable and mutable borrows: importing
+methods with `mut self: &Self` (or other `mut &Self` parameters) is permitted
+when the source and target layouts are compatible.
+
+## Supported forms Limitations
+
+- Outside module scope, `using` does not accept `public` / `private`
+ modifiers yet (imported methods inherit the source method’s visibility).
+- Constructor reuse (`constructor`) via `using` is not supported yet.

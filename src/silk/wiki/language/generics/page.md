@@ -1,0 +1,60 @@
+---
+layout: "docs"
+title: "Generics (monomorphized)"
+description: "Silk generics are compile-time and monomorphized: each applied type like Vector(int) produces a concrete instantiation at build time (no runtime type parameters)."
+docsCollection: "silkWiki"
+section: "language"
+order: 42
+sourcePath: "language/generics.md"
+githubRepo: "oro-computer/silk"
+githubRef: "master"
+---
+
+# Generics (monomorphized)
+
+Silk generics are compile-time and monomorphized: each applied type like
+`Vector(int)` produces a concrete instantiation at build time (no runtime type
+parameters).
+
+Full reference: [generics](/silk/wiki/language/generics/).
+
+## Notes
+
+- supported forms and restrictions: [generics](/silk/wiki/language/generics/)
+
+## Syntax
+```silk
+struct Pair(T) {
+  a: T,
+  b: T,
+}
+
+impl Pair(T) {
+  public fn first (self: &Pair(T)) -> T { return self.a; }
+}
+```
+
+## Examples
+
+### Example: generic struct + applied type
+```silk
+struct Pair(T) {
+  a: T,
+  b: T,
+}
+
+impl Pair(T) {
+  public fn first (self: &Pair(T)) -> T { return self.a; }
+}
+
+fn main () -> int {
+  let p: Pair(int) = { a: 1, b: 2 };
+  return p.first();
+}
+```
+
+## See also
+
+- Full reference: [generics](/silk/wiki/language/generics/)
+- Type forms: [types](/silk/wiki/language/types/)
+- Std generic collections: [vector](/silk/wiki/std/vector/), [map](/silk/wiki/std/map/), [set](/silk/wiki/std/set/)

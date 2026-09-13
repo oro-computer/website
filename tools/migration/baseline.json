@@ -1,0 +1,3543 @@
+{
+  "html": [
+    "/blog/",
+    "/docs/",
+    "/",
+    "/runtime/docs/",
+    "/runtime/",
+    "/runtime/learn/configuration/",
+    "/runtime/learn/desktop-integrations/",
+    "/runtime/learn/getting-started/",
+    "/runtime/learn/",
+    "/runtime/learn/project-layout/",
+    "/runtime/learn/windows-and-messaging/",
+    "/sage/docs/",
+    "/sage/",
+    "/silk/docs/",
+    "/silk/",
+    "/silk/learn/getting-started/",
+    "/silk/learn/",
+    "/silk/learn/language-tour/",
+    "/silk/learn/modules-and-packages/",
+    "/silk/learn/results-and-errors/",
+    "/silk/learn/types-and-optionals/",
+    "/silk/spec/2026/",
+    "/silk/wiki/",
+    "/slg/docs/",
+    "/slg/",
+    "/virtnosis/docs/",
+    "/virtnosis/"
+  ],
+  "documents": [
+    {
+      "collection": "runtime",
+      "id": "cli/build",
+      "source": "/runtime/docs/source/cli/build.md",
+      "url": "/runtime/docs/cli/build/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/config",
+      "source": "/runtime/docs/source/cli/config.md",
+      "url": "/runtime/docs/cli/config/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/env",
+      "source": "/runtime/docs/source/cli/env.md",
+      "url": "/runtime/docs/cli/env/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/help",
+      "source": "/runtime/docs/source/cli/help.md",
+      "url": "/runtime/docs/cli/help/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/init",
+      "source": "/runtime/docs/source/cli/init.md",
+      "url": "/runtime/docs/cli/init/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/install-app",
+      "source": "/runtime/docs/source/cli/install-app.md",
+      "url": "/runtime/docs/cli/install-app/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/list-devices",
+      "source": "/runtime/docs/source/cli/list-devices.md",
+      "url": "/runtime/docs/cli/list-devices/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/mcp",
+      "source": "/runtime/docs/source/cli/mcp.md",
+      "url": "/runtime/docs/cli/mcp/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/oroc",
+      "source": "/runtime/docs/source/cli/oroc.md",
+      "url": "/runtime/docs/cli/oroc/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/print-build-dir",
+      "source": "/runtime/docs/source/cli/print-build-dir.md",
+      "url": "/runtime/docs/cli/print-build-dir/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/run",
+      "source": "/runtime/docs/source/cli/run.md",
+      "url": "/runtime/docs/cli/run/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/setup",
+      "source": "/runtime/docs/source/cli/setup.md",
+      "url": "/runtime/docs/cli/setup/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/update",
+      "source": "/runtime/docs/source/cli/update.md",
+      "url": "/runtime/docs/cli/update/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/update/bundle",
+      "source": "/runtime/docs/source/cli/update/bundle.md",
+      "url": "/runtime/docs/cli/update/bundle/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/update/extract",
+      "source": "/runtime/docs/source/cli/update/extract.md",
+      "url": "/runtime/docs/cli/update/extract/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/update/info",
+      "source": "/runtime/docs/source/cli/update/info.md",
+      "url": "/runtime/docs/cli/update/info/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/update/init",
+      "source": "/runtime/docs/source/cli/update/init.md",
+      "url": "/runtime/docs/cli/update/init/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/update/keygen",
+      "source": "/runtime/docs/source/cli/update/keygen.md",
+      "url": "/runtime/docs/cli/update/keygen/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/update/server",
+      "source": "/runtime/docs/source/cli/update/server.md",
+      "url": "/runtime/docs/cli/update/server/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/update/sign",
+      "source": "/runtime/docs/source/cli/update/sign.md",
+      "url": "/runtime/docs/cli/update/sign/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/update/validate",
+      "source": "/runtime/docs/source/cli/update/validate.md",
+      "url": "/runtime/docs/cli/update/validate/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/update/verify",
+      "source": "/runtime/docs/source/cli/update/verify.md",
+      "url": "/runtime/docs/cli/update/verify/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/version",
+      "source": "/runtime/docs/source/cli/version.md",
+      "url": "/runtime/docs/cli/version/"
+    },
+    {
+      "collection": "runtime",
+      "id": "cli/versions",
+      "source": "/runtime/docs/source/cli/versions.md",
+      "url": "/runtime/docs/cli/versions/"
+    },
+    {
+      "collection": "runtime",
+      "id": "config/copy-map",
+      "source": "/runtime/docs/source/config/copy-map.md",
+      "url": "/runtime/docs/config/copy-map/"
+    },
+    {
+      "collection": "runtime",
+      "id": "config/overview",
+      "source": "/runtime/docs/source/config/overview.md",
+      "url": "/runtime/docs/config/overview/"
+    },
+    {
+      "collection": "runtime",
+      "id": "config/reference",
+      "source": "/runtime/docs/source/config/reference.md",
+      "url": "/runtime/docs/config/reference/"
+    },
+    {
+      "collection": "runtime",
+      "id": "guides/build-and-package",
+      "source": "/runtime/docs/source/guides/build-and-package.md",
+      "url": "/runtime/docs/guides/build-and-package/"
+    },
+    {
+      "collection": "runtime",
+      "id": "guides/calling-http-apis",
+      "source": "/runtime/docs/source/guides/calling-http-apis.md",
+      "url": "/runtime/docs/guides/calling-http-apis/"
+    },
+    {
+      "collection": "runtime",
+      "id": "guides/configure-your-runtime-project",
+      "source": "/runtime/docs/source/guides/configure-your-runtime-project.md",
+      "url": "/runtime/docs/guides/configure-your-runtime-project/"
+    },
+    {
+      "collection": "runtime",
+      "id": "guides/custom-protocols-and-routing",
+      "source": "/runtime/docs/source/guides/custom-protocols-and-routing.md",
+      "url": "/runtime/docs/guides/custom-protocols-and-routing/"
+    },
+    {
+      "collection": "runtime",
+      "id": "guides/desktop-integrations",
+      "source": "/runtime/docs/source/guides/desktop-integrations.md",
+      "url": "/runtime/docs/guides/desktop-integrations/"
+    },
+    {
+      "collection": "runtime",
+      "id": "guides/files-and-sandboxing",
+      "source": "/runtime/docs/source/guides/files-and-sandboxing.md",
+      "url": "/runtime/docs/guides/files-and-sandboxing/"
+    },
+    {
+      "collection": "runtime",
+      "id": "guides/from-zero-to-first-run",
+      "source": "/runtime/docs/source/guides/from-zero-to-first-run.md",
+      "url": "/runtime/docs/guides/from-zero-to-first-run/"
+    },
+    {
+      "collection": "runtime",
+      "id": "guides/frontend-build-pipeline",
+      "source": "/runtime/docs/source/guides/frontend-build-pipeline.md",
+      "url": "/runtime/docs/guides/frontend-build-pipeline/"
+    },
+    {
+      "collection": "runtime",
+      "id": "guides/hello-world",
+      "source": "/runtime/docs/source/guides/hello-world.md",
+      "url": "/runtime/docs/guides/hello-world/"
+    },
+    {
+      "collection": "runtime",
+      "id": "guides/lifecycle-hooks-and-deep-links",
+      "source": "/runtime/docs/source/guides/lifecycle-hooks-and-deep-links.md",
+      "url": "/runtime/docs/guides/lifecycle-hooks-and-deep-links/"
+    },
+    {
+      "collection": "runtime",
+      "id": "guides/local-data-with-sqlite",
+      "source": "/runtime/docs/source/guides/local-data-with-sqlite.md",
+      "url": "/runtime/docs/guides/local-data-with-sqlite/"
+    },
+    {
+      "collection": "runtime",
+      "id": "guides/mcp-and-agent-automation",
+      "source": "/runtime/docs/source/guides/mcp-and-agent-automation.md",
+      "url": "/runtime/docs/guides/mcp-and-agent-automation/"
+    },
+    {
+      "collection": "runtime",
+      "id": "guides/mobile-targets-and-device-installs",
+      "source": "/runtime/docs/source/guides/mobile-targets-and-device-installs.md",
+      "url": "/runtime/docs/guides/mobile-targets-and-device-installs/"
+    },
+    {
+      "collection": "runtime",
+      "id": "guides/native-extensions",
+      "source": "/runtime/docs/source/guides/native-extensions.md",
+      "url": "/runtime/docs/guides/native-extensions/"
+    },
+    {
+      "collection": "runtime",
+      "id": "guides/offline-first-with-service-workers",
+      "source": "/runtime/docs/source/guides/offline-first-with-service-workers.md",
+      "url": "/runtime/docs/guides/offline-first-with-service-workers/"
+    },
+    {
+      "collection": "runtime",
+      "id": "guides/project-layout",
+      "source": "/runtime/docs/source/guides/project-layout.md",
+      "url": "/runtime/docs/guides/project-layout/"
+    },
+    {
+      "collection": "runtime",
+      "id": "guides/release-packaging-and-signed-updates",
+      "source": "/runtime/docs/source/guides/release-packaging-and-signed-updates.md",
+      "url": "/runtime/docs/guides/release-packaging-and-signed-updates/"
+    },
+    {
+      "collection": "runtime",
+      "id": "guides/secure-storage-and-sessions",
+      "source": "/runtime/docs/source/guides/secure-storage-and-sessions.md",
+      "url": "/runtime/docs/guides/secure-storage-and-sessions/"
+    },
+    {
+      "collection": "runtime",
+      "id": "guides/shared-workers-across-windows",
+      "source": "/runtime/docs/source/guides/shared-workers-across-windows.md",
+      "url": "/runtime/docs/guides/shared-workers-across-windows/"
+    },
+    {
+      "collection": "runtime",
+      "id": "guides/testing-and-diagnostics",
+      "source": "/runtime/docs/source/guides/testing-and-diagnostics.md",
+      "url": "/runtime/docs/guides/testing-and-diagnostics/"
+    },
+    {
+      "collection": "runtime",
+      "id": "guides/windows-and-messaging",
+      "source": "/runtime/docs/source/guides/windows-and-messaging.md",
+      "url": "/runtime/docs/guides/windows-and-messaging/"
+    },
+    {
+      "collection": "runtime",
+      "id": "guides/worker-threads-for-heavy-work",
+      "source": "/runtime/docs/source/guides/worker-threads-for-heavy-work.md",
+      "url": "/runtime/docs/guides/worker-threads-for-heavy-work/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/ai",
+      "source": "/runtime/docs/source/javascript/ai.md",
+      "url": "/runtime/docs/javascript/ai/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/all-modules",
+      "source": "/runtime/docs/source/javascript/all-modules.md",
+      "url": "/runtime/docs/javascript/all-modules/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/application",
+      "source": "/runtime/docs/source/javascript/application.md",
+      "url": "/runtime/docs/javascript/application/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/asn1",
+      "source": "/runtime/docs/source/javascript/asn1.md",
+      "url": "/runtime/docs/javascript/asn1/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/assert",
+      "source": "/runtime/docs/source/javascript/assert.md",
+      "url": "/runtime/docs/javascript/assert/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/async",
+      "source": "/runtime/docs/source/javascript/async.md",
+      "url": "/runtime/docs/javascript/async/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/async_hooks",
+      "source": "/runtime/docs/source/javascript/async_hooks.md",
+      "url": "/runtime/docs/javascript/async_hooks/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/background",
+      "source": "/runtime/docs/source/javascript/background.md",
+      "url": "/runtime/docs/javascript/background/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/buffer",
+      "source": "/runtime/docs/source/javascript/buffer.md",
+      "url": "/runtime/docs/javascript/buffer/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/cdp",
+      "source": "/runtime/docs/source/javascript/cdp.md",
+      "url": "/runtime/docs/javascript/cdp/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/child_process",
+      "source": "/runtime/docs/source/javascript/child_process.md",
+      "url": "/runtime/docs/javascript/child_process/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/clipboard",
+      "source": "/runtime/docs/source/javascript/clipboard.md",
+      "url": "/runtime/docs/javascript/clipboard/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/commonjs",
+      "source": "/runtime/docs/source/javascript/commonjs.md",
+      "url": "/runtime/docs/javascript/commonjs/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/conduit",
+      "source": "/runtime/docs/source/javascript/conduit.md",
+      "url": "/runtime/docs/javascript/conduit/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/console",
+      "source": "/runtime/docs/source/javascript/console.md",
+      "url": "/runtime/docs/javascript/console/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/constants",
+      "source": "/runtime/docs/source/javascript/constants.md",
+      "url": "/runtime/docs/javascript/constants/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/cookies",
+      "source": "/runtime/docs/source/javascript/cookies.md",
+      "url": "/runtime/docs/javascript/cookies/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/crypto",
+      "source": "/runtime/docs/source/javascript/crypto.md",
+      "url": "/runtime/docs/javascript/crypto/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/dbus",
+      "source": "/runtime/docs/source/javascript/dbus.md",
+      "url": "/runtime/docs/javascript/dbus/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/dgram",
+      "source": "/runtime/docs/source/javascript/dgram.md",
+      "url": "/runtime/docs/javascript/dgram/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/diagnostics",
+      "source": "/runtime/docs/source/javascript/diagnostics.md",
+      "url": "/runtime/docs/javascript/diagnostics/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/did",
+      "source": "/runtime/docs/source/javascript/did.md",
+      "url": "/runtime/docs/javascript/did/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/dns",
+      "source": "/runtime/docs/source/javascript/dns.md",
+      "url": "/runtime/docs/javascript/dns/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/enumeration",
+      "source": "/runtime/docs/source/javascript/enumeration.md",
+      "url": "/runtime/docs/javascript/enumeration/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/errno",
+      "source": "/runtime/docs/source/javascript/errno.md",
+      "url": "/runtime/docs/javascript/errno/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/errors",
+      "source": "/runtime/docs/source/javascript/errors.md",
+      "url": "/runtime/docs/javascript/errors/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/events",
+      "source": "/runtime/docs/source/javascript/events.md",
+      "url": "/runtime/docs/javascript/events/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/extension",
+      "source": "/runtime/docs/source/javascript/extension.md",
+      "url": "/runtime/docs/javascript/extension/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/fetch",
+      "source": "/runtime/docs/source/javascript/fetch.md",
+      "url": "/runtime/docs/javascript/fetch/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/fs",
+      "source": "/runtime/docs/source/javascript/fs.md",
+      "url": "/runtime/docs/javascript/fs/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/gc",
+      "source": "/runtime/docs/source/javascript/gc.md",
+      "url": "/runtime/docs/javascript/gc/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/hci",
+      "source": "/runtime/docs/source/javascript/hci.md",
+      "url": "/runtime/docs/javascript/hci/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/hooks",
+      "source": "/runtime/docs/source/javascript/hooks.md",
+      "url": "/runtime/docs/javascript/hooks/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/http",
+      "source": "/runtime/docs/source/javascript/http.md",
+      "url": "/runtime/docs/javascript/http/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/https",
+      "source": "/runtime/docs/source/javascript/https.md",
+      "url": "/runtime/docs/javascript/https/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/i18n",
+      "source": "/runtime/docs/source/javascript/i18n.md",
+      "url": "/runtime/docs/javascript/i18n/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/ip",
+      "source": "/runtime/docs/source/javascript/ip.md",
+      "url": "/runtime/docs/javascript/ip/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/ipc",
+      "source": "/runtime/docs/source/javascript/ipc.md",
+      "url": "/runtime/docs/javascript/ipc/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/ipfs",
+      "source": "/runtime/docs/source/javascript/ipfs.md",
+      "url": "/runtime/docs/javascript/ipfs/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/iroh",
+      "source": "/runtime/docs/source/javascript/iroh.md",
+      "url": "/runtime/docs/javascript/iroh/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/language",
+      "source": "/runtime/docs/source/javascript/language.md",
+      "url": "/runtime/docs/javascript/language/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/latica",
+      "source": "/runtime/docs/source/javascript/latica.md",
+      "url": "/runtime/docs/javascript/latica/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/location",
+      "source": "/runtime/docs/source/javascript/location.md",
+      "url": "/runtime/docs/javascript/location/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/mcp",
+      "source": "/runtime/docs/source/javascript/mcp.md",
+      "url": "/runtime/docs/javascript/mcp/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/mime",
+      "source": "/runtime/docs/source/javascript/mime.md",
+      "url": "/runtime/docs/javascript/mime/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/module",
+      "source": "/runtime/docs/source/javascript/module.md",
+      "url": "/runtime/docs/javascript/module/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/navigation",
+      "source": "/runtime/docs/source/javascript/navigation.md",
+      "url": "/runtime/docs/javascript/navigation/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/net",
+      "source": "/runtime/docs/source/javascript/net.md",
+      "url": "/runtime/docs/javascript/net/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/network",
+      "source": "/runtime/docs/source/javascript/network.md",
+      "url": "/runtime/docs/javascript/network/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/notification",
+      "source": "/runtime/docs/source/javascript/notification.md",
+      "url": "/runtime/docs/javascript/notification/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/npm",
+      "source": "/runtime/docs/source/javascript/npm.md",
+      "url": "/runtime/docs/javascript/npm/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/os",
+      "source": "/runtime/docs/source/javascript/os.md",
+      "url": "/runtime/docs/javascript/os/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/overview",
+      "source": "/runtime/docs/source/javascript/overview.md",
+      "url": "/runtime/docs/javascript/overview/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/path",
+      "source": "/runtime/docs/source/javascript/path.md",
+      "url": "/runtime/docs/javascript/path/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/process",
+      "source": "/runtime/docs/source/javascript/process.md",
+      "url": "/runtime/docs/javascript/process/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/protocol-handlers",
+      "source": "/runtime/docs/source/javascript/protocol-handlers.md",
+      "url": "/runtime/docs/javascript/protocol-handlers/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/querystring",
+      "source": "/runtime/docs/source/javascript/querystring.md",
+      "url": "/runtime/docs/javascript/querystring/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/secure-storage",
+      "source": "/runtime/docs/source/javascript/secure-storage.md",
+      "url": "/runtime/docs/javascript/secure-storage/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/semver",
+      "source": "/runtime/docs/source/javascript/semver.md",
+      "url": "/runtime/docs/javascript/semver/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/service-worker",
+      "source": "/runtime/docs/source/javascript/service-worker.md",
+      "url": "/runtime/docs/javascript/service-worker/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/shared-worker",
+      "source": "/runtime/docs/source/javascript/shared-worker.md",
+      "url": "/runtime/docs/javascript/shared-worker/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/signal",
+      "source": "/runtime/docs/source/javascript/signal.md",
+      "url": "/runtime/docs/javascript/signal/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/sqlite",
+      "source": "/runtime/docs/source/javascript/sqlite.md",
+      "url": "/runtime/docs/javascript/sqlite/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/stream",
+      "source": "/runtime/docs/source/javascript/stream.md",
+      "url": "/runtime/docs/javascript/stream/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/string_decoder",
+      "source": "/runtime/docs/source/javascript/string_decoder.md",
+      "url": "/runtime/docs/javascript/string_decoder/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/tar",
+      "source": "/runtime/docs/source/javascript/tar.md",
+      "url": "/runtime/docs/javascript/tar/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/tcp",
+      "source": "/runtime/docs/source/javascript/tcp.md",
+      "url": "/runtime/docs/javascript/tcp/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/test",
+      "source": "/runtime/docs/source/javascript/test.md",
+      "url": "/runtime/docs/javascript/test/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/timers",
+      "source": "/runtime/docs/source/javascript/timers.md",
+      "url": "/runtime/docs/javascript/timers/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/tls",
+      "source": "/runtime/docs/source/javascript/tls.md",
+      "url": "/runtime/docs/javascript/tls/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/toml",
+      "source": "/runtime/docs/source/javascript/toml.md",
+      "url": "/runtime/docs/javascript/toml/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/tty",
+      "source": "/runtime/docs/source/javascript/tty.md",
+      "url": "/runtime/docs/javascript/tty/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/url",
+      "source": "/runtime/docs/source/javascript/url.md",
+      "url": "/runtime/docs/javascript/url/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/usb",
+      "source": "/runtime/docs/source/javascript/usb.md",
+      "url": "/runtime/docs/javascript/usb/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/util",
+      "source": "/runtime/docs/source/javascript/util.md",
+      "url": "/runtime/docs/javascript/util/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/vm",
+      "source": "/runtime/docs/source/javascript/vm.md",
+      "url": "/runtime/docs/javascript/vm/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/window",
+      "source": "/runtime/docs/source/javascript/window.md",
+      "url": "/runtime/docs/javascript/window/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/worker",
+      "source": "/runtime/docs/source/javascript/worker.md",
+      "url": "/runtime/docs/javascript/worker/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/worker_threads",
+      "source": "/runtime/docs/source/javascript/worker_threads.md",
+      "url": "/runtime/docs/javascript/worker_threads/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/xpc",
+      "source": "/runtime/docs/source/javascript/xpc.md",
+      "url": "/runtime/docs/javascript/xpc/"
+    },
+    {
+      "collection": "runtime",
+      "id": "javascript/zlib",
+      "source": "/runtime/docs/source/javascript/zlib.md",
+      "url": "/runtime/docs/javascript/zlib/"
+    },
+    {
+      "collection": "runtime",
+      "id": "start",
+      "source": "/runtime/docs/source/start.md",
+      "url": "/runtime/docs/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/abi-libsilk",
+      "source": "/silk/docs/source/compiler/abi-libsilk.md",
+      "url": "/silk/docs/compiler/abi-libsilk/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/architecture",
+      "source": "/silk/docs/source/compiler/architecture.md",
+      "url": "/silk/docs/compiler/architecture/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/async-runtime",
+      "source": "/silk/docs/source/compiler/async-runtime.md",
+      "url": "/silk/docs/compiler/async-runtime/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/backend-amdgpu",
+      "source": "/silk/docs/source/compiler/backend-amdgpu.md",
+      "url": "/silk/docs/compiler/backend-amdgpu/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/backend-gpu",
+      "source": "/silk/docs/source/compiler/backend-gpu.md",
+      "url": "/silk/docs/compiler/backend-gpu/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/backend-nvidia",
+      "source": "/silk/docs/source/compiler/backend-nvidia.md",
+      "url": "/silk/docs/compiler/backend-nvidia/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/backend-wasm",
+      "source": "/silk/docs/source/compiler/backend-wasm.md",
+      "url": "/silk/docs/compiler/backend-wasm/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/build-scripts",
+      "source": "/silk/docs/source/compiler/build-scripts.md",
+      "url": "/silk/docs/compiler/build-scripts/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/builtin-deps",
+      "source": "/silk/docs/source/compiler/builtin-deps.md",
+      "url": "/silk/docs/compiler/builtin-deps/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/cache-silk",
+      "source": "/silk/docs/source/compiler/cache-silk.md",
+      "url": "/silk/docs/compiler/cache-silk/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/cli-silk",
+      "source": "/silk/docs/source/compiler/cli-silk.md",
+      "url": "/silk/docs/compiler/cli-silk/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/diagnostics",
+      "source": "/silk/docs/source/compiler/diagnostics.md",
+      "url": "/silk/docs/compiler/diagnostics/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/implementation-status",
+      "source": "/silk/docs/source/compiler/implementation-status.md",
+      "url": "/silk/docs/compiler/implementation-status/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/ir-overview",
+      "source": "/silk/docs/source/compiler/ir-overview.md",
+      "url": "/silk/docs/compiler/ir-overview/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/libsilk-quickstart",
+      "source": "/silk/docs/source/compiler/libsilk-quickstart.md",
+      "url": "/silk/docs/compiler/libsilk-quickstart/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/limits",
+      "source": "/silk/docs/source/compiler/limits.md",
+      "url": "/silk/docs/compiler/limits/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/lsp-silk",
+      "source": "/silk/docs/source/compiler/lsp-silk.md",
+      "url": "/silk/docs/compiler/lsp-silk/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/package-distribution",
+      "source": "/silk/docs/source/compiler/package-distribution.md",
+      "url": "/silk/docs/compiler/package-distribution/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/package-manifests",
+      "source": "/silk/docs/source/compiler/package-manifests.md",
+      "url": "/silk/docs/compiler/package-manifests/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/stdlib-integration",
+      "source": "/silk/docs/source/compiler/stdlib-integration.md",
+      "url": "/silk/docs/compiler/stdlib-integration/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/testing-strategy",
+      "source": "/silk/docs/source/compiler/testing-strategy.md",
+      "url": "/silk/docs/compiler/testing-strategy/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/vendored-deps",
+      "source": "/silk/docs/source/compiler/vendored-deps.md",
+      "url": "/silk/docs/compiler/vendored-deps/"
+    },
+    {
+      "collection": "silk",
+      "id": "compiler/zig-api",
+      "source": "/silk/docs/source/compiler/zig-api.md",
+      "url": "/silk/docs/compiler/zig-api/"
+    },
+    {
+      "collection": "silk",
+      "id": "guides/cli",
+      "source": "/silk/docs/source/guides/cli.md",
+      "url": "/silk/docs/guides/cli/"
+    },
+    {
+      "collection": "silk",
+      "id": "guides/formal-silk",
+      "source": "/silk/docs/source/guides/formal-silk.md",
+      "url": "/silk/docs/guides/formal-silk/"
+    },
+    {
+      "collection": "silk",
+      "id": "guides/hello-world",
+      "source": "/silk/docs/source/guides/hello-world.md",
+      "url": "/silk/docs/guides/hello-world/"
+    },
+    {
+      "collection": "silk",
+      "id": "guides/language-tour",
+      "source": "/silk/docs/source/guides/language-tour.md",
+      "url": "/silk/docs/guides/language-tour/"
+    },
+    {
+      "collection": "silk",
+      "id": "guides/modules-and-packages",
+      "source": "/silk/docs/source/guides/modules-and-packages.md",
+      "url": "/silk/docs/guides/modules-and-packages/"
+    },
+    {
+      "collection": "silk",
+      "id": "guides/practical-logger-module",
+      "source": "/silk/docs/source/guides/practical-logger-module.md",
+      "url": "/silk/docs/guides/practical-logger-module/"
+    },
+    {
+      "collection": "silk",
+      "id": "guides/project-dependencies",
+      "source": "/silk/docs/source/guides/project-dependencies.md",
+      "url": "/silk/docs/guides/project-dependencies/"
+    },
+    {
+      "collection": "silk",
+      "id": "guides/purpose",
+      "source": "/silk/docs/source/guides/purpose.md",
+      "url": "/silk/docs/guides/purpose/"
+    },
+    {
+      "collection": "silk",
+      "id": "guides/standard-library",
+      "source": "/silk/docs/source/guides/standard-library.md",
+      "url": "/silk/docs/guides/standard-library/"
+    },
+    {
+      "collection": "silk",
+      "id": "guides/testing",
+      "source": "/silk/docs/source/guides/testing.md",
+      "url": "/silk/docs/guides/testing/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/asm",
+      "source": "/silk/docs/source/language/asm.md",
+      "url": "/silk/docs/language/asm/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/atomics",
+      "source": "/silk/docs/source/language/atomics.md",
+      "url": "/silk/docs/language/atomics/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/attributes",
+      "source": "/silk/docs/source/language/attributes.md",
+      "url": "/silk/docs/language/attributes/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/borrow-checker",
+      "source": "/silk/docs/source/language/borrow-checker.md",
+      "url": "/silk/docs/language/borrow-checker/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/buffers",
+      "source": "/silk/docs/source/language/buffers.md",
+      "url": "/silk/docs/language/buffers/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/build-metadata",
+      "source": "/silk/docs/source/language/build-metadata.md",
+      "url": "/silk/docs/language/build-metadata/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/cheat-sheet",
+      "source": "/silk/docs/source/language/cheat-sheet.md",
+      "url": "/silk/docs/language/cheat-sheet/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/concurrency",
+      "source": "/silk/docs/source/language/concurrency.md",
+      "url": "/silk/docs/language/concurrency/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/const-functions",
+      "source": "/silk/docs/source/language/const-functions.md",
+      "url": "/silk/docs/language/const-functions/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/conventions",
+      "source": "/silk/docs/source/language/conventions.md",
+      "url": "/silk/docs/language/conventions/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/dependent-types",
+      "source": "/silk/docs/source/language/dependent-types.md",
+      "url": "/silk/docs/language/dependent-types/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/doc-comments",
+      "source": "/silk/docs/source/language/doc-comments.md",
+      "url": "/silk/docs/language/doc-comments/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/duration-instant",
+      "source": "/silk/docs/source/language/duration-instant.md",
+      "url": "/silk/docs/language/duration-instant/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/enums",
+      "source": "/silk/docs/source/language/enums.md",
+      "url": "/silk/docs/language/enums/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/errors",
+      "source": "/silk/docs/source/language/errors.md",
+      "url": "/silk/docs/language/errors/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/ext",
+      "source": "/silk/docs/source/language/ext.md",
+      "url": "/silk/docs/language/ext/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/flow-blocks-statements",
+      "source": "/silk/docs/source/language/flow-blocks-statements.md",
+      "url": "/silk/docs/language/flow-blocks-statements/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/flow-break",
+      "source": "/silk/docs/source/language/flow-break.md",
+      "url": "/silk/docs/language/flow-break/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/flow-continue",
+      "source": "/silk/docs/source/language/flow-continue.md",
+      "url": "/silk/docs/language/flow-continue/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/flow-expression-statements",
+      "source": "/silk/docs/source/language/flow-expression-statements.md",
+      "url": "/silk/docs/language/flow-expression-statements/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/flow-for",
+      "source": "/silk/docs/source/language/flow-for.md",
+      "url": "/silk/docs/language/flow-for/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/flow-if-else",
+      "source": "/silk/docs/source/language/flow-if-else.md",
+      "url": "/silk/docs/language/flow-if-else/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/flow-loop",
+      "source": "/silk/docs/source/language/flow-loop.md",
+      "url": "/silk/docs/language/flow-loop/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/flow-match",
+      "source": "/silk/docs/source/language/flow-match.md",
+      "url": "/silk/docs/language/flow-match/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/flow-overview",
+      "source": "/silk/docs/source/language/flow-overview.md",
+      "url": "/silk/docs/language/flow-overview/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/flow-return",
+      "source": "/silk/docs/source/language/flow-return.md",
+      "url": "/silk/docs/language/flow-return/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/flow-while",
+      "source": "/silk/docs/source/language/flow-while.md",
+      "url": "/silk/docs/language/flow-while/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/formal-verification",
+      "source": "/silk/docs/source/language/formal-verification.md",
+      "url": "/silk/docs/language/formal-verification/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/function-disciplines",
+      "source": "/silk/docs/source/language/function-disciplines.md",
+      "url": "/silk/docs/language/function-disciplines/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/generics",
+      "source": "/silk/docs/source/language/generics.md",
+      "url": "/silk/docs/language/generics/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/gpu-execution",
+      "source": "/silk/docs/source/language/gpu-execution.md",
+      "url": "/silk/docs/language/gpu-execution/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/gpu-launch-blocks",
+      "source": "/silk/docs/source/language/gpu-launch-blocks.md",
+      "url": "/silk/docs/language/gpu-launch-blocks/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/grammar",
+      "source": "/silk/docs/source/language/grammar.md",
+      "url": "/silk/docs/language/grammar/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/interfaces",
+      "source": "/silk/docs/source/language/interfaces.md",
+      "url": "/silk/docs/language/interfaces/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/literals-aggregate",
+      "source": "/silk/docs/source/language/literals-aggregate.md",
+      "url": "/silk/docs/language/literals-aggregate/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/literals-boolean",
+      "source": "/silk/docs/source/language/literals-boolean.md",
+      "url": "/silk/docs/language/literals-boolean/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/literals-character",
+      "source": "/silk/docs/source/language/literals-character.md",
+      "url": "/silk/docs/language/literals-character/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/literals-duration",
+      "source": "/silk/docs/source/language/literals-duration.md",
+      "url": "/silk/docs/language/literals-duration/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/literals-numeric",
+      "source": "/silk/docs/source/language/literals-numeric.md",
+      "url": "/silk/docs/language/literals-numeric/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/literals-overview",
+      "source": "/silk/docs/source/language/literals-overview.md",
+      "url": "/silk/docs/language/literals-overview/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/literals-regexp",
+      "source": "/silk/docs/source/language/literals-regexp.md",
+      "url": "/silk/docs/language/literals-regexp/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/literals-string",
+      "source": "/silk/docs/source/language/literals-string.md",
+      "url": "/silk/docs/language/literals-string/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/memory-model",
+      "source": "/silk/docs/source/language/memory-model.md",
+      "url": "/silk/docs/language/memory-model/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/mutability",
+      "source": "/silk/docs/source/language/mutability.md",
+      "url": "/silk/docs/language/mutability/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/operators",
+      "source": "/silk/docs/source/language/operators.md",
+      "url": "/silk/docs/language/operators/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/optional",
+      "source": "/silk/docs/source/language/optional.md",
+      "url": "/silk/docs/language/optional/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/packages-imports-exports",
+      "source": "/silk/docs/source/language/packages-imports-exports.md",
+      "url": "/silk/docs/language/packages-imports-exports/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/regions",
+      "source": "/silk/docs/source/language/regions.md",
+      "url": "/silk/docs/language/regions/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/struct-requirements",
+      "source": "/silk/docs/source/language/struct-requirements.md",
+      "url": "/silk/docs/language/struct-requirements/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/structs-impls-layout",
+      "source": "/silk/docs/source/language/structs-impls-layout.md",
+      "url": "/silk/docs/language/structs-impls-layout/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/syntax-tour",
+      "source": "/silk/docs/source/language/syntax-tour.md",
+      "url": "/silk/docs/language/syntax-tour/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/target-metadata",
+      "source": "/silk/docs/source/language/target-metadata.md",
+      "url": "/silk/docs/language/target-metadata/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/testing",
+      "source": "/silk/docs/source/language/testing.md",
+      "url": "/silk/docs/language/testing/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/toolchain-metadata",
+      "source": "/silk/docs/source/language/toolchain-metadata.md",
+      "url": "/silk/docs/language/toolchain-metadata/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/type-unions",
+      "source": "/silk/docs/source/language/type-unions.md",
+      "url": "/silk/docs/language/type-unions/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/typed-errors",
+      "source": "/silk/docs/source/language/typed-errors.md",
+      "url": "/silk/docs/language/typed-errors/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/types",
+      "source": "/silk/docs/source/language/types.md",
+      "url": "/silk/docs/language/types/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/using",
+      "source": "/silk/docs/source/language/using.md",
+      "url": "/silk/docs/language/using/"
+    },
+    {
+      "collection": "silk",
+      "id": "language/varargs",
+      "source": "/silk/docs/source/language/varargs.md",
+      "url": "/silk/docs/language/varargs/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/libsilk.7",
+      "source": "/silk/docs/source/man/libsilk.7.md",
+      "url": "/silk/docs/man/libsilk.7/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk-build.1",
+      "source": "/silk/docs/source/man/silk-build.1.md",
+      "url": "/silk/docs/man/silk-build.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk-cache.1",
+      "source": "/silk/docs/source/man/silk-cache.1.md",
+      "url": "/silk/docs/man/silk-cache.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk-cc.1",
+      "source": "/silk/docs/source/man/silk-cc.1.md",
+      "url": "/silk/docs/man/silk-cc.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk-check.1",
+      "source": "/silk/docs/source/man/silk-check.1.md",
+      "url": "/silk/docs/man/silk-check.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk-codesign.1",
+      "source": "/silk/docs/source/man/silk-codesign.1.md",
+      "url": "/silk/docs/man/silk-codesign.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk-devices.1",
+      "source": "/silk/docs/source/man/silk-devices.1.md",
+      "url": "/silk/docs/man/silk-devices.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk-doc.1",
+      "source": "/silk/docs/source/man/silk-doc.1.md",
+      "url": "/silk/docs/man/silk-doc.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk-env.1",
+      "source": "/silk/docs/source/man/silk-env.1.md",
+      "url": "/silk/docs/man/silk-env.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk-error.1",
+      "source": "/silk/docs/source/man/silk-error.1.md",
+      "url": "/silk/docs/man/silk-error.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk-format.1",
+      "source": "/silk/docs/source/man/silk-format.1.md",
+      "url": "/silk/docs/man/silk-format.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk-graph.1",
+      "source": "/silk/docs/source/man/silk-graph.1.md",
+      "url": "/silk/docs/man/silk-graph.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk-guide.1",
+      "source": "/silk/docs/source/man/silk-guide.1.md",
+      "url": "/silk/docs/man/silk-guide.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk-help.1",
+      "source": "/silk/docs/source/man/silk-help.1.md",
+      "url": "/silk/docs/man/silk-help.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk-lsp.1",
+      "source": "/silk/docs/source/man/silk-lsp.1.md",
+      "url": "/silk/docs/man/silk-lsp.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk-man.1",
+      "source": "/silk/docs/source/man/silk-man.1.md",
+      "url": "/silk/docs/man/silk-man.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk-package.1",
+      "source": "/silk/docs/source/man/silk-package.1.md",
+      "url": "/silk/docs/man/silk-package.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk-proto.1",
+      "source": "/silk/docs/source/man/silk-proto.1.md",
+      "url": "/silk/docs/man/silk-proto.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk-repl.1",
+      "source": "/silk/docs/source/man/silk-repl.1.md",
+      "url": "/silk/docs/man/silk-repl.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk-size.1",
+      "source": "/silk/docs/source/man/silk-size.1.md",
+      "url": "/silk/docs/man/silk-size.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk-targets.1",
+      "source": "/silk/docs/source/man/silk-targets.1.md",
+      "url": "/silk/docs/man/silk-targets.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk-test.1",
+      "source": "/silk/docs/source/man/silk-test.1.md",
+      "url": "/silk/docs/man/silk-test.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk.1",
+      "source": "/silk/docs/source/man/silk.1.md",
+      "url": "/silk/docs/man/silk.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk.7",
+      "source": "/silk/docs/source/man/silk.7.md",
+      "url": "/silk/docs/man/silk.7/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk_abi_get_version.3",
+      "source": "/silk/docs/source/man/silk_abi_get_version.3.md",
+      "url": "/silk/docs/man/silk_abi_get_version.3/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk_amdgpu_aql_dispatch_packet_build.3",
+      "source": "/silk/docs/source/man/silk_amdgpu_aql_dispatch_packet_build.3.md",
+      "url": "/silk/docs/man/silk_amdgpu_aql_dispatch_packet_build.3/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk_bytes.3",
+      "source": "/silk/docs/source/man/silk_bytes.3.md",
+      "url": "/silk/docs/man/silk_bytes.3/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk_compiler.3",
+      "source": "/silk/docs/source/man/silk_compiler.3.md",
+      "url": "/silk/docs/man/silk_compiler.3/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/silk_error.3",
+      "source": "/silk/docs/source/man/silk_error.3.md",
+      "url": "/silk/docs/man/silk_error.3/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/slc.1",
+      "source": "/silk/docs/source/man/slc.1.md",
+      "url": "/silk/docs/man/slc.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "man/slcc.1",
+      "source": "/silk/docs/source/man/slcc.1.md",
+      "url": "/silk/docs/man/slcc.1/"
+    },
+    {
+      "collection": "silk",
+      "id": "spec/2026",
+      "source": "/silk/docs/source/spec/2026.md",
+      "url": "/silk/spec/2026/"
+    },
+    {
+      "collection": "silk",
+      "id": "start",
+      "source": "/silk/docs/source/start.md",
+      "url": "/silk/docs/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/abort-controller",
+      "source": "/silk/docs/source/std/abort-controller.md",
+      "url": "/silk/docs/std/abort-controller/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/abort_controller",
+      "source": "/silk/docs/source/std/abort_controller.md",
+      "url": "/silk/docs/std/abort_controller/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/algorithms",
+      "source": "/silk/docs/source/std/algorithms.md",
+      "url": "/silk/docs/std/algorithms/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/args",
+      "source": "/silk/docs/source/std/args.md",
+      "url": "/silk/docs/std/args/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/arrays",
+      "source": "/silk/docs/source/std/arrays.md",
+      "url": "/silk/docs/std/arrays/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/atomic",
+      "source": "/silk/docs/source/std/atomic.md",
+      "url": "/silk/docs/std/atomic/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/bits",
+      "source": "/silk/docs/source/std/bits.md",
+      "url": "/silk/docs/std/bits/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/boolean",
+      "source": "/silk/docs/source/std/boolean.md",
+      "url": "/silk/docs/std/boolean/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/boxed-values",
+      "source": "/silk/docs/source/std/boxed-values.md",
+      "url": "/silk/docs/std/boxed-values/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/buffer",
+      "source": "/silk/docs/source/std/buffer.md",
+      "url": "/silk/docs/std/buffer/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/build",
+      "source": "/silk/docs/source/std/build.md",
+      "url": "/silk/docs/std/build/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/bytes",
+      "source": "/silk/docs/source/std/bytes.md",
+      "url": "/silk/docs/std/bytes/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/conventions",
+      "source": "/silk/docs/source/std/conventions.md",
+      "url": "/silk/docs/std/conventions/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/crypto-aead",
+      "source": "/silk/docs/source/std/crypto-aead.md",
+      "url": "/silk/docs/std/crypto-aead/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/crypto-box",
+      "source": "/silk/docs/source/std/crypto-box.md",
+      "url": "/silk/docs/std/crypto-box/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/crypto-hash",
+      "source": "/silk/docs/source/std/crypto-hash.md",
+      "url": "/silk/docs/std/crypto-hash/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/crypto-random",
+      "source": "/silk/docs/source/std/crypto-random.md",
+      "url": "/silk/docs/std/crypto-random/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/crypto-secretbox",
+      "source": "/silk/docs/source/std/crypto-secretbox.md",
+      "url": "/silk/docs/std/crypto-secretbox/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/crypto-sign",
+      "source": "/silk/docs/source/std/crypto-sign.md",
+      "url": "/silk/docs/std/crypto-sign/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/crypto",
+      "source": "/silk/docs/source/std/crypto.md",
+      "url": "/silk/docs/std/crypto/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/dylib",
+      "source": "/silk/docs/source/std/dylib.md",
+      "url": "/silk/docs/std/dylib/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/env",
+      "source": "/silk/docs/source/std/env.md",
+      "url": "/silk/docs/std/env/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/ffi-c",
+      "source": "/silk/docs/source/std/ffi-c.md",
+      "url": "/silk/docs/std/ffi-c/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/ffi-c_owned",
+      "source": "/silk/docs/source/std/ffi-c_owned.md",
+      "url": "/silk/docs/std/ffi-c_owned/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/filesystem",
+      "source": "/silk/docs/source/std/filesystem.md",
+      "url": "/silk/docs/std/filesystem/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/flag",
+      "source": "/silk/docs/source/std/flag.md",
+      "url": "/silk/docs/std/flag/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/fmt",
+      "source": "/silk/docs/source/std/fmt.md",
+      "url": "/silk/docs/std/fmt/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/formal",
+      "source": "/silk/docs/source/std/formal.md",
+      "url": "/silk/docs/std/formal/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/fs-stream",
+      "source": "/silk/docs/source/std/fs-stream.md",
+      "url": "/silk/docs/std/fs-stream/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/fs",
+      "source": "/silk/docs/source/std/fs.md",
+      "url": "/silk/docs/std/fs/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/function",
+      "source": "/silk/docs/source/std/function.md",
+      "url": "/silk/docs/std/function/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/ggml",
+      "source": "/silk/docs/source/std/ggml.md",
+      "url": "/silk/docs/std/ggml/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/gpu-device",
+      "source": "/silk/docs/source/std/gpu-device.md",
+      "url": "/silk/docs/std/gpu-device/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/gpu-isa",
+      "source": "/silk/docs/source/std/gpu-isa.md",
+      "url": "/silk/docs/std/gpu-isa/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/gpu",
+      "source": "/silk/docs/source/std/gpu.md",
+      "url": "/silk/docs/std/gpu/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/graphics-metal",
+      "source": "/silk/docs/source/std/graphics-metal.md",
+      "url": "/silk/docs/std/graphics-metal/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/graphics-opengl",
+      "source": "/silk/docs/source/std/graphics-opengl.md",
+      "url": "/silk/docs/std/graphics-opengl/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/graphics-opengles",
+      "source": "/silk/docs/source/std/graphics-opengles.md",
+      "url": "/silk/docs/std/graphics-opengles/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/graphics-vulkan",
+      "source": "/silk/docs/source/std/graphics-vulkan.md",
+      "url": "/silk/docs/std/graphics-vulkan/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/graphics-window",
+      "source": "/silk/docs/source/std/graphics-window.md",
+      "url": "/silk/docs/std/graphics-window/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/graphics",
+      "source": "/silk/docs/source/std/graphics.md",
+      "url": "/silk/docs/std/graphics/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/http",
+      "source": "/silk/docs/source/std/http.md",
+      "url": "/silk/docs/std/http/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/https",
+      "source": "/silk/docs/source/std/https.md",
+      "url": "/silk/docs/std/https/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/idl-web",
+      "source": "/silk/docs/source/std/idl-web.md",
+      "url": "/silk/docs/std/idl-web/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/image-color",
+      "source": "/silk/docs/source/std/image-color.md",
+      "url": "/silk/docs/std/image-color/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/image-jpeg",
+      "source": "/silk/docs/source/std/image-jpeg.md",
+      "url": "/silk/docs/std/image-jpeg/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/image-png",
+      "source": "/silk/docs/source/std/image-png.md",
+      "url": "/silk/docs/std/image-png/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/image",
+      "source": "/silk/docs/source/std/image.md",
+      "url": "/silk/docs/std/image/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/interfaces",
+      "source": "/silk/docs/source/std/interfaces.md",
+      "url": "/silk/docs/std/interfaces/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/io-async",
+      "source": "/silk/docs/source/std/io-async.md",
+      "url": "/silk/docs/std/io-async/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/io-stream",
+      "source": "/silk/docs/source/std/io-stream.md",
+      "url": "/silk/docs/std/io-stream/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/io",
+      "source": "/silk/docs/source/std/io.md",
+      "url": "/silk/docs/std/io/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/js-ecma",
+      "source": "/silk/docs/source/std/js-ecma.md",
+      "url": "/silk/docs/std/js-ecma/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/json",
+      "source": "/silk/docs/source/std/json.md",
+      "url": "/silk/docs/std/json/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/limits",
+      "source": "/silk/docs/source/std/limits.md",
+      "url": "/silk/docs/std/limits/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/list",
+      "source": "/silk/docs/source/std/list.md",
+      "url": "/silk/docs/std/list/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/map",
+      "source": "/silk/docs/source/std/map.md",
+      "url": "/silk/docs/std/map/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/math-matrix",
+      "source": "/silk/docs/source/std/math-matrix.md",
+      "url": "/silk/docs/std/math-matrix/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/math-vector",
+      "source": "/silk/docs/source/std/math-vector.md",
+      "url": "/silk/docs/std/math-vector/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/math",
+      "source": "/silk/docs/source/std/math.md",
+      "url": "/silk/docs/std/math/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/memory",
+      "source": "/silk/docs/source/std/memory.md",
+      "url": "/silk/docs/std/memory/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/mime",
+      "source": "/silk/docs/source/std/mime.md",
+      "url": "/silk/docs/std/mime/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/module-catalog",
+      "source": "/silk/docs/source/std/module-catalog.md",
+      "url": "/silk/docs/std/module-catalog/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/net-stream",
+      "source": "/silk/docs/source/std/net-stream.md",
+      "url": "/silk/docs/std/net-stream/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/net",
+      "source": "/silk/docs/source/std/net.md",
+      "url": "/silk/docs/std/net/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/networking",
+      "source": "/silk/docs/source/std/networking.md",
+      "url": "/silk/docs/std/networking/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/number",
+      "source": "/silk/docs/source/std/number.md",
+      "url": "/silk/docs/std/number/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/optional",
+      "source": "/silk/docs/source/std/optional.md",
+      "url": "/silk/docs/std/optional/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/os",
+      "source": "/silk/docs/source/std/os.md",
+      "url": "/silk/docs/std/os/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/overview",
+      "source": "/silk/docs/source/std/overview.md",
+      "url": "/silk/docs/std/overview/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/package-structure",
+      "source": "/silk/docs/source/std/package-structure.md",
+      "url": "/silk/docs/std/package-structure/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/path",
+      "source": "/silk/docs/source/std/path.md",
+      "url": "/silk/docs/std/path/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/process-child",
+      "source": "/silk/docs/source/std/process-child.md",
+      "url": "/silk/docs/std/process-child/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/process",
+      "source": "/silk/docs/source/std/process.md",
+      "url": "/silk/docs/std/process/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/protobuf",
+      "source": "/silk/docs/source/std/protobuf.md",
+      "url": "/silk/docs/std/protobuf/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/queue",
+      "source": "/silk/docs/source/std/queue.md",
+      "url": "/silk/docs/std/queue/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/range",
+      "source": "/silk/docs/source/std/range.md",
+      "url": "/silk/docs/std/range/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/readline",
+      "source": "/silk/docs/source/std/readline.md",
+      "url": "/silk/docs/std/readline/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/regex",
+      "source": "/silk/docs/source/std/regex.md",
+      "url": "/silk/docs/std/regex/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/result",
+      "source": "/silk/docs/source/std/result.md",
+      "url": "/silk/docs/std/result/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-atomic",
+      "source": "/silk/docs/source/std/runtime-atomic.md",
+      "url": "/silk/docs/std/runtime-atomic/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-build",
+      "source": "/silk/docs/source/std/runtime-build.md",
+      "url": "/silk/docs/std/runtime-build/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-dylib",
+      "source": "/silk/docs/source/std/runtime-dylib.md",
+      "url": "/silk/docs/std/runtime-dylib/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-env",
+      "source": "/silk/docs/source/std/runtime-env.md",
+      "url": "/silk/docs/std/runtime-env/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-event_loop",
+      "source": "/silk/docs/source/std/runtime-event_loop.md",
+      "url": "/silk/docs/std/runtime-event_loop/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-fs",
+      "source": "/silk/docs/source/std/runtime-fs.md",
+      "url": "/silk/docs/std/runtime-fs/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-globals",
+      "source": "/silk/docs/source/std/runtime-globals.md",
+      "url": "/silk/docs/std/runtime-globals/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-gpu",
+      "source": "/silk/docs/source/std/runtime-gpu.md",
+      "url": "/silk/docs/std/runtime-gpu/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-graphics-metal",
+      "source": "/silk/docs/source/std/runtime-graphics-metal.md",
+      "url": "/silk/docs/std/runtime-graphics-metal/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-io",
+      "source": "/silk/docs/source/std/runtime-io.md",
+      "url": "/silk/docs/std/runtime-io/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-linux-event_loop",
+      "source": "/silk/docs/source/std/runtime-linux-event_loop.md",
+      "url": "/silk/docs/std/runtime-linux-event_loop/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-mem",
+      "source": "/silk/docs/source/std/runtime-mem.md",
+      "url": "/silk/docs/std/runtime-mem/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-net",
+      "source": "/silk/docs/source/std/runtime-net.md",
+      "url": "/silk/docs/std/runtime-net/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-number",
+      "source": "/silk/docs/source/std/runtime-number.md",
+      "url": "/silk/docs/std/runtime-number/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-posix-atomic",
+      "source": "/silk/docs/source/std/runtime-posix-atomic.md",
+      "url": "/silk/docs/std/runtime-posix-atomic/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-posix-dylib",
+      "source": "/silk/docs/source/std/runtime-posix-dylib.md",
+      "url": "/silk/docs/std/runtime-posix-dylib/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-posix-env",
+      "source": "/silk/docs/source/std/runtime-posix-env.md",
+      "url": "/silk/docs/std/runtime-posix-env/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-posix-event_loop",
+      "source": "/silk/docs/source/std/runtime-posix-event_loop.md",
+      "url": "/silk/docs/std/runtime-posix-event_loop/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-posix-fs",
+      "source": "/silk/docs/source/std/runtime-posix-fs.md",
+      "url": "/silk/docs/std/runtime-posix-fs/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-posix-io",
+      "source": "/silk/docs/source/std/runtime-posix-io.md",
+      "url": "/silk/docs/std/runtime-posix-io/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-posix-mem",
+      "source": "/silk/docs/source/std/runtime-posix-mem.md",
+      "url": "/silk/docs/std/runtime-posix-mem/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-posix-net",
+      "source": "/silk/docs/source/std/runtime-posix-net.md",
+      "url": "/silk/docs/std/runtime-posix-net/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-posix-process",
+      "source": "/silk/docs/source/std/runtime-posix-process.md",
+      "url": "/silk/docs/std/runtime-posix-process/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-posix-signal",
+      "source": "/silk/docs/source/std/runtime-posix-signal.md",
+      "url": "/silk/docs/std/runtime-posix-signal/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-posix-sync",
+      "source": "/silk/docs/source/std/runtime-posix-sync.md",
+      "url": "/silk/docs/std/runtime-posix-sync/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-posix-task",
+      "source": "/silk/docs/source/std/runtime-posix-task.md",
+      "url": "/silk/docs/std/runtime-posix-task/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-posix-time",
+      "source": "/silk/docs/source/std/runtime-posix-time.md",
+      "url": "/silk/docs/std/runtime-posix-time/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-process",
+      "source": "/silk/docs/source/std/runtime-process.md",
+      "url": "/silk/docs/std/runtime-process/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-readline",
+      "source": "/silk/docs/source/std/runtime-readline.md",
+      "url": "/silk/docs/std/runtime-readline/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-regex",
+      "source": "/silk/docs/source/std/runtime-regex.md",
+      "url": "/silk/docs/std/runtime-regex/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-signal",
+      "source": "/silk/docs/source/std/runtime-signal.md",
+      "url": "/silk/docs/std/runtime-signal/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-sync",
+      "source": "/silk/docs/source/std/runtime-sync.md",
+      "url": "/silk/docs/std/runtime-sync/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-task",
+      "source": "/silk/docs/source/std/runtime-task.md",
+      "url": "/silk/docs/std/runtime-task/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-time",
+      "source": "/silk/docs/source/std/runtime-time.md",
+      "url": "/silk/docs/std/runtime-time/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-unicode",
+      "source": "/silk/docs/source/std/runtime-unicode.md",
+      "url": "/silk/docs/std/runtime-unicode/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-wasi-cwd",
+      "source": "/silk/docs/source/std/runtime-wasi-cwd.md",
+      "url": "/silk/docs/std/runtime-wasi-cwd/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-wasi-env",
+      "source": "/silk/docs/source/std/runtime-wasi-env.md",
+      "url": "/silk/docs/std/runtime-wasi-env/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-wasi-event_loop",
+      "source": "/silk/docs/source/std/runtime-wasi-event_loop.md",
+      "url": "/silk/docs/std/runtime-wasi-event_loop/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-wasi-fs",
+      "source": "/silk/docs/source/std/runtime-wasi-fs.md",
+      "url": "/silk/docs/std/runtime-wasi-fs/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-wasi-io",
+      "source": "/silk/docs/source/std/runtime-wasi-io.md",
+      "url": "/silk/docs/std/runtime-wasi-io/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-wasi-mem",
+      "source": "/silk/docs/source/std/runtime-wasi-mem.md",
+      "url": "/silk/docs/std/runtime-wasi-mem/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-wasi-net",
+      "source": "/silk/docs/source/std/runtime-wasi-net.md",
+      "url": "/silk/docs/std/runtime-wasi-net/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-wasi-preopen",
+      "source": "/silk/docs/source/std/runtime-wasi-preopen.md",
+      "url": "/silk/docs/std/runtime-wasi-preopen/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-wasi-process",
+      "source": "/silk/docs/source/std/runtime-wasi-process.md",
+      "url": "/silk/docs/std/runtime-wasi-process/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-wasi-signal",
+      "source": "/silk/docs/source/std/runtime-wasi-signal.md",
+      "url": "/silk/docs/std/runtime-wasi-signal/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-wasi-sync",
+      "source": "/silk/docs/source/std/runtime-wasi-sync.md",
+      "url": "/silk/docs/std/runtime-wasi-sync/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-wasi-task",
+      "source": "/silk/docs/source/std/runtime-wasi-task.md",
+      "url": "/silk/docs/std/runtime-wasi-task/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-wasi-time",
+      "source": "/silk/docs/source/std/runtime-wasi-time.md",
+      "url": "/silk/docs/std/runtime-wasi-time/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-window",
+      "source": "/silk/docs/source/std/runtime-window.md",
+      "url": "/silk/docs/std/runtime-window/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime-z3",
+      "source": "/silk/docs/source/std/runtime-z3.md",
+      "url": "/silk/docs/std/runtime-z3/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/runtime",
+      "source": "/silk/docs/source/std/runtime.md",
+      "url": "/silk/docs/std/runtime/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/semver",
+      "source": "/silk/docs/source/std/semver.md",
+      "url": "/silk/docs/std/semver/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/set",
+      "source": "/silk/docs/source/std/set.md",
+      "url": "/silk/docs/std/set/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/signal",
+      "source": "/silk/docs/source/std/signal.md",
+      "url": "/silk/docs/std/signal/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/sqlite",
+      "source": "/silk/docs/source/std/sqlite.md",
+      "url": "/silk/docs/std/sqlite/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/ssh",
+      "source": "/silk/docs/source/std/ssh.md",
+      "url": "/silk/docs/std/ssh/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/ssh2",
+      "source": "/silk/docs/source/std/ssh2.md",
+      "url": "/silk/docs/std/ssh2/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/stack",
+      "source": "/silk/docs/source/std/stack.md",
+      "url": "/silk/docs/std/stack/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/stream",
+      "source": "/silk/docs/source/std/stream.md",
+      "url": "/silk/docs/std/stream/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/strings",
+      "source": "/silk/docs/source/std/strings.md",
+      "url": "/silk/docs/std/strings/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/sync",
+      "source": "/silk/docs/source/std/sync.md",
+      "url": "/silk/docs/std/sync/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/tar-async",
+      "source": "/silk/docs/source/std/tar-async.md",
+      "url": "/silk/docs/std/tar-async/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/tar",
+      "source": "/silk/docs/source/std/tar.md",
+      "url": "/silk/docs/std/tar/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/task",
+      "source": "/silk/docs/source/std/task.md",
+      "url": "/silk/docs/std/task/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/temporal",
+      "source": "/silk/docs/source/std/temporal.md",
+      "url": "/silk/docs/std/temporal/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/test",
+      "source": "/silk/docs/source/std/test.md",
+      "url": "/silk/docs/std/test/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/time",
+      "source": "/silk/docs/source/std/time.md",
+      "url": "/silk/docs/std/time/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/tls",
+      "source": "/silk/docs/source/std/tls.md",
+      "url": "/silk/docs/std/tls/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/toml",
+      "source": "/silk/docs/source/std/toml.md",
+      "url": "/silk/docs/std/toml/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/unicode",
+      "source": "/silk/docs/source/std/unicode.md",
+      "url": "/silk/docs/std/unicode/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/url",
+      "source": "/silk/docs/source/std/url.md",
+      "url": "/silk/docs/std/url/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/uuid-random",
+      "source": "/silk/docs/source/std/uuid-random.md",
+      "url": "/silk/docs/std/uuid-random/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/uuid",
+      "source": "/silk/docs/source/std/uuid.md",
+      "url": "/silk/docs/std/uuid/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/vector",
+      "source": "/silk/docs/source/std/vector.md",
+      "url": "/silk/docs/std/vector/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/wasm",
+      "source": "/silk/docs/source/std/wasm.md",
+      "url": "/silk/docs/std/wasm/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/websocket",
+      "source": "/silk/docs/source/std/websocket.md",
+      "url": "/silk/docs/std/websocket/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/window-gtk",
+      "source": "/silk/docs/source/std/window-gtk.md",
+      "url": "/silk/docs/std/window-gtk/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/window-ios",
+      "source": "/silk/docs/source/std/window-ios.md",
+      "url": "/silk/docs/std/window-ios/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/window-macos",
+      "source": "/silk/docs/source/std/window-macos.md",
+      "url": "/silk/docs/std/window-macos/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/window",
+      "source": "/silk/docs/source/std/window.md",
+      "url": "/silk/docs/std/window/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/xml",
+      "source": "/silk/docs/source/std/xml.md",
+      "url": "/silk/docs/std/xml/"
+    },
+    {
+      "collection": "silk",
+      "id": "std/z3",
+      "source": "/silk/docs/source/std/z3.md",
+      "url": "/silk/docs/std/z3/"
+    },
+    {
+      "collection": "silk",
+      "id": "usage/cli-examples",
+      "source": "/silk/docs/source/usage/cli-examples.md",
+      "url": "/silk/docs/usage/cli-examples/"
+    },
+    {
+      "collection": "silk",
+      "id": "usage/editor-coc-nvim",
+      "source": "/silk/docs/source/usage/editor-coc-nvim.md",
+      "url": "/silk/docs/usage/editor-coc-nvim/"
+    },
+    {
+      "collection": "silk",
+      "id": "usage/editor-ctags",
+      "source": "/silk/docs/source/usage/editor-ctags.md",
+      "url": "/silk/docs/usage/editor-ctags/"
+    },
+    {
+      "collection": "silk",
+      "id": "usage/editor-textmate",
+      "source": "/silk/docs/source/usage/editor-textmate.md",
+      "url": "/silk/docs/usage/editor-textmate/"
+    },
+    {
+      "collection": "silk",
+      "id": "usage/editor-vim",
+      "source": "/silk/docs/source/usage/editor-vim.md",
+      "url": "/silk/docs/usage/editor-vim/"
+    },
+    {
+      "collection": "silk",
+      "id": "usage/getting-started",
+      "source": "/silk/docs/source/usage/getting-started.md",
+      "url": "/silk/docs/usage/getting-started/"
+    },
+    {
+      "collection": "silk",
+      "id": "usage/github-actions",
+      "source": "/silk/docs/source/usage/github-actions.md",
+      "url": "/silk/docs/usage/github-actions/"
+    },
+    {
+      "collection": "silk",
+      "id": "usage/github-linguist",
+      "source": "/silk/docs/source/usage/github-linguist.md",
+      "url": "/silk/docs/usage/github-linguist/"
+    },
+    {
+      "collection": "silk",
+      "id": "usage/guide-examples",
+      "source": "/silk/docs/source/usage/guide-examples.md",
+      "url": "/silk/docs/usage/guide-examples/"
+    },
+    {
+      "collection": "silk",
+      "id": "usage/howto-custom-stdlib-root",
+      "source": "/silk/docs/source/usage/howto-custom-stdlib-root.md",
+      "url": "/silk/docs/usage/howto-custom-stdlib-root/"
+    },
+    {
+      "collection": "silk",
+      "id": "usage/howto-dynamic-libraries",
+      "source": "/silk/docs/source/usage/howto-dynamic-libraries.md",
+      "url": "/silk/docs/usage/howto-dynamic-libraries/"
+    },
+    {
+      "collection": "silk",
+      "id": "usage/howto-lumen-trail",
+      "source": "/silk/docs/source/usage/howto-lumen-trail.md",
+      "url": "/silk/docs/usage/howto-lumen-trail/"
+    },
+    {
+      "collection": "silk",
+      "id": "usage/howto-run-wasi-node",
+      "source": "/silk/docs/source/usage/howto-run-wasi-node.md",
+      "url": "/silk/docs/usage/howto-run-wasi-node/"
+    },
+    {
+      "collection": "silk",
+      "id": "usage/pure-silk-gpu-ml",
+      "source": "/silk/docs/source/usage/pure-silk-gpu-ml.md",
+      "url": "/silk/docs/usage/pure-silk-gpu-ml/"
+    },
+    {
+      "collection": "silk",
+      "id": "usage/pure-silk-gpu",
+      "source": "/silk/docs/source/usage/pure-silk-gpu.md",
+      "url": "/silk/docs/usage/pure-silk-gpu/"
+    },
+    {
+      "collection": "silk",
+      "id": "usage/tutorials/01-first-program",
+      "source": "/silk/docs/source/usage/tutorials/01-first-program.md",
+      "url": "/silk/docs/usage/tutorials/01-first-program/"
+    },
+    {
+      "collection": "silk",
+      "id": "usage/tutorials/02-structs-and-impls",
+      "source": "/silk/docs/source/usage/tutorials/02-structs-and-impls.md",
+      "url": "/silk/docs/usage/tutorials/02-structs-and-impls/"
+    },
+    {
+      "collection": "silk",
+      "id": "usage/tutorials/03-arrays-and-slices",
+      "source": "/silk/docs/source/usage/tutorials/03-arrays-and-slices.md",
+      "url": "/silk/docs/usage/tutorials/03-arrays-and-slices/"
+    },
+    {
+      "collection": "silk",
+      "id": "usage/tutorials/04-filesystem",
+      "source": "/silk/docs/source/usage/tutorials/04-filesystem.md",
+      "url": "/silk/docs/usage/tutorials/04-filesystem/"
+    },
+    {
+      "collection": "silk",
+      "id": "usage/tutorials/05-concurrency",
+      "source": "/silk/docs/source/usage/tutorials/05-concurrency.md",
+      "url": "/silk/docs/usage/tutorials/05-concurrency/"
+    },
+    {
+      "collection": "silk",
+      "id": "usage/tutorials/06-async-io-streams-abort",
+      "source": "/silk/docs/source/usage/tutorials/06-async-io-streams-abort.md",
+      "url": "/silk/docs/usage/tutorials/06-async-io-streams-abort/"
+    },
+    {
+      "collection": "silk",
+      "id": "usage/tutorials/07-formal-silk",
+      "source": "/silk/docs/source/usage/tutorials/07-formal-silk.md",
+      "url": "/silk/docs/usage/tutorials/07-formal-silk/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/borrow-checker",
+      "source": "/silk/wiki/source/language/borrow-checker.md",
+      "url": "/silk/wiki/language/borrow-checker/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/buffers",
+      "source": "/silk/wiki/source/language/buffers.md",
+      "url": "/silk/wiki/language/buffers/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/cheat-sheet",
+      "source": "/silk/wiki/source/language/cheat-sheet.md",
+      "url": "/silk/wiki/language/cheat-sheet/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/concurrency",
+      "source": "/silk/wiki/source/language/concurrency.md",
+      "url": "/silk/wiki/language/concurrency/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/const-functions",
+      "source": "/silk/wiki/source/language/const-functions.md",
+      "url": "/silk/wiki/language/const-functions/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/conventions",
+      "source": "/silk/wiki/source/language/conventions.md",
+      "url": "/silk/wiki/language/conventions/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/dependent-types",
+      "source": "/silk/wiki/source/language/dependent-types.md",
+      "url": "/silk/wiki/language/dependent-types/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/doc-comments",
+      "source": "/silk/wiki/source/language/doc-comments.md",
+      "url": "/silk/wiki/language/doc-comments/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/duration-instant",
+      "source": "/silk/wiki/source/language/duration-instant.md",
+      "url": "/silk/wiki/language/duration-instant/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/enums",
+      "source": "/silk/wiki/source/language/enums.md",
+      "url": "/silk/wiki/language/enums/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/errors",
+      "source": "/silk/wiki/source/language/errors.md",
+      "url": "/silk/wiki/language/errors/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/ext",
+      "source": "/silk/wiki/source/language/ext.md",
+      "url": "/silk/wiki/language/ext/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/flow-blocks-statements",
+      "source": "/silk/wiki/source/language/flow-blocks-statements.md",
+      "url": "/silk/wiki/language/flow-blocks-statements/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/flow-break",
+      "source": "/silk/wiki/source/language/flow-break.md",
+      "url": "/silk/wiki/language/flow-break/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/flow-continue",
+      "source": "/silk/wiki/source/language/flow-continue.md",
+      "url": "/silk/wiki/language/flow-continue/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/flow-expression-statements",
+      "source": "/silk/wiki/source/language/flow-expression-statements.md",
+      "url": "/silk/wiki/language/flow-expression-statements/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/flow-for",
+      "source": "/silk/wiki/source/language/flow-for.md",
+      "url": "/silk/wiki/language/flow-for/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/flow-if-else",
+      "source": "/silk/wiki/source/language/flow-if-else.md",
+      "url": "/silk/wiki/language/flow-if-else/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/flow-loop",
+      "source": "/silk/wiki/source/language/flow-loop.md",
+      "url": "/silk/wiki/language/flow-loop/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/flow-match",
+      "source": "/silk/wiki/source/language/flow-match.md",
+      "url": "/silk/wiki/language/flow-match/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/flow-overview",
+      "source": "/silk/wiki/source/language/flow-overview.md",
+      "url": "/silk/wiki/language/flow-overview/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/flow-return",
+      "source": "/silk/wiki/source/language/flow-return.md",
+      "url": "/silk/wiki/language/flow-return/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/flow-while",
+      "source": "/silk/wiki/source/language/flow-while.md",
+      "url": "/silk/wiki/language/flow-while/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/formal-verification",
+      "source": "/silk/wiki/source/language/formal-verification.md",
+      "url": "/silk/wiki/language/formal-verification/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/function-disciplines",
+      "source": "/silk/wiki/source/language/function-disciplines.md",
+      "url": "/silk/wiki/language/function-disciplines/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/generics",
+      "source": "/silk/wiki/source/language/generics.md",
+      "url": "/silk/wiki/language/generics/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/grammar",
+      "source": "/silk/wiki/source/language/grammar.md",
+      "url": "/silk/wiki/language/grammar/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/interfaces",
+      "source": "/silk/wiki/source/language/interfaces.md",
+      "url": "/silk/wiki/language/interfaces/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/literals-aggregate",
+      "source": "/silk/wiki/source/language/literals-aggregate.md",
+      "url": "/silk/wiki/language/literals-aggregate/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/literals-boolean",
+      "source": "/silk/wiki/source/language/literals-boolean.md",
+      "url": "/silk/wiki/language/literals-boolean/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/literals-character",
+      "source": "/silk/wiki/source/language/literals-character.md",
+      "url": "/silk/wiki/language/literals-character/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/literals-duration",
+      "source": "/silk/wiki/source/language/literals-duration.md",
+      "url": "/silk/wiki/language/literals-duration/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/literals-numeric",
+      "source": "/silk/wiki/source/language/literals-numeric.md",
+      "url": "/silk/wiki/language/literals-numeric/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/literals-overview",
+      "source": "/silk/wiki/source/language/literals-overview.md",
+      "url": "/silk/wiki/language/literals-overview/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/literals-string",
+      "source": "/silk/wiki/source/language/literals-string.md",
+      "url": "/silk/wiki/language/literals-string/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/memory-model",
+      "source": "/silk/wiki/source/language/memory-model.md",
+      "url": "/silk/wiki/language/memory-model/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/mutability",
+      "source": "/silk/wiki/source/language/mutability.md",
+      "url": "/silk/wiki/language/mutability/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/operators",
+      "source": "/silk/wiki/source/language/operators.md",
+      "url": "/silk/wiki/language/operators/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/optional",
+      "source": "/silk/wiki/source/language/optional.md",
+      "url": "/silk/wiki/language/optional/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/packages-imports-exports",
+      "source": "/silk/wiki/source/language/packages-imports-exports.md",
+      "url": "/silk/wiki/language/packages-imports-exports/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/regions",
+      "source": "/silk/wiki/source/language/regions.md",
+      "url": "/silk/wiki/language/regions/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/struct-requirements",
+      "source": "/silk/wiki/source/language/struct-requirements.md",
+      "url": "/silk/wiki/language/struct-requirements/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/structs-impls-layout",
+      "source": "/silk/wiki/source/language/structs-impls-layout.md",
+      "url": "/silk/wiki/language/structs-impls-layout/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/syntax-tour",
+      "source": "/silk/wiki/source/language/syntax-tour.md",
+      "url": "/silk/wiki/language/syntax-tour/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/testing",
+      "source": "/silk/wiki/source/language/testing.md",
+      "url": "/silk/wiki/language/testing/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/typed-errors",
+      "source": "/silk/wiki/source/language/typed-errors.md",
+      "url": "/silk/wiki/language/typed-errors/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/types",
+      "source": "/silk/wiki/source/language/types.md",
+      "url": "/silk/wiki/language/types/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "language/varargs",
+      "source": "/silk/wiki/source/language/varargs.md",
+      "url": "/silk/wiki/language/varargs/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "start",
+      "source": "/silk/wiki/source/start.md",
+      "url": "/silk/wiki/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/algorithms",
+      "source": "/silk/wiki/source/std/algorithms.md",
+      "url": "/silk/wiki/std/algorithms/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/args",
+      "source": "/silk/wiki/source/std/args.md",
+      "url": "/silk/wiki/std/args/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/arrays",
+      "source": "/silk/wiki/source/std/arrays.md",
+      "url": "/silk/wiki/std/arrays/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/bits",
+      "source": "/silk/wiki/source/std/bits.md",
+      "url": "/silk/wiki/std/bits/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/buffer",
+      "source": "/silk/wiki/source/std/buffer.md",
+      "url": "/silk/wiki/std/buffer/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/conventions",
+      "source": "/silk/wiki/source/std/conventions.md",
+      "url": "/silk/wiki/std/conventions/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/crypto",
+      "source": "/silk/wiki/source/std/crypto.md",
+      "url": "/silk/wiki/std/crypto/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/env",
+      "source": "/silk/wiki/source/std/env.md",
+      "url": "/silk/wiki/std/env/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/filesystem",
+      "source": "/silk/wiki/source/std/filesystem.md",
+      "url": "/silk/wiki/std/filesystem/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/fmt",
+      "source": "/silk/wiki/source/std/fmt.md",
+      "url": "/silk/wiki/std/fmt/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/formal",
+      "source": "/silk/wiki/source/std/formal.md",
+      "url": "/silk/wiki/std/formal/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/interfaces",
+      "source": "/silk/wiki/source/std/interfaces.md",
+      "url": "/silk/wiki/std/interfaces/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/io",
+      "source": "/silk/wiki/source/std/io.md",
+      "url": "/silk/wiki/std/io/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/json",
+      "source": "/silk/wiki/source/std/json.md",
+      "url": "/silk/wiki/std/json/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/map",
+      "source": "/silk/wiki/source/std/map.md",
+      "url": "/silk/wiki/std/map/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/memory",
+      "source": "/silk/wiki/source/std/memory.md",
+      "url": "/silk/wiki/std/memory/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/networking",
+      "source": "/silk/wiki/source/std/networking.md",
+      "url": "/silk/wiki/std/networking/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/overview",
+      "source": "/silk/wiki/source/std/overview.md",
+      "url": "/silk/wiki/std/overview/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/package-structure",
+      "source": "/silk/wiki/source/std/package-structure.md",
+      "url": "/silk/wiki/std/package-structure/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/path",
+      "source": "/silk/wiki/source/std/path.md",
+      "url": "/silk/wiki/std/path/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/process",
+      "source": "/silk/wiki/source/std/process.md",
+      "url": "/silk/wiki/std/process/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/result",
+      "source": "/silk/wiki/source/std/result.md",
+      "url": "/silk/wiki/std/result/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/runtime",
+      "source": "/silk/wiki/source/std/runtime.md",
+      "url": "/silk/wiki/std/runtime/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/semver",
+      "source": "/silk/wiki/source/std/semver.md",
+      "url": "/silk/wiki/std/semver/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/set",
+      "source": "/silk/wiki/source/std/set.md",
+      "url": "/silk/wiki/std/set/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/strings",
+      "source": "/silk/wiki/source/std/strings.md",
+      "url": "/silk/wiki/std/strings/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/sync",
+      "source": "/silk/wiki/source/std/sync.md",
+      "url": "/silk/wiki/std/sync/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/task",
+      "source": "/silk/wiki/source/std/task.md",
+      "url": "/silk/wiki/std/task/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/temporal",
+      "source": "/silk/wiki/source/std/temporal.md",
+      "url": "/silk/wiki/std/temporal/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/tls",
+      "source": "/silk/wiki/source/std/tls.md",
+      "url": "/silk/wiki/std/tls/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/toml",
+      "source": "/silk/wiki/source/std/toml.md",
+      "url": "/silk/wiki/std/toml/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/url",
+      "source": "/silk/wiki/source/std/url.md",
+      "url": "/silk/wiki/std/url/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/uuid",
+      "source": "/silk/wiki/source/std/uuid.md",
+      "url": "/silk/wiki/std/uuid/"
+    },
+    {
+      "collection": "silkWiki",
+      "id": "std/vector",
+      "source": "/silk/wiki/source/std/vector.md",
+      "url": "/silk/wiki/std/vector/"
+    },
+    {
+      "collection": "virtnosis",
+      "id": "cli/virtnosis-agent",
+      "source": "/virtnosis/docs/source/cli/virtnosis-agent.md",
+      "url": "/virtnosis/docs/cli/virtnosis-agent/"
+    },
+    {
+      "collection": "virtnosis",
+      "id": "cli/vnactl",
+      "source": "/virtnosis/docs/source/cli/vnactl.md",
+      "url": "/virtnosis/docs/cli/vnactl/"
+    },
+    {
+      "collection": "virtnosis",
+      "id": "guides/deployment",
+      "source": "/virtnosis/docs/source/guides/deployment.md",
+      "url": "/virtnosis/docs/guides/deployment/"
+    },
+    {
+      "collection": "virtnosis",
+      "id": "guides/getting-started",
+      "source": "/virtnosis/docs/source/guides/getting-started.md",
+      "url": "/virtnosis/docs/guides/getting-started/"
+    },
+    {
+      "collection": "virtnosis",
+      "id": "guides/install-and-package",
+      "source": "/virtnosis/docs/source/guides/install-and-package.md",
+      "url": "/virtnosis/docs/guides/install-and-package/"
+    },
+    {
+      "collection": "virtnosis",
+      "id": "guides/operator-guide",
+      "source": "/virtnosis/docs/source/guides/operator-guide.md",
+      "url": "/virtnosis/docs/guides/operator-guide/"
+    },
+    {
+      "collection": "virtnosis",
+      "id": "guides/output-and-automation",
+      "source": "/virtnosis/docs/source/guides/output-and-automation.md",
+      "url": "/virtnosis/docs/guides/output-and-automation/"
+    },
+    {
+      "collection": "virtnosis",
+      "id": "guides/systemd",
+      "source": "/virtnosis/docs/source/guides/systemd.md",
+      "url": "/virtnosis/docs/guides/systemd/"
+    },
+    {
+      "collection": "virtnosis",
+      "id": "man/virtnosis-7",
+      "source": "/virtnosis/docs/source/man/virtnosis-7.md",
+      "url": "/virtnosis/docs/man/virtnosis-7/"
+    },
+    {
+      "collection": "virtnosis",
+      "id": "man/virtnosis-agent-1",
+      "source": "/virtnosis/docs/source/man/virtnosis-agent-1.md",
+      "url": "/virtnosis/docs/man/virtnosis-agent-1/"
+    },
+    {
+      "collection": "virtnosis",
+      "id": "man/virtnosis-agent-protocol-7",
+      "source": "/virtnosis/docs/source/man/virtnosis-agent-protocol-7.md",
+      "url": "/virtnosis/docs/man/virtnosis-agent-protocol-7/"
+    },
+    {
+      "collection": "virtnosis",
+      "id": "man/virtnosis-scan-report-7",
+      "source": "/virtnosis/docs/source/man/virtnosis-scan-report-7.md",
+      "url": "/virtnosis/docs/man/virtnosis-scan-report-7/"
+    },
+    {
+      "collection": "virtnosis",
+      "id": "man/vnactl-1",
+      "source": "/virtnosis/docs/source/man/vnactl-1.md",
+      "url": "/virtnosis/docs/man/vnactl-1/"
+    },
+    {
+      "collection": "virtnosis",
+      "id": "reference/architecture",
+      "source": "/virtnosis/docs/source/reference/architecture.md",
+      "url": "/virtnosis/docs/reference/architecture/"
+    },
+    {
+      "collection": "virtnosis",
+      "id": "reference/development",
+      "source": "/virtnosis/docs/source/reference/development.md",
+      "url": "/virtnosis/docs/reference/development/"
+    },
+    {
+      "collection": "virtnosis",
+      "id": "reference/overview",
+      "source": "/virtnosis/docs/source/reference/overview.md",
+      "url": "/virtnosis/docs/reference/overview/"
+    },
+    {
+      "collection": "virtnosis",
+      "id": "reference/repository-docs",
+      "source": "/virtnosis/docs/source/reference/repository-docs.md",
+      "url": "/virtnosis/docs/reference/repository-docs/"
+    },
+    {
+      "collection": "virtnosis",
+      "id": "reference/scan-analysis",
+      "source": "/virtnosis/docs/source/reference/scan-analysis.md",
+      "url": "/virtnosis/docs/reference/scan-analysis/"
+    },
+    {
+      "collection": "virtnosis",
+      "id": "start",
+      "source": "/virtnosis/docs/source/start.md",
+      "url": "/virtnosis/docs/"
+    },
+    {
+      "collection": "sage",
+      "id": "cli/configuration",
+      "source": "/sage/docs/source/cli/configuration.md",
+      "url": "/sage/docs/cli/configuration/"
+    },
+    {
+      "collection": "sage",
+      "id": "cli/diagnostics",
+      "source": "/sage/docs/source/cli/diagnostics.md",
+      "url": "/sage/docs/cli/diagnostics/"
+    },
+    {
+      "collection": "sage",
+      "id": "cli/environment-and-files",
+      "source": "/sage/docs/source/cli/environment-and-files.md",
+      "url": "/sage/docs/cli/environment-and-files/"
+    },
+    {
+      "collection": "sage",
+      "id": "cli/inputs-and-modes",
+      "source": "/sage/docs/source/cli/inputs-and-modes.md",
+      "url": "/sage/docs/cli/inputs-and-modes/"
+    },
+    {
+      "collection": "sage",
+      "id": "cli/keys-and-commands",
+      "source": "/sage/docs/source/cli/keys-and-commands.md",
+      "url": "/sage/docs/cli/keys-and-commands/"
+    },
+    {
+      "collection": "sage",
+      "id": "cli/options",
+      "source": "/sage/docs/source/cli/options.md",
+      "url": "/sage/docs/cli/options/"
+    },
+    {
+      "collection": "sage",
+      "id": "cli/sage",
+      "source": "/sage/docs/source/cli/sage.md",
+      "url": "/sage/docs/cli/sage/"
+    },
+    {
+      "collection": "sage",
+      "id": "cli/syntax-and-cache",
+      "source": "/sage/docs/source/cli/syntax-and-cache.md",
+      "url": "/sage/docs/cli/syntax-and-cache/"
+    },
+    {
+      "collection": "sage",
+      "id": "guides/getting-started",
+      "source": "/sage/docs/source/guides/getting-started.md",
+      "url": "/sage/docs/guides/getting-started/"
+    },
+    {
+      "collection": "sage",
+      "id": "guides/pager-workflows",
+      "source": "/sage/docs/source/guides/pager-workflows.md",
+      "url": "/sage/docs/guides/pager-workflows/"
+    },
+    {
+      "collection": "sage",
+      "id": "guides/plugins-quickstart",
+      "source": "/sage/docs/source/guides/plugins-quickstart.md",
+      "url": "/sage/docs/guides/plugins-quickstart/"
+    },
+    {
+      "collection": "sage",
+      "id": "javascript/all-modules",
+      "source": "/sage/docs/source/javascript/all-modules.md",
+      "url": "/sage/docs/javascript/all-modules/"
+    },
+    {
+      "collection": "sage",
+      "id": "javascript/crypto",
+      "source": "/sage/docs/source/javascript/crypto.md",
+      "url": "/sage/docs/javascript/crypto/"
+    },
+    {
+      "collection": "sage",
+      "id": "javascript/dom",
+      "source": "/sage/docs/source/javascript/dom.md",
+      "url": "/sage/docs/javascript/dom/"
+    },
+    {
+      "collection": "sage",
+      "id": "javascript/env",
+      "source": "/sage/docs/source/javascript/env.md",
+      "url": "/sage/docs/javascript/env/"
+    },
+    {
+      "collection": "sage",
+      "id": "javascript/fetch",
+      "source": "/sage/docs/source/javascript/fetch.md",
+      "url": "/sage/docs/javascript/fetch/"
+    },
+    {
+      "collection": "sage",
+      "id": "javascript/fs",
+      "source": "/sage/docs/source/javascript/fs.md",
+      "url": "/sage/docs/javascript/fs/"
+    },
+    {
+      "collection": "sage",
+      "id": "javascript/module-index",
+      "source": "/sage/docs/source/javascript/module-index.md",
+      "url": "/sage/docs/javascript/module-index/"
+    },
+    {
+      "collection": "sage",
+      "id": "javascript/navigator",
+      "source": "/sage/docs/source/javascript/navigator.md",
+      "url": "/sage/docs/javascript/navigator/"
+    },
+    {
+      "collection": "sage",
+      "id": "javascript/overview",
+      "source": "/sage/docs/source/javascript/overview.md",
+      "url": "/sage/docs/javascript/overview/"
+    },
+    {
+      "collection": "sage",
+      "id": "javascript/path",
+      "source": "/sage/docs/source/javascript/path.md",
+      "url": "/sage/docs/javascript/path/"
+    },
+    {
+      "collection": "sage",
+      "id": "javascript/performance",
+      "source": "/sage/docs/source/javascript/performance.md",
+      "url": "/sage/docs/javascript/performance/"
+    },
+    {
+      "collection": "sage",
+      "id": "javascript/process",
+      "source": "/sage/docs/source/javascript/process.md",
+      "url": "/sage/docs/javascript/process/"
+    },
+    {
+      "collection": "sage",
+      "id": "javascript/runtime",
+      "source": "/sage/docs/source/javascript/runtime.md",
+      "url": "/sage/docs/javascript/runtime/"
+    },
+    {
+      "collection": "sage",
+      "id": "javascript/url",
+      "source": "/sage/docs/source/javascript/url.md",
+      "url": "/sage/docs/javascript/url/"
+    },
+    {
+      "collection": "sage",
+      "id": "javascript/uuid",
+      "source": "/sage/docs/source/javascript/uuid.md",
+      "url": "/sage/docs/javascript/uuid/"
+    },
+    {
+      "collection": "sage",
+      "id": "javascript/web",
+      "source": "/sage/docs/source/javascript/web.md",
+      "url": "/sage/docs/javascript/web/"
+    },
+    {
+      "collection": "sage",
+      "id": "man/sage-1",
+      "source": "/sage/docs/source/man/sage-1.md",
+      "url": "/sage/docs/man/sage-1/"
+    },
+    {
+      "collection": "sage",
+      "id": "man/sage-7",
+      "source": "/sage/docs/source/man/sage-7.md",
+      "url": "/sage/docs/man/sage-7/"
+    },
+    {
+      "collection": "sage",
+      "id": "man/sage-plugin-api-3",
+      "source": "/sage/docs/source/man/sage-plugin-api-3.md",
+      "url": "/sage/docs/man/sage-plugin-api-3/"
+    },
+    {
+      "collection": "sage",
+      "id": "start",
+      "source": "/sage/docs/source/start.md",
+      "url": "/sage/docs/"
+    },
+    {
+      "collection": "slg",
+      "id": "cli/diagnostics",
+      "source": "/slg/docs/source/cli/diagnostics.md",
+      "url": "/slg/docs/cli/diagnostics/"
+    },
+    {
+      "collection": "slg",
+      "id": "cli/input-types-and-parsing",
+      "source": "/slg/docs/source/cli/input-types-and-parsing.md",
+      "url": "/slg/docs/cli/input-types-and-parsing/"
+    },
+    {
+      "collection": "slg",
+      "id": "cli/options-reference",
+      "source": "/slg/docs/source/cli/options-reference.md",
+      "url": "/slg/docs/cli/options-reference/"
+    },
+    {
+      "collection": "slg",
+      "id": "cli/output-and-exit-codes",
+      "source": "/slg/docs/source/cli/output-and-exit-codes.md",
+      "url": "/slg/docs/cli/output-and-exit-codes/"
+    },
+    {
+      "collection": "slg",
+      "id": "cli/parallelism",
+      "source": "/slg/docs/source/cli/parallelism.md",
+      "url": "/slg/docs/cli/parallelism/"
+    },
+    {
+      "collection": "slg",
+      "id": "cli/patterns-and-matching",
+      "source": "/slg/docs/source/cli/patterns-and-matching.md",
+      "url": "/slg/docs/cli/patterns-and-matching/"
+    },
+    {
+      "collection": "slg",
+      "id": "cli/slg",
+      "source": "/slg/docs/source/cli/slg.md",
+      "url": "/slg/docs/cli/slg/"
+    },
+    {
+      "collection": "slg",
+      "id": "cli/traversal-and-ignores",
+      "source": "/slg/docs/source/cli/traversal-and-ignores.md",
+      "url": "/slg/docs/cli/traversal-and-ignores/"
+    },
+    {
+      "collection": "slg",
+      "id": "guides/getting-started",
+      "source": "/slg/docs/source/guides/getting-started.md",
+      "url": "/slg/docs/guides/getting-started/"
+    },
+    {
+      "collection": "slg",
+      "id": "guides/search-recipes",
+      "source": "/slg/docs/source/guides/search-recipes.md",
+      "url": "/slg/docs/guides/search-recipes/"
+    },
+    {
+      "collection": "slg",
+      "id": "man/slg-1",
+      "source": "/slg/docs/source/man/slg-1.md",
+      "url": "/slg/docs/man/slg-1/"
+    },
+    {
+      "collection": "slg",
+      "id": "start",
+      "source": "/slg/docs/source/start.md",
+      "url": "/slg/docs/"
+    }
+  ]
+}

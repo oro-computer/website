@@ -1,0 +1,88 @@
+---
+layout: "docs"
+title: "[silk-error(1)](?p=man/silk-error.1) — Explain Compiler Diagnostic Codes"
+description: "NOTE: This is the Markdown source for the eventual man 1 page for silk error. The roff-formatted manpage should be generated from this content."
+docsCollection: "silk"
+section: "man"
+order: 296
+sourcePath: "man/silk-error.1.md"
+githubRepo: "oro-computer/silk"
+githubRef: "master"
+---
+
+# [`silk-error(1)`](/silk/docs/man/silk-error.1/) — Explain Compiler Diagnostic Codes
+
+> NOTE: This is the Markdown source for the eventual man 1 page for `silk error`. The roff-formatted manpage should be generated from this content.
+
+## Name
+
+`silk-error` — explain stable Silk compiler diagnostic codes.
+
+## Synopsis
+
+- `silk error [--json] <code>`
+- `silk error [--json] --list`
+- `silk error [--json] -l`
+
+## Description
+
+`silk error` is the terminal lookup surface for stable compiler diagnostics.
+When another command prints a diagnostic such as `error[E2028]`, pass that code
+to `silk error` to see the canonical short description, category, related docs,
+any bundled example, and a guide lookup hint when the installed guide catalog
+links that diagnostic code.
+
+The lookup accepts copied forms:
+
+- `E2028`
+- `2028`
+- `diag:E2028`
+- `error[E2028]`
+
+`silk error --list` and `silk error -l` print every stable compiler error code
+and its short description in deterministic order.
+
+Use `--json` for editor, CI, and agent workflows that need structured
+diagnostic metadata. Lookup mode emits one `diagnostic` object; list mode emits
+a `diagnostics` array.
+
+## Output
+
+For a single code, output includes:
+
+- the code and canonical description,
+- the diagnostic category,
+- extra details when the compiler has a useful static explanation,
+- documentation references,
+- a `silk guide <code>` search hint when the installed guide catalog links the
+ code,
+- and a Silk example when one is bundled.
+
+Examples are syntax-highlighted when stdout is a color-capable TTY. Piped
+output, `NO_COLOR`, and `TERM=dumb` remain plain text.
+
+JSON output is newline-terminated and includes:
+
+- `schemaVersion`
+- `command`
+- `mode`
+- `diagnostic` or `diagnostics`
+- `guideStatus` for lookup mode
+
+## Examples
+
+```sh
+silk error E2028
+silk error error[E2028]
+silk error --list
+silk error --json E2028
+silk error --json --list
+```
+
+## See Also
+
+- [`silk(1)`](/silk/docs/man/silk.1/)
+- [`silk-guide(1)`](/silk/docs/man/silk-guide.1/)
+- [`silk-check(1)`](/silk/docs/man/silk-check.1/)
+- [`silk-build(1)`](/silk/docs/man/silk-build.1/)
+- [`silk-test(1)`](/silk/docs/man/silk-test.1/)

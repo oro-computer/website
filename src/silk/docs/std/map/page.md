@@ -1,0 +1,240 @@
+---
+layout: "docs"
+title: "std::map — Maps and Dictionaries"
+description: "std::map provides the standard associative container surfaces:"
+docsCollection: "silk"
+section: "std"
+order: 82
+sourcePath: "std/map.md"
+githubRepo: "oro-computer/silk"
+githubRef: "master"
+---
+
+# [`std::map`](/silk/wiki/std/map/) — Maps and Dictionaries
+
+[`std::map`](/silk/wiki/std/map/) provides the standard associative container surfaces:
+
+- `HashMap(K, V)` — an unordered map backed by a hash table.
+- `TreeMap(K, V)` — an ordered map backed by a red-black tree.
+
+The API is specified here; it
+targets the compiler and will grow as the language gains
+first-class container ergonomics (in particular, more borrow- and move-aware
+iteration and accessors).
+
+## Considerations
+
+In the Supported forms:
+
+- `HashMap(K, V)` owns keys and values by value:
+ - `clear` / `drop` run `Drop` for all live entries,
+ - `remove` drops the removed key and returns the removed value,
+ - `put` returns the previous value when replacing an existing entry.
+- `TreeMap(K, V)` does not run `Drop` for stored keys/values yet; it should be
+ treated as single-slot storage in the Supported forms.
+- `HashMap(K, V)` stores keys and values in the compiler’s **scalar-slot**
+ layout (`sizeof(K)` / `sizeof(V)` bytes, multiples of 8 in the current
+ subset). This supports multi-slot value types such as `string` and non-opaque
+ structs/enums over supported primitives.
+- `TreeMap(K, V)` is still limited by its current node layout and, for now,
+ should be treated as **single-slot** storage (keys/values that lower to a
+ single `u64` slot).
+- These containers are intended for “plain” value types:
+ - primitive scalars,
+ - `string` views,
+ - and small POD structs over those primitives.
+- `get` and `iter` produce values by value (copy element bytes). For value types
+ that require `Drop`, copying out creates duplicate ownership. Prefer move-out
+ operations (`remove` and the returned previous value from `put`) for
+ `Drop`-managed values.
+
+These limits are expected to be relaxed as the language gains borrow-aware
+accessors and iterators for container storage.
+
+## HashMap (`HashMap(K, V)`)
+
+### Construction
+
+`HashMap` requires hashing and equality functions (similar in spirit to the
+`Hash` and `KeyEqual` customization points of C++ `std::unordered_map`). For
+common key types, [`std::map`](/silk/wiki/std/map/) ships default `hash_*` / `eq_*` helpers and
+`HashMap` provides `empty()` / `init(cap)` overloads that select those defaults
+implicitly.
+
+For common key types, [`std::map`](/silk/wiki/std/map/) provides default `hash_*` / `eq_*` helpers so
+callers do not need to write hashing and equality functions themselves.
+
+Default helper functions are provided for these key types:
+
+- `bool`
+- fixed-width integers (`u8`/`i8`/`u16`/`i16`/`u32`/`i32`/`u64`/`i64`/`u128`/`i128`)
+- platform integers (`int`, `usize`, `size`/`isize`)
+- `char`
+- `string` (bytewise FNV-1a)
+
+Example (using [`std::map`](/silk/wiki/std/map/) defaults via `HashMap.init(cap)` / `HashMap.empty()`):
+
+```silk
+import std::map;
+import std::result;
+import std::memory;
+
+type Map = std::map::HashMap(u64, int);
+type InitResult = std::result::Result(Map, std::memory::AllocFailed);
+
+fn main () -> int {
+  match (Map.init(16)) {
+    InitResult::Ok(map) => {
+      let mut m: Map = map;
+      let put_r = m.put(1, 10);
+      if put_r.is_err() { m.drop(); return 2; }
+
+      let v: int = m.get(1) ?? 0;
+      m.drop();
+      return v;
+    },
+    InitResult::Err(_) => {
+      return 1;
+    },
+  }
+}
+```
+
+Example (custom hashing/equality):
+
+```silk
+import std::map;
+import std::result;
+import std::memory;
+
+type Map = std::map::HashMap(u64, int);
+type InitResult = std::result::Result(Map, std::memory::AllocFailed);
+
+fn hash_u64 (k: u64) -> u64 { return k; }
+fn eq_u64 (a: u64, b: u64) -> bool { return a == b; }
+
+fn main () -> int {
+  match (Map.init_with(16, hash_u64, eq_u64)) {
+    InitResult::Ok(map) => {
+      let mut m: Map = map;
+      m.drop();
+      return 0;
+    },
+    InitResult::Err(_) => {
+      return 1;
+    },
+  }
+}
+```
+
+`HashMap.init_with(cap, ...)` validates the requested capacity:
+
+- `cap < 0` returns `AllocErrorKind::InvalidInput`.
+- very large `cap` values that would overflow internal sizing arithmetic return
+ `AllocErrorKind::Overflow`.
+
+### Core API
+
+`HashMap(K, V)` provides:
+
+- `fn empty () -> HashMap(K, V);` (only for default key types)
+- `fn init (cap: i64) -> std::result::Result(HashMap(K, V), std::memory::AllocFailed);` (only for default key types)
+- `fn empty_with (hash: fn(K) -> u64, eq: fn(K, K) -> bool) -> HashMap(K, V);`
+- `fn init_with (cap: i64, hash: fn(K) -> u64, eq: fn(K, K) -> bool) -> std::result::Result(HashMap(K, V), std::memory::AllocFailed);`
+- `fn len (self: &HashMap(K, V)) -> i64;`
+- `fn is_empty (self: &HashMap(K, V)) -> bool;`
+- `fn capacity (self: &HashMap(K, V)) -> i64;`
+- `fn contains_key (self: &HashMap(K, V), key: K) -> bool;`
+- `fn get (self: &HashMap(K, V), key: K) -> V?;`
+- `fn put (mut self: &HashMap(K, V), key: K, value: V) -> std::result::Result(V?, std::memory::OutOfMemory);`
+ Inserts or replaces and returns the previous value, if present.
+- `fn remove (mut self: &HashMap(K, V), key: K) -> V?;`
+- `fn iter (self: &HashMap(K, V)) -> HashMapIter(K, V);`
+- `fn clear (mut self: &HashMap(K, V)) -> void;`
+- `fn reserve_additional (mut self: &HashMap(K, V), additional: i64) -> std::memory::OutOfMemory?;`
+- `fn drop (mut self: &HashMap(K, V)) -> void;`
+ Releases the table backing memory.
+
+Complexity expectations:
+
+- average `O(1)` for `get`/`put`/`remove` when the hash distribution is good,
+- worst case `O(n)` in adversarial collision patterns.
+
+## TreeMap (`TreeMap(K, V)`)
+
+`TreeMap` is an ordered map. It requires an ordering function.
+
+### Core API
+
+`TreeMap(K, V)` provides:
+
+- `fn init (cmp: fn(K, K) -> int) -> TreeMap(K, V);`
+ Contract: `cmp(a, b) < 0` iff `a < b`; `cmp(a, b) == 0` iff keys are equal.
+- `fn len (self: &TreeMap(K, V)) -> i64;`
+- `fn is_empty (self: &TreeMap(K, V)) -> bool;`
+- `fn contains_key (self: &TreeMap(K, V), key: K) -> bool;`
+- `fn get (self: &TreeMap(K, V), key: K) -> V?;`
+- `fn put (mut self: &TreeMap(K, V), key: K, value: V) -> std::result::Result(V?, std::memory::OutOfMemory);`
+- `fn remove (mut self: &TreeMap(K, V), key: K) -> V?;`
+- `fn iter (self: &TreeMap(K, V)) -> TreeMapIter(K, V);`
+- `fn clear (mut self: &TreeMap(K, V)) -> void;`
+- `fn drop (mut self: &TreeMap(K, V)) -> void;`
+
+Complexity expectations:
+
+- `O(log n)` lookup/insert/remove.
+
+## Iteration
+
+Both maps provide iteration through an iterator interface:
+
+- `HashMapIter(K, V)` implements [`std::interfaces::Iterator(Entry(K, V))`](/silk/docs/std/interfaces/).
+- `TreeMapIter(K, V)` implements [`std::interfaces::Iterator(Entry(K, V))`](/silk/docs/std/interfaces/).
+
+The produced item type is:
+
+```silk
+struct Entry(K, V) {
+  key: K,
+  value: V,
+}
+```
+
+Notes:
+
+- Iteration is by value (copies out `key` and `value`).
+- `HashMap` iteration order is unspecified.
+- `TreeMap` iteration yields entries in ascending key order (as defined by `cmp`).
+
+## [`std::interfaces`](/silk/docs/std/interfaces/) surface
+
+The current [`std::map`](/silk/wiki/std/map/) implementation already exposes its common container
+shape through [`std::interfaces`](/silk/docs/std/interfaces/):
+
+- `HashMap(K, V)` implements:
+ - `Len`
+ - `Capacity`
+ - `IsEmpty`
+ - `Clear`
+ - `ReserveAdditional`
+ - `Drop`
+- `TreeMap(K, V)` implements:
+ - `Len`
+ - `IsEmpty`
+ - `Clear`
+ - `Drop`
+- `HashMapIter(K, V)` and `TreeMapIter(K, V)` implement
+ [`std::interfaces::Iterator(Entry(K, V))`](/silk/docs/std/interfaces/).
+
+This is the intended stdlib style: even before dynamic interface dispatch
+exists, the core map types should read like canonical examples of the shared
+container protocols.
+
+## Design goals
+
+- Provide a consistent, ergonomic key→value container story in `std::` without
+ relying on a builtin `map(K, V)` type form.
+- Make allocation behavior explicit and compatible with regions (`with`) and
+ `--noheap`.
+- Keep the API close in spirit to C++’s `std::unordered_map` and [`std::map`](/silk/wiki/std/map/)
+ (operations, complexity expectations, and terminology), adapted to Silk.

@@ -1,5 +1,0 @@
-# Jekyll runs by default on GitHub Pages builds, but this repo is a static site.
-# Keep Markdown sources (docs, API reference, etc.) as raw `.md` files so they can be
-# fetched by `assets/docs-viewer.js` without Liquid processing.
-markdown_ext: "markdown,mkdown,mkdn,mkd"
-

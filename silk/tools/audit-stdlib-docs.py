@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import sys
 from dataclasses import dataclass
@@ -9,7 +10,7 @@ from pathlib import Path
 
 
 SILK_ROOT = Path(__file__).resolve().parents[1]
-STD_DOCS = SILK_ROOT / "docs" / "source" / "std"
+STD_DOCS = Path(os.environ.get("ORO_SITE_OUTPUT", str(SILK_ROOT.parent / "public"))) / "silk" / "docs" / "source" / "std"
 
 ORDER = [
     "Description",

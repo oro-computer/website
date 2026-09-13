@@ -1,0 +1,120 @@
+<main id="main">
+      <section class="section">
+        <div class="container">
+          <article class="learn-lesson-shell">
+            <!-- learn:chapter-bar -->
+
+            <header class="learn-lesson-heading">
+              <div class="learn-lesson-number">4</div>
+              <div>
+                <small>Chapter 4</small>
+                <h1>Types and optionals</h1>
+              </div>
+            </header>
+
+            <div class="prose learn-prose">
+              <p>
+                Silk types should make the shape of the data easy to inspect. Use named structs for records, scalar types
+                at boundaries, and optionals when absence is expected.
+              </p>
+
+              <h2>Name the data shape</h2>
+              <p>A struct gives related fields one concrete type.</p>
+
+              <div class="learn-code" data-code-block="">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/profile.slk</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-silk">package profile;
+
+struct User {
+  id: u64;
+  name: string;
+  email: string?;
+}
+
+fn display_name (user: &amp;User) -&gt; string {
+  return user.name;
+}</code></pre>
+              </div>
+
+              <h2>Return optional data deliberately</h2>
+              <p><code>User?</code> says a lookup can miss without turning that miss into a failure.</p>
+
+              <div class="learn-code" data-code-block="">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/profile.slk</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-silk">fn find_user (id: u64) -&gt; User? {
+  if id == 1 {
+    return Some(User{
+      id: 1,
+      name: "Ada",
+      email: Some("ada@example.com"),
+    });
+  }
+
+  return None;
+}</code></pre>
+              </div>
+
+              <h2>Handle the optional at the call site</h2>
+              <p>Use a fallback when that is all the caller needs.</p>
+
+              <div class="learn-code" data-code-block="">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/profile.slk</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-silk">fn email_label (id: u64) -&gt; string {
+  let user: User? = find_user(id);
+
+  match user {
+    Some(value) =&gt; {
+      return value.email ?? "no email";
+    },
+    None =&gt; {
+      return "missing user";
+    },
+  }
+}</code></pre>
+              </div>
+
+              <h2>Check before building</h2>
+              <p>The type checker should catch mismatched field, optional, and return shapes early.</p>
+
+              <div class="learn-code" data-code-block="" data-code-kind="terminal">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">Terminal</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy command"></button>
+                </div>
+                <pre><code class="language-bash">silk check src/profile.slk</code></pre>
+              </div>
+
+              <div class="learn-callout">
+                <p>
+                  Use optionals for normal absence. When callers need to know why something failed, move to a result shape
+                  instead of overloading <code>None</code>.
+                </p>
+              </div>
+
+              <h2>What changed</h2>
+              <ul>
+                <li><code>User</code> made the record shape inspectable.</li>
+                <li><code>string?</code> made a missing email explicit.</li>
+                <li><code>User?</code> modeled a lookup miss as normal data.</li>
+                <li><code>match</code> handled the optional before using the payload.</li>
+              </ul>
+
+              <div class="learn-complete">
+                <h2>Chapter complete</h2>
+                <p>Next, distinguish recoverable domain failures from typed contract errors.</p>
+                <a class="button button-primary" href="/silk/learn/results-and-errors/">Continue to results and errors</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>

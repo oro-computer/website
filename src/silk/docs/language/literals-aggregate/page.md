@@ -1,0 +1,220 @@
+---
+layout: "docs"
+title: "Aggregate Literals"
+description: "Aggregate literals cover arrays and structs."
+docsCollection: "silk"
+section: "language"
+order: 42
+sourcePath: "language/literals-aggregate.md"
+githubRepo: "oro-computer/silk"
+githubRef: "master"
+---
+
+# Aggregate Literals
+
+Aggregate literals cover arrays and structs.
+
+## Array Literals
+
+Array literals construct fixed-size array values from a list of elements.
+
+### Surface Syntax
+
+An array literal is written using square brackets:
+
+```silk
+let xs = [1, 2, 3];
+let ys = [1, 2, 3,]; // trailing comma allowed
+```
+
+Empty array literals are permitted only when an expected array type is
+available from context (so the compiler knows the element type and, for
+fixed-size arrays, the required length):
+
+```silk
+let empty: i32[0] = [];
+let empty_slice: i32[] = [];
+```
+
+### Typing
+
+- A non-empty array literal has type `T[N]` where `N` is the number of
+ elements and `T` is inferred from the elements (or from an expected type
+ when present).
+- When an expected type is present and it is `T[N]`, the literal must contain
+ exactly `N` elements.
+- When an expected type is present and it is `T[]`, the literal’s elements are
+ type-checked against `T` and the resulting value has type `T[]`.
+ - In Silk currently, this slice form is lowered as a non-owning
+ view over a compiler-generated backing array.
+ - Lifetime rules are not yet enforced for such
+ slices; do not allow a slice derived from a stack-backed array literal to
+ outlive the scope where it was created.
+
+Compiler requirements:
+
+- Infer element type when possible, or require explicit annotation where
+ ambiguity exists.
+- Validate that all elements are convertible to the target element type.
+- Enforce current-subset restrictions on which element types are supported for
+ array lowering/codegen (see [types](/silk/docs/language/types/) and
+ [structs impls layout](/silk/docs/language/structs-impls-layout/)).
+
+## Struct Literals
+
+Struct literals construct values of `struct` types by specifying field names and values.
+
+### Surface Syntax
+
+A struct literal may be written in two forms:
+
+- An **explicit** struct literal begins with a struct type name followed by a
+ brace-enclosed field initializer list.
+- A **contextual (inferred)** struct literal omits the type name and consists
+ only of the brace-enclosed field initializer list. This form is only valid
+ when an expected struct type is available from context (for example a
+ function argument position or an explicit type annotation).
+
+An explicit struct literal looks like:
+
+```silk
+struct Pair {
+  a: int,
+  b: int,
+}
+
+fn make () -> Pair {
+  return Pair { a: 1, b: 2 };
+}
+```
+
+Whitespace may appear between the type name and `{` in ordinary expression
+contexts. The parser suppresses that non-adjacent form only at the immediate
+boundary where an expression is followed by a statement block (for example the
+condition or iterable expression before `if`, [`while`](/silk/wiki/language/flow-while/), `for`, or [`match`](/silk/wiki/language/flow-match/) block
+braces). Inside delimited subexpressions such as array literals, call
+arguments, indexes, parenthesized expressions, and accepted struct initializer
+values, `Type { ... }` remains an explicit struct literal because the brace
+cannot be the following statement block.
+
+An inferred struct literal looks like:
+
+```silk
+struct User {
+  name: string,
+}
+
+fn print_user (user: User) -> void {
+  std::println("user.name = {}", user.name);
+}
+
+fn main () -> int {
+  // Equivalent to: `print_user(User{ name: "user name" });`
+  print_user({ name: "user name" });
+  return 0;
+}
+```
+
+Initializers are written as either:
+
+- `field_name: <expr>` (explicit initializer), or
+- `field_name` (shorthand initializer, equivalent to `field_name: field_name`).
+
+Initializers are separated by commas and an optional trailing comma is
+permitted.
+
+Example (shorthand):
+
+```silk
+struct User {
+  name: string,
+}
+
+fn main () -> int {
+  let name: string = "alice";
+  let user = User{ name }; // equivalent to `User{ name: name }`
+  if (user.name != "alice") { return 1; }
+  return 0;
+}
+```
+
+### Field defaults (struct declarations)
+
+A `struct` field declaration may include a default value expression:
+
+```silk
+struct Beep {
+  value: string = "boop",
+}
+```
+
+When a struct literal omits a field, the compiler uses the field default
+expression when present; otherwise it falls back to zero-initialization in the
+current backend subset. This means the empty literal form is useful when all
+fields have defaults:
+
+```silk
+let b = Beep {};
+```
+
+Important notes:
+
+- Inferred struct literals are a **value** construction mechanism. They do not
+ imply heap allocation. The compiler will not infer `&T` from `{ ... }`; use
+ `new` for heap allocation explicitly.
+- The parser only treats `{ ... }` as an inferred struct literal when it
+ contains a struct-style initializer list (or is `{}`); blocks (`{ Stmt* }`)
+ remain statement syntax (there is no general “block expression” in the current
+ subset).
+
+### Default constructors (empty struct literals)
+
+If a `struct` defines a **default constructor** method with the signature:
+
+```silk
+fn constructor (mut self: &Self) -> void { ... }
+```
+
+then an **empty** struct literal invokes it as part of value construction:
+
+- `Type{}` (explicit empty literal)
+- `{}` when a struct type is expected from context (inferred empty literal)
+
+Construction order:
+
+1. All struct slots are zero-initialized.
+2. Field default expressions are evaluated for omitted fields (if present).
+3. The default constructor is invoked, allowing it to mutate `self`.
+
+Visibility rule:
+
+- The default constructor is invoked only when it is visible from the current
+ package (constructors are `public` by default; an explicitly `private`
+ constructor is not invoked implicitly).
+
+Supported forms note:
+
+- Non-empty struct literals (for example `Type{ x: 1 }`) do **not** invoke
+ constructors implicitly.
+
+Compiler requirements:
+
+- Enforce that field names are valid and that each field is initialized at most once.
+- Define the behavior for omitted fields (in the Supported forms, omitted fields
+ are default-initialized).
+- Respect struct lowering/layout rules from [`structs-impls-layout.md`](/silk/docs/language/structs-impls-layout/).
+
+### Notes
+
+The current compiler implementation supports struct literals only for the
+limited struct subset described in [`structs-impls-layout.md`](/silk/docs/language/structs-impls-layout/):
+
+- structs with 0+ fields of supported value types (scalar primitives, `string`,
+ nested structs, and supported optionals),
+- literals may omit fields:
+ - omitted fields that have a field default (`field: T = <expr>`) use that
+ default expression,
+ - otherwise, omitted fields are **zero-initialized** in the current backend
+ subset,
+- no duplicate field initializers are permitted,
+- field order is not semantically significant.

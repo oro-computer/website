@@ -1,0 +1,115 @@
+<main id="main">
+      <section class="section">
+        <div class="container">
+          <article class="learn-lesson-shell">
+            <!-- learn:chapter-bar -->
+
+            <header class="learn-lesson-heading">
+              <div class="learn-lesson-number">2</div>
+              <div>
+                <small>Chapter 2</small>
+                <h1>Language tour</h1>
+              </div>
+            </header>
+
+            <div class="prose learn-prose">
+              <p>
+                This chapter expands the first program into the source shapes you will read most often: explicit bindings,
+                functions, branchy control flow, optionals, and a small result-style return type.
+              </p>
+
+              <h2>Make values readable</h2>
+              <p>Use explicit types at useful boundaries and mark mutation where it happens.</p>
+
+              <div class="learn-code" data-code-block="">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/tour.slk</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-silk">package tour;
+
+fn accumulate (limit: int) -&gt; int {
+  let mut total: int = 0;
+  let mut i: int = 0;
+
+  while i &lt; limit {
+    total = total + i;
+    i = i + 1;
+  }
+
+  return total;
+}</code></pre>
+              </div>
+
+              <h2>Use small functions for decisions</h2>
+              <p>Return types make the boundary visible even when the body is simple.</p>
+
+              <div class="learn-code" data-code-block="">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/tour.slk</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-silk">fn classify (score: int) -&gt; string {
+  if score &gt;= 90 { return "excellent"; }
+  if score &gt;= 70 { return "steady"; }
+  if score &gt;= 50 { return "watch"; }
+  return "blocked";
+}</code></pre>
+              </div>
+
+              <h2>Model absence with an optional</h2>
+              <p><code>T?</code> is the right shape when missing is normal and no extra error detail is needed.</p>
+
+              <div class="learn-code" data-code-block="">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/tour.slk</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-silk">fn env_label (name: string) -&gt; string? {
+  if name == "prod" { return Some("production"); }
+  if name == "dev" { return Some("development"); }
+  return None;
+}
+
+fn label_or_default (name: string) -&gt; string {
+  return env_label(name) ?? "unknown";
+}</code></pre>
+              </div>
+
+              <h2>Check the module</h2>
+              <p>Keep using the same quick feedback loop as the first chapter.</p>
+
+              <div class="learn-code" data-code-block="" data-code-kind="terminal">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">Terminal</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy command"></button>
+                </div>
+                <pre><code class="language-bash">silk check src/tour.slk
+silk test src/tour.slk</code></pre>
+              </div>
+
+              <div class="learn-callout">
+                <p>
+                  The point is not to memorize every construct here. The habit is to read the boundary first: package,
+                  imports, function signatures, return types, and optional/result shapes.
+                </p>
+              </div>
+
+              <h2>What changed</h2>
+              <ul>
+                <li><code>let mut</code> made mutation visible.</li>
+                <li>Function signatures carried the important type information.</li>
+                <li><code>string?</code> represented absence without inventing an error path.</li>
+                <li><code>??</code> handled the optional fallback at the call site.</li>
+              </ul>
+
+              <div class="learn-complete">
+                <h2>Chapter complete</h2>
+                <p>Next, split useful code into package modules and import it deliberately.</p>
+                <a class="button button-primary" href="/silk/learn/modules-and-packages/">Continue to modules and packages</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>

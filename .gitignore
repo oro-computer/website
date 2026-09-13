@@ -2,3 +2,11 @@
 _site
 .code
 .codex
+
+node_modules/
+public/
+public-next/
+test-results/
+playwright-report/
+__pycache__/
+*.pyc

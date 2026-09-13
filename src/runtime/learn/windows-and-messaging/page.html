@@ -1,0 +1,120 @@
+<main id="main">
+      <section class="section">
+        <div class="container">
+          <article class="learn-lesson-shell">
+            <!-- learn:chapter-bar -->
+
+            <header class="learn-lesson-heading">
+              <div class="learn-lesson-number">4</div>
+              <div>
+                <small>Chapter 4</small>
+                <h1>Windows and messaging</h1>
+              </div>
+            </header>
+
+            <div class="prose learn-prose">
+              <p>
+                Oro Runtime windows are native host windows that load bundled web paths. Use numeric window indexes to find,
+                focus, and message the windows your app owns.
+              </p>
+
+              <h2>Bundle a detail page</h2>
+              <p>A window path has to resolve inside the application bundle.</p>
+
+              <div class="learn-code" data-code-block="">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">copy-map.toml</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-toml">"./src/index.html" = "index.html"
+"./src/main.js" = "main.js"
+"./src/detail.html" = "detail.html"
+"./src/detail.js" = "detail.js"</code></pre>
+              </div>
+
+              <div class="learn-code" data-code-block="">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/detail.html</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-html">&lt;!doctype html&gt;
+&lt;html lang="en"&gt;
+  &lt;meta charset="utf-8" /&gt;
+  &lt;title&gt;Field note detail&lt;/title&gt;
+  &lt;main&gt;
+    &lt;h1&gt;Detail window&lt;/h1&gt;
+    &lt;pre id="payload"&gt;Waiting for a message...&lt;/pre&gt;
+  &lt;/main&gt;
+  &lt;script type="module" src="./detail.js"&gt;&lt;/script&gt;
+&lt;/html&gt;</code></pre>
+              </div>
+
+              <h2>Create or focus the window</h2>
+              <p>Look for the window first. Create it only when it is not already open.</p>
+
+              <div class="learn-code" data-code-block="">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/main.js</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-javascript">import application from 'oro:application'
+
+async function openDetailWindow(note) {
+  let detailWindow = await application.getWindow(1)
+
+  if (!detailWindow) {
+    detailWindow = await application.createWindow({
+      index: 1,
+      path: 'detail.html',
+      title: 'Field note detail',
+      width: 520,
+      height: 420,
+    })
+  }
+
+  await detailWindow.focus()
+  await detailWindow.postMessage({ type: 'note:selected', note })
+}</code></pre>
+              </div>
+
+              <h2>Receive the message</h2>
+              <p>Each window can listen for messages from other windows.</p>
+
+              <div class="learn-code" data-code-block="">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/detail.js</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-javascript">const payload = document.getElementById('payload')
+
+globalThis.addEventListener('message', (event) =&gt; {
+  const message = event.detail ?? event.data
+  payload.textContent = JSON.stringify(message, null, 2)
+})</code></pre>
+              </div>
+
+              <div class="learn-callout">
+                <p>
+                  Window messaging keeps the capability boundary visible: the main window opens and addresses the detail
+                  window, while each page remains regular browser JavaScript.
+                </p>
+              </div>
+
+              <h2>What changed</h2>
+              <ul>
+                <li>The detail page was added to the bundle manifest.</li>
+                <li><code>application.getWindow(1)</code> avoided duplicate windows.</li>
+                <li><code>createWindow</code> opened a native host window.</li>
+                <li><code>postMessage</code> moved structured data between pages.</li>
+              </ul>
+
+              <div class="learn-complete">
+                <h2>Chapter complete</h2>
+                <p>Next, add user-visible desktop capabilities: notifications, clipboard, and menus.</p>
+                <a class="button button-primary" href="/runtime/learn/desktop-integrations/">Continue to desktop integrations</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>

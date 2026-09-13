@@ -1,0 +1,105 @@
+<main id="main">
+      <section class="section">
+        <div class="container">
+          <article class="learn-lesson-shell">
+            <!-- learn:chapter-bar -->
+
+            <header class="learn-lesson-heading">
+              <div class="learn-lesson-number">3</div>
+              <div>
+                <small>Chapter 3</small>
+                <h1>Configuration</h1>
+              </div>
+            </header>
+
+            <div class="prose learn-prose">
+              <p>
+                Shared app behavior belongs in <code>oro.toml</code>. Local machine choices, staging URLs, signing paths,
+                and device selections belong in <code>.ororc</code>.
+              </p>
+
+              <h2>Make shared settings explicit</h2>
+              <p>Put product identity, bundled files, window defaults, and permissions under version control.</p>
+
+              <div class="learn-code" data-code-block="">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">oro.toml</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-toml">[meta]
+bundle_identifier = "com.example.field-notes"
+title = "Field Notes"
+version = "0.2.0"
+lang = "en-US"
+
+[build]
+name = "field-notes"
+copy_map = "copy-map.toml"
+output = "build"
+
+[window]
+width = "70%"
+height = "80%"
+resizable = true
+
+[permissions]
+allow_notifications = true
+allow_clipboard = true</code></pre>
+              </div>
+
+              <h2>Keep local settings local</h2>
+              <p>Use <code>.ororc</code> for values that should not travel with the source tree.</p>
+
+              <div class="learn-code" data-code-block="">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">.ororc</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-toml">[build]
+platform = "ios-simulator"
+
+[ios]
+simulator_device = "iPhone 15"
+
+[env]
+API_BASE_URL = "https://staging.example.com"</code></pre>
+              </div>
+
+              <h2>Inspect the merged result</h2>
+              <p>When behavior is surprising, ask the CLI what configuration it actually sees.</p>
+
+              <div class="learn-code" data-code-block="" data-code-kind="terminal">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">Terminal</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy command"></button>
+                </div>
+                <pre><code class="language-bash">oroc config --format toml
+oroc config --describe permissions.allow_notifications
+oroc config --describe window.width</code></pre>
+              </div>
+
+              <div class="learn-callout">
+                <p>
+                  The merge order is deliberate: source config first, local overrides second, one-off CLI flags last.
+                  Debug the merged value before changing code.
+                </p>
+              </div>
+
+              <h2>What changed</h2>
+              <ul>
+                <li>Product behavior stayed in <code>oro.toml</code>.</li>
+                <li>Machine-local choices moved to <code>.ororc</code>.</li>
+                <li>Permissions became reviewable instead of hidden in runtime code.</li>
+                <li>The CLI became the source of truth for effective config.</li>
+              </ul>
+
+              <div class="learn-complete">
+                <h2>Chapter complete</h2>
+                <p>Next, create a second window and pass messages between runtime windows.</p>
+                <a class="button button-primary" href="/runtime/learn/windows-and-messaging/">Continue to windows</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>

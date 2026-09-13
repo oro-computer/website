@@ -1,0 +1,54 @@
+---
+layout: "docs"
+title: "[silk_abi_get_version(3)](?p=man/silk_abi_get_version.3) — Query the libsilk ABI Version"
+description: "NOTE: This is the Markdown source for the eventual man 3 page for silk_abi_get_version. The roff-formatted manpage should be generated from this content."
+docsCollection: "silk"
+section: "man"
+order: 306
+sourcePath: "man/silk_abi_get_version.3.md"
+githubRepo: "oro-computer/silk"
+githubRef: "master"
+---
+
+# [`silk_abi_get_version(3)`](/silk/docs/man/silk_abi_get_version.3/) — Query the `libsilk` ABI Version
+
+> NOTE: This is the Markdown source for the eventual man 3 page for `silk_abi_get_version`. The roff-formatted manpage should be generated from this content.
+
+## Name
+
+`silk_abi_get_version` — query the runtime embedding ABI version of `libsilk.a`.
+
+## Synopsis
+
+```c
+#include <silk/silk.h>
+
+void silk_abi_get_version(int *out_major,
+                          int *out_minor,
+                          int *out_patch);
+```
+
+## Description
+
+`silk_abi_get_version` reports the semantic version of the `libsilk` embedding ABI as `MAJOR.MINOR.PATCH`.
+
+Embedders should compare the runtime version returned by this function with the compile-time ABI version macros in [`include/silk/silk.h`](https://github.com/oro-computer/silk/blob/master/include/silk/silk.h):
+
+```c
+#define SILK_ABI_VERSION_MAJOR ...
+#define SILK_ABI_VERSION_MINOR ...
+#define SILK_ABI_VERSION_PATCH ...
+```
+
+## Parameters
+
+- `out_major`, `out_minor`, `out_patch` — output pointers written on success. This API tolerates `NULL` pointers and skips writing those components.
+
+## Return value
+
+None.
+
+## See Also
+
+- [`libsilk(7)`](/silk/docs/man/libsilk.7/)
+- [abi libsilk](/silk/docs/compiler/abi-libsilk/)

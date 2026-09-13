@@ -1,0 +1,104 @@
+<main id="main">
+      <section class="section">
+        <div class="container">
+          <article class="learn-lesson-shell">
+            <!-- learn:chapter-bar -->
+
+            <header class="learn-lesson-heading">
+              <div class="learn-lesson-number">1</div>
+              <div>
+                <small>Chapter 1</small>
+                <h1>First program</h1>
+              </div>
+            </header>
+
+            <div class="prose learn-prose">
+              <p>
+                This chapter starts with one Silk source file. You will make the package boundary visible, import the I/O
+                function you need, add a small test, and run the same feedback loop used by larger packages.
+              </p>
+
+              <h2>Create a workspace</h2>
+              <p>Make a small directory with a source folder and a build output folder.</p>
+
+              <div class="learn-code" data-code-block="" data-code-kind="terminal">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">Terminal</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy command"></button>
+                </div>
+                <pre><code class="language-bash">mkdir first-silk
+cd first-silk
+mkdir src build</code></pre>
+              </div>
+
+              <h2>Add a Silk source file</h2>
+              <p>
+                The first line declares the package namespace. The import block says where <code>println</code> comes from
+                before the program body starts.
+              </p>
+
+              <div class="learn-code" data-code-block="">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/main.slk</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-silk">package first;
+
+import { println } from "std/io";
+import { expect_equal } from "std/test";
+
+fn answer () -&gt; int {
+  return 40 + 2;
+}
+
+fn main () -&gt; int {
+  println("hello from silk: {d}", answer());
+  return 0;
+}
+
+test "answer is stable" {
+  expect_equal(42, answer());
+}</code></pre>
+              </div>
+
+              <h2>Check, test, and build</h2>
+              <p>
+                <code>silk check</code> validates the module set without writing an artifact. <code>silk test</code> runs
+                language-level tests. <code>silk build</code> emits the executable.
+              </p>
+
+              <div class="learn-code" data-code-block="" data-code-kind="terminal">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">Terminal</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy command"></button>
+                </div>
+                <pre><code class="language-bash">silk check src/main.slk
+silk test src/main.slk
+silk build src/main.slk -o build/first</code></pre>
+              </div>
+
+              <div class="learn-callout">
+                <p>
+                  The important habit is the loop: check the module set quickly, run focused tests, then build the artifact
+                  only after the source boundary is clear.
+                </p>
+              </div>
+
+              <h2>What changed</h2>
+              <ul>
+                <li><code>package first;</code> gave the file a namespace.</li>
+                <li><code>import { println } from "std/io";</code> made the stdlib dependency explicit.</li>
+                <li>The test lives beside the code it protects and runs with <code>silk test</code>.</li>
+                <li>The output path is explicit, so build artifacts stay out of source.</li>
+              </ul>
+
+              <div class="learn-complete">
+                <h2>Chapter complete</h2>
+                <p>Next, use the same source model with more language constructs.</p>
+                <a class="button button-primary" href="/silk/learn/language-tour/">Continue to the language tour</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>

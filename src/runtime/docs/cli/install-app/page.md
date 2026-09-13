@@ -1,0 +1,42 @@
+---
+layout: "docs"
+title: "oroc install-app"
+description: "Install the app to the device or host target."
+docsCollection: "runtime"
+section: "cli"
+order: 32
+sourcePath: "cli/install-app.md"
+githubRepo: "oro-computer/runtime"
+githubRef: "master"
+---
+
+# [`oroc install-app`](/runtime/docs/cli/install-app/)
+
+Install the app to the device or host target.
+
+## Usage
+
+```bash
+oroc install-app [--platform=<platform>] [--device=<identifier>] [options]
+```
+
+## Options
+
+| Option | Description |
+| --- | --- |
+| `-D, --debug` | debug output |
+| `--device[=identifier]` | device identifier (ECID/UDID/ID) |
+| `--platform=<platform>` | android \| ios (default: host) |
+| `--prod` | install production build |
+| `-V, --verbose` | verbose output |
+
+macOS only:
+
+| Option | Description |
+| --- | --- |
+| `--target=<target>` | install into '$target/Applications' (default: /) |
+
+## Common errors
+
+- Android: list devices with `adb devices` or pass `--device`.
+- iOS/macOS: list devices with `oroc list-devices --platform=ios` and pass `--device`.

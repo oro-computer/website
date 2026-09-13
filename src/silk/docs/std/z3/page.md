@@ -1,0 +1,147 @@
+---
+layout: "docs"
+title: "std::runtime::z3 — Z3 SMT Solver (C API Bindings)"
+description: "std::runtime::z3 provides low-level ext bindings for the Z3 C API. It is intended for user-space programs that want to call into Z3 directly."
+docsCollection: "silk"
+section: "std"
+order: 149
+sourcePath: "std/z3.md"
+githubRepo: "oro-computer/silk"
+githubRef: "master"
+---
+
+# [`std::runtime::z3`](/silk/docs/std/runtime-z3/) — Z3 SMT Solver (C API Bindings)
+
+[`std::runtime::z3`](/silk/docs/std/runtime-z3/) provides low-level `ext` bindings for the Z3 C API.
+It is intended for user-space programs that want to call into Z3 directly.
+
+This module is a direct, unsafe FFI surface:
+
+- all Z3 opaque handles are represented as `u64` (raw pointers),
+- all Z3 `const char *` strings are represented as `u64`,
+- pointer parameters (including `T*` / `T const*` / `T[]`) are represented as `u64`.
+
+The module does **not** provide a safe, ownership-tracked wrapper. Callers are
+responsible for using the Z3 reference-counting APIs correctly.
+
+## Built-In Dependencies + Linking
+
+On the supported glibc hosted baseline, the Silk toolchain vendors:
+
+- Z3 headers under [`vendor/include`](https://github.com/oro-computer/silk/tree/master/vendor/include) (e.g. `z3.h`, `z3_api.h`, `z3_fixedpoint.h`, ...),
+- a Z3 static archive under the supported glibc target layout:
+ [`vendor/lib/x64-linux/libz3.a`](https://github.com/oro-computer/silk/blob/master/vendor/lib/x64-linux/libz3.a).
+
+When [`std::runtime::z3`](/silk/docs/std/runtime-z3/) is present in a Linux x86_64 glibc module set,
+`silk build` auto-links the built-in `libz3.a` into executable and
+shared-library outputs. Auto-linking also applies on that target when linking
+`.o`/`.a` inputs that reference Z3 `Z3_*` symbols.
+
+Musl targets do not use a built-in Z3 archive. A Linux x86_64 musl build that
+imports [`std::runtime::z3`](/silk/docs/std/runtime-z3/), or links native inputs that reference Z3 `Z3_*`
+symbols, is accepted only when the command or manifest explicitly supplies a
+musl-built Z3 library:
+
+- pass a `libz3.a` archive as a normal build input, or
+- add a dynamic dependency such as `--needed libz3.so` or
+ `--needed libz3.so.0` and provide the runtime search path as needed.
+
+In staged/installed toolchains, the built-in archive is expected under the
+compiler prefix:
+
+- `build/lib/silk/vendor/lib/x64-linux/` (repo build prefix)
+- `<prefix>/lib/silk/vendor/lib/x64-linux/` (installed)
+
+Fresh Apple Silicon and musl-targeted checkouts can build the compiler without
+an additional Z3 archive. The driver does not use the shipped glibc archive to
+satisfy a musl target. Formal Silk verification should use a dynamic Z3
+override (`--z3-lib` or `SILK_Z3_LIB`) when the compiler has no compiled-in
+static Z3.
+
+To avoid runtime dependencies on `libstdc++.so.6` and `libgcc_s.so.1`, the
+driver prefers to link a static Z3 archive together with a small set of
+**system static** runtime archives (GCC toolchain-provided):
+
+- `libstdc++.a`
+- `libsupc++.a`
+- `libgcc.a`
+- `libgcc_eh.a`
+- `libitm.a`
+
+On glibc-based systems, the driver also links:
+
+- `libc_nonshared.a` (for `atexit` / stack protector helpers that may not be
+ exported from `libc.so.6`)
+
+On some toolchains, the system `libstdc++.a` is missing internal symbols
+referenced by the built-in Z3 build (notably `basic_string::_M_replace_cold`).
+When the required static archives are missing or incompatible, `silk build`
+falls back to using the shared C++ runtime by adding:
+
+- `libstdc++.so.6` (DT_NEEDED)
+- `libgcc_s.so.1` (DT_NEEDED)
+
+### Locating System Static Archives
+
+When static-linking Z3 for [`std::runtime::z3`](/silk/docs/std/runtime-z3/), the driver tries to locate the
+required system static archives using the configured C/C++ toolchain:
+
+- for `libstdc++.a`, `libsupc++.a`, `libgcc.a`, `libgcc_eh.a`, `libitm.a`:
+ - uses `CXX` (or `c++` if unset) and runs `-print-file-name=<archive>`
+- for `libc_nonshared.a`:
+ - uses `SILK_CC`, then `CC` (or `cc` if unset) and runs `-print-file-name=<archive>`
+
+If your toolchain is installed in a non-standard location, set `CXX` and/or
+`SILK_CC` (or `CC`) so those commands can resolve the static archive paths.
+
+If auto-detection fails, you can also pass the `.a` files explicitly as
+`silk build` inputs.
+
+If the driver cannot locate a compatible set of static runtime archives, it
+falls back to adding `libstdc++.so.6` and `libgcc_s.so.1` as `DT_NEEDED`
+dependencies (see above). For musl static Z3 builds, downstream toolchains that
+need exact C++ runtime selection should pass the matching musl C++ runtime
+archives explicitly, or choose a dynamic `libz3` dependency instead.
+
+When producing an executable/shared library, the driver still adds runtime
+dynamic dependencies for common system libraries:
+
+- `libpthread.so.0`
+- `libm.so.6`
+
+## glibc C23 Compatibility Shims
+
+The shipped glibc `libz3.a` build references some glibc C23 entrypoints (for
+example `__isoc23_sscanf`) that may be missing on older glibc versions.
+
+To keep the hosted `linux/x86_64` baseline working across libc versions, the
+Silk toolchain provides weak shim implementations (wrapping `vsscanf`/`strtol`)
+and auto-links them when `libz3.a` is pulled in.
+
+## Static Constructors
+
+A static Z3 archive can contain `.init_array` constructors (C++ static
+initialization).
+
+Silk executables do not use libc `crt1`, so the native backend runs linked
+`.init_array` constructors from the executable entry stub before calling user
+code.
+
+## C Strings Returned By Z3
+
+Many Z3 APIs return `Z3_string` (`const char *`). These are borrowed pointers
+managed by Z3. Convert them to a Silk `string` view using:
+
+- `std::ffi::c::cstr_borrow(ptr: u64) -> string` (from [`std/ffi/c.slk`](https://github.com/oro-computer/silk/blob/master/std/ffi/c.slk))
+
+The returned `string` is a borrowed view; it is valid only while the Z3-owned
+storage remains valid.
+
+## Platform Support
+
+The current toolchain provides built-in [`std::runtime::z3`](/silk/docs/std/runtime-z3/) auto-linking only on
+Linux x86_64 glibc.
+
+Linux x86_64 musl is supported only when downstream supplies a musl-built Z3
+library explicitly, either as a `libz3.a` input or as a `libz3` dynamic
+dependency. The shipped glibc archive is never used for musl targets.

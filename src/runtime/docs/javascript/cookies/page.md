@@ -1,0 +1,99 @@
+---
+layout: "docs"
+title: "oro:cookies"
+description: "oro:cookies reads and writes cookies for application-controlled origins."
+docsCollection: "runtime"
+section: "javascript"
+order: 73
+sourcePath: "javascript/cookies.md"
+githubRepo: "oro-computer/runtime"
+githubRef: "master"
+---
+
+# [`oro:cookies`](/runtime/docs/javascript/cookies/)
+
+[`oro:cookies`](/runtime/docs/javascript/cookies/) reads and writes cookies for application-controlled origins.
+
+## Examples
+
+Set, read, and remove cookies for an application-controlled origin:
+
+```js
+import { set, get, remove } from 'oro:cookies'
+
+await set('https://app.example', 'session=abc123; Path=/; HttpOnly')
+console.log(await get('https://app.example'))
+await remove('https://app.example', 'session')
+```
+
+## API reference
+
+<!-- GENERATED: ORO_API_REFERENCE_START -->
+
+### Module specifiers
+
+```text
+oro:cookies
+```
+
+### TypeScript declarations
+
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### [`oro:cookies`](/runtime/docs/javascript/cookies/)
+
+```ts
+declare module "oro:cookies" {
+    /**
+     * Get cookies for a URL as a `Cookie` header value ("a=b; c=d").
+     *
+     * @param {string} url
+     * @returns {Promise<{ value: string }>}
+     */
+    export function get(url: string): Promise<{
+        value: string;
+    }>;
+    /**
+     * Set a cookie for a URL from a `Set-Cookie` header value.
+     *
+     * @param {string} url
+     * @param {string} cookie - a Set-Cookie header value
+     * @returns {Promise<{ ok: boolean }>}
+     */
+    export function set(url: string, cookie: string): Promise<{
+        ok: boolean;
+    }>;
+    /**
+     * Remove cookies matching `name` for a URL.
+     *
+     * @param {string} url
+     * @param {string} name
+     * @returns {Promise<{ ok: boolean }>}
+     */
+    export function remove(url: string, name: string): Promise<{
+        ok: boolean;
+    }>;
+    /**
+     * Clear all cookies in the current WebView data store.
+     *
+     * @returns {Promise<{ ok: boolean }>}
+     */
+    export function clear(): Promise<{
+        ok: boolean;
+    }>;
+    namespace _default {
+        export { get };
+        export { set };
+        export { remove };
+        export { clear };
+    }
+    export default _default;
+}
+```
+
+<!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](/runtime/docs/javascript/overview/)
+- [All module specifiers](/runtime/docs/javascript/all-modules/)

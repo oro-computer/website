@@ -1,0 +1,176 @@
+---
+layout: "docs"
+title: "oro:asn1"
+description: "oro:asn1 parses ASN.1 source text and files into structured module data."
+docsCollection: "runtime"
+section: "javascript"
+order: 60
+sourcePath: "javascript/asn1.md"
+githubRepo: "oro-computer/runtime"
+githubRef: "master"
+---
+
+# [`oro:asn1`](/runtime/docs/javascript/asn1/)
+
+[`oro:asn1`](/runtime/docs/javascript/asn1/) parses ASN.1 source text and files into structured module data.
+
+## Examples
+
+Parse ASN.1 source text and inspect the discovered modules:
+
+```js
+import { parse } from 'oro:asn1'
+
+const document = await parse(`
+Demo DEFINITIONS ::= BEGIN
+  serialNumber INTEGER ::= 42
+END
+`)
+
+console.log(document.modulesCount)
+console.log(document.modules[0]?.name)
+```
+
+## API reference
+
+<!-- GENERATED: ORO_API_REFERENCE_START -->
+
+### Module specifiers
+
+```text
+oro:asn1
+```
+
+### TypeScript declarations
+
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### [`oro:asn1`](/runtime/docs/javascript/asn1/)
+
+```ts
+declare module "oro:asn1" {
+    /**
+     * Parses an ASN.1 document provided as a string.
+     * @param {string} source
+     * @param {Asn1ParseOptions} [options]
+     * @returns {Promise<{ modules: Asn1Module[], modulesCount: number, lexerDebug: boolean, maxDepth: number, sourceText?: string }>}
+     */
+    export function parse(source: string, options?: Asn1ParseOptions): Promise<{
+        modules: Asn1Module[];
+        modulesCount: number;
+        lexerDebug: boolean;
+        maxDepth: number;
+        sourceText?: string;
+    }>;
+    /**
+     * Parses an ASN.1 document from a file path on disk.
+     * @param {string} path
+     * @param {Asn1ParseOptions} [options]
+     * @returns {Promise<{ modules: Asn1Module[], modulesCount: number, lexerDebug: boolean, maxDepth: number, sourceText?: string }>}
+     */
+    export function parseFile(path: string, options?: Asn1ParseOptions): Promise<{
+        modules: Asn1Module[];
+        modulesCount: number;
+        lexerDebug: boolean;
+        maxDepth: number;
+        sourceText?: string;
+    }>;
+    const _default: Readonly<{
+        parse: typeof parse;
+        parseFile: typeof parseFile;
+    }>;
+    export default _default;
+    /**
+     * Describes options when parsing ASN.1 inputs.
+     */
+    export type Asn1ParseOptions = {
+        /**
+         * Emits lexer debug information inside the native parser.
+         */
+        lexerDebug?: boolean;
+        /**
+         * When true, the original input is echoed back in the response.
+         */
+        includeSourceText?: boolean;
+        /**
+         * Controls how deep nested type/value trees are traversed when building the JSON representation.
+         */
+        maxDepth?: number;
+    };
+    /**
+     * Represents a parsed ASN.1 definition module.
+     */
+    export type Asn1Module = {
+        name?: string;
+        oid?: string;
+        flags?: Record<string, boolean>;
+        imports?: Asn1Import[];
+        exports?: Asn1Export[];
+        members?: Asn1Expression[];
+        sourceFile?: string;
+    };
+    export type Asn1Import = {
+        module?: string;
+        symbols?: Array<{
+            identifier?: string;
+            metaType: string;
+            exprType: string;
+        }>;
+        kind?: string;
+    };
+    export type Asn1Export = {
+        identifier?: string;
+        metaType: string;
+        exprType: string;
+    };
+    export type Asn1Expression = {
+        metaType: string;
+        exprType: string;
+        identifier?: string;
+        line?: number;
+        unique?: boolean;
+        reference?: string;
+        value?: Asn1Value;
+        constraints?: Asn1Constraint | Asn1Constraint[];
+        members?: Asn1Expression[];
+        markers?: string[];
+        tag?: {
+            description?: string;
+            class?: string;
+            mode?: string;
+            value?: string;
+        };
+        truncated?: boolean;
+    };
+    export type Asn1Constraint = {
+        type: string;
+        presence: string;
+        line?: number;
+        value?: Asn1Value;
+        range?: {
+            start?: Asn1Value;
+            stop?: Asn1Value;
+        };
+        elements?: Asn1Constraint[];
+        truncated?: boolean;
+    };
+    export type Asn1Value = {
+        type: string;
+        repr?: string;
+        integer?: string;
+        real?: number;
+        string?: string;
+        reference?: string;
+        bytes?: number[];
+        sizeInBits?: number;
+        valueSet?: Asn1Constraint | Asn1Constraint[];
+    };
+}
+```
+
+<!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](/runtime/docs/javascript/overview/)
+- [All module specifiers](/runtime/docs/javascript/all-modules/)

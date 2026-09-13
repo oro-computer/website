@@ -1,0 +1,73 @@
+---
+layout: "docs"
+title: "oro:ip"
+description: "oro:ip normalizes and validates IP address inputs."
+docsCollection: "runtime"
+section: "javascript"
+order: 91
+sourcePath: "javascript/ip.md"
+githubRepo: "oro-computer/runtime"
+githubRef: "master"
+---
+
+# [`oro:ip`](/runtime/docs/javascript/ip/)
+
+[`oro:ip`](/runtime/docs/javascript/ip/) normalizes and validates IP address inputs.
+
+## Examples
+
+Normalize user-provided IP input before using it in socket code:
+
+```js
+import { normalizeIPv4, isIPv4 } from 'oro:ip'
+
+const address = normalizeIPv4('127.000.000.001')
+
+console.log(address)
+console.log(isIPv4(address))
+```
+
+## API reference
+
+<!-- GENERATED: ORO_API_REFERENCE_START -->
+
+### Module specifiers
+
+```text
+oro:ip
+```
+
+### TypeScript declarations
+
+These declarations are generated from the runtime's published TypeScript surface.
+
+#### [`oro:ip`](/runtime/docs/javascript/ip/)
+
+```ts
+declare module "oro:ip" {
+    /**
+     * Normalizes input as an IPv4 address string
+     * @param {string|object|string[]|Uint8Array} input
+     * @return {string}
+     */
+    export function normalizeIPv4(input: string | object | string[] | Uint8Array): string;
+    /**
+     * Determines if an input `string` is in IP address version 4 format.
+     * @param {string|object|string[]|Uint8Array} input
+     * @return {boolean}
+     */
+    export function isIPv4(input: string | object | string[] | Uint8Array): boolean;
+    namespace _default {
+        export { normalizeIPv4 };
+        export { isIPv4 };
+    }
+    export default _default;
+}
+```
+
+<!-- GENERATED: ORO_API_REFERENCE_END -->
+
+## See also
+
+- [JavaScript APIs overview](/runtime/docs/javascript/overview/)
+- [All module specifiers](/runtime/docs/javascript/all-modules/)

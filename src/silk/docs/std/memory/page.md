@@ -1,0 +1,144 @@
+---
+layout: "docs"
+title: "std::memory"
+description: "This describes intended memory APIs; it is not implemented yet."
+docsCollection: "silk"
+section: "std"
+order: 87
+sourcePath: "std/memory.md"
+githubRepo: "oro-computer/silk"
+githubRef: "master"
+---
+
+# [`std::memory`](/silk/docs/std/memory/)
+
+This describes intended memory APIs; it is not
+implemented yet.
+
+[`std::memory`](/silk/docs/std/memory/) provides allocation interfaces and low-level memory utilities.
+It sits at the bottom of most other std modules.
+
+See also:
+
+- [regions](/silk/docs/language/regions/) (`region`, `with`, and region-backed `new`)
+- [buffers](/silk/docs/language/buffers/) (`Buffer(T)` intrinsic)
+- [conventions](/silk/docs/std/conventions/) (allocation conventions)
+
+## Exported API
+A small subset is implemented in [`std/memory.slk`](https://github.com/oro-computer/silk/blob/master/std/memory.slk) for early compiler bring-up.
+These helpers are pure and operate on scalar types only, plus a shared
+allocation-failure error type used across `std::`.
+
+```silk
+module std::memory;
+
+export error OutOfMemory {
+  requested: i64 = 0
+}
+
+enum AllocErrorKind {
+  OutOfMemory,
+  InvalidInput,
+  Overflow,
+  Unknown,
+}
+
+export error AllocFailed {
+  code: int,
+  requested: i64,
+}
+
+impl AllocFailed {
+  public fn kind (self: &AllocFailed) -> AllocErrorKind;
+}
+
+export fn alloc_failed (kind: AllocErrorKind, requested: i64) -> AllocFailed;
+
+export fn is_power_of_two_u64 (x: u64) -> bool;
+export fn align_up_u64 (value: u64, alignment: u64) -> u64;
+export fn align_down_u64 (value: u64, alignment: u64) -> u64;
+export fn div_ceil_u64 (n: u64, d: u64) -> u64;
+```
+
+Notes:
+
+- `align_*` functions require `alignment` to be a power of two.
+- `OutOfMemory` is the shared error type returned by allocation-backed
+ containers and builders (for example [`std::vector::Vector`](/silk/docs/std/vector/) and
+ [`std::strings::StringBuilder`](/silk/docs/std/strings/)) when capacity growth cannot allocate.
+- `OutOfMemory{}` is the canonical form when the requested byte count is not
+ known at the call site; `requested` defaults to `0` in that case.
+- `AllocFailed` is a small, stable “constructor failed” error used by APIs
+ like `BufferU8.init` / `Vector(T).init` where invalid inputs (negative
+ capacities, overflow) must be distinguished from out-of-memory.
+## Scope
+
+[`std::memory`](/silk/docs/std/memory/) is responsible for:
+
+- Defining allocator interfaces used by other `std::` modules.
+- Providing safe wrappers around region allocation and the intrinsic `Buffer(T)` type
+ (where possible).
+- Providing low-level memory operations (`memcpy`, `memcmp`, zeroing, etc.).
+- Defining common allocation error conventions (`OutOfMemory`, etc.).
+
+Non-goals (initially):
+
+- A full garbage collector (explicit allocation is the design baseline).
+- Region inference beyond the region model already described in the language
+ docs.
+
+## Intrinsics and Their Std Surface
+
+The language defines:
+
+- regions ([regions](/silk/docs/language/regions/)) as an allocation context for `new`,
+- `Buffer(T)` as an intrinsic “fat pointer” ([buffers](/silk/docs/language/buffers/)).
+
+The buffer document enumerates intrinsic operations under the [`std::buffer::`](/silk/docs/std/buffer/)
+namespace (allocation, read/write, drop, view/slice). The [`std::memory`](/silk/docs/std/memory/) design
+assumes those operations exist and that
+higher-level containers in [`std::arrays`](/silk/docs/std/arrays/) and [`std::strings`](/silk/docs/std/strings/) are layered on top.
+
+## Allocator Interface
+The stdlib needs a first-class allocator abstraction so that:
+
+- containers can be written without hardcoding a global heap,
+- freestanding builds can provide their own allocator,
+- hosted builds can use an OS-backed allocator.
+
+Illustrative sketch:
+
+```silk
+module std::memory;
+
+export enum AllocError {
+  OutOfMemory,
+}
+
+export interface Allocator {
+  // Allocate `n` elements of type `T`.
+  alloc: fn(T, n: int) -> Result(Buffer(T), AllocError);
+  // Resize an existing allocation.
+  realloc: fn(T, buf: Buffer(T), old_n: int, new_n: int) -> Result(Buffer(T), AllocError);
+  // Free an allocation.
+  free: fn(T, buf: Buffer(T), n: int) -> void;
+}
+```
+
+The exact interface depends on how generics and interfaces are represented in
+the implemented language. The key requirement is that containers can accept an
+allocator value and use it consistently.
+
+## Common Utilities
+
+[`std::memory`](/silk/docs/std/memory/) should provide low-level routines that are useful across the
+stdlib:
+
+- `copy(dst, src, n)`
+- `move(dst, src, n)`
+- `set(dst, byte, n)`
+- `zero(dst, n)`
+- `equal(a, b, n)`
+
+These should have both safe and “unchecked” variants where appropriate, so that
+verified code can elide bounds checks while still keeping safety explicit.

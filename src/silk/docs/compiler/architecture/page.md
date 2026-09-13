@@ -1,0 +1,271 @@
+---
+layout: "docs"
+title: "Compiler Architecture"
+description: "This document describes the intended architecture of the Silk compiler implemented in Zig."
+docsCollection: "silk"
+section: "compiler"
+order: 254
+sourcePath: "compiler/architecture.md"
+githubRepo: "oro-computer/silk"
+githubRef: "master"
+---
+
+# Compiler Architecture
+
+This document describes the intended architecture of the Silk compiler implemented in Zig.
+
+Current hard implementation limits (file size caps, current maxima, etc.)
+are documented in [limits](/silk/docs/compiler/limits/).
+
+## High-Level Structure
+
+The compiler is implemented in Zig and organized into three major layers:
+
+- Front-end:
+ - Lexer: implements the token set and literals from [operators](/silk/docs/language/operators/) and the literal docs.
+ - Parser: implements the grammar from [grammar](/silk/docs/language/grammar/).
+ - Type checker: enforces the type rules from [types](/silk/docs/language/types/) and related concept docs.
+ - Verifier: handles Formal Silk constructs from [formal verification](/silk/docs/language/formal-verification/).
+- Middle-end:
+ - IR representation for Silk programs, including regions, buffers, concurrency, and FFI constructs (see [ir overview](/silk/docs/compiler/ir-overview/) for the current IR design and roadmap).
+ - Optimizations that respect the language’s safety guarantees.
+- Back-end:
+ - Code generation for executables, static libraries, and shared libraries using a Silk-owned backend (IR + codegen), not by “transpiling to C”.
+ - Emission of object files and archives that can be linked into executables and libraries.
+ - C99 ABI mappings for interop with `libsilk.a`.
+
+The driver gives each type-check invocation an isolated scratch lifetime. A
+recycling allocator services the checker's frequent short-lived allocations
+and is backed by a per-invocation arena; after checker diagnostics have released
+their owned state, the arena reclaims any scratch intentionally retained until
+the phase boundary. Repeated in-process checks therefore do not accumulate
+checker memory or report phase-owned scratch as application leaks.
+
+In terms of concrete targets and file formats, the back-end MUST eventually support:
+
+- ELF for Unix-like systems:
+ - `linux/x86_64` is the initial full IR-backed target (executables, objects, static libraries, and shared libraries).
+ - `linux/aarch64` (ARM64) is a required future IR-backed target (beyond const-only executables).
+ - position-independent code and shared objects (`.so`) for dynamic libraries.
+- Mach-O for macOS:
+ - both Intel (`x86_64`) and Apple Silicon (`arm64`) MUST be supported,
+ - dynamic libraries (`.dylib`) for loading Silk packages at runtime.
+- PE/COFF for Windows:
+ - initially `x86_64`, with other architectures considered later as needed,
+ - DLLs for dynamic loading.
+
+Current snapshot (Silk (ABI) 0.1.1):
+
+- [`src/backend_const.zig`](https://github.com/oro-computer/silk/blob/master/src/backend_const.zig) provides a **target-aware const-main stub backend** that emits minimal executables for a fully-constant executable entrypoint (`main` reduces to a constant integer or a `void` main falls through; supports `fn main () -> int`, `fn main () -> void`, and the standard `fn main(argc: int, argv: u64) -> int` / `fn main(argc: int, argv: u64) -> void` forms when arguments are unused):
+ - ELF64: `linux-x86_64`, `linux-x86_64-musl`, `linux-aarch64`,
+ `linux-aarch64-musl`, `android-aarch64`
+ - Mach-O 64-bit: `macos-x86_64`, `macos-aarch64`, `ios-aarch64`, `ios-simulator-aarch64`, `ios-simulator-x86_64`
+ - PE32+: `windows-x86_64`, `windows-aarch64`
+ This backend does not link the full runtime/stdlib; it only encodes “exit with this integer”.
+ macOS host note:
+ - `macos-aarch64` const-main executables are now emitted directly by the
+ Silk-owned Mach-O byte backend,
+ - when the host is macOS and the output target is `macos-x86_64` or
+ `macos-aarch64`, the driver still performs an ad hoc host `codesign -s -`
+ pass so the generated executable is runnable immediately on macOS hosts.
+- [`src/backend_macho_aarch64_host.zig`](https://github.com/oro-computer/silk/blob/master/src/backend_macho_aarch64_host.zig) provides a **temporary Apple Silicon
+ host-backed Mach-O backend**:
+ - it currently covers the validated scalar IR executable subset on
+ `macos/aarch64` hosts for:
+ - `macos-aarch64`,
+ - `ios-aarch64`,
+ - `ios-simulator-aarch64`,
+ - and `ios-simulator-x86_64`,
+ - emits target-specific arm64 or x86_64 assembly, assembles it with host
+ `clang -c`, links executables and dylibs with host `ld`, and builds
+ static archives with Apple `libtool -static`,
+ - `macos-aarch64` also expands bundled `libsilk_rt*.a` archives into
+ temporary object members before host linking so runtime-backed scalar
+ executables build on Apple Silicon,
+ - `macos-aarch64`, `ios-aarch64`, `ios-simulator-aarch64`, and
+ `ios-simulator-x86_64` also reuse the same host-backed object emitter to
+ produce Mach-O relocatable objects, static library archives via Apple
+ `libtool -static`, and Mach-O dylibs via the Apple linker for the current
+ supported library IR subset,
+ - `ios-aarch64`, `ios-simulator-aarch64`, and `ios-simulator-x86_64` are
+ intentionally narrower than `macos-aarch64`, but now include:
+ - pure-Silk scalar executables,
+ - reachable float-to-int lowering via target-correct helper objects
+ compiled from [`src/silk_rt_f128.c`](https://github.com/oro-computer/silk/blob/master/src/silk_rt_f128.c),
+ - and portable bundled runtime helpers compiled on demand for the
+ requested iOS SDK target (number / regex / unicode / filesystem / dns /
+ bounded socket networking / process / signal / term / pty / readline /
+ task-pool / async),
+ - mixed `.slk` + native `.c` / `.h` / `.m` / `.o` / `.a` executable,
+ static-library, and shared-library inputs, with `.m` compiled as
+ Objective-C and linked against `libobjc` for executable/shared outputs,
+ - native-input-only executables whose `main` comes from linked objects or
+ archives,
+ - and object/static/shared library outputs for the supported
+ library IR subset,
+ - this host-backed subset is now wired through the `silk` CLI / driver path
+ (with the same host `codesign -s -` post-pass on macOS targets that need
+ it),
+ - and is an explicit bring-up step until the non-const Mach-O executable path
+ is emitted fully by Silk-owned codegen.
+- [`src/backend_ir_elf.zig`](https://github.com/oro-computer/silk/blob/master/src/backend_ir_elf.zig) provides an **IR→ELF backend** for `linux-x86_64`
+ and `linux-x86_64-musl` outputs (a growing subset of the language, including
+ multi-function programs, rodata, and link-input builds). This backend is
+ host-agnostic for x86_64 Linux ELF outputs: it can emit Linux ELF artifacts
+ even when the compiler itself is running on a non-`linux/x86_64` host. The
+ driver selects glibc or musl loader/libc defaults from the explicit target,
+ `--elf-interp`, manifest `elf_interp`, or `SILK_ELF_INTERP`.
+ Shared IR type resolution preserves the language's transparent-alias rule:
+ a named import of an exported type alias resolves through that alias to its
+ concrete struct or enum carrier, including a monomorphized generic carrier,
+ in both expression- and statement-position lowering.
+- [`src/backend_wasm_ir.zig`](https://github.com/oro-computer/silk/blob/master/src/backend_wasm_ir.zig) provides the IR-backed backend for `wasm32-unknown-unknown` and `wasm32-wasi` outputs.
+- [`src/lower_gpu_ir.zig`](https://github.com/oro-computer/silk/blob/master/src/lower_gpu_ir.zig) builds target-neutral device `ir.Program` graphs from
+ launchable GPU entries and their eligible direct helper call graphs. Portable
+ device primitives are represented as compiler-owned semantic externs in IR;
+ they never become link imports. [backend gpu](/silk/docs/compiler/backend-gpu/) defines the
+ shared contract consumed by AMDGPU and the GPU-v1 NVIDIA PTX selector.
+- [`src/backend_amdgpu.zig`](https://github.com/oro-computer/silk/blob/master/src/backend_amdgpu.zig) provides the first standalone AMDGPU backend
+ encoder. It recognizes AMDHSA code-object targets for `gfx942`, `gfx1100`,
+ and `gfx1151`, emits dependency-light ELF64
+ AMDGPU code-object bytes plus
+ MessagePack metadata, and serializes 64-byte HSA AQL kernel-dispatch packets.
+ `silk build --kind object --target amdgcn-*` can emit an AMDHSA `.hsaco` for
+ exactly one exported root-package void source kernel with up to 32 immutable
+ `u64` parameters whose body is empty or contains only supported
+ compiler-backed GPU call statements. This is not yet a general
+ Silk IR-to-GPU lowering path. Linux x86_64 executable builds may also use
+ `--gpu-target amdgcn-*`: `attr(device=gpu)` functions are compiled into
+ individual code objects, removed from host lowering, and appended in a
+ provider-tagged versioned bundle consumed by [`std::gpu`](/silk/docs/std/gpu/) through the bundled
+ GPU runtime. The same path accepts NVIDIA `sm80` and embeds Silk-emitted PTX
+ for the CUDA Driver API.
+ The checked `gpu (grid=..., workspace=...) { kernel(args...); }` form
+ resolves the entry name at compile time and dispatches through
+ [`std::gpu::launch_and_synchronize`](/silk/docs/std/gpu/). It returns both phase statuses as
+ [`std::gpu::DispatchResult`](/silk/docs/std/gpu/) in value position and discards them in statement
+ position; separate manual functions remain available for overlapping
+ execution. Launch blocks are accepted in ordinary, async, and task host
+ functions, with synchronization acting as a blocking host call.
+ [`std::gpu::launch`](/silk/docs/std/gpu/) automatically packs the explicit `u64` arguments, and
+ [`std::gpu::device`](/silk/docs/std/gpu-device/) provides target-neutral global-index and packed-`u32`
+ load/store operations. The earlier fill and threshold-classification
+ operations remain compatibility helpers.
+ See [backend gpu](/silk/docs/compiler/backend-gpu/), [backend amdgpu](/silk/docs/compiler/backend-amdgpu/), and
+ [backend nvidia](/silk/docs/compiler/backend-nvidia/) for the portable and provider contracts.
+- [`src/backend_nvidia.zig`](https://github.com/oro-computer/silk/blob/master/src/backend_nvidia.zig) is the GPU-v1 NVIDIA selector. It emits
+ null-terminated PTX directly from the same target-neutral `ir.Program`, and
+ the provider-neutral bundle records CUDA plus its PTX target tag. The hosted
+ runtime loads that text through the CUDA Driver API without a link-time CUDA
+ dependency or an external compilation command. See
+ [backend nvidia](/silk/docs/compiler/backend-nvidia/).
+
+Portable Silk-owned Mach-O and PE/COFF IR-backed object/static/shared library emission, and additional IR-backed architectures (notably AArch64) are explicit future requirements and MUST be planned and implemented as the back-end matures. The current Apple target object/static/shared support is Apple Silicon host-backed bring-up, not the final portable Mach-O backend.
+
+An initial IR-driven, native backend is being prototyped alongside the existing constant-expression emitter:
+
+- the front-end (parser + checker) produces `ast.Module` values,
+- a lowering pass in [`src/lower_ir.zig`](https://github.com/oro-computer/silk/blob/master/src/lower_ir.zig) translates a constrained subset of `fn main() -> int` and `fn main() -> void` programs into `ir.Function` graphs, using integer arithmetic, comparisons, and simple control flow (`Br` / `BrCond`),
+- a target-independent IR interpreter in [`src/ir_eval.zig`](https://github.com/oro-computer/silk/blob/master/src/ir_eval.zig) provides reference semantics for these IR functions,
+- the constant-expression backend emits a minimal target-specific executable stub (ELF64/Mach-O/PE32+) whose entrypoint terminates the process with the evaluated `main` return value,
+- a dedicated IR→ELF backend module ([`src/backend_ir_elf.zig`](https://github.com/oro-computer/silk/blob/master/src/backend_ir_elf.zig)) will gradually assume responsibility for emitting native code directly from `ir.Function` graphs, starting with a single-function, integer-returning subset and expanding as more language features are lowered to IR.
+
+### Packages, Modules, Imports, and Exports
+
+Silk programs are organized into **packages** and **modules**:
+
+- A *module* is a single source file and the natural unit of parsing and type checking.
+- A *package* is a collection of modules that share a namespace and build configuration (e.g. the main package, `std::`, and third-party packages).
+- Packages may:
+ - **export** symbols (types, functions, constants) that are visible to importers,
+ - **import** symbols from other packages via explicit imports.
+
+The compiler MUST:
+
+- represent packages and their dependency graph explicitly in the middle-end,
+- implement an import resolver that:
+ - maps import paths to source modules/packages,
+ - enforces acyclic and well-formed package graphs,
+- implement symbol visibility rules:
+ - distinguish exported vs internal symbols within a package,
+ - ensure only exported symbols are visible across package boundaries.
+
+Front-end work (parser, checker, resolver) and back-end work (linkage, symbol emission) MUST be designed so that:
+
+- importing and exporting package symbols is a first-class, well-specified feature,
+- building advanced programs that span multiple modules and packages (including `std::` and user packages) is supported by both the CLI (`silk`) and the C ABI (`libsilk.a`).
+
+The concrete surface syntax for packages, imports, and exports is specified in
+[packages imports exports](/silk/docs/language/packages-imports-exports/) and is being implemented
+incrementally in the front-end. Resolver and back-end integration will follow
+that spec.
+
+The implementation must remain spec-driven: any architectural decision should be traceable back to a document in `docs/`.
+
+### Executable Entrypoint
+
+For executable builds driven via the C ABI (`SILK_OUTPUT_EXECUTABLE`) and,
+eventually, the `silk` CLI, the compiler enforces a simple, explicit entrypoint:
+
+- there MUST be exactly one top-level function with one of these signatures:
+
+  ```silk
+  fn main() -> int { ... }
+  fn main() -> void { ... }
+  ```
+
+- this function:
+ - takes no parameters,
+ - returns `int` or `void`,
+ - serves as the process entrypoint when an executable is produced.
+
+In the initial bring-up, this requirement is enforced by the front-end (via
+`silk_compiler_build`) and a minimal back-end that supports only constant
+integer `main` functions. This is a temporary measure; the long-term back-end
+is a true Silk code generator, not a C transpiler.
+
+## Module Layout (Draft)
+
+This is a draft module layout for the Zig implementation. Exact file names may change, but the layering should be preserved.
+
+- [`src/`](https://github.com/oro-computer/silk/tree/master/src/) (compiler implementation):
+ - [`src/driver.zig`](https://github.com/oro-computer/silk/blob/master/src/driver.zig) — CLI entry points and high-level orchestration.
+ - [`src/lexer.zig`](https://github.com/oro-computer/silk/blob/master/src/lexer.zig) — tokenization and trivia handling.
+ - [`src/parser.zig`](https://github.com/oro-computer/silk/blob/master/src/parser.zig) — AST construction.
+ - [`src/ast.zig`](https://github.com/oro-computer/silk/blob/master/src/ast.zig) — AST node definitions.
+ - [`src/types.zig`](https://github.com/oro-computer/silk/blob/master/src/types.zig) — type system representation and operations.
+ - [`src/checker.zig`](https://github.com/oro-computer/silk/blob/master/src/checker.zig) — type checking and semantic analysis.
+ - [`src/formal_silk.zig`](https://github.com/oro-computer/silk/blob/master/src/formal_silk.zig) — Formal Silk VC generation and verification (Z3-backed).
+ - [`src/z3_api.zig`](https://github.com/oro-computer/silk/blob/master/src/z3_api.zig) — Z3 C API shim (static-by-default, optional dynamic override).
+ - [`src/ir.zig`](https://github.com/oro-computer/silk/blob/master/src/ir.zig) — core intermediate representation.
+ - [`src/codegen.zig`](https://github.com/oro-computer/silk/blob/master/src/codegen.zig) — target-independent code generation logic.
+ - [`src/backend_amdgpu.zig`](https://github.com/oro-computer/silk/blob/master/src/backend_amdgpu.zig) — standalone AMDHSA ELF code-object and AQL
+ packet encoder for the initial AMD GPU backend surface.
+ - [`src/abi.zig`](https://github.com/oro-computer/silk/blob/master/src/abi.zig) — C99 ABI and FFI glue for `libsilk.a`.
+ - [`src/std_integration.zig`](https://github.com/oro-computer/silk/blob/master/src/std_integration.zig) — integration with the `std::` package and stdlib selection.
+ - [`src/cli/`](https://github.com/oro-computer/silk/tree/master/src/cli/) (optional breakdown):
+ - [`src/cli/options.zig`](https://github.com/oro-computer/silk/blob/master/src/cli/options.zig) — option parsing.
+ - [`src/cli/commands.zig`](https://github.com/oro-computer/silk/blob/master/src/cli/commands.zig) — `build`, `check`, `abi` subcommands.
+
+In addition to the core compiler, a separate language server executable (`silk-lsp`) is provided for editor and IDE integrations. It is implemented in Zig, reuses the front-end modules above (lexer, parser, type checker), and speaks the Language Server Protocol as specified in [lsp silk](/silk/docs/compiler/lsp-silk/). The language server does not introduce new language features; it is a tooling layer over the existing compiler.
+
+Test code is expected to live alongside these modules (via Zig `test` blocks) and/or under dedicated test drivers.
+
+## Test Layout (Draft)
+
+Testing is incremental and must be developed alongside the implementation:
+
+- Zig unit tests:
+ - Each core module (`lexer.zig`, `parser.zig`, `checker.zig`, etc.) contains Zig `test` blocks that exercise its behavior.
+ - Additional integration tests may live in dedicated files (e.g. [`src/tests_frontend.zig`](https://github.com/oro-computer/silk/blob/master/src/tests_frontend.zig)) that compile sample Silk programs drawn from `docs/language/`.
+- C99 tests:
+ - A separate directory (e.g. [`c-tests/`](https://github.com/oro-computer/silk/tree/master/c-tests/)) will contain C test programs and harnesses that:
+ - link against `libsilk.a`,
+ - use the C ABI (`silk/silk.h`) to drive compilation/execution,
+ - validate FFI and ABI behavior.
+
+The build system (Zig build file and any supporting scripts) must be wired so that:
+
+- running the Zig test suite exercises all relevant `test` blocks,
+- running the C test suite builds and runs the C harnesses,
+- both suites can be invoked easily during development and CI.

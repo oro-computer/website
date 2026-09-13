@@ -1,0 +1,171 @@
+---
+layout: "docs"
+title: "Target Metadata (OS_PLATFORM, OS_ARCH, OS_IS_UNIX, OS_IS_POSIX)"
+description: "Silk exposes a small set of compiler-provided target metadata values to both runtime code and Formal Silk (compile-time verification)."
+docsCollection: "silk"
+section: "language"
+order: 64
+sourcePath: "language/target-metadata.md"
+githubRepo: "oro-computer/silk"
+githubRef: "master"
+---
+
+# Target Metadata (`OS_PLATFORM`, `OS_ARCH`, `OS_IS_UNIX`, `OS_IS_POSIX`)
+
+Silk exposes a small set of compiler-provided **target metadata** values to both
+runtime code and Formal Silk (compile-time verification).
+
+These values let programs adapt to the compilation target (platform/OS and CPU
+architecture) without requiring environment-specific runtime queries.
+
+## Notes
+
+- target metadata is available as built-in compile-time constants
+ in every module:
+ - `OS_PLATFORM`, `OS_ARCH`, `OS_IS_UNIX`, `OS_IS_POSIX`.
+- the standard library re-exports these via [`std::os`](/silk/docs/std/os/)
+ ([os](/silk/docs/std/os/)).
+
+## Built-In Constants
+
+The compiler provides the following built-in constants in every module:
+
+- `OS_PLATFORM: string`
+- `OS_ARCH: string`
+- `OS_IS_UNIX: bool`
+- `OS_IS_POSIX: bool`
+
+These behave like normal `const` values:
+
+- They do not require an import.
+- They may be used anywhere an expression of the corresponding type is allowed.
+- They are compile-time constants (their values are fixed at compile time and
+ are embedded into the output artifact).
+
+### `OS_PLATFORM`
+
+A canonical target platform/OS name string.
+
+Current compiler target set and values:
+
+- `linux-x86_64`, `linux-x86_64-musl`, `linux-aarch64`, and
+ `linux-aarch64-musl`:
+ - `OS_PLATFORM == "linux"`
+- `macos-x86_64` and `macos-aarch64`:
+ - `OS_PLATFORM == "macos"`
+- `ios-aarch64`, `ios-simulator-aarch64`, and `ios-simulator-x86_64`:
+ - `OS_PLATFORM == "ios"`
+- `android-aarch64`:
+ - `OS_PLATFORM == "android"`
+- `windows-x86_64` and `windows-aarch64`:
+ - `OS_PLATFORM == "windows"`
+- `wasm32-unknown-unknown`:
+ - `OS_PLATFORM == "unknown"`
+- `wasm32-wasi`:
+ - `OS_PLATFORM == "wasi"`
+- `amdgcn-amd-amdhsa-gfx942`, `amdgcn-amd-amdhsa-gfx1100`, and
+ `amdgcn-amd-amdhsa-gfx1151`:
+ - `OS_PLATFORM == "amdhsa"`
+
+### `OS_ARCH`
+
+A canonical target CPU architecture name string.
+
+Current compiler target set and values:
+
+- `linux-x86_64`, `linux-x86_64-musl`, `macos-x86_64`,
+ `ios-simulator-x86_64`, and `windows-x86_64`:
+ - `OS_ARCH == "x86_64"`
+- `linux-aarch64`, `linux-aarch64-musl`, `macos-aarch64`, `ios-aarch64`,
+ `ios-simulator-aarch64`, `android-aarch64`, and `windows-aarch64`:
+ - `OS_ARCH == "aarch64"`
+ - Formal Silk comparisons also accept the ARM64 aliases `"arm64"` and `"aarch"` in any letter case, including through compile-time string constants, even though the canonical `OS_ARCH` value remains `"aarch64"`.
+- `wasm32-unknown-unknown` and `wasm32-wasi`:
+ - `OS_ARCH == "wasm32"`
+- `amdgcn-amd-amdhsa-gfx942`, `amdgcn-amd-amdhsa-gfx1100`, and
+ `amdgcn-amd-amdhsa-gfx1151`:
+ - `OS_ARCH == "amdgcn"`
+
+### `OS_IS_UNIX`
+
+Whether the compilation target is a UNIX family target.
+
+Current compiler target set:
+
+- `linux-x86_64`: `true`
+- `linux-x86_64-musl`: `true`
+- `linux-aarch64`: `true`
+- `linux-aarch64-musl`: `true`
+- `macos-x86_64`: `true`
+- `macos-aarch64`: `true`
+- `ios-aarch64`: `true`
+- `ios-simulator-aarch64`: `true`
+- `ios-simulator-x86_64`: `true`
+- `android-aarch64`: `true`
+- `windows-x86_64`: `false`
+- `windows-aarch64`: `false`
+- `wasm32-unknown-unknown`: `false`
+- `wasm32-wasi`: `false`
+- `amdgcn-amd-amdhsa-gfx942`: `false`
+- `amdgcn-amd-amdhsa-gfx1100`: `false`
+- `amdgcn-amd-amdhsa-gfx1151`: `false`
+
+### `OS_IS_POSIX`
+
+Whether the compilation target is a POSIX target.
+
+Current compiler target set:
+
+- `linux-x86_64`: `true`
+- `linux-x86_64-musl`: `true`
+- `linux-aarch64`: `true`
+- `linux-aarch64-musl`: `true`
+- `macos-x86_64`: `true`
+- `macos-aarch64`: `true`
+- `ios-aarch64`: `true`
+- `ios-simulator-aarch64`: `true`
+- `ios-simulator-x86_64`: `true`
+- `android-aarch64`: `true`
+- `windows-x86_64`: `false`
+- `windows-aarch64`: `false`
+- `wasm32-unknown-unknown`: `false`
+- `wasm32-wasi`: `false`
+- `amdgcn-amd-amdhsa-gfx942`: `false`
+- `amdgcn-amd-amdhsa-gfx1100`: `false`
+- `amdgcn-amd-amdhsa-gfx1151`: `false`
+
+## Relationship to [`std::os`](/silk/docs/std/os/)
+
+The standard library provides [`std::os`](/silk/docs/std/os/) helpers that expose the same metadata
+in a namespaced form and additionally map these strings into enums for use with
+[`match`](/silk/wiki/language/flow-match/) (see [os](/silk/docs/std/os/); targets not covered by the current enum set map
+to `Unknown`).
+
+## Examples
+
+### Target-gated behavior
+
+```silk
+import std::os;
+import { println } from "std/io";
+
+fn main () -> int {
+  if OS_IS_POSIX {
+    println("posix");
+  }
+
+  match (std::os::platform()) {
+    std::os::Platform::Linux => println("linux"),
+    std::os::Platform::WASI => println("wasi"),
+    std::os::Platform::Unknown => println("unknown"),
+  };
+
+  return 0;
+}
+```
+
+### Formal Silk requirements
+
+```silk
+#require OS_IS_POSIX;
+```

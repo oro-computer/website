@@ -1,0 +1,58 @@
+---
+layout: "docs"
+title: "std:: package structure"
+description: "This page describes how std:: modules are organized and how the compiler finds and links them (including std-root selection and archive wiring)."
+docsCollection: "silkWiki"
+section: "std"
+order: 51
+sourcePath: "std/package-structure.md"
+githubRepo: "oro-computer/silk"
+githubRef: "master"
+---
+
+# `std::` package structure
+
+This page describes how `std::` modules are organized and how the compiler
+finds and links them (including std-root selection and archive wiring).
+
+Full reference: [package structure](/silk/wiki/std/package-structure/).
+
+## Notes
+
+- Design + implementation: std-root resolution and `std::...` import mapping are implemented.
+- Full reference: [package structure](/silk/wiki/std/package-structure/)
+
+## How `std::` resolves
+
+- `std::foo::bar` resolves to `<std_root>/foo/bar.slk`.
+- The std root can be overridden per build (CLI flags) or via environment variables.
+- On supported hosted targets, a prebuilt std archive (`libsilk_std.a`) can be used to link std modules without recompiling them.
+
+## Examples
+
+### Example: import a std module
+```silk
+import std::io;
+import std::strings;
+
+fn main () -> int {
+  if std::strings::eq("a", "a") {
+    std::io::println("ok");
+    return 0;
+  }
+  return 1;
+}
+```
+
+### Build with a custom std root (CLI)
+
+```bash
+silk build main.slk
+silk build --std-root ./my-stdlib main.slk
+silk build --std-root ./my-stdlib --std-lib ./my-stdlib/libsilk_std.a main.slk
+```
+
+## See also
+
+- Full reference: [package structure](/silk/wiki/std/package-structure/)
+- Runtime interface layer: [runtime](/silk/wiki/std/runtime/)

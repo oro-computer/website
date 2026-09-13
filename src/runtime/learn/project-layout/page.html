@@ -1,0 +1,107 @@
+<main id="main">
+      <section class="section">
+        <div class="container">
+          <article class="learn-lesson-shell">
+            <!-- learn:chapter-bar -->
+
+            <header class="learn-lesson-heading">
+              <div class="learn-lesson-number">2</div>
+              <div>
+                <small>Chapter 2</small>
+                <h1>Project layout</h1>
+              </div>
+            </header>
+
+            <div class="prose learn-prose">
+              <p>
+                Runtime projects are ordinary folders with an explicit app contract. The two files to read first are
+                <code>oro.toml</code>, which describes the app, and the copy map, which says exactly what ships.
+              </p>
+
+              <h2>Read the generated shape</h2>
+              <p>Keep source files, copied assets, and build output in separate places.</p>
+
+              <div class="learn-code" data-code-block="" data-code-kind="terminal">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">Terminal</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy command"></button>
+                </div>
+                <pre><code class="language-bash">find . -maxdepth 2 -type f | sort</code></pre>
+              </div>
+
+              <div class="learn-code" data-code-block="">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">Project shape</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy text"></button>
+                </div>
+                <pre><code class="language-text">field-notes/
+  oro.toml
+  copy-map.toml
+  src/
+    index.html
+    main.js
+    styles.css
+  build/</code></pre>
+              </div>
+
+              <h2>Name the bundle inputs</h2>
+              <p>The build config points to the copy map. The copy map owns the final bundle paths.</p>
+
+              <div class="learn-code" data-code-block="">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">oro.toml</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-toml">[build]
+name = "field-notes"
+copy_map = "copy-map.toml"
+output = "build"</code></pre>
+              </div>
+
+              <div class="learn-code" data-code-block="">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">copy-map.toml</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-toml">"./src/index.html" = "index.html"
+"./src/main.js" = "main.js"
+"./src/styles.css" = "styles.css"</code></pre>
+              </div>
+
+              <h2>Check what will ship</h2>
+              <p>If a file is not in the copy map, it is not part of the bundled app.</p>
+
+              <div class="learn-code" data-code-block="" data-code-kind="terminal">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">Terminal</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy command"></button>
+                </div>
+                <pre><code class="language-bash">oroc build .
+oroc print-build-dir .</code></pre>
+              </div>
+
+              <div class="learn-callout">
+                <p>
+                  Treat the copy map as a manifest, not a convenience file. It keeps builds reviewable because every bundled
+                  file has an intentional source path.
+                </p>
+              </div>
+
+              <h2>What changed</h2>
+              <ul>
+                <li><code>oro.toml</code> became the app contract.</li>
+                <li><code>copy-map.toml</code> became the shipping manifest.</li>
+                <li><code>src/</code> stayed plain web source.</li>
+                <li><code>build/</code> stayed generated output.</li>
+              </ul>
+
+              <div class="learn-complete">
+                <h2>Chapter complete</h2>
+                <p>Next, separate shared project configuration from local machine overrides.</p>
+                <a class="button button-primary" href="/runtime/learn/configuration/">Continue to configuration</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>

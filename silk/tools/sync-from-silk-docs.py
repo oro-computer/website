@@ -5,9 +5,15 @@ from __future__ import annotations
 import argparse
 import re
 import shutil
+import sys
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
+from importlib import import_module
+source_pages = import_module("source-pages")
 
 
 EXCLUDE_BASENAMES = {
@@ -622,13 +628,17 @@ def move_section_to_end(markdown: str, heading: str) -> str:
     return "\n".join(out + ["", *section]) + "\n"
 
 
-def postprocess_tree(root: Path) -> None:
+def postprocess_tree(root: Path, *, keep_files: set[str] = frozenset(), keep_prefixes: tuple[str, ...] = ()) -> None:
     for path in sorted(root.rglob("*.md")):
+        if should_skip(path.relative_to(root).as_posix(), keep_files, keep_prefixes):
+            continue
         text = path.read_text(encoding="utf-8")
-        next_text = normalize_editorial_framing(text)
-        next_text = normalize_user_facing_links(next_text)
-        next_text = normalize_headings_for_context(path, next_text)
-        next_text = normalize_trailing_newlines(next_text)
+        def normalize(body):
+            body = normalize_editorial_framing(body)
+            body = normalize_user_facing_links(body)
+            body = normalize_headings_for_context(path, body)
+            return normalize_trailing_newlines(body)
+        next_text = source_pages.preserve_fences(text, normalize)
         if next_text != text:
             path.write_text(next_text, encoding="utf-8")
 
@@ -698,15 +708,19 @@ def main() -> None:
         default=None,
         help="Path to repo root (auto-detected by default).",
     )
+    parser.add_argument("--silk-repo", type=Path, help="Path to the upstream Silk checkout.")
     args = parser.parse_args()
 
-    repo_root = args.repo_root if args.repo_root else Path(__file__).resolve().parents[3]
-
-    src_docs = repo_root / "silk" / "docs"
+    site = Path(__file__).resolve().parents[2]
+    silk_repo = args.silk_repo or ((args.repo_root / "silk") if args.repo_root else site.parent / "silk")
+    src_docs = silk_repo.resolve() / "docs"
     src_wiki = src_docs / "wiki"
 
-    dst_docs = repo_root / "website" / "silk" / "docs" / "source"
-    dst_wiki = repo_root / "website" / "silk" / "wiki" / "source"
+    staging = tempfile.TemporaryDirectory(prefix="oro-silk-import-")
+    dst_docs = Path(staging.name) / "docs"
+    dst_wiki = Path(staging.name) / "wiki"
+    source_pages.stage_collection(site, "silk", dst_docs)
+    source_pages.stage_collection(site, "silkWiki", dst_wiki)
 
     if not src_docs.exists():
         raise SystemExit(f"Missing source docs at {src_docs}")
@@ -717,7 +731,7 @@ def main() -> None:
         dst_docs,
         keep_files=KEEP_DOCS_FILES,
         keep_prefixes=KEEP_DOCS_PREFIXES + ("wiki/",),
-        sanitize=sanitize_docs_markdown,
+        sanitize=lambda rel, text: source_pages.preserve_fences(text, lambda body: sanitize_docs_markdown(rel, body)),
     )
 
     # Wiki: copy everything under docs/wiki into website wiki source.
@@ -727,13 +741,18 @@ def main() -> None:
             dst_wiki,
             keep_files=KEEP_WIKI_FILES,
             keep_prefixes=(),
-            sanitize=sanitize_wiki_markdown,
+            sanitize=lambda rel, text: source_pages.preserve_fences(text, lambda body: sanitize_wiki_markdown(rel, body)),
         )
     else:
         wiki_stats = SyncStats()
 
-    postprocess_tree(dst_docs)
-    postprocess_tree(dst_wiki)
+    postprocess_tree(dst_docs, keep_files=KEEP_DOCS_FILES, keep_prefixes=KEEP_DOCS_PREFIXES)
+    postprocess_tree(dst_wiki, keep_files=KEEP_WIKI_FILES)
+
+    source_pages.import_collection(site, "silk", dst_docs)
+    if src_wiki.exists():
+        source_pages.import_collection(site, "silkWiki", dst_wiki)
+    staging.cleanup()
 
     print("Synced Silk docs to website:")
     print(

@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import sys
+import os
 from pathlib import Path
 
 
-SLG_ROOT = Path(__file__).resolve().parents[1]
+SITE_ROOT = Path(__file__).resolve().parents[2]
+SLG_ROOT = Path(os.environ.get("ORO_SITE_OUTPUT", str(SITE_ROOT / "public"))) / "slg"
 REPO_ROOT = SLG_ROOT.parent
 
-sys.path.insert(0, str(REPO_ROOT / "tools"))
+sys.path.insert(0, str(SITE_ROOT / "tools"))
 
 from site_audit_common import SiteAuditConfig, run_site_audit
 

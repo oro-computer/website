@@ -1,0 +1,341 @@
+---
+layout: "docs"
+title: "if / else"
+description: "The if / else construct provides branching based on a boolean condition."
+docsCollection: "silk"
+section: "language"
+order: 14
+sourcePath: "language/flow-if-else.md"
+githubRepo: "oro-computer/silk"
+githubRef: "master"
+---
+
+# `if` / `else`
+
+The `if` / `else` construct provides branching based on a boolean condition.
+
+`if` is available both as a statement and as a value expression. Both forms
+evaluate the condition once and execute only the selected branch.
+
+## Surface Syntax
+
+Minimal form:
+
+```silk
+if <condition> {
+  ...
+}
+```
+
+With an `else`:
+
+```silk
+if <condition> {
+  ...
+} else {
+  ...
+}
+```
+
+## Value expression
+
+A value-position conditional has an expression at the end of each branch:
+
+```silk
+let label = if ready {
+  "ready"
+} else {
+  "not ready"
+};
+```
+
+An expression form requires `else`, and both branch values must have one
+compatible type. The selected value becomes the result; the other expression
+is not evaluated. This contract applies to strings, scalars, optionals,
+results, and the other value categories accepted by the checker and hosted
+lowerer.
+
+Lowering a value-position conditional is type-directed before it emits either
+branch. Type classification must not evaluate the condition or leave partial
+control flow behind. The condition is therefore evaluated exactly once even
+when the result binding omits an explicit type annotation, and values borrowed
+by the condition (including string views) remain valid after the conditional.
+
+## `if let` (Pattern-Destructuring Statement Form)
+
+Silk also supports an `if let` statement form for refutable pattern matching
+without introducing a separate [`match`](/silk/wiki/language/flow-match/) expression:
+
+```silk
+if let <pattern> = <scrutinee> {
+  ...
+} else {
+  ...
+}
+
+if let mut <pattern> = <scrutinee> {
+  ...
+}
+```
+
+Notes:
+
+- The scrutinee expression is evaluated exactly once.
+- The pattern binders (for example `Some(v)` binds `v`) are in scope only in
+ the `then` block.
+- `if let mut` marks binders introduced by the pattern as mutable in that
+ scope, so they may be reassigned like ordinary `let mut` locals.
+- `else` is optional (when omitted, a non-matching scrutinee executes no block).
+- `else if let ...` chains are supported and parse as nesting in the same way
+ as `else if ...`.
+- `else let ...` is supported as shorthand for `else if let ...`; `else let mut`
+ has the same binder mutability as `else if let mut`.
+- `if let move ...`, `else if let move ...`, and `else let move ...` consume the
+ scrutinee for ownership-tracked values. The consumed source binding is not
+ available in the `then` block, the `else` block, or after the `if`.
+
+### `if let` chains (`&& let`)
+
+The `if let` statement form supports a short-circuiting `&&` chain that mixes
+refutable `let` clauses and ordinary boolean clauses:
+
+```silk
+if let Some(x) = get_x() &&
+   x > 0 &&
+   let mut Ok(v) = get_value(x) {
+  // `x` and `v` are in scope here.
+  v = v + 1;
+  return v;
+} else {
+  // `x` and `v` are NOT in scope here.
+  return 0;
+}
+```
+
+Semantics:
+
+- Clauses are evaluated left-to-right and short-circuit like `&&`.
+- A `let <pattern> = <expr>` clause evaluates `<expr>` exactly once:
+ - if the pattern matches, its binders are introduced and evaluation continues,
+ - otherwise the entire condition is `false`.
+- A `let mut <pattern> = <expr>` clause introduces mutable binders for the
+ remaining clauses and the `then` block.
+- A `let move <pattern> = <expr>` clause consumes the clause scrutinee for
+ ownership-tracked values. The moved source binding is unavailable in later
+ clauses, the `then` block, and the `else` block.
+- A non-`let` clause must have type `bool`; `false` short-circuits.
+- Binders introduced by `let` clauses are in scope for:
+ - subsequent clauses in the chain, and
+ - the `then` block.
+ They are not in scope in the `else` block, and they do not escape the `if`.
+
+Parsing note (Supported forms):
+
+- `&&` at the top level is parsed as a clause separator. Use parentheses if a
+ clause needs its own `&&` / `||` / `??` expression at the top level.
+
+Example (`else let` shorthand):
+
+```silk
+fn main () -> int {
+  let a: int? = None;
+  let b: int? = Some(3);
+
+  if let Some(v) = a {
+    return v;
+  } else let Some(v) = b {
+    return v;
+  } else {
+    return 0;
+  }
+}
+```
+
+Supported patterns in the Supported forms (same as [`match`](/silk/wiki/language/flow-match/) expressions; see
+[flow match](/silk/docs/language/flow-match/)):
+
+- optionals: `None`, `Some(name)`, `Some(_)`
+- recoverable results: `Ok(name)`, `Err(name)` (and `_` binders)
+- enums: `Variant(...)` / `E::Variant(...)` / qualified variants
+- type unions: `name: Type` / `_: Type`
+
+Example (optional):
+
+```silk
+fn main () -> int {
+  let maybe: int? = Some(7);
+
+  if let Some(v) = maybe {
+    return v;
+  }
+  return 0;
+}
+```
+
+Example (recoverable `Result`):
+
+```silk
+import std::result;
+
+fn main () -> int {
+  let r: std::result::Result(int, string) = Ok(42);
+  if let Ok(v) = r {
+    return v;
+  }
+  return 0;
+}
+```
+
+Notes:
+
+- `<condition>` is an expression; parentheses are optional because the normal
+ expression grammar already includes parenthesized expressions.
+- Bodies are blocks. `else` may be followed by either:
+ - a block (`else { ... }`), or
+ - another `if` (`else if ... { ... }`) to form an “else-if” chain.
+
+## Surface Syntax (Expression Form)
+
+Silk also supports `if` / `else` as an **expression** form that yields a value:
+
+```silk
+let v: int = if cond { 123 } else { 456 };
+```
+
+Notes:
+
+- `if` expressions require an `else` branch so the expression yields a value on
+ all paths.
+- The `else if ...` chain form is supported in expression position:
+
+  ```silk
+  let v: int = if a { 1 } else if b { 2 } else { 3 };
+  ```
+
+- Restriction: the `{ ... }` bodies of `if` expressions
+ contain a single expression (not a full statement block).
+
+## Semantics
+
+- The condition expression is evaluated exactly once.
+- If the condition is `true`, the `if` block executes and the `else` block (if
+ present) does not execute.
+- If the condition is `false`, the `else` block executes if present; otherwise
+ the `if` statement does nothing.
+
+Blocks create scopes:
+
+- Declarations inside the `if` body are not visible outside that body.
+- Declarations inside the `else` body are not visible outside that body.
+
+## Type Checking Rules
+
+- The condition must have type `bool`. If it does not, the checker reports a
+ type mismatch ([diagnostics](/silk/docs/compiler/diagnostics/), `E2001`).
+
+For `if` expressions:
+
+- The `then` and `else` branches must produce compatible value types.
+- The expression’s result type is the shared branch type (or the expected type
+ when the expression is type-directed).
+
+## `else if` Chains
+
+The language supports chained conditions (“else-if chains”). The compiler
+parses `else if` as sugar for nesting an `if` inside the `else` block:
+
+```silk
+fn main () -> int {
+  let x: int = 1;
+
+  if x == 0 {
+    return 0;
+  } else {
+    if x == 1 {
+      return 1;
+    } else {
+      return 2;
+    }
+  }
+}
+```
+
+The equivalent direct surface form is:
+
+```silk
+fn main () -> int {
+  let x: int = 1;
+  if x == 0 {
+    return 0;
+  } else if x == 1 {
+    return 1;
+  } else {
+    return 2;
+  }
+}
+```
+
+## Examples
+
+### Minimal `if` / `else`
+
+```silk
+fn main () -> int {
+  if true {
+    return 0;
+  } else {
+    return 1;
+  }
+}
+```
+
+### Boolean expressions in conditions
+
+```silk
+fn main () -> int {
+  let x: int = 1;
+  let y: int = 2;
+
+  if x < y && y < 10 {
+    return 3;
+  } else {
+    return 4;
+  }
+}
+```
+
+### Control flow inside branches
+
+```silk
+fn main () -> int {
+  let x: int = 1;
+  let y: int = 2;
+
+  if x < y {
+    while false {
+      continue;
+    }
+    return 3;
+  } else {
+    return 4;
+  }
+}
+```
+
+## Notes
+
+Supported forms:
+
+- `if <expr> { ... }` and `if <expr> { ... } else { ... }` statement forms.
+- `if let <pattern> = <expr> { ... }` statement form:
+ - `else if let` / `else let` chains, and
+ - `&&` let-chains in the `if let` condition.
+- Boolean type-checking for conditions.
+- `if` expressions of the form `if <cond> { <expr> } else { <expr> }`.
+
+Limitations:
+
+- General block expressions (`{ stmt* <expr> }`) outside the specific `if`
+ expression form.
+
+examples:

@@ -1,0 +1,41 @@
+---
+layout: "docs"
+title: "GitHub Linguist Support"
+description: "The Silk compiler repository includes a .gitattributes entry that tags *.slk files as Silk sources for GitHub Linguist."
+docsCollection: "silk"
+section: "usage"
+order: 248
+sourcePath: "usage/github-linguist.md"
+githubRepo: "oro-computer/silk"
+githubRef: "master"
+---
+
+# GitHub Linguist Support
+
+The Silk compiler repository includes a `.gitattributes` entry that tags `*.slk` files as Silk sources for GitHub
+Linguist.
+
+## What This Does
+
+- Ensures `*.slk` files are classified as Silk in GitHub’s language breakdown.
+- Helps GitHub apply the correct syntax highlighting when a TextMate grammar is available.
+
+## Reuse in Other Repositories
+
+If you maintain downstream Silk projects, copy these lines into your project’s `.gitattributes`:
+
+```text
+*.slk linguist-language=Silk
+*.slk linguist-detectable=true
+```
+
+Adjust or extend the entries if you use additional Silk-related file extensions.
+
+Example:
+
+```sh
+printf '%s\n' \
+  '*.slk linguist-language=Silk' \
+  '*.slk linguist-detectable=true' >> .gitattributes
+git add .gitattributes
+```

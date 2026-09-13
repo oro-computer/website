@@ -1,0 +1,206 @@
+---
+layout: "docs"
+title: "std::fmt"
+description: "The initial formatting engine is implemented in std/fmt.slk and is intentionally scoped to the current compiler/backend subset (no generics, no runtime interface dispatch)."
+docsCollection: "silk"
+section: "std"
+order: 77
+sourcePath: "std/fmt.md"
+githubRepo: "oro-computer/silk"
+githubRef: "master"
+---
+
+# [`std::fmt`](/silk/docs/std/fmt/)
+
+The initial formatting engine is implemented
+in [`std/fmt.slk`](https://github.com/oro-computer/silk/blob/master/std/fmt.slk) and is intentionally scoped to the current compiler/backend
+subset (no generics, no runtime interface dispatch).
+
+[`std::fmt`](/silk/docs/std/fmt/) provides a shared, Zig-`std.fmt`-style format-string syntax and a
+small formatting engine used by [`std::io::print`](/silk/docs/std/io/) / [`std::io::println`](/silk/docs/std/io/).
+
+See also:
+
+- [io](/silk/docs/std/io/) (stdout printing)
+- [literals string](/silk/docs/language/literals-string/) (string literal semantics)
+- [ext](/silk/docs/language/ext/) (current string ABI and null-termination rule)
+
+## Format String Syntax (Zig-compatible subset)
+
+A format string is a `string` containing literal text and **placeholders**.
+
+### Escaping braces
+
+- `{{` renders a literal `{`
+- `}}` renders a literal `}`
+
+### Placeholders
+
+Placeholders are written with `{ ... }`:
+
+- `{}` — formats the next argument (sequential).
+- `{0}` — formats argument 0 (positional).
+- `{d}` — formats the next argument using a specifier (here: decimal).
+- `{0x}` — formats argument 0 using a specifier (here: hex lower).
+
+Placeholders may also include **format options** after a colon `:`:
+
+- `{:10}` — width 10 (default alignment).
+- `{:>10}` — width 10, right-aligned.
+- `{:=^10}` — width 10, center-aligned, filled with `=`.
+- `{:04}` — width 4, zero-padded (special case: leading `0` implies `fill='0'`).
+
+Precision is written after a dot:
+
+- `{e:.5}` — scientific formatting with precision 5 (when supported by the value type).
+
+### Grammar (informal)
+
+Within `{ ... }`:
+
+- optional **argument selector**:
+ - digits: `0`, `1`, `2`, ...
+ - bracketed index: `[0]`, `[1]`, ... (reserved for future named arguments; currently only numeric indices are accepted)
+- optional **specifier string** (examples: `d`, `x`, `s`, `c`, `e`)
+- optional `:` followed by:
+ - optional `fill` + `alignment`:
+ - `<` left, `^` center, `>` right
+ - `fill` is any single byte placed immediately before the alignment character (example: `*^`)
+ - optional `width`:
+ - digits (`10`), or bracketed index (`[1]`) to take the width from another argument
+ - optional `.` and optional `precision`:
+ - digits (`.3`), or bracketed index (`.[1]`) to take the precision from another argument
+
+## Exported API
+
+Because the language does not yet have generics, the current API uses an
+explicit argument carrier type (`Arg`). With language-level varargs, the
+formatter now accepts a variable number of arguments (up to the current
+compiler’s varargs limit).
+
+### `Arg`
+
+[`std::fmt::Arg`](/silk/docs/std/fmt/) is a POD carrier used by [`std::io`](/silk/docs/std/io/) printing:
+
+- `Arg.missing()` — missing argument placeholder.
+- `Arg.int(value: int)` — signed integer argument.
+- `Arg.i128(value: i128)` — signed 128-bit integer argument.
+- `Arg.u64(value: u64)` — unsigned integer / pointer-sized argument.
+- `Arg.u128(value: u128)` — unsigned 128-bit integer argument.
+- `Arg.f64(value: f64)` — floating-point argument (both `f32` and `f64` coerce to this ctor).
+- `Arg.f128(value: f128)` — 128-bit floating-point argument.
+- `Arg.bool(value: bool)` — boolean argument.
+- `Arg.char(value: char)` — Unicode scalar argument (formatted as UTF-8 bytes for `{c}` / `{u}`; invalid codepoints render as U+FFFD).
+- `Arg.string(value: string)` — string argument.
+- `Arg.regexp(value: regexp)` — regexp argument (currently formatted as placeholder text).
+- `Arg.Region(value: Region)` — region argument (currently formatted as placeholder text).
+
+Compiler convenience: the compiler supports an opt-in implicit
+call-argument coercion mechanism for struct types that provide exported static
+ctor methods (`int`/`i128`/`u64`/`u128`/`f64`/`f128`/`bool`/`char`/`string`/`regexp`/`Region`).
+[`std::fmt::Arg`](/silk/docs/std/fmt/) implements these ctors, so callers can pass primitives directly
+to [`std::io::print`](/silk/docs/std/io/) / [`std::io::println`](/silk/docs/std/io/) without explicit `Arg.*` wrappers.
+Values implementing [`std::interfaces::Serialize(string)`](/silk/docs/std/interfaces/) are also accepted in
+that path: the compiler may first lower the value through `serialize()` and
+then call `Arg.string(...)` automatically when `Arg` is expected.
+[`std::strings::String`](/silk/docs/std/strings/) also satisfies ordinary borrowed plain-`string`
+expectations in `string` parameters and bindings, so those sites no longer
+require mandatory `.as_string()`.
+
+See [types](/silk/docs/language/types/) for the full rule.
+
+### Supported specifiers
+
+The current formatter supports:
+
+- `s` — string
+- `d` — decimal number (`int`/`u64`/`i128`/`u128` and `f64`/`f128`)
+- `b` — binary integer
+- `o` — octal integer
+- `x` — lowercase hex integer
+- `X` — uppercase hex integer
+- `e` — scientific `f64`/`f128`
+- `c` — Unicode scalar (`char`) rendered as UTF-8 bytes
+- `u` — Unicode scalar (`char`) rendered as UTF-8 bytes
+- `any` — alias for default formatting in the Supported forms
+
+When the specifier is empty (`{}`), a default is chosen based on the argument
+kind.
+
+Zig-compat note: when a width is specified (and non-zero), signed integers
+include an explicit sign for non-negative values (for example `"{:4}"` formats
+`123` as `"+123"`).
+
+Supported forms limitation: formatting signed integers (`int`/`i128`) in
+non-decimal bases (`b`/`o`/`x`/`X`) requires non-negative values.
+
+Float formatting is implemented for `f64` in the Supported forms:
+
+- `{}` / `{d}` format as decimal by default, with an automatic scientific fallback
+ for very small / very large magnitudes.
+- `{e}` formats in scientific notation.
+- precision (`.{N}`) controls the number of digits after the decimal point
+ (default: 6), and width/alignment apply like other formatting kinds.
+
+Hex float formatting (`{x}` on floats) and full debug formatting (`{any}`
+recursing through arbitrary types) remain future work.
+
+`f128` formatting is implemented by converting values to `f64` for formatting,
+so output precision is limited to `f64` precision in the Supported forms.
+
+## High-Level Formatting (`format`)
+
+[`std::fmt`](/silk/docs/std/fmt/) provides a high-level convenience for producing formatted strings:
+
+```silk
+import { println } from "std/io";
+import format from "std/fmt";
+import std::fmt;
+import std::strings;
+import std::result;
+
+type StringAllocResult = std::result::Result(std::strings::String, std::fmt::Error);
+
+fn main () -> int {
+  const a = 1;
+  const b = 2;
+
+  match (format("hello {}", "world")) {
+    StringAllocResult::Ok(hello_value) => {
+      let mut hello: std::strings::String = hello_value;
+      match (format("a + b = {}", a + b)) {
+        StringAllocResult::Ok(sum_value) => {
+          let mut sum: std::strings::String = sum_value;
+          println("{}", hello.as_string());
+          println("sum of {}", sum.as_string());
+          sum.drop();
+          hello.drop();
+          return 0;
+        },
+        StringAllocResult::Err(_) => {
+          hello.drop();
+          return 2;
+        },
+      }
+    },
+    StringAllocResult::Err(_) => {
+      return 1;
+    },
+  }
+}
+```
+
+Signature:
+
+```silk
+export default fn format (fmt: string, ...args: Arg) -> std::result::Result(std::strings::String, std::fmt::Error);
+```
+
+Notes (Supported forms):
+
+- `format` is also available as a named export (`import { format } from "std/fmt";`).
+- The returned [`std::strings::String`](/silk/docs/std/strings/) is an owned, NUL-terminated string buffer.
+ - When heap-backed, it is freed on Drop (calls [`std::runtime::mem::free`](/silk/docs/std/runtime-mem/)).
+ - When region-backed (inside `with <region>` / `with <bytes>`), Drop calls `free` but `free` is a no-op for region pointers (see [regions](/silk/docs/language/regions/)), and region-allocated values must not outlive the region.
+- Use `String.as_string()` to obtain a borrowed `string` view.
+- For bounded allocations, format into caller-owned storage with `format_to_buffer_u8`.

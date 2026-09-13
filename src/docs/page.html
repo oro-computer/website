@@ -1,0 +1,229 @@
+<main id="main" class="docs-landing-main">
+      <div class="docs-landing-shell">
+        <aside class="docs-landing-sidebar" aria-label="Documentation sections">
+          <a class="docs-sidebar-home" href="/docs/">Documentation</a>
+
+          <nav class="docs-sidebar-nav" aria-label="Technology documentation">
+            <section>
+              <h2>Oro Runtime</h2>
+              <a href="#runtime">Overview</a>
+              <a href="/runtime/docs/">What is Oro Runtime?</a>
+              <a href="/runtime/docs/guides/from-zero-to-first-run/">Quick start</a>
+              <a href="#runtime-guides">Guides</a>
+              <a href="#runtime-howto">How-to</a>
+              <a href="/runtime/docs/javascript/all-modules/">Full API reference</a>
+            </section>
+
+            <section>
+              <h2>Silk</h2>
+              <a href="#silk">Overview</a>
+              <a href="/silk/docs/guides/purpose/">What is Silk?</a>
+              <a href="/silk/docs/usage/getting-started/">Quick start</a>
+              <a href="#silk-guides">Guides</a>
+              <a href="/silk/spec/2026/">2026 spec</a>
+              <a href="/silk/docs/compiler/cli-silk/">Full CLI documentation</a>
+              <a href="/silk/docs/std/overview/">Stdlib API reference</a>
+              <a href="/silk/docs/compiler/libsilk-quickstart/">Embedders</a>
+              <a href="/silk/docs/guides/formal-silk/">Formal Silk</a>
+            </section>
+          </nav>
+        </aside>
+
+        <article class="docs-landing-content">
+          <header class="docs-landing-intro" id="overview">
+            <p class="docs-landing-kicker">Documentation</p>
+            <h1>Start with the technology you are using.</h1>
+            <p>
+              Oro Computer documentation is split by product surface. Runtime docs cover native app delivery from web
+              projects. Silk docs cover the language, package system, CLI, standard library, embedders, ABI/FFI, and
+              Formal Silk.
+            </p>
+
+            <div class="docs-quick-select" aria-label="Choose a documentation area">
+              <a href="#runtime">
+                <span>Oro Runtime</span>
+                <small>Native apps, service workers, filesystem, windows, notifications, APIs.</small>
+              </a>
+              <a href="#silk">
+                <span>Silk</span>
+                <small>Language tour, modules, packages, stdlib, ABI/FFI, embedders, proofs.</small>
+              </a>
+            </div>
+          </header>
+
+          <section class="docs-tech-section" id="runtime" aria-labelledby="runtime-title">
+            <div class="docs-tech-heading">
+              <div>
+                <p class="docs-landing-kicker">Oro Runtime</p>
+                <h2 id="runtime-title">Build and ship native apps from ordinary web projects.</h2>
+              </div>
+              <a class="docs-section-action" href="/runtime/docs/">Open Runtime docs</a>
+            </div>
+
+            <p class="docs-tech-summary">
+              Use the Runtime path when you are creating an app, running it locally, packaging it, or reaching for native
+              capabilities through explicit <code>oro:*</code> JavaScript modules.
+            </p>
+
+            <div class="docs-link-grid">
+              <section class="docs-link-block" id="runtime-start">
+                <h3>Start</h3>
+                <a href="/runtime/docs/">
+                  <span>What is Oro Runtime?</span>
+                  <small>Architecture and the runtime model.</small>
+                </a>
+                <a href="/runtime/docs/guides/from-zero-to-first-run/">
+                  <span>Quick start</span>
+                  <small>Install, run, and package the first project.</small>
+                </a>
+                <a href="/runtime/docs/guides/hello-world/">
+                  <span>Hello world</span>
+                  <small>The smallest useful app path.</small>
+                </a>
+              </section>
+
+              <section class="docs-link-block" id="runtime-guides">
+                <h3>Guides</h3>
+                <a href="/runtime/docs/guides/offline-first-with-service-workers/">
+                  <span>Service workers</span>
+                  <small>Register background behavior and offline work.</small>
+                </a>
+                <a href="/runtime/docs/guides/files-and-sandboxing/">
+                  <span>Filesystem and sandboxing</span>
+                  <small>Persist local data with clear boundaries.</small>
+                </a>
+                <a href="/runtime/docs/guides/windows-and-messaging/">
+                  <span>Window management and messaging</span>
+                  <small>Coordinate app surfaces and IPC.</small>
+                </a>
+              </section>
+
+              <section class="docs-link-block" id="runtime-howto">
+                <h3>How-to</h3>
+                <a href="/runtime/docs/guides/desktop-integrations/">
+                  <span>Notifications and desktop integrations</span>
+                  <small>Use host affordances from web code.</small>
+                </a>
+                <a href="/runtime/docs/cli/oroc/">
+                  <span><code>oroc</code> command reference</span>
+                  <small>Run, build, inspect, and package projects.</small>
+                </a>
+                <a href="/runtime/docs/config/reference/">
+                  <span>Configuration reference</span>
+                  <small>Project settings and runtime behavior.</small>
+                </a>
+              </section>
+
+              <section class="docs-link-block" id="runtime-reference">
+                <h3>Reference</h3>
+                <a href="/runtime/docs/javascript/all-modules/">
+                  <span>Full API reference</span>
+                  <small>Every documented <code>oro:*</code> module.</small>
+                </a>
+                <a href="/runtime/docs/javascript/fs/">
+                  <span>Filesystem API</span>
+                  <small>Read, write, watch, and scope files.</small>
+                </a>
+                <a href="/runtime/docs/javascript/window/">
+                  <span>Window API</span>
+                  <small>Create and coordinate native windows.</small>
+                </a>
+              </section>
+            </div>
+          </section>
+
+          <section class="docs-tech-section" id="silk" aria-labelledby="silk-title">
+            <div class="docs-tech-heading">
+              <div>
+                <p class="docs-landing-kicker">Silk</p>
+                <h2 id="silk-title">Learn Silk as a complete systems language, not a syntax teaser.</h2>
+              </div>
+              <a class="docs-section-action" href="/silk/docs/">Open Silk docs</a>
+            </div>
+
+            <p class="docs-tech-summary">
+              Use the Silk path when you are learning the language, defining packages and modules, publishing code, using
+              stdlib APIs, embedding Silk, crossing ABI/FFI boundaries, or writing formally checked programs.
+            </p>
+
+            <div class="docs-link-grid">
+              <section class="docs-link-block" id="silk-start">
+                <h3>Start</h3>
+                <a href="/silk/docs/guides/purpose/">
+                  <span>What is Silk?</span>
+                  <small>The language goals and where Silk fits.</small>
+                </a>
+                <a href="/silk/docs/usage/getting-started/">
+                  <span>Quick start</span>
+                  <small>Install the CLI and run a first program.</small>
+                </a>
+                <a href="/silk/docs/guides/language-tour/">
+                  <span>Language tour</span>
+                  <small>Types, control flow, structs, interfaces, and errors.</small>
+                </a>
+              </section>
+
+              <section class="docs-link-block" id="silk-guides">
+                <h3>Guides</h3>
+                <a href="/silk/docs/guides/modules-and-packages/">
+                  <span>Modules, packages, and publication</span>
+                  <small>Imports, exports, targets, GitHub, and npm packaging.</small>
+                </a>
+                <a href="/silk/docs/guides/practical-logger-module/">
+                  <span>Practical logger module</span>
+                  <small>A reusable module with stdlib, targets, and ABI notes.</small>
+                </a>
+                <a href="/silk/docs/guides/standard-library/">
+                  <span>Standard library guide</span>
+                  <small>How the stdlib is organized and used.</small>
+                </a>
+              </section>
+
+              <section class="docs-link-block" id="silk-reference">
+                <h3>Reference</h3>
+                <a href="/silk/spec/2026/">
+                  <span>2026 spec</span>
+                  <small>The language specification.</small>
+                </a>
+                <a href="/silk/docs/compiler/cli-silk/">
+                  <span>Full CLI documentation</span>
+                  <small>Compiler and toolchain commands.</small>
+                </a>
+                <a href="/silk/docs/std/overview/">
+                  <span>Full stdlib API reference</span>
+                  <small>Documented standard library modules.</small>
+                </a>
+              </section>
+
+              <section class="docs-link-block" id="formal-silk">
+                <h3>Advanced</h3>
+                <a href="/silk/docs/compiler/libsilk-quickstart/">
+                  <span>Usage for embedders</span>
+                  <small>Embed Silk through libsilk.</small>
+                </a>
+                <a href="/silk/docs/compiler/abi-libsilk/">
+                  <span>ABI and FFI</span>
+                  <small>Direct ABI symbol import and host boundaries.</small>
+                </a>
+                <a href="/silk/docs/guides/formal-silk/">
+                  <span>Formal Silk considerations</span>
+                  <small>Proof-oriented workflows and verification surfaces.</small>
+                </a>
+              </section>
+            </div>
+          </section>
+        </article>
+
+        <aside class="docs-landing-toc" aria-label="On this page">
+          <p>On this page</p>
+          <a href="#overview">Overview</a>
+          <a href="#runtime">Oro Runtime</a>
+          <a href="#runtime-guides">Runtime guides</a>
+          <a href="#runtime-reference">Runtime reference</a>
+          <a href="#silk">Silk</a>
+          <a href="#silk-guides">Silk guides</a>
+          <a href="#silk-reference">Silk reference</a>
+          <a href="#formal-silk">Formal Silk</a>
+        </aside>
+      </div>
+    </main>

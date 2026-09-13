@@ -2,9 +2,16 @@
 
 from __future__ import annotations
 
+import argparse
 import re
+import sys
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
+from importlib import import_module
+source_pages = import_module("source-pages")
 
 from js_api_reference_content import (
     DEFAULT_SEE_ALSO,
@@ -63,7 +70,7 @@ class ModuleBlock:
 
 
 def repo_root() -> Path:
-    return Path(__file__).resolve().parents[3]
+    return Path(__file__).resolve().parents[2]
 
 
 def read_text(path: Path) -> str:
@@ -245,7 +252,10 @@ def render_generated_page(path: Path, family: str, specs: list[str], blocks: dic
 
 def main() -> None:
     root = repo_root()
-    index_path = root / "runtime" / "api" / "index.d.ts"
+    parser = argparse.ArgumentParser(description="Refresh Runtime API Markdown while preserving curated prose.")
+    parser.add_argument("--runtime-repo", type=Path, default=root.parent / "runtime")
+    args = parser.parse_args()
+    index_path = args.runtime_repo.resolve() / "api" / "index.d.ts"
     if not index_path.exists():
         raise SystemExit(f"Missing {index_path}")
 
@@ -255,7 +265,10 @@ def main() -> None:
     for spec in blocks.keys():
         families.setdefault(family_of(spec), []).append(spec)
 
-    out_dir = root / "website" / "runtime" / "docs" / "source" / "javascript"
+    staging = tempfile.TemporaryDirectory(prefix="oro-runtime-import-")
+    staged = Path(staging.name)
+    source_pages.stage_collection(root, "runtime", staged)
+    out_dir = staged / "javascript"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     written: list[Path] = []
@@ -288,12 +301,15 @@ def main() -> None:
             stale_path.unlink()
             removed.append(stale_path)
 
+    source_pages.import_collection(root, "runtime", staged)
+    staging.cleanup()
+
     if written or removed:
         print("Wrote:")
         for p in written:
-            print(f"- {p}")
+            print(f"- {root / 'src/runtime/docs/javascript' / p.stem / 'page.md'}")
         for p in removed:
-            print(f"- removed {p}")
+            print(f"- removed {root / 'src/runtime/docs/javascript' / p.stem / 'page.md'}")
     else:
         print("Unchanged: generated JavaScript API reference pages")
 

@@ -1,0 +1,131 @@
+<main id="main">
+      <section class="hero" aria-label="Sage overview">
+        <div class="container">
+          <div class="hero-grid">
+            <div class="hero-copy">
+              <div class="hero-kicker">Sage</div>
+              <h1>A fast, ergonomic terminal pager.</h1>
+              <p class="lede">
+                Page local files, whole directories, piped stdin, and remote content with a responsive TUI, strong search and
+                find workflows, syntax highlighting, and a robust JavaScript plugin API.
+              </p>
+              <div class="hero-actions">
+                <a class="button button-primary" href="/sage/docs/">Read the docs</a>
+                <a class="button" href="/sage/docs/cli/sage/">CLI</a>
+                <a class="button" href="/sage/docs/javascript/overview/">JavaScript APIs</a>
+                <a class="button button-quiet" href="https://github.com/oro-computer/sage" target="_blank" rel="noreferrer">GitHub</a>
+              </div>
+            </div>
+
+            <div class="panel" aria-label="CLI examples">
+              <div class="panel-header">
+                <div class="panel-title">Getting Started</div>
+                <a class="button button-quiet" href="/sage/docs/cli/sage/">Reference</a>
+              </div>
+              <div class="panel-body">
+                <pre><code class="language-bash">sage README.md
+sage src/
+git diff | sage
+sage https://example.com/
+sage --compile-cache</code></pre>
+                <p>Inputs can be files, directories, stdin, `http://`, `https://`, or `ssh://` URLs.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-label="Why Sage">
+        <div class="container">
+          <div class="prose">
+            <h2>Why Sage</h2>
+            <p>A pager-first CLI with a real documentation and automation surface.</p>
+          </div>
+
+          <div class="card-grid mt-lg">
+            <div class="card col-span-4">
+              <div class="card-body">
+                <h3 class="card-title">Real input coverage</h3>
+                <div class="card-meta">
+                  Open one file, a directory worth of files, piped stdin, or remote content without changing tools.
+                </div>
+                <div class="card-links">
+                  <a class="button button-quiet" href="/sage/docs/cli/inputs-and-modes/">Inputs and modes</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="card col-span-4">
+              <div class="card-body">
+                <h3 class="card-title">Operator ergonomics</h3>
+                <div class="card-meta">
+                  Incremental search, cross-tab find, tab navigation, command mode, line index generation, syntax caches, and mouse support.
+                </div>
+                <div class="card-links">
+                  <a class="button button-quiet" href="/sage/docs/cli/keys-and-commands/">Keys and commands</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="card col-span-4">
+              <div class="card-body">
+                <h3 class="card-title">Programmable runtime</h3>
+                <div class="card-meta">
+                  QuickJS plugins can react to pager events, register commands, persist bounded state, and make HTTP(S) requests.
+                </div>
+                <div class="card-links">
+                  <a class="button button-quiet" href="/sage/docs/javascript/runtime/">JavaScript runtime</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-label="Documentation map">
+        <div class="container">
+          <div class="prose">
+            <h2>Docs map</h2>
+            <p>A CLI-first path through usage, configuration, plugins, and the full JavaScript API surface.</p>
+          </div>
+
+          <div class="list mt-lg">
+            <a class="list-row" href="/sage/docs/">
+              <div>
+                <div class="list-title">Start</div>
+                <div class="list-desc">Quick start, reading path, and what Sage covers.</div>
+              </div>
+              <div class="list-meta">Docs</div>
+            </a>
+            <a class="list-row" href="/sage/docs/guides/getting-started/">
+              <div>
+                <div class="list-title">Guides</div>
+                <div class="list-desc">Build, install, adopt Sage as a pager, and ship plugins.</div>
+              </div>
+              <div class="list-meta">Guides</div>
+            </a>
+            <a class="list-row" href="/sage/docs/cli/sage/">
+              <div>
+                <div class="list-title">CLI</div>
+                <div class="list-desc"><code>sage</code> modes, input types, flags, keys, config, syntax caches, and diagnostics.</div>
+              </div>
+              <div class="list-meta">CLI</div>
+            </a>
+            <a class="list-row" href="/sage/docs/javascript/overview/">
+              <div>
+                <div class="list-title">JavaScript APIs</div>
+                <div class="list-desc">Plugin runtime, stable <code>sage:*</code> modules, globals, events, and examples.</div>
+              </div>
+              <div class="list-meta">API</div>
+            </a>
+            <a class="list-row" href="/sage/docs/man/sage-1/">
+              <div>
+                <div class="list-title">Man pages</div>
+                <div class="list-desc"><code>sage(1)</code>, <code>sage(7)</code>, and <code>sage-plugin-api(3)</code> in reader-friendly form.</div>
+              </div>
+              <div class="list-meta">Man</div>
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>

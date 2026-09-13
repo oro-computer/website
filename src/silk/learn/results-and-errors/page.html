@@ -1,0 +1,123 @@
+<main id="main">
+      <section class="section">
+        <div class="container">
+          <article class="learn-lesson-shell">
+            <!-- learn:chapter-bar -->
+
+            <header class="learn-lesson-heading">
+              <div class="learn-lesson-number">5</div>
+              <div>
+                <small>Chapter 5</small>
+                <h1>Results and errors</h1>
+              </div>
+            </header>
+
+            <div class="prose learn-prose">
+              <p>
+                Silk separates two ideas that are often blurred together: recoverable failures are values, while typed
+                errors describe contract violations that must be declared.
+              </p>
+
+              <h2>Use Result for recoverable failure</h2>
+              <p>If the caller can continue normally, return data that describes success or failure.</p>
+
+              <div class="learn-code" data-code-block="">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/parse.slk</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-silk">package parse;
+
+type PortResult = Result(int, string);
+
+fn parse_port (text: string) -&gt; PortResult {
+  if text == "" {
+    return Err("port is required");
+  }
+
+  if text == "8080" {
+    return Ok(8080);
+  }
+
+  return Err("unsupported port");
+}</code></pre>
+              </div>
+
+              <h2>Handle both cases</h2>
+              <p>A result keeps the caller honest because the failure value is part of the type.</p>
+
+              <div class="learn-code" data-code-block="">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/parse.slk</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-silk">fn port_or_default (text: string) -&gt; int {
+  match (parse_port(text)) {
+    PortResult::Ok(port) =&gt; {
+      return port;
+    },
+    PortResult::Err(_) =&gt; {
+      return 3000;
+    },
+  }
+}</code></pre>
+              </div>
+
+              <h2>Declare contract errors separately</h2>
+              <p>Typed errors use <code>error</code>, <code>panic</code>, and a declared error contract.</p>
+
+              <div class="learn-code" data-code-block="">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">src/parse.slk</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy code"></button>
+                </div>
+                <pre><code class="language-silk">error OutOfRange {
+  value: int,
+}
+
+fn require_user_port (port: int) -&gt; int | OutOfRange {
+  if port &lt; 1024 {
+    panic OutOfRange { value: port };
+  }
+
+  return port;
+}</code></pre>
+              </div>
+
+              <h2>Check the contract</h2>
+              <p>The compiler verifies that typed errors are declared and handled according to their signatures.</p>
+
+              <div class="learn-code" data-code-block="" data-code-kind="terminal">
+                <div class="learn-code-header">
+                  <span class="learn-code-title">Terminal</span>
+                  <button class="learn-copy" type="button" data-copy-code="" aria-label="Copy command"></button>
+                </div>
+                <pre><code class="language-bash">silk check src/parse.slk
+silk test src/parse.slk</code></pre>
+              </div>
+
+              <div class="learn-callout">
+                <p>
+                  Use <code>Result(T, E)</code> for recoverable domain outcomes. Use typed errors for broken contracts
+                  that should not continue as ordinary control flow.
+                </p>
+              </div>
+
+              <h2>What changed</h2>
+              <ul>
+                <li><code>Result(int, string)</code> carried recoverable parse failure.</li>
+                <li><code>match</code> forced the caller to name both result cases.</li>
+                <li><code>error OutOfRange</code> declared a contract error shape.</li>
+                <li><code>-&gt; int | OutOfRange</code> made the typed error contract visible.</li>
+              </ul>
+
+              <div class="learn-complete">
+                <h2>Chapter complete</h2>
+                <p>You now have the core Silk learning path. Continue into the docs for structs, interfaces, testing, ABI, and Formal Silk.</p>
+                <a class="button button-primary" href="/silk/docs/language/structs-impls-layout/">Continue in docs</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>

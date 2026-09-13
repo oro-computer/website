@@ -1,0 +1,243 @@
+---
+layout: "docs"
+title: "std::build"
+description: "(manifest builder + step graph)."
+docsCollection: "silk"
+section: "std"
+order: 73
+sourcePath: "std/build.md"
+githubRepo: "oro-computer/silk"
+githubRef: "master"
+---
+
+# [`std::build`](/silk/docs/std/build/)
+
+(manifest builder + step graph).
+
+[`std::build`](/silk/docs/std/build/) provides helper APIs for writing Silk build modules (`build.slk`).
+Build modules are executed by the `silk` CLI (see [build scripts](/silk/docs/compiler/build-scripts/))
+and must produce a TOML v1.0 package manifest in the `silk.toml` format.
+
+This module is intentionally a *tooling* surface:
+
+- it does not change the compiler’s manifest-driven build model,
+- it exists to make build modules easy to write, deterministic, and hard to get wrong.
+
+## Concepts
+
+### `Context`
+
+A `Context` describes the build-module invocation.
+
+- `package_root`: absolute package root directory.
+- `action`: the current package action string.
+ - `"build"` for `silk build --package`, `silk check --package`, and
+ `silk test --package`
+ - `"install"` for `silk build install --package`
+ - `"uninstall"` for `silk build uninstall --package`
+
+The driver provides these values to the build module via the
+[`std::interfaces::Builder`](/silk/docs/std/interfaces/) entrypoint parameters:
+
+- `package_root` (string)
+- `action` (string)
+
+For standalone hosted tools (not build modules), `Context.from_args(argc, argv)`
+is available to parse `argv` into a `Context`.
+
+### `Build`
+
+A `Build` is a programmatic builder for a package manifest. It exposes methods
+for setting:
+
+- `[package]` fields (`name`, `version`, `definitions`),
+- `[build]` fields (`default_target`, `security_provider`),
+- package-level `[[native]]` entries for target-scoped native requirements,
+- and `[[target]]` entries (including native `inputs`, `cflags`, `ldflags`, and
+ dynamic linkage fields like `needed`/`runpath`/`soname`).
+
+[`std::build`](/silk/docs/std/build/) emits TOML in a deterministic, canonical form.
+
+Note: for toolchain-shipped built-in static archives (for example the mbedTLS
+archives used by [`std::tls`](/silk/docs/std/tls/) with the `builtin` security provider),
+`[[target]].inputs` supports `@builtin/<name>.a` entries (see
+[package manifests](/silk/docs/compiler/package-manifests/)). Build modules may emit these via
+`Build.target_add_input(...)`. On supported native hosts, common built-in
+dependency families (`libsodium`, `mbedTLS`, `libsqlite3`, `libssh2`) are also
+auto-linked when the active provider and native `.c` / `.h` / `.m` / `.o` /
+`.a` inputs require them, so explicit `@builtin/...` entries are optional for
+those common cases.
+
+For package-owned native code that should be linked whenever the package is
+imported as a dependency, build modules should emit `[[native]]` entries via:
+
+- `Build.add_native(target) -> NativeId` (`target = ""` means no target gate),
+- `Build.native_add_input(id, path)`,
+- `Build.native_add_cflag(id, arg)`,
+- `Build.native_add_ldflag(id, arg)`,
+- `Build.native_add_needed(id, soname)`,
+- `Build.native_add_runpath(id, path)`.
+
+The emitted `[[native]]` table follows the package-manifest rules: paths are
+relative to the owning package root, `target` is a compiler target triple, and
+matching entries are consumed by root package builds and by imported
+dependencies. Emit one `[[native]]` entry per target when a helper is portable
+across a specific set of hosted targets, such as `linux-x86_64` and
+`macos-aarch64`.
+
+For native header inputs, `Build.target_add_input(...)` follows the same rule
+as direct manifest/CLI builds:
+
+- if the added path ends in `.h` and a sibling `.c` exists, Silk compiles that
+ `.c`,
+- otherwise, if a sibling `.m` exists, Silk compiles that Objective-C source
+ for supported Apple host-backed Mach-O targets,
+- otherwise Silk falls back to compiling the header itself as a C translation
+ unit.
+
+## Exported API
+
+Build modules are intended to be normal modules that export a `run` entrypoint.
+
+Declaring module conformance to [`std::interfaces::Builder`](/silk/docs/std/interfaces/) is recommended for
+clearer diagnostics and tooling, but the driver requires only that `run` exists
+with the correct signature.
+
+The interface name in `module ... as ...` is resolved after imports, so build
+modules may use the unqualified form (`module ... as Builder;`) and import
+`Builder` in the import block.
+
+Typical entrypoint:
+
+```silk
+module hello::build as Builder;
+
+import { Builder } from "std/interfaces";
+import build from "std/build";
+
+export async fn run (package_root: string, action: string) -> int {
+  let ctx: build::Context = build::Context{ package_root: package_root, action: action };
+  let _ = action;
+  let _ = ctx;
+  let mut b: build::Build = build::Build.init();
+  b.package("hello", "0.1.0");
+  let t = b.add_executable("hello", "src/main.slk");
+  b.target_set_output(t, "build/hello");
+  return b.emit();
+}
+```
+
+Notes:
+
+- Build modules may still generate the TOML manifest directly; [`std::build`](/silk/docs/std/build/) is
+ a convenience layer.
+- Build modules are allowed to be `async` so they can `await` during manifest
+ generation.
+- `build::context(argc, argv)` remains available for wrapper/legacy usage when
+ you are writing a standalone hosted program and want to parse `argv` into a
+ `Context`.
+- `build::run(argc, argv, callback)` remains available for older callback-style
+ build modules.
+
+Current manifest-builder methods include:
+
+- `Build.init() -> Build`
+- `package(name, version)`
+- `set_default_target(name)`
+- `set_security_provider(provider)` where `provider` is `auto`, `platform`, or
+ `builtin`
+
+### Step graph (`StepGraph`)
+
+Build modules often need to run deterministic, dependency-ordered “pre-build”
+work before emitting the manifest (for example: generating `.slk` sources,
+writing version files, or running small code generators).
+
+[`std::build`](/silk/docs/std/build/) provides a small step graph API to make these build-module actions:
+
+- explicit (steps + dependencies),
+- deterministic (stable execution order),
+- and cacheable (content-addressed generated-file cache).
+
+Concepts:
+
+- `StepId` — an integer handle for a created step.
+- `StepKind` — the kind of a step (`MkdirAll`, `WriteFile`, or `Run`).
+- A step graph is executed with `g.run()` which runs all steps in dependency
+ order (topological sort) and returns `0` on success.
+- Dependencies are declared with `g.depends_on(step, dep)` (“run `dep` before
+ `step`”). Cycles are rejected.
+
+API surface:
+
+- `StepGraph.init(package_root)`
+- `mkdir_all(path, mode) -> StepId`
+- `write_file(path, bytes, mode) -> StepId` (cached)
+- `write_file_uncached(path, bytes, mode) -> StepId`
+- `write_file_string(path, contents, mode) -> StepId` (cached)
+- `run_cmd(program) -> StepId`
+- `cmd_arg(step, arg)`
+- `cmd_set_cwd(step, cwd)`
+- `depends_on(step, dep)`
+- `run() -> int`
+
+Path rules:
+
+- Step paths are interpreted relative to `package_root` when not absolute.
+
+Caching:
+
+- `WriteFile` steps are cacheable.
+- When caching is enabled for a `WriteFile` step:
+ - the step computes a content hash over the output bytes,
+ - stores a blob under `<package_root>/.silk/cache/build/<hash>.blob`,
+ - and only (re)writes the destination file when its bytes differ from the
+ desired output (to avoid unnecessary rebuild churn from timestamp changes).
+- The `silk cache` command treats these `.blob` files as recognized managed
+ cache entries, so users can inspect/prune/compact them alongside CLI
+ build-cache entries without manually spelunking the cache directory.
+- Managed cache cleanup for these blobs is coordinated with normal `silk build`
+ cache activity, so explicit cache maintenance does not race live build-cache
+ reads or writes.
+
+- `Run` steps are not cached in the current API.
+
+Minimal example (generate a source file before emitting the manifest):
+
+```silk
+module app::build as std::interfaces::Builder;
+
+import build from "std/build";
+
+export async fn run (package_root: string, action: string) -> int {
+  let _ = action;
+
+  let mut g: build::StepGraph = build::StepGraph.init(package_root);
+  let dir = g.mkdir_all("build/gen", 493); // 0755
+  let gen = g.write_file_string(
+    "build/gen/generated.slk",
+    "export fn generated_answer () -> int { return 42; }\n",
+    420, // 0644
+  );
+  g.depends_on(gen, dir);
+  if g.run() != 0 {
+    return 1;
+  }
+
+  let mut b: build::Build = build::Build.init();
+  b.package("app", "0.1.0");
+  b.sources_add_include("src/**/*.slk");
+  b.sources_add_include("build/gen/**/*.slk");
+  let _ = b.add_executable("app", "src/main.slk");
+  return b.emit();
+}
+```
+
+## Considerations
+This module is expected to grow toward a Zig-like build system:
+
+- programmatic installation/uninstallation hooks,
+- and richer native build configuration beyond the current `cflags`/`ldflags`
+ fields (additional include path kinds and structured link search paths).
+
+When those features are introduced, they will be specified here first.

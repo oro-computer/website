@@ -4,17 +4,20 @@ from __future__ import annotations
 
 import re
 import sys
+import os
 from pathlib import Path
 
 
-RUNTIME_ROOT = Path(__file__).resolve().parents[1]
+SITE_ROOT = Path(__file__).resolve().parents[2]
+RUNTIME_ROOT = Path(os.environ.get("ORO_SITE_OUTPUT", str(SITE_ROOT / "public"))) / "runtime"
 REPO_ROOT = RUNTIME_ROOT.parent
 JAVASCRIPT_DOCS = RUNTIME_ROOT / "docs" / "source" / "javascript"
 CLI_DOCS = RUNTIME_ROOT / "docs" / "source" / "cli"
-UPSTREAM_RUNTIME_INDEX = REPO_ROOT.parent / "runtime" / "api" / "index.d.ts"
-UPSTREAM_RUNTIME_CLI = REPO_ROOT.parent / "runtime" / "api" / "CLI.md"
+UPSTREAM_RUNTIME_ROOT = Path(os.environ["ORO_RUNTIME_REPO"]) if "ORO_RUNTIME_REPO" in os.environ else None
+UPSTREAM_RUNTIME_INDEX = UPSTREAM_RUNTIME_ROOT / "api" / "index.d.ts" if UPSTREAM_RUNTIME_ROOT else None
+UPSTREAM_RUNTIME_CLI = UPSTREAM_RUNTIME_ROOT / "api" / "CLI.md" if UPSTREAM_RUNTIME_ROOT else None
 
-sys.path.insert(0, str(REPO_ROOT / "tools"))
+sys.path.insert(0, str(SITE_ROOT / "tools"))
 
 from site_audit_common import SiteAuditConfig, run_site_audit
 
@@ -77,7 +80,7 @@ def family_reference_re(family: str) -> re.Pattern[str]:
 
 
 def parse_runtime_specifiers() -> tuple[set[str], set[str]]:
-    if not UPSTREAM_RUNTIME_INDEX.exists():
+    if UPSTREAM_RUNTIME_INDEX is None or not UPSTREAM_RUNTIME_INDEX.exists():
         return set(), set()
     text = UPSTREAM_RUNTIME_INDEX.read_text(encoding="utf-8")
     specifiers = set(MODULE_START.findall(text))
@@ -86,7 +89,7 @@ def parse_runtime_specifiers() -> tuple[set[str], set[str]]:
 
 
 def parse_runtime_cli_sections() -> set[str]:
-    if not UPSTREAM_RUNTIME_CLI.exists():
+    if UPSTREAM_RUNTIME_CLI is None or not UPSTREAM_RUNTIME_CLI.exists():
         return set()
     text = UPSTREAM_RUNTIME_CLI.read_text(encoding="utf-8")
     return set(re.findall(r"^##\s+([^\n]+)$", text, re.M))

@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import re
 import sys
+import os
 from pathlib import Path
 
 
-SILK_ROOT = Path(__file__).resolve().parents[1]
+SITE_ROOT = Path(__file__).resolve().parents[2]
+SILK_ROOT = Path(os.environ.get("ORO_SITE_OUTPUT", str(SITE_ROOT / "public"))) / "silk"
 REPO_ROOT = SILK_ROOT.parent
 
 DOCS_SOURCE = SILK_ROOT / "docs" / "source"
@@ -16,7 +18,7 @@ WIKI_SOURCE = SILK_ROOT / "wiki" / "source"
 DOCS_INDEX = SILK_ROOT / "docs" / "index.json"
 WIKI_INDEX = SILK_ROOT / "wiki" / "index.json"
 
-sys.path.insert(0, str(REPO_ROOT / "tools"))
+sys.path.insert(0, str(SITE_ROOT / "tools"))
 
 from site_audit_common import (
     Issue,
