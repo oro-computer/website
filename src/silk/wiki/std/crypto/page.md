@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "std::crypto"
 description: "std::crypto provides cryptography primitives (hosted baseline via libsodium in the current design)."
 docsCollection: "silkWiki"

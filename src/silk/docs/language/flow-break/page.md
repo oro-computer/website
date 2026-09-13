@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "break"
 description: "break exits the nearest enclosing loop."
 docsCollection: "silk"

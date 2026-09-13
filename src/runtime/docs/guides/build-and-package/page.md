@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "Build and package"
 description: "This guide summarizes the workflows downstream app developers use most:"
 docsCollection: "runtime"

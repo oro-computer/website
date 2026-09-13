@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "oro:crypto"
 description: "oro:crypto exposes hashing, random bytes, and bundled sodium-backed helpers."
 docsCollection: "runtime"

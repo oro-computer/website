@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::runtime::dylib"
 description: "std::runtime::dylib is the runtime interface used by std::dylib."
 docsCollection: "silk"

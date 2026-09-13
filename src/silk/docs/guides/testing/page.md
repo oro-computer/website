@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "Testing"
 description: "Silk testing is language-level: tests live next to the code they exercise. The compiler discovers them, runs them with silk test, and emits TAP output (TAP v13) so results are easy to consume in CI an"
 docsCollection: "silk"

@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "Interfaces"
 description: "Interfaces declare method signatures that types (or modules) can conform to via impl ... as ... (or module ... as ...). This is the basis for protocol-like surfaces such as iterators and Drop."
 docsCollection: "silkWiki"

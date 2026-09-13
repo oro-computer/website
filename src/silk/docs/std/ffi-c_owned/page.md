@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::ffi::c_owned"
 description: "Source: std/ffi/c_owned.slk"
 docsCollection: "silk"

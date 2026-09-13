@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "sage-docs"
 title: "Options"
 description: "This page documents every public CLI flag on sage."
 docsCollection: "sage"

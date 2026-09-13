@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "[slc(1)](?p=man/slc.1) — Alias of silk build"
 description: "NOTE: This is the Markdown source for the eventual man 1 page for slc. The roff-formatted manpage should be generated from this content."
 docsCollection: "silk"

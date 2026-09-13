@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::graphics::opengl"
 description: "Source: std/graphics/opengl.slk"
 docsCollection: "silk"

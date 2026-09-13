@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "Release packaging and signed updates"
 description: "Shipping the app is only half of the release story. The other half is producing update artifacts that can be verified, served, and diagnosed later without improvisation."
 docsCollection: "runtime"

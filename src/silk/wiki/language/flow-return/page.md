@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "return"
 description: "Use return to exit the current function."
 docsCollection: "silkWiki"

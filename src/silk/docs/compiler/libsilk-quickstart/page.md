@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "libsilk quickstart"
 description: "This page is the shortest path to embedding the Silk compiler from C or C++."
 docsCollection: "silk"

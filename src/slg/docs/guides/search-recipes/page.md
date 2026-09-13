@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "slg-docs"
 title: "Search recipes"
 description: "These are practical slg workflows for code trees, logs, and large repositories."
 docsCollection: "slg"

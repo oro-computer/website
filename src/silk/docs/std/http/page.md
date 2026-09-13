@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::http"
 description: "std::http provides HTTP/1.1 request/response parsing, a small blocking client/server connection API on top of std::net::TCPStream, and ergonomic URL/stream client helpers."
 docsCollection: "silk"

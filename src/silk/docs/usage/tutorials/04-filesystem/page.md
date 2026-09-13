@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "Tutorial 4: filesystem basics (std::fs)"
 description: "This tutorial demonstrates a very common “systems script” pattern:"
 docsCollection: "silk"

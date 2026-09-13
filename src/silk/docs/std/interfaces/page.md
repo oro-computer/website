@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::interfaces"
 description: "This module defines small, non-generic standard-library interfaces (“protocols”) that can be used today to express common capabilities across std:: types."
 docsCollection: "silk"

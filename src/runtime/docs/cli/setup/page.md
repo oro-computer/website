@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "oroc setup"
 description: "Setup build tools for the host or a target platform."
 docsCollection: "runtime"

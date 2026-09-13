@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::runtime::fs"
 description: "Source: std/runtime/fs.slk"
 docsCollection: "silk"

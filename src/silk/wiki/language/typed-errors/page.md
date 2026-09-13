@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "Typed errors (error, panic, and T | ErrorType...)"
 description: "Typed errors make “this function can fail” explicit in the type system:"
 docsCollection: "silkWiki"

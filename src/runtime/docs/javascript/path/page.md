@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "oro:path"
 description: "oro:path provides cross-platform path manipulation utilities."
 docsCollection: "runtime"

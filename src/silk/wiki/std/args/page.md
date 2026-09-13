@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "std::args"
 description: "std::args provides helpers for working with the hosted main(argc, argv) entrypoint shape."
 docsCollection: "silkWiki"

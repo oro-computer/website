@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "virtnosis-docs"
 title: "Systemd Guide"
 description: "This guide documents the systemd deployment story for Virtnosis."
 docsCollection: "virtnosis"

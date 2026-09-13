@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "Types"
 description: "This document specifies the Silk type system used by the compiler front-end and type checker."
 docsCollection: "silk"

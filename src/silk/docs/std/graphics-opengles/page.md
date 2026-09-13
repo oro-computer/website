@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::graphics::opengles"
 description: "Source: std/graphics/opengles.slk"
 docsCollection: "silk"

@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "std::bits"
 description: "std::bits is the standard bit-manipulation and byte-order helper module."
 docsCollection: "silkWiki"

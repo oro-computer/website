@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "Dependent types (const parameters) (design)"
 description: "This page covers Silk’s intended support for types that mention compile-time values (especially integers), such as dependent-length collections."
 docsCollection: "silkWiki"

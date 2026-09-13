@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "[silk-test(1)](?p=man/silk-test.1) — Run Language-Level Tests"
 description: "NOTE: This is the Markdown source for the eventual man 1 page for silk test. The roff-formatted manpage should be generated from this content."
 docsCollection: "silk"

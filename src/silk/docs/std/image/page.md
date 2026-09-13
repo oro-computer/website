@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::image — Image Codecs + Color"
 description: "std::image provides:"
 docsCollection: "silk"

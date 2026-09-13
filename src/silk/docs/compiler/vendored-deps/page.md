@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "Built-In Dependencies (Legacy Link)"
 description: "This page moved to builtin deps. The canonical built-in dependency documentation describes the shipped dependency sources, generated archives, provider selection, staging layout, and zig build deps wo"
 docsCollection: "silk"

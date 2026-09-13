@@ -100,7 +100,7 @@ export async function importCollection(
     const text = linkReferences(body, collection, file, catalog)
     const metadata = {
       ...(previous?.metadata || {
-        layout: file === 'spec/2026.md' ? 'spec' : 'docs',
+        layout: collection === 'silk' && file === 'spec/2026.md' ? 'spec' : `${collection}-docs`,
         title,
         description: '',
         docsCollection: collection,

@@ -1,1 +1,3 @@
-import '../lib/learn-client.js'
+import { initLearn } from '../lib/learn-client.ts'
+
+initLearn()

@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "Aggregate literals (arrays and structs)"
 description: "Aggregate literals build compound values directly in source code:"
 docsCollection: "silkWiki"

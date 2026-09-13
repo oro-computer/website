@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "Lifecycle hooks and deep links"
 description: "Lifecycle hooks are where the application stops being a generic page and starts reacting like a native application. Use them for readiness, connectivity, backgrounding, and OS-delivered URLs."
 docsCollection: "runtime"

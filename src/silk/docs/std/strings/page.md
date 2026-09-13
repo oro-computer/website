@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::strings"
 description: "A small but growing subset is implemented in std/strings.slk to support early toolchain bring-up; the rest of this document describes the intended long-term API."
 docsCollection: "silk"

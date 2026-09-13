@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "copy_map"
 description: "Copy-maps let you explicitly map build inputs into your app bundle. They are referenced from oro.toml:"
 docsCollection: "runtime"

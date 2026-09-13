@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "Expression statements"
 description: "Many expressions can appear as standalone statements when followed by ; (assignment, calls, ++/--, and other “statement-like” expressions)."
 docsCollection: "silkWiki"

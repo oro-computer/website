@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "Compiler Diagnostics"
 description: "This document specifies the human-readable diagnostic format emitted by the Silk toolchain, including:"
 docsCollection: "silk"

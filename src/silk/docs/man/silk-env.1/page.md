@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "[silk-env(1)](?p=man/silk-env.1) — Print silk CLI Environment"
 description: "NOTE: This is the Markdown source for the eventual man 1 page for silk env. The roff-formatted manpage should be generated from this content."
 docsCollection: "silk"

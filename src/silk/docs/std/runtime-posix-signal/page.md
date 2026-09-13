@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::runtime::posix::signal"
 description: "Source: std/runtime/posix/signal.slk"
 docsCollection: "silk"

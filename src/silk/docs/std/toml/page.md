@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::toml"
 description: "std::toml provides a TOML v1.0-style parser plus deterministic emission over an index-based DOM."
 docsCollection: "silk"

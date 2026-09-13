@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "[silk_amdgpu_aql_dispatch_packet_build(3)](?p=man/silk_amdgpu_aql_dispatch_packet_build.3) — Serialize AMDGPU AQL Dispatch Packets"
 description: "NOTE: This is the Markdown source for the eventual man 3 page for the AMDGPU AQL packet helper. The roff-formatted manpage should be generated from this content."
 docsCollection: "silk"

@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "loop Loop"
 description: "The loop statement executes a block repeatedly until it is terminated by a break or return."
 docsCollection: "silk"

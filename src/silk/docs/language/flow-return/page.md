@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "return"
 description: "The return statement exits a function, optionally with a value."
 docsCollection: "silk"

@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::semver"
 description: "std::semver provides a SemVer 2.0.0 parser and precedence comparison."
 docsCollection: "silk"

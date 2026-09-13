@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "sage-docs"
 title: "Plugins quickstart"
 description: "sage can load JavaScript plugins in the interactive TUI path. Plugins are a good fit when you want:"
 docsCollection: "sage"

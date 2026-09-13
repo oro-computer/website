@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::crypto::sign"
 description: "Source: std/crypto/sign.slk"
 docsCollection: "silk"

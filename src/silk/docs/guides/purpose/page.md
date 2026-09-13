@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "What Silk is for"
 description: "Silk is for systems code that has to be understood, shipped, embedded, and trusted after it grows beyond a single file."
 docsCollection: "silk"

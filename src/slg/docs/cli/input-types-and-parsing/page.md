@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "slg-docs"
 title: "Input types and parsing"
 description: "This page is the exact downstream input model for slg."
 docsCollection: "slg"

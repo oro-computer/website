@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "Target-neutral GPU compilation"
 description: "This document defines the shared compiler contract between Silk source and processor-specific GPU backends. AMDGPU is the first consumer; the GPU-v1 closure adds an NVIDIA PTX consumer. Both consume t"
 docsCollection: "silk"

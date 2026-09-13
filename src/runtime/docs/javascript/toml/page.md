@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "oro:toml"
 description: "oro:toml parses and serializes TOML documents."
 docsCollection: "runtime"

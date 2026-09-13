@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "oro:tar"
 description: "oro:tar opens, creates, streams, and extracts tar archives."
 docsCollection: "runtime"

@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "Flow Control Overview"
 description: "Flow control describes how Silk programs sequence work, branch, loop, and exit. This concept spans several surface constructs and their static rules (typing, scoping, and diagnostics)."
 docsCollection: "silk"

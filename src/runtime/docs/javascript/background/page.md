@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "oro:background"
 description: "oro:background lets you inspect and coordinate the runtime background task surface."
 docsCollection: "runtime"

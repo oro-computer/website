@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "oro:xpc"
 description: "oro:xpc connects to macOS XPC services and encodes structured XPC payloads."
 docsCollection: "runtime"

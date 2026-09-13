@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "Custom protocols and routing"
 description: "Some apps need more than a single https://-style origin. Custom protocols let you give internal resources a stable shape and route them through service-worker logic instead of hard-coding filesystem p"
 docsCollection: "runtime"

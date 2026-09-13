@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::temporal"
 description: "A small, ergonomic subset is implemented in std/temporal.slk:"
 docsCollection: "silk"

@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "Getting started"
 description: "This page gets you from “a file” to “a runnable program”, and points you at the docs you’ll use most often."
 docsCollection: "silk"

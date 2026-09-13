@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "How-To: Use a Custom Stdlib Root (and Runtime)"
 description: "The std::... modules are loaded from a stdlib root (a directory containing a std/ tree). Because std::runtime is part of that source tree, selecting a different stdlib root is also how you select a di"
 docsCollection: "silk"

@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "sage-docs"
 title: "JavaScript APIs overview"
 description: "sage can load JavaScript plugins in the interactive TUI path. Plugins run as ES modules on top of QuickJS and can extend the pager with custom commands, event handlers, bounded filesystem state, child"
 docsCollection: "sage"

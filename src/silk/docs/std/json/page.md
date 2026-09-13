@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::json"
 description: "std::json provides an RFC 8259-style JSON parser plus deterministic JSON emission over an index-based DOM."
 docsCollection: "silk"

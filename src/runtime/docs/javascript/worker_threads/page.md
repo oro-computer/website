@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "oro:worker_threads"
 description: "oro:worker_threads exposes worker-thread primitives, ports, and environment data helpers."
 docsCollection: "runtime"

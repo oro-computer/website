@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::runtime::wasi::mem"
 description: "Source: std/runtime/wasi/mem.slk"
 docsCollection: "silk"

@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "Packages, imports, and exports"
 description: "Silk has explicit module/package structure:"
 docsCollection: "silkWiki"

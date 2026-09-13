@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "Practical Logger Module Walkthrough"
 description: "This walkthrough builds a small structured logger package that can be imported from Silk and exposed to C through a generated header. It starts with the normal Silk API in src/lib.slk, then adds src/c"
 docsCollection: "silk"

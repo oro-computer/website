@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::math::matrix"
 description: "Source: std/math/matrix.slk"
 docsCollection: "silk"

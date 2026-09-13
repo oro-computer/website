@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "oro:service-worker"
 description: "oro:service-worker/* exposes the service-worker environment, lifecycle objects, and helpers."
 docsCollection: "runtime"

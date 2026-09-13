@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "WebAssembly Runtime (std::wasm)"
 description: "std::wasm is the standard library surface for executing WebAssembly (WASM) modules from Silk."
 docsCollection: "silk"

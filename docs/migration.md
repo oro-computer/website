@@ -14,9 +14,18 @@ remains reproducible. Production cutover is complete; deployment evidence is rec
 | Page chrome | Headers, footers, metadata, product navigation, learn chapter bars, documentation sidebars, breadcrumbs, previous/next links, and heading lists render at build time. |
 | Progressive features | Search, keyboard tabs, copy controls, Ask AI, mobile sidebar controls, active headings, and tab fragments work with browser JavaScript. |
 | Artifacts | One build emits HTML, indexes, search data, raw Markdown, LLM packs, the sitemap, CNAME, and `.nojekyll`. |
-| Ingestion | Silk and Runtime retain their upstream/editorial ownership rules and accept explicit upstream checkout paths. Unchanged public pages retain exact Markdown and metadata. |
+| Ingestion | Native TypeScript tools retain Silk and Runtime upstream/editorial ownership rules and explicit checkout paths. Unchanged public pages retain exact Markdown and metadata. |
 | Cleanup | The browser Markdown renderers, vendored rendering libraries, old HTML shells, duplicate Python exporters, generated source-tree indexes, and Jekyll configuration are retired. |
-| CI | Audit and deployment workflows use Node 24, Python 3.12, and the same `npm run check` gate. |
+| CI | Node 24 runs ingestion, audits, browser serving, and the `npm run check` gate without Python. Pull requests validate in Docs Audit; production pushes validate and deploy the same artifact in Pages, without a duplicate push audit. |
+
+Collection layouts subscribe to lightweight, collection-specific navigation keys.
+Search and raw-source/LLM templates have separate dependencies, so document-body
+edits do not invalidate unrelated navigation consumers. Shared article transforms
+remain page-local rather than storing rendered articles in global data. Markdown
+keeps the existing alerts, highlighting, and legacy heading-ID policy; enabling
+additional DOMStack Markdown plugins is an explicit compatibility decision.
+Homepage and learn styles are scoped to their consumers, and progressive clients
+are TypeScript modules rather than unchecked global initializers.
 
 The route inventory is in `tools/migration/baseline.json`; original Markdown
 links and heading text are in `tools/migration/link-inventory.json`. The migration

@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "virtnosis-docs"
 title: "vnactl"
 description: "vnactl is the operator and automation client for virtnosis-agent."
 docsCollection: "virtnosis"

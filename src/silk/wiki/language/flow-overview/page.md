@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "Flow control overview"
 description: "Silk has familiar structured control flow:"
 docsCollection: "silkWiki"

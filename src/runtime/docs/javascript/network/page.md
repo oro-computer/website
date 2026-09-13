@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "oro:network"
 description: "oro:network exposes a higher-level networking surface built on the Latica stack."
 docsCollection: "runtime"

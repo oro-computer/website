@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "virtnosis-docs"
 title: "Development Guide"
 description: "This guide is for contributors working inside virtnosis/."
 docsCollection: "virtnosis"

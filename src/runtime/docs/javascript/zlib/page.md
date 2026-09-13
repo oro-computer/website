@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "oro:zlib"
 description: "oro:zlib compresses and decompresses buffers and exposes zlib stream helpers."
 docsCollection: "runtime"

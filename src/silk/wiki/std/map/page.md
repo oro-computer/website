@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "std::map"
 description: "std::map provides associative containers:"
 docsCollection: "silkWiki"

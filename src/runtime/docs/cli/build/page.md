@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "oroc build"
 description: "Build an Oro Runtime application."
 docsCollection: "runtime"

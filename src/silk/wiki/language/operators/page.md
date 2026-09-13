@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "Operators"
 description: "Silk’s operators cover arithmetic, comparisons, logical operators, assignment, casts, ranges, optionals (?., ??), and typed-error propagation (?)."
 docsCollection: "silkWiki"

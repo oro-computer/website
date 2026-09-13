@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::process"
 description: "(hosted POSIX baseline)."
 docsCollection: "silk"

@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "Aggregate Literals"
 description: "Aggregate literals cover arrays and structs."
 docsCollection: "silk"

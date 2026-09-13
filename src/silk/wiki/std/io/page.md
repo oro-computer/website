@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "std::io"
 description: "std::io provides basic stdin/stdout/stderr I/O and a small formatting surface (print/println)."
 docsCollection: "silkWiki"

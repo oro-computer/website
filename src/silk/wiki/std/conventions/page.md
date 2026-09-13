@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "std:: conventions"
 description: "std:: modules follow shared conventions for naming, ownership/allocation, error reporting."
 docsCollection: "silkWiki"

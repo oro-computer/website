@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "Frontend build pipeline"
 description: "Most production Oro Runtime applications do not ship raw source files. They run a web build first, then copy the built artifacts into the runtime bundle. This guide shows a clean pipeline that works f"
 docsCollection: "runtime"

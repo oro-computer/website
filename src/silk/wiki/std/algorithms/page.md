@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "std::algorithms"
 description: "std::algorithms provides common algorithms over collections. Today, a small Supported forms exists for scalar types."
 docsCollection: "silkWiki"

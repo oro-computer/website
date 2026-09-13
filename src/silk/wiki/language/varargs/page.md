@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "Varargs (...args)"
 description: "Silk supports “varargs” parameters to accept a variable number of trailing arguments, used by std::io::print / std::io::println."
 docsCollection: "silkWiki"

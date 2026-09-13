@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::path"
 description: "std::path provides path manipulation utilities, borrowed path views, and the owned PathBuf builder/buffer."
 docsCollection: "silk"

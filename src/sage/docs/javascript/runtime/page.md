@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "sage-docs"
 title: "JavaScript runtime"
 description: "This page describes the full plugin runtime model: how plugins load, what globals are installed, what events exist, and where the limits are."
 docsCollection: "sage"

@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "sage-docs"
 title: "sage-plugin-api(3)"
 description: "sage-plugin-api(3) is the manual page for the JavaScript plugin runtime. This page mirrors the man page in website form and points into the fuller module documentation."
 docsCollection: "sage"

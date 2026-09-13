@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "Optionals (T?)"
 description: "Optionals represent “maybe a value” without sentinel nulls."
 docsCollection: "silkWiki"

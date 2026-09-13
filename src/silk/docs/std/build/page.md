@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::build"
 description: "(manifest builder + step graph)."
 docsCollection: "silk"

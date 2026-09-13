@@ -81,7 +81,7 @@ for (const [key, c] of Object.entries(collections)) {
       order: order++,
     }
     const vars = {
-      layout: id === 'spec/2026' ? 'spec' : 'docs',
+      layout: collection === 'silk' && id === 'spec/2026' ? 'spec' : `${collection}-docs`,
       title: info.title.replace(/`/g, ''),
       description: description(body),
       docsCollection: collection,

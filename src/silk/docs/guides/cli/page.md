@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "CLI and toolchain"
 description: "Silk’s CLI is designed around a small number of commands that compose well:"
 docsCollection: "silk"

@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "Struct Requirements (#require)"
 description: "Use #require on a struct to state requirements that must hold for all values constructed for that struct type."
 docsCollection: "silk"

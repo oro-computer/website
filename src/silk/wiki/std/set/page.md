@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "std::set"
 description: "std::set provides set containers:"
 docsCollection: "silkWiki"

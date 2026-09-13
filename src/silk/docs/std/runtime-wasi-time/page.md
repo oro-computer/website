@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::runtime::wasi::time"
 description: "Source: std/runtime/wasi/time.slk"
 docsCollection: "silk"

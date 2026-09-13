@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "oroc version"
 description: "Inspect or bump the project version defined in your configuration file."
 docsCollection: "runtime"

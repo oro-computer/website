@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "sage-docs"
 title: "sage(1)"
 description: "sage(1) is the command reference for the pager itself. This page mirrors the man page in website form so downstream readers do not have to context-switch into man."
 docsCollection: "sage"

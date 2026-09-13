@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "[silk-doc(1)](?p=man/silk-doc.1) — Generate Documentation (Markdown or Manpages)"
 description: "NOTE: This is the Markdown source for the eventual man 1 page for silk doc. The roff-formatted manpage should be generated from this content."
 docsCollection: "silk"

@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "oro:dgram"
 description: "oro:dgram provides UDP sockets and multicast helpers with a Node-compatible API."
 docsCollection: "runtime"

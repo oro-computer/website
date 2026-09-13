@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::runtime::atomic"
 description: "std::runtime::atomic is the stdlib runtime interface used by std::atomic."
 docsCollection: "silk"

@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "sage-docs"
 title: "Sage Docs"
 description: "sage is a fast, ergonomic terminal pager with a strong CLI story: open one file, a directory worth of files, piped stdin, or remote content, then navigate with a responsive TUI, incremental search, sy"
 docsCollection: "sage"

@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "std::path"
 description: "std::path provides path manipulation helpers."
 docsCollection: "silkWiki"

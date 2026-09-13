@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::crypto::hash"
 description: "Source: std/crypto/hash.slk"
 docsCollection: "silk"

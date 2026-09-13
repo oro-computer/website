@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "slg-docs"
 title: "Patterns and matching"
 description: "This page documents how slg interprets patterns once parsing is complete."
 docsCollection: "slg"

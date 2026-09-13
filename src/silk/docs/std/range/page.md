@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::range"
 description: "std::range provides a boxed, method-bearing representation of the built-in range primitive."
 docsCollection: "silk"

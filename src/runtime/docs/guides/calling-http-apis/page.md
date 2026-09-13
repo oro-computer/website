@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "Calling HTTP APIs"
 description: "Most production applications spend their time moving between three layers:"
 docsCollection: "runtime"

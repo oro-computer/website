@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "sage-docs"
 title: "All module specifiers"
 description: "Public, stable module specifiers:"
 docsCollection: "sage"

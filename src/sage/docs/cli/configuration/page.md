@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "sage-docs"
 title: "Configuration"
 description: "sage reads configuration from .sagerc, a TOML file."
 docsCollection: "sage"

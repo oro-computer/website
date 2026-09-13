@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "std::tls"
 description: "std::tls provides TLS client/server primitives (hosted baseline via mbedTLS)."
 docsCollection: "silkWiki"

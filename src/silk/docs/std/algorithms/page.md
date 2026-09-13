@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::algorithms"
 description: "This describes intended algorithm APIs; it is not implemented yet."
 docsCollection: "silk"

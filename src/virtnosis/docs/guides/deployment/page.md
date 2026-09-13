@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "virtnosis-docs"
 title: "Deployment Guide"
 description: "This guide covers local agent deployment, shared socket deployment, and the important permission and auth choices."
 docsCollection: "virtnosis"

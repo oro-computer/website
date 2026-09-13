@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::task"
 description: "This module provides a small hosted baseline for task/runtime utilities on linux/x86_64."
 docsCollection: "silk"

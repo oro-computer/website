@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::function"
 description: "std::function provides a boxed holder for first-class Silk function values."
 docsCollection: "silk"

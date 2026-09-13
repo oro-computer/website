@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "sage-docs"
 title: "sage(7)"
 description: "sage(7) is the conceptual manual page for the pager. It explains how the CLI behaves beyond the flag list in sage(1)."
 docsCollection: "sage"

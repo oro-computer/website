@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "std::sync"
 description: "std::sync provides synchronization primitives (hosted baseline)."
 docsCollection: "silkWiki"

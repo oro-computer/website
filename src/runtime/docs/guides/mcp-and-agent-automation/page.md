@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "MCP and agent automation"
 description: "Oro Runtime supports MCP in two complementary ways:"
 docsCollection: "runtime"

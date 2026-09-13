@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::vector"
 description: "This module provides a generic, growable vector type Vector(T) used broadly across std::."
 docsCollection: "silk"

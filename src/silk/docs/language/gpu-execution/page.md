@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "GPU execution placement"
 description: "Silk functions run on the program's host CPU unless their declaration carries the GPU placement attribute:"
 docsCollection: "silk"

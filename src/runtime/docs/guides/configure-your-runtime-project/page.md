@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "Configure your runtime project"
 description: "Oro Runtime projects are controlled by oro.toml, with optional machine-local overrides in .ororc. Treat those files as part of the app contract: they define what ships, how the window behaves, which p"
 docsCollection: "runtime"

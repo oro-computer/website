@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "String Literals"
 description: "String literals represent string values: immutable, length-tracked sequences of bytes that are typically interpreted as UTF-8 text."
 docsCollection: "silk"

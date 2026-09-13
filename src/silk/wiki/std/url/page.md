@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "std::url"
 description: "std::url provides a WHATWG URL parser/serializer and URLSearchParams-style behavior."
 docsCollection: "silkWiki"

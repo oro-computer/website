@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "Hello world"
 description: "This guide builds a small Oro Runtime app that does three things immediately:"
 docsCollection: "runtime"

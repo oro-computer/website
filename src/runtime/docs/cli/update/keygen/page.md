@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "oroc update keygen"
 description: "Generate an Ed25519 keypair for signing update manifests."
 docsCollection: "runtime"

@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "slg-docs"
 title: "Output and exit codes"
 description: "This page documents what slg prints, where it prints it, and how it exits."
 docsCollection: "slg"

@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "Testing and diagnostics"
 description: "If the runtime app is real, it needs two things early:"
 docsCollection: "runtime"

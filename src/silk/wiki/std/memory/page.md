@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "std::memory"
 description: "std::memory provides low-level helpers and the long-term allocator design."
 docsCollection: "silkWiki"

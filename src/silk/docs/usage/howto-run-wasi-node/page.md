@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "How-To: Run wasm32-wasi Output in Node.js"
 description: "This guide shows how to:"
 docsCollection: "silk"

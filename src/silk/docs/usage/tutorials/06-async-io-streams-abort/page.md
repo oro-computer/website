@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "Tutorial 6: Async I/O + Streams + Abort Signals"
 description: "This tutorial shows how to compose the current concurrency + stdlib building blocks into practical I/O pipelines:"
 docsCollection: "silk"

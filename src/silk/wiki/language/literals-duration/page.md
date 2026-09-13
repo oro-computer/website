@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "Duration literals"
 description: "Duration literals represent time spans with unit suffixes (ms, s, min, etc) and produce a Duration value."
 docsCollection: "silkWiki"

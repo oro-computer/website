@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "for loops"
 description: "for loops iterate over:"
 docsCollection: "silkWiki"

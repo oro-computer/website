@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "Packages, Imports, and Exports"
 description: "This document specifies the initial surface syntax for packages, imports, and exports in Silk. The semantics are intentionally minimal for now and will be extended as the compiler’s resolver and linke"
 docsCollection: "silk"

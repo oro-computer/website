@@ -5,7 +5,8 @@ chapters, and documentation for Runtime, Silk, Virtnosis, Sage, and slg.
 
 ## Local development
 
-Use Node 24 and Python 3.12. No sibling checkout is needed to build the site.
+Use Node 24. Builds, ingestion tools, audits, and tests run in TypeScript on Node;
+Python is not required. No sibling checkout is needed to build the site.
 
 ```sh
 npm ci
@@ -21,16 +22,25 @@ are output files; do not commit `public/`.
 - `src/**/page.html`: authored page fragments, with metadata in `page.vars.ts`.
 - `src/**/page.md`: public documentation, including YAML frontmatter.
 - `src/layouts/`: shared page chrome, navigation, and progressive browser clients.
-- `src/globals/global.css`: Oro styles, based on `docs/branding/`.
+- `src/globals/global.css`: shared Oro styles, based on `docs/branding/`.
+  Homepage styles live in `src/style.css`; learn styles in `src/layouts/learn.layout.css`.
 - `src/lib/`: rendering, URL, collection, and navigation helpers.
-- `src/global.data.ts`: collection data derived from source pages.
-- `src/artifacts.template.ts`: navigation/search JSON, raw Markdown, LLM packs,
-  and sitemap output.
+- `src/global.data.ts`: validated collection metadata and precomputed navigation,
+  search, and source-export projections derived from source pages.
+- `src/layouts/*-docs.layout.ts`: thin collection-specific data
+  consumers sharing the docs renderer and its assets.
+- `src/*-{index,search,sources,llms}.template.ts`: dependency-scoped collection
+  artifacts; `src/sitemap.template.ts`: sitemap output;
+  `src/artifacts.template.ts`: site-wide LLM directory and `.nojekyll`.
 
 Consult `docs/branding/` before changing visual design or copy tone. The approved
 logo originals remain in `docs/branding/assets/`; their checked mirrors in `src/docs/branding/assets/` retain
 the same public URLs. Update both when replacing an asset. Handlebars is disabled globally so literal `{{ ... }}` code
-examples remain intact.
+examples remain intact. The Markdown parser deliberately keeps the existing
+plugin policy: tables, strikethrough, HTML, linkification, GitHub alerts, syntax
+highlighting, and legacy heading IDs. DOMStack's other default extensions are
+not implicitly enabled; review fragment and rendered-output compatibility before
+adding plugins.
 
 Each documentation page declares `title`, `description`, `docsCollection`,
 `section`, `order`, `sourcePath`, `githubRepo`, and `githubRef`. Preserve
@@ -38,6 +48,9 @@ Each documentation page declares `title`, `description`, `docsCollection`,
 The `start` document lives at its collection root; the specification lives at
 `src/silk/spec/2026/page.md`. Order is explicit and does not depend on filenames.
 New imported pages are appended; review their section and order after syncing.
+Use the collection-specific layout, such as `runtime-docs` or `silkWiki-docs`,
+for new documentation pages (`spec` for the specification). The shared `docs`
+layout is an asset-bearing parent, not a standalone article renderer.
 
 Use canonical directory links such as `/runtime/docs/guides/hello-world/`.
 Collection roots redirect legacy `?p=` links while preserving fragments. Static
@@ -52,8 +65,8 @@ checkouts, preserve the established curated/website-owned content, and write
 committed DOMStack Markdown pages. Review and commit their changes before deploying.
 
 ```sh
-python3 silk/tools/sync-from-silk-docs.py --silk-repo /path/to/silk
-python3 runtime/tools/generate-js-api-reference.py --runtime-repo /path/to/runtime
+node silk/tools/sync-from-silk-docs.ts --silk-repo /path/to/silk
+node runtime/tools/generate-js-api-reference.ts --runtime-repo /path/to/runtime
 npm run build
 npm run audit
 npm run audit:content
@@ -69,8 +82,10 @@ linked API headings become plain-text titles when a page changes. The reference
 catalog includes new pages in the same import batch. Runtime's generated
 reference markers retain surrounding prose.
 
-The Python index and LLM exporters have been replaced by DOMStack templates.
-Content audits inspect `public/` by default; set `ORO_SITE_OUTPUT` to inspect
+The generators call the TypeScript importer directly; they never run during a
+DOMStack build. JSON indexes and LLM exports are DOMStack templates, not ingestion
+outputs. Content audits run through `tools/audit-content.ts` and inspect `public/`
+by default; set `ORO_SITE_OUTPUT` to inspect
 another output directory. Set `ORO_RUNTIME_REPO` explicitly to additionally audit
 against a particular upstream Runtime checkout; ordinary checks are independent
 of whatever happens to be checked out next door.
@@ -117,7 +132,10 @@ update the relevant assertions and redirects together.
 
 ## Deployment and dependency updates
 
-GitHub Actions builds and uploads `public/` and deploys with the Pages environment.
+Pull requests run the Docs Audit workflow. Production-branch pushes run the
+Pages workflow, which validates once, uploads that checked `public/` artifact,
+and deploys with the Pages environment. Both workflows use Node only and retain
+browser failure artifacts.
 The repository's **Settings → Pages → Source** must be **GitHub Actions**. Merging
 these changes does not itself change that repository setting. The output contains
 `CNAME`, `.nojekyll`, branding assets, raw Markdown, and `llms.txt` packs.

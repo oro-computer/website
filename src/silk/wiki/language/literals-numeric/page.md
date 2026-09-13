@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "Numeric literals"
 description: "Silk supports integer and floating-point literals, including base prefixes suffixes as defined in the canonical spec."
 docsCollection: "silkWiki"

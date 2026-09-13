@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "AMDGPU Backend"
 description: "This document specifies the initial AMD GPU backend surface for Silk. The backend is implemented in Zig and emits AMDHSA code-object bytes directly from Silk-owned data structures. It must not depend "
 docsCollection: "silk"

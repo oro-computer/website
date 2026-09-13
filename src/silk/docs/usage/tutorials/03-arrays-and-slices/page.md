@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "Tutorial 3: Arrays and Slices"
 description: "This tutorial covers:"
 docsCollection: "silk"

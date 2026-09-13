@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "oro:worker"
 description: "oro:worker re-exports the runtime worker classes for dedicated, shared, and service workers."
 docsCollection: "runtime"

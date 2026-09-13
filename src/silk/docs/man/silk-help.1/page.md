@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "[silk-help(1)](?p=man/silk-help.1) - Show Silk CLI Help"
 description: "NOTE: This is the Markdown source for the eventual man 1 page for silk help. The roff-formatted manpage should be generated from this content."
 docsCollection: "silk"

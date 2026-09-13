@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "Function Disciplines (pure, task, async)"
 description: "This document specifies Silk’s intended “function discipline” system: how functions declare whether they are pure, asynchronous, or safe to run as parallel tasks."
 docsCollection: "silk"

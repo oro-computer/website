@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "Language tour"
 description: "This is a guided walkthrough of the core ideas you’ll use in real Silk programs: explicit structure, readable types, predictable control flow, and clear boundaries."
 docsCollection: "silk"

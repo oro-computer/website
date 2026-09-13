@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "Pure-Silk learned-threshold GPU classifier"
 description: "examples/pure_silk_gpu_ml.slk is a small but real supervised-learning workflow. It uses a one-dimensional nearest-centroid model:"
 docsCollection: "silk"

@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "while"
 description: "Use while for condition-controlled looping."
 docsCollection: "silkWiki"

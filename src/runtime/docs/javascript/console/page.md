@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "oro:console"
 description: "oro:console exposes the runtime console implementation and patch helpers."
 docsCollection: "runtime"

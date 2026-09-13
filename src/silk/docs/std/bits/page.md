@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::bits"
 description: "A small bit-manipulation and byte-order helper subset is implemented in std/bits.slk for the current backend subset."
 docsCollection: "silk"

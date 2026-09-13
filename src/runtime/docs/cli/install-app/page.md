@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "oroc install-app"
 description: "Install the app to the device or host target."
 docsCollection: "runtime"

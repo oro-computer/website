@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "Oro Runtime Docs"
 description: "Oro Runtime is a cross-platform runtime for building native applications as web applications: HTML/CSS for UI, JavaScript for behavior, and a small native core for OS integration."
 docsCollection: "runtime"

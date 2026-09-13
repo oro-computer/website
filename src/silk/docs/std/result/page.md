@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "std::result"
 description: "The language’s error model is explicit and typed (errors). std::result standardizes the common “success or error” return shape so that APIs across std:: compose cleanly."
 docsCollection: "silk"

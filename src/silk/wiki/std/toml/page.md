@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "std::toml"
 description: "std::toml provides TOML parsing (implementation + expanded subset)."
 docsCollection: "silkWiki"

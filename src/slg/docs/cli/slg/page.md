@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "slg-docs"
 title: "slg"
 description: "slg is the canonical CLI entrypoint for Silk Line Grep."
 docsCollection: "slg"

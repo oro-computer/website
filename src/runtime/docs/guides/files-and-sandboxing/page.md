@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "Files and sandboxing"
 description: "Most serious applications need two kinds of file access:"
 docsCollection: "runtime"

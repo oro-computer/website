@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "sage-docs"
 title: "sage:env"
 description: "sage:env reads and mutates the host process environment."
 docsCollection: "sage"

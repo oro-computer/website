@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "oro:ipc"
 description: "oro:ipc exposes low-level runtime IPC helpers used to talk to the native host process."
 docsCollection: "runtime"

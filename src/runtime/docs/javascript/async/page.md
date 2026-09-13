@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "runtime-docs"
 title: "oro:async"
 description: "oro:async exposes async context propagation, deferred values, and resource tracking primitives."
 docsCollection: "runtime"

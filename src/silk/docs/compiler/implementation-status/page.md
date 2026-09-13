@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silk-docs"
 title: "Notes"
 description: "This page is a downstream-facing snapshot of what the reference Silk compiler and toolchain support end-to-end today. It is intentionally high-level: each language, standard-library, and compiler page"
 docsCollection: "silk"

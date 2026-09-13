@@ -1,5 +1,5 @@
 ---
-layout: "docs"
+layout: "silkWiki-docs"
 title: "Enums"
 description: "enum defines a nominal sum type with a fixed set of variants."
 docsCollection: "silkWiki"
