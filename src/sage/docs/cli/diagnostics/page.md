@@ -1,5 +1,5 @@
 ---
-layout: "sage-docs"
+layout: "docs"
 title: "Diagnostics"
 description: "This page documents the public exit codes plus the most important user-visible warnings and errors."
 docsCollection: "sage"

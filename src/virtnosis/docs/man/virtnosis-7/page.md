@@ -1,5 +1,5 @@
 ---
-layout: "virtnosis-docs"
+layout: "docs"
 title: "virtnosis(7)"
 description: "virtnosis — libvirt security analysis and diagnosis architecture"
 docsCollection: "virtnosis"

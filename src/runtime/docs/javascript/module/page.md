@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:module"
 description: "oro:module exposes module-loader helpers and builtin-module inspection."
 docsCollection: "runtime"

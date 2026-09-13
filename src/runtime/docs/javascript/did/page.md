@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:did"
 description: "oro:did parses and manipulates decentralized identifiers and DID URLs."
 docsCollection: "runtime"

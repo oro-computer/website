@@ -1,5 +1,5 @@
 ---
-layout: "slg-docs"
+layout: "docs"
 title: "Parallelism"
 description: "slg can traverse and search in parallel, but the control surface is explicit and intentionally bounded."
 docsCollection: "slg"

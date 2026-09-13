@@ -1,5 +1,5 @@
 ---
-layout: "virtnosis-docs"
+layout: "docs"
 title: "Overview"
 description: "Virtnosis is a read-only libvirt security analysis and diagnosis toolset."
 docsCollection: "virtnosis"

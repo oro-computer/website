@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::os"
 description: "std::os provides:"
 docsCollection: "silk"

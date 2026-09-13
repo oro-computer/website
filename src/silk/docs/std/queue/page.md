@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::queue"
 description: "This module provides queue-oriented containers built on a shared owning deque core."
 docsCollection: "silk"

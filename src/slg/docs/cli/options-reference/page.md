@@ -1,5 +1,5 @@
 ---
-layout: "slg-docs"
+layout: "docs"
 title: "Options reference"
 description: "This page lists every public CLI flag on slg."
 docsCollection: "slg"

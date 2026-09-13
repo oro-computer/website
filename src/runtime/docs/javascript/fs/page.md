@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:fs"
 description: "oro:fs provides filesystem APIs modeled on POSIX and Node.js."
 docsCollection: "runtime"

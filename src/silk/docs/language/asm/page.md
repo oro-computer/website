@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Inline Assembly (asm)"
 description: "Silk provides an asm keyword for embedding inline assembly in a way that is explicit in source code and assembled at compile time."
 docsCollection: "silk"

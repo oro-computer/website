@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Blocks and Statement Composition"
 description: "Blocks group statements, establish lexical scopes, and provide the “body” form for structured control-flow constructs like if, while, and the match statement used for typed errors."
 docsCollection: "silk"

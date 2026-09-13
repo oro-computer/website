@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "continue"
 description: "continue skips the remainder of the current loop iteration and jumps to the next iteration of the nearest enclosing loop."
 docsCollection: "silk"

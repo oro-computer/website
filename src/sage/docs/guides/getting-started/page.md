@@ -1,5 +1,5 @@
 ---
-layout: "sage-docs"
+layout: "docs"
 title: "Getting started"
 description: "This guide covers the downstream story: build sage, install it, page real inputs, then move into configuration and plugins."
 docsCollection: "sage"

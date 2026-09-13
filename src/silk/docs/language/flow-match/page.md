@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "match Expression (and Statement)"
 description: "The match expression provides structured pattern matching."
 docsCollection: "silk"

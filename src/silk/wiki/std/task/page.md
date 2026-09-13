@@ -1,5 +1,5 @@
 ---
-layout: "silkWiki-docs"
+layout: "docs"
 title: "std::task"
 description: "std::task provides hosted task/runtime helpers, including sleep/yield operations."
 docsCollection: "silkWiki"

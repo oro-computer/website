@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:test"
 description: "oro:test provides the runtime test harness used by application and module tests."
 docsCollection: "runtime"

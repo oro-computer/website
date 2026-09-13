@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::runtime::graphics::metal"
 description: "std::runtime::graphics::metal is the low-level runtime boundary used by std::graphics::metal. It is not the application API; application code should import std::graphics::metal or std::graphics::windo"
 docsCollection: "silk"

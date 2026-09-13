@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:i18n"
 description: "oro:i18n resolves UI languages, localized messages, and locale-aware metadata."
 docsCollection: "runtime"

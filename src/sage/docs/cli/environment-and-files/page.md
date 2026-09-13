@@ -1,5 +1,5 @@
 ---
-layout: "sage-docs"
+layout: "docs"
 title: "Environment and files"
 description: "This page collects every environment variable and important filesystem location used by sage."
 docsCollection: "sage"

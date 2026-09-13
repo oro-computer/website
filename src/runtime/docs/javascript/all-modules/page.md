@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "JavaScript API modules"
 description: "Oro Runtime exposes native capabilities as explicit ES module imports under the oro:* namespace. Treat those imports as the boundary between ordinary web code and host capabilities."
 docsCollection: "runtime"

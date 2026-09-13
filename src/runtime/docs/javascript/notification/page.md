@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:notification"
 description: "oro:notification provides an API to display desktop and mobile notifications and request permission to use them."
 docsCollection: "runtime"

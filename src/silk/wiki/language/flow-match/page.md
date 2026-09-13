@@ -1,5 +1,5 @@
 ---
-layout: "silkWiki-docs"
+layout: "docs"
 title: "match"
 description: "match provides structured pattern matching."
 docsCollection: "silkWiki"

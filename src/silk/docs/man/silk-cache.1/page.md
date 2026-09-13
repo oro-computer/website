@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "[silk-cache(1)](?p=man/silk-cache.1) — Inspect and Maintain the Managed Silk Cache"
 description: "NOTE: This is the Markdown source for the eventual man 1 page for silk cache. The roff-formatted manpage should be generated from this content."
 docsCollection: "silk"

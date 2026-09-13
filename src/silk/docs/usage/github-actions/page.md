@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "GitHub Actions: Install Released silk"
 description: "This guide shows how to install the released Silk CLI in another GitHub Actions workflow without rebuilding the compiler from source."
 docsCollection: "silk"

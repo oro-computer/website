@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Target Metadata (OS_PLATFORM, OS_ARCH, OS_IS_UNIX, OS_IS_POSIX)"
 description: "Silk exposes a small set of compiler-provided target metadata values to both runtime code and Formal Silk (compile-time verification)."
 docsCollection: "silk"

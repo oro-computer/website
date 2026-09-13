@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "Native extensions"
 description: "Use a native extension when app code needs a capability that should not live in JavaScript: an existing C/C++ library, platform-specific code, long-running native work, or a Wasm module that should be"
 docsCollection: "runtime"

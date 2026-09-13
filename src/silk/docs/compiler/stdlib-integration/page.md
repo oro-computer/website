@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Standard Library Integration"
 description: "This document describes how the std:: package integrates with the compiler and the CLI."
 docsCollection: "silk"

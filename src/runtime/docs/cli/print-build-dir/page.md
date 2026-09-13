@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oroc print-build-dir"
 description: "Print the build directory path."
 docsCollection: "runtime"

@@ -1,5 +1,5 @@
 ---
-layout: "silkWiki-docs"
+layout: "docs"
 title: "std::fmt"
 description: "std::fmt defines the formatting model used by std::io::print/println by string-building helpers. It follows a Zig-std.fmt-style format-string syntax."
 docsCollection: "silkWiki"

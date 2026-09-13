@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:protocol-handlers"
 description: "oro:protocol-handlers exposes runtime helpers for custom protocol and service-worker routing."
 docsCollection: "runtime"

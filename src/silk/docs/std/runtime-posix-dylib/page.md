@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::runtime::posix::dylib"
 description: "std::runtime::posix::dylib is the hosted POSIX dynamic-loader backend for std::runtime::dylib."
 docsCollection: "silk"

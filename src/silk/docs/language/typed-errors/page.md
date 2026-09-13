@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Typed Errors (error, panic, and T | ErrorType...)"
 description: "Silk’s typed error system exists to eliminate the “trust gap” between a function’s signature and its real behavior. There are no hidden exceptions and no implicit panic channel: if a function can term"
 docsCollection: "silk"

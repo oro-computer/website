@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "using (Aliases and Method Reuse)"
 description: "using introduces a local alias to an existing symbol, and (in interface / impl bodies) can import method signatures/implementations under a new name."
 docsCollection: "silk"

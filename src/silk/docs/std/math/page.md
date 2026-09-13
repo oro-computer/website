@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::math"
 description: "This module provides linear algebra utilities intended for graphics and general-purpose computation."
 docsCollection: "silk"

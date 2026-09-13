@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:util"
 description: "oro:util exposes inspection, debug, and type-checking helpers."
 docsCollection: "runtime"

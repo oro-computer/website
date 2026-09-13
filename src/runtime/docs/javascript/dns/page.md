@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:dns"
 description: "oro:dns provides DNS lookup helpers and promise-based resolution APIs."
 docsCollection: "runtime"

@@ -1,14 +1,15 @@
 import { html, raw, render } from 'fragtml'
 import { article } from '../lib/rendering.ts'
-import type { LayoutFunction } from '@domstack/static/types.js'
+import type { DataDeps, LayoutFunction } from '@domstack/static/types.js'
 import {
   collections,
   sectionTitle,
 } from '../lib/collections.ts'
-import { rawUrl, type DocLink, type Navigation, type DocVars } from '../lib/docs.ts'
+import { rawUrl, type DocLink, type NavigationData, type DocVars } from '../lib/docs.ts'
 export const parentLayout = 'root'
-// Asset-bearing parent: collection wrappers render the documentation shell.
-const docsLayout: LayoutFunction<Record<string, unknown>, string> = ({ children }) => children
+export const vars = {
+  dataDeps: ['navigation'] satisfies DataDeps<NavigationData>,
+}
 function prevNext(doc: DocLink | null, label: string): string {
   return doc
     ? render(
@@ -19,7 +20,8 @@ function prevNext(doc: DocLink | null, label: string): string {
       )
     : ''
 }
-export function renderDocs(v: DocVars, children: string, navigation: Navigation): string {
+const docsLayout: LayoutFunction<DocVars, string, string, NavigationData> = ({ vars: v, children, data }) => {
+  const navigation = data.navigation[v.docsCollection]
   const c = collections[v.docsCollection]
   const doc = navigation.bySource[v.sourcePath]
   if (!doc) throw new Error(`Missing navigation document: ${v.docsCollection}/${v.sourcePath}`)

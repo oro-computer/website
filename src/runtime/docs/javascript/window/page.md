@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:window"
 description: "oro:window provides the ApplicationWindow class and window-specific methods."
 docsCollection: "runtime"

@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Duration & Instant"
 description: "Duration and Instant are time-related types with special literal and operator support."
 docsCollection: "silk"

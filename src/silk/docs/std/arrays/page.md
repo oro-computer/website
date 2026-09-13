@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::arrays"
 description: "A generic Slice(T) view type is provided for early FFI-friendly bridging; higher-level owning containers live in std::vector."
 docsCollection: "silk"

@@ -1,5 +1,5 @@
 ---
-layout: "virtnosis-docs"
+layout: "docs"
 title: "Output and Automation"
 description: "Virtnosis output is designed to stay machine-consumable even when the scan is partial, bounded, or degraded."
 docsCollection: "virtnosis"

@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:enumeration"
 description: "oro:enumeration is a small typed-set helper used throughout the runtime surface."
 docsCollection: "runtime"

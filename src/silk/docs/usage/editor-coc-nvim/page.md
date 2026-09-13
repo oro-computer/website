@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "coc.nvim Integration for Silk"
 description: "This page describes the coc.nvim client for the silk-lsp language server."
 docsCollection: "silk"

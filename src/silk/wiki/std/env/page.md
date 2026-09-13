@@ -1,5 +1,5 @@
 ---
-layout: "silkWiki-docs"
+layout: "docs"
 title: "std::env"
 description: "std::env provides access to process environment variables and common directory helpers."
 docsCollection: "silkWiki"

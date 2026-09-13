@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oroc update sign"
 description: "Sign an update manifest and emit a detached manifest.sig file."
 docsCollection: "runtime"

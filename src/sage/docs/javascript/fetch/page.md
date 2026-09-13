@@ -1,5 +1,5 @@
 ---
-layout: "sage-docs"
+layout: "docs"
 title: "sage:fetch"
 description: "sage:fetch is the host-backed WHATWG-style network module."
 docsCollection: "sage"

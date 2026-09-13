@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:ip"
 description: "oro:ip normalizes and validates IP address inputs."
 docsCollection: "runtime"

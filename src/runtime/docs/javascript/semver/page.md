@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:semver"
 description: "oro:semver parses, validates, and compares semantic versions."
 docsCollection: "runtime"

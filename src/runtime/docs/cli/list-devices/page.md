@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oroc list-devices"
 description: "Get the list of connected devices."
 docsCollection: "runtime"

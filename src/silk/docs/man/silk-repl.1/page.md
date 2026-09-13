@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "[silk-repl(1)](?p=man/silk-repl.1) - Interactive Silk REPL"
 description: "NOTE: This is the Markdown source for the eventual man 1 page for silk repl. The roff-formatted manpage should be generated from this content."
 docsCollection: "silk"

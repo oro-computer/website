@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::window"
 description: "std::window is the opt-in standard-library windowing facade. Importing and reaching this module's runtime calls is the signal that an executable wants platform window support; unrelated std:: users do"
 docsCollection: "silk"

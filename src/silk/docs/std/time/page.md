@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::time"
 description: "std::time is a small CLI-oriented facade over the broader std::temporal module. It exposes monotonic timing and basic duration helpers without requiring tools to import calendar/date functionality."
 docsCollection: "silk"

@@ -1,5 +1,5 @@
 ---
-layout: "silkWiki-docs"
+layout: "docs"
 title: "Regions (with)"
 description: "Regions provide a fixed-size, statically allocated backing store that can be used as an allocation context for new."
 docsCollection: "silkWiki"

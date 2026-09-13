@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "Worker threads for heavy work"
 description: "The main window should stay responsive. If a task is CPU-heavy or processes large blobs of text or binary data, move it to oro:worker_threads."
 docsCollection: "runtime"

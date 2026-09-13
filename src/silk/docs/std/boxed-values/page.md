@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Boxed Value Types"
 description: "This document records the current design direction for boxed stdlib wrappers around language primitive values and primitive-adjacent built-ins."
 docsCollection: "silk"

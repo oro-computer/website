@@ -1,5 +1,5 @@
 ---
-layout: "sage-docs"
+layout: "docs"
 title: "sage:process"
 description: "sage:process exposes process metadata plus bounded shell execution."
 docsCollection: "sage"

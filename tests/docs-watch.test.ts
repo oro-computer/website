@@ -6,7 +6,7 @@ import { join, basename } from 'node:path'
 import { identifyPages } from '@domstack/static/lib/identify-pages.js'
 import { buildPagesDirect } from '@domstack/static/lib/build-pages/index.js'
 
-test('DOMStack selectively rebuilds docs consumers for body and navigation edits', { timeout: 20000 }, async () => {
+test('body edits stay isolated while navigation edits rebuild shared docs consumers', { timeout: 20000 }, async () => {
   const fixture = await mkdtemp(join(tmpdir(), 'oro-docs-watch-'))
   const src = join(fixture, 'src')
   const dest = join(fixture, 'public')
@@ -19,12 +19,12 @@ test('DOMStack selectively rebuilds docs consumers for body and navigation edits
       await writeFile(join(src, target), `export { default } from ${JSON.stringify(url)}\nexport * from ${JSON.stringify(url)}\n`)
     }
     for (const name of ['global.data.ts', 'global.vars.ts', 'markdown-it.settings.ts']) await proxy(name, name)
-    for (const name of ['root', 'docs', 'runtime-docs', 'silk-docs'])
+    for (const name of ['root', 'docs'])
       await proxy(name + '.layout.ts', 'layouts/' + name + '.layout.ts')
     for (const name of (await readdir(new URL('../src/', import.meta.url))).filter(name => name.endsWith('.template.ts') && name !== 'cname.template.ts'))
       await proxy(name, name)
     const pageSource = (collection: string, id: string, title: string, body: string) => `---
-layout: "${collection}-docs"
+layout: "docs"
 title: "${title}"
 description: "Summary"
 docsCollection: "${collection}"
@@ -55,7 +55,7 @@ ${body}
     const initial = first.report.watchDependencies!
     assert.ok(Object.values(initial.globalDataFingerprints).every(value => typeof value === 'string'))
     const subscription = Object.values(initial.consumers).find(c => c.key === pageFiles[0])!
-    assert.deepEqual(subscription.globalDataKeys, ['runtimeNavigation'])
+    assert.deepEqual(subscription.globalDataKeys, ['navigation'])
     const unchanged = await readFile(join(dest, 'runtime/docs/next/index.html'), 'utf8')
     const index = await readFile(join(dest, 'runtime/docs/index.json'), 'utf8')
 
@@ -82,9 +82,9 @@ ${body}
       pageFilterPaths: [pageFiles[0]], templateFilterPaths: [], pagesFileFilterPaths: [],
     })
     assert.deepEqual(titleEdit.errors, [])
-    assert.deepEqual(titleEdit.report.pages.map(p => p.sourcePageFilePath).sort(), pageFiles.slice(0, 2).sort())
+    assert.deepEqual(titleEdit.report.pages.map(p => p.sourcePageFilePath).sort(), [...pageFiles].sort())
     assert.deepEqual(titleEdit.report.templates.map(t => basename(t.templateInfo.templateFile.filepath)).sort(), [
-      'runtime-index.template.ts', 'runtime-llms.template.ts', 'runtime-search.template.ts', 'runtime-sources.template.ts',
+      'navigation.template.ts', 'runtime-llms.template.ts', 'runtime-search.template.ts', 'runtime-sources.template.ts',
     ])
     assert.match(await readFile(join(dest, 'runtime/docs/next/index.html'), 'utf8'), /Renamed/)
   } finally {

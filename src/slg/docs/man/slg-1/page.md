@@ -1,5 +1,5 @@
 ---
-layout: "slg-docs"
+layout: "docs"
 title: "slg (1) — Silk Line Grep"
 description: "This page is the reader-friendly website form of the shipped slg(1) manual."
 docsCollection: "slg"

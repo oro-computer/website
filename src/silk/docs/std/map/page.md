@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::map — Maps and Dictionaries"
 description: "std::map provides the standard associative container surfaces:"
 docsCollection: "silk"

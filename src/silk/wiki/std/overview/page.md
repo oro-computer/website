@@ -1,5 +1,5 @@
 ---
-layout: "silkWiki-docs"
+layout: "docs"
 title: "Standard library overview (std::)"
 description: "std:: is the Silk standard library namespace. The docs/std/ tree specifies the intended API and structure; an in-tree stdlib implementation exists under std/ for Silk currently."
 docsCollection: "silkWiki"

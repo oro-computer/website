@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::fs"
 description: "std::fs provides a small hosted filesystem API backed by std::runtime::fs. It exposes low-level File handles, path/file metadata queries, whole-file helpers, directory iteration, and byte-oriented I/O"
 docsCollection: "silk"

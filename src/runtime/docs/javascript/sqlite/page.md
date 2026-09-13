@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:sqlite"
 description: "oro:sqlite opens SQLite databases and exposes sync and async query helpers."
 docsCollection: "runtime"

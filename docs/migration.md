@@ -18,11 +18,15 @@ remains reproducible. Production cutover is complete; deployment evidence is rec
 | Cleanup | The browser Markdown renderers, vendored rendering libraries, old HTML shells, duplicate Python exporters, generated source-tree indexes, and Jekyll configuration are retired. |
 | CI | Node 24 runs ingestion, audits, browser serving, and the `npm run check` gate without Python. Pull requests validate in Docs Audit; production pushes validate and deploy the same artifact in Pages, without a duplicate push audit. |
 
-Collection layouts subscribe to lightweight, collection-specific navigation keys.
-Search and raw-source/LLM templates have separate dependencies, so document-body
-edits do not invalidate unrelated navigation consumers. Shared article transforms
-remain page-local rather than storing rendered articles in global data. Markdown
-keeps the existing alerts, highlighting, and legacy heading-ID policy; enabling
+All six documentation collections use the single `docs` layout; the Silk
+specification retains `spec`. The `docs` layout subscribes to one shared,
+lightweight navigation key covering all collections. Navigation changes rebuild
+all docs. Body-only edits remain isolated to the changed article and its
+collection's search and exports: search and raw-source/LLM templates retain
+separate, per-collection dependencies. Ingestion remains separate from building.
+Shared article transforms remain page-local rather than storing rendered articles
+in global data. Markdown keeps the existing alerts, highlighting, and legacy
+heading-ID policy; enabling
 additional DOMStack Markdown plugins is an explicit compatibility decision.
 Homepage and learn styles are scoped to their consumers, and progressive clients
 are TypeScript modules rather than unchecked global initializers.

@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oroc update verify"
 description: "Verify a manifest and signature pair using an Ed25519 public key."
 docsCollection: "runtime"

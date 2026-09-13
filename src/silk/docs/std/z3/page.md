@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::runtime::z3 — Z3 SMT Solver (C API Bindings)"
 description: "std::runtime::z3 provides low-level ext bindings for the Z3 C API. It is intended for user-space programs that want to call into Z3 directly."
 docsCollection: "silk"

@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::boolean"
 description: "std::boolean provides a no-allocation boxed wrapper around the built-in bool primitive for method-oriented APIs."
 docsCollection: "silk"

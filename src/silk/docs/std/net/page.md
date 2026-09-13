@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::net"
 description: "This is the canonical module doc for std::net."
 docsCollection: "silk"

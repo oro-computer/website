@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:errors"
 description: "oro:errors exports DOM-style and runtime-specific error classes and constants."
 docsCollection: "runtime"

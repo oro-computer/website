@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "silk CLI"
 description: "This document describes the command-line interface of the silk compiler from the downstream user’s perspective."
 docsCollection: "silk"

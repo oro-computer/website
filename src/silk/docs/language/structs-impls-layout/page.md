@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Structs, Impl Blocks, and Memory Layout"
 description: "Structs and impl blocks are separated:"
 docsCollection: "silk"

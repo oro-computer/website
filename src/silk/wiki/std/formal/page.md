@@ -1,5 +1,5 @@
 ---
-layout: "silkWiki-docs"
+layout: "docs"
 title: "std::formal"
 description: "std::formal provides reusable Formal Silk theories (“standard lemmas”) used by stdlib code and downstream verified code."
 docsCollection: "silkWiki"

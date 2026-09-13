@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Modules, Packages, and Publication"
 description: "Silk code is organized around explicit module sets. A module set is the group of .slk files the compiler loads, resolves, checks, and builds together. Packages give those files a public namespace, imp"
 docsCollection: "silk"

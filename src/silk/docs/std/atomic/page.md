@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::atomic"
 description: "std::atomic provides the public Silk API for low-level atomic operations."
 docsCollection: "silk"

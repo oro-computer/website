@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:os"
 description: "oro:os exposes platform, CPU, temporary-directory, and system metadata helpers."
 docsCollection: "runtime"

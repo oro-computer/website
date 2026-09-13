@@ -1,5 +1,5 @@
 ---
-layout: "virtnosis-docs"
+layout: "docs"
 title: "Architecture"
 description: "This document explains the product architecture from a systems perspective."
 docsCollection: "virtnosis"

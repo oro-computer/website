@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "Shared workers across windows"
 description: "If one background coordinator should serve multiple windows at the same time, use a shared worker instead of one worker per window. This is a strong fit for search indexing, presence state, websocket "
 docsCollection: "runtime"

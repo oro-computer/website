@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:constants"
 description: "oro:constants publishes the runtime’s platform, errno, and low-level constant tables."
 docsCollection: "runtime"

@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "NVIDIA GPU backend"
 description: "This document specifies Silk's NVIDIA provider for the target-neutral GPU-v1 contract in backend-gpu.md."
 docsCollection: "silk"

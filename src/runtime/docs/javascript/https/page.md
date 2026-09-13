@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:https"
 description: "oro:https provides HTTPS client and server APIs on top of the runtime TLS stack."
 docsCollection: "runtime"

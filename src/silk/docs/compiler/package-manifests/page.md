@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Package Manifests (silk.toml)"
 description: "This document specifies Silk’s package manifest format and how the silk compiler consumes it."
 docsCollection: "silk"

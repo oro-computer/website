@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Type Unions (T1 | T2 | ...)"
 description: "Silk supports type unions in type annotations. A union type represents a value that is exactly one of several member types."
 docsCollection: "silk"

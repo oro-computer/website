@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::bytes"
 description: "std::bytes is the byte-oriented facade for allocation-free work over borrowed memory. It reuses std::arrays::ByteSlice as the concrete slice type and gives CLI/search/build tools short, stable names f"
 docsCollection: "silk"

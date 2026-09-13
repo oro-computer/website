@@ -1,5 +1,5 @@
 ---
-layout: "silkWiki-docs"
+layout: "docs"
 title: "Types"
 description: "Silk is a statically typed language with a small set of built-in primitive types and first-class user-defined types (struct, enum, interface)."
 docsCollection: "silkWiki"

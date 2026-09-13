@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Tutorial 7: Formal Silk in real code"
 description: "This tutorial shows how Formal Silk fits into ordinary systems code:"
 docsCollection: "silk"

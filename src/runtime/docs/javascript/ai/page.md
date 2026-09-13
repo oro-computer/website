@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:ai"
 description: "oro:ai exposes local AI helpers. It currently exports two modules:"
 docsCollection: "runtime"

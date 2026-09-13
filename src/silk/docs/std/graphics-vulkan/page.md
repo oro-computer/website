@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::graphics::vulkan"
 description: "Source: std/graphics/vulkan.slk"
 docsCollection: "silk"

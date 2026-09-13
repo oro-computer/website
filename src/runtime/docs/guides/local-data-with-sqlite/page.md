@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "Local data with SQLite"
 description: "Once an app moves beyond a few JSON files, SQLite is the right default. It gives you transactions, indexes, and queryable data without adding another service to your deployment story."
 docsCollection: "runtime"

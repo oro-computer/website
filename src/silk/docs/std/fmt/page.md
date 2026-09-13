@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::fmt"
 description: "The initial formatting engine is implemented in std/fmt.slk and is intentionally scoped to the current compiler/backend subset (no generics, no runtime interface dispatch)."
 docsCollection: "silk"

@@ -1,5 +1,5 @@
 ---
-layout: "virtnosis-docs"
+layout: "docs"
 title: "virtnosis-agent-protocol(7)"
 description: "virtnosis-agent-protocol — control protocol and transport model for Virtnosis"
 docsCollection: "virtnosis"

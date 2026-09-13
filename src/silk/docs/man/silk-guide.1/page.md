@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "[silk-guide(1)](?p=man/silk-guide.1) — Search Curated Silk Example Guides"
 description: "NOTE: This is the Markdown source for the eventual man 1 page for silk guide. The roff-formatted manpage should be generated from this content."
 docsCollection: "silk"

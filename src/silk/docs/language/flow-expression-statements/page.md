@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Expression Statements"
 description: "Expression statements allow expressions to be used for their side effects."
 docsCollection: "silk"

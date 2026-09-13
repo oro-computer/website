@@ -1,5 +1,5 @@
 ---
-layout: "slg-docs"
+layout: "docs"
 title: "Diagnostics"
 description: "This page documents the public exit codes plus the most important user-visible diagnostics."
 docsCollection: "slg"

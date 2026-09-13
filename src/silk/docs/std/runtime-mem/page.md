@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::runtime::mem"
 description: "Source: std/runtime/mem.slk"
 docsCollection: "silk"

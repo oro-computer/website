@@ -1,5 +1,5 @@
 ---
-layout: "silkWiki-docs"
+layout: "docs"
 title: "std::net"
 description: "std::net provides networking primitives (hosted POSIX baseline)."
 docsCollection: "silkWiki"

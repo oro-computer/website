@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::sqlite"
 description: "std::sqlite provides SQLite database primitives for the hosted POSIX baseline. On supported hosted target layouts, silk build auto-links the built-in libsqlite3.a so outputs do not depend on a system "
 docsCollection: "silk"

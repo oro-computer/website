@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Formal Silk"
 description: "Formal Silk is Silk’s compile-time formal verification language. It is written using syntax that does not exist at runtime and is discharged at compile time using the Z3 SMT solver."
 docsCollection: "silk"

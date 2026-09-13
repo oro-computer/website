@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::buffer"
 description: "std::buffer provides:"
 docsCollection: "silk"

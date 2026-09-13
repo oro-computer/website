@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:tcp"
 description: "oro:tcp exposes lower-level TCP client and server helpers alongside the higher-level oro:net API."
 docsCollection: "runtime"

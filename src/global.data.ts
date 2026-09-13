@@ -21,11 +21,11 @@ const globalData: GlobalDataFunction<DocsData, Record<string, unknown>, string> 
       editUrl: editUrl(source),
     })
   }
-  const data = { routes: pages.map(p => p.pageInfo.url).sort() } as DocsData
+  const data = { routes: pages.map(p => p.pageInfo.url).sort(), navigation: {} } as DocsData
   for (const collection of Object.keys(collections) as Collection[]) {
     const list = docs[collection]
     list.sort((a, b) => a.order - b.order || a.id.localeCompare(b.id, 'en'))
-    data[`${collection}Navigation`] = projectCollection(list)
+    data.navigation[collection] = projectCollection(list)
     data[`${collection}Exports`] = list.map(({ collection, id, title, sourcePath, url, markdown }) => ({ collection, id, title, sourcePath, url, markdown }))
     data[`${collection}Search`] = {
       kind: collection === 'silkWiki' ? 'wiki' : 'docs', count: list.length,

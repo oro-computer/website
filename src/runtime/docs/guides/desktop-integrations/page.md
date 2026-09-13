@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "Desktop integrations"
 description: "Oro Runtime applications stay web-first, but the point of the runtime is that you do not stop at the browser boundary. This guide shows how to add four integrations users actually notice: notification"
 docsCollection: "runtime"

@@ -1,5 +1,5 @@
 ---
-layout: "silkWiki-docs"
+layout: "docs"
 title: "std::json"
 description: "std::json provides JSON parsing and stringifying (implementation + expanded subset)."
 docsCollection: "silkWiki"

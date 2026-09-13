@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::regex"
 description: "This module provides regular expression helpers built on top of:"
 docsCollection: "silk"

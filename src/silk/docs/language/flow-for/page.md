@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "for Loop"
 description: "The for loop iterates over a range or iterable and executes a block once per element."
 docsCollection: "silk"

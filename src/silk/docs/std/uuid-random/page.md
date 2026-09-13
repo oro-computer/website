@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::uuid::random"
 description: "Source: std/uuid/random.slk"
 docsCollection: "silk"

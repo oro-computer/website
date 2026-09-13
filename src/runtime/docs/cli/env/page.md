@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oroc env"
 description: "Print environment variables relevant to the Oro CLI and build configuration."
 docsCollection: "runtime"

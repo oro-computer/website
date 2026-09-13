@@ -1,5 +1,5 @@
 ---
-layout: "virtnosis-docs"
+layout: "docs"
 title: "vnactl(1)"
 description: "vnactl — Virtnosis agent control client"
 docsCollection: "virtnosis"

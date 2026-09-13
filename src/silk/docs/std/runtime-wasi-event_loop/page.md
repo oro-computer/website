@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::runtime::wasi::event_loop"
 description: "Source: std/runtime/wasi/event_loop.slk"
 docsCollection: "silk"

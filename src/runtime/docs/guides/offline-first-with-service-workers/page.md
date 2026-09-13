@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "Offline-first with service workers"
 description: "For applications that need to keep working without reliable connectivity, service workers are the right boundary. Use them to cache the application shell, serve known assets, and provide controlled fa"
 docsCollection: "runtime"

@@ -1,5 +1,5 @@
 ---
-layout: "virtnosis-docs"
+layout: "docs"
 title: "Getting Started"
 description: "This guide gets you from an installed Virtnosis CLI to a useful first scan."
 docsCollection: "virtnosis"

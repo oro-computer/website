@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::args"
 description: "A small native-argv helper surface is implemented in std/args.slk to make early programs ergonomic while string[] parameters and richer slice/iterator features are still future work."
 docsCollection: "silk"

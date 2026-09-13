@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:cookies"
 description: "oro:cookies reads and writes cookies for application-controlled origins."
 docsCollection: "runtime"

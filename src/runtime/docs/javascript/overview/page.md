@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "JavaScript APIs overview"
 description: "Oro Runtime apps run inside the platform WebView. You use standard web APIs (DOM, ES modules, fetch, URLs, WebCrypto, WebAssembly) and import Oro-specific native capabilities as explicit ES modules un"
 docsCollection: "runtime"

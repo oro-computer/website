@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:assert"
 description: "oro:assert provides Node-compatible assertion helpers for tests, runtime checks, and invariants."
 docsCollection: "runtime"

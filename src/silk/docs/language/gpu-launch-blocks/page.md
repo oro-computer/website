@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "GPU launch blocks"
 description: "Silk provides a checked host-side form for launching one GPU kernel without importing a launch function or repeating the kernel name as a string:"
 docsCollection: "silk"

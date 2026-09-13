@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:ipfs"
 description: "oro:ipfs manages the embedded IPFS node and common content operations."
 docsCollection: "runtime"

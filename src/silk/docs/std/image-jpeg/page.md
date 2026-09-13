@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::image::jpeg"
 description: "Source: std/image/jpeg.slk"
 docsCollection: "silk"

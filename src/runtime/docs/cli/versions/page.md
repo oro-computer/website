@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oroc versions"
 description: "Print Oro CLI/runtime and dependency versions."
 docsCollection: "runtime"

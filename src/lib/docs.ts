@@ -34,10 +34,13 @@ export interface SearchIndex {
   count: number
   items: { id: string; title: string; file: string; url: string; section: string; summary: string; text: string }[]
 }
-export type DocsData = { routes: string[] } &
-  Record<`${Collection}Navigation`, Navigation> &
+export type DocsData = {
+  routes: string[]
+  navigation: Record<Collection, Navigation>
+} &
   Record<`${Collection}Exports`, ExportDoc[]> &
   Record<`${Collection}Search`, SearchIndex>
+export type NavigationData = Pick<DocsData, 'navigation'>
 
 export function validateDocVars(v: Record<string, unknown>, source: string): DocVars {
   if (typeof v.docsCollection !== 'string' || !Object.hasOwn(collections, v.docsCollection))

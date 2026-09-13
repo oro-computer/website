@@ -1,5 +1,5 @@
 ---
-layout: "silkWiki-docs"
+layout: "docs"
 title: "Literals"
 description: "Literals are the simplest way to write values directly in source code: numbers, booleans, chars, strings, durations, and aggregates like arrays struct literals."
 docsCollection: "silkWiki"

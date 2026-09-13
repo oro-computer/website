@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::list"
 description: "This module provides list-shaped wrappers over the queue core from std::queue."
 docsCollection: "silk"

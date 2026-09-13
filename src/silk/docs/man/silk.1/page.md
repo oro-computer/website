@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "[silk(1)](?p=man/silk.1) — Silk Language Compiler"
 description: "NOTE: This is the Markdown source for the eventual man 1 page for silk. The roff-formatted manpage should be generated from this content."
 docsCollection: "silk"

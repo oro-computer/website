@@ -1,5 +1,5 @@
 ---
-layout: "silkWiki-docs"
+layout: "docs"
 title: "break"
 description: "break; exits the nearest enclosing loop."
 docsCollection: "silkWiki"

@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Testing Strategy (Zig + C99 + Silk)"
 description: "This document defines how we validate the compiler, ABI, and standard library."
 docsCollection: "silk"

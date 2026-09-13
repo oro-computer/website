@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::stream"
 description: "This module provides a Web Streams-inspired API for byte streams designed to work well with Silk’s async/task model."
 docsCollection: "silk"

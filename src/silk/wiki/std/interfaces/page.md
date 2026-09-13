@@ -1,5 +1,5 @@
 ---
-layout: "silkWiki-docs"
+layout: "docs"
 title: "std::interfaces"
 description: "std::interfaces defines shared std protocol interfaces such as Drop, Len, and Iterator(T)."
 docsCollection: "silkWiki"

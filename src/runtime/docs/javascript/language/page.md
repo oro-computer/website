@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:language"
 description: "oro:language resolves language names, tags, and related metadata."
 docsCollection: "runtime"

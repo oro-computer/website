@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:mcp"
 description: "oro:mcp provides runtime MCP helpers for registering tools/resources and controlling the embedded HTTP/SSE bridge."
 docsCollection: "runtime"

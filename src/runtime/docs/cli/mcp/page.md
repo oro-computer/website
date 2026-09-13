@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oroc mcp"
 description: "Run a Model Context Protocol (MCP) server for agent tooling."
 docsCollection: "runtime"

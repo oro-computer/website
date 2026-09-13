@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::math::vector"
 description: "Source: std/math/vector.slk"
 docsCollection: "silk"

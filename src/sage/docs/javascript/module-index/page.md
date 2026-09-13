@@ -1,5 +1,5 @@
 ---
-layout: "sage-docs"
+layout: "docs"
 title: "Module index"
 description: "This is the stable built-in module surface for Sage plugins."
 docsCollection: "sage"

@@ -1,5 +1,5 @@
 ---
-layout: "sage-docs"
+layout: "docs"
 title: "sage:performance"
 description: "sage:performance provides a small Performance implementation."
 docsCollection: "sage"

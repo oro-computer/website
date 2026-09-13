@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::net::stream"
 description: "Source: std/net/stream.slk"
 docsCollection: "silk"

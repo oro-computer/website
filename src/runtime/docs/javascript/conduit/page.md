@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:conduit"
 description: "oro:conduit manages the runtime WebSocket conduit used for internal cross-surface messaging."
 docsCollection: "runtime"

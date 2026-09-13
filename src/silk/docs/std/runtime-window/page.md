@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::runtime::window"
 description: "std::runtime::window is the low-level runtime boundary used by std::window. It is not intended as the ergonomic application API; import std::window or a platform facade under std::window::* instead."
 docsCollection: "silk"

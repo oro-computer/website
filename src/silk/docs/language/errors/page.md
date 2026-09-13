@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Errors"
 description: "This document summarizes the Silk error-handling model at a level suitable for compiler implementation. It is based on the language design captured in docs/ (optionals, verification, ext, ABI)."
 docsCollection: "silk"

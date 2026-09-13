@@ -1,5 +1,5 @@
 ---
-layout: "sage-docs"
+layout: "docs"
 title: "sage:fs"
 description: "sage:fs provides bounded filesystem access for plugins."
 docsCollection: "sage"

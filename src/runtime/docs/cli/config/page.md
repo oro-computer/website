@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oroc config"
 description: "Inspect configuration values."
 docsCollection: "runtime"

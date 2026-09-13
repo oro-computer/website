@@ -1,5 +1,5 @@
 ---
-layout: "silkWiki-docs"
+layout: "docs"
 title: "Silk Wiki"
 description: "The Silk Wiki is the learning-first, example-driven side of the Silk documentation set."
 docsCollection: "silkWiki"

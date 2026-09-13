@@ -27,9 +27,10 @@ are output files; do not commit `public/`.
 - `src/lib/`: rendering, URL, collection, and navigation helpers.
 - `src/global.data.ts`: validated collection metadata and precomputed navigation,
   search, and source-export projections derived from source pages.
-- `src/layouts/*-docs.layout.ts`: thin collection-specific data
-  consumers sharing the docs renderer and its assets.
-- `src/*-{index,search,sources,llms}.template.ts`: dependency-scoped collection
+- `src/layouts/docs.layout.ts`: the shared documentation renderer, consuming one
+  lightweight navigation key for all collections.
+- `src/navigation.template.ts`: navigation indexes for all collections.
+- `src/*-{search,sources,llms}.template.ts`: dependency-scoped collection
   artifacts; `src/sitemap.template.ts`: sitemap output;
   `src/artifacts.template.ts`: site-wide LLM directory and `.nojekyll`.
 
@@ -48,9 +49,11 @@ Each documentation page declares `title`, `description`, `docsCollection`,
 The `start` document lives at its collection root; the specification lives at
 `src/silk/spec/2026/page.md`. Order is explicit and does not depend on filenames.
 New imported pages are appended; review their section and order after syncing.
-Use the collection-specific layout, such as `runtime-docs` or `silkWiki-docs`,
-for new documentation pages (`spec` for the specification). The shared `docs`
-layout is an asset-bearing parent, not a standalone article renderer.
+Use `layout: "docs"` for documentation pages in every collection (`spec` for the
+specification). All docs share one lightweight navigation dependency: navigation
+changes rebuild all docs, while body-only edits remain isolated to the changed
+article and its collection's search and exports. Search and raw-source/LLM
+artifacts retain separate, per-collection dependencies.
 
 Use canonical directory links such as `/runtime/docs/guides/hello-world/`.
 Collection roots redirect legacy `?p=` links while preserving fragments. Static

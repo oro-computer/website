@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::runtime::process"
 description: "Source: std/runtime/process.slk"
 docsCollection: "silk"

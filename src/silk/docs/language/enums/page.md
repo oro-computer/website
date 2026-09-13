@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "enum Types"
 description: "An enum defines a tagged union type: a value that is exactly one of several named variants, optionally carrying a payload."
 docsCollection: "silk"

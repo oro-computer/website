@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "[silk_error(3)](?p=man/silk_error.3) — Retrieve and Format Compiler Errors"
 description: "NOTE: This is the Markdown source for the eventual man 3 page for SilkError formatting and retrieval. The roff-formatted manpage should be generated from this content."
 docsCollection: "silk"

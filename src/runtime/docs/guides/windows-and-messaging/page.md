@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "Windows and messaging"
 description: "Oro Runtime apps can create multiple windows. Windows are identified by a numeric index."
 docsCollection: "runtime"

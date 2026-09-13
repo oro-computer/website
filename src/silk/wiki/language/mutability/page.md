@@ -1,5 +1,5 @@
 ---
-layout: "silkWiki-docs"
+layout: "docs"
 title: "Mutability (mut)"
 description: "Silk is safe-by-default: bindings and borrows are immutable unless you opt in to mutation."
 docsCollection: "silkWiki"

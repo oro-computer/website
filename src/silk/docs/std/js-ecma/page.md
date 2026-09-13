@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "ECMAScript FFI (std::js::ecma)"
 description: "This module defines a small, environment-agnostic interface for interacting with an ECMAScript engine from Silk."
 docsCollection: "silk"

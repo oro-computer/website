@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Web IDL (std::idl::web)"
 description: "This module provides a Web IDL parser plus an ergonomic, query-oriented API for inspecting the parsed document."
 docsCollection: "silk"

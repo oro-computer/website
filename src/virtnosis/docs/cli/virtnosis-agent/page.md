@@ -1,5 +1,5 @@
 ---
-layout: "virtnosis-docs"
+layout: "docs"
 title: "virtnosis-agent"
 description: "virtnosis-agent is the local control-plane daemon for Virtnosis."
 docsCollection: "virtnosis"

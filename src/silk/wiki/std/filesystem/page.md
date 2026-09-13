@@ -1,5 +1,5 @@
 ---
-layout: "silkWiki-docs"
+layout: "docs"
 title: "std::fs"
 description: "std::fs provides a small hosted POSIX-oriented filesystem API (Supported forms subset)."
 docsCollection: "silkWiki"

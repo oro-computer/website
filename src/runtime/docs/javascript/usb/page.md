@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:usb"
 description: "oro:usb installs and exposes the runtime WebUSB surface for window contexts."
 docsCollection: "runtime"

@@ -1,5 +1,5 @@
 ---
-layout: "sage-docs"
+layout: "docs"
 title: "sage:navigator"
 description: "sage:navigator exposes a browser-like navigator object."
 docsCollection: "sage"

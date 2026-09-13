@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:application"
 description: "oro:application exposes application-level APIs: creating windows, querying windows, menus, and runtime metadata."
 docsCollection: "runtime"

@@ -1,5 +1,5 @@
 ---
-layout: "silkWiki-docs"
+layout: "docs"
 title: "std::arrays"
 description: "std::arrays defines borrowed views like Slice(T) and helpers for working with fixed arrays and slices."
 docsCollection: "silkWiki"

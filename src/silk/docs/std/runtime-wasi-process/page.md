@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::runtime::wasi::process"
 description: "Source: std/runtime/wasi/process.slk"
 docsCollection: "silk"

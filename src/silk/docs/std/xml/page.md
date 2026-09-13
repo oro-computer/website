@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::xml — XML Parsing (libxml2)"
 description: "std::xml provides a small, DOM-style XML parsing and traversal API backed by libxml2."
 docsCollection: "silk"

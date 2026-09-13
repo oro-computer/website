@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:process"
 description: "oro:process exposes runtime process state, env access, signals, and scheduling helpers."
 docsCollection: "runtime"

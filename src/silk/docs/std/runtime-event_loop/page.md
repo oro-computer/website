@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::runtime::event_loop"
 description: "Source: std/runtime/event_loop.slk"
 docsCollection: "silk"

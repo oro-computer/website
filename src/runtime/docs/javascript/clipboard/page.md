@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:clipboard"
 description: "oro:clipboard reads and writes clipboard text from the current application context."
 docsCollection: "runtime"

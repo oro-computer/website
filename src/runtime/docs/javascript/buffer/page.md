@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:buffer"
 description: "oro:buffer provides Buffer, Blob, and related byte-oriented helpers."
 docsCollection: "runtime"

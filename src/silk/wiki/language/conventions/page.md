@@ -1,5 +1,5 @@
 ---
-layout: "silkWiki-docs"
+layout: "docs"
 title: "Conventions"
 description: "This page summarizes the conventions used throughout the Silk language docs: notation, naming, and the “implementation status” pattern."
 docsCollection: "silkWiki"

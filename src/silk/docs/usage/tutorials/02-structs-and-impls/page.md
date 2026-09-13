@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Tutorial 2: structs and impl"
 description: "This tutorial covers:"
 docsCollection: "silk"

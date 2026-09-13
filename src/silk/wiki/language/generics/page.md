@@ -1,5 +1,5 @@
 ---
-layout: "silkWiki-docs"
+layout: "docs"
 title: "Generics (monomorphized)"
 description: "Silk generics are compile-time and monomorphized: each applied type like Vector(int) produces a concrete instantiation at build time (no runtime type parameters)."
 docsCollection: "silkWiki"

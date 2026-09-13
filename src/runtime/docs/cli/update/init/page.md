@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oroc update init"
 description: "Scaffold a minimal update manifest JSON file."
 docsCollection: "runtime"

@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std:: Module Catalog"
 description: "This page is the canonical inventory of shipped modules under std/."
 docsCollection: "silk"

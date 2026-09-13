@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Operators"
 description: "This document summarizes the operator set and precedence for Silk."
 docsCollection: "silk"

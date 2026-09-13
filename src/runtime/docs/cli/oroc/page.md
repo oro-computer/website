@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oroc"
 description: "oroc is the Oro Runtime command line tool. It builds, runs, packages, and inspects Oro Runtime projects."
 docsCollection: "runtime"

@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Vim Integration for Silk"
 description: "This document describes the built-in Vim support for Silk shipped with the Silk compiler repository."
 docsCollection: "silk"

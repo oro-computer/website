@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oroc update server"
 description: "Run an update server that speaks the Oro Application Update Protocol."
 docsCollection: "runtime"

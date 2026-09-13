@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:cdp"
 description: "oro:cdp controls the runtime Chrome DevTools Protocol endpoint used for inspection and debugging."
 docsCollection: "runtime"

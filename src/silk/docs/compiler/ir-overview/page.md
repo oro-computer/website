@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Intermediate Representation (IR) – Overview"
 description: "This document introduces the initial intermediate representation (IR) used by the Silk compiler. The IR is intentionally small and focused for now so that we can start supporting more advanced program"
 docsCollection: "silk"

@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:signal"
 description: "oro:signal exposes process-signal constants, conversion helpers, and event listeners."
 docsCollection: "runtime"

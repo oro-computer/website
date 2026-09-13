@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Dependent Types (Const Parameters and Type-Level Computation)"
 description: "This document specifies Silk’s intended support for “dependent-type-like” patterns where types mention compile-time values (most notably integers)."
 docsCollection: "silk"

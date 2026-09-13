@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::limits"
 description: "This module provides shared numeric limits for Silk primitive types."
 docsCollection: "silk"

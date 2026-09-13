@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::runtime::regex"
 description: "Source: std/runtime/regex.slk"
 docsCollection: "silk"

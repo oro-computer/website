@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:dbus"
 description: "oro:dbus connects to DBus and lets JavaScript code call methods, watch signals, and manage names."
 docsCollection: "runtime"

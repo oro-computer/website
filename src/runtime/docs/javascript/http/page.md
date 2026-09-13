@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:http"
 description: "oro:http provides Node-compatible HTTP client and server APIs."
 docsCollection: "runtime"

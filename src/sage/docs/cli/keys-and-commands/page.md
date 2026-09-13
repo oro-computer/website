@@ -1,5 +1,5 @@
 ---
-layout: "sage-docs"
+layout: "docs"
 title: "Keys and commands"
 description: "This is the full interactive key and command reference for sage."
 docsCollection: "sage"

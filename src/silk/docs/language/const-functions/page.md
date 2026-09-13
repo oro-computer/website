@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Const Functions (const fn)"
 description: "Parser: implemented"
 docsCollection: "silk"

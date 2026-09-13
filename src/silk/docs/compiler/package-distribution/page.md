@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Silk Package Distribution"
 description: "The manifest, CLI, install, inspection/linting, and binary-dependency consumption behavior described here are implemented in the current toolchain. This document describes the package authoring, publi"
 docsCollection: "silk"

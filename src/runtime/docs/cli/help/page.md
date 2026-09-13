@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oroc help"
 description: "Discover commands, options, and workflow entry points from the CLI help index."
 docsCollection: "runtime"

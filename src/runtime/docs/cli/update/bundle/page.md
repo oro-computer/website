@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oroc update bundle"
 description: "Build a tar archive containing a directory for use as an update artifact."
 docsCollection: "runtime"

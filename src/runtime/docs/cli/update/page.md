@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oroc update"
 description: "Update tooling for manifests, signatures, and bundles."
 docsCollection: "runtime"

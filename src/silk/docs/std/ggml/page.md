@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::ggml"
 description: "std::ggml exposes a small, ABI-safe Silk wrapper over a pinned subset of upstream ggml. The current module is intentionally narrow: it is meant to let Silk programs allocate ggml contexts, build basic"
 docsCollection: "silk"

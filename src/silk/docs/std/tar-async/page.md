@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::tar::async"
 description: "Source: std/tar/async.slk"
 docsCollection: "silk"

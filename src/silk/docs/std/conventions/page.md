@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std:: Conventions"
 description: "This defines the intended conventions for the Silk standard library. New and refactored std:: APIs must follow this document; older surfaces may temporarily diverge but must be migrated as they are to"
 docsCollection: "silk"

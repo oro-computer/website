@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::test"
 description: "This module provides test-only helpers that record test failures without aborting the process."
 docsCollection: "silk"

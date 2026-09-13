@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Atomics"
 description: "Silk atomics are compiler-backed operations for low-level thread synchronization. They are distinct from ordinary loads/stores and from volatile memory access:"
 docsCollection: "silk"

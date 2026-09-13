@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "[silk-proto(1)](?p=man/silk-proto.1) — compile proto3 schemas to Silk"
 description: "NOTE: This is the Markdown source for the eventual man 1 page for silk proto. The roff-formatted manpage should be generated from this content."
 docsCollection: "silk"

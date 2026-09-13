@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Project Dependencies"
 description: "Silk projects build dependencies from package roots on disk. A dependency can be an explicit local path, a package found under a packages/ search root, or an installed package root. The examples/proje"
 docsCollection: "silk"

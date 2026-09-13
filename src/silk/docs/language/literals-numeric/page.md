@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "Numeric Literals"
 description: "Numeric literals produce integer (int, u8, i128, …) and floating-point (f32, f64, f128) values."
 docsCollection: "silk"

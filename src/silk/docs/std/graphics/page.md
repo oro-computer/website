@@ -1,5 +1,5 @@
 ---
-layout: "silk-docs"
+layout: "docs"
 title: "std::graphics — Graphics API Bindings"
 description: "std::graphics is a namespace for low-level, FFI-oriented bindings to common graphics APIs and platform-specific facades where a generated SDK registry is not available."
 docsCollection: "silk"

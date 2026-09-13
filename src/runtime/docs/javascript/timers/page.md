@@ -1,5 +1,5 @@
 ---
-layout: "runtime-docs"
+layout: "docs"
 title: "oro:timers"
 description: "oro:timers exposes timer primitives, promise-based sleeps, and scheduler helpers."
 docsCollection: "runtime"
