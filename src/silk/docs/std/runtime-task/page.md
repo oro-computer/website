@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::runtime::task"
 description: "Source: std/runtime/task.slk"
 docsCollection: "silk"
 section: "std"

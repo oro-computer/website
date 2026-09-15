@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "loop"
 description: "loop { ... } is an infinite loop that exits via break or return."
 docsCollection: "silkWiki"
 section: "language"

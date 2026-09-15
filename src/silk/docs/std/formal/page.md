@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::formal"
 description: "This module provides the small, stable Formal Silk vocabulary that is broadly reusable across std:: and downstream verified code."
 docsCollection: "silk"
 section: "std"

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oroc install-app"
 description: "Install the app to the device or host target."
 docsCollection: "runtime"
 section: "cli"

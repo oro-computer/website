@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::process::child"
 description: "Source: std/process/child.slk"
 docsCollection: "silk"
 section: "std"

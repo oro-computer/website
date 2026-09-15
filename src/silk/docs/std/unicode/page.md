@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::unicode"
 description: "This module provides practical Unicode helpers focused on:"
 docsCollection: "silk"
 section: "std"

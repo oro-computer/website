@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::vector"
 description: "std::vector provides a generic, growable owning container Vector(T) used widely throughout std::."
 docsCollection: "silkWiki"
 section: "std"

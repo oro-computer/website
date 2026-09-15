@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Build Metadata (BUILD_KIND, BUILD_MODE, BUILD_VERSION)"
 description: "Silk exposes a small set of compiler-provided build metadata values to both runtime code and Formal Silk (compile-time verification) so programs can adapt to build configuration and so theories can ex"
 docsCollection: "silk"
 section: "language"

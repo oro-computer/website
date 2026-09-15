@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:asn1"
 description: "oro:asn1 parses ASN.1 source text and files into structured module data."
 docsCollection: "runtime"
 section: "javascript"

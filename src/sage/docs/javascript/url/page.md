@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "sage:url"
 description: "sage:url implements WHATWG-style URL and URLSearchParams."
 docsCollection: "sage"
 section: "javascript"

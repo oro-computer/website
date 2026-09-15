@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::net"
 description: "A small endian/byte-order helper subset plus hosted IPv4/IPv6 TCP and IPv4/IPv6 UDP socket APIs are implemented in std/net.slk."
 docsCollection: "silk"
 section: "std"

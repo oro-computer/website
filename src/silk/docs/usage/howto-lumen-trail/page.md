@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Build LumenTrail, an iOS Objective-C App With Silk Stdlib Code"
 description: "This how-to uses examples/projects/lumen-trail/ to show the current iOS embedding flow on Apple Silicon macOS through the LumenTrail simulator app:"
 docsCollection: "silk"
 section: "usage"

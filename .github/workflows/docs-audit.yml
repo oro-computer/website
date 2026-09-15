@@ -2,8 +2,7 @@ name: Docs Audit
 
 on:
   pull_request:
-  push:
-    branches: [main, master]
+
   workflow_dispatch:
 
 permissions:
@@ -18,9 +17,7 @@ jobs:
         with:
           node-version: '24'
           cache: npm
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run check

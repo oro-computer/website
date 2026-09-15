@@ -1,5 +1,7 @@
-export default {
-  "layout": "learn",
+import type { CheckedPageVars } from '#lib/page-vars.ts'
+
+const vars = {
+  "layout": "learn" as const,
   "title": "Types and Optionals · Learn Silk",
   "description": "Chapter 4 of Learn Silk: use explicit scalar types, structs, and T? optionals for missing values.",
   "bodyClass": "site-dark product-page learn-page learn-lesson-page silk-learn-page",
@@ -22,3 +24,5 @@ export default {
     "position": "4 / 5"
   }
 }
+
+export default vars satisfies CheckedPageVars<typeof vars>

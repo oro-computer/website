@@ -14,14 +14,15 @@
     "strict": true,
     "noEmit": true,
     "allowImportingTsExtensions": true,
-    "allowJs": true,
-    "checkJs": false,
+    "allowJs": false,
     "skipLibCheck": true,
     "erasableSyntaxOnly": true
   },
   "include": [
     "src/**/*.ts",
     "tools/**/*.ts",
+    "runtime/tools/**/*.ts",
+    "silk/tools/**/*.ts",
     "tests/**/*.ts",
     "playwright.config.ts"
   ]

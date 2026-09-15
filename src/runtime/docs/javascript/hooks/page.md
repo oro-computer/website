@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:hooks"
 description: "oro:hooks provides a consistent way to subscribe to runtime-delivered lifecycle and system events."
 docsCollection: "runtime"
 section: "javascript"

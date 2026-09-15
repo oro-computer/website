@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Project layout"
 description: "An Oro Runtime project is a directory with:"
 docsCollection: "runtime"
 section: "guides"

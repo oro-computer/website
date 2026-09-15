@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "silk Cache Management"
 description: "This document describes the managed cache model used by the silk toolchain and the silk cache command surface for inspecting and maintaining that cache."
 docsCollection: "silk"
 section: "compiler"

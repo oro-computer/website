@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::gpu"
 description: "std::gpu is the public host-side API for pure-Silk GPU discovery, device memory, streams, kernel launch, and synchronization. GPU-v1 mixed Linux x86_64 executables use the provider recorded in their b"
 docsCollection: "silk"
 section: "std"

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::readline"
 description: "std::readline provides a small, ergonomic readline-style API for reading a single line of user input with interactive editing and history when stdin is connected to a TTY."
 docsCollection: "silk"
 section: "std"

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::ssh2"
 description: "std::ssh2 provides the current libssh2-backed SSH2 implementation for the hosted POSIX baseline. On supported hosted target layouts, silk build auto-links the built-in libssh2.a so outputs do not depe"
 docsCollection: "silk"
 section: "std"

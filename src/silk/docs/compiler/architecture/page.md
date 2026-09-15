@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Compiler Architecture"
 description: "This document describes the intended architecture of the Silk compiler implemented in Zig."
 docsCollection: "silk"
 section: "compiler"

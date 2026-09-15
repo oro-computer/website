@@ -28,6 +28,9 @@ export function header(product: string, route: string, wide: boolean): string {
             : []),
       ]
     : []
+  const activeSubnav = sub
+    .filter(([text, url]) => route === url || (text !== 'Overview' && route.startsWith(url)))
+    .sort((a, b) => b[1].length - a[1].length)[0]?.[1]
   return render(
     html`<header class="site-top" id="top">
       <div class="${wide ? 'container container-wide' : 'container'}">
@@ -70,8 +73,7 @@ export function header(product: string, route: string, wide: boolean): string {
                     ([text, url]) =>
                       html`<a
                         href="${url}"
-                        ${route === url ||
-                        (text !== 'Overview' && route.startsWith(url))
+                        ${url === activeSubnav
                           ? html`aria-current="page"`
                           : null}
                         >${text}</a

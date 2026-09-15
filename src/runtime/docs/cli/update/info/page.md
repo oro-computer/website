@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oroc update info"
 description: "Query update servers or static manifests over HTTP, TCP, or UDP."
 docsCollection: "runtime"
 section: "cli"

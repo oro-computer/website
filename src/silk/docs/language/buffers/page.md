@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Buffers"
 description: "Buffer(T) provides low-level access to a contiguous block of memory. It is intentionally unsafe and used as a foundation for higher-level collections and strings."
 docsCollection: "silk"
 section: "language"

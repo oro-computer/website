@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "if / else"
 description: "Use if / else for boolean branching."
 docsCollection: "silkWiki"
 section: "language"

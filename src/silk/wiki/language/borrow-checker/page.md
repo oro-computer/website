@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Borrow checker (design)"
 description: "Silk’s long-term design includes a borrow-checker-style static safety layer over references and mutation. Silk currently enforces a simpler, explicit mut borrow contract (see mutability)."
 docsCollection: "silkWiki"
 section: "language"

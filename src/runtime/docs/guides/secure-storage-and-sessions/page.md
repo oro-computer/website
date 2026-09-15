@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Secure storage and sessions"
 description: "Application data and application secrets are not the same thing. Put notes, caches, and drafts in the filesystem or SQLite. Put refresh tokens, client secrets, and other credentials in oro:secure-stor"
 docsCollection: "runtime"
 section: "guides"

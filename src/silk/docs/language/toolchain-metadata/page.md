@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Toolchain Metadata (SILK_VERSION, SILK_ABI_VERSION, SILK_GIT_COMMIT)"
 description: "Silk exposes a small set of compiler-provided toolchain metadata values to:"
 docsCollection: "silk"
 section: "language"

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::url"
 description: "std::url provides a WHATWG-URL-compatible URL parser and serializer plus URLSearchParams behavior (application/x-www-form-urlencoded)."
 docsCollection: "silk"
 section: "std"

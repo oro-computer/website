@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Tutorial 1: your first program"
 description: "This tutorial gets you from “a file” to “a runnable program” with the smallest useful workflow:"
 docsCollection: "silk"
 section: "usage"

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::window::ios"
 description: "std::window::ios is the iOS-specific facade for applications that want to select the iOS provider explicitly while still using the portable std::window types."
 docsCollection: "silk"
 section: "std"

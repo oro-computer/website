@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "sage:crypto"
 description: "sage:crypto provides random bytes and UUID v4 generation."
 docsCollection: "sage"
 section: "javascript"

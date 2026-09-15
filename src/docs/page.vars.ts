@@ -1,5 +1,7 @@
-export default {
-  "layout": "marketing",
+import type { CheckedPageVars } from '#lib/page-vars.ts'
+
+const vars = {
+  "layout": "marketing" as const,
   "title": "Docs · Oro Computer",
   "description": "Oro Computer documentation hub for Oro Runtime and Silk, with quick starts, guides, full references, CLI docs, embedders, and Formal Silk.",
   "bodyClass": "site-dark docs-landing-page",
@@ -7,3 +9,5 @@ export default {
   "product": "docs",
   "footerLabel": "Oro Computer Docs"
 }
+
+export default vars satisfies CheckedPageVars<typeof vars>

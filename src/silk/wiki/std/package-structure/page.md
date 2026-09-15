@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std:: package structure"
 description: "This page describes how std:: modules are organized and how the compiler finds and links them (including std-root selection and archive wiring)."
 docsCollection: "silkWiki"
 section: "std"

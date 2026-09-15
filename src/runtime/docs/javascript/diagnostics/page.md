@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:diagnostics"
 description: "oro:diagnostics exposes channels, metrics, and runtime/window diagnostic queries."
 docsCollection: "runtime"
 section: "javascript"

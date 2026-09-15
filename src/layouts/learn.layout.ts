@@ -1,6 +1,6 @@
 import { html, render } from 'fragtml'
 import type { LayoutFunction } from '@domstack/static/types.js'
-import { names } from '../lib/navigation.ts'
+import { names } from '#lib/navigation.ts'
 export const parentLayout = 'root'
 interface LearnVars {
   product: string

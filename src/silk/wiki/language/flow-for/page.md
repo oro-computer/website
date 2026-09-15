@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "for loops"
 description: "for loops iterate over:"
 docsCollection: "silkWiki"
 section: "language"

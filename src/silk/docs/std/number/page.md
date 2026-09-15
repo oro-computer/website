@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::number"
 description: "This module provides small, dependency-light number parsing and formatting helpers, plus a boxed Number value type."
 docsCollection: "silk"
 section: "std"

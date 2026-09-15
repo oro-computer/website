@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Concurrency (async, task, await, yield)"
 description: "Silk concurrency is built around:"
 docsCollection: "silkWiki"
 section: "language"

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Optional"
 description: "The Optional type provides a safe way to represent values that may or may not be present, instead of relying on sentinel values such as null."
 docsCollection: "silk"
 section: "language"

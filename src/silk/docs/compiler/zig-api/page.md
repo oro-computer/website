@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Zig Embedding API"
 description: "This page documents the Zig-facing embedding surface exported as the silk module."
 docsCollection: "silk"
 section: "compiler"

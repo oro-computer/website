@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Built-In Dependencies"
 description: "Silk aims to be buildable with minimal reliance on system-installed dependencies. For the hosted POSIX baseline, Silk ships built-in dependency sources and pinned archives:"
 docsCollection: "silk"
 section: "compiler"

@@ -1,5 +1,7 @@
-export default {
-  "layout": "learn",
+import type { CheckedPageVars } from '#lib/page-vars.ts'
+
+const vars = {
+  "layout": "learn" as const,
   "title": "First Runtime App · Learn Oro Runtime",
   "description": "Chapter 1 of Learn Oro Runtime: create a project, edit the first page, use oro:application, and run the app.",
   "bodyClass": "site-dark product-page learn-page learn-lesson-page runtime-learn-page",
@@ -22,3 +24,5 @@ export default {
     "position": "1 / 5"
   }
 }
+
+export default vars satisfies CheckedPageVars<typeof vars>

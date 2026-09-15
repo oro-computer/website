@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "How To Load Dynamic Libraries"
 description: "This guide shows how to load a dynamic library at runtime, resolve a symbol, convert it to a typed C function pointer, and call it from Silk."
 docsCollection: "silk"
 section: "usage"

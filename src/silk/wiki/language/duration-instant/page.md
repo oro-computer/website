@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Duration and Instant"
 description: "Duration represents a signed time span and Instant represents a signed point-in-time on a monotonic timeline. the backend treats both as distinct Silk types that lower to i64 nanoseconds."
 docsCollection: "silkWiki"
 section: "language"

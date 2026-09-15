@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Character Literals"
 description: "Character literals represent Unicode scalar values (code points) and have type char (types)."
 docsCollection: "silk"
 section: "language"

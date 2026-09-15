@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "[silk-size(1)](?p=man/silk-size.1) - Inspect Artifact Sizes"
 description: "NOTE: This is the Markdown source for the eventual man 1 page for silk size. The roff-formatted manpage should be generated from this content."
 docsCollection: "silk"
 section: "man"

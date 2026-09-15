@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::buffer"
 description: "In the in-tree stdlib, std::buffer provides a packed byte buffer (BufferU8) plus width-oriented scalar buffer aliases built on std::vector::Vector(T) (for example BufferI32)."
 docsCollection: "silkWiki"
 section: "std"

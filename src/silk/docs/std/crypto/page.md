@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::crypto"
 description: "std::crypto provides cryptographic primitives through a selectable security provider. The builtin provider uses target-matched built-in libsodium archives on the hosted POSIX baseline; the Apple platf"
 docsCollection: "silk"
 section: "std"

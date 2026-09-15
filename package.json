@@ -5,9 +5,13 @@
   "engines": {
     "node": ">=24"
   },
+  "imports": {
+    "#lib/*": "./src/lib/*"
+  },
   "scripts": {
     "clean": "node tools/clean.ts",
     "build": "npm run clean && domstack",
+    "start": "domstack --serve",
     "dev": "domstack --watch",
     "preview": "domstack --serve",
     "typecheck": "tsc --noEmit",
@@ -16,12 +20,12 @@
     "test:site": "node --test tests/site/*.test.ts",
     "test:browser": "playwright test",
     "test:reproducibility": "node tools/reproducibility.ts",
-    "audit:content": "python3 runtime/tools/audit-site.py && python3 silk/tools/audit-site.py && python3 silk/tools/audit-stdlib-docs.py && python3 sage/tools/audit-site.py && python3 slg/tools/audit-site.py && python3 virtnosis/tools/audit-site.py",
+    "audit:content": "node tools/audit-content.ts",
     "test:tooling": "node --test tests/tooling/*.test.ts",
     "check": "npm run typecheck && npm test && npm run build && npm run audit && npm run audit:content && npm run test:site && npm run test:browser && npm run test:tooling && npm run test:reproducibility"
   },
   "devDependencies": {
-    "@domstack/static": "beta",
+    "@domstack/static": "12.0.0-beta.6",
     "@playwright/test": "^1.55.0",
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^24.0.0",

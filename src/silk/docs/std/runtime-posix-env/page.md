@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::runtime::posix::env"
 description: "Source: std/runtime/posix/env.slk"
 docsCollection: "silk"
 section: "std"

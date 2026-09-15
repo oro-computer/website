@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:errno"
 description: "oro:errno converts errno values to names and messages."
 docsCollection: "runtime"
 section: "javascript"

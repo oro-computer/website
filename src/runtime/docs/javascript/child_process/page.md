@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:child_process"
 description: "oro:child_process launches and manages subprocesses with a Node-compatible API."
 docsCollection: "runtime"
 section: "javascript"

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Const Functions (const fn)"
 description: "const fn marks a function as eligible for compile-time evaluation."
 docsCollection: "silkWiki"
 section: "language"

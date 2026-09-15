@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:string_decoder"
 description: "oro:string_decoder decodes split byte streams into text without corrupting multibyte characters."
 docsCollection: "runtime"
 section: "javascript"

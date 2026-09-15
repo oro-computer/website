@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::runtime::build"
 description: "Source: std/runtime/build.slk"
 docsCollection: "silk"
 section: "std"
