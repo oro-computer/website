@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs'
-import { collectionConfig, markdownFiles, pathJoin, pattern, read, reportIssues, runSiteAudit } from './common.ts'
+import { collectionConfig, markdownFiles, pathJoin, pattern, read, reportIssues, runSiteAudit, withSourceInventory } from './common.ts'
 import type { AuditContext, Issue, Reporter } from './common.ts'
 
 const curated = new Map(['ai', 'application', 'extension', 'fs', 'hooks', 'mcp', 'notification', 'secure-storage', 'window'].map(name => [`oro:${name}`, `${name}.md`]))
@@ -59,6 +59,7 @@ export function runtimeIssues(context: AuditContext): Issue[] {
   return issues
 }
 export function runRuntimeAudit(context: AuditContext, reporter: Reporter = console): number {
+  context = withSourceInventory(context)
   const rc = runSiteAudit(context, 'runtime', reporter)
   if (rc !== 0) return rc
   return reportIssues(runtimeIssues(context), context.outputRoot, 'OK: runtime docs audit passed', reporter, 'runtime docs issues')

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { cp, mkdtemp, readdir, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { collections, type Collection } from '../src/lib/collections.ts'
+import { collections, type Collection } from '#lib/collections.ts'
 import { exportCollection, importCollection } from '../tools/import-public.ts'
 test('all 585 public documents survive an unchanged refresh byte for byte', async () => {
   const site = await mkdtemp(join(tmpdir(), 'oro-import-roundtrip-'))

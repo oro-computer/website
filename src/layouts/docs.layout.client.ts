@@ -1,9 +1,9 @@
-import { initAskAiMenu } from '../lib/ask-ai-client.ts'
-import { legacyTarget } from '../lib/legacy.ts'
-import { enhanceSidebar } from '../lib/sidebar-client.ts'
-import { initLearn } from '../lib/learn-client.ts'
-import { renderTabs } from '../lib/tabs.ts'
-import { enhanceArticle } from '../lib/article-client.ts'
+import { initAskAiMenu } from '#lib/ask-ai-client.ts'
+import { legacyTarget } from '#lib/legacy.ts'
+import { enhanceSidebar } from '#lib/sidebar-client.ts'
+import { initLearn } from '#lib/learn-client.ts'
+import { renderTabs } from '#lib/tabs.ts'
+import { enhanceArticle } from '#lib/article-client.ts'
 const app = document.querySelector<HTMLElement>('[data-docs-app]')
 if (app) {
   const routes = document.querySelector('[data-legacy-routes]')

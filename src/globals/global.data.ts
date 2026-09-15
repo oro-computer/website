@@ -1,6 +1,6 @@
 import type { GlobalDataFunction } from '@domstack/static/types.js'
-import { collections, type Collection } from './lib/collections.ts'
-import { editUrl, plainText, projectCollection, validateDocVars, type Doc, type DocsData } from './lib/docs.ts'
+import { collections, type Collection } from '#lib/collections.ts'
+import { editUrl, plainText, projectCollection, validateDocVars, type Doc, type DocsData } from '#lib/docs.ts'
 const globalData: GlobalDataFunction<DocsData, Record<string, unknown>, string> = async ({ pages }) => {
   const docs: Record<Collection, Doc[]> = {
       runtime: [], silk: [], silkWiki: [], virtnosis: [], sage: [], slg: [],

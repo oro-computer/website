@@ -22,17 +22,35 @@ are output files; do not commit `public/`.
 - `src/**/page.html`: authored page fragments, with metadata in `page.vars.ts`.
 - `src/**/page.md`: public documentation, including YAML frontmatter.
 - `src/layouts/`: shared page chrome, navigation, and progressive browser clients.
+  `registry.ts` registers actual layout exports with DOMStack's type-only registry.
+  HTML `page.vars.ts` companions use `CheckedPageVars` from `#lib/page-vars.ts`
+  to validate supplied metadata against their layout chain and global vars during
+  `npm run typecheck`; this adds no runtime registry or subscriptions.
 - `src/globals/global.css`: shared Oro styles, based on `docs/branding/`.
   Homepage styles live in `src/style.css`; learn styles in `src/layouts/learn.layout.css`.
 - `src/lib/`: rendering, URL, collection, and navigation helpers.
-- `src/global.data.ts`: validated collection metadata and precomputed navigation,
-  search, and source-export projections derived from source pages.
+- `src/globals/global.vars.ts`: shared site configuration.
+- `src/globals/global.data.ts`: validated collection metadata and precomputed navigation,
+  search, and LLM-export projections derived from source pages.
 - `src/layouts/docs.layout.ts`: the shared documentation renderer, consuming one
   lightweight navigation key for all collections.
-- `src/navigation.template.ts`: navigation indexes for all collections.
-- `src/*-{search,sources,llms}.template.ts`: dependency-scoped collection
-  artifacts; `src/sitemap.template.ts`: sitemap output;
-  `src/artifacts.template.ts`: site-wide LLM directory and `.nojekyll`.
+- `src/{product}/llms.txt.template.ts`: product LLM packs; Silk includes its wiki.
+- `src/{product}/docs/search.json.template.ts`: collection search indexes;
+  the wiki uses `src/silk/wiki/`.
+- `src/lib/docs-page-outputs.ts`: shared `pageOutputs` hook exported by the `docs`
+  and `spec` layouts. Each page owns its raw Markdown export at its existing
+  collection `source/` URL, using its `sourcePath`.
+- `src/llms.txt.template.ts`, `sitemap.xml.template.ts`, `CNAME.template.ts`,
+  and `nojekyll.template.ts`: site-wide artifacts.
+
+Templates live beside their output locations. Single-file templates return strings
+and use their filenames without `.template.ts` as output names. The root
+`nojekyll.template.ts` explicitly names its hidden output `.nojekyll`.
+Raw Markdown uses DOMStack page outputs instead of collection templates: body
+edits update only that page's raw copy, and watch rebuilds retain unchanged copies
+without rewriting them. Deleted pages and changed raw paths clean up owned files.
+Navigation is rendered into HTML from global data; the legacy navigation
+`index.json` endpoints are no longer generated.
 
 Consult `docs/branding/` before changing visual design or copy tone. The approved
 logo originals remain in `docs/branding/assets/`; their checked mirrors in `src/docs/branding/assets/` retain
@@ -52,8 +70,8 @@ New imported pages are appended; review their section and order after syncing.
 Use `layout: "docs"` for documentation pages in every collection (`spec` for the
 specification). All docs share one lightweight navigation dependency: navigation
 changes rebuild all docs, while body-only edits remain isolated to the changed
-article and its collection's search and exports. Search and raw-source/LLM
-artifacts retain separate, per-collection dependencies.
+article, its raw output, and its collection's search and LLM exports. Search and
+LLM artifacts retain separate, per-collection dependencies; raw outputs need none.
 
 Use canonical directory links such as `/runtime/docs/guides/hello-world/`.
 Collection roots redirect legacy `?p=` links while preserving fragments. Static
@@ -86,9 +104,10 @@ catalog includes new pages in the same import batch. Runtime's generated
 reference markers retain surrounding prose.
 
 The generators call the TypeScript importer directly; they never run during a
-DOMStack build. JSON indexes and LLM exports are DOMStack templates, not ingestion
-outputs. Content audits run through `tools/audit-content.ts` and inspect `public/`
-by default; set `ORO_SITE_OUTPUT` to inspect
+DOMStack build. Search indexes and LLM exports are DOMStack templates, not ingestion
+outputs. Content audits derive document IDs and expected raw filenames from committed
+Markdown frontmatter, then inspect the generated files in `public/` by default.
+They do not depend on public navigation JSON. Set `ORO_SITE_OUTPUT` to inspect
 another output directory. Set `ORO_RUNTIME_REPO` explicitly to additionally audit
 against a particular upstream Runtime checkout; ordinary checks are independent
 of whatever happens to be checked out next door.

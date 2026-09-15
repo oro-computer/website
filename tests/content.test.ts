@@ -11,9 +11,9 @@ import {
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { load } from 'cheerio'
-import { canonicalLink } from '../src/lib/urls.ts'
-import { docUrl } from '../src/lib/collections.ts'
-import { markdown } from '../src/lib/markdown.ts'
+import { canonicalLink } from '#lib/urls.ts'
+import { docUrl } from '#lib/collections.ts'
+import { markdown } from '#lib/markdown.ts'
 import { publicContent } from '../tools/migration/content.ts'
 import {
   importCollection,

@@ -7,8 +7,8 @@ import {
   collections,
   docUrl,
   type Collection,
-} from '../../src/lib/collections.ts'
-import { canonicalLink } from '../../src/lib/urls.ts'
+} from '#lib/collections.ts'
+import { canonicalLink } from '#lib/urls.ts'
 import MarkdownIt from 'markdown-it'
 import { publicContent, description } from './content.ts'
 const legacy = resolve(process.argv[2] || '.')

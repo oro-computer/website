@@ -1,6 +1,6 @@
 import { readFile, writeFile, mkdir, readdir, stat } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
-import type { Collection } from '../src/lib/collections.ts'
+import type { Collection } from '#lib/collections.ts'
 
 export async function stageCollection(collection: Collection, dest: string, site: string): Promise<void> {
   const { exportCollection } = await import('./import-public.ts')

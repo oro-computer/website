@@ -1,7 +1,7 @@
 import MarkdownIt from 'markdown-it'
 import { sanitizeMarkdown, sanitizeSpecMarkdown } from './public-copy.ts'
-import { canonicalLink } from '../../src/lib/urls.ts'
-import { collections, type Collection } from '../../src/lib/collections.ts'
+import { canonicalLink } from '#lib/urls.ts'
+import { collections, type Collection } from '#lib/collections.ts'
 const parser = new MarkdownIt({ html: true })
 export function publicContent(
   text: string,

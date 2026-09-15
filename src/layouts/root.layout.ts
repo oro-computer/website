@@ -1,8 +1,8 @@
-import { rootContent } from '../lib/rendering.ts'
+import { rootContent } from '#lib/rendering.ts'
 import { html, raw, render } from 'fragtml'
 import type { LayoutFunction } from '@domstack/static/types.js'
-import { header, footer } from '../lib/navigation.ts'
-import { collections, type Collection } from '../lib/collections.ts'
+import { header, footer } from '#lib/navigation.ts'
+import { collections, type Collection } from '#lib/collections.ts'
 interface RootVars {
   title: string
   siteUrl: string

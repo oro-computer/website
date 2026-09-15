@@ -1,23 +1,20 @@
 import { existsSync } from 'node:fs'
 import { relative } from 'node:path'
-import { checkDocLinks, checkIndex, checkLines, checkPLinks, collectionConfig, lines, loadIds, markdownFiles, pathJoin, pattern, read, reportIssues, trim } from './common.ts'
+import { checkDocLinks, checkRawOutputs, checkLines, checkPLinks, collectionConfig, lines, collectionIds, withSourceInventory, markdownFiles, pathJoin, pattern, read, reportIssues, trim } from './common.ts'
 import type { AuditContext, Issue, Reporter } from './common.ts'
 
 function checkText(source: string, expression: RegExp, message: string): Issue[] {
   return markdownFiles(source).filter(path => expression.test(read(path))).map(path => ({ path, message }))
 }
 export function runSilkAudit(context: AuditContext, reporter: Reporter = console): number {
+  context = withSourceInventory(context)
   const configs = [collectionConfig(context, 'silk'), collectionConfig(context, 'silkWiki')]
-  if (configs.some(config => !existsSync(config.index))) {
-    reporter.error('Missing Silk index.json files; run build scripts first.')
-    return 2
-  }
   const docs = configs[0]!
   const wiki = configs[1]!
-  const ids = { docs: loadIds(docs.index), wiki: loadIds(wiki.index) }
+  const ids = { docs: collectionIds(docs), wiki: collectionIds(wiki) }
   const sources = { docs: docs.source, wiki: wiki.source, spec: pathJoin(docs.source, 'spec') }
   const issues = [
-    ...configs.flatMap(checkIndex),
+    ...configs.flatMap(checkRawOutputs),
     ...configs.flatMap(config => checkPLinks(config, ids, true)),
     ...configs.flatMap(config => checkDocLinks(config.source, context.outputRoot, sources)),
     ...configs.flatMap(config => checkText(config.source, pattern('\\bconst\\s+region\\s+arena\\b|\\bexport\\s+const\\s+region\\s+arena\\b|\\bwith\\s+arena\\b\\s*\\{|\\bfrom\\s+arena\\b|\\bglobal_arena\\b', 'i'), 'Found arena identifier in examples (use regions + neutral names).')),

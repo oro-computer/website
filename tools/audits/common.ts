@@ -1,10 +1,34 @@
 import { existsSync, readFileSync, readdirSync, realpathSync } from 'node:fs'
 import { dirname, isAbsolute, relative, resolve } from 'node:path'
-import { collections, type Collection } from '../../src/lib/collections.ts'
+import { load } from 'js-yaml'
+import { collections, type Collection } from '#lib/collections.ts'
 
 export interface Issue { path: string; message: string }
-export interface AuditContext { siteRoot: string; outputRoot: string; runtimeRepo?: string }
-export interface CollectionConfig { source: string; index: string; kind: string }
+export interface AuditContext { siteRoot: string; outputRoot: string; runtimeRepo?: string; inventory?: SourceInventory }
+interface SourceItem { id: string; file: string }
+export type SourceInventory = Record<Collection, SourceItem[]>
+export interface CollectionConfig { source: string; items: SourceItem[]; kind: string }
+
+export function buildSourceInventory(siteRoot: string): SourceInventory {
+  const inventory = Object.fromEntries(Object.keys(collections).map(key => [key, []])) as unknown as SourceInventory
+  for (const path of markdownFiles(pathJoin(siteRoot, 'src')).sort()) {
+    if (!path.endsWith('/page.md')) continue
+    const frontmatter = /^---\n([\s\S]*?)\n---(?:\n|$)/.exec(read(path))
+    if (!frontmatter) continue
+    const data = load(frontmatter[1]!) as Record<string, unknown> | undefined
+    if (!data || typeof data.docsCollection !== 'string' || !Object.hasOwn(collections, data.docsCollection)) continue
+    if (typeof data.sourcePath !== 'string' || !/\.(md|txt)$/.test(data.sourcePath) || normalizeRelPath(data.sourcePath) !== data.sourcePath) {
+      throw new Error(`${path}: invalid or missing sourcePath`)
+    }
+    inventory[data.docsCollection as Collection].push({ id: data.sourcePath.replace(/\.(md|txt)$/, ''), file: data.sourcePath })
+  }
+  return inventory
+}
+
+// Scope reuse to this invocation, never a process-global cache of source metadata.
+export function withSourceInventory(context: AuditContext): AuditContext {
+  return context.inventory ? context : { ...context, inventory: buildSourceInventory(context.siteRoot) }
+}
 export type Reporter = Pick<Console, 'log' | 'error'>
 
 // Translate the Python regex constructs used by these audits, without changing policy.
@@ -49,7 +73,7 @@ export function pathJoin(...parts: string[]): string {
 }
 export function collectionConfig(context: AuditContext, collection: Collection): CollectionConfig {
   const root = pathJoin(context.outputRoot, collections[collection].base.slice(1))
-  return { source: pathJoin(root, 'source'), index: pathJoin(root, 'index.json'), kind: collection === 'silkWiki' ? 'wiki' : 'docs' }
+  return { source: pathJoin(root, 'source'), items: (context.inventory ?? buildSourceInventory(context.siteRoot))[collection], kind: collection === 'silkWiki' ? 'wiki' : 'docs' }
 }
 export function markdownFiles(root: string, recursive = true): string[] {
   if (!existsSync(root)) return []
@@ -60,15 +84,10 @@ export function markdownFiles(root: string, recursive = true): string[] {
   }
   return files
 }
-interface Index { sections?: { items?: { id: string; file: string }[] }[] }
-export function indexItems(path: string): { id: string; file: string }[] {
-  const data: Index = JSON.parse(read(path))
-  return (data.sections ?? []).flatMap(section => section.items ?? [])
-}
-export const loadIds = (path: string): Set<string> => new Set(indexItems(path).map(item => item.id))
-export function checkIndex(config: CollectionConfig): Issue[] {
-  return indexItems(config.index).filter(item => !existsSync(pathJoin(config.source, item.file)))
-    .map(item => ({ path: config.index, message: `Index refers to missing file: ${item.file}` }))
+export const collectionIds = (config: CollectionConfig): Set<string> => new Set(config.items.map(item => item.id))
+export function checkRawOutputs(config: CollectionConfig): Issue[] {
+  return config.items.filter(item => !existsSync(pathJoin(config.source, item.file)))
+    .map(item => ({ path: pathJoin(config.source, item.file), message: 'Missing raw output for source page; run build scripts first.' }))
 }
 export function normalizeRelPath(input: string): string | undefined {
   if (!input) return undefined
@@ -166,10 +185,9 @@ export function reportIssues(issues: Issue[], root: string, success: string, rep
 }
 export function runSiteAudit(context: AuditContext, collection: Exclude<Collection, 'silkWiki'>, reporter: Reporter = console): number {
   const config = collectionConfig(context, collection)
-  const title = { runtime: 'Runtime', silk: 'Silk', sage: 'Sage', slg: 'Slg', virtnosis: 'Virtnosis' }[collection]
-  if (!existsSync(config.index)) { reporter.error(`Missing ${title} docs/index.json; run build scripts first.`); return 2 }
+
   return reportIssues([
-    ...checkIndex(config), ...checkPLinks(config, { docs: loadIds(config.index) }),
+    ...checkRawOutputs(config), ...checkPLinks(config, { docs: collectionIds(config) }),
     ...checkDocLinks(config.source, context.outputRoot, { docs: config.source }),
     ...checkLines(config.source, 'viewer'), ...checkLines(config.source, 'manpage'), ...checkLines(config.source, 'editorial'),
   ], context.outputRoot, `OK: ${collection} site audit passed`, reporter)

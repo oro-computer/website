@@ -1,8 +1,8 @@
 {
   "missing": {
-    "status": 2,
+    "status": 1,
     "stdout": "",
-    "stderr": "Missing Runtime docs/index.json; run build scripts first.\n"
+    "stderr": "runtime/docs/source/start.md: Missing raw output for source page; run build scripts first.\nFAIL: 1 issues\n"
   },
   "clean": {
     "status": 0,
@@ -12,7 +12,7 @@
   "common": {
     "status": 1,
     "stdout": "",
-    "stderr": "sage/docs/index.json: Index refers to missing file: lost.md\nsage/docs/source/start.md: Broken ?p= link: heading\nsage/docs/source/start.md: Broken ?p= link: fenced\nsage/docs/source/start.md: Broken ?p= link: missing\nsage/docs/source/start.md: Broken ?p= link: nope\nsage/docs/source/start.md: Missing link target: docs/absent.md -> sage/docs/source/absent.md\nsage/docs/source/start.md: Missing link target: /absent.txt -> absent.txt\nsage/docs/source/start.md: Line 6: raw ?p= reference must be a markdown link.\nsage/docs/source/start.md: Line 6: raw manpage reference must be a markdown link.\nsage/docs/source/start.md: Line 10: avoid status-style or transitional editorial framing in published docs.\nsage/docs/source/start.md: Line 11: avoid status-style or transitional editorial framing in published docs.\nsage/docs/source/start.md: Line 12: avoid status-style or transitional editorial framing in published docs.\nsage/docs/source/start.md: Line 13: avoid status-style or transitional editorial framing in published docs.\nsage/docs/source/start.md: Line 14: avoid status-style or transitional editorial framing in published docs.\nsage/docs/source/start.md: Line 15: avoid status-style or transitional editorial framing in published docs.\nsage/docs/source/start.md: Line 16: avoid status-style or transitional editorial framing in published docs.\nsage/docs/source/start.md: Line 17: avoid status-style or transitional editorial framing in published docs.\nsage/docs/source/start.md: Line 19: avoid status-style or transitional editorial framing in published docs.\nFAIL: 18 issues\n"
+    "stderr": "sage/docs/source/lost.md: Missing raw output for source page; run build scripts first.\nsage/docs/source/start.md: Broken ?p= link: heading\nsage/docs/source/start.md: Broken ?p= link: fenced\nsage/docs/source/start.md: Broken ?p= link: missing\nsage/docs/source/start.md: Broken ?p= link: nope\nsage/docs/source/start.md: Missing link target: docs/absent.md -> sage/docs/source/absent.md\nsage/docs/source/start.md: Missing link target: /absent.txt -> absent.txt\nsage/docs/source/start.md: Line 6: raw ?p= reference must be a markdown link.\nsage/docs/source/start.md: Line 6: raw manpage reference must be a markdown link.\nsage/docs/source/start.md: Line 10: avoid status-style or transitional editorial framing in published docs.\nsage/docs/source/start.md: Line 11: avoid status-style or transitional editorial framing in published docs.\nsage/docs/source/start.md: Line 12: avoid status-style or transitional editorial framing in published docs.\nsage/docs/source/start.md: Line 13: avoid status-style or transitional editorial framing in published docs.\nsage/docs/source/start.md: Line 14: avoid status-style or transitional editorial framing in published docs.\nsage/docs/source/start.md: Line 15: avoid status-style or transitional editorial framing in published docs.\nsage/docs/source/start.md: Line 16: avoid status-style or transitional editorial framing in published docs.\nsage/docs/source/start.md: Line 17: avoid status-style or transitional editorial framing in published docs.\nsage/docs/source/start.md: Line 19: avoid status-style or transitional editorial framing in published docs.\nFAIL: 18 issues\n"
   },
   "silk": {
     "status": 1,
@@ -21,7 +21,7 @@
   },
   "stdlib": {
     "status": 1,
-    "stdout": "<fixture>/silk/docs/source/std/a.md: Status/body uses banned transitional wording: active expansion\n<fixture>/silk/docs/source/std/a.md: Status/body uses banned transitional wording: current snapshot\n<fixture>/silk/docs/source/std/a.md: Status/body uses banned transitional wording: Partially implemented\n<fixture>/silk/docs/source/std/a.md: Status/body uses banned transitional wording: initial std wrapper\n<fixture>/silk/docs/source/std/a.md: Status/body uses banned transitional wording: expansion path\n<fixture>/silk/docs/source/std/a.md: Status/body uses banned transitional wording: \\bMVP\\b\n<fixture>/silk/docs/source/std/a.md: Banned heading: API\n<fixture>/silk/docs/source/std/a.md: Banned heading: Design Goals\n<fixture>/silk/docs/source/std/a.md: Banned heading pattern: Initial Design MVP\n<fixture>/silk/docs/source/std/a.md: Banned heading pattern: Initial Design MVP\n<fixture>/silk/docs/source/std/a.md: Banned heading pattern: Current Scope\n",
+    "stdout": "output/silk/docs/source/std/a.md: Status/body uses banned transitional wording: active expansion\noutput/silk/docs/source/std/a.md: Status/body uses banned transitional wording: current snapshot\noutput/silk/docs/source/std/a.md: Status/body uses banned transitional wording: Partially implemented\noutput/silk/docs/source/std/a.md: Status/body uses banned transitional wording: initial std wrapper\noutput/silk/docs/source/std/a.md: Status/body uses banned transitional wording: expansion path\noutput/silk/docs/source/std/a.md: Status/body uses banned transitional wording: \\bMVP\\b\noutput/silk/docs/source/std/a.md: Banned heading: API\noutput/silk/docs/source/std/a.md: Banned heading: Design Goals\noutput/silk/docs/source/std/a.md: Banned heading pattern: Initial Design MVP\noutput/silk/docs/source/std/a.md: Banned heading pattern: Initial Design MVP\noutput/silk/docs/source/std/a.md: Banned heading pattern: Current Scope\n",
     "stderr": ""
   },
   "runtime": {

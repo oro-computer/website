@@ -3,7 +3,9 @@ import assert from 'node:assert/strict'
 import {
   cp,
   mkdtemp,
-  mkdir,
+  readdir,
+  stat,
+  access,
   readFile,
   writeFile,
   rm,
@@ -60,27 +62,69 @@ test('a standalone checkout rebuilds articles, sidebar data and exports in watch
     await waitFor(async () => logs.includes('ORO_WATCH_READY'))
     const source = join(site, 'src', route, 'page.md')
     const original = await readFile(source, 'utf8')
-    const updated =
-      original
-        .replace('title: "Hello world"', 'title: "Watch refresh"')
-        .replace('# Hello world', '# Watch refresh') +
-      '\nA unique watch-mode verification sentence.\n'
+    const outputRoot = join(site, 'public')
+    const rawPath = 'runtime/docs/source/guides/hello-world.md'
+    const siblingPath = join(outputRoot, 'runtime/docs/index.html')
+    const rawMtimes = async () => {
+      const paths = (await readdir(outputRoot, { recursive: true }))
+        .filter(path => /\/(docs|wiki)\/source\/.*\.(md|txt)$/.test(path)).sort()
+      return Object.fromEntries(await Promise.all(paths.map(async path =>
+        [path, (await stat(join(outputRoot, path), { bigint: true })).mtimeNs] as const)))
+    }
+    const initialRaw = await rawMtimes()
+    assert.ok(Object.keys(initialRaw).length > 1)
+    assert.ok(rawPath in initialRaw)
+    const sibling = await readFile(siblingPath, 'utf8')
+    const siblingMtime = (await stat(siblingPath, { bigint: true })).mtimeNs
+    const sentence = 'A unique watch-mode verification sentence.'
+    const updated = original + '\n' + sentence + '\n'
+    await delay(100)
     await writeFile(source, updated)
     await waitFor(async () => {
-      const paths = [
-        route + 'index.html',
-        'runtime/docs/index.html',
-        'runtime/docs/search.json',
-        'runtime/docs/index.json',
-        'runtime/llms.txt',
-        'runtime/docs/source/guides/hello-world.md',
-      ]
-      const output = await Promise.all(
-        paths.map((path) => readFile(join(site, 'public', path), 'utf8')),
-      )
-      return output.every((text) => text.includes('Watch refresh'))
+      const output = await Promise.all([
+        route + 'index.html', 'runtime/docs/search.json', 'runtime/llms.txt', rawPath,
+      ].map(path => readFile(join(outputRoot, path), 'utf8')))
+      return output.every(text => text.includes(sentence))
     })
-    assert.equal(await readFile(source, 'utf8'), updated)
+    // Allow the debounced build to finish before checking files it must not touch.
+    await delay(500)
+    const bodyRaw = await rawMtimes()
+    assert.deepEqual(Object.keys(bodyRaw), Object.keys(initialRaw))
+    assert.deepEqual(Object.keys(bodyRaw).filter(path => bodyRaw[path] !== initialRaw[path]), [rawPath])
+    assert.equal(await readFile(siblingPath, 'utf8'), sibling)
+    assert.equal((await stat(siblingPath, { bigint: true })).mtimeNs, siblingMtime)
+
+    // Only frontmatter changes: the Markdown heading and raw body stay identical.
+    const retitled = updated.replace('title: "Hello world"', 'title: "Watch refresh"')
+    assert.notEqual(retitled, updated)
+    await writeFile(source, retitled)
+    await waitFor(async () => {
+      const output = await Promise.all([
+        route + 'index.html', 'runtime/docs/index.html', 'runtime/docs/search.json', 'runtime/llms.txt',
+      ].map(path => readFile(join(outputRoot, path), 'utf8')))
+      return output.every(text => text.includes('Watch refresh'))
+    })
+    await delay(500)
+    assert.deepEqual(await rawMtimes(), bodyRaw)
+
+    const renamedRawPath = 'runtime/docs/source/guides/watch-renamed.txt'
+    const renamed = retitled.replace('sourcePath: "guides/hello-world.md"', 'sourcePath: "guides/watch-renamed.txt"')
+    assert.notEqual(renamed, retitled)
+    const raw = await readFile(join(outputRoot, rawPath))
+    await writeFile(source, renamed)
+    await waitFor(async () => {
+      assert.deepEqual(await readFile(join(outputRoot, renamedRawPath)), raw)
+      await assert.rejects(access(join(outputRoot, rawPath)), { code: 'ENOENT' })
+      return true
+    })
+    await rm(source)
+    await waitFor(async () => {
+      await assert.rejects(access(join(outputRoot, renamedRawPath)), { code: 'ENOENT' })
+      await assert.rejects(access(join(outputRoot, route, 'index.html')), { code: 'ENOENT' })
+      const search = await readFile(join(outputRoot, 'runtime/docs/search.json'), 'utf8')
+      const pack = await readFile(join(outputRoot, 'runtime/llms.txt'), 'utf8')
+      return !search.includes(sentence) && !pack.includes(sentence)
+    })
   } finally {
     if (child && child.exitCode === null) {
       const exited = new Promise<void>((resolve) =>

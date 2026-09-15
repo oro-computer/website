@@ -1,3 +1,1 @@
-import { initLearn } from '../lib/learn-client.ts'
-
-initLearn()
+import '#lib/learn-client.ts'

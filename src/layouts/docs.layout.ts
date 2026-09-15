@@ -1,11 +1,12 @@
 import { html, raw, render } from 'fragtml'
-import { article } from '../lib/rendering.ts'
+import { article } from '#lib/rendering.ts'
 import type { DataDeps, LayoutFunction } from '@domstack/static/types.js'
 import {
   collections,
   sectionTitle,
-} from '../lib/collections.ts'
-import { rawUrl, type DocLink, type NavigationData, type DocVars } from '../lib/docs.ts'
+} from '#lib/collections.ts'
+import { rawUrl, type DocLink, type NavigationData, type DocVars } from '#lib/docs.ts'
+export { pageOutputs } from '#lib/docs-page-outputs.ts'
 export const parentLayout = 'root'
 export const vars = {
   dataDeps: ['navigation'] satisfies DataDeps<NavigationData>,

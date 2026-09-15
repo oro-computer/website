@@ -1,8 +1,9 @@
 import { html, raw, render } from 'fragtml'
 import type { LayoutFunction } from '@domstack/static/types.js'
-import { article } from '../lib/rendering.ts'
-import { collections } from '../lib/collections.ts'
-import { rawUrl, type DocVars } from '../lib/docs.ts'
+import { article } from '#lib/rendering.ts'
+import { collections } from '#lib/collections.ts'
+import { rawUrl, type DocVars } from '#lib/docs.ts'
+export { pageOutputs } from '#lib/docs-page-outputs.ts'
 export const parentLayout = 'root'
 type SpecVars = DocVars & { specLabel?: string }
 const spec: LayoutFunction<SpecVars, string> = ({ vars: v, children }) => {

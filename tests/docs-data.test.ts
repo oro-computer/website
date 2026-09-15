@@ -1,9 +1,9 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { projectCollection, validateDocVars, editUrl, type Doc } from '../src/lib/docs.ts'
-import { collectionIndex, pack, sitemap } from '../src/lib/artifacts.ts'
-import { article, rootContent } from '../src/lib/rendering.ts'
-import { markdown } from '../src/lib/markdown.ts'
+import { projectCollection, validateDocVars, editUrl, rawUrl, type Doc } from '#lib/docs.ts'
+import { pack, sitemap } from '#lib/artifacts.ts'
+import { article, rootContent } from '#lib/rendering.ts'
+import { markdown } from '#lib/markdown.ts'
 const doc: Doc = {
   collection: 'runtime', id: 'start', title: 'Start', description: 'Summary',
   section: 'overview', order: 0, sourcePath: 'start.md', url: '/runtime/docs/',
@@ -22,8 +22,7 @@ test('navigation is JSON-safe, precomputed, and independent of body/search chang
   assert.equal(JSON.stringify(nav), JSON.stringify(projectCollection([{ ...doc, markdown: 'Changed', searchText: 'Changed', description: 'Changed' }, second])))
   assert.deepEqual(JSON.parse(JSON.stringify(nav)).bySource['start.md'], { ...nav.bySource['start.md'] })
   assert.throws(() => projectCollection([doc, doc]), /Duplicate document/)
-  const index = JSON.parse(collectionIndex('runtime', nav).content)
-  assert.equal(index.sections[0].items[1].file, 'next.txt')
+  assert.equal(nav.sections[0].items[1].sourcePath, 'next.txt')
 })
 test('navigation rejects legacy ID collisions between Markdown and text sources', () => {
   const first = { ...doc, id: 'foo', sourcePath: 'foo.md' }
@@ -40,9 +39,17 @@ test('source validation rejects malformed collection metadata with source contex
   assert.equal(editUrl('silk/docs/renamed/README.md'), 'https://github.com/oro-computer/website/blob/master/src/silk/docs/renamed/README.md')
 })
 test('artifact URLs use site configuration and sitemap escapes XML', () => {
-  assert.match(pack('runtime', [doc], 'https://preview.example').content, /URL: https:\/\/preview.example\/runtime\/docs\//)
-  const xml = sitemap(['/page/?a=1&b=2'], 'https://preview.example').content
+  assert.match(pack('runtime', [doc], 'https://preview.example'), /URL: https:\/\/preview.example\/runtime\/docs\//)
+  const xml = sitemap(['/page/?a=1&b=2'], 'https://preview.example')
   assert.ok(xml.includes('https://preview.example/page/?a=1&amp;b=2'))
+})
+test('LLM packs retain source-relative raw URLs and exact Markdown bytes', () => {
+  const nested = { ...doc, sourcePath: 'guides/nested/start.txt', markdown: '# Start\r\n\r\nExact bytes\n' }
+  assert.equal(rawUrl(nested), '/runtime/docs/source/guides/nested/start.txt')
+  assert.equal(pack('runtime', [nested], 'https://preview.example'),
+    '# runtime documentation\n\n## Start\n\nURL: https://preview.example/runtime/docs/\n' +
+    'Source: https://preview.example/runtime/docs/source/guides/nested/start.txt\n\n' + nested.markdown)
+
 })
 test('article enhancement is page-local and preserves legacy anchors', () => {
   const md = markdown()

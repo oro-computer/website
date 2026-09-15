@@ -3,7 +3,7 @@ import { linkReferences, type Reference } from './migration/references.ts'
 import { readFile, readdir, writeFile, mkdir, unlink } from 'node:fs/promises'
 import { load as parseYaml } from 'js-yaml'
 import { resolve, join, dirname } from 'node:path'
-import { collections, docUrl, type Collection } from '../src/lib/collections.ts'
+import { collections, docUrl, type Collection } from '#lib/collections.ts'
 import {
   publicContent,
   description,
