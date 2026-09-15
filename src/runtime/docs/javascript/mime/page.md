@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:mime"
 description: "oro:mime looks up MIME types, extensions, and content-type metadata."
 docsCollection: "runtime"
 section: "javascript"

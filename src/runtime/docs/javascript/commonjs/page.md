@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:commonjs"
 description: "oro:commonjs/* exposes the runtime’s CommonJS loader, cache, and resolution helpers."
 docsCollection: "runtime"
 section: "javascript"

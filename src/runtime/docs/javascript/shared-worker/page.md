@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:shared-worker"
 description: "oro:shared-worker/* exposes the shared-worker environment and runtime helpers."
 docsCollection: "runtime"
 section: "javascript"

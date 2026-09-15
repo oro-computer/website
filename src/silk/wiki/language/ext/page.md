@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "External declarations (ext)"
 description: "ext declares foreign symbols so Silk code can call C (or wasm imports) access foreign variables."
 docsCollection: "silkWiki"
 section: "language"

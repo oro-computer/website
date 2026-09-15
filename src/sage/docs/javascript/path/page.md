@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "sage:path"
 description: "sage:path is a small POSIX-style path helper module."
 docsCollection: "sage"
 section: "javascript"

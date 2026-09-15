@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::strings"
 description: "std::strings provides utilities and types built on top of the core string type (UTF‑8 bytes), including simple comparisons and owned string construction."
 docsCollection: "silkWiki"
 section: "std"

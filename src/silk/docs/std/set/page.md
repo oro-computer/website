@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::set — Sets"
 description: "std::set provides standard set container surfaces:"
 docsCollection: "silk"
 section: "std"

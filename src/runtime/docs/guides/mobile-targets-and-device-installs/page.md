@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Mobile targets and device installs"
 description: "Oro Runtime can target Android and Apple devices from the same project model. The key is to separate three concerns:"
 docsCollection: "runtime"
 section: "guides"

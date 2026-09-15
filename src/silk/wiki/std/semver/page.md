@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::semver"
 description: "std::semver implements Semantic Versioning (SemVer 2.0.0):"
 docsCollection: "silkWiki"
 section: "std"

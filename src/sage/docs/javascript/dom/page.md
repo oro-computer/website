@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "sage:core/dom"
 description: "sage:core/dom provides DOMException and structuredClone."
 docsCollection: "sage"
 section: "javascript"

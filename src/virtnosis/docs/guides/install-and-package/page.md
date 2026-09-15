@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Install and Package"
 description: "This guide covers source builds, local installs, docs installs, and the packaging-oriented make targets shipped in the repository."
 docsCollection: "virtnosis"
 section: "guides"

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Language Spec Conventions"
 description: "This document defines conventions used across docs/language/. It exists to keep the language specification consistent and easy to navigate for both:"
 docsCollection: "silk"
 section: "language"

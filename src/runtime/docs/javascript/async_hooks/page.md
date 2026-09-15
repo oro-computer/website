@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:async_hooks"
 description: "oro:async_hooks exposes hook-based async lifecycle inspection compatible with Node-style instrumentation."
 docsCollection: "runtime"
 section: "javascript"

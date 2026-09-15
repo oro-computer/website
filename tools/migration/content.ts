@@ -76,18 +76,4 @@ export function description(text: string): string {
   return ''
 }
 
-/** Read visible heading text, including linked/code-formatted API names. */
-export function title(text: string): string {
-  const tokens = parser.parse(text, {})
-  const index = tokens.findIndex(
-    (t) => t.type === 'heading_open' && t.tag === 'h1',
-  )
-  if (index < 0) return ''
-  return (tokens[index + 1].children || [])
-    .map((t) =>
-      t.type === 'softbreak' ? ' ' : t.type === 'html_inline' ? '' : t.content,
-    )
-    .join('')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
+export { titleFromMarkdown, titleFromMarkdown as title } from '#lib/titles.ts'

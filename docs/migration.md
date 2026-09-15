@@ -59,6 +59,21 @@ it does not alter runtime discovery, rendering, or subscriptions. Markdown
 frontmatter continues to use runtime metadata validation rather than per-page
 TypeScript companions.
 
+Path redirects follow the DOMStack `redirectFrom` cookbook pattern: old paths
+live in destination-page metadata, global data validates a separate redirects
+projection, and a typed pages factory uses the existing redirect layout. The
+logger-guide and specification aliases now use this path; legacy `?p=` links
+retain their query-aware client resolver. Alias changes and destination moves
+update generated pages, while body-only edits leave redirects untouched.
+
+All 585 documentation pages now use their Markdown H1 as the default title,
+removing redundant frontmatter titles without changing article bodies. Because
+DOMStack beta.6 infers raw inline Markdown, shared title helpers reduce it to
+plain text at metadata consumers and in ingestion. Formatted H1s and anchors
+remain unchanged; intentional frontmatter overrides remain supported. This also
+removes stale link syntax from 31 metadata titles. Imports no longer regenerate
+redundant title fields and preserve explicit overrides during upstream refreshes.
+
 ## Acceptance checks
 
 `npm run check` runs:

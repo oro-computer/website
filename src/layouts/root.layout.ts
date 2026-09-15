@@ -1,4 +1,5 @@
 import { rootContent } from '#lib/rendering.ts'
+import { plainTitle } from '#lib/titles.ts'
 import { html, raw, render } from 'fragtml'
 import type { LayoutFunction } from '@domstack/static/types.js'
 import { header, footer } from '#lib/navigation.ts'
@@ -30,7 +31,7 @@ const root: LayoutFunction<RootVars, string> = ({
   const editorial = (v.bodyClass || '').includes('editorial-layout')
   const product = collection?.product || v.product || ''
   const title = collection
-    ? `${v.title} · ${v.layout === 'spec' ? 'Silk Spec' : collection.title} · ${v.siteName ?? 'Oro Computer'}`
+    ? `${plainTitle(v.title)} · ${v.layout === 'spec' ? 'Silk Spec' : collection.title} · ${v.siteName ?? 'Oro Computer'}`
     : v.title
   if (!collection) children = rootContent(children)
   const canonical = new URL(v.redirect || page.url, v.siteUrl).href

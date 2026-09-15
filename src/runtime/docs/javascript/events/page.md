@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:events"
 description: "oro:events provides EventEmitter, EventTarget, and event primitives used across the runtime."
 docsCollection: "runtime"
 section: "javascript"

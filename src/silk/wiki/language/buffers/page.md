@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Buffers (Buffer(T)) (design)"
 description: "The long-term design includes an intrinsic Buffer(T) type for low-level, unsafe contiguous memory access, intended to sit underneath safe collections."
 docsCollection: "silkWiki"
 section: "language"

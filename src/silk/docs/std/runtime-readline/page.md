@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::runtime::readline"
 description: "Source: std/runtime/readline.slk"
 docsCollection: "silk"
 section: "std"

@@ -95,7 +95,7 @@ test('a standalone checkout rebuilds articles, sidebar data and exports in watch
     assert.equal((await stat(siblingPath, { bigint: true })).mtimeNs, siblingMtime)
 
     // Only frontmatter changes: the Markdown heading and raw body stay identical.
-    const retitled = updated.replace('title: "Hello world"', 'title: "Watch refresh"')
+    const retitled = updated.replace(/^---\r?\n/, '---\ntitle: "Watch refresh"\n')
     assert.notEqual(retitled, updated)
     await writeFile(source, retitled)
     await waitFor(async () => {

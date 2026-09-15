@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Standard library"
 description: "Silk’s standard library lives under the reserved std:: namespace. This is where “practical systems programming” shows up: I/O, filesystem, networking, parsing, collections, time, and the shared conven"
 docsCollection: "silk"
 section: "guides"

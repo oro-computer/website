@@ -9,6 +9,7 @@ import {
   type Collection,
 } from '#lib/collections.ts'
 import { canonicalLink } from '#lib/urls.ts'
+import { plainTitle, titleFromMarkdown } from '#lib/titles.ts'
 import MarkdownIt from 'markdown-it'
 import { publicContent, description } from './content.ts'
 const legacy = resolve(process.argv[2] || '.')
@@ -33,7 +34,7 @@ for (const [key, c] of Object.entries(collections)) {
       catalog.push({
         collection: key as Collection,
         id: item.id,
-        title: item.title,
+        title: plainTitle(item.title),
       })
 }
 for (const [key, c] of Object.entries(collections)) {
@@ -76,13 +77,16 @@ for (const [key, c] of Object.entries(collections)) {
       catalog,
     )
     const info = indexed.get(file) || {
-      title: original.match(/^# (.+)$/m)?.[1] || id,
+      title: titleFromMarkdown(body) || id,
       section: id.split('/')[0],
       order: order++,
     }
+    const heading = titleFromMarkdown(body)
+    const title = plainTitle(info.title)
+    if (!title) throw new Error(`Invalid title for ${file}`)
     const vars = {
       layout: collection === 'silk' && id === 'spec/2026' ? 'spec' : 'docs',
-      title: info.title.replace(/`/g, ''),
+      ...(title !== heading ? { title } : {}),
       description: description(body),
       docsCollection: collection,
       section: info.section,

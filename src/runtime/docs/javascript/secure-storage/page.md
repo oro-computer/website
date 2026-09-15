@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:secure-storage"
 description: "oro:secure-storage stores secrets scoped by origin (for example tokens, credentials, API keys)."
 docsCollection: "runtime"
 section: "javascript"

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Structs and impl"
 description: "struct is Silk’s primary record type: named fields stored together as one value. impl blocks attach methods (and special methods like constructor and drop) to a type."
 docsCollection: "silkWiki"
 section: "language"

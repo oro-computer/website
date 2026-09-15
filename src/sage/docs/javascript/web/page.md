@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "sage:core/web"
 description: "sage:core/web provides a host-free, in-memory set of WHATWG-style web primitives."
 docsCollection: "sage"
 section: "javascript"

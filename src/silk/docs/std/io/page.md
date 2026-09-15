@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::io"
 description: "Basic stdin reads, stdout/stderr writes, an fd-backed BufferedWriter, and a minimal std::io::async subset are implemented in std/io.slk via std::runtime::io."
 docsCollection: "silk"
 section: "std"

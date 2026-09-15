@@ -24,10 +24,9 @@ test('body edits stay isolated while navigation edits rebuild shared docs consum
       await proxy(name + '.layout.ts', 'layouts/' + name + '.layout.ts')
     for (const name of (await readdir(new URL('../src/', import.meta.url), { recursive: true })).filter(name => name.endsWith('.template.ts')))
       await proxy(name, name)
-    const pageSource = (collection: string, id: string, title: string, body: string) => `---
+    const pageSource = (collection: string, id: string, heading: string, body: string, title?: string) => `---
 layout: "docs"
-title: "${title}"
-description: "Summary"
+${title === undefined ? '' : `title: ${JSON.stringify(title)}\n`}description: "Summary"
 docsCollection: "${collection}"
 section: "overview"
 order: ${id === 'start' ? 0 : 1}
@@ -35,7 +34,7 @@ sourcePath: "${id}.md"
 githubRepo: "oro-computer/${collection}"
 githubRef: "master"
 ---
-# ${id}
+# ${heading}
 
 ## Stable anchor
 

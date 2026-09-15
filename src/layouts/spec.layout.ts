@@ -1,6 +1,7 @@
 import { html, raw, render } from 'fragtml'
 import type { LayoutFunction } from '@domstack/static/types.js'
 import { article } from '#lib/rendering.ts'
+import { plainTitle } from '#lib/titles.ts'
 import { collections } from '#lib/collections.ts'
 import { rawUrl, type DocVars } from '#lib/docs.ts'
 export { pageOutputs } from '#lib/docs-page-outputs.ts'
@@ -11,7 +12,7 @@ const spec: LayoutFunction<SpecVars, string> = ({ vars: v, children }) => {
   const markdownUrl = rawUrl({ collection: v.docsCollection, sourcePath: v.sourcePath })
   const year = v.sourcePath.match(/(?:^|\/)(\d{4})\.(?:md|txt)$/)?.[1]
   const productLabel = collections[v.docsCollection].title.replace(/ (?:Docs|Wiki)$/, '')
-  const label = v.specLabel ?? (year ? `${productLabel} Spec (${year})` : v.title)
+  const label = v.specLabel ?? (year ? `${productLabel} Spec (${year})` : plainTitle(v.title))
   const upstreamPath = v.sourcePath.split('/').map(encodeURIComponent).join('/')
   const upstreamUrl = `https://github.com/${v.githubRepo}/blob/${encodeURIComponent(v.githubRef)}/docs/${upstreamPath}`
   return render(

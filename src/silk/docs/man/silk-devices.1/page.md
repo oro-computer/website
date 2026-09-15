@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "[silk-devices(1)](?p=man/silk-devices.1) - Manage Platform Devices And App Lifecycles"
 description: "NOTE: This is the Markdown source for the eventual man 1 page for silk devices. The roff-formatted manpage should be generated from this content."
 docsCollection: "silk"
 section: "man"

@@ -1,4 +1,6 @@
 import { load } from 'cheerio'
+import type { Redirect } from './redirects.ts'
+import { plainTitle } from './titles.ts'
 import { collections, sectionTitle, type Collection } from './collections.ts'
 export interface DocVars {
   docsCollection: Collection
@@ -35,6 +37,7 @@ export interface SearchIndex {
   items: { id: string; title: string; file: string; url: string; section: string; summary: string; text: string }[]
 }
 export type DocsData = {
+  redirects: Redirect[]
   routes: string[]
   navigation: Record<Collection, Navigation>
 } &
@@ -53,7 +56,9 @@ export function validateDocVars(v: Record<string, unknown>, source: string): Doc
   const path = v.sourcePath as string
   if (!/\.(md|txt)$/.test(path) || path.startsWith('/') || path.includes('\\') || path.split('/').some(p => !p || p === '.' || p === '..'))
     throw new Error(`${source}: invalid sourcePath ${path}`)
-  return v as unknown as DocVars
+  const title = plainTitle(v.title as string)
+  if (!title) throw new Error(`${source}: title must contain visible text (supply an H1 or explicit title)`)
+  return { ...v, title } as unknown as DocVars
 }
 export function projectCollection(docs: Doc[]) {
   const bySource: Record<string, NavDoc> = Object.create(null)

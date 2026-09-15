@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "sage"
 description: "sage is the canonical CLI entrypoint for the pager."
 docsCollection: "sage"
 section: "cli"

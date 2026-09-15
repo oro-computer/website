@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Repository Documents"
 description: "This page maps the documentation layers that exist in the virtnosis repository and explains which ones are public/operator-facing versus contributor/internal."
 docsCollection: "virtnosis"
 section: "reference"

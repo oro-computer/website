@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Character literals"
 description: "char represents a Unicode scalar value. Character literals write a char value directly in source code."
 docsCollection: "silkWiki"
 section: "language"

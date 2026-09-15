@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "C99 ABI and libsilk.a"
 description: "This document defines the C99 ABI and the interface of the libsilk.a static library."
 docsCollection: "silk"
 section: "compiler"

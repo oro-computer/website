@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "[silk-cc(1)](?p=man/silk-cc.1) — C Compiler Wrapper for libsilk"
 description: "NOTE: This is the Markdown source for the eventual man 1 page for silk cc. The roff-formatted manpage should be generated from this content."
 docsCollection: "silk"
 section: "man"

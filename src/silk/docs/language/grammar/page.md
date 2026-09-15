@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Formal Grammar Spec"
 description: "This document contains the formal grammar and lexical specification for Silk as used by the compiler implementation."
 docsCollection: "silk"
 section: "language"

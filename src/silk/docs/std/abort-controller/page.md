@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::abort_controller"
 description: "This module provides a WHATWG-style AbortController / AbortSignal pair for cooperative cancellation across async functions and OS-thread-backed task concurrency."
 docsCollection: "silk"
 section: "std"

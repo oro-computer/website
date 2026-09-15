@@ -61,12 +61,22 @@ highlighting, and legacy heading IDs. DOMStack's other default extensions are
 not implicitly enabled; review fragment and rendered-output compatibility before
 adding plugins.
 
-Each documentation page declares `title`, `description`, `docsCollection`,
-`section`, `order`, `sourcePath`, `githubRepo`, and `githubRef`. Preserve
+Each documentation page declares `description`, `docsCollection`, `section`,
+`order`, `sourcePath`, `githubRepo`, and `githubRef`. Its first Markdown H1 is the
+default title; do not repeat it in frontmatter. Preserve
 `sourcePath`: it defines the stable raw Markdown endpoint and import identity.
 The `start` document lives at its collection root; the specification lives at
 `src/silk/spec/2026/page.md`. Order is explicit and does not depend on filenames.
 New imported pages are appended; review their section and order after syncing.
+DOMStack infers the first H1 as inline Markdown. `src/lib/titles.ts` converts that
+value to plain text for document/social metadata, navigation, search titles, and
+LLM-pack headings, while the article keeps its formatted heading and anchor.
+An optional frontmatter `title` overrides the inferred title; use it only for an
+intentional difference (inline Markdown is reduced to plain text there too).
+An H1 edit changes navigation metadata, while a body edit below it does not.
+Imports infer titles from H1s, retain explicit overrides, and use a filename
+fallback only for new documents without an H1. Raw Markdown remains unchanged.
+
 Use `layout: "docs"` for documentation pages in every collection (`spec` for the
 specification). All docs share one lightweight navigation dependency: navigation
 changes rebuild all docs, while body-only edits remain isolated to the changed
@@ -78,6 +88,37 @@ Collection roots redirect legacy `?p=` links while preserving fragments. Static
 redirect pages retain Silk's old logger-guide and specification aliases. The
 articles, sidebar, previous/next navigation, and ToC work without JavaScript;
 search, tabs, copy controls, and Ask AI progressively enhance them.
+
+### Redirects from old URLs
+
+Follow the [DOMStack redirect-pages recipe](https://domstack.net/docs/cookbook/redirect-pages/):
+keep old paths on the **destination page**, rather than in a separate route map.
+For Markdown, add frontmatter:
+
+```yaml
+redirectFrom:
+  - /old-guide/
+  - /old-guide.html
+```
+
+HTML pages can declare the same array in their `page.vars.ts` object. Global data
+validates and collects these aliases; `src/redirects.pages.ts` subscribes only to
+`redirects` and renders each old URL through the existing `redirect` layout. The
+target comes from the destination page's actual URL, so retained aliases follow
+it when it moves. Removing an alias or destination removes its generated redirect
+in watch mode. Body edits do not change the redirect collection.
+
+Use same-origin paths beginning with `/`, with trailing `/` for directory URLs.
+Queries, fragments, unsafe paths, duplicate aliases, and aliases colliding with
+source pages are rejected. Choose paths that do not overlap assets or other
+generated outputs. Redirect pages have a canonical target and a no-JavaScript
+meta-refresh/fallback link; with JavaScript they preserve the incoming query and
+fragment. These are static client-side redirects, not HTTP 301 responses.
+
+Legacy `?p=` document IDs still use the separate client resolver; do not put them
+in `redirectFrom`. Manual content imports preserve existing page metadata,
+including aliases. The logger guide and specification now declare their old
+paths this way without changing their Markdown bodies or raw exports.
 
 ## Refreshing upstream content
 

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::runtime::unicode"
 description: "Source: std/runtime/unicode.slk"
 docsCollection: "silk"
 section: "std"

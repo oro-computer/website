@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::dylib"
 description: "std::dylib is the opt-in standard-library facade for loading dynamic libraries and resolving symbols at runtime."
 docsCollection: "silk"
 section: "std"

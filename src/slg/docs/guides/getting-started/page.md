@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Getting started"
 description: "This guide covers the downstream story: build slg, install it, run a few real searches, then move into the exact CLI reference."
 docsCollection: "slg"
 section: "guides"

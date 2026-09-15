@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Regular Expression Literals"
 description: "Regular expression literals represent regexp values: compiled regular expression bytecode that can be used by std::regex helpers."
 docsCollection: "silk"
 section: "language"

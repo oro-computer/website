@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Testing (test)"
 description: "Silk supports top-level test declarations that are discovered and executed by silk test."
 docsCollection: "silkWiki"
 section: "language"

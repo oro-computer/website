@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::runtime::posix::atomic"
 description: "std::runtime::posix::atomic is the hosted POSIX implementation module for std::runtime::atomic."
 docsCollection: "silk"
 section: "std"

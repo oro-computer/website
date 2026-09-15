@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::runtime::posix::time"
 description: "Source: std/runtime/posix/time.slk"
 docsCollection: "silk"
 section: "std"
