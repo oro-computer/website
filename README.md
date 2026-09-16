@@ -5,7 +5,8 @@ chapters, and documentation for Runtime, Silk, Virtnosis, Sage, and slg.
 
 ## Local development
 
-Use Node 24 and Python 3.12. No sibling checkout is needed to build the site.
+Use Node 24. Builds, ingestion tools, audits, and tests run on Node; Python is
+not required. No sibling checkout is needed to build the site.
 
 ```sh
 npm ci
@@ -52,8 +53,8 @@ checkouts, preserve the established curated/website-owned content, and write
 committed DOMStack Markdown pages. Review and commit their changes before deploying.
 
 ```sh
-python3 silk/tools/sync-from-silk-docs.py --silk-repo /path/to/silk
-python3 runtime/tools/generate-js-api-reference.py --runtime-repo /path/to/runtime
+node silk/tools/sync-from-silk-docs.ts --silk-repo /path/to/silk
+node runtime/tools/generate-js-api-reference.ts --runtime-repo /path/to/runtime
 npm run build
 npm run audit
 npm run audit:content
@@ -69,8 +70,11 @@ linked API headings become plain-text titles when a page changes. The reference
 catalog includes new pages in the same import batch. Runtime's generated
 reference markers retain surrounding prose.
 
-The Python index and LLM exporters have been replaced by DOMStack templates.
-Content audits inspect `public/` by default; set `ORO_SITE_OUTPUT` to inspect
+The generators call the TypeScript importer directly; they never run during a
+DOMStack build. Search indexes and LLM exports remain DOMStack templates.
+Content audits derive document IDs and expected raw filenames from committed
+Markdown frontmatter rather than public navigation JSON, which is still generated.
+They inspect `public/` by default; set `ORO_SITE_OUTPUT` to inspect
 another output directory. Set `ORO_RUNTIME_REPO` explicitly to additionally audit
 against a particular upstream Runtime checkout; ordinary checks are independent
 of whatever happens to be checked out next door.
@@ -117,7 +121,10 @@ update the relevant assertions and redirects together.
 
 ## Deployment and dependency updates
 
-GitHub Actions builds and uploads `public/` and deploys with the Pages environment.
+Pull requests run the Docs Audit workflow. Production-branch pushes run the
+Pages workflow, which validates once, uploads that checked `public/` artifact,
+and deploys with the Pages environment. Both workflows use Node only and retain
+browser failure artifacts.
 The repository's **Settings → Pages → Source** must be **GitHub Actions**. Merging
 these changes does not itself change that repository setting. The output contains
 `CNAME`, `.nojekyll`, branding assets, raw Markdown, and `llms.txt` packs.

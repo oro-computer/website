@@ -21,13 +21,19 @@ jobs:
         with:
           node-version: '24'
           cache: npm
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
       - run: npm ci
       # Upstream ingestion is manual. Validate only the committed public sources.
       - run: npx playwright install --with-deps chromium
       - run: npm run check
+      - name: Verify source files remain unchanged
+        run: |
+          git diff --check
+          git diff --exit-code
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-test-results
+          path: test-results/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: public

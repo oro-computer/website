@@ -1,5 +1,10 @@
 // Public-copy normalization, moved from the legacy viewer. Import-time only.
-export function sanitizeMarkdown(markdown, { currentFile = "", kind = "docs" } = {}) {
+export interface SanitizeMarkdownOptions {
+  currentFile?: string;
+  kind?: "docs" | "wiki";
+}
+
+export function sanitizeMarkdown(markdown: string, { currentFile = "", kind = "docs" }: SanitizeMarkdownOptions = {}): string {
     const banned =
       /(STATUS\.md|PLAN\.md|docs\/wiki\/style-guide\.md|_template-[^`\\s]+|style-guide\.md|README\.md)/;
     const statusLine = /^(Status:|Implementation status:)\s*/i;
@@ -7,7 +12,7 @@ export function sanitizeMarkdown(markdown, { currentFile = "", kind = "docs" } =
     const isLanguageDoc = String(currentFile || "").startsWith("language/");
     const testsHeading = /^(#{1,6})\s+Tests\b/i;
 
-    function rewriteStatusLine(line) {
+    function rewriteStatusLine(line: string): string | null {
       const m = String(line).match(/^(\s*)(Status:|Implementation status:)\s*/i);
       if (!m) return null;
       const leading = m[1] || "";
@@ -32,7 +37,7 @@ export function sanitizeMarkdown(markdown, { currentFile = "", kind = "docs" } =
       return leading + rest.slice(cut + cutLen);
     }
 
-    function rewriteOutsideCode(text) {
+    function rewriteOutsideCode(text: string): string {
       let out = text;
 
       // Headings
@@ -178,8 +183,8 @@ export function sanitizeMarkdown(markdown, { currentFile = "", kind = "docs" } =
     const lines = String(markdown).split("\n");
     const out = [];
     let inCode = false;
-    let codeLang = null;
-    let skipLevel = null;
+    let codeLang: string | null = null;
+    let skipLevel: number | null = null;
     let skipRepoFixtureList = false;
     let skipWikiFixtureBullets = false;
 
@@ -307,7 +312,7 @@ export function sanitizeMarkdown(markdown, { currentFile = "", kind = "docs" } =
   }
 
 
-  function dropProposalProcess(markdown) {
+  function dropProposalProcess(markdown: string): string {
     const lines = String(markdown).split("\n");
     const out = [];
     let i = 0;
@@ -324,7 +329,7 @@ export function sanitizeMarkdown(markdown, { currentFile = "", kind = "docs" } =
     return out.join("\n");
   }
 
-export function sanitizeSpecMarkdown(markdown) {
+export function sanitizeSpecMarkdown(markdown: string): string {
     // Keep the spec faithful, but remove repo-workflow prose and status framing
     // that does not belong in a standalone reader-facing specification.
     const banned =
@@ -333,7 +338,7 @@ export function sanitizeSpecMarkdown(markdown) {
     const statusHeading = /^(#{1,6})\s+(Status|Implementation status)\s*:?\s*$/i;
     const testsHeading = /^(#{1,6})\s+Tests\b/i;
 
-    function rewriteStatusLine(line) {
+    function rewriteStatusLine(line: string): string | null {
       const m = String(line).match(/^(\s*)(Status:|Implementation status:)\s*/i);
       if (!m) return null;
       const leading = m[1] || "";
@@ -353,7 +358,7 @@ export function sanitizeSpecMarkdown(markdown) {
       return leading + rest.slice(cut + cutLen);
     }
 
-    function rewriteOutsideCode(text) {
+    function rewriteOutsideCode(text: string): string {
       let out = text;
 
       // Generated-spec phrasing: make the single-file edition self-contained.
@@ -433,8 +438,8 @@ export function sanitizeSpecMarkdown(markdown) {
     const lines = md.split("\n");
     const out = [];
     let inCode = false;
-    let skipLevel = null;
-    let codeLang = null;
+    let skipLevel: number | null = null;
+    let codeLang: string | null = null;
     let skipFixtureList = false;
 
     for (let line of lines) {
@@ -537,7 +542,7 @@ export function sanitizeSpecMarkdown(markdown) {
         );
       } else {
         // In code fences, rewrite comment text only.
-        const rewriteComment = (comment) => {
+        const rewriteComment = (comment: string): string => {
           const leading = (comment.match(/^\s*/) || [""])[0];
           const body = comment.slice(leading.length);
           const rewritten = body

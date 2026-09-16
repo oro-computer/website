@@ -16,7 +16,7 @@
     "test:site": "node --test tests/site/*.test.ts",
     "test:browser": "playwright test",
     "test:reproducibility": "node tools/reproducibility.ts",
-    "audit:content": "python3 runtime/tools/audit-site.py && python3 silk/tools/audit-site.py && python3 silk/tools/audit-stdlib-docs.py && python3 sage/tools/audit-site.py && python3 slg/tools/audit-site.py && python3 virtnosis/tools/audit-site.py",
+    "audit:content": "node tools/audit-content.ts",
     "test:tooling": "node --test tests/tooling/*.test.ts",
     "check": "npm run typecheck && npm test && npm run build && npm run audit && npm run audit:content && npm run test:site && npm run test:browser && npm run test:tooling && npm run test:reproducibility"
   },
@@ -32,5 +32,8 @@
     "markdown-it": "^15.0.0",
     "markdown-it-github-alerts": "^1.0.1",
     "typescript": "^5.9.2"
+  },
+  "imports": {
+    "#lib/*": "./src/lib/*"
   }
 }
