@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "virtnosis-agent(1)"
 description: "virtnosis-agent — Virtnosis local agent and daemon"
 docsCollection: "virtnosis"
 section: "man"

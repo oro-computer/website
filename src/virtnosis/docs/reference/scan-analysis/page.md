@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Scan Analysis"
 description: "This guide explains what Virtnosis scans, what “deep” means, and how to interpret partial versus confirmed findings."
 docsCollection: "virtnosis"
 section: "reference"

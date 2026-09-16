@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:extension"
 description: "oro:extension loads app-bundled native extensions and Wasm extensions, then exposes their registered runtime state to JavaScript."
 docsCollection: "runtime"
 section: "javascript"

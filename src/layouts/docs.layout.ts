@@ -1,68 +1,17 @@
 import { html, raw, render } from 'fragtml'
-import { load } from 'cheerio'
-import type { LayoutFunction } from '@domstack/static/types.js'
+import { article } from '#lib/rendering.ts'
+import type { DataDeps, LayoutFunction } from '@domstack/static/types.js'
 import {
   collections,
   sectionTitle,
-  type Collection,
-} from '../lib/collections.ts'
-import { rawUrl, type Doc, type DocsData } from '../lib/docs.ts'
+} from '#lib/collections.ts'
+import { rawUrl, type DocLink, type NavigationData, type DocVars } from '#lib/docs.ts'
+export { pageOutputs } from '#lib/docs-page-outputs.ts'
 export const parentLayout = 'root'
-export const vars = { dataDeps: ['docs'] }
-export function article(
-  content: string,
-  spec = false,
-): { body: string; toc: string } {
-  const $ = load(content, {}, false)
-  const headings: { id: string; title: string; level: string }[] = []
-  $('h2,h3,h4,h5').each((_i, h) => {
-    const id = $(h).attr('id') || ''
-    const title = $(h).text()
-    if (id) {
-      headings.push({ id, title, level: h.tagName })
-      $(h).append(
-        render(
-          html`<a
-            class="docs-heading-anchor"
-            href="#${id}"
-            aria-label="Link to this section"
-            >#</a
-          >`,
-        ),
-      )
-    }
-  })
-  return {
-    body: $.html(),
-    toc: render(
-      spec
-        ? html`<div class="spec-toc-title">Table of contents</div>
-            <div class="spec-toc">
-              ${headings.map(
-                (h) =>
-                  html`<a
-                    href="#${h.id}"
-                    data-level="${h.level}"
-                    data-id="${h.id}"
-                    >${h.title}</a
-                  >`,
-              )}
-            </div>`
-        : html`<div class="docs-toc-title">On this page</div>
-            <ul class="docs-toc-list">
-              ${headings
-                .filter((h) => ['h2', 'h3'].includes(h.level))
-                .map(
-                  (h) =>
-                    html`<li data-level="${h.level}">
-                      <a href="#${h.id}">${h.title}</a>
-                    </li>`,
-                )}
-            </ul>`,
-    ),
-  }
+export const vars = {
+  dataDeps: ['navigation'] satisfies DataDeps<NavigationData>,
 }
-function prevNext(doc: Doc | undefined, label: string): string {
+function prevNext(doc: DocLink | null, label: string): string {
   return doc
     ? render(
         html`<a class="docs-prevnext-link" href="${doc.url}"
@@ -72,23 +21,14 @@ function prevNext(doc: Doc | undefined, label: string): string {
       )
     : ''
 }
-const docsLayout: LayoutFunction<
-  Record<string, any>,
-  string,
-  string,
-  DocsData
-> = ({ vars: v, children, data }) => {
-  const collection = v.docsCollection as Collection
-  const c = collections[collection]
-  const docs = data.docs[collection]
-  const idx = docs.findIndex((d) => d.sourcePath === v.sourcePath)
-  const doc = docs[idx]
-  const sections = [...new Set(docs.map((d) => d.section))]
+const docsLayout: LayoutFunction<DocVars, string, string, NavigationData> = ({ vars: v, children, data }) => {
+  const navigation = data.navigation[v.docsCollection]
+  const c = collections[v.docsCollection]
+  const doc = navigation.bySource[v.sourcePath]
+  if (!doc) throw new Error(`Missing navigation document: ${v.docsCollection}/${v.sourcePath}`)
+  const sections = navigation.sections
   const { body, toc } = article(children)
-  const legacy =
-    doc.id === 'start'
-      ? JSON.stringify(Object.fromEntries(docs.map((d) => [d.id, d.url])))
-      : ''
+  const legacy = doc.id === 'start' ? JSON.stringify(navigation.legacy) : ''
   return render(
     html`<main id="main">
       <section class="section">
@@ -116,11 +56,9 @@ const docsLayout: LayoutFunction<
               <nav class="docs-nav" data-docs-nav>
                 ${sections.map(
                   (s) =>
-                    html`<div class="docs-nav-section">${sectionTitle(s)}</div>
+                    html`<div class="docs-nav-section">${s.title}</div>
                       <ul class="docs-nav-list">
-                        ${docs
-                          .filter((d) => d.section === s)
-                          .map(
+                        ${s.items.map(
                             (d) =>
                               html`<li>
                                 <a
@@ -156,17 +94,17 @@ const docsLayout: LayoutFunction<
                 >
                 ·
                 <a
-                  href="https://github.com/oro-computer/website/blob/master/src${doc.url}page.md"
+                  href="${doc.editUrl}"
                   >Edit this page</a
                 >
                 · <a href="${rawUrl(doc)}">View Markdown</a>
               </p>
               <div class="docs-prevnext">
                 <div class="docs-prevnext-item" data-docs-prev>
-                  ${raw(prevNext(docs[idx - 1], 'Previous'))}
+                  ${raw(prevNext(doc.previous, 'Previous'))}
                 </div>
                 <div class="docs-prevnext-item" data-docs-next>
-                  ${raw(prevNext(docs[idx + 1], 'Next'))}
+                  ${raw(prevNext(doc.next, 'Next'))}
                 </div>
               </div>
             </article>

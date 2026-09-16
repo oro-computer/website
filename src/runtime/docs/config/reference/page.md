@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Configuration reference"
 description: "This page documents the most commonly used oro.toml sections and keys."
 docsCollection: "runtime"
 section: "config"

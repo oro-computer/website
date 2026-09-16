@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::window::macos"
 description: "std::window::macos is the macOS-specific facade for applications that want to select the macOS provider explicitly while still using the portable std::window types."
 docsCollection: "silk"
 section: "std"

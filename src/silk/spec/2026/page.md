@@ -1,6 +1,6 @@
 ---
 layout: "spec"
-title: "Silk Specification (2026)"
+redirectFrom: ["/silk/docs/spec/2026/"]
 description: "This is the single-file edition of the Silk language specification for 2026."
 docsCollection: "silk"
 section: "spec"

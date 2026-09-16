@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Systemd Guide"
 description: "This guide documents the systemd deployment story for Virtnosis."
 docsCollection: "virtnosis"
 section: "guides"

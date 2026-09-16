@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oroc update validate"
 description: "Validate an update manifest JSON file against the expected schema shape."
 docsCollection: "runtime"
 section: "cli"

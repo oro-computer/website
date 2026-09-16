@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Syntax and cache"
 description: "sage can apply syntax highlighting to local paths and URL-backed content."
 docsCollection: "sage"
 section: "cli"

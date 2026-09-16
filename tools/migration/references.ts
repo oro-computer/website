@@ -1,10 +1,10 @@
 import MarkdownIt from 'markdown-it'
-import { canonicalLink } from '../../src/lib/urls.ts'
+import { canonicalLink } from '#lib/urls.ts'
 import {
   collections,
   docUrl,
   type Collection,
-} from '../../src/lib/collections.ts'
+} from '#lib/collections.ts'
 export interface Reference {
   collection: Collection
   id: string

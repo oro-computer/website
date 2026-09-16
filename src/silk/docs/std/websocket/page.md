@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::websocket"
 description: "std::websocket provides an RFC 6455 WebSocket implementation on top of std::net::TCPStream (client + server handshake, framing, ping/pong, close, fragmentation)."
 docsCollection: "silk"
 section: "std"

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "silk guide"
 description: "silk guide is the curated example discovery surface for common Silk tasks."
 docsCollection: "silk"
 section: "usage"

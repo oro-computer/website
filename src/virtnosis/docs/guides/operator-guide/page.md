@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Operator Guide"
 description: "This guide focuses on day-to-day use of Virtnosis as an operator, responder, or CI consumer."
 docsCollection: "virtnosis"
 section: "guides"

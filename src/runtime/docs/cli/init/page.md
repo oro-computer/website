@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oroc init"
 description: "Create a new project. If the path is not provided, the new project is created in the current directory."
 docsCollection: "runtime"
 section: "cli"

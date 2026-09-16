@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Compiler Limits"
 description: "This document enumerates the current hard limits in the Silk compiler and its tooling. These limits are implementation guardrails (primarily to keep memory usage bounded when compiling untrusted input"
 docsCollection: "silk"
 section: "compiler"

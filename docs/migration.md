@@ -1,7 +1,7 @@
 # DOMStack migration status
 
 The repository implementation now builds the entire Oro website with
-`@domstack/static@beta`. The lockfile records the resolved beta so `npm ci`
+`@domstack/static@12.0.0-beta.7`. The lockfile records the pinned beta so `npm ci`
 remains reproducible. Production cutover is complete; deployment evidence is recorded below.
 
 ## Implemented
@@ -13,15 +13,78 @@ remains reproducible. Production cutover is complete; deployment evidence is rec
 | Compatibility | Original collection roots, all valid legacy document IDs, aliases, fragments, and raw Markdown endpoints are retained. |
 | Page chrome | Headers, footers, metadata, product navigation, learn chapter bars, documentation sidebars, breadcrumbs, previous/next links, and heading lists render at build time. |
 | Progressive features | Search, keyboard tabs, copy controls, Ask AI, mobile sidebar controls, active headings, and tab fragments work with browser JavaScript. |
-| Artifacts | One build emits HTML, indexes, search data, raw Markdown, LLM packs, the sitemap, CNAME, and `.nojekyll`. |
-| Ingestion | Native TypeScript tools for Silk and Runtime retain their upstream/editorial ownership rules and accept explicit upstream checkout paths. Unchanged public pages retain exact Markdown and metadata. |
+| Artifacts | One build emits HTML, search indexes, raw Markdown, LLM packs, the sitemap, CNAME, and `.nojekyll`. Legacy navigation JSON exports are retired. |
+| Ingestion | Native TypeScript tools retain Silk and Runtime upstream/editorial ownership rules and explicit checkout paths. Unchanged public pages retain exact Markdown and metadata. |
 | Cleanup | The browser Markdown renderers, vendored rendering libraries, old HTML shells, duplicate Python exporters, generated source-tree indexes, and Jekyll configuration are retired. |
 | CI | Node 24 runs ingestion, audits, browser serving, and the `npm run check` gate without Python. Pull requests validate in Docs Audit; production pushes validate and deploy the same artifact in Pages, without a duplicate push audit. |
+
+All six documentation collections use the single `docs` layout; the Silk
+specification retains `spec`. The `docs` layout subscribes to one shared,
+lightweight navigation key covering all collections. Navigation changes rebuild
+all docs. Body-only edits update the changed article and its page-owned raw copy,
+plus its collection's search and LLM templates, which retain per-collection
+dependencies. DOMStack 12.0.0-beta.6 supplies the `pageOutputs` hook shared by
+`docs` and `spec`; no collection subscription is needed for raw exports. Watch
+rebuilds skip unchanged raw writes and clean up removed or renamed outputs.
+Global data now uses beta.7's optional stateful API to cache processed documents
+by `sourceId`. Initial/reset builds index all docs; deltas reread and render only
+upserted docs and remove deleted entries. Lightweight route/redirect records also
+cover non-doc pages. Collection views reference cached entries, while existing
+fingerprints and `dataDeps` alone decide downstream invalidation. State is saved
+only after successful validation and committed by DOMStack after a successful
+build. Source initialization, state transfer, projections, and fingerprinting
+still have whole-site costs. Ingestion remains separate from building.
+
+The actual watcher regression measured 585 initial Markdown reads/search renders,
+then one of each for a body edit, title override, or raw-path change, and zero
+for deletion. All 1,238 clean outputs matched the pre-index beta.7 build byte for
+byte. Restart watch mode for aliased/re-exported helper changes that beta.7 does
+not track; no framework patch or duplicate invalidation system is introduced.
+Shared article transforms remain page-local rather than storing rendered articles
+in global data. Markdown keeps the existing alerts, highlighting, and legacy
+heading-ID policy; enabling
+additional DOMStack Markdown plugins is an explicit compatibility decision.
+Homepage and learn styles are scoped to their consumers, and progressive clients
+are TypeScript modules rather than unchecked global initializers.
+
+Artifact templates are co-located with their output directories: product
+`llms.txt.template.ts` files and collection `search.json.template.ts` files.
+The former six `source/sources.template.ts` exporters are replaced by the shared
+`src/lib/docs-page-outputs.ts` hook, with each source page owning its raw output.
+The wiki uses `src/silk/wiki/`; other collections use `src/{product}/docs/`.
+Navigation remains in global data for HTML rendering, not as public `index.json`
+exports. Content audits read committed Markdown metadata for document IDs and
+expected raw exports. Single-file outputs use the template filename without `.template.ts`;
+raw page outputs use destination-root paths derived from collection metadata and
+`sourcePath`, preserving public URLs and Markdown bytes with frontmatter stripped. Site-wide `llms.txt`, sitemap, CNAME, and `.nojekyll` templates
+remain at the source root, with an explicit hidden-output name for `.nojekyll`.
 
 The route inventory is in `tools/migration/baseline.json`; original Markdown
 links and heading text are in `tools/migration/link-inventory.json`. The migration
 utility can reconstruct the initial conversion from a legacy checkout. It is
 not part of ordinary builds or content refreshes.
+
+HTML page companions now validate their supplied vars with DOMStack's type-only
+layout registry and `ValidatePageVars`, via `CheckedPageVars`. The registry
+references actual renderer, parent, and default exports for all seven layouts;
+it does not alter runtime discovery, rendering, or subscriptions. Markdown
+frontmatter continues to use runtime metadata validation rather than per-page
+TypeScript companions.
+
+Path redirects follow the DOMStack `redirectFrom` cookbook pattern: old paths
+live in destination-page metadata, global data validates a separate redirects
+projection, and a typed pages factory uses the existing redirect layout. The
+logger-guide and specification aliases now use this path; legacy `?p=` links
+retain their query-aware client resolver. Alias changes and destination moves
+update generated pages, while body-only edits leave redirects untouched.
+
+All 585 documentation pages now use their Markdown H1 as the default title,
+removing redundant frontmatter titles without changing article bodies. Because
+DOMStack beta.6 infers raw inline Markdown, shared title helpers reduce it to
+plain text at metadata consumers and in ingestion. Formatted H1s and anchors
+remain unchanged; intentional frontmatter overrides remain supported. This also
+removes stale link syntax from 31 metadata titles. Imports no longer regenerate
+redundant title fields and preserve explicit overrides during upstream refreshes.
 
 ## Acceptance checks
 

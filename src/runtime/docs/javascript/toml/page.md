@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:toml"
 description: "oro:toml parses and serializes TOML documents."
 docsCollection: "runtime"
 section: "javascript"

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "External Declarations (ext)"
 description: "Silk’s external declaration feature lets Silk code call foreign functions and access foreign variables."
 docsCollection: "silk"
 section: "language"

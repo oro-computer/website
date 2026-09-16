@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Interfaces"
 description: "Interfaces allow types to declare that they implement a particular contract. They are the foundation for standard-library “protocols” such as readers, writers, iterators, and allocators."
 docsCollection: "silk"
 section: "language"

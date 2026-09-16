@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::io::async"
 description: "Source: std/io/async.slk"
 docsCollection: "silk"
 section: "std"

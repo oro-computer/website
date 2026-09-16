@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "if / else"
 description: "The if / else construct provides branching based on a boolean condition."
 docsCollection: "silk"
 section: "language"

@@ -1,1 +1,1 @@
-import '../lib/learn-client.js'
+import '#lib/learn-client.ts'

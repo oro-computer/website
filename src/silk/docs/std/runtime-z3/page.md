@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::runtime::z3"
 description: "Source: std/runtime/z3.slk"
 docsCollection: "silk"
 section: "std"

@@ -1,8 +1,9 @@
-import { legacyTarget } from '../lib/legacy.ts'
-import { enhanceSidebar } from '../lib/sidebar-client.ts'
-import '../lib/learn-client.js'
-import { renderTabs } from '../lib/tabs.js'
-import { enhanceArticle } from '../lib/article-client.ts'
+import { initAskAiMenu } from '#lib/ask-ai-client.ts'
+import { legacyTarget } from '#lib/legacy.ts'
+import { enhanceSidebar } from '#lib/sidebar-client.ts'
+import { initLearn } from '#lib/learn-client.ts'
+import { renderTabs } from '#lib/tabs.ts'
+import { enhanceArticle } from '#lib/article-client.ts'
 const app = document.querySelector<HTMLElement>('[data-docs-app]')
 if (app) {
   const routes = document.querySelector('[data-legacy-routes]')
@@ -20,10 +21,7 @@ if (app) {
   }
   const content = app.querySelector<HTMLElement>('[data-docs-content]')!
   renderTabs(content)
-  const oro = globalThis as typeof globalThis & {
-    oroInitTabs?: (root: HTMLElement) => void
-  }
-  oro.oroInitTabs?.(content)
+  initLearn(content)
   enhanceArticle(app)
   enhanceSidebar(app)
   const input = app.querySelector<HTMLInputElement>('[data-docs-search]')!
@@ -51,7 +49,13 @@ if (app) {
           return r.json()
         })
         .then((data) => data.items)
-      const docs = await index
+      const pending = index
+      // Evict failures even when the query was cleared while fetching. An older
+      // request must never evict a replacement cached by a later input event.
+      void pending.catch(() => {
+        if (index === pending) index = undefined
+      })
+      const docs = await pending
       if (current !== version) return
       const scored = docs
         .map((d) => ({
@@ -88,7 +92,6 @@ if (app) {
         results.textContent =
           'Search is unavailable. Browse the navigation below.'
         nav.hidden = false
-        index = undefined
       }
     }
   })
@@ -109,3 +112,5 @@ function revealHashTarget() {
 }
 revealHashTarget()
 addEventListener('hashchange', revealHashTarget)
+
+initAskAiMenu()

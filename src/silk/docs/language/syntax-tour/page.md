@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Silk Syntax Tour (Soup to Nuts)"
 description: "This document is an example-driven tour of Silk’s surface syntax, from a single-file “hello world” through modules/packages, declarations, statements, expressions, and the Formal Silk verification dir"
 docsCollection: "silk"
 section: "language"

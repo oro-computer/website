@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Memory Model (Stack, Heap, and Moves)"
 description: "This document specifies Silk’s intended memory model: how values are allocated, passed, and how (future) heap-managed values interact with the type system."
 docsCollection: "silk"
 section: "language"

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::runtime::gpu"
 description: "std::runtime::gpu is the internal swappable runtime interface beneath std::gpu. It forwards to bundled silk_rt_gpu_* functions on the hosted Linux baseline and is not the preferred application import."
 docsCollection: "silk"
 section: "std"

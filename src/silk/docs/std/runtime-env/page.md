@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::runtime::env"
 description: "Source: std/runtime/env.slk"
 docsCollection: "silk"
 section: "std"

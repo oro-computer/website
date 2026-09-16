@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "[silk-package(1)](?p=man/silk-package.1) — Inspect And Lint Silk Packages"
 description: "NOTE: This is the Markdown source for the eventual man 1 page for silk package. The roff-formatted manpage should be generated from this content."
 docsCollection: "silk"
 section: "man"

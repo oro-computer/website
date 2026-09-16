@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::runtime"
 description: "std::runtime is the interface layer that isolates OS/environment-specific primitives (I/O, filesystem, time, threads, allocation) from higher-level std::... modules."
 docsCollection: "silkWiki"
 section: "std"

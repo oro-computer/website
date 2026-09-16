@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "CLI usage examples"
 description: "This page is a grab bag of practical workflows for the silk toolchain. It focuses on how people actually use the CLI: quick feedback (check), tests that integrate with CI (test), and explicit build ou"
 docsCollection: "silk"
 section: "usage"

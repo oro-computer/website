@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::graphics::metal"
 description: "Source: std/graphics/metal.slk"
 docsCollection: "silk"
 section: "std"

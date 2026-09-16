@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::temporal"
 description: "std::temporal provides Instant/Duration helpers and time-related utilities."
 docsCollection: "silkWiki"
 section: "std"

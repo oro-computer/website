@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::memory"
 description: "This describes intended memory APIs; it is not implemented yet."
 docsCollection: "silk"
 section: "std"

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oroc update extract"
 description: "Extract a tar archive produced by oroc update bundle into a destination directory."
 docsCollection: "runtime"
 section: "cli"

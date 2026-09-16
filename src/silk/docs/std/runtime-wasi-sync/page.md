@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::runtime::wasi::sync"
 description: "Source: std/runtime/wasi/sync.slk"
 docsCollection: "silk"
 section: "std"

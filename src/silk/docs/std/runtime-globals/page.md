@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::runtime::globals"
 description: "Source: std/runtime/globals.slk"
 docsCollection: "silk"
 section: "std"

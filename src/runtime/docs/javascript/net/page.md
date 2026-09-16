@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:net"
 description: "oro:net provides Node-compatible TCP clients and servers."
 docsCollection: "runtime"
 section: "javascript"

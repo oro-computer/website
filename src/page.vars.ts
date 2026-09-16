@@ -1,5 +1,7 @@
-export default {
-  layout: 'marketing',
+import type { CheckedPageVars } from '#lib/page-vars.ts'
+
+const vars = {
+  layout: 'marketing' as const,
   title: 'Technology · Oro Computer',
   description:
     'Oro Computer builds edge software foundations for humans and AI agents through Oro Runtime, Silk, and Virtnosis.',
@@ -8,3 +10,5 @@ export default {
   product: '',
   footerLabel: '',
 }
+
+export default vars satisfies CheckedPageVars<typeof vars>

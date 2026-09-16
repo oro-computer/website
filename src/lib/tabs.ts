@@ -1,13 +1,13 @@
-export function renderTabs(container) {
+export function renderTabs(container: HTMLElement | null): void {
     if (!container) return;
     const doc = container.ownerDocument || document;
 
     const walker = doc.createTreeWalker(container, NodeFilter.SHOW_COMMENT);
-    const starts = [];
+    const starts: Comment[] = [];
     let node = null;
     while ((node = walker.nextNode())) {
-      const text = String(node.data || "").trim();
-      if (text.startsWith("tabs:start")) starts.push(node);
+      const text = String(node.nodeValue || "").trim();
+      if (text.startsWith("tabs:start")) starts.push(node as Comment);
     }
 
     let counter = 0;
@@ -21,11 +21,11 @@ export function renderTabs(container) {
       const parent = start.parentNode;
       if (!parent) continue;
 
-      let end = null;
+      let end: Comment | null = null;
       let cur = start.nextSibling;
       while (cur) {
-        if (cur.nodeType === Node.COMMENT_NODE && String(cur.data || "").trim().startsWith("tabs:end")) {
-          end = cur;
+        if (cur.nodeType === Node.COMMENT_NODE && String(cur.nodeValue || "").trim().startsWith("tabs:end")) {
+          end = cur as Comment;
           break;
         }
         cur = cur.nextSibling;
@@ -40,7 +40,7 @@ export function renderTabs(container) {
       }
 
       const headings = between.filter(
-        (n) => n.nodeType === Node.ELEMENT_NODE && /^H[2-6]$/.test(n.tagName || "")
+        (n): n is HTMLElement => n instanceof HTMLElement && /^H[2-6]$/.test(n.tagName)
       );
       if (!headings.length) {
         start.remove();
@@ -91,7 +91,7 @@ export function renderTabs(container) {
         panels.push(panel);
 
         let child = heading.nextSibling;
-        while (child && child !== end && !(child.nodeType === Node.ELEMENT_NODE && child.tagName === headingTag)) {
+        while (child && child !== end && !(child instanceof Element && child.tagName === headingTag)) {
           const next = child.nextSibling;
           if (child.nodeType === Node.TEXT_NODE && !String(child.textContent || "").trim()) {
             child.remove();

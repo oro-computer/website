@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:latica"
 description: "oro:latica/* exposes the runtime’s Latica networking primitives, packet helpers, and crypto utilities."
 docsCollection: "runtime"
 section: "javascript"

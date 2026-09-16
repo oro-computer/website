@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:tty"
 description: "oro:tty exposes terminal streams and TTY detection helpers."
 docsCollection: "runtime"
 section: "javascript"

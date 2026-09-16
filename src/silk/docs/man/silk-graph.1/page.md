@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "[silk-graph(1)](?p=man/silk-graph.1) - Inspect Module Graphs"
 description: "NOTE: This is the Markdown source for the eventual man 1 page for silk graph. The roff-formatted manpage should be generated from this content."
 docsCollection: "silk"
 section: "man"

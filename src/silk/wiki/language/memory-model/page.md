@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Memory model"
 description: "This page is a learning-oriented companion to the canonical memory model: memory model."
 docsCollection: "silkWiki"
 section: "language"

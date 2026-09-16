@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "slg Docs"
 description: "slg is a fast recursive line grep utility for files and directories."
 docsCollection: "slg"
 section: "overview"

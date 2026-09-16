@@ -1,10 +1,24 @@
-import { load } from 'cheerio'
-import { highlight } from '../lib/markdown.ts'
+import { rootContent } from '#lib/rendering.ts'
+import { plainTitle } from '#lib/titles.ts'
 import { html, raw, render } from 'fragtml'
 import type { LayoutFunction } from '@domstack/static/types.js'
-import { header, footer } from '../lib/navigation.ts'
-import { collections, type Collection } from '../lib/collections.ts'
-const root: LayoutFunction<Record<string, any>, string> = ({
+import { header, footer } from '#lib/navigation.ts'
+import { collections, type Collection } from '#lib/collections.ts'
+interface RootVars {
+  title: string
+  siteUrl: string
+  siteName?: string
+  lang?: string
+  layout: string
+  docsCollection?: Collection
+  description?: string
+  bodyClass?: string
+  product?: string
+  redirect?: string
+  footerLabel?: string
+  bodyAttrs?: { 'data-ask-ai'?: string | boolean }
+}
+const root: LayoutFunction<RootVars, string> = ({
   vars: v,
   children,
   page,
@@ -12,30 +26,18 @@ const root: LayoutFunction<Record<string, any>, string> = ({
   styles = [],
 }) => {
   const collection = v.docsCollection
-    ? collections[v.docsCollection as Collection]
+    ? collections[v.docsCollection]
     : undefined
   const editorial = (v.bodyClass || '').includes('editorial-layout')
   const product = collection?.product || v.product || ''
   const title = collection
-    ? `${v.title} · ${v.layout === 'spec' ? 'Silk Spec' : collection.title} · Oro Computer`
+    ? `${plainTitle(v.title)} · ${v.layout === 'spec' ? 'Silk Spec' : collection.title} · ${v.siteName ?? 'Oro Computer'}`
     : v.title
-  if (!collection && children.includes('<pre')) {
-    const $ = load(children, {}, false)
-    $('pre code').each((_i, el) => {
-      const language = $(el)
-        .attr('class')
-        ?.match(/language-([\w+-]+)/)?.[1]
-      if (language) {
-        const highlighted = highlight($(el).text(), language)
-        if (highlighted) $(el).html(highlighted).addClass('hljs')
-      }
-    })
-    children = $.html()
-  }
+  if (!collection) children = rootContent(children)
   const canonical = new URL(v.redirect || page.url, v.siteUrl).href
   return render(
     html`<!doctype html>
-      <html lang="en">
+      <html lang="${v.lang ?? 'en'}">
         <head>
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -49,7 +51,7 @@ const root: LayoutFunction<Record<string, any>, string> = ({
           <meta property="og:type" content="website" />
           <meta
             property="og:image"
-            content="https://oro.computer/docs/branding/assets/logo-full.png"
+            content="${new URL('/docs/branding/assets/logo-full.png', v.siteUrl).href}"
           />
           <meta name="twitter:card" content="summary" />
           <link

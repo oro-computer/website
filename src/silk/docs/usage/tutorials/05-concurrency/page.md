@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Tutorial 5: concurrency basics (async, task, yield, await)"
 description: "Silk’s concurrency model is built from two orthogonal modifiers:"
 docsCollection: "silk"
 section: "usage"

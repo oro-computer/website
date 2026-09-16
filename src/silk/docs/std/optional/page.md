@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::optional"
 description: "Optional(T) / T? is a language type, not a stdlib-defined enum. The compiler already provides the method-oriented combinator surface on optional values. std::optional exists as a stdlib namespace of f"
 docsCollection: "silk"
 section: "std"

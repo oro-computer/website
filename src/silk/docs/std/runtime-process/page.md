@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::runtime::process"
 description: "Source: std/runtime/process.slk"
 docsCollection: "silk"
 section: "std"

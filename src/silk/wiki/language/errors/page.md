@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Errors and assertions"
 description: "Silk favors explicit, typed error modeling (optionals and Result-style return shapes) and uses typed errors (error, panic, T | ErrorType...) for unrecoverable logic bugs and contract violations."
 docsCollection: "silkWiki"
 section: "language"

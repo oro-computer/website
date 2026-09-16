@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:location"
 description: "oro:location normalizes the current runtime location and origin semantics across platforms."
 docsCollection: "runtime"
 section: "javascript"

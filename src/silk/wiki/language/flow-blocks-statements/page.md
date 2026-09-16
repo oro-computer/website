@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Blocks and statements"
 description: "Blocks ({ ... }) group statements and introduce a new scope."
 docsCollection: "silkWiki"
 section: "language"
