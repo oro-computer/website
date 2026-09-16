@@ -79,6 +79,9 @@ test('redirectFrom aliases follow source edits, moves and deletion in watch mode
     // watch() resolves only after the initial build and filesystem watcher readiness.
     const initial = await bounded('watcher readiness', site.watch({ serve: false }))
     assert.deepEqual(initial.pageBuildResults?.errors, [])
+    // Beta.7 queues events observed during initial discovery/building.
+    await delay(0)
+    await bounded('startup events settled', site.settled())
     for (const alias of aliases) await assertRedirect(alias, '/target/')
     const snapshots = await Promise.all(aliases.map(async alias => ({
       html: await readFile(output(alias), 'utf8'),

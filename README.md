@@ -30,8 +30,9 @@ are output files; do not commit `public/`.
   Homepage styles live in `src/style.css`; learn styles in `src/layouts/learn.layout.css`.
 - `src/lib/`: rendering, URL, collection, and navigation helpers.
 - `src/globals/global.vars.ts`: shared site configuration.
-- `src/globals/global.data.ts`: validated collection metadata and precomputed navigation,
-  search, and LLM-export projections derived from source pages.
+- `src/globals/global.data.ts`: a watch-session index keyed by DOMStack `sourceId`,
+  caching validated document metadata, Markdown, and rendered search text. Navigation,
+  search, and LLM-export views are derived from those cached entries.
 - `src/layouts/docs.layout.ts`: the shared documentation renderer, consuming one
   lightweight navigation key for all collections.
 - `src/{product}/llms.txt.template.ts`: product LLM packs; Silk includes its wiki.
@@ -88,6 +89,28 @@ Collection roots redirect legacy `?p=` links while preserving fragments. Static
 redirect pages retain Silk's old logger-guide and specification aliases. The
 articles, sidebar, previous/next navigation, and ToC work without JavaScript;
 search, tabs, copy controls, and Ask AI progressively enhance them.
+
+### Incremental global data
+
+DOMStack beta.7 supplies private `previousState`, reset/delta `changes`, and
+`setState()` to the data callback. Initial builds and resets process all documents;
+watch deltas replace only `changes.upserted` entries and delete `changes.removed`
+IDs. Pages leaving a docs collection retain only their route/redirect metadata.
+The cache contains plain data, never page instances or renderers, and DOMStack
+commits its snapshot only after a successful build. It does not persist across
+watch sessions or change the clean-build/ingestion workflow.
+
+Collection views are still rebuilt from cached document references, and existing
+DOMStack fingerprints plus `dataDeps` remain the only downstream invalidation
+system. There are no extra application hashes or changed-key declarations.
+Source initialization, projection, state cloning, and fingerprinting still have
+collection-wide costs; a body edit no longer rereads/renders the whole corpus for
+search. The standalone watcher test measures these reads/renders directly.
+
+Beta.7's dependency tracking is conservative and incomplete for package import
+aliases and static re-exports. Restart the watcher after changing shared helpers
+reached through `#lib/*` or re-exports, or inputs read outside tracked imports.
+Editing `global.data.ts` itself resets the index; ordinary page edits are tracked.
 
 ### Redirects from old URLs
 

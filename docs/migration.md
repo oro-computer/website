@@ -1,7 +1,7 @@
 # DOMStack migration status
 
 The repository implementation now builds the entire Oro website with
-`@domstack/static@beta`. The lockfile records the resolved beta so `npm ci`
+`@domstack/static@12.0.0-beta.7`. The lockfile records the pinned beta so `npm ci`
 remains reproducible. Production cutover is complete; deployment evidence is recorded below.
 
 ## Implemented
@@ -26,8 +26,20 @@ plus its collection's search and LLM templates, which retain per-collection
 dependencies. DOMStack 12.0.0-beta.6 supplies the `pageOutputs` hook shared by
 `docs` and `spec`; no collection subscription is needed for raw exports. Watch
 rebuilds skip unchanged raw writes and clean up removed or renamed outputs.
-Global data still processes all documents for search; this change narrows output
-writes, not that computation. Ingestion remains separate from building.
+Global data now uses beta.7's optional stateful API to cache processed documents
+by `sourceId`. Initial/reset builds index all docs; deltas reread and render only
+upserted docs and remove deleted entries. Lightweight route/redirect records also
+cover non-doc pages. Collection views reference cached entries, while existing
+fingerprints and `dataDeps` alone decide downstream invalidation. State is saved
+only after successful validation and committed by DOMStack after a successful
+build. Source initialization, state transfer, projections, and fingerprinting
+still have whole-site costs. Ingestion remains separate from building.
+
+The actual watcher regression measured 585 initial Markdown reads/search renders,
+then one of each for a body edit, title override, or raw-path change, and zero
+for deletion. All 1,238 clean outputs matched the pre-index beta.7 build byte for
+byte. Restart watch mode for aliased/re-exported helper changes that beta.7 does
+not track; no framework patch or duplicate invalidation system is introduced.
 Shared article transforms remain page-local rather than storing rendered articles
 in global data. Markdown keeps the existing alerts, highlighting, and legacy
 heading-ID policy; enabling
