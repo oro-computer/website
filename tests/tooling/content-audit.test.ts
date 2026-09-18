@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 
 import { test } from 'node:test'
@@ -11,7 +11,6 @@ import { runSilkAudit, runStdlibAudit } from '../../tools/audits/silk.ts'
 
 const siteRoot = resolve(import.meta.dirname, '../..')
 const cases = ['missing', 'clean', 'common', 'silk', 'stdlib', 'runtime', 'cap'] as const
-const baselines = JSON.parse(readFileSync(new URL('./content-audit-baseline.json', import.meta.url), 'utf8'))
 for (const name of cases) test(`Content audit regression: ${name}`, () => {
   const root = mkdtempSync(join(siteRoot, '.audit-fixture-'))
   const context: AuditContext = { siteRoot: root, outputRoot: join(root, 'output'), runtimeRepo: join(root, 'output/upstream') }
@@ -28,10 +27,8 @@ for (const name of cases) test(`Content audit regression: ${name}`, () => {
     for (const product of ['runtime', 'silk', 'sage', 'slg', 'virtnosis']) page(product, 'start.md')
     if (name !== 'missing') {
       for (const product of ['runtime', 'silk', 'sage', 'slg', 'virtnosis']) {
-
         put(`${product}/docs/source/start.md`, '# Start\n')
       }
-
       for (const path of ['index.html', 'runtime/index.html', 'runtime/docs/index.html']) put(path, '')
     }
     if (name === 'common') {
@@ -62,13 +59,63 @@ for (const name of cases) test(`Content audit regression: ${name}`, () => {
     }
     const stdout: string[] = [], stderr: string[] = []
     const status = runners[name]!(context, { log: message => stdout.push(message), error: message => stderr.push(message) })
-    const result = { status, stdout: stdout.join('\n') + (stdout.length ? '\n' : ''), stderr: stderr.join('\n') + (stderr.length ? '\n' : '') }
-    // Editorial findings were captured from the original Python audits; missing-output
-        // expectations now follow committed source metadata rather than public indexes. Directory traversal
-    // order is filesystem-dependent, so compare findings within each output stream.
-    assert.equal(result.status, baselines[name].status)
-    assert.deepEqual(result.stdout.split('\n').sort(), baselines[name].stdout.split('\n').sort())
-    assert.deepEqual(result.stderr.split('\n').sort(), baselines[name].stderr.split('\n').sort())
+    assert.equal(status, name === 'clean' ? 0 : 1)
+    if (name === 'clean') {
+      assert.deepEqual(stdout, [
+        'OK: runtime site audit passed', 'OK: runtime docs audit passed', 'OK: silk site audit passed',
+        'Stdlib doc audit passed.', ...['sage', 'slg', 'virtnosis'].map(product => `OK: ${product} site audit passed`),
+      ])
+      assert.deepEqual(stderr, [])
+    } else if (name === 'cap') {
+      assert.deepEqual(stdout, [])
+      assert.equal(stderr.length, 202)
+      assert.deepEqual(stderr.slice(0, 200).map(message => /Broken \?p= link: missing(\d+)$/.exec(message)?.[1]),
+        Array.from({ length: 200 }, (_, i) => String(i)))
+      assert.deepEqual(stderr.slice(200), ['... and 5 more', 'FAIL: 205 issues'])
+    } else {
+      // Count every detection category without snapshotting wording or traversal order.
+      const expected: Record<string, [RegExp, number][]> = {
+        missing: [[/runtime\/docs\/source\/start.md: Missing raw output/, 1]],
+        common: [
+          [/lost.md: Missing raw output/, 1], [/Broken \?p= link: (heading|fenced|missing|nope)$/, 4],
+          [/Missing link target: (docs\/absent.md|\/absent.txt) ->/, 2],
+          [/Line 6: raw \?p= reference/, 1], [/Line 6: raw manpage reference/, 1],
+          [/Line (10|11|12|13|14|15|16|17|19): avoid status-style/, 9],
+        ],
+        silk: [
+          [/Broken \?p= link: (wiki\/lost|docs\/oops)$/, 2],
+          [/Missing link target: (spec\/missing.md|docs\/missing.txt) -> silk\/docs\/source\//, 2],
+          [/Found arena identifier/, 2], [/Found deprecated/, 2],
+          [/Line 6: raw \?p= reference/, 1], [/Line 6: raw manpage reference/, 1],
+          [/Line (3|7): avoid status-style/, 2], [/spec\/2026.md: Spec contains repo-internal/, 1],
+        ],
+        stdlib: [
+          [/Status\/body uses banned transitional wording:/, 6],
+          [/Banned heading: (API|Design Goals)$/, 2],
+          [/Banned heading pattern: Initial Design MVP$/, 2], [/Banned heading pattern: Current Scope$/, 1],
+        ],
+        runtime: [
+          [/module-index.md: remove this page/, 1], [/module-index.md: remove generic Object.keys/, 1],
+          [/module-index.md: missing an Examples section/, 1],
+          [/missing docs page for published module family oro:(fs|new)\.$/, 2],
+          [/excluded private module family oro:node should not have a public docs page/, 1],
+          [/excluded private module family oro:internal should not appear in the public module listing/, 1],
+          [/missing published module specifier oro:(fs\/promises|new)\.$/, 2],
+          [/cli\/(oroc|update\/init).md: missing website docs page for upstream CLI section/, 2],
+          [/index.html: stale runtime repository reference/, 3],
+        ],
+      }
+      const findings = name === 'stdlib' ? stdout : stderr.slice(0, -1)
+      for (const [pattern, count] of expected[name]!) {
+        assert.equal(findings.filter(message => pattern.test(message)).length, count, String(pattern))
+      }
+      assert.equal(findings.length, expected[name]!.reduce((sum, [, count]) => sum + count, 0))
+      if (name === 'stdlib') assert.deepEqual(stderr, [])
+      else {
+        assert.deepEqual(stdout, name === 'runtime' ? ['OK: runtime site audit passed'] : [])
+        assert.equal(stderr.at(-1), `FAIL: ${findings.length} ${name === 'runtime' ? 'runtime docs issues' : 'issues'}`)
+      }
+    }
   } finally { rmSync(root, { recursive: true, force: true }) }
 })
 test('source inventory includes dedicated spec routes and txt outputs without public indexes', () => {

@@ -1,37 +1,43 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { createHash } from 'node:crypto'
 import { readFile, writeFile, mkdir, mkdtemp, rm, stat } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { dirname, join, relative } from 'node:path'
+import { join, relative } from 'node:path'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { files, preserveFences, splitLines } from '../tools/source-pages.ts'
 import { KEEP_DOCS_FILES, KEEP_DOCS_PREFIXES, syncTree, postprocessTree, sanitizeDocsMarkdown, sanitizeWikiMarkdown, normalizeEditorialFraming, normalizeUserFacingLinks, normalizeHeadingsForContext, normalizeTrailingNewlines, main as silkMain } from '../silk/tools/sync-from-silk-docs.ts'
 import { parseIndexDTS, renderGeneratedPage, updateCuratedPage } from '../runtime/tools/generate-js-api-reference.ts'
 import { DESCRIPTION_BY_FAMILY, EXAMPLES_BY_FAMILY, GUIDE_REFS_BY_FAMILY, DEFAULT_SEE_ALSO } from '../runtime/tools/js-api-reference-content.ts'
 
-// Captured from the original Python implementations before removal.
 const fixture = JSON.parse(await readFile(new URL('./ingestion-fixtures.json', import.meta.url), 'utf8')) as {
   cases: { rel: string; path: string; kind: string; input: string; expected: string }[]
-  runtimeFamilies: string[]; runtimeSHA256: string; contentSHA256: string
-  tree: { source: Record<string, string>; staged: Record<string, string>; stats: { copied: number; skipped: number; deleted: number }; expected: Record<string, string> }
   curated: { input: string; declarations: string; expected: string; secondExpected: string }[]
 }
-const sha256 = (text: string) => createHash('sha256').update(text).digest('hex')
 async function temporary(run: (root: string) => Promise<void>): Promise<void> {
   const root = await mkdtemp(join(tmpdir(), 'oro-ingestion-test-'))
   try { await run(root) } finally { await rm(root, { recursive: true, force: true }) }
 }
-test('evaluated runtime content and all family renderers match the Python oracle exactly', () => {
-  assert.equal(sha256(JSON.stringify([DESCRIPTION_BY_FAMILY, EXAMPLES_BY_FAMILY, GUIDE_REFS_BY_FAMILY, DEFAULT_SEE_ALSO])), fixture.contentSHA256)
-  const rendered = fixture.runtimeFamilies.map(family => {
-    const declarations = [family + '/z', family, family + '/index'].map(spec => `declare module '${spec}' {\n  export function ping(): void;\n}\n`).join('\n')
-    const blocks = parseIndexDTS(declarations)
-    return renderGeneratedPage('unused', family, Object.keys(blocks), blocks)
-  })
-  assert.equal(sha256(rendered.join('')), fixture.runtimeSHA256)
+test('configured runtime families render descriptions, examples, links, and ordered declarations', () => {
+  const families = Object.keys(EXAMPLES_BY_FAMILY)
+  assert.ok(families.length > 0)
+  for (const family of families) {
+    const specs = [family + '/z', family, family + '/index']
+    const blocks = parseIndexDTS(specs.map(spec => `declare module '${spec}' {\n  export function ping(): void;\n}\n`).join('\n'))
+    const rendered = renderGeneratedPage('unused', family, specs, blocks)
+    assert.ok(rendered.startsWith(`# \`${family}\`\n`), family)
+    assert.ok(rendered.includes(DESCRIPTION_BY_FAMILY[family].trim()), family)
+    assert.ok(rendered.includes(`## Examples\n\n${EXAMPLES_BY_FAMILY[family].trimEnd()}`), family)
+    assert.ok(rendered.includes(`\n${family}\n${family}/index\n${family}/z\n`), family)
+    const ordered = [family, family + '/index', family + '/z']
+    for (const spec of ordered) assert.ok(rendered.includes(blocks[spec].block.trimEnd()), spec)
+    assert.deepEqual([...rendered.matchAll(/^#### `([^`]+)`$/gm)].map(match => match[1]), ordered)
+    const guides = GUIDE_REFS_BY_FAMILY[family] ?? []
+    assert.equal(rendered.includes('## Related guides'), guides.length > 0, family)
+    for (const [label, id] of [...guides, ...DEFAULT_SEE_ALSO]) assert.ok(rendered.includes(`- [${label}](?p=${id})`), family)
+    assert.ok(rendered.endsWith('\n') && !rendered.endsWith('\n\n'), family)
+  }
 })
-test('Silk editorial transformations and fence protection match the Python oracle', () => {
+test('Silk editorial transformations preserve context and fenced content', () => {
   for (const [index, entry] of fixture.cases.entries()) {
     const sanitize = entry.kind === 'wiki' ? sanitizeWikiMarkdown : sanitizeDocsMarkdown
     let actual = preserveFences(entry.input, body => sanitize(entry.rel, body))
@@ -69,6 +75,7 @@ test('Silk ownership, exclusions, pruning, raw txt copying, and postprocessing',
   await writeFile(join(src, 'ignored.bin'), 'ignored')
   await writeFile(join(dst, 'language/removed.md'), 'removed')
   await writeFile(join(dst, 'STATUS.md'), 'stale tracker')
+  await writeFile(join(dst, 'asset.svg'), 'not owned')
   await writeFile(join(dst, 'guides/PLAN.md'), 'excluded even under an owned prefix')
   const ownership = { keepFiles: KEEP_DOCS_FILES, keepPrefixes: [...KEEP_DOCS_PREFIXES, 'wiki/'] }
   assert.deepEqual(await syncTree(src, dst, { ...ownership, sanitize: (rel, text) => preserveFences(text, body => sanitizeDocsMarkdown(rel, body)) }), { copied: 2, skipped: 4, deleted: 3 })
@@ -76,25 +83,11 @@ test('Silk ownership, exclusions, pruning, raw txt copying, and postprocessing',
   for (const name of ['guides/custom.md', 'start.md']) assert.equal(await readFile(join(dst, name), 'utf8'), authored)
   for (const name of ['language/removed.md', 'STATUS.md', 'guides/PLAN.md', 'wiki/reference.md', 'ignored.bin']) await assert.rejects(stat(join(dst, name)), { code: 'ENOENT' })
   assert.deepEqual(await readFile(join(dst, 'language/raw.txt')), await readFile(join(src, 'language/raw.txt')))
-  assert.match(await readFile(join(dst, 'language/new.md'), 'utf8'), /\/\/ Works today: \{\{ literal \}\}  \n/)
-}))
-test('complete staged Silk tree and counters match the Python oracle', async () => temporary(async root => {
-  const src = join(root, 'upstream'), dst = join(root, 'staged')
-  for (const [base, entries] of [[src, fixture.tree.source], [dst, fixture.tree.staged]] as const) {
-    for (const [rel, body] of Object.entries(entries)) {
-      const path = join(base, rel)
-      await mkdir(dirname(path), { recursive: true })
-      await writeFile(path, body)
-    }
-  }
-  assert.deepEqual(await syncTree(src, dst, {
-    keepFiles: KEEP_DOCS_FILES, keepPrefixes: [...KEEP_DOCS_PREFIXES, 'wiki/'],
-    sanitize: (rel, text) => preserveFences(text, body => sanitizeDocsMarkdown(rel, body)),
-  }), fixture.tree.stats)
-  await postprocessTree(dst, { keepFiles: KEEP_DOCS_FILES, keepPrefixes: KEEP_DOCS_PREFIXES })
-  const actual: Record<string, string> = {}
-  for (const path of await files(dst)) actual[relative(dst, path)] = await readFile(path, 'utf8')
-  assert.deepEqual(actual, fixture.tree.expected)
+  assert.equal(await readFile(join(dst, 'language/new.md'), 'utf8'), '# New\n\nSupported forms: prose\n\n```silk\n// Works today: {{ literal }}  \n```\n')
+  assert.equal(await readFile(join(dst, 'asset.svg'), 'utf8'), 'not owned')
+  assert.deepEqual((await files(dst)).map(path => relative(dst, path)).sort(), [
+    'asset.svg', 'guides/custom.md', 'language/new.md', 'language/raw.txt', 'start.md',
+  ])
 }))
 test('fence placeholders cannot collide with authored text; mismatched and unclosed fences stay exact', () => {
   const fence = '````silk\nWorks today: {{ value }}  \n```\n~~~~\n`````\n'
