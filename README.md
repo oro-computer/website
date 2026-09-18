@@ -92,7 +92,7 @@ search, tabs, copy controls, and Ask AI progressively enhance them.
 
 ### Incremental global data
 
-DOMStack beta.7 supplies private `previousState`, reset/delta `changes`, and
+DOMStack supplies private `previousState`, reset/delta `changes`, and
 `setState()` to the data callback. Initial builds and resets process all documents;
 watch deltas replace only `changes.upserted` entries and delete `changes.removed`
 IDs. Pages leaving a docs collection retain only their route/redirect metadata.
@@ -103,12 +103,13 @@ watch sessions or change the clean-build/ingestion workflow.
 Collection views are still rebuilt from cached document references, and existing
 DOMStack fingerprints plus `dataDeps` remain the only downstream invalidation
 system. There are no extra application hashes or changed-key declarations.
-Source initialization, projection, state cloning, and fingerprinting still have
-collection-wide costs; a body edit no longer rereads/renders the whole corpus for
-search. The standalone watcher test measures these reads/renders directly.
+DOMStack also caches Markdown source preparation between watch builds, avoiding
+repeated reads and H1 parsing for unchanged documents. Projection, state cloning,
+and fingerprinting still have collection-wide costs. The standalone watcher test
+measures the data callback's document reads/renders directly.
 
-Beta.7's dependency tracking is conservative and incomplete for package import
-aliases and static re-exports. Restart the watcher after changing shared helpers
+Dependency tracking has known limitations for package import aliases and static
+re-exports (see [DOMStack #328](https://github.com/bcomnes/domstack/issues/328)). Restart the watcher after changing shared helpers
 reached through `#lib/*` or re-exports, or inputs read outside tracked imports.
 Editing `global.data.ts` itself resets the index; ordinary page edits are tracked.
 
@@ -160,8 +161,9 @@ npm run audit:content
 The defaults use adjacent `silk` and `runtime` directories, independent of the
 website checkout's name. Silk's legacy `--repo-root` workspace option is retained.
 The tools stage flat Markdown temporarily, apply the existing ownership and
-pruning rules, then import it through `tools/import-public.ts`. Public-copy
-normalization runs during ingestion, never during rendering; fenced examples
+pruning rules, then import it through `tools/import-public.ts`. Shared normalization
+and reference-linking helpers live in `tools/ingestion/`. Public-copy normalization
+runs during ingestion, never during rendering; fenced examples
 are preserved. Unchanged staged pages keep their exact Markdown and metadata;
 linked API headings become plain-text titles when a page changes. The reference
 catalog includes new pages in the same import batch. Runtime's generated
@@ -206,15 +208,15 @@ all original 27 HTML routes and 585 documentation routes, raw-source parity,
 search text, and LLM packs. Browser tests cover desktop/mobile layouts,
 no-JavaScript rendering, compatibility redirects, search, tabs, copy controls,
 Ask AI, specification heading search, and fragments inside tabs. Tooling tests
-verify all 585 pages survive unchanged imports and that a renamed standalone
+verify all current documents survive unchanged imports and that a renamed standalone
 checkout rebuilds articles and exports during development. To use an existing Chromium install,
 set `ORO_BROWSER_EXECUTABLE` to its executable path.
 
-`tools/migration/migrate.ts /path/to/legacy-checkout` records the original route
-inventory and performs the deterministic initial conversion. It is a migration
-utility, not a routine content refresh command. Keep `tools/migration/baseline.json`
-as the compatibility fixture. See [migration status and cutover](docs/migration.md). When intentionally retiring or adding routes,
-update the relevant assertions and redirects together.
+`tests/fixtures/legacy-routes.json` records the original HTML and raw-document
+endpoints as a fixed compatibility baseline. Keep it independent of the current
+source inventory so deleting a page cannot silently erase its compatibility check.
+When intentionally retiring routes, update the relevant assertions and redirects
+together. The one-time converter and migration report remain available in Git history.
 
 ## Deployment and dependency updates
 
@@ -226,8 +228,8 @@ The repository's **Settings → Pages → Source** must be **GitHub Actions**. M
 these changes does not itself change that repository setting. The output contains
 `CNAME`, `.nojekyll`, branding assets, raw Markdown, and `llms.txt` packs.
 
-DOMStack uses the **beta** distribution tag in `package.json`. The committed
-lockfile records the resolved version, and CI uses `npm ci` for reproducible
-installs. To refresh to the current beta, run `npm update @domstack/static`,
-commit the updated lockfile, run the complete validation sequence, and compare
-representative desktop and mobile screenshots.
+DOMStack is pinned to an exact beta version in `package.json` and the committed
+lockfile; CI uses `npm ci` for reproducible installs. To refresh to the current
+beta, run `npm install --save-dev --save-exact @domstack/static@beta`, run the
+complete validation sequence, and compare representative desktop and mobile
+screenshots. Commit both `package.json` and `package-lock.json`.

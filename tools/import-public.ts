@@ -1,10 +1,10 @@
-import { linkReferences, type Reference } from './migration/references.ts'
+import { linkReferences, type Reference } from './ingestion/references.ts'
 /** Import a complete staged collection. Invoked by the manual Silk/Runtime tools. */
 import { readFile, readdir, writeFile, mkdir, unlink } from 'node:fs/promises'
 import { load as parseYaml } from 'js-yaml'
 import { resolve, join, dirname } from 'node:path'
 import { collections, docUrl, type Collection } from '#lib/collections.ts'
-import { publicContent, description } from './migration/content.ts'
+import { publicContent, description } from './ingestion/content.ts'
 import { plainTitle, titleFromMarkdown } from '#lib/titles.ts'
 
 function explicitTitle(metadata: Record<string, any>, file: string): string | undefined {

@@ -15,7 +15,7 @@ import { canonicalLink } from '#lib/urls.ts'
 import { docUrl } from '#lib/collections.ts'
 import { markdown } from '#lib/markdown.ts'
 import { titleFromMarkdown } from '#lib/titles.ts'
-import { publicContent } from '../tools/migration/content.ts'
+import { publicContent } from '../tools/ingestion/content.ts'
 import {
   importCollection,
   pageText,
@@ -172,7 +172,7 @@ test('fence protection handles longer closing delimiters and indented code', () 
     assert.equal(publicContent(source, 'silk', 'language/example.md'), source)
 })
 test('public reference links are idempotent and leave existing links and fences intact', async () => {
-  const { linkReferences } = await import('../tools/migration/references.ts')
+  const { linkReferences } = await import('../tools/ingestion/references.ts')
   const catalog = [
     { collection: 'silk' as const, id: 'std/io', title: '`std::io`' },
   ]

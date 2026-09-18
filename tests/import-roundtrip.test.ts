@@ -33,7 +33,7 @@ test('redirectFrom survives importing changed upstream bodies', async () => {
   }
 })
 
-test('all 585 public documents survive an unchanged refresh byte for byte', async () => {
+test('all public documents survive an unchanged refresh byte for byte', async () => {
   const site = await mkdtemp(join(tmpdir(), 'oro-import-roundtrip-'))
   try {
     await cp('src', join(site, 'src'), { recursive: true })
@@ -45,7 +45,10 @@ test('all 585 public documents survive an unchanged refresh byte for byte', asyn
     const files = (await readdir('src', { recursive: true })).filter((f) =>
       f.endsWith('page.md'),
     )
-    assert.equal(files.length, 585)
+    assert.ok(files.length > 0)
+    const refreshed = (await readdir(join(site, 'src'), { recursive: true }))
+      .filter(file => file.endsWith('page.md'))
+    assert.deepEqual(refreshed.sort(), files.sort())
     for (const file of files)
       assert.equal(
         await readFile(join(site, 'src', file), 'utf8'),

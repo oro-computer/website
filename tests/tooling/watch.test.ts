@@ -15,6 +15,7 @@ import {
 import { spawn } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
+import { buildSourceInventory } from '../../tools/audits/common.ts'
 import { setTimeout as delay } from 'node:timers/promises'
 
 test('a standalone checkout rebuilds articles, sidebar data and exports in watch mode', { timeout: 240000 }, async (t) => {
@@ -139,7 +140,9 @@ test('a standalone checkout rebuilds articles, sidebar data and exports in watch
         }
       })
     }
-    await checkTelemetry('initial', 585)
+    const docCount = Object.values(buildSourceInventory(site)).reduce((count, docs) => count + docs.length, 0)
+    assert.ok(docCount > 0)
+    await checkTelemetry('initial', docCount)
     const original = await readFile(source, 'utf8')
     const outputRoot = join(site, 'public')
     const rawPath = 'runtime/docs/source/guides/hello-world.md'

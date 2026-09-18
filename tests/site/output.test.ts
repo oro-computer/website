@@ -9,7 +9,7 @@ import { load } from 'cheerio'
 import { splitPage } from '../../tools/import-public.ts'
 import { collections } from '#lib/collections.ts'
 const baseline = JSON.parse(
-  await readFile('tools/migration/baseline.json', 'utf8'),
+  await readFile(new URL('../fixtures/legacy-routes.json', import.meta.url), 'utf8'),
 )
 test('all original routes and documents have static HTML and unchanged raw endpoints', async () => {
   assert.equal(baseline.documents.length, 585)
@@ -140,15 +140,11 @@ test('public branding assets match the canonical originals', async () => {
   }
   for (const file of ['CNAME', '.nojekyll']) await access('public/' + file)
 })
-test('every legacy document ID resolves to its recorded canonical route', async () => {
+test('legacy document lookups normalize IDs and reject missing or inherited entries', async () => {
   const { legacyTarget } = await import('#lib/legacy.ts')
-  for (const key of Object.keys(collections)) {
-    const docs = baseline.documents.filter((d: any) => d.collection === key)
-    const map = Object.fromEntries(docs.map((d: any) => [d.id, d.url]))
-    for (const doc of docs) {
-      assert.equal(legacyTarget(doc.id, map), doc.url)
-      assert.equal(legacyTarget('./' + doc.id + '.md', map), doc.url)
-    }
-    assert.equal(legacyTarget('constructor', map), undefined)
-  }
+  const map = { 'guides/hello-world': '/runtime/docs/guides/hello-world/' }
+  assert.equal(legacyTarget('guides/hello-world', map), map['guides/hello-world'])
+  assert.equal(legacyTarget('./guides/hello-world.md', map), map['guides/hello-world'])
+  assert.equal(legacyTarget('missing', map), undefined)
+  assert.equal(legacyTarget('constructor', map), undefined)
 })
