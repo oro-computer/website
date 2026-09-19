@@ -4,6 +4,7 @@ title: "Hello world"
 description: "Welcome to the Oro Computer blog: notes on Runtime, Silk, and building native applications with web technologies."
 publishDate: "2026-09-18T12:00:00Z"
 authors:
+  - bcomnes
   - jwerle
 ---
 
