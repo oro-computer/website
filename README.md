@@ -10,11 +10,11 @@ Python is not required. No sibling checkout is needed to build the site.
 
 ```sh
 npm ci
-npm run dev
+npm start
 ```
 
-`npm run build` creates `public/` from scratch. `npm run preview` builds and serves
-that same artifact. Generated HTML, search indexes, raw Markdown, and LLM packs
+`npm start` builds, serves, and watches for changes. `npm run build` creates
+`public/` from scratch. Generated HTML, search indexes, raw Markdown, and LLM packs
 are output files; do not commit `public/`.
 
 ## Editing content
