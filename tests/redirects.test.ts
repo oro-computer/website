@@ -18,7 +18,7 @@ test('accepts absent or empty metadata and any source-backed page structure', ()
   assert.deepEqual(collectRedirects([]), [])
   assert.deepEqual(collectRedirects([page(undefined), page([])]), [])
   for (const source of ['current/page.html', 'current/page.md', 'current/page.ts']) {
-    assert.deepEqual(collectRedirects([page(['/old/'], source)]), [{ from: '/old/', to: '/current/' }])
+    assert.deepEqual(collectRedirects([page(['/old/'], source)]), [{ from: '/old/', to: '/current/', source }])
   }
 })
 
@@ -26,9 +26,9 @@ test('projects deterministic JSON-safe metadata independently of page bodies', (
   const first = page(['/z/', '/a/'])
   const second = page(['/b.html'], 'other.md', '/other.html')
   const expected = [
-    { from: '/a/', to: '/current/' },
-    { from: '/b.html', to: '/other.html' },
-    { from: '/z/', to: '/current/' },
+    { from: '/a/', to: '/current/', source: 'current/page.md' },
+    { from: '/b.html', to: '/other.html', source: 'other.md' },
+    { from: '/z/', to: '/current/', source: 'current/page.md' },
   ]
   assert.deepEqual(collectRedirects([first, second]), expected)
   const changed = { ...first, vars: { redirectFrom: ['/a/', '/z/'], title: 'Changed', ignored: 1n },
@@ -90,13 +90,13 @@ test('uses actual outputRelname when provided, including literal Unicode names',
   existing.pageInfo.outputRelname = 'caf%C3%A9/index.html'
   assert.throws(() => collectRedirects([page(['/caf%C3%A9/']), existing]), /collides.*special\/page.html/)
   assert.deepEqual(collectRedirects([page(['/different-public-url/']), existing]), [
-    { from: '/different-public-url/', to: '/current/' },
+    { from: '/different-public-url/', to: '/current/', source: 'current/page.md' },
   ])
 })
 
 test('preserves target URLs and aliases as data, without HTML escaping', () => {
   assert.deepEqual(collectRedirects([page(['/old&name.html'], 'quoted"source.md', '/new&name.html')]), [
-    { from: '/old&name.html', to: '/new&name.html' },
+    { from: '/old&name.html', to: '/new&name.html', source: 'quoted"source.md' },
   ])
   assert.throws(() => collectRedirects([page(['bad'], 'quoted"source.md')]), error => {
     assert.ok(error instanceof Error)

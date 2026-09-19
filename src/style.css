@@ -915,7 +915,7 @@
 
 .editorial-layout .section-kicker {
   margin: 0;
-  color: var(--color-purple);
+  color: var(--color-fg);
   font-size: 0.78rem;
   font-weight: 760;
   letter-spacing: 0.08em;
@@ -1014,7 +1014,7 @@
 }
 
 .editorial-product-index {
-  color: rgba(91, 59, 162, 0.84);
+  color: var(--color-muted);
   font-family: var(--font-mono);
   font-size: 0.84rem;
   font-weight: 720;

@@ -129,7 +129,7 @@ test('reset caches only cloneable projections, including non-doc routes and redi
   assert.equal(result.data.navigation.runtime.bySource['a.md'].next?.id, 'b')
   assert.equal(result.data.navigation.runtime.bySource['b.md'].previous?.id, 'a')
   assert.deepEqual(result.data.redirects, [
-    { from: '/old-a/', to: a.pageInfo.url }, { from: '/old-landing/', to: landing.pageInfo.url },
+    { from: '/old-a/', to: a.pageInfo.url, source: a.sourceId }, { from: '/old-landing/', to: landing.pageInfo.url, source: landing.sourceId },
   ])
 })
 
@@ -194,7 +194,7 @@ test('title, ordering, collection, source path, route and redirect updates repla
   assert.equal(result.data.navigation.runtime.bySource['b.md'].next, null)
   assert.equal(result.data.navigation.silk.bySource['c.md'].previous?.id, 'guides/renamed')
   assert.equal(result.data.navigation.silk.bySource['guides/renamed.txt'].section, 'guides')
-  assert.deepEqual(result.data.redirects, [{ from: '/new-alias/', to: a.pageInfo.url }])
+  assert.deepEqual(result.data.redirects, [{ from: '/new-alias/', to: a.pageInfo.url, source: a.sourceId }])
 
   a.vars.redirectFrom = undefined
   result = await equivalent(pages, delta([a]), result)

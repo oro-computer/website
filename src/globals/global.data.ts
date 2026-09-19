@@ -3,10 +3,12 @@ import { collections, type Collection } from '#lib/collections.ts'
 import { collectRedirects, type RedirectPage } from '#lib/redirects.ts'
 import { editUrl, plainText, projectCollection, validateDocVars, type Doc, type DocsData } from '#lib/docs.ts'
 
-type IndexedPage = RedirectPage & { doc?: Doc }
+import { readBlogPost, projectBlog, type BlogPost, type BlogData } from '#lib/blog.ts'
+
+type IndexedPage = RedirectPage & { doc?: Doc; post?: BlogPost }
 export type DocsIndex = Map<string, IndexedPage>
 
-const globalData: GlobalDataFunction<DocsData, Record<string, unknown>, string, DocsIndex> = async ({
+const globalData: GlobalDataFunction<DocsData & BlogData, Record<string, unknown>, string, DocsIndex> = async ({
   pages, previousState, changes, setState,
 }) => {
   const reset = changes.kind === 'reset' || previousState === undefined
@@ -38,6 +40,7 @@ const globalData: GlobalDataFunction<DocsData, Record<string, unknown>, string, 
         editUrl: editUrl(source),
       }
     }
+    if (page.vars.layout === 'blog') entry.post = await readBlogPost(page)
     index.set(source, entry)
   }
 
@@ -50,11 +53,13 @@ const globalData: GlobalDataFunction<DocsData, Record<string, unknown>, string, 
   for (const { doc } of indexedPages) {
     if (doc) docs[doc.collection].push(doc)
   }
+  const blog = projectBlog(indexedPages.flatMap(({ post }) => post ? [post] : []))
   const data = {
     redirects: collectRedirects(indexedPages),
-    routes: indexedPages.map(page => page.pageInfo.url).sort(),
+    routes: [...indexedPages.map(page => page.pageInfo.url), ...blog.blogArchives.map(archive => archive.url)].sort(),
     navigation: {},
-  } as DocsData
+    ...blog,
+  } as DocsData & BlogData
   for (const collection of Object.keys(collections) as Collection[]) {
     const list = docs[collection]
     list.sort((a, b) => a.order - b.order || a.id.localeCompare(b.id, 'en'))

@@ -12,6 +12,9 @@
     "clean": "node tools/clean.ts",
     "build": "npm run clean && domstack",
     "start": "domstack --watch",
+    "new-blogpost": "node tools/blog/create.ts",
+    "import-author": "node tools/authors/import.ts",
+    "publish-draft": "node tools/blog/publish.ts",
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/*.test.ts",
     "audit": "node tools/audit-output.ts",
@@ -31,6 +34,7 @@
     "fragtml": "0.0.10",
     "highlight.js": "^11.11.1",
     "js-yaml": "^5.4.2",
+    "jsonfeed-to-atom": "^1.2.5",
     "markdown-it": "^15.0.0",
     "markdown-it-github-alerts": "^1.0.1",
     "typescript": "^5.9.2"

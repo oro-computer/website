@@ -45,6 +45,8 @@ test('a standalone checkout rebuilds articles, sidebar data and exports in watch
         }
         const restore = []
         for (const page of new Set([...context.pages, ...(context.changes.upserted ?? [])])) {
+          // Measure docs independently of other indexed content, such as blog posts.
+          if (page.vars.docsCollection === undefined) continue
           for (const [method, counter] of [['readMarkdownContent', 'reads'], ['renderInnerPage', 'renders']]) {
             const descriptor = Object.getOwnPropertyDescriptor(page, method)
             const original = page[method]

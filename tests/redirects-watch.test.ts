@@ -51,13 +51,14 @@ test('redirectFrom aliases follow source edits, moves and deletion in watch mode
     assert.equal($('header nav[aria-label="Primary navigation"]').length, 1)
     assert.equal($('body > main#main a[data-redirect]').length, 1)
     assert.equal($('body > footer.site-footer').length, 1)
+    assert.equal($('footer .page-edit').attr('href'), `https://github.com/oro-computer/website/blob/master/src${target}page.md`)
     assert.equal($('body > a.skip-link').attr('href'), '#main')
     assert.equal($('link[rel="canonical"]').attr('href'), `https://oro.computer${target}`)
     assert.equal($('meta[property="og:url"]').attr('content'), `https://oro.computer${target}`)
     assert.equal($('noscript meta[http-equiv="refresh"]').attr('content'), `0;url=${target}`)
     assert.equal($('meta[http-equiv="refresh"]').length, 1)
     assert.equal($('a[data-redirect]').attr('href'), target)
-    assert.equal($('a[data-redirect]').text(), 'Continue to the page')
+    assert.equal($('a[data-redirect]').text().trim(), 'Continue to the page')
   }
   try {
     // Re-export production consumers, not test implementations of their data subscriptions.
