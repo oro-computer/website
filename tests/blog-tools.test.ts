@@ -16,7 +16,7 @@ async function fixture(t: { after: (fn: () => Promise<void>) => void }) {
   return { blogDir, now }
 }
 
-test('create scaffolds a dated draft, one heading, and colocated images', async t => {
+test('create scaffolds a dated draft, frontmatter title, and colocated images', async t => {
   const options = await fixture(t)
   const draft = await createPost('Hello Runtime', options)
   assert.equal(draft, join(options.blogDir, '2026/hello-runtime/page.draft.md'))
@@ -24,9 +24,9 @@ test('create scaffolds a dated draft, one heading, and colocated images', async 
   assert.match(content, /layout: blog\n/)
   assert.match(content, /description: "A short summary of this post\."/)
   assert.match(content, /publishDate: "2026-06-15T12:00:00.000Z"/)
-  assert.equal(content.match(/^# Hello Runtime$/gm)?.length, 1)
-  assert.doesNotMatch(content, /^title:/m)
-    assert.match(content, /^author: oro$/m)
+  assert.match(content, /^title: "Hello Runtime"$/m)
+  assert.doesNotMatch(content, /^# /m)
+  assert.match(content, /^authors: \["oro-computer"\]$/m)
   assert.match(content, /Draft: replace/)
   assert.deepEqual(await readdir(dirname(draft)), ['img', 'page.draft.md'])
 })
@@ -35,14 +35,14 @@ test('publish supports explicit older years, preserves body and metadata, and up
   const options = await fixture(t)
   const draft = await createPost('Older Post', { ...options, now: new Date('2025-06-15T12:00:00Z') })
   const body = '\r\n# Older Post\r\n\r\npublishDate: "leave body alone"\r\n---\r\nText without final newline'
-  await writeFile(draft, `---\r\nlayout: blog\r\ndescription: Summary\r\nauthor: joe\r\ntags: [runtime, news]\r\npublishDate: '2025-06-15'\r\n---\r\n${body}`)
+  await writeFile(draft, `---\r\nlayout: blog\r\ndescription: Summary\r\nauthors: [jwerle]\r\ntags: [runtime, news]\r\npublishDate: '2025-06-15'\r\n---\r\n${body}`)
   await assert.rejects(publishDraft('older-post', options), { code: 'ENOENT' })
   const published = await publishDraft('2025/older-post', options)
   const content = await readFile(published, 'utf8')
   const end = content.indexOf('\r\n---\r\n', 5)
   assert.equal(content.slice(end + 7), body)
   assert.deepEqual(load(content.slice(5, end)), {
-    layout: 'blog', description: 'Summary', author: 'joe', tags: ['runtime', 'news'], publishDate: now.toISOString(),
+    layout: 'blog', description: 'Summary', authors: ['jwerle'], tags: ['runtime', 'news'], publishDate: now.toISOString(),
   })
   assert.deepEqual(await readdir(dirname(published)), ['img', 'page.md'])
 })
@@ -89,24 +89,32 @@ test('invalid paths, symlinks, titles, and malformed metadata fail without publi
 
 test('explicit authors are validated, scaffolded, and retained on publication', async t => {
   const options = await fixture(t)
-  for (const author of ['bret', 'joe', 'oro'] as const) {
-    const args = parseCreateArgs([`Post ${author}`, '--author', author])
-    assert.deepEqual(args, { help: false, title: `Post ${author}`, author })
+  for (const authors of [['bcomnes'], ['jwerle'], ['oro-computer'], ['bcomnes', 'jwerle']]) {
+    const title = `Post ${authors.join(' ')}`
+    const args = await parseCreateArgs([title, ...authors.flatMap(author => ['--author', author])])
+    assert.deepEqual(args, { help: false, title, authors })
     if (args.help) throw new Error('Expected create arguments')
-    const draft = await createPost(args.title, { ...options, author: args.author })
-    assert.match(await readFile(draft, 'utf8'), new RegExp(`^author: ${author}$`, 'm'))
-    const published = await publishDraft(`post-${author}`, options)
-    const metadata = load((await readFile(published, 'utf8')).split('---\n')[1]!) as { author: string }
-    assert.equal(metadata.author, author)
+    const draft = await createPost(args.title, { ...options, authors: args.authors })
+    const draftMetadata = load((await readFile(draft, 'utf8')).split('---\n')[1]!) as { authors: string[] }
+    assert.deepEqual(draftMetadata.authors, authors)
+    const published = await publishDraft(`post-${authors.join('-')}`, options)
+    const metadata = load((await readFile(published, 'utf8')).split('---\n')[1]!) as { authors: string[] }
+    assert.deepEqual(metadata.authors, authors)
   }
-  assert.deepEqual(parseCreateArgs(['Default Post']), { help: false, title: 'Default Post', author: 'oro' })
-  assert.deepEqual(parseCreateArgs(['--author=bret', 'Named Post']), { help: false, title: 'Named Post', author: 'bret' })
-  assert.throws(() => parseCreateArgs(['--author', 'unknown', 'Post']), /unknown author/)
-  assert.throws(() => parseCreateArgs(['Post', '--author']), /Usage:/)
+  assert.deepEqual(await parseCreateArgs(['Default Post']), { help: false, title: 'Default Post', authors: ['oro-computer'] })
+  assert.deepEqual(await parseCreateArgs(['--author=bcomnes', 'Named Post']), { help: false, title: 'Named Post', authors: ['bcomnes'] })
+  for (const author of ['unknown', 'joe', 'bret', 'oro']) {
+    await assert.rejects(() => parseCreateArgs(['--author', author, 'Post']), /unknown author/)
+    await assert.rejects(createPost('Unknown Author', { ...options, authors: [author] }), /unknown author/)
+  }
+  await assert.rejects(() => parseCreateArgs(['Post', '--author']), /Usage:/)
+  await assert.rejects(() => parseCreateArgs(['Post', '--author', 'bcomnes', '--author', 'bcomnes']), /duplicate/)
+  await assert.rejects(createPost('Duplicate Authors', { ...options, authors: ['bcomnes', 'bcomnes'] }), /duplicate/)
+  await assert.rejects(createPost('Empty Authors', { ...options, authors: [] }), /nonempty array/)
   // Runtime callers must be validated too, even if they bypass TypeScript.
-  // @ts-expect-error Deliberately invalid author ID.
-  await assert.rejects(createPost('Unknown Author', { ...options, author: 'unknown' }), /unknown author/)
-  assert.deepEqual(await readdir(join(options.blogDir, '2026')), ['post-bret', 'post-joe', 'post-oro'])
+  // @ts-expect-error Deliberately invalid authors shape.
+  await assert.rejects(createPost('Invalid Authors', { ...options, authors: 'bcomnes' }), /nonempty array/)
+  assert.deepEqual(await readdir(join(options.blogDir, '2026')), ['post-bcomnes', 'post-bcomnes-jwerle', 'post-jwerle', 'post-oro-computer'])
 })
 
 test('year selection follows UTC at the year boundary', async t => {

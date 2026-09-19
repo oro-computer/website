@@ -1,11 +1,12 @@
 ---
 layout: blog
+title: "Hello world"
 description: "Welcome to the Oro Computer blog: notes on Runtime, Silk, and building native applications with web technologies."
 publishDate: "2026-09-18T12:00:00Z"
-author: joe
+authors:
+  - jwerle
 ---
 
-# Hello world
 
 Welcome to the Oro Computer blog. This is a place for release notes, technical
 walkthroughs, and work in progress across our projects.

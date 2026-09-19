@@ -58,7 +58,7 @@ export function jsonFeed(posts: readonly BlogPost[], siteUrl: string): string {
       content_html: feedHtml(post, siteUrl),
       date_published: post.publishDate,
       date_modified: post.updatedDate ?? post.publishDate,
-      authors: [{ name: post.authorName, ...(post.authorUrl ? { url: post.authorUrl } : {}) }],
+      authors: post.authors.map(author => ({ name: author.name, url: author.url, avatar: new URL(author.avatar, siteUrl).href })),
     })),
   })
 }
@@ -83,7 +83,7 @@ ${entries.map(post => `<entry>
 <link rel="alternate" href="${url(post.url)}"/>
 <published>${xmlEscape(post.publishDate)}</published>
 <updated>${xmlEscape(post.updatedDate ?? post.publishDate)}</updated>
-<author><name>${xmlEscape(post.authorName)}</name>${post.authorUrl ? `<uri>${xmlEscape(post.authorUrl)}</uri>` : ''}</author>
+${post.authors.map(author => `<author><name>${xmlEscape(author.name)}</name><uri>${xmlEscape(author.url)}</uri></author>`).join('\n')}
 <summary>${xmlEscape(post.description)}</summary>
 <content type="html">${xmlEscape(feedHtml(post, siteUrl))}</content>
 </entry>`).join('\n')}

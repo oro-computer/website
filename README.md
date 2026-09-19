@@ -149,7 +149,9 @@ paths this way without changing their Markdown bodies or raw exports.
 The blog at `/blog/` lists posts newest first. Start and publish posts with:
 
 ```sh
-npm run new-blogpost -- --author bret "Post title"
+npm run import-author -- bcomnes
+npm run import-author -- jwerle
+npm run new-blogpost -- --author bcomnes --author jwerle "Post title"
 npm start -- --drafts
 npm run publish-draft -- post-title
 # For a draft from an earlier year:
@@ -162,26 +164,45 @@ publishing. The publish command sets `publishDate` to now and installs `page.md`
 without overwriting an existing post, then removes the draft. It preserves the
 article body and metadata values, but normalizes YAML formatting/comments.
 
+Blog posts require a `title` in frontmatter. The `blog` layout renders the H1,
+followed by the publication date and authors with linked avatars. Do not repeat the title as a Markdown
+H1; start body sections at H2. This differs from documentation pages, which keep
+their title in Markdown.
+
 You can also author Markdown posts and local images directly under
 `src/blog/<year>/<slug>/`, using `page.md` for a published post:
 
 ```markdown
 ---
 layout: blog
+title: "Your post title"
 description: "A short summary for the index and feeds."
 publishDate: "2026-09-18T12:00:00Z"
-author: bret
+authors:
+  - bcomnes
+  - jwerle
 ---
-
-# Your post title
 
 Write the post here. Link local images with `./image.png`.
 ```
 
-The H1 supplies the title, just like docs. Select an author from `src/lib/authors.ts`:
-`joe` (Joseph Werle), `bret` (Bret Comnes), or `oro` (Oro Computer, the default).
-Author names and profile links appear in bylines and both feeds. The create
-command accepts `--author joe` or `--author bret`; unknown IDs fail validation.
+Posts require a nonempty `authors` array of registered lowercase GitHub usernames.
+The local registry in `src/authors/` includes `bcomnes`, `jwerle`, and `oro-computer`.
+Repeat `--author username` to create a multi-author draft; only the create command
+defaults to `['oro-computer']` when no authors are specified. Missing or empty
+frontmatter arrays, duplicate usernames, unknown usernames, and legacy aliases
+are rejected. Author order is preserved in bylines and both feeds. Display names,
+profile links, and local avatars come from the registry; JSON Feed includes
+absolute avatar URLs and Atom includes each author's name and profile URI.
+
+Use `npm run import-author -- username` to import or refresh a profile, then review
+and commit its `author-meta.json` and avatar under `src/authors/<username>/`.
+Importing contacts GitHub and its avatar service and is subject to GitHub rate
+limits; an optional `GITHUB_TOKEN` may be supplied through the environment.
+Builds and post creation read only the local registry and never fetch author data.
+Restart `npm start` after importing authors or editing registry metadata: DOMStack
+tracks static imports, not the registry's filesystem reads.
+See [`tools/authors/README.md`](tools/authors/README.md) for importer details.
 `updatedDate` is optional and must not precede `publishDate`. Quote date values
 and include a timezone. Publication dates control ordering, not scheduling:
 future-dated published files are still public.

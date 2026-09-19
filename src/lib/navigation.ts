@@ -102,16 +102,20 @@ export function footer(label: string, editorial: boolean, editHref: string): str
           </div>
           <div class="editorial-footer-links">
             <a href="/docs/">Docs</a>
-            <a class="page-edit" href="${editHref}">Edit this page</a>
+          </div>
+          <div class="footer-meta">
             <span>© <span data-year>2026</span> Oro Computer</span>
+            <a class="page-edit" href="${editHref}">Edit this page</a>
           </div>
         </footer>`
       : html`<footer class="site-footer">
           <div class="container">
             <div class="footer-inner">
-              <strong>${label || 'Oro Computer'}</strong
-              ><a class="page-edit" href="${editHref}">Edit this page</a>
-              <span>© <span data-year>2026</span> Oro Computer.</span>
+              <strong>${label || 'Oro Computer'}</strong>
+              <div class="footer-meta">
+                <span>© <span data-year>2026</span> Oro Computer.</span>
+                <a class="page-edit" href="${editHref}">Edit this page</a>
+              </div>
             </div>
           </div>
         </footer>`,

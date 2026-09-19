@@ -75,16 +75,16 @@ body::before {
 }
 
 a {
-  color: var(--color-purple);
+  color: var(--color-fg);
   text-decoration: underline;
-  text-decoration-color: rgba(91, 59, 162, 0.26);
+  text-decoration-color: var(--color-border-strong);
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
 }
 
 a:hover,
 a:focus-visible {
-  text-decoration-color: rgba(246, 201, 69, 0.9);
+  text-decoration-color: var(--color-gold);
 }
 
 img {
@@ -171,7 +171,7 @@ pre {
 
 .site-header:has(.site-subnav) {
   min-height: 0;
-  padding-top: 0.5rem;
+  padding-top: 1rem;
 }
 
 .brand {
@@ -974,6 +974,26 @@ pre code {
   color: var(--color-fg);
 }
 
+.footer-meta {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem 1rem;
+}
+
+.site-footer .page-edit {
+  margin-inline-start: auto;
+  color: inherit;
+  white-space: nowrap;
+}
+
+.site-footer .page-edit:hover,
+.site-footer .page-edit:focus-visible {
+  color: var(--color-fg);
+  text-decoration: underline;
+}
+
 .docs-layout {
   display: grid;
   grid-template-columns: 300px minmax(0, 1fr);
@@ -1488,7 +1508,7 @@ pre code {
   }
 
   .site-header:has(.site-subnav) {
-    padding-top: 0.65rem;
+    padding-top: 1rem;
   }
 
   .brand-mark {
@@ -2605,9 +2625,9 @@ pre code {
 
 .docs-tech-heading {
   display: flex;
-  gap: 1.5rem;
+  flex-direction: column;
+  gap: 1rem;
   align-items: flex-start;
-  justify-content: space-between;
 }
 
 .docs-tech-heading h2 {
@@ -2616,6 +2636,7 @@ pre code {
 
 .docs-section-action {
   display: inline-flex;
+  flex-shrink: 0;
   min-width: 150px;
   min-height: 42px;
   align-items: center;
@@ -3443,12 +3464,16 @@ body:not(.editorial-layout) .hero + .section {
   border-top: 1px solid rgba(31, 31, 31, 0.1);
 }
 
-body:not(.editorial-layout) .panel,
 body:not(.editorial-layout) .docs-sidebar,
-body:not(.editorial-layout) .docs-toc,
+body:not(.editorial-layout) .docs-toc {
+  border-color: var(--color-border);
+  background: transparent;
+  box-shadow: none;
+}
+
+body:not(.editorial-layout) .panel,
 body:not(.editorial-layout) .docs-prevnext-link,
-body:not(.editorial-layout) .docs-quick-select a,
-body:not(.editorial-layout) .docs-link-block {
+body:not(.editorial-layout) .docs-quick-select a {
   border-color: rgba(31, 31, 31, 0.12);
   background: rgba(255, 255, 255, 0.5);
   box-shadow: none;
@@ -3564,7 +3589,7 @@ body:not(.editorial-layout) .docs-landing-content p {
 body:not(.editorial-layout) .docs-quick-select a,
 body:not(.editorial-layout) .docs-link-block a {
   border-color: rgba(31, 31, 31, 0.12);
-  background: rgba(255, 255, 255, 0.46);
+  background: var(--color-bg);
   color: var(--color-fg);
 }
 
@@ -3582,8 +3607,8 @@ body:not(.editorial-layout) .docs-quick-select a:hover,
 body:not(.editorial-layout) .docs-quick-select a:focus-visible,
 body:not(.editorial-layout) .docs-link-block a:hover,
 body:not(.editorial-layout) .docs-link-block a:focus-visible {
-  border-color: rgba(91, 59, 162, 0.28);
-  background: rgba(255, 255, 255, 0.72);
+  border-color: var(--color-border-strong);
+  background: linear-gradient(rgba(31, 31, 31, 0.05), rgba(31, 31, 31, 0.05)), var(--color-bg);
 }
 
 body:not(.editorial-layout) .docs-landing-content h2,
@@ -3608,6 +3633,7 @@ body:not(.editorial-layout) .docs-tech-section {
 
 body:not(.editorial-layout) .docs-link-block {
   border-top-color: rgba(31, 31, 31, 0.12);
+  background: transparent;
 }
 
 body:not(.editorial-layout) .docs-link-block code {
@@ -3634,8 +3660,6 @@ body:not(.editorial-layout) .site-subnav-links a,
 body:not(.editorial-layout) .tabs,
 body:not(.editorial-layout) .tabs-tab,
 body:not(.editorial-layout) .panel,
-body:not(.editorial-layout) .docs-sidebar,
-body:not(.editorial-layout) .docs-toc,
 body:not(.editorial-layout) .docs-search,
 body:not(.editorial-layout) .docs-search-result,
 body:not(.editorial-layout) .docs-prevnext-link,

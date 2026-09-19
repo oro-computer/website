@@ -1,6 +1,6 @@
 import type { PageData } from '@domstack/static/types.js'
 import { plainTitle } from '#lib/titles.ts'
-import { resolveBlogAuthor, type AuthorId } from '#lib/authors.ts'
+import { resolveBlogAuthors, type BlogAuthor } from '#lib/authors.ts'
 
 export interface BlogPost {
   url: string
@@ -8,8 +8,7 @@ export interface BlogPost {
   description: string
   publishDate: string
   updatedDate?: string
-  authorName: string
-  authorUrl?: string
+  authors: BlogAuthor[]
   html: string
   draft?: boolean
 }
@@ -36,7 +35,7 @@ export interface BlogPostVars {
   description: string
   publishDate: string
   updatedDate?: string
-  author?: AuthorId
+  authors: string[]
 }
 
 export function blogDate(value: unknown, field: string, source: string): string {
@@ -52,20 +51,20 @@ export function blogDate(value: unknown, field: string, source: string): string 
   return new Date(time).toISOString()
 }
 
-export function validateBlogVars(vars: Record<string, unknown>, source: string): Omit<BlogPost, 'url' | 'html' | 'draft'> {
+export async function validateBlogVars(vars: Record<string, unknown>, source: string): Promise<Omit<BlogPost, 'url' | 'html' | 'draft'>> {
   const title = typeof vars.title === 'string' ? plainTitle(vars.title) : ''
-  if (!title) throw new Error(`${source}: title must contain visible text (supply an H1 or explicit title)`)
+  if (!title) throw new Error(`${source}: title is required and must contain visible text; set title in blog post frontmatter`)
   if (typeof vars.description !== 'string' || !vars.description.trim()) throw new Error(`${source}: description must be a non-empty string`)
   const publishDate = blogDate(vars.publishDate, 'publishDate', source)
   const updatedDate = vars.updatedDate === undefined ? undefined : blogDate(vars.updatedDate, 'updatedDate', source)
   if (updatedDate && Date.parse(updatedDate) < Date.parse(publishDate)) throw new Error(`${source}: updatedDate must not precede publishDate`)
-  const author = resolveBlogAuthor(vars.author, source)
-  return { title, description: vars.description.trim(), publishDate, ...(updatedDate ? { updatedDate } : {}), authorName: author.name, authorUrl: author.url }
+  const authors = await resolveBlogAuthors(vars.authors, source)
+  return { title, description: vars.description.trim(), publishDate, ...(updatedDate ? { updatedDate } : {}), authors }
 }
 
 export async function readBlogPost(page: BlogPage): Promise<BlogPost> {
   if (page.pageInfo.type !== 'md') throw new Error(`${page.sourceId}: blog posts must be Markdown`)
-  const metadata = validateBlogVars(page.vars, page.sourceId)
+  const metadata = await validateBlogVars(page.vars, page.sourceId)
   return { ...metadata, url: page.pageInfo.url, html: await page.renderInnerPage(), draft: /\.draft\.md$/.test(page.sourceId) }
 }
 
