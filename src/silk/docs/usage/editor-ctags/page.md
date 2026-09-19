@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Universal Ctags Support"
 description: "The Silk compiler repository ships a Universal Ctags configuration for Silk at its root (.ctags)."
 docsCollection: "silk"
 section: "usage"

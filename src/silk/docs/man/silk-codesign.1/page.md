@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "[silk-codesign(1)](?p=man/silk-codesign.1) - Sign And Verify Platform Artifacts"
 description: "NOTE: This is the Markdown source for the eventual man 1 page for silk codesign. The roff-formatted manpage should be generated from this content."
 docsCollection: "silk"
 section: "man"

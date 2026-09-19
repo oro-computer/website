@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "sage:fs"
 description: "sage:fs provides bounded filesystem access for plugins."
 docsCollection: "sage"
 section: "javascript"

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::env"
 description: "std::env provides access to process environment variables."
 docsCollection: "silk"
 section: "std"

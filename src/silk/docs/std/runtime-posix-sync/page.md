@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::runtime::posix::sync"
 description: "Source: std/runtime/posix/sync.slk"
 docsCollection: "silk"
 section: "std"

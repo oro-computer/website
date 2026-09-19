@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:npm/*"
 description: "oro:npm/* supports package-resolution and service-worker plumbing for NPM-backed modules."
 docsCollection: "runtime"
 section: "javascript"

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:querystring"
 description: "oro:querystring parses and serializes URL query strings."
 docsCollection: "runtime"
 section: "javascript"

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:hci"
 description: "oro:hci exposes host controller interface helpers for low-level Bluetooth adapter access."
 docsCollection: "runtime"
 section: "javascript"

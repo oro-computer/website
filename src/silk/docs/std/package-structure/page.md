@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std:: Module Structure"
 description: "This describes the intended organization and build integration for std::. A first, minimal slice of the build integration is implemented (auto-resolving std::... imports from a configurable stdlib roo"
 docsCollection: "silk"
 section: "std"

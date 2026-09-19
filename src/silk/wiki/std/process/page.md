@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::process"
 description: "std::process provides process-oriented primitives (hosted baseline)."
 docsCollection: "silkWiki"
 section: "std"

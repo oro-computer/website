@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::image::png"
 description: "Source: std/image/png.slk"
 docsCollection: "silk"
 section: "std"

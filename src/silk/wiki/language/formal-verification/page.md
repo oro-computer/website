@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Formal verification (Formal Silk)"
 description: "Silk includes syntax for writing contracts and verification metadata:"
 docsCollection: "silkWiki"
 section: "language"

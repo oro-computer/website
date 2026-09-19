@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Formal Silk"
 description: "Formal Silk is Silk’s compile-time formal verification language. It lets you write machine-checked specifications next to ordinary code, and have the compiler prove those specifications using the Z3 S"
 docsCollection: "silk"
 section: "guides"

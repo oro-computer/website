@@ -11,10 +11,11 @@ import {
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { load } from 'cheerio'
-import { canonicalLink } from '../src/lib/urls.ts'
-import { docUrl } from '../src/lib/collections.ts'
-import { markdown } from '../src/lib/markdown.ts'
-import { publicContent } from '../tools/migration/content.ts'
+import { canonicalLink } from '#lib/urls.ts'
+import { docUrl } from '#lib/collections.ts'
+import { markdown } from '#lib/markdown.ts'
+import { titleFromMarkdown } from '#lib/titles.ts'
+import { publicContent } from '../tools/ingestion/content.ts'
 import {
   importCollection,
   pageText,
@@ -86,7 +87,7 @@ test('staged imports preserve metadata and ownership boundaries and prune remove
     const wiki = join(site, 'src/silk/wiki/page.md')
     const metadata = {
       layout: 'docs',
-      title: 'Old',
+
       description: 'Old',
       docsCollection: 'silk',
       section: 'language',
@@ -116,7 +117,8 @@ test('staged imports preserve metadata and ownership boundaries and prune remove
     const { metadata: next, body } = splitPage(await readFile(page, 'utf8'))
     assert.equal(next.order, 42)
     assert.equal(next.section, 'language')
-    assert.equal(next.title, 'New title')
+    assert.equal(Object.hasOwn(next, 'title'), false)
+    assert.equal(titleFromMarkdown(body), 'New title')
     assert.ok(body.includes('(/silk/docs/)'))
     await assert.rejects(access(stale))
     await access(wiki)
@@ -127,6 +129,41 @@ test('staged imports preserve metadata and ownership boundaries and prune remove
     await rm(site, { recursive: true, force: true })
   }
 })
+test('imports preserve explicit overrides, infer changed headings, and fall back without H1', async () => {
+  const site = await mkdtemp(join(tmpdir(), 'oro-import-titles-'))
+  try {
+    const stage = join(site, 'staged')
+    await mkdir(stage, { recursive: true })
+    await mkdir(join(site, 'src'), { recursive: true })
+    await writeFile(join(stage, 'example.md'), '# First\n')
+    await writeFile(join(stage, 'fallback.md'), 'No heading.\n')
+    await importCollection('silk', stage, site)
+    const file = join(site, 'src/silk/docs/example/page.md')
+    const fallback = splitPage(await readFile(join(site, 'src/silk/docs/fallback/page.md'), 'utf8'))
+    assert.equal(fallback.metadata.title, 'fallback')
+    await writeFile(join(stage, 'example.md'), '# [`Second`](/silk/docs/example/)\n')
+    await importCollection('silk', stage, site)
+    const inferred = splitPage(await readFile(file, 'utf8'))
+    assert.equal(Object.hasOwn(inferred.metadata, 'title'), false)
+    assert.equal(titleFromMarkdown(inferred.body), 'Second')
+    await writeFile(file, pageText({ ...inferred.metadata, title: 'Editorial `override`', redirectFrom: ['/old/'] }, inferred.body))
+    await writeFile(join(stage, 'example.md'), '# Third\n')
+    await importCollection('silk', stage, site)
+    const overridden = splitPage(await readFile(file, 'utf8'))
+    assert.equal(overridden.metadata.title, 'Editorial `override`')
+    assert.deepEqual(overridden.metadata.redirectFrom, ['/old/'])
+    assert.equal(titleFromMarkdown(overridden.body), 'Third')
+    for (const title of ['', '   ', null, 42]) {
+      const invalid = pageText({ ...overridden.metadata, title }, overridden.body)
+      await writeFile(file, invalid)
+      await assert.rejects(importCollection('silk', stage, site), /Invalid explicit title/)
+      assert.equal(await readFile(file, 'utf8'), invalid)
+    }
+  } finally {
+    await rm(site, { recursive: true, force: true })
+  }
+})
+
 test('fence protection handles longer closing delimiters and indented code', () => {
   for (const source of [
     '```js\n// Works today\nconst t = "{{ foo }}"\n````\n',
@@ -135,7 +172,7 @@ test('fence protection handles longer closing delimiters and indented code', () 
     assert.equal(publicContent(source, 'silk', 'language/example.md'), source)
 })
 test('public reference links are idempotent and leave existing links and fences intact', async () => {
-  const { linkReferences } = await import('../tools/migration/references.ts')
+  const { linkReferences } = await import('../tools/ingestion/references.ts')
   const catalog = [
     { collection: 'silk' as const, id: 'std/io', title: '`std::io`' },
   ]
@@ -171,7 +208,9 @@ test('absolute raw Markdown URLs resolve across collections and keep fragments',
 test('refreshed linked API headings produce plain titles and new pages can reference each other', async () => {
   const site = await mkdtemp(join(tmpdir(), 'oro-import-headings-'))
   try {
-    await mkdir(join(site, 'src'), { recursive: true })
+    const wiki = join(site, 'src/silk/wiki/page.md')
+    await mkdir(join(wiki, '..'), { recursive: true })
+    await writeFile(wiki, pageText({ docsCollection: 'silkWiki', sourcePath: 'start.md' }, '# [`Wiki API`](/silk/wiki/)\n'))
     const stage = join(site, 'staged/std')
     await mkdir(stage, { recursive: true })
     await writeFile(
@@ -180,13 +219,15 @@ test('refreshed linked API headings produce plain titles and new pages can refer
     )
     await writeFile(
       join(stage, 'beta.md'),
-      '# `std::beta`\n\nUse `std::alpha`.\n',
+      '# `std::beta`\n\nUse `std::alpha` and `Wiki API`.\n',
     )
     await importCollection('silk', join(site, 'staged'), site)
     const file = join(site, 'src/silk/docs/std/alpha/page.md')
     const first = await readFile(file, 'utf8')
-    assert.equal(splitPage(first).metadata.title, 'std::alpha')
+    assert.equal(Object.hasOwn(splitPage(first).metadata, 'title'), false)
+    assert.equal(titleFromMarkdown(splitPage(first).body), 'std::alpha')
     assert.ok(first.includes('[`std::beta`](/silk/docs/std/beta/)'))
+    assert.ok((await readFile(join(site, 'src/silk/docs/std/beta/page.md'), 'utf8')).includes('[`Wiki API`](/silk/wiki/)'))
     await importCollection('silk', join(site, 'staged'), site)
     assert.equal(await readFile(file, 'utf8'), first)
   } finally {

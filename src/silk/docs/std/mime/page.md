@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::mime"
 description: "std::mime maps file names, extensions, and content-type strings to MIME metadata suitable for HTTP responses, file indexing tools, and package publication helpers. Its shape is influenced by the local"
 docsCollection: "silk"
 section: "std"

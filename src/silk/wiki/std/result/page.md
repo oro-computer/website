@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::result"
 description: "std::result standardizes the common “success or error” return shape as Result(T, E) so APIs across std:: compose cleanly."
 docsCollection: "silkWiki"
 section: "std"

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::runtime::posix::io"
 description: "Source: std/runtime/posix/io.slk"
 docsCollection: "silk"
 section: "std"

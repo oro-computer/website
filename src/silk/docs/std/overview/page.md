@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Standard Library Overview (std::)"
 description: "The docs/std/ directory specifies the intended API and structure. A minimal in-tree stdlib source tree also exists under std/ (used by the toolchain to satisfy import std::...;)."
 docsCollection: "silk"
 section: "std"

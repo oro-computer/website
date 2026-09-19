@@ -1,22 +1,27 @@
-export default [
-  {
-    outputName: 'silk/docs/guides/toy-logger-module/index.html',
-    vars: {
-      layout: 'redirect',
-      title: 'Practical Logger Module Walkthrough',
-      description: 'This guide has moved.',
-      redirect: '/silk/docs/guides/practical-logger-module/',
-    },
-    children: '',
+import type { DataDeps, PagesForLayout } from '@domstack/static/types.js'
+import type globalVars from './globals/global.vars.ts'
+import type {} from './layouts/registry.ts'
+import type { DocsData } from '#lib/docs.ts'
+import { redirectOutputName } from '#lib/redirects.ts'
+
+type RedirectData = Pick<DocsData, 'redirects'>
+export const dataDeps = ['redirects'] satisfies DataDeps<RedirectData>
+
+const redirects: PagesForLayout<
+  'redirect',
+  { title: string; description: string; redirect: string },
+  typeof globalVars,
+  RedirectData,
+  Record<string, never>
+> = ({ data }) => data.redirects.map(({ from, to }) => ({
+  outputName: redirectOutputName(from),
+  vars: {
+    layout: 'redirect',
+    title: 'Redirecting…',
+    description: 'This page has moved.',
+    redirect: to,
   },
-  {
-    outputName: 'silk/docs/spec/2026/index.html',
-    vars: {
-      layout: 'redirect',
-      title: 'Silk Specification (2026)',
-      description: 'The Silk language specification.',
-      redirect: '/silk/spec/2026/',
-    },
-    children: '',
-  },
-]
+  children: '',
+}))
+
+export default redirects

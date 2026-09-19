@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "sage:uuid"
 description: "sage:uuid provides explicit UUID helper functions."
 docsCollection: "sage"
 section: "javascript"

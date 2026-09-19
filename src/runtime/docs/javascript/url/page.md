@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:url"
 description: "oro:url exposes the WHATWG URL implementation used by the runtime."
 docsCollection: "runtime"
 section: "javascript"

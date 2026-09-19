@@ -1,4 +1,6 @@
-export default function defineSilk(hljs) {
+import type { HLJSApi, Language, Mode } from 'highlight.js'
+
+export default function defineSilk(hljs: HLJSApi): Language {
     const KEYWORDS = {
       keyword:
         "package module import from attr export public private default const let var mut move fn c_fn test theory struct extends enum type error interface impl using as is raw pure async task region with new sizeof alignof offsetof typename asm ext where if else match while for in loop return panic break continue assert await yield",
@@ -103,7 +105,7 @@ export default function defineSilk(hljs) {
       relevance: 0,
     };
 
-    const DECL_IMPL = {
+    const DECL_IMPL: Mode = {
       variants: [
         {
           match: [/\bimpl\b/, /\s+/, QUALIFIED_NAME, /\s+/, /\bas\b/, /\s+/, QUALIFIED_NAME],

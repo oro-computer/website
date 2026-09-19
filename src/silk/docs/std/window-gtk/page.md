@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::window::gtk"
 description: "std::window::gtk is the GTK-specific facade for applications that want to select the Linux GTK provider explicitly while still using the portable std::window types."
 docsCollection: "silk"
 section: "std"

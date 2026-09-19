@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Configuration overview"
 description: "Oro Runtime projects are configured with a file named oro.toml (TOML) in the project root."
 docsCollection: "runtime"
 section: "config"

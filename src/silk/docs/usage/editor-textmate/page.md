@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "TextMate Grammar (tmLanguage)"
 description: "The Silk compiler repository ships a TextMate grammar for Silk under textmate/silk.tmLanguage.json. It provides syntax highlighting for editors that consume tmLanguage grammars (TextMate, VS Code, Sub"
 docsCollection: "silk"
 section: "usage"

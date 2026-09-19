@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Boolean Literals"
 description: "Boolean literals are the two built-in logical values:"
 docsCollection: "silk"
 section: "language"

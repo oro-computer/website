@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "while Loop"
 description: "The while loop repeatedly executes a block while a boolean condition holds."
 docsCollection: "silk"
 section: "language"

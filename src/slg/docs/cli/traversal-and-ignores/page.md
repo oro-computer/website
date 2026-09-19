@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Traversal and ignores"
 description: "This page documents exactly what slg walks, skips, and re-enables."
 docsCollection: "slg"
 section: "cli"

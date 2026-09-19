@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "[silk-targets(1)](?p=man/silk-targets.1) - Inspect Target Capabilities"
 description: "NOTE: This is the Markdown source for the eventual man 1 page for silk targets. The roff-formatted manpage should be generated from this content."
 docsCollection: "silk"
 section: "man"

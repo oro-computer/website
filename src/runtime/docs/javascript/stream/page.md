@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:stream"
 description: "oro:stream exposes Node-style streams, Web streams, and pipeline helpers."
 docsCollection: "runtime"
 section: "javascript"

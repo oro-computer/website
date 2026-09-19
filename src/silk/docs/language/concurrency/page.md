@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Concurrency"
 description: "Concurrency in Silk is built around two orthogonal function modifiers:"
 docsCollection: "silk"
 section: "language"

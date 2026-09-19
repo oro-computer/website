@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::process"
 description: "(hosted POSIX baseline)."
 docsCollection: "silk"
 section: "std"

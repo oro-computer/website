@@ -1,4 +1,6 @@
-export default function defineToml(hljs) {
+import type { HLJSApi, Language } from 'highlight.js'
+
+export default function defineToml(hljs: HLJSApi): Language {
     const COMMENT = hljs.COMMENT("#", "$", { relevance: 0 });
 
     const BASIC_STRING = {

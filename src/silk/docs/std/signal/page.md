@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::signal"
 description: "std::signal provides a small, pollable signal-watching surface intended for terminal/TUI programs."
 docsCollection: "silk"
 section: "std"

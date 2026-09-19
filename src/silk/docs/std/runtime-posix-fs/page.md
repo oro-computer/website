@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::runtime::posix::fs"
 description: "Source: std/runtime/posix/fs.slk"
 docsCollection: "silk"
 section: "std"

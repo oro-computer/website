@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Cheat sheet"
 description: "If you want a fast, high-signal overview of Silk surface syntax, start with the canonical cheat sheet:"
 docsCollection: "silkWiki"
 section: "language"

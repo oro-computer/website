@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::runtime::wasi::preopen"
 description: "Source: std/runtime/wasi/preopen.slk"
 docsCollection: "silk"
 section: "std"

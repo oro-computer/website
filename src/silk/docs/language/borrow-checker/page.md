@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Borrow Checking (Static Alias and Lifetime Safety)"
 description: "This document specifies Silk’s intended borrow-checking model for references."
 docsCollection: "silk"
 section: "language"

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Doc comments"
 description: "Silk supports both line and block doc comments. They attach to the following declaration (like many C/Rust-style doc systems)."
 docsCollection: "silkWiki"
 section: "language"

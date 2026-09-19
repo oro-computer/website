@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "From zero to first run"
 description: "This guide starts from an empty directory and gets you to a runnable Oro Runtime application using the installed toolchain. The goal is not just to boot a page, but to end with a project that already "
 docsCollection: "runtime"
 section: "guides"

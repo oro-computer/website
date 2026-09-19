@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:tls"
 description: "oro:tls exposes TLS sockets, servers, and certificate-pin helpers."
 docsCollection: "runtime"
 section: "javascript"

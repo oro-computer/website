@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::tls"
 description: "std::tls provides TLS client/server primitives for the hosted POSIX baseline using the built-in mbedTLS provider."
 docsCollection: "silk"
 section: "std"

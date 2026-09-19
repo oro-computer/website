@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "WebAssembly Back-End (wasm32 / wasm64)"
 description: "This document describes the shipped WebAssembly back-end, the target conventions it uses today, and the remaining ABI boundaries for wasm targets."
 docsCollection: "silk"
 section: "compiler"

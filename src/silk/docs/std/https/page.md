@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::https"
 description: "std::https provides a small HTTPS client/server connection API on top of std::tls (currently the built-in mbedTLS provider) and std::net::TCPStream, plus URL and stream convenience helpers."
 docsCollection: "silk"
 section: "std"

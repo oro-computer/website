@@ -1,4 +1,4 @@
-export function writeClipboard(text) {
+export function writeClipboard(text: string | null | undefined): Promise<boolean> {
     const value = String(text ?? "");
     if (!value) return Promise.resolve(false);
 

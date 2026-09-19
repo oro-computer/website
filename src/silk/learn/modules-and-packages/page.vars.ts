@@ -1,5 +1,7 @@
-export default {
-  "layout": "learn",
+import type { CheckedPageVars } from '#lib/page-vars.ts'
+
+const vars = {
+  "layout": "learn" as const,
   "title": "Modules and Packages · Learn Silk",
   "description": "Chapter 3 of Learn Silk: create a package root, export a small module, and import it from a downstream program.",
   "bodyClass": "site-dark product-page learn-page learn-lesson-page silk-learn-page",
@@ -22,3 +24,5 @@ export default {
     "position": "3 / 5"
   }
 }
+
+export default vars satisfies CheckedPageVars<typeof vars>

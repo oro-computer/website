@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:fetch"
 description: "oro:fetch exposes the runtime fetch stack and standard request/response primitives."
 docsCollection: "runtime"
 section: "javascript"

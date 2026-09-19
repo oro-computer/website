@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::uuid"
 description: "std::uuid provides UUID primitives (parsing, formatting, and variants)."
 docsCollection: "silkWiki"
 section: "std"

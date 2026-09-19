@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Regions"
 description: "Regions provide a fixed-size, statically allocated block of memory that can be used as an allocation context for new."
 docsCollection: "silk"
 section: "language"

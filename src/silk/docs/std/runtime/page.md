@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::runtime"
 description: "std::runtime defines a runtime interface layer that sits underneath the rest of the standard library."
 docsCollection: "silk"
 section: "std"

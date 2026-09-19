@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::stack"
 description: "This module provides stack-oriented wrappers over std::queue’s deque core."
 docsCollection: "silk"
 section: "std"

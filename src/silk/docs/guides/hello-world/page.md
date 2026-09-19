@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Hello world"
 description: "This page teaches the Silk “shape of a program”: explicit imports, a normal main, and a workflow that makes it cheap to iterate."
 docsCollection: "silk"
 section: "guides"

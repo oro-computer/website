@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::ffi::c (C FFI helpers)"
 description: "This module provides small, explicit helpers for interoperating with C APIs from Silk via ext declarations."
 docsCollection: "silk"
 section: "std"

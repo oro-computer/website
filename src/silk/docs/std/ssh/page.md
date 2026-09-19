@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::ssh"
 description: "std::ssh is the ergonomic stdlib entrypoint for Silk's hosted SSH client surface. It forwards the current libssh2-backed implementation that lives in std::ssh2, so downstream code can import std::ssh "
 docsCollection: "silk"
 section: "std"

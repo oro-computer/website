@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "[silk(7)](?p=man/silk.7) — Silk Toolchain Overview"
 description: "NOTE: This is the Markdown source for the eventual man 7 page for Silk. The roff-formatted manpage should be generated from this content."
 docsCollection: "silk"
 section: "man"

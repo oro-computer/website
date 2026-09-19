@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Varargs (Variable Arguments)"
 description: "Silk supports declaring functions that accept a variable number of trailing arguments (“varargs”). This is used heavily by std::io::print / std::io::println for formatted output."
 docsCollection: "silk"
 section: "language"

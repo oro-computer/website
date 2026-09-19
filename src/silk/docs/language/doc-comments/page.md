@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Silkdoc (Documentation Comments)"
 description: "This document specifies Silkdoc, Silk’s documentation-comment format. Silkdoc comments are intended for tools (documentation generators, editors, and the language server). They do not affect program s"
 docsCollection: "silk"
 section: "language"

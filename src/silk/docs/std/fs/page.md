@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::fs"
 description: "This is the canonical module doc for std::fs."
 docsCollection: "silk"
 section: "std"

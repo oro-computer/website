@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Build Modules (build.slk)"
 description: "This document specifies Silk’s build module concept: a package-local Silk module named build.slk that can generate a package build plan at build time."
 docsCollection: "silk"
 section: "compiler"
