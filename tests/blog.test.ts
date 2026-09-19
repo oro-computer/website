@@ -113,7 +113,7 @@ test('native drafts stay in preview summaries but never enter feeds; feed limit 
 })
 
 test('feed bodies resolve links, fragments and local assets against each canonical post URL', () => {
-  const post = sample({ html: '<a href="../other/?a=1&amp;b=2">Other</a><a href="#section">Section</a><img src="./image.png"><video poster="poster.jpg" src="/clip.mp4"></video><a href="mailto:info@oro.computer">Email</a><img src="data:image/png;base64,abc"><picture><source srcset="./small.png 480w, ./large.png 960w"><img src="./small.png" srcset="data:image/png;base64,abc 1x, ./large.png 2x"></picture>' })
+  const post = sample({ html: '<a href="../other/?a=1&amp;b=2">Other</a><a href="#section">Section</a><img src="./image.png"><video poster="poster.jpg" src="/clip.mp4"></video><a href="mailto:info@oro.computer">Email</a><img src="data:image/png;base64,abc"><picture><source srcset="./small.png 480w, ./large.png 960w"><img src="./small.png" srcset="data:image/png;base64,abc 1x, ./large.png 2x"></picture><img class="compact-srcset" srcset="./one.png,./two.png">' })
   const $ = load(feedHtml(post, site))
   assert.equal($('a').eq(0).attr('href'), site + '/blog/other/?a=1&b=2')
   assert.equal($('a').eq(1).attr('href'), site + '/blog/hello/#section')
@@ -124,6 +124,7 @@ test('feed bodies resolve links, fragments and local assets against each canonic
   assert.equal($('img').eq(1).attr('src'), 'data:image/png;base64,abc')
   assert.equal($('source').attr('srcset'), site + '/blog/hello/small.png 480w, ' + site + '/blog/hello/large.png 960w')
   assert.equal($('picture img').attr('srcset'), 'data:image/png;base64,abc 1x, ' + site + '/blog/hello/large.png 2x')
+  assert.equal($('.compact-srcset').attr('srcset'), site + '/blog/hello/one.png, ' + site + '/blog/hello/two.png')
 })
 
 test('JSON Feed 1.1 and Atom preserve escaped metadata, full content, updates and stable IDs', () => {

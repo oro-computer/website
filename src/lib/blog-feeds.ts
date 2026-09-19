@@ -3,18 +3,20 @@ import jsonfeedToAtom from 'jsonfeed-to-atom'
 import { json } from '#lib/artifacts.ts'
 import { projectBlog, type BlogPost } from '#lib/blog.ts'
 
-// URLs in srcset may contain commas (notably data URLs), so split descriptors
-// only after consuming the URL token, following the HTML candidate syntax.
+// URLs in srcset may contain commas (notably data URLs), while ordinary
+// candidates may be comma-separated without whitespace. Keep data URLs intact
+// but let commas delimit every other URL token.
 function absoluteSrcset(value: string, base: URL): string {
   const candidates: string[] = []
   let rest = value
   while (rest.length) {
     rest = rest.replace(/^[\t\n\f\r ,]+/, '')
-    const token = /^[^\t\n\f\r ]+/.exec(rest)?.[0]
+    const dataUrl = /^data:/i.test(rest)
+    const token = (dataUrl ? /^[^\t\n\f\r ]+/ : /^[^\t\n\f\r ,]+/).exec(rest)?.[0]
     if (!token) break
     rest = rest.slice(token.length)
     let descriptors = ''
-    if (!token.endsWith(',')) {
+    if (dataUrl || !rest.startsWith(',')) {
       let depth = 0
       let end = 0
       for (; end < rest.length; end++) {
@@ -24,8 +26,10 @@ function absoluteSrcset(value: string, base: URL): string {
       }
       descriptors = rest.slice(0, end).trim()
       rest = rest.slice(end + 1)
+    } else {
+      rest = rest.slice(1)
     }
-    candidates.push(new URL(token.replace(/,+$/, ''), base).href + (descriptors ? ` ${descriptors}` : ''))
+    candidates.push(new URL(token, base).href + (descriptors ? ` ${descriptors}` : ''))
   }
   return candidates.join(', ')
 }
