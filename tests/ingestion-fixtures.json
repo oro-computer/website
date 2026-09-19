@@ -1,0 +1,143 @@
+{
+  "cases": [
+    {
+      "rel": "std/sample.md",
+      "path": "/fixture/std/sample.md",
+      "kind": "docs",
+      "input": "# Reference (Current)\n\nStatus: **Partially implemented**. The repository has current supported contexts.\nWorks today: prose\n## Syntax (Selected)\n## Examples (Works today): sample\n## Works today: another\n## What works today (native)\nexamples labeled “Works today”\nexport const region global_arena; const region arena; with arena; from arena; arena[0]; `arena`; `global_arena`\n## Implementation Status\nImplementation status (native): in progress\nInitial Implemented Subset; current compiler subset; active expansion; Partially implemented\nStatus and Future Work\n## Notes and Limitations\n## Current API (native)\n## Design Goals\nKeep design notes.\n## Tests\nRemove test prose.\n### Nested tests\nAlso removed.\n## Arenas\nRemoved arena prose.\n## Surface Syntax\nThe repository, the repository, This repository, this repository.\n`this repository` repo dependency workflow; what works today.\n`STATUS.md` (implementation status) (tracked in `PLAN.md`)\n- End-to-end support snapshot: `STATUS.md`\n- Implemented-subset notes: PLAN.md\n- Relevant fixtures: useful and `STATUS.md`\nStatus: implemented for the current front-end + native backend subset.\nSee `?p=std/runtime`, ?p=docs/language/README and `silk` (1), `std::io` (3).\nSee [docs/std/runtime-event-loop.md](old), docs/std/foo.md, `docs/language/mutability.md`.\nhttps://oro.computer/silk/docs/?p=docs/start https://oro.computer/silk/wiki/?p=wiki/start\n`?p=...` docs/usage/tutorials/README.md ?p=man/my-app.7 docs/std/foo-bar.md\n## Silk Proposal Process (TC39-Inspired)\nRemove proposal.\n## Exported API\nchecker.checkModuleSetWithImports\nCLI output: `silk` CLI and `silk` (1) — Silk Language Compiler (`silk --version`)\n## Current Scope\nMVP initial std wrapper current snapshot.\n",
+      "expected": "# Reference\n\nThe Silk compiler repository has supported contexts.\nSupported forms: prose\n## Syntax\n## Examples: sample\n## Example: another\n## Supported forms\nexamples labeled “Example”\nexport const region global_region_buf; const region region_buf; with region_buf; from region_buf; region_buf[0]; `region_buf`; `global_region_buf`\n## Notes\navailable\nInitial Supported forms; current implementation; current module surface; Implemented\nStatus and Future Work\n## Considerations\n## Exported API\n## Surface Syntax\nThe Silk compiler repository, the Silk compiler repository, The Silk compiler repository, the Silk compiler repository.\n`this repository` Silk compiler repository’s vendored dependency workflow; current implementation notes.\n[implementation status](?p=compiler/implementation-status)\n- End-to-end support snapshot: [implementation status](?p=compiler/implementation-status)\n- Notes: PLAN.md\n- Relevant fixtures: useful and [implementation status](?p=compiler/implementation-status)\nimplemented for the current front-end + native backend subset.\nSee [runtime](?p=std/runtime), [start](?p=start) and [`silk(1)`](?p=man/silk.1), [`std::io(3)`](?p=std/io).\nSee [runtime](?p=std/runtime), docs/std/foo.md, [mutability](?p=language/mutability).\n[start](?p=start) wiki/wiki/?p=start\ndocs links [start](?p=start) ?p=man/my-app.7 docs/std/foo-bar.md\n## Silk Proposal Process (TC39-Inspired)\nRemove proposal.\n## Exported API\nchecker.checkModuleSetWithImports\nCLI output: `silk` CLI and [`silk(1)`](?p=man/silk.1) — Silk Language Compiler (`silk --version`)\n## Considerations\nbaseline stdlib wrapper current implementation.\n\n## Design goals\nKeep design notes.\n"
+    },
+    {
+      "rel": "std/sample.md",
+      "path": "/fixture/std/sample.md",
+      "kind": "docs",
+      "input": "```silk\n// Works today: {{ literal }}  \nlet n = 1;\n```\n",
+      "expected": "```silk\n// Works today: {{ literal }}  \nlet n = 1;\n```\n"
+    },
+    {
+      "rel": "std/sample.md",
+      "path": "/fixture/std/sample.md",
+      "kind": "docs",
+      "input": "  ~~~~silk\nStatus: **private**.\n~~~\n  ~~~~~\n",
+      "expected": "  ~~~~silk\nStatus: **private**.\n~~~\n  ~~~~~\n"
+    },
+    {
+      "rel": "std/sample.md",
+      "path": "/fixture/std/sample.md",
+      "kind": "docs",
+      "input": "````md\n```silk\nthis repository\n```\n````\n",
+      "expected": "````md\n```silk\nthis repository\n```\n````\n"
+    },
+    {
+      "rel": "std/sample.md",
+      "path": "/fixture/std/sample.md",
+      "kind": "docs",
+      "input": "```silk\n// Works today: unclosed  ",
+      "expected": "```silk\n// Works today: unclosed  "
+    },
+    {
+      "rel": "std/sample.md",
+      "path": "/fixture/std/sample.md",
+      "kind": "docs",
+      "input": "    ```silk\nWorks today: indented\n    ```\n",
+      "expected": "    ```silk\nCurrent subset: indented\n    ```\n"
+    },
+    {
+      "rel": "std/sample.md",
+      "path": "/fixture/std/sample.md",
+      "kind": "docs",
+      "input": "```invalid`info\nWorks today: not a fence\n```\n",
+      "expected": "```invalid`info\nCurrent subset: not a fence\n```\n"
+    },
+    {
+      "rel": "language/flow-for.md",
+      "path": "/fixture/language/flow-for.md",
+      "kind": "docs",
+      "input": "## Design Goals\nKeep design notes.\n## Current Scope\nMVP initial std wrapper current snapshot.\n",
+      "expected": "## Model\nKeep design notes.\n## Current Scope\nMVP initial std wrapper current snapshot.\n"
+    },
+    {
+      "rel": "spec/2026.md",
+      "path": "/fixture/spec/2026.md",
+      "kind": "docs",
+      "input": "## Silk Proposal Process (TC39-Inspired)\nRemove proposal.\n## Exported API\nchecker.checkModuleSetWithImports\nCLI output: `silk` CLI and `silk` (1) — Silk Language Compiler (`silk --version`)\n",
+      "expected": "## Exported API\nthe module-set import helper\nCLI output: the `silk` CLI and [`silk(1)`](?p=man/silk.1) (`silk --version`)\n"
+    },
+    {
+      "rel": "compiler/vendored-deps.md",
+      "path": "/fixture/compiler/vendored-deps.md",
+      "kind": "docs",
+      "input": "# Built-In Dependencies\n",
+      "expected": "# Built-In Dependencies (Legacy Link)\n"
+    },
+    {
+      "rel": "wiki/reference.md",
+      "path": "/fixture/wiki/reference.md",
+      "kind": "wiki",
+      "input": "# Reference (Current)\n\nStatus: **Partially implemented**. The repository has current supported contexts.\nWorks today: prose\n## Syntax (Selected)\n## Examples (Works today): sample\n## Works today: another\n## What works today (native)\nexamples labeled “Works today”\nexport const region global_arena; const region arena; with arena; from arena; arena[0]; `arena`; `global_arena`\n## Implementation Status\nImplementation status (native): in progress\nInitial Implemented Subset; current compiler subset; active expansion; Partially implemented\nStatus and Future Work\n## Notes and Limitations\n## Current API (native)\n## Design Goals\nKeep design notes.\n## Tests\nRemove test prose.\n### Nested tests\nAlso removed.\n## Arenas\nRemoved arena prose.\n## Surface Syntax\nThe repository, the repository, This repository, this repository.\n`this repository` repo dependency workflow; what works today.\n`STATUS.md` (implementation status) (tracked in `PLAN.md`)\n- End-to-end support snapshot: `STATUS.md`\n- Implemented-subset notes: PLAN.md\n- Relevant fixtures: useful and `STATUS.md`\nStatus: implemented for the current front-end + native backend subset.\nSee `?p=std/runtime`, ?p=docs/language/README and `silk` (1), `std::io` (3).\nSee [docs/std/runtime-event-loop.md](old), docs/std/foo.md, `docs/language/mutability.md`.\nhttps://oro.computer/silk/docs/?p=docs/start https://oro.computer/silk/wiki/?p=wiki/start\n`?p=...` docs/usage/tutorials/README.md ?p=man/my-app.7 docs/std/foo-bar.md\n## Silk Proposal Process (TC39-Inspired)\nRemove proposal.\n## Exported API\nchecker.checkModuleSetWithImports\nCLI output: `silk` CLI and `silk` (1) — Silk Language Compiler (`silk --version`)\n## Current Scope\nMVP initial std wrapper current snapshot.\n",
+      "expected": "# Reference\n\nThe repository has supported contexts.\nSupported forms: prose\n## Syntax\n## Examples: sample\n## Example: another\n## Supported forms\nexamples labeled “Example”\nexport const region global_region_buf; const region region_buf; with region_buf; from region_buf; region_buf[0]; `region_buf`; `global_region_buf`\n## Notes\navailable\nInitial Supported forms; current implementation; current module surface; Implemented\nStatus and Future Work\n## Considerations\n## Exported API\n## Design Goals\nKeep design notes.\n## Tests\nRemove test prose.\n### Nested tests\nAlso removed.\n## Arenas\nRemoved arena prose.\n## Surface Syntax\nThe repository, the repository, This repository, this repository.\n`this repository` repo dependency workflow; what works today.\n (implementation status) (tracked in )\n- Fixtures: useful\nImplemented in the reference compiler (front-end + native backend subset).\nSee [runtime](?p=std/runtime), [start](?p=start) and [`silk(1)`](?p=man/silk.1), [`std::io(3)`](?p=std/io).\nSee [runtime](?p=std/runtime), docs/std/foo.md, [mutability](?p=language/mutability).\n[start](?p=start) wiki/wiki/?p=start\ndocs links [start](?p=start) ?p=man/my-app.7 docs/std/foo-bar.md\n## Silk Proposal Process (TC39-Inspired)\nRemove proposal.\n## Exported API\nchecker.checkModuleSetWithImports\nCLI output: `silk` CLI and [`silk(1)`](?p=man/silk.1) — Silk Language Compiler (`silk --version`)\n## Current Scope\nMVP initial std wrapper current snapshot.\n"
+    },
+    {
+      "rel": "wiki/reference.md",
+      "path": "/fixture/wiki/reference.md",
+      "kind": "wiki",
+      "input": "```silk\n// Works today: {{ literal }}  \nlet n = 1;\n```\n",
+      "expected": "```silk\n// Works today: {{ literal }}  \nlet n = 1;\n```\n"
+    },
+    {
+      "rel": "wiki/reference.md",
+      "path": "/fixture/wiki/reference.md",
+      "kind": "wiki",
+      "input": "  ~~~~silk\nStatus: **private**.\n~~~\n  ~~~~~\n",
+      "expected": "  ~~~~silk\nStatus: **private**.\n~~~\n  ~~~~~\n"
+    },
+    {
+      "rel": "wiki/reference.md",
+      "path": "/fixture/wiki/reference.md",
+      "kind": "wiki",
+      "input": "````md\n```silk\nthis repository\n```\n````\n",
+      "expected": "````md\n```silk\nthis repository\n```\n````\n"
+    },
+    {
+      "rel": "wiki/reference.md",
+      "path": "/fixture/wiki/reference.md",
+      "kind": "wiki",
+      "input": "```silk\n// Works today: unclosed  ",
+      "expected": "```silk\n// Works today: unclosed  "
+    },
+    {
+      "rel": "wiki/reference.md",
+      "path": "/fixture/wiki/reference.md",
+      "kind": "wiki",
+      "input": "    ```silk\nWorks today: indented\n    ```\n",
+      "expected": "    ```silk\nCurrent subset: indented\n    ```\n"
+    },
+    {
+      "rel": "wiki/reference.md",
+      "path": "/fixture/wiki/reference.md",
+      "kind": "wiki",
+      "input": "```invalid`info\nWorks today: not a fence\n```\n",
+      "expected": "```invalid`info\nCurrent subset: not a fence\n```\n"
+    }
+  ],
+  "curated": [
+    {
+      "input": "# Curated\n\nKeep prose.\n",
+      "declarations": "declare module 'oro:application' {\n  export function ping(): void;\n}\n",
+      "expected": "# Curated\n\nKeep prose.\n\n## API reference\n\n<!-- GENERATED: ORO_API_REFERENCE_START -->\n\n### Module specifiers\n\n```text\noro:application\n```\n\n### TypeScript declarations\n\nThese declarations are generated from the runtime's published TypeScript surface.\n\n#### `oro:application`\n\n```ts\ndeclare module 'oro:application' {\n  export function ping(): void;\n}\n```\n\n<!-- GENERATED: ORO_API_REFERENCE_END -->\n\n## See also\n\n- [JavaScript APIs overview](?p=javascript/overview)\n- [All module specifiers](?p=javascript/all-modules)\n",
+      "secondExpected": "# Curated\n\nKeep prose.\n\n## API reference\n\n<!-- GENERATED: ORO_API_REFERENCE_START -->\n\n### Module specifiers\n\n```text\noro:application\n```\n\n### TypeScript declarations\n\nThese declarations are generated from the runtime's published TypeScript surface.\n\n#### `oro:application`\n\n```ts\ndeclare module 'oro:application' {\n  export function ping(): void;\n}\n```\n\n<!-- GENERATED: ORO_API_REFERENCE_END -->\n## See also\n\n- [JavaScript APIs overview](?p=javascript/overview)\n- [All module specifiers](?p=javascript/all-modules)\n"
+    },
+    {
+      "input": "# Curated\n\n## API reference\n\n<!-- GENERATED: ORO_API_REFERENCE_START -->\nOld API\n<!-- GENERATED: ORO_API_REFERENCE_END -->\n\nKeep footer.\n",
+      "declarations": "declare module 'oro:application' {\n  export function ping(): void;\n}\n",
+      "expected": "# Curated\n\n## API reference\n\n<!-- GENERATED: ORO_API_REFERENCE_START -->\n\n### Module specifiers\n\n```text\noro:application\n```\n\n### TypeScript declarations\n\nThese declarations are generated from the runtime's published TypeScript surface.\n\n#### `oro:application`\n\n```ts\ndeclare module 'oro:application' {\n  export function ping(): void;\n}\n```\n\n<!-- GENERATED: ORO_API_REFERENCE_END -->\nKeep footer.\n\n## See also\n\n- [JavaScript APIs overview](?p=javascript/overview)\n- [All module specifiers](?p=javascript/all-modules)\n",
+      "secondExpected": "# Curated\n\n## API reference\n\n<!-- GENERATED: ORO_API_REFERENCE_START -->\n\n### Module specifiers\n\n```text\noro:application\n```\n\n### TypeScript declarations\n\nThese declarations are generated from the runtime's published TypeScript surface.\n\n#### `oro:application`\n\n```ts\ndeclare module 'oro:application' {\n  export function ping(): void;\n}\n```\n\n<!-- GENERATED: ORO_API_REFERENCE_END -->\nKeep footer.\n\n## See also\n\n- [JavaScript APIs overview](?p=javascript/overview)\n- [All module specifiers](?p=javascript/all-modules)\n"
+    },
+    {
+      "input": "# Curated\n\n<!-- GENERATED: ORO_API_REFERENCE_START -->\nOld\n<!-- GENERATED: ORO_API_REFERENCE_END -->\n\n## See also\n\nKeep links.\n",
+      "declarations": "declare module 'oro:application' {\n  export function ping(): void;\n}\n",
+      "expected": "# Curated\n\n## API reference\n\n<!-- GENERATED: ORO_API_REFERENCE_START -->\n\n### Module specifiers\n\n```text\noro:application\n```\n\n### TypeScript declarations\n\nThese declarations are generated from the runtime's published TypeScript surface.\n\n#### `oro:application`\n\n```ts\ndeclare module 'oro:application' {\n  export function ping(): void;\n}\n```\n\n<!-- GENERATED: ORO_API_REFERENCE_END -->\n## See also\n\nKeep links.\n",
+      "secondExpected": "# Curated\n\n## API reference\n\n<!-- GENERATED: ORO_API_REFERENCE_START -->\n\n### Module specifiers\n\n```text\noro:application\n```\n\n### TypeScript declarations\n\nThese declarations are generated from the runtime's published TypeScript surface.\n\n#### `oro:application`\n\n```ts\ndeclare module 'oro:application' {\n  export function ping(): void;\n}\n```\n\n<!-- GENERATED: ORO_API_REFERENCE_END -->\n## See also\n\nKeep links.\n"
+    }
+  ]
+}

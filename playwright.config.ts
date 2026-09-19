@@ -9,7 +9,7 @@ export default defineConfig({
       : {},
   },
   webServer: {
-    command: 'python3 -m http.server 9877 --bind 127.0.0.1 --directory public',
+    command: 'node tools/serve-output.ts',
     url: 'http://127.0.0.1:9877',
     reuseExistingServer: !process.env.CI,
   },
