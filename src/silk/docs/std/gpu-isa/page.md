@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::gpu::isa"
 description: "std::gpu::isa is the typed Silk spelling of the initial dependency-light AMDGPU instruction subset. It exists for kernel bring-up while ordinary Silk expressions are connected to the general GPU selec"
 docsCollection: "silk"
 section: "std"

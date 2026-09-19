@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "String literals"
 description: "string is Silk’s built-in UTF‑8 byte sequence type. String literals write a string value directly in source code."
 docsCollection: "silkWiki"
 section: "language"

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Syntax tour"
 description: "The canonical syntax tour is a soup-to-nuts walkthrough of Silk surface syntax, with many examples and cross-links:"
 docsCollection: "silkWiki"
 section: "language"

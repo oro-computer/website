@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:vm"
 description: "oro:vm runs JavaScript in isolated runtime contexts and manages context windows and workers."
 docsCollection: "runtime"
 section: "javascript"

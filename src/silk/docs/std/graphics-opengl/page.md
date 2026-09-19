@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::graphics::opengl"
 description: "Source: std/graphics/opengl.slk"
 docsCollection: "silk"
 section: "std"

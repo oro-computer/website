@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "virtnosis-scan-report(7)"
 description: "virtnosis-scan-report — output model and reporting semantics for Virtnosis scans"
 docsCollection: "virtnosis"
 section: "man"

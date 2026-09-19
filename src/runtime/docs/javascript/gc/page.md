@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:gc"
 description: "oro:gc lets you register finalizers and control object retention hooks."
 docsCollection: "runtime"
 section: "javascript"

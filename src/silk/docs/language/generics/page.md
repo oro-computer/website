@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Generics (Monomorphized)"
 description: "This document specifies Silk’s parameterized type and declaration syntax."
 docsCollection: "silk"
 section: "language"

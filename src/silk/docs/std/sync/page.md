@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::sync"
 description: "This module provides a small hosted baseline for synchronization primitives used by the current task lowering on linux/x86_64."
 docsCollection: "silk"
 section: "std"

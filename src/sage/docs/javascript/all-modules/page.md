@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "All module specifiers"
 description: "Public, stable module specifiers:"
 docsCollection: "sage"
 section: "javascript"

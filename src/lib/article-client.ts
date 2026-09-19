@@ -1,4 +1,4 @@
-import { writeClipboard } from './clipboard.js'
+import { writeClipboard } from './clipboard.ts'
 export function enhanceArticle(app: HTMLElement): void {
   for (const pre of app.querySelectorAll('pre')) {
     const code = pre.querySelector('code')

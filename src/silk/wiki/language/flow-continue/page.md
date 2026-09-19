@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "continue"
 description: "continue; skips the remainder of the current loop body and advances to the next iteration."
 docsCollection: "silkWiki"
 section: "language"

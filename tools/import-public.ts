@@ -1,14 +1,19 @@
-import { linkReferences, type Reference } from './migration/references.ts'
+import { linkReferences, type Reference } from './ingestion/references.ts'
 /** Import a complete staged collection. Invoked by the manual Silk/Runtime tools. */
 import { readFile, readdir, writeFile, mkdir, unlink } from 'node:fs/promises'
 import { load as parseYaml } from 'js-yaml'
 import { resolve, join, dirname } from 'node:path'
-import { collections, docUrl, type Collection } from '../src/lib/collections.ts'
-import {
-  publicContent,
-  description,
-  title as pageTitle,
-} from './migration/content.ts'
+import { collections, docUrl, type Collection } from '#lib/collections.ts'
+import { publicContent, description } from './ingestion/content.ts'
+import { plainTitle, titleFromMarkdown } from '#lib/titles.ts'
+
+function explicitTitle(metadata: Record<string, any>, file: string): string | undefined {
+  if (!Object.hasOwn(metadata, 'title')) return undefined
+  if (typeof metadata.title !== 'string' || !plainTitle(metadata.title))
+    throw new Error(`Invalid explicit title in ${file}: expected nonempty visible text`)
+  return metadata.title
+}
+
 export function splitPage(text: string): {
   metadata: Record<string, any>
   body: string
@@ -55,7 +60,7 @@ export async function importCollection(
       catalog.push({
         collection: metadata.docsCollection,
         id: metadata.sourcePath.replace(/\.(md|txt)$/, ''),
-        title: metadata.title,
+        title: plainTitle(explicitTitle(metadata, path) ?? '') || titleFromMarkdown(body) || metadata.sourcePath.replace(/\.(md|txt)$/, ''),
       })
     if (metadata.docsCollection === collection)
       existing.set(metadata.sourcePath, { path, metadata, body, text })
@@ -71,10 +76,10 @@ export async function importCollection(
         const previous = existing.get(file)
         const unchanged = previous?.body === input
         const body = unchanged ? input : publicContent(input, collection, file)
-        const title = unchanged
-          ? previous.metadata.title
-          : pageTitle(body) || file.replace(/\.(md|txt)$/, '')
-        return { file, previous, unchanged, body, title }
+        const heading = titleFromMarkdown(body)
+        const override = explicitTitle(previous?.metadata || {}, file)
+        const title = override === undefined ? heading || file.replace(/\.(md|txt)$/, '') : plainTitle(override)
+        return { file, previous, unchanged, body, title, heading, override }
       }),
   )
   for (const entry of staged)
@@ -88,7 +93,7 @@ export async function importCollection(
     Math.max(0, ...[...existing.values()].map((e) => e.metadata.order)) + 1
   const pending: { path: string; text: string; previous?: string }[] = []
   const routes = new Set<string>()
-  for (const { file, previous, unchanged, body, title } of staged) {
+  for (const { file, previous, unchanged, body, title, heading, override } of staged) {
     const path =
       previous?.path || join(src, docUrl(collection, file), 'page.md')
     if (routes.has(path))
@@ -100,8 +105,7 @@ export async function importCollection(
     const text = linkReferences(body, collection, file, catalog)
     const metadata = {
       ...(previous?.metadata || {
-        layout: file === 'spec/2026.md' ? 'spec' : 'docs',
-        title,
+        layout: collection === 'silk' && file === 'spec/2026.md' ? 'spec' : 'docs',
         description: '',
         docsCollection: collection,
         section: file.includes('/') ? file.split('/')[0] : 'overview',
@@ -110,7 +114,7 @@ export async function importCollection(
         githubRepo: c.repo,
         githubRef: 'master',
       }),
-      title,
+      ...(override === undefined && !heading ? { title } : {}),
       description: description(text),
     }
     pending.push({

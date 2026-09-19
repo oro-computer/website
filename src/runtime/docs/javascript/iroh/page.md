@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:iroh"
 description: "oro:iroh exposes the runtime’s Iroh transport bindings for peer-to-peer connections and streams."
 docsCollection: "runtime"
 section: "javascript"

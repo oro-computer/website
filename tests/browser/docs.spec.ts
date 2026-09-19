@@ -27,9 +27,13 @@ test('legacy queries and aliases preserve fragments', async ({ page }) => {
   await expect(page).toHaveURL(/\/runtime\/docs\/guides\/hello-world\/#next$/)
   await page.goto('/silk/docs/?p=spec/2026#language-cheat-sheet')
   await expect(page).toHaveURL(/\/silk\/spec\/2026\/#language-cheat-sheet$/)
-  await page.goto('/silk/docs/guides/toy-logger-module/#main')
+  await page.goto('/silk/docs/guides/toy-logger-module/?ref=legacy#main')
   await expect(page).toHaveURL(
-    /\/silk\/docs\/guides\/practical-logger-module\/#main$/,
+    /\/silk\/docs\/guides\/practical-logger-module\/\?ref=legacy#main$/,
+  )
+  await page.goto('/silk/docs/spec/2026/?ref=legacy#language-cheat-sheet')
+  await expect(page).toHaveURL(
+    /\/silk\/spec\/2026\/\?ref=legacy#language-cheat-sheet$/,
   )
   await page.goto('/silk/wiki/?p=start#main')
   await expect(page).toHaveURL(/\/silk\/wiki\/#main$/)

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::abort_controller"
 description: "This is the canonical module doc for std::abort_controller."
 docsCollection: "silk"
 section: "std"

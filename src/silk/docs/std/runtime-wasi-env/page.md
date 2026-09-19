@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::runtime::wasi::env"
 description: "Source: std/runtime/wasi/env.slk"
 docsCollection: "silk"
 section: "std"

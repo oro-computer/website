@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Pager workflows"
 description: "sage is most useful when you treat it as a CLI tool first and a programmable runtime second. These patterns cover the common downstream workflows."
 docsCollection: "sage"
 section: "guides"

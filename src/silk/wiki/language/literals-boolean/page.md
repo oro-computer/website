@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Boolean literals"
 description: "Silk has the boolean type bool with literals true and false."
 docsCollection: "silkWiki"
 section: "language"

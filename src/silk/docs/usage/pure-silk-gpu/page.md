@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Pure-Silk CPU/GPU program"
 description: "The following workflow keeps application code entirely in Silk. main and ordinary functions compile for the host CPU; attr(device=gpu) functions are compiled into target GPU artifacts embedded in the "
 docsCollection: "silk"
 section: "usage"

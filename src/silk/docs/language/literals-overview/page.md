@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Literals Overview"
 description: "This document provides a high-level overview of literals in Silk, with details split into dedicated documents for each category."
 docsCollection: "silk"
 section: "language"

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Silk Language Server (LSP)"
 description: "This document specifies the current Language Server Protocol (LSP) implementation for Silk."
 docsCollection: "silk"
 section: "compiler"

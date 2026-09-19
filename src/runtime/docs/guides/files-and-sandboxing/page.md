@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Files and sandboxing"
 description: "Most serious applications need two kinds of file access:"
 docsCollection: "runtime"
 section: "guides"

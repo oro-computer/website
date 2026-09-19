@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Inputs and modes"
 description: "This page is the exact downstream input model for sage."
 docsCollection: "sage"
 section: "cli"

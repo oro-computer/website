@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Grammar"
 description: "grammar is the canonical “what the parser accepts” reference for Silk surface syntax."
 docsCollection: "silkWiki"
 section: "language"

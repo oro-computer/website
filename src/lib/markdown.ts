@@ -1,9 +1,9 @@
 import MarkdownIt from 'markdown-it'
 import alerts from 'markdown-it-github-alerts'
 import hljs, { type LanguageFn } from 'highlight.js'
-import silk from './silk.js'
-import toml from './toml.js'
-import zig from './zig.js'
+import silk from './silk.ts'
+import toml from './toml.ts'
+import zig from './zig.ts'
 for (const [name, language] of Object.entries({ silk, toml, zig }))
   hljs.registerLanguage(name, language as LanguageFn)
 // Match the previous marked renderer's anchor algorithm, including duplicate suffixes.
@@ -18,14 +18,16 @@ export function slug(text: string): string {
     )
     .replace(/\s/g, '-')
 }
+// Own the complete plugin set rather than inheriting DOMStack's defaults:
+// GitHub alerts and the legacy heading IDs are the site's compatibility contract.
+// Keep MarkdownIt's default tables/strikethrough, HTML and linkification; do not
+// add anchor, emoji, task-list or typography plugins that change existing output.
 export function markdown() {
   const md = new MarkdownIt({
     html: true,
     linkify: true,
     highlight(code, lang) {
-      return lang && hljs.getLanguage(lang)
-        ? hljs.highlight(code, { language: lang, ignoreIllegals: true }).value
-        : ''
+      return lang ? highlight(code, lang) || '' : ''
     },
   })
   md.use(alerts)

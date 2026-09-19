@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Development Guide"
 description: "This guide is for contributors working inside virtnosis/."
 docsCollection: "virtnosis"
 section: "reference"

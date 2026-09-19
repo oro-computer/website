@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::tar"
 description: "std::tar provides a portable, streaming tar reader/writer for building and inspecting tar archives without loading whole archives into memory."
 docsCollection: "silk"
 section: "std"

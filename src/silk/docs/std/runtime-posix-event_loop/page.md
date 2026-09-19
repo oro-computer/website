@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::runtime::posix::event_loop"
 description: "Source: std/runtime/posix/event_loop.slk"
 docsCollection: "silk"
 section: "std"

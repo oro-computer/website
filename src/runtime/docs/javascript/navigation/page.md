@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "oro:navigation"
 description: "oro:navigation surfaces the Navigation API state that the runtime makes available to application code."
 docsCollection: "runtime"
 section: "javascript"

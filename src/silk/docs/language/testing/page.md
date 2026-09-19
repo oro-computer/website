@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Testing"
 description: "This document specifies the initial language-level testing surface for Silk."
 docsCollection: "silk"
 section: "language"

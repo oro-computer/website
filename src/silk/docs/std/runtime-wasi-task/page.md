@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::runtime::wasi::task"
 description: "Source: std/runtime/wasi/task.slk"
 docsCollection: "silk"
 section: "std"

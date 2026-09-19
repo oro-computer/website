@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Duration Literals"
 description: "The Duration and Instant types have specialized literal support."
 docsCollection: "silk"
 section: "language"

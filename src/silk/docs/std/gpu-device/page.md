@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "std::gpu::device"
 description: "std::gpu::device is the semantic operation surface available inside attr(device=gpu) function bodies. Unlike std::gpu::isa, its API is expressed in terms of kernel parameters and work-item behavior ra"
 docsCollection: "silk"
 section: "std"

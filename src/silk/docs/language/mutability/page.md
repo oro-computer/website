@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Mutability"
 description: "Mutability in Silk is “safe by default”: values are immutable unless explicitly marked mutable under clear rules using the mut keyword."
 docsCollection: "silk"
 section: "language"

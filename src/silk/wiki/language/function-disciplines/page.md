@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Function disciplines (pure, async, task)"
 description: "Function modifiers declare constraints and concurrency behavior:"
 docsCollection: "silkWiki"
 section: "language"

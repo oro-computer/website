@@ -1,4 +1,6 @@
-export default function defineZig(hljs) {
+import type { HLJSApi, Language } from 'highlight.js'
+
+export default function defineZig(hljs: HLJSApi): Language {
     const KEYWORDS = {
       keyword:
         "addrspace align allowzero and anyframe anytype asm async await break catch comptime const continue defer else enum errdefer error export extern fn for if inline linksection noalias noinline nosuspend orelse packed pub resume return callconv struct suspend switch test threadlocal try union unreachable usingnamespace var volatile while",

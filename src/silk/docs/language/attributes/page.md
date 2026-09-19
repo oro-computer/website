@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Attributes (attr(...))"
 description: "Silk supports first-class attributes that can annotate declarations and can also be queried at compile time for conditional compilation."
 docsCollection: "silk"
 section: "language"

@@ -1,6 +1,5 @@
 ---
 layout: "docs"
-title: "Async Runtime (Hosted)"
 description: "Current host-build note:"
 docsCollection: "silk"
 section: "compiler"
