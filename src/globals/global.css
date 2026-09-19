@@ -3256,6 +3256,7 @@ body.site-dark::before {
 }
 
 body:not(.editorial-layout) .site-top {
+  padding-top: 24px;
   background: rgba(250, 248, 244, 0.92);
   border-bottom: 1px solid rgba(31, 31, 31, 0.08);
   box-shadow: none;

@@ -1133,7 +1133,7 @@
   .editorial-layout .site-top {
     position: sticky;
     top: 0;
-    padding-top: 0;
+    padding-top: 24px;
     background: rgba(250, 248, 244, 0.92);
     border-bottom: 1px solid rgba(31, 31, 31, 0.08);
     backdrop-filter: blur(16px);
