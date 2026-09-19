@@ -144,6 +144,74 @@ in `redirectFrom`. Manual content imports preserve existing page metadata,
 including aliases. The logger guide and specification now declare their old
 paths this way without changing their Markdown bodies or raw exports.
 
+## Blog
+
+The blog at `/blog/` lists posts newest first. Start and publish posts with:
+
+```sh
+npm run new-blogpost -- --author bret "Post title"
+npm run dev -- --drafts
+npm run publish-draft -- post-title
+# For a draft from an earlier year:
+npm run publish-draft -- 2025/post-title
+```
+
+The create command scaffolds `src/blog/<current-year>/<slug>/page.draft.md` and
+an `img/` directory. Replace the draft's summary and write the article before
+publishing. The publish command sets `publishDate` to now and installs `page.md`
+without overwriting an existing post, then removes the draft. It preserves the
+article body and metadata values, but normalizes YAML formatting/comments.
+
+You can also author Markdown posts and local images directly under
+`src/blog/<year>/<slug>/`, using `page.md` for a published post:
+
+```markdown
+---
+layout: blog
+description: "A short summary for the index and feeds."
+publishDate: "2026-09-18T12:00:00Z"
+author: bret
+---
+
+# Your post title
+
+Write the post here. Link local images with `./image.png`.
+```
+
+The H1 supplies the title, just like docs. Select an author from `src/lib/authors.ts`:
+`joe` (Joseph Werle), `bret` (Bret Comnes), or `oro` (Oro Computer, the default).
+Author names and profile links appear in bylines and both feeds. The create
+command accepts `--author joe` or `--author bret`; unknown IDs fail validation.
+`updatedDate` is optional and must not precede `publishDate`. Quote date values
+and include a timezone. Publication dates control ordering, not scheduling:
+future-dated published files are still public.
+
+Use `page.draft.md` while writing and preview with `npm run dev -- --drafts`.
+Normal builds omit draft pages. Drafts appear in the preview index but never in
+feeds; files and images in a draft directory are not private, so do not commit
+sensitive material. Rename to `page.md` to publish without resetting its date, or
+use the publish command to set it to now. The initial published post is
+`src/blog/2026/hello-world/page.md`.
+
+`/feed.json` (JSON Feed 1.1) and `/feed.xml` (Atom) contain the latest 20 published
+posts with full HTML, stable URL-based IDs, authors, and update dates. Feed links
+and image sources are absolute. Every HTML page advertises both feeds. Empty
+feeds are valid and deterministic; Atom uses the Unix epoch until a post exists.
+
+Blog data shares the incremental global-data index. Body edits refresh the post
+and feeds; the index subscribes only to summaries, and docs navigation is
+independent. Posts use `layout: blog`; the listing uses `blog-index`. Both inherit
+`root`, keeping site chrome shared. `src/blog/archives.pages.ts` generates each
+`/blog/<year>/` archive from the posts in that year directory, with no hand-authored
+index needed. Archives link from the main index and post breadcrumbs and appear
+in the sitemap. Publishing an older-year draft keeps it in its original year
+archive even when its publication date is newer. Removing the last post from a
+year removes that archive during watch builds.
+
+Every page has an **Edit this page** footer link to its source in GitHub, matching
+the repository browser/edit workflow. Generated redirect pages link to the
+source page that declares their alias, rather than a nonexistent output file.
+
 ## Refreshing upstream content
 
 Ingestion is separate from building and CI. These commands read explicit upstream

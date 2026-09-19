@@ -51,6 +51,7 @@ test('redirectFrom aliases follow source edits, moves and deletion in watch mode
     assert.equal($('header nav[aria-label="Primary navigation"]').length, 1)
     assert.equal($('body > main#main a[data-redirect]').length, 1)
     assert.equal($('body > footer.site-footer').length, 1)
+    assert.equal($('footer .page-edit').attr('href'), `https://github.com/oro-computer/website/blob/master/src${target}page.md`)
     assert.equal($('body > a.skip-link').attr('href'), '#main')
     assert.equal($('link[rel="canonical"]').attr('href'), `https://oro.computer${target}`)
     assert.equal($('meta[property="og:url"]').attr('content'), `https://oro.computer${target}`)
