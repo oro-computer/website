@@ -150,7 +150,7 @@ The blog at `/blog/` lists posts newest first. Start and publish posts with:
 
 ```sh
 npm run new-blogpost -- --author bret "Post title"
-npm run dev -- --drafts
+npm start -- --drafts
 npm run publish-draft -- post-title
 # For a draft from an earlier year:
 npm run publish-draft -- 2025/post-title
@@ -186,7 +186,7 @@ command accepts `--author joe` or `--author bret`; unknown IDs fail validation.
 and include a timezone. Publication dates control ordering, not scheduling:
 future-dated published files are still public.
 
-Use `page.draft.md` while writing and preview with `npm run dev -- --drafts`.
+Use `page.draft.md` while writing and preview with `npm start -- --drafts`.
 Normal builds omit draft pages. Drafts appear in the preview index but never in
 feeds; files and images in a draft directory are not private, so do not commit
 sensitive material. Rename to `page.md` to publish without resetting its date, or
