@@ -1,5 +1,6 @@
 import { html, render } from 'fragtml'
 import type { LayoutFunction } from '@domstack/static/types.js'
+import type {} from './root.layout.ts'
 import { names } from '#lib/navigation.ts'
 export const parentLayout = 'root'
 interface LearnVars {
@@ -44,3 +45,9 @@ const learn: LayoutFunction<LearnVars, string> = ({ children, vars: v }) => {
   return children.replace('<!-- learn:chapter-bar -->', bar)
 }
 export default learn
+
+declare module '@domstack/static/types.js' {
+  interface LayoutRegistry {
+    learn: typeof import('./learn.layout.ts') & { render: typeof learn }
+  }
+}

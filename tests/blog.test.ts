@@ -138,6 +138,8 @@ test('JSON Feed 1.1 and Atom preserve escaped metadata, full content, updates an
   assert.match(xml, /Hello &amp; &lt;Oro&gt;/)
   const $ = load(xml, { xml: true })
   assert.equal($('feed').attr('xmlns'), 'http://www.w3.org/2005/Atom')
+  assert.equal($('feed > id').text(), site + '/blog/')
+  assert.equal($('feed > link[rel="self"]').attr('href'), site + '/feed.xml')
   assert.equal($('feed > updated').text(), post.updatedDate)
   assert.equal($('entry > id').text(), site + post.url)
   assert.equal($('entry > title').text(), post.title)

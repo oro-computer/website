@@ -1,6 +1,6 @@
 import type { DataDeps, PagesForLayout } from '@domstack/static/types.js'
 import type globalVars from './globals/global.vars.ts'
-import type {} from './layouts/registry.ts'
+import type {} from './layouts/redirect.layout.ts'
 import type { DocsData } from '#lib/docs.ts'
 import { redirectOutputName } from '#lib/redirects.ts'
 

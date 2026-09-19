@@ -5,6 +5,7 @@ import { html, raw, render } from 'fragtml'
 import type { LayoutFunction } from '@domstack/static/types.js'
 import { header, footer } from '#lib/navigation.ts'
 import { collections, type Collection } from '#lib/collections.ts'
+
 interface RootVars {
   title: string
   siteUrl: string
@@ -20,6 +21,7 @@ interface RootVars {
   editSource?: string
   bodyAttrs?: { 'data-ask-ai'?: string | boolean }
 }
+
 const root: LayoutFunction<RootVars, string> = ({
   vars: v,
   children,
@@ -34,7 +36,9 @@ const root: LayoutFunction<RootVars, string> = ({
   const product = collection?.product || v.product || ''
   const title = collection
     ? `${plainTitle(v.title)} · ${v.layout === 'spec' ? 'Silk Spec' : collection.title} · ${v.siteName ?? 'Oro Computer'}`
-    : v.layout === 'blog' ? `${plainTitle(v.title)} · ${v.siteName ?? 'Oro Computer'}` : v.title
+    : v.layout === 'blog'
+      ? `${plainTitle(v.title)} · ${v.siteName ?? 'Oro Computer'}`
+      : v.title
   if (!collection) children = rootContent(children)
   const canonical = new URL(v.redirect || page.url, v.siteUrl).href
   return render(
@@ -50,9 +54,22 @@ const root: LayoutFunction<RootVars, string> = ({
           <meta property="og:title" content="${title}" />
           <meta property="og:description" content="${v.description || ''}" />
           <meta property="og:url" content="${canonical}" />
-          <meta property="og:type" content="${v.layout === 'blog' ? 'article' : 'website'}" />
-          <link rel="alternate" type="application/feed+json" title="Oro Computer Blog — JSON Feed" href="/feed.json" />
-          <link rel="alternate" type="application/atom+xml" title="Oro Computer Blog — Atom" href="/feed.xml" />
+          <meta
+            property="og:type"
+            content="${v.layout === 'blog' ? 'article' : 'website'}"
+          />
+          <link
+            rel="alternate"
+            type="application/feed+json"
+            title="Oro Computer Blog — JSON Feed"
+            href="/feed.json"
+          />
+          <link
+            rel="alternate"
+            type="application/atom+xml"
+            title="Oro Computer Blog — Atom"
+            href="/feed.xml"
+          />
           <meta
             property="og:image"
             content="${new URL('/docs/branding/assets/logo-full.png', v.siteUrl).href}"
@@ -70,9 +87,11 @@ const root: LayoutFunction<RootVars, string> = ({
             (url) => html`<script type="module" src="${url}"></script>`,
           )}
           ${v.redirect
-            ? html`<noscript
-                ><meta http-equiv="refresh" content="0;url=${v.redirect}"
-              /></noscript>`
+            ? html`
+                <noscript>
+                  <meta http-equiv="refresh" content="0;url=${v.redirect}" />
+                </noscript>
+              `
             : null}
         </head>
         <body
@@ -82,13 +101,29 @@ const root: LayoutFunction<RootVars, string> = ({
             : '')}"
           ${v.bodyAttrs?.['data-ask-ai'] ? html`data-ask-ai="true"` : null}
         >
-          <a class="skip-link" href="#main">Skip to content</a>${raw(
-            header(product, page.url, editorial),
-          )}${raw(children)}${raw(
-            footer(v.footerLabel || collection?.title || '', editorial, editUrl(v.editSource ?? page.generated?.pagesFile.pagesFile.relname ?? page.pageFile.relname)),
+          <a class="skip-link" href="#main">Skip to content</a>
+          ${raw(header(product, page.url, editorial))}
+          ${raw(children)}
+          ${raw(
+            footer(
+              v.footerLabel || collection?.title || '',
+              editorial,
+              editUrl(
+                v.editSource ??
+                page.generated?.pagesFile.pagesFile.relname ??
+                page.pageFile.relname,
+              ),
+            ),
           )}
         </body>
       </html>`,
   )
 }
+
 export default root
+
+declare module '@domstack/static/types.js' {
+  interface LayoutRegistry {
+    root: typeof import('./root.layout.ts') & { render: typeof root }
+  }
+}

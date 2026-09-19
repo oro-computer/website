@@ -1,6 +1,7 @@
 import { html, raw, render } from 'fragtml'
 import { article } from '#lib/rendering.ts'
 import type { DataDeps, LayoutFunction } from '@domstack/static/types.js'
+import type {} from './root.layout.ts'
 import {
   collections,
   sectionTitle,
@@ -123,3 +124,9 @@ const docsLayout: LayoutFunction<DocVars, string, string, NavigationData> = ({ v
   )
 }
 export default docsLayout
+
+declare module '@domstack/static/types.js' {
+  interface LayoutRegistry {
+    docs: typeof import('./docs.layout.ts') & { render: typeof docsLayout }
+  }
+}

@@ -1,5 +1,6 @@
 import { html, raw, render } from 'fragtml'
 import type { LayoutFunction } from '@domstack/static/types.js'
+import type {} from './root.layout.ts'
 import { article } from '#lib/rendering.ts'
 import { plainTitle } from '#lib/titles.ts'
 import { collections } from '#lib/collections.ts'
@@ -59,3 +60,9 @@ const spec: LayoutFunction<SpecVars, string> = ({ vars: v, children }) => {
   )
 }
 export default spec
+
+declare module '@domstack/static/types.js' {
+  interface LayoutRegistry {
+    spec: typeof import('./spec.layout.ts') & { render: typeof spec }
+  }
+}

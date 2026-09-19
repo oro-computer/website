@@ -1,4 +1,5 @@
 import { html, render } from 'fragtml'
+
 export const names: Record<string, string> = {
   runtime: 'Runtime',
   silk: 'Silk',
@@ -6,7 +7,12 @@ export const names: Record<string, string> = {
   sage: 'Sage',
   slg: 'slg',
 }
-export function header(product: string, route: string, wide: boolean): string {
+
+export function header(
+  product: string,
+  route: string,
+  wide: boolean,
+): string {
   const label = names[product]
   const sub = label
     ? [
@@ -29,7 +35,10 @@ export function header(product: string, route: string, wide: boolean): string {
       ]
     : []
   const activeSubnav = sub
-    .filter(([text, url]) => route === url || (text !== 'Overview' && route.startsWith(url)))
+    .filter(
+      ([text, url]) =>
+        route === url || (text !== 'Overview' && route.startsWith(url)),
+    )
     .sort((a, b) => b[1].length - a[1].length)[0]?.[1]
   return render(
     html`<header class="site-top" id="top">
@@ -87,7 +96,12 @@ export function header(product: string, route: string, wide: boolean): string {
     </header>`,
   )
 }
-export function footer(label: string, editorial: boolean, editHref: string): string {
+
+export function footer(
+  label: string,
+  editorial: boolean,
+  editHref: string,
+): string {
   return render(
     editorial
       ? html`<footer class="site-footer editorial-footer">
@@ -95,7 +109,10 @@ export function footer(label: string, editorial: boolean, editHref: string): str
             <span>Keep up to date</span
             ><a href="mailto:info@oro.computer">info@oro.computer</a>
           </div>
-          <div class="editorial-footer-links" aria-label="Oro links">
+          <div
+            class="editorial-footer-links"
+            aria-label="Oro links"
+          >
             <a href="https://github.com/oro-computer">github</a
             ><a href="https://github.com/oro-computer/runtime">runtime</a
             ><a href="mailto:contributors@oro.computer">contributors</a>

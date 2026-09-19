@@ -1,23 +1,72 @@
 import type { LayoutFunction } from '@domstack/static/types.js'
+import type {} from './root.layout.ts'
 import { html, raw, render } from 'fragtml'
-import { blogYear, formatBlogDate, validateBlogVars, type BlogPostVars } from '#lib/blog.ts'
+import {
+  blogYear,
+  formatBlogDate,
+  validateBlogVars,
+  type BlogPostVars,
+} from '#lib/blog.ts'
+
 export const parentLayout = 'root'
-export const vars = { bodyClass: 'site-dark blog-page', product: 'blog', footerLabel: 'Oro Computer Blog' }
-const layout: LayoutFunction<BlogPostVars, string> = async ({ vars, children, page }) => {
+export const vars = {
+  bodyClass: 'site-dark blog-page',
+  product: 'blog',
+  footerLabel: 'Oro Computer Blog',
+}
+
+const layout: LayoutFunction<BlogPostVars, string> = async ({
+  vars,
+  children,
+  page,
+}) => {
   const post = await validateBlogVars({ ...vars }, page.url)
   const year = blogYear(page.url)
-  return render(html`<main id="main" class="blog-main"><div class="blog-column"><article class="blog-article">
-    <header class="blog-article-meta">
-      <nav class="blog-breadcrumb" aria-label="Blog navigation"><a href="/blog/">Blog</a>${year ? html`<span aria-hidden="true"> / </span><a href="/blog/${year}/">${year}</a>` : null}</nav>
-      <h1 class="blog-title">${post.title}</h1>
-      <p class="blog-byline">
-        <span class="blog-authors">${post.authors.map(author => html`<a class="blog-author" rel="author" href="${author.url}"><img src="${author.avatar}" width="32" height="32" alt="" /><span>${author.name}</span></a>`)}</span>
-        <time datetime="${post.publishDate}">${formatBlogDate(post.publishDate)}</time>
-      </p>
-      ${post.updatedDate ? html`<p class="blog-updated">Updated <time datetime="${post.updatedDate}">${formatBlogDate(post.updatedDate)}</time></p>` : null}
-    </header>
-    <div class="prose blog-prose">${raw(children)}</div>
-    <footer class="blog-article-footer"><a href="/blog/">← Back to blog</a></footer>
-  </article></div></main>`)
+
+  return render(html`
+    <main id="main" class="blog-main">
+      <div class="blog-column">
+        <article class="blog-article">
+          <header class="blog-article-meta">
+            <nav class="blog-breadcrumb" aria-label="Blog navigation">
+              <a href="/blog/">Blog</a>${year
+                ? html`<span aria-hidden="true"> / </span><a href="/blog/${year}/">${year}</a>`
+                : null}
+            </nav>
+            <h1 class="blog-title">${post.title}</h1>
+            <p class="blog-byline">
+              <span class="blog-authors">
+                ${post.authors.map(author => html`
+                  <a class="blog-author" rel="author" href="${author.url}">
+                    <img src="${author.avatar}" width="32" height="32" alt="" />
+                    <span>${author.name}</span>
+                  </a>
+                `)}
+              </span>
+              <time datetime="${post.publishDate}">${formatBlogDate(post.publishDate)}</time>
+            </p>
+            ${post.updatedDate
+              ? html`
+                  <p class="blog-updated">
+                    Updated <time datetime="${post.updatedDate}">${formatBlogDate(post.updatedDate)}</time>
+                  </p>
+                `
+              : null}
+          </header>
+          <div class="prose blog-prose">${raw(children)}</div>
+          <footer class="blog-article-footer">
+            <a href="/blog/">← Back to blog</a>
+          </footer>
+        </article>
+      </div>
+    </main>
+  `)
 }
+
 export default layout
+
+declare module '@domstack/static/types.js' {
+  interface LayoutRegistry {
+    blog: typeof import('./blog.layout.ts') & { render: typeof layout }
+  }
+}

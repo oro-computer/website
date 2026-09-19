@@ -1,5 +1,6 @@
 import { html, render } from 'fragtml'
 import type { LayoutFunction } from '@domstack/static/types.js'
+import type {} from './root.layout.ts'
 export const parentLayout = 'root'
 const redirect: LayoutFunction<{ redirect: string }, string> = ({ vars }) =>
   render(
@@ -11,3 +12,9 @@ const redirect: LayoutFunction<{ redirect: string }, string> = ({ vars }) =>
     </main>`,
   )
 export default redirect
+
+declare module '@domstack/static/types.js' {
+  interface LayoutRegistry {
+    redirect: typeof import('./redirect.layout.ts') & { render: typeof redirect }
+  }
+}

@@ -1,5 +1,6 @@
 import { load } from 'cheerio'
-import { json, xmlEscape } from '#lib/artifacts.ts'
+import jsonfeedToAtom from 'jsonfeed-to-atom'
+import { json } from '#lib/artifacts.ts'
 import { projectBlog, type BlogPost } from '#lib/blog.ts'
 
 // URLs in srcset may contain commas (notably data URLs), so split descriptors
@@ -44,8 +45,8 @@ export function feedHtml(post: BlogPost, siteUrl: string): string {
   return $.html()
 }
 
-export function jsonFeed(posts: readonly BlogPost[], siteUrl: string): string {
-  return json({
+function feedData(posts: readonly BlogPost[], siteUrl: string) {
+  return {
     version: 'https://jsonfeed.org/version/1.1',
     title: 'Oro Computer Blog',
     home_page_url: new URL('/blog/', siteUrl).href,
@@ -58,34 +59,46 @@ export function jsonFeed(posts: readonly BlogPost[], siteUrl: string): string {
       content_html: feedHtml(post, siteUrl),
       date_published: post.publishDate,
       date_modified: post.updatedDate ?? post.publishDate,
-      authors: post.authors.map(author => ({ name: author.name, url: author.url, avatar: new URL(author.avatar, siteUrl).href })),
+      authors: post.authors.map(author => ({
+        name: author.name,
+        url: author.url,
+        avatar: new URL(author.avatar, siteUrl).href,
+      })),
     })),
-  })
+  }
+}
+
+export function jsonFeed(posts: readonly BlogPost[], siteUrl: string): string {
+  return json(feedData(posts, siteUrl))
 }
 
 export function atomFeed(posts: readonly BlogPost[], siteUrl: string): string {
-  const entries = projectBlog(posts).blogFeed
-  const updated = entries.reduce((latest, post) => {
-    const date = post.updatedDate ?? post.publishDate
-    return Date.parse(date) > Date.parse(latest) ? date : latest
-  }, entries.length ? entries[0].updatedDate ?? entries[0].publishDate : '1970-01-01T00:00:00.000Z')
-  const url = (path: string) => xmlEscape(new URL(path, siteUrl).href)
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
-<title>Oro Computer Blog</title>
-<id>${url('/blog/')}</id>
-<link rel="alternate" href="${url('/blog/')}"/>
-<link rel="self" type="application/atom+xml" href="${url('/feed.xml')}"/>
-<updated>${xmlEscape(updated)}</updated>
-${entries.map(post => `<entry>
-<id>${url(post.url)}</id>
-<title>${xmlEscape(post.title)}</title>
-<link rel="alternate" href="${url(post.url)}"/>
-<published>${xmlEscape(post.publishDate)}</published>
-<updated>${xmlEscape(post.updatedDate ?? post.publishDate)}</updated>
-${post.authors.map(author => `<author><name>${xmlEscape(author.name)}</name><uri>${xmlEscape(author.url)}</uri></author>`).join('\n')}
-<summary>${xmlEscape(post.description)}</summary>
-<content type="html">${xmlEscape(feedHtml(post, siteUrl))}</content>
-</entry>`).join('\n')}
-</feed>\n`
+  const feed = feedData(posts, siteUrl)
+  const xml = jsonfeedToAtom({
+    ...feed,
+    version: 'https://jsonfeed.org/version/1',
+  })
+  const $ = load(xml, { xml: true })
+
+  // v1.2 only accepts JSON Feed 1.0, omits 1.1 author arrays, and uses the
+  // clock for empty feeds. Preserve our identity and deterministic metadata.
+  $('feed > id').text(feed.home_page_url)
+  $('feed > updated').text(feed.items.reduce((latest, item) =>
+    Date.parse(item.date_modified) > Date.parse(latest) ? item.date_modified : latest,
+  feed.items[0]?.date_modified ?? '1970-01-01T00:00:00.000Z'))
+
+  $('feed > entry').each((index, element) => {
+    const item = feed.items[index]
+    const entry = $(element)
+    for (const author of item.authors) {
+      entry.append($('<author/>').append(
+        $('<name/>').text(author.name),
+        $('<uri/>').text(author.url),
+      ))
+    }
+    // The converter pretty-prints whitespace around CDATA; retain exact body text.
+    entry.find('content[type="html"]').text(item.content_html)
+  })
+
+  return $.xml() + '\n'
 }
