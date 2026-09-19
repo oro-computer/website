@@ -87,7 +87,7 @@ export function header(product: string, route: string, wide: boolean): string {
     </header>`,
   )
 }
-export function footer(label: string, editorial: boolean): string {
+export function footer(label: string, editorial: boolean, editHref: string): string {
   return render(
     editorial
       ? html`<footer class="site-footer editorial-footer">
@@ -101,15 +101,21 @@ export function footer(label: string, editorial: boolean): string {
             ><a href="mailto:contributors@oro.computer">contributors</a>
           </div>
           <div class="editorial-footer-links">
-            <a href="/docs/">Docs</a
-            ><span>© <span data-year>2026</span> Oro Computer</span>
+            <a href="/docs/">Docs</a>
+          </div>
+          <div class="footer-meta">
+            <span>© <span data-year>2026</span> Oro Computer</span>
+            <a class="page-edit" href="${editHref}">Edit this page</a>
           </div>
         </footer>`
       : html`<footer class="site-footer">
           <div class="container">
             <div class="footer-inner">
-              <strong>${label || 'Oro Computer'}</strong
-              ><span>© <span data-year>2026</span> Oro Computer.</span>
+              <strong>${label || 'Oro Computer'}</strong>
+              <div class="footer-meta">
+                <span>© <span data-year>2026</span> Oro Computer.</span>
+                <a class="page-edit" href="${editHref}">Edit this page</a>
+              </div>
             </div>
           </div>
         </footer>`,

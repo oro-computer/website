@@ -7,7 +7,7 @@ export type RedirectPage = {
   }
 }
 
-export type Redirect = { from: string, to: string }
+export type Redirect = { from: string, to: string, source: string }
 
 function validatePath(from: string): void {
   const invalid = () => new Error(`Invalid redirectFrom ${JSON.stringify(from)}: expected a safe same-origin URL path`)
@@ -66,7 +66,7 @@ export function collectRedirects(pages: readonly RedirectPage[]): Redirect[] {
         throw new Error(`redirectFrom ${JSON.stringify(from)} on ${JSON.stringify(source)} collides with existing page ${JSON.stringify(existing)} at output ${JSON.stringify(output)}`)
       }
       for (const key of outputKeys) owners.set(key, { from, source })
-      redirects.push({ from, to: pageInfo.url })
+      redirects.push({ from, to: pageInfo.url, source })
     }
   }
   return redirects.sort((a, b) => a.from < b.from ? -1 : a.from > b.from ? 1 : 0)
