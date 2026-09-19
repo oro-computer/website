@@ -2,7 +2,7 @@ import type { DataDeps, PagesForLayout } from '@domstack/static/types.js'
 import type globalVars from '../globals/global.vars.ts'
 import type {} from '../layouts/blog-index.layout.ts'
 import type { BlogData } from '#lib/blog.ts'
-import { blogIndex } from '#lib/blog-index.ts'
+import { blogIndex } from '../layouts/blog-index.ts'
 
 type ArchiveData = Pick<BlogData, 'blogArchives'>
 export const dataDeps = ['blogArchives'] satisfies DataDeps<ArchiveData>

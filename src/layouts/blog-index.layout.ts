@@ -20,6 +20,10 @@ export default layout
 
 declare module '@domstack/static/types.js' {
   interface LayoutRegistry {
-    'blog-index': typeof import('./blog-index.layout.ts') & { render: typeof layout }
+    'blog-index': {
+      parentLayout: typeof parentLayout
+      vars: typeof vars
+      render: typeof layout
+    }
   }
 }

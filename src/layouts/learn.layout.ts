@@ -48,6 +48,9 @@ export default learn
 
 declare module '@domstack/static/types.js' {
   interface LayoutRegistry {
-    learn: typeof import('./learn.layout.ts') & { render: typeof learn }
+    learn: {
+      parentLayout: typeof parentLayout
+      render: typeof learn
+    }
   }
 }

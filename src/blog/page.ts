@@ -1,6 +1,6 @@
 import type { DataDeps, PageFunction } from '@domstack/static/types.js'
 import type { BlogData } from '#lib/blog.ts'
-import { blogIndex } from '#lib/blog-index.ts'
+import { blogIndex } from '../layouts/blog-index.ts'
 
 export const vars = {
   layout: 'blog-index',

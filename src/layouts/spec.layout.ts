@@ -63,6 +63,9 @@ export default spec
 
 declare module '@domstack/static/types.js' {
   interface LayoutRegistry {
-    spec: typeof import('./spec.layout.ts') & { render: typeof spec }
+    spec: {
+      parentLayout: typeof parentLayout
+      render: typeof spec
+    }
   }
 }

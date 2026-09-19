@@ -124,6 +124,8 @@ export default root
 
 declare module '@domstack/static/types.js' {
   interface LayoutRegistry {
-    root: typeof import('./root.layout.ts') & { render: typeof root }
+    root: {
+      render: typeof root
+    }
   }
 }

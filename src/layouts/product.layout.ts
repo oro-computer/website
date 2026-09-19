@@ -8,6 +8,9 @@ export default layout
 
 declare module '@domstack/static/types.js' {
   interface LayoutRegistry {
-    product: typeof import('./product.layout.ts') & { render: typeof layout }
+    product: {
+      parentLayout: typeof parentLayout
+      render: typeof layout
+    }
   }
 }

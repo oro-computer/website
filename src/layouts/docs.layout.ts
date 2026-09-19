@@ -127,6 +127,10 @@ export default docsLayout
 
 declare module '@domstack/static/types.js' {
   interface LayoutRegistry {
-    docs: typeof import('./docs.layout.ts') & { render: typeof docsLayout }
+    docs: {
+      parentLayout: typeof parentLayout
+      vars: typeof vars
+      render: typeof docsLayout
+    }
   }
 }
