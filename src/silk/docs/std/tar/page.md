@@ -18,9 +18,9 @@ loading whole archives into memory.
 Key goals:
 
 - **Streaming**: iterate headers and stream entry data.
-- **Multiple backends**: in-memory bytes, [`std::fs::File`](/silk/docs/std/fs/), and [`std::stream`](/silk/docs/std/stream/).
+- **Multiple backends**: in-memory bytes, [`std::fs::File`](/silk/docs/std/filesystem/), and [`std::stream`](/silk/docs/std/stream/).
 - **Portability**: tar format logic is pure Silk; the file/IO backends are
- implemented in terms of [`std::fs`](/silk/docs/std/fs/), [`std::io`](/silk/docs/std/io/), and [`std::stream`](/silk/docs/std/stream/).
+ implemented in terms of [`std::fs`](/silk/docs/std/filesystem/), [`std::io`](/silk/docs/std/io/), and [`std::stream`](/silk/docs/std/stream/).
 - **Large archives**: byte-slice inputs can be backed by an mmap mapping created
  by the embedding program (or a future stdlib mmap API).
 - **Async-friendly**: fd-backed adapters are provided under [`std::tar::async`](/silk/docs/std/tar-async/)

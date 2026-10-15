@@ -45,6 +45,258 @@ When a manifest is malformed (invalid TOML syntax or an invalid manifest shape),
 the compiler reports a diagnostic with file, line, and column information and a
 caret snippet pointing at the offending token when possible.
 
+## Source Formatting (`[format]`)
+
+`silk.toml` is the canonical home for project formatting policy. Every field is
+optional. Omitted fields inherit the selected `style`; with no `[format]` table,
+the effective configuration is the `silk` style.
+
+```toml
+[format]
+style = "silk"
+enabled = true
+
+indent_style = "space"
+indent_width = 2
+line_width = 100
+line_ending = "preserve"
+final_newline = "always"
+trim_trailing_whitespace = true
+
+organize_imports = true
+sort_import_names = true
+named_import_multiline_threshold = 3
+split_statements = true
+multiline_condition_brace = "next-line"
+blank_line_after_block = true
+blank_line_after_multiline_expression = true
+align_silkdoc = true
+
+format_check = "error"
+line_width_check = "off"
+trailing_whitespace_check = "off"
+final_newline_check = "off"
+deny_warnings = false
+max_warnings = 0
+```
+
+The settings are grouped by purpose below. Unknown keys, wrong value types,
+out-of-range integers, and unsupported enum values are manifest errors. This is
+intentional: a misspelled team policy must not silently fall back to a default.
+
+### Style and indentation
+
+- `style = "silk" | "compact"` selects defaults before the remaining explicit
+ fields are applied. `silk` is the canonical repository style. `compact` uses
+ the same syntax normalization but defaults both post-brace blank-line fields
+ to `false` and raises `named_import_multiline_threshold` to `6`.
+- `enabled = <bool>` enables all formatter rewrites. When `false`, `silk format`
+ leaves bytes unchanged, while explicitly enabled checks such as
+ `line_width_check` can still report policy violations.
+- `indent_style = "space" | "tab"` chooses indentation units.
+- `indent_width = <int>` is in `1..16`. It is the number of spaces per nesting
+ level and the visual tab width used by the line-width check. When
+ `indent_style = "tab"`, one tab is emitted per nesting level.
+- `line_width = <int>` is in `40..1000`. It is a policy ceiling used by
+ `line_width_check`; the formatter does not arbitrarily reflow expressions or
+ prose merely to satisfy the ceiling.
+
+### File layout
+
+- `line_ending = "preserve" | "lf" | "crlf"` controls emitted newlines.
+ `preserve` detects the first existing newline and defaults to LF for a
+ single-line file. Newlines inside protected multiline strings and ordinary
+ block-comment bodies remain verbatim.
+- `final_newline = "always" | "preserve" | "never"` controls the final line
+ ending of a non-empty file. `always` emits exactly one, `never` removes all
+ terminal line endings, and `preserve` retains whether the input ended in a
+ line ending. An empty file remains empty and satisfies either explicit
+ policy.
+- `trim_trailing_whitespace = <bool>` removes spaces and tabs immediately before
+ line endings on formatter-owned lines. Protected multiline strings and
+ ordinary block-comment bodies remain verbatim.
+
+### Structural layout
+
+- `organize_imports = <bool>` enables canonical top-of-file import ordering and
+ std/package/relative grouping. Comment-bearing header regions remain in
+ source order even when enabled.
+- `sort_import_names = <bool>` alphabetizes names inside named imports when the
+ import header can be organized safely.
+- `named_import_multiline_threshold = <int>` is in `0..255`. A named import with
+ more names than this value becomes one name per line. `0` disables this
+ count-based expansion.
+- `split_statements = <bool>` places top-level and block-level statements after
+ semicolons on separate lines. Semicolons inside parentheses and brackets are
+ never treated as statement boundaries.
+- `multiline_condition_brace = "next-line" | "same-line" | "preserve"`
+ controls the opening brace of a multiline `if` / `else if` header.
+- `blank_line_after_block = <bool>` inserts one empty line between a standalone
+ block-closing brace and a following construct. `} else {` and expression
+ continuations remain attached.
+- `blank_line_after_multiline_expression = <bool>` applies that separation to a
+ semicolon-terminated multiline brace expression such as an assigned [`match`](/silk/wiki/language/flow-match/)
+ or aggregate value.
+- `align_silkdoc = <bool>` aligns the outer margin of standalone multiline
+ `/** ... */` comments to structural indentation without reflowing their text.
+ Ordinary block comments remain verbatim.
+
+### Check policy
+
+The four `*_check` settings accept `"off"`, `"warn"`, or `"error"`, following
+the severity model used by configurable linters:
+
+- `format_check` reports whether formatter output differs from the input.
+- `line_width_check` reports source lines wider than `line_width` visual
+ columns. Tabs advance to the next `indent_width` tab stop; each valid UTF-8
+ scalar counts as one column.
+- `trailing_whitespace_check` reports spaces or tabs before a line ending.
+- `final_newline_check` reports disagreement with `final_newline`; it is inert
+ when that setting is `"preserve"`.
+
+Checks run only with `silk format --check`. An `error` produces a non-zero exit
+status. A `warn` is reported but exits successfully unless
+`deny_warnings = true` or the number of warnings exceeds `max_warnings`.
+`max_warnings = 0` disables the warning-count ceiling; positive values fail when
+the warning count is greater than the configured value. The count spans every
+input in the invocation governed by the same resolved manifest (or the same
+explicit/built-in policy); unrelated project manifests keep independent
+budgets.
+
+This separation lets a team adopt a new policy as `warn`, inspect it locally
+and in CI, and promote it to `error` without changing the formatter algorithm.
+
+### Discovery and precedence
+
+For each source file, `silk format` and Silk LSP formatting perform two
+independent ancestor searches: one for the nearest `silk.toml` and one for the
+nearest `.silk/format.toml`. The manifest supplies the shared package policy;
+the `.silk/format.toml` file is an optional partial developer/user overlay.
+The resolution order from highest to lowest precedence is:
+
+1. repeated CLI `--set key=value` overrides,
+2. an explicit `--config <path/to/silk.toml>`, which disables ancestor
+ discovery,
+3. explicitly listed fields in the nearest `.silk/format.toml`,
+4. the nearest `silk.toml` `[format]` table,
+5. built-in `silk` style defaults.
+
+Within the CLI override layer, `style` is resolved first and the remaining
+scalar overrides are then applied, regardless of argument order. Thus
+`--set indent_width=4 --set style=compact` and the reversed order resolve to
+the same configuration.
+
+`--no-config` skips both manifest and local-overlay discovery. `--print-config
+<file>` prints the fully merged table, including inherited values and defaults,
+and performs no rewrite. Project configuration wins over LSP client indentation
+hints so save-time and CI formatting remain identical.
+
+The `.silk/format.toml` overlay accepts the same `[format]` keys. It may contain
+only the fields a developer wants to change; all omitted fields continue to
+come from the nearest manifest or built-in defaults. Its ancestor search is
+independent of the manifest search, so a project-local overlay can refine a
+manifest above it and a home-level `.silk/format.toml` can refine a project
+manifest below it. Only the nearest overlay applies. Teams may check this file
+in when the extra layer is intentional, but its primary ergonomic use is as a
+personal or development-only file that may be listed in `.gitignore`.
+Configuration discovery reads the file directly, so ignoring it in version
+control does not disable the overlay.
+
+An overlay `style` selects that preset before the overlay's other explicit
+fields are applied. Preset-managed defaults therefore change together, while
+unrelated manifest fields remain inherited. For compatibility with the former
+standalone parser, `.silk/format.toml` may omit the `[format]` header and place
+formatter keys at the root; `--print-config` always prints the canonical table
+form. An explicit `--config` is self-contained and is not combined with a
+discovered local overlay.
+
+The configuration model deliberately combines ideas proven by
+[clang-format](https://clang.llvm.org/docs/ClangFormatStyleOptions.html)
+(style defaults plus explicit overrides),
+[ESLint](https://eslint.org/docs/latest/use/configure/rules) (per-check
+severities), and [Oxc](https://oxc.rs/docs/guide/usage/linter/config.html)
+(project discovery, CLI precedence, and resolved-config inspection), while
+keeping one TOML source of truth for Silk packages.
+
+## Code-Quality Checks (`[check]`)
+
+Code-quality rules are separate from `[format]` because they analyze program
+structure rather than source layout. They run after successful parsing and type
+checking in `silk check` and are also published by `silk-lsp`.
+
+```toml
+[check]
+deny_warnings = false
+max_warnings = 0
+
+[check.rules.cyclomatic_complexity]
+severity = "warn"
+max = 20
+variant = "classic"
+```
+
+- `[check].deny_warnings = <bool>` makes any rule warning fail `silk check`.
+- `[check].max_warnings = <int>` is in `0..65535`; `0` disables the ceiling and
+ a positive value fails when the warning count exceeds it. Warnings are
+ counted across every checked source governed by the same resolved manifest;
+ unrelated manifests keep independent budgets.
+- Every rule has `severity = "off" | "warn" | "error"`. `off` disables both
+ analysis and reporting, `warn` reports without failing by itself, and `error`
+ reports and fails.
+
+Unknown `[check]` keys, rule names, and rule options are manifest errors. Rule
+diagnostics use stable `L...` codes whose severity is determined by
+configuration rather than baked into the code name.
+
+### `cyclomatic_complexity`
+
+The cyclomatic-complexity rule limits the number of linearly independent paths
+through each named function, method, anonymous function, and test body. The
+term follows the graph-theoretic definition of
+[cyclomatic complexity](https://en.wikipedia.org/wiki/Cyclomatic_complexity),
+adapted below to Silk's concrete runtime decision points.
+
+- `severity` defaults to `"off"`.
+- `max` is in `1..65535` and defaults to `20`.
+- `variant = "classic" | "modified"` defaults to `"classic"`.
+
+Every analyzed body begins at complexity `1`. Silk adds one for each runtime
+decision point in that body:
+
+- `if`, `if let`, `let ... else`, [`while`](/silk/wiki/language/flow-while/), `while let`, `for`, C-style `for`,
+ [`loop`](/silk/wiki/language/flow-loop/), `async loop`, and `task loop`;
+- every additional short-circuit `&&` clause in an `if let` / `while let`
+ chain;
+- short-circuit `&&`, `||`, and `??` expressions, optional field access `?.`,
+ error propagation `?`, and `if` expressions;
+- a parameter default, because the call may either supply or omit that value;
+- and [`match`](/silk/wiki/language/flow-match/) alternatives.
+
+The refutable pattern filter in `for let <pattern> in <iterable>` adds one
+decision in addition to the loop decision. A typed match binder such as
+`value: SomeType` is selective and therefore contributes in classic mode.
+
+For `variant = "classic"`, each non-catch-all [`match`](/silk/wiki/language/flow-match/) arm adds one. Wildcard and
+untyped whole-value statement binder arms are catch-all arms and do not add
+another path. For
+`variant = "modified"`, each [`match`](/silk/wiki/language/flow-match/) expression or statement adds exactly one,
+regardless of arm count. Nested anonymous functions are measured independently
+and do not contribute their internal decisions to the enclosing body.
+
+The rule emits `L5001` at the body name (or anonymous-function/test token),
+states the measured and allowed values, and suggests extracting decisions or
+raising the explicit project threshold. A body is reported only when its value
+is strictly greater than `max`.
+
+The default and classic/modified distinction intentionally align with the
+[ESLint complexity rule](https://eslint.org/docs/latest/rules/complexity) and
+[Oxc implementation](https://oxc.rs/docs/guide/usage/linter/rules/eslint/complexity),
+adapted to Silk control-flow constructs.
+
+The reusable report schema, evidence model, ownership rules, category taxonomy,
+and mathematical invariants are specified in
+[complexity analysis](/silk/docs/compiler/complexity-analysis/).
+
 ## Build Modules (`build.slk`)
 
 A package root directory MAY also contain a build module:

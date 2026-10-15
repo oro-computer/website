@@ -374,7 +374,7 @@ declare module "oro:window" {
             backend?: boolean | undefined;
             event: string;
             value?: (string | object) | undefined;
-        }): Promise<ipc.Result>;
+        }): Promise<any>;
         /**
          * Post a message to a window
          * TODO(@jwerle): research using `BroadcastChannel` instead

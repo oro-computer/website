@@ -1,7 +1,7 @@
 ---
 layout: "docs"
 redirectFrom: ["/silk/docs/guides/toy-logger-module/"]
-description: "This walkthrough builds a small structured logger package that can be imported from Silk and exposed to C through a generated header. It starts with the normal Silk API in src/lib.slk, then adds src/c"
+description: "Build a reusable logger, then expose a small C API through a generated header."
 docsCollection: "silk"
 section: "guides"
 order: 6
@@ -12,39 +12,7 @@ githubRef: "master"
 
 # Practical Logger Module Walkthrough
 
-This walkthrough builds a small structured logger package that can be imported
-from Silk and exposed to C through a generated header. It starts with the normal
-Silk API in [`src/lib.slk`](https://github.com/oro-computer/silk/blob/master/src/lib.slk), then adds [`src/c_api.slk`](https://github.com/oro-computer/silk/blob/master/src/c_api.slk) for the narrow ABI wrapper.
-
-After the `logger_static` target emits `build/acme_logger.h` and
-`build/libacme_logger.a`, a C caller can drive the package with borrowed
-`SilkString` values:
-
-```c
-#include <silk/silk.h>
-#include "acme_logger.h"
-
-static SilkString silk_str(const char *ptr) {
-  SilkString s = { .ptr = (char *)ptr, .len = 0 };
-  while (ptr[s.len] != '\0') s.len++;
-  return s;
-}
-
-int main(void) {
-  return logger_write_c(20, silk_str("ffi"), silk_str("hello from C"));
-}
-```
-
-The manifest package name is `logger`. Source modules declare the symbol
-namespace with `package acme::logger;`. Downstream code imports the package's
-default module through the dependency key:
-
-```silk
-import logger from "logger";
-```
-
-Direct imports such as `import acme::logger::logger_write_c;` are shown only in
-the ABI section because they bind ABI/export paths directly.
+Build a reusable logger, then expose a small C API through a generated header.
 
 ## Package Layout
 

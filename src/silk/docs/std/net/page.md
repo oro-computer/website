@@ -9,16 +9,21 @@ githubRepo: "oro-computer/silk"
 githubRef: "master"
 ---
 
-# [`std::net`](/silk/docs/std/networking/)
+# [`std::net`](/silk/docs/std/net/)
 
-This is the canonical module doc for [`std::net`](/silk/docs/std/networking/).
+This is the canonical module doc for [`std::net`](/silk/docs/std/net/).
 
-[`std::net`](/silk/docs/std/networking/) provides the hosted networking API shipped in [`std/net.slk`](https://github.com/oro-computer/silk/blob/master/std/net.slk):
+[`std::net`](/silk/docs/std/net/) provides the hosted networking API shipped in [`std/net.slk`](https://github.com/oro-computer/silk/blob/master/std/net.slk):
 byte-order helpers, IPv4/IPv6 address types, TCP and UDP sockets, hostname
 resolution, and the current async socket integration layer.
 
+TCP writes on Linux and macOS suppress `SIGPIPE` per send. If the socket
+reports `EPIPE`, `TCPStream.write`, `write_all`, and `write_string` return
+`NetErrorKind::BrokenPipe` instead of terminating the process. Other socket
+errors retain their normal mapping; process-wide signal handlers are unchanged.
+
 On Apple targets using the `auto` or `platform` security provider, builds that
-import [`std::net`](/silk/docs/std/networking/) link `Network.framework` as the platform networking provider
+import [`std::net`](/silk/docs/std/net/) link `Network.framework` as the platform networking provider
 surface is brought online. The current public API remains the hosted socket API
 documented in [networking](/silk/docs/std/networking/).
 

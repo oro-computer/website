@@ -51,7 +51,8 @@ The shipped hosted backend is based on the platform dynamic loader:
 2. Open a handle with `open(path)`, `open_with_flags(path, flags)`, or
  `open_self()`.
 3. Resolve a symbol with `Library.symbol(name)`.
-4. Convert `Symbol.address()` to the exact `c_fn` type with `as raw`.
+4. Convert `Symbol.address()` to the exact `c_fn` type with `as raw` inside a
+ narrow unsafe boundary.
 5. Call the function pointer.
 6. Let scope cleanup close the `Library`, or call `close()` when the program
  must observe a close failure before continuing.
@@ -78,7 +79,7 @@ fn main () -> int {
   }
   let sym: Symbol = sym_opt ?? Symbol.invalid();
 
-  let strlen: StrLen = sym.address() as raw StrLen;
+  let strlen: StrLen = unsafe { sym.address() as raw StrLen };
   let n: u64 = strlen("hello" as raw u64);
 
   assert(n == 5, "strlen should count the hello string bytes");
@@ -115,7 +116,7 @@ The caller must assert the ABI by casting to a `c_fn` alias:
 
 ```silk
 type StrLen = c_fn (u64) -> u64;
-let strlen: StrLen = sym.address() as raw StrLen;
+let strlen: StrLen = unsafe { sym.address() as raw StrLen };
 ```
 
 The declared `c_fn` type must match the foreign symbol exactly:
@@ -128,6 +129,10 @@ The declared `c_fn` type must match the foreign symbol exactly:
 
 Silk cannot validate dynamic symbol signatures at runtime. A mismatched
 signature is undefined behavior in the same way it is undefined behavior in C.
+The unsafe boundary is required at the cast because it is the point where the
+untyped address gains a callable ABI. Calling the resulting safe `c_fn` does
+not require another boundary. Keep the owning `Library` open through every
+call; the type does not encode the dynamic-loader lifetime.
 
 Silk strings can be passed to C string parameters by converting the string view
 to its byte pointer:
@@ -199,6 +204,7 @@ When distributing applications:
 ## Related Guides
 
 - [howto dynamic libraries](/silk/docs/usage/howto-dynamic-libraries/)
+- [unsafe](/silk/docs/language/unsafe/)
 - [ext](/silk/docs/language/ext/)
 - [operators](/silk/docs/language/operators/)
 

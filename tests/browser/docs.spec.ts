@@ -11,9 +11,6 @@ test('static articles, navigation, metadata and the specification work without J
     '/silk/docs/std/overview/',
     '/silk/wiki/',
     '/silk/spec/2026/',
-    '/sage/docs/',
-    '/slg/docs/',
-    '/virtnosis/docs/',
   ]) {
     await page.goto(baseURL + route)
     await expect(page.locator('.prose h1')).toBeVisible()

@@ -23,7 +23,7 @@ runtime implementation by supplying an alternate stdlib root with compatible
 
 ## Motivation
 
-- [`std::fs`](/silk/docs/std/fs/), [`std::task`](/silk/docs/std/task/), [`std::sync`](/silk/docs/std/sync/), and other OS-facing std modules need
+- [`std::fs`](/silk/docs/std/filesystem/), [`std::task`](/silk/docs/std/task/), [`std::sync`](/silk/docs/std/sync/), and other OS-facing std modules need
  low-level primitives (files, clocks, threads, syscalls).
 - Those primitives differ significantly across platforms.
 - Keeping these differences confined to [`std::runtime::...`](/silk/docs/std/runtime/) avoids scattering
@@ -39,7 +39,7 @@ The std runtime is organized as:
 
 Example:
 
-- [`std::runtime::fs`](/silk/docs/std/runtime-fs/) is the interface used by [`std::fs`](/silk/docs/std/fs/).
+- [`std::runtime::fs`](/silk/docs/std/runtime-fs/) is the interface used by [`std::fs`](/silk/docs/std/filesystem/).
 - [`std::runtime::posix::fs`](/silk/docs/std/runtime-posix-fs/) provides the POSIX implementation using `ext` calls
  like `open(2)`, `read(2)`, and `close(2)`.
 
@@ -90,7 +90,7 @@ alternate stdlib root without changing higher-level `std::...` modules.
  (via [`std::result::Result(T, int)`](/silk/docs/std/result/) or an optional error `int?`) so callers do
  not need to pair a sentinel return with a separate `errno()` query.
 - Higher-level, ergonomic, and allocation-aware APIs belong in `std::...`
- modules (for example [`std::fs::File.read_to_end`](/silk/docs/std/fs/)).
+ modules (for example [`std::fs::File.read_to_end`](/silk/docs/std/filesystem/)).
 - [`std::runtime::...`](/silk/docs/std/runtime/) modules should avoid exposing platform-specific struct
  layouts directly to Silk code when possible; prefer integer-like handles and
  pointer-plus-size patterns.
@@ -142,7 +142,7 @@ Runtime areas in the shipped stdlib:
 - [`std::runtime::gpu`](/silk/docs/std/runtime-gpu/) — Linux host-side GPU discovery, tracked device memory,
  bounded copies, packed explicit-kernarg kernel launch, synchronization, and
  last-error access used by [`std::gpu`](/silk/docs/std/gpu/); see [runtime gpu](/silk/docs/std/runtime-gpu/).
-- [`std::runtime::fs`](/silk/docs/std/runtime-fs/) — filesystem primitives used by [`std::fs`](/silk/docs/std/fs/) (hosted baseline;
+- [`std::runtime::fs`](/silk/docs/std/runtime-fs/) — filesystem primitives used by [`std::fs`](/silk/docs/std/filesystem/) (hosted baseline;
  on `wasm32-wasi` the shipped backend supports a small subset using the first
  preopened directory as a sandbox root, and resolves relative paths against a
  virtual cwd ([`std::runtime::wasi::cwd`](/silk/docs/std/runtime-wasi-cwd/))).
@@ -155,7 +155,7 @@ Runtime areas in the shipped stdlib:
  - includes raw stat metadata queries (`stat`, `lstat`, `fstat`) plus path
  classification (`path_kind`) and owned canonical path resolution
  (`realpath`) for higher-level wrappers such as
- [`std::fs::{stat,lstat,fstat,path_kind,is_regular_file,realpath}`](/silk/docs/std/fs/).
+ [`std::fs::{stat,lstat,fstat,path_kind,is_regular_file,realpath}`](/silk/docs/std/filesystem/).
  - on the hosted POSIX baseline, `stat` / `path_kind` follow symlinks,
  `lstat` reports the link itself, and `realpath` resolves symlinks via the
  underlying OS,
@@ -200,9 +200,9 @@ Runtime areas in the shipped stdlib:
  `chdir`/`getcwd` are implemented via a virtual cwd layer
  ([`std::runtime::wasi::cwd`](/silk/docs/std/runtime-wasi-cwd/)); hosted child-process operations remain
  unsupported).
-- [`std::runtime::net`](/silk/docs/std/runtime-net/) — hosted networking primitives used by [`std::net`](/silk/docs/std/networking/)
+- [`std::runtime::net`](/silk/docs/std/runtime-net/) — hosted networking primitives used by [`std::net`](/silk/docs/std/net/)
  (IPv4/IPv6 TCP + UDP sockets plus hostname resolution used by
- [`std::net::resolve_host`](/silk/docs/std/networking/); delegates to [`std::runtime::posix::net`](/silk/docs/std/runtime-posix-net/) in the shipped stdlib).
+ [`std::net::resolve_host`](/silk/docs/std/net/); delegates to [`std::runtime::posix::net`](/silk/docs/std/runtime-posix-net/) in the shipped stdlib).
 - Apple Security runtime helpers — bundled `silk_rt_apple_crypto_*` symbols
  used by the Apple `platform` security provider for [`std::crypto`](/silk/docs/std/crypto/) core/random
  operations. These helpers are statically linked when referenced and require
@@ -247,6 +247,12 @@ Runtime areas in the shipped stdlib:
  instead of `libsilk_rt.a`. In that configuration, `libsilk_rt` performs no
  default heap allocation unless an embedder installs an allocator via
  `silk_rt_set_allocator`.
+ Linux AArch64 distribution prefixes additionally carry glibc- and
+ musl-specific runtime archives, including no-heap variants. The compiler
+ selects the archive matching the output target before resolving runtime
+ members because async/task state embeds libc-defined pthread and signal
+ layouts. The AArch64 musl variant uses a private AAPCS64 coroutine context
+ instead of importing the unavailable musl `ucontext` functions.
 - [`std::runtime::window`](/silk/docs/std/runtime-window/) — low-level target/provider detection, opaque
  provider handles, nonblocking provider event polling, high-level provider
  `run(...)` / `run_ex(...)` boundaries, and native window-control hooks used
@@ -278,7 +284,7 @@ Follow-ups are expected to introduce additional runtime areas:
  - the hosted executor is thread-affine: `Handle.poll()` / `Handle.deinit()`
  must be called from the same OS thread that created the handle; cross-thread
  wake is supported via `Handle.wake()`.
- - abort-aware wrappers exist for cooperative cancellation ([`std::abort_controller`](/silk/docs/std/abort_controller/)):
+ - abort-aware wrappers exist for cooperative cancellation ([`std::abort_controller`](/silk/docs/std/abort-controller/)):
  - `sleep_ms_abortable(ms, sig) -> bool`
  - `fd_wait_readable_abortable(fd, sig) -> bool`
  - `fd_wait_writable_abortable(fd, sig) -> bool`
@@ -308,7 +314,7 @@ higher-level std modules you want to reuse. For example, to reuse the shipped
 - [`std/runtime/sync.slk`](https://github.com/oro-computer/silk/blob/master/std/runtime/sync.slk) implementing the [`std::runtime::sync`](/silk/docs/std/runtime-sync/) interface
  (`alloc_zeroed`, `heap_free`, mutex/condvar ops),
 
-and similarly for [`std::fs`](/silk/docs/std/fs/) ([`std/runtime/fs.slk`](https://github.com/oro-computer/silk/blob/master/std/runtime/fs.slk)) if you reuse [`std::fs`](/silk/docs/std/fs/).
+and similarly for [`std::fs`](/silk/docs/std/filesystem/) ([`std/runtime/fs.slk`](https://github.com/oro-computer/silk/blob/master/std/runtime/fs.slk)) if you reuse [`std::fs`](/silk/docs/std/filesystem/).
 
 To reuse [`std::io`](/silk/docs/std/io/), provide [`std/runtime/io.slk`](https://github.com/oro-computer/silk/blob/master/std/runtime/io.slk) implementing the
 [`std::runtime::io`](/silk/docs/std/runtime-io/) interface (`STDIN_FD`, `STDOUT_FD`, `STDERR_FD`, `read`,
@@ -347,7 +353,7 @@ compiling the reachable std sources as part of the build on supported targets.
 ### Building a Custom Std Archive
 
 For supported native hosted archive targets in the current toolchain
-(`linux/x86_64` and `macos/aarch64`), a prebuilt stdlib archive
+(`linux/x86_64`, `linux/aarch64`, and `macos/aarch64`), a prebuilt stdlib archive
 (`libsilk_std.a`) contains one object per std module.
 
 Archive member naming requirement (current scheme):

@@ -180,3 +180,9 @@ fn foo (oops: bool) -> Result(int, Oops) {
   return Ok(0);
 }
 ```
+
+Unqualified `Ok(value)` and `Err(error)` constructor shorthand requires an
+expected concrete `Result(T, E)` type. A single payload does not determine both
+parameters, and sibling branch inference does not instantiate an otherwise
+unspecified generic Result family. Add an annotation or use the instantiated
+Result API when no enclosing context supplies these types.

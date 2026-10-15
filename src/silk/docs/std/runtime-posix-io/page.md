@@ -29,6 +29,13 @@ Use the following owning docs for the substantive API/design context for this mo
 
 ## Notes
 
+- `fcntl(fd: i32, cmd: i32, arg: i32) -> i32` calls the bundled
+ `silk_rt_fs_fcntl_int` fixed-signature wrapper. It supports commands with
+ integer arguments (including `F_GETFD` and `F_SETFD`); pointer-valued commands
+ are outside this binding's contract. Return values and `errno` follow libc.
+ The wrapper supplies the platform's variadic calling convention, including
+ stack-passed variadic arguments on Apple ARM64.
+
 - The shipped source for this module is [`std/runtime/posix/io.slk`](https://github.com/oro-computer/silk/blob/master/std/runtime/posix/io.slk).
 - The canonical module name is [`std::runtime::posix::io`](/silk/docs/std/runtime-posix-io/).
 - This page is intentionally implementation-oriented. Downstream users should usually start with the higher-level std module docs listed above unless they are working on the runtime layer itself.

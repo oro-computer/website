@@ -74,8 +74,8 @@ available to user programs.
  - [`std::process`](/silk/docs/std/process/)
  - [`std::os`](/silk/docs/std/os/)
  - [`std::path`](/silk/docs/std/path/)
- - [`std::fs`](/silk/docs/std/fs/)
- - [`std::net`](/silk/docs/std/networking/)
+ - [`std::fs`](/silk/docs/std/filesystem/)
+ - [`std::net`](/silk/docs/std/net/)
  - [`std::tls`](/silk/docs/std/tls/)
  - [`std::http`](/silk/docs/std/http/)
  - [`std::https`](/silk/docs/std/https/)
@@ -98,7 +98,7 @@ platform/environment primitives in a **pluggable** way.
 
 Design intent:
 
-- Higher-level `std::...` modules (like [`std::fs`](/silk/docs/std/fs/), [`std::task`](/silk/docs/std/task/), [`std::sync`](/silk/docs/std/sync/)) are
+- Higher-level `std::...` modules (like [`std::fs`](/silk/docs/std/filesystem/), [`std::task`](/silk/docs/std/task/), [`std::sync`](/silk/docs/std/sync/)) are
  written against [`std::runtime::...`](/silk/docs/std/runtime/) interfaces.
 - The shipped stdlib provides a default hosted POSIX backend under
  [`std::runtime::posix::...`](/silk/docs/std/runtime/) and the corresponding [`std::runtime::...`](/silk/docs/std/runtime/) modules
@@ -215,7 +215,7 @@ The stdlib should be layered:
 
 - A “core” subset that does not require OS services (collections, algorithms,
  string utilities, formatting, etc.).
-- Hosted modules ([`std::fs`](/silk/docs/std/fs/), [`std::net`](/silk/docs/std/networking/), parts of [`std::temporal`](/silk/docs/std/temporal/) and
+- Hosted modules ([`std::fs`](/silk/docs/std/filesystem/), [`std::net`](/silk/docs/std/net/), parts of [`std::temporal`](/silk/docs/std/temporal/) and
  [`std::io`](/silk/docs/std/io/)) that rely on POSIX syscalls or POSIX-like APIs.
 
 This layering allows `std::` to be used in freestanding environments while

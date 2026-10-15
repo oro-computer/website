@@ -29,6 +29,9 @@ Use the following owning docs for the substantive API/design context for this mo
 
 ## Notes
 
+- Hosted socket `write` suppresses `SIGPIPE` per send on Linux and macOS.
+ An `EPIPE` failure maps to the stable broken-pipe error code `12`; the
+ runtime does not install a process-wide signal handler.
 - The shipped source for this module is [`std/runtime/net.slk`](https://github.com/oro-computer/silk/blob/master/std/runtime/net.slk).
 - The canonical module name is [`std::runtime::net`](/silk/docs/std/runtime-net/).
 - This page is intentionally implementation-oriented. Downstream users should usually start with the higher-level std module docs listed above unless they are working on the runtime layer itself.

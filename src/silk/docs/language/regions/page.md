@@ -81,14 +81,14 @@ store and cursor.
 A region declaration has the surface form:
 
 ```silk
-const region region_buf: u8[1024];
+const region arena: u8[1024];
 ```
 
 The backing-size expression may also use literal arithmetic that folds at parse
 time:
 
 ```silk
-const region region_buf: u8[1024 * 1024];
+const region arena: u8[1024 * 1024];
 ```
 
 Rules:
@@ -116,9 +116,9 @@ Rules:
 struct Frame { x: int }
 
 fn main () -> int {
-  const region region_buf: u8[1024];
+  const region arena: u8[1024];
 
-  with region_buf {
+  with arena {
     let p: &Frame = new Frame{ x: 1 };
     // ...
   }
@@ -171,9 +171,9 @@ first `<bytes>` bytes of `<region>`:
 struct Frame { x: int }
 
 fn main () -> int {
-  const region region_buf: u8[2048];
+  const region arena: u8[2048];
 
-  with 1024 from region_buf {
+  with 1024 from arena {
     let p: &Frame = new Frame{ x: 1 };
     // ...
   }
@@ -185,12 +185,12 @@ fn main () -> int {
 You may also specify a byte slice of the source region:
 
 ```silk
-with 1024 from region_buf[64..] {
-  // uses bytes 64..(64 + 1024) of `region_buf`
+with 1024 from arena[64..] {
+  // uses bytes 64..(64 + 1024) of `arena`
 }
 
-with 1024 from region_buf[64..1088] {
-  // uses bytes 64..1088 of `region_buf`
+with 1024 from arena[64..1088] {
+  // uses bytes 64..1088 of `arena`
 }
 ```
 
@@ -285,7 +285,7 @@ Important limitation:
 Region declarations may be exported and imported like other top-level bindings:
 
 ```silk
-export const region global_region_buf: u8[4096];
+export const region global_arena: u8[4096];
 ```
 
 Exporting a region exports a `Region` handle that refers to the same backing

@@ -32,14 +32,14 @@ Use the following owning docs for the substantive API/design context for this mo
 - The shipped source for this module is [`std/runtime/fs.slk`](https://github.com/oro-computer/silk/blob/master/std/runtime/fs.slk).
 - The canonical module name is [`std::runtime::fs`](/silk/docs/std/runtime-fs/).
 - This module now carries the implementation-facing raw metadata surface used
- by [`std::fs::Stats`](/silk/docs/std/fs/) (`StatInfo`, `StatResult`, `stat`, `lstat`, `fstat`),
+ by [`std::fs::Stats`](/silk/docs/std/filesystem/) (`StatInfo`, `StatResult`, `stat`, `lstat`, `fstat`),
  plus `fstat_size` for allocation-free descriptor size probes.
 - It also carries the borrowed directory-entry bridge used by
- [`std::fs::Dir.next_view()`](/silk/docs/std/fs/) (`DirEntryBorrowed`,
+ [`std::fs::Dir.next_view()`](/silk/docs/std/filesystem/) (`DirEntryBorrowed`,
  `DirEntryBorrowedResult`, `readdir_borrowed`, and
  `readdir_borrowed_into`).
 - The hosted implementation exposes raw `chmod` and advisory `flock`/unlock
- operations for the typed [`std::fs`](/silk/docs/std/fs/) wrappers. Unsupported runtimes return the
+ operations for the typed [`std::fs`](/silk/docs/std/filesystem/) wrappers. Unsupported runtimes return the
  stable filesystem `Unsupported` code rather than exposing a platform errno.
 - The wrapper's internal errno mapping is defined for every compilation target.
  macOS selects its platform values where they differ; WASI stubs use the

@@ -9,7 +9,7 @@ githubRepo: "oro-computer/silk"
 githubRef: "master"
 ---
 
-# [`std::net`](/silk/docs/std/networking/)
+# [`std::net`](/silk/docs/std/net/)
 
 A small endian/byte-order
 helper subset plus hosted **IPv4/IPv6 TCP** and **IPv4/IPv6 UDP** socket APIs
@@ -17,9 +17,9 @@ are implemented in [`std/net.slk`](https://github.com/oro-computer/silk/blob/mas
 
 Async integration :
 
-- [`std::net`](/silk/docs/std/networking/) exposes async TCP `connect` and `accept` via:
- - [`std::net::TCPStream.{connect_async,connect_v6_async}`](/silk/docs/std/networking/)
- - [`std::net::TCPListener.accept_async`](/silk/docs/std/networking/)
+- [`std::net`](/silk/docs/std/net/) exposes async TCP `connect` and `accept` via:
+ - [`std::net::TCPStream.{connect_async,connect_v6_async}`](/silk/docs/std/net/)
+ - [`std::net::TCPListener.accept_async`](/silk/docs/std/net/)
 - On supported hosted POSIX targets (`linux/*` and Apple Silicon `macos/aarch64`
  today), these are backed by the hosted async runtime
  ([async runtime](/silk/docs/compiler/async-runtime/)) with a `poll(2)` fallback backend and
@@ -28,17 +28,17 @@ Async integration :
  the blocking socket operation.
 - Cancellation of in-flight socket operations is still follow-up work.
 
-[`std::net`](/silk/docs/std/networking/) provides networking primitives on POSIX systems.
+[`std::net`](/silk/docs/std/net/) provides networking primitives on POSIX systems.
 
 Apple provider note: when the active security provider is `auto` or `platform`
 and the target is an Apple platform, `silk build` links `Network.framework` for
-[`std::net`](/silk/docs/std/networking/) users. The current [`std::net`](/silk/docs/std/networking/) implementation still exposes the
+[`std::net`](/silk/docs/std/net/) users. The current [`std::net`](/silk/docs/std/net/) implementation still exposes the
 hosted socket API below; Network-backed TCP/UDP and TLS transport mappings are
 tracked as follow-up stdlib work.
 
 Hostname resolution (DNS) integration :
 
-- [`std::net`](/silk/docs/std/networking/) provides `resolve_host(...)` and `TCPStream.connect_host(...)` helpers
+- [`std::net`](/silk/docs/std/net/) provides `resolve_host(...)` and `TCPStream.connect_host(...)` helpers
  built on a small hosted POSIX `getaddrinfo(3)` shim.
 - This is intended for common client-side use cases (HTTP/HTTPS/SSH) where
  code wants to connect to `host:port` without binding libc directly.
@@ -51,9 +51,9 @@ See also:
 - [io](/silk/docs/std/io/) (shared I/O traits and error conventions)
 - [concurrency](/silk/docs/language/concurrency/) (async/task model)
 - [conventions](/silk/docs/std/conventions/)
-- [http](/silk/docs/std/http/) ([`std::http`](/silk/docs/std/http/) on top of [`std::net`](/silk/docs/std/networking/))
-- [https](/silk/docs/std/https/) ([`std::https`](/silk/docs/std/https/) on top of [`std::tls`](/silk/docs/std/tls/) + [`std::net`](/silk/docs/std/networking/))
-- [websocket](/silk/docs/std/websocket/) ([`std::websocket`](/silk/docs/std/websocket/) on top of [`std::net`](/silk/docs/std/networking/))
+- [http](/silk/docs/std/http/) ([`std::http`](/silk/docs/std/http/) on top of [`std::net`](/silk/docs/std/net/))
+- [https](/silk/docs/std/https/) ([`std::https`](/silk/docs/std/https/) on top of [`std::tls`](/silk/docs/std/tls/) + [`std::net`](/silk/docs/std/net/))
+- [websocket](/silk/docs/std/websocket/) ([`std::websocket`](/silk/docs/std/websocket/) on top of [`std::net`](/silk/docs/std/net/))
 
 ## Exported API
 A small, non-socket subset exists in [`std/net.slk`](https://github.com/oro-computer/silk/blob/master/std/net.slk) for early bring-up:
@@ -103,7 +103,7 @@ Notes:
 
 ## Hosted TCP API
 
-[`std::net`](/silk/docs/std/networking/) exposes a small TCP API for hosted targets via the
+[`std::net`](/silk/docs/std/net/) exposes a small TCP API for hosted targets via the
 pluggable runtime interface [`std::runtime::net`](/silk/docs/std/runtime-net/):
 
 ```silk
@@ -255,6 +255,9 @@ Notes:
  stubs return error values.
 - `TCPStream`/`TCPListener` wrap raw file descriptors; avoid copying these
  values until the language has move-only handle types.
+- TCP writes suppress `SIGPIPE` per send on Linux and macOS. An `EPIPE`
+ failure is returned as `NetErrorKind::BrokenPipe`; other socket failures
+ keep their normal error mapping. No process-wide signal handler is changed.
 - The timeout variants use a finite hosted resolver/connect wait and report
  `NetErrorKind::TimedOut`. A successfully connected stream is restored to
  blocking mode with matching send/receive timeouts installed.
@@ -275,7 +278,7 @@ Notes:
 
 ## Hosted UDP API
 
-[`std::net`](/silk/docs/std/networking/) also exposes a small UDP API for hosted targets. The API is
+[`std::net`](/silk/docs/std/net/) also exposes a small UDP API for hosted targets. The API is
 datagram-oriented but remains blocking.
 
 ```silk
@@ -345,7 +348,7 @@ Notes:
 
 ## Scope
 
-[`std::net`](/silk/docs/std/networking/) is responsible for:
+[`std::net`](/silk/docs/std/net/) is responsible for:
 
 - Sockets and basic protocols.
 - Integration with concurrency primitives (`async`, `task`).
@@ -375,7 +378,7 @@ export fn tcp_listen (addr: SocketAddr) -> Result(TCPListener, NetError);
 ## Blocking vs Async
 
 The initial hosted baseline may be blocking I/O. Once the language’s async
-model is implemented, [`std::net`](/silk/docs/std/networking/) should provide:
+model is implemented, [`std::net`](/silk/docs/std/net/) should provide:
 
 - non-blocking sockets + integration with an event loop,
 - `async fn` wrappers for common operations,

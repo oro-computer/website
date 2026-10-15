@@ -59,10 +59,10 @@ Both AMD and NVIDIA selectors accept this complete portable set. A selector
 may implement additional target-specific scalar IR, but that extension does
 not expand the portable source contract.
 
-Mutable device locals, named constants, general arithmetic and control flow,
-aggregates, recursion, indirect/dynamic calls, floating point, vendor-specific
-matrix instructions, shared-memory allocation, barriers, and arbitrary
-address-space pointer arithmetic are not portable GPU-v1 constructs. The
+Structured control flow, aggregates, recursion, indirect/dynamic calls,
+floating point, vendor-specific matrix instructions, shared-memory allocation,
+barriers, and arbitrary address-space pointer arithmetic are not portable
+GPU-v1 constructs. The
 target-specific [`std::gpu::isa`](/silk/docs/std/gpu-isa/) escape hatch may expose selected operations
 without expanding the portable contract. Unsupported programs report the exact
 lowering or selector limitation and do not produce an invalid GPU artifact.
@@ -118,10 +118,11 @@ runtime call to a `const fn` is invalid on the GPU for the same reason it is
 invalid on the CPU. `const pure fn` does not mean “runtime device function”;
 use `pure fn` or `attr(device=gpu)` for that purpose.
 
-The GPU-v1 device lowerer accepts literals and runtime scalar parameters. Named
-scalar `const` bindings, including values initialized by a `const fn` call, are
-outside this versioned subset. Write the folded literal in the device body or
-pass the value as a kernel parameter, as the learned-threshold example does.
+The shared device lowerer accepts literals, runtime scalar parameters, mutable
+and immutable scalar locals, assignment and compound assignment, and named
+scalar `const` bindings. A named `const` initializer is lowered as an immutable
+SSA value. Calling a `const fn` at runtime remains invalid; a future constant
+evaluation pass may materialize such a call before device lowering.
 
 ## Portable device operations
 
@@ -147,7 +148,7 @@ operation rather than an algorithm-specific operation. It keeps this initial
 device subset explicit while general Silk numeric casts continue to exclude
 `bool`.
 
-The first straight-line device-IR subset also accepts:
+The portable GPU-v1 baseline also accepts:
 
 - scalar `bool`, `u32`, and `u64` parameters, results, and immutable locals;
 - integer and boolean literals;
@@ -186,12 +187,15 @@ clang, or an external assembler.
 
 The AMDGPU consumer selects the complete portable executable graph set. It can
 emit multiple recognized stores in one kernel and follows direct helper calls
-while building each graph. The NVIDIA PTX consumer selects that same set and a
-straight-line scalar superset from device IR, including integer arithmetic,
-bitwise operations, shifts, comparisons, branches, and calls. Programs that
-use that superset are NVIDIA-target-specific until AMD instruction selection
-implements the same IR.
+while building each graph. The NVIDIA PTX consumer selects that same set plus
+the general scalar device-IR surface: mutable locals and constants; integer and
+floating-point arithmetic and casts; bitwise operations and shifts; structured
+`if`, [`while`](/silk/wiki/language/flow-while/), and [`loop`](/silk/wiki/language/flow-loop/) control flow with `break`/`continue`; assertions;
+direct calls; typed `u32`/`u64`/`f32`/`f64` global and shared-memory access;
+workgroup barriers; and the documented NVIDIA tensor-MMA fragment operation.
+Every maintained NVIDIA processor target consumes this same source subset.
 
-General mutable locals, structured source control flow, named scalar constants,
-floating point, aggregates, typed address spaces/slices, barriers, recursion,
-dynamic dispatch, and indirect calls remain outside portable GPU v1.
+Aggregates, typed Silk pointer/slice values, recursion, dynamic dispatch, and
+indirect calls remain outside device IR. Address-space operations use typed
+compiler-owned functions with a `u64` base or element index, so source does not
+perform unchecked byte arithmetic.

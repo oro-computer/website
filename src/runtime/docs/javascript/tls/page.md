@@ -97,10 +97,10 @@ declare module "oro:tls" {
     /**
      * Create a `sha256/<base64>` pin from a leaf certificate DER payload.
      *
-     * @param {Buffer|TypedArray|DataView|ArrayBuffer} der
+     * @param {Buffer|ArrayBufferView|ArrayBuffer} der
      * @returns {Promise<string>}
      */
-    export function createTlsPinFromCertificateDer(der: Buffer | any | DataView | ArrayBuffer): Promise<string>;
+    export function createTlsPinFromCertificateDer(der: Buffer | ArrayBufferView | ArrayBuffer): Promise<string>;
     /**
      * Create a `sha256/<base64>` pin from a PEM-encoded certificate.
      *

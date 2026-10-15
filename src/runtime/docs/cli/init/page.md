@@ -25,3 +25,9 @@ oroc init [<project-dir>]
 | --- | --- |
 | `-C, --config` | only create the config file |
 | `-n, --name` | project name |
+
+## Scaffold
+
+The default scaffold contains `oro.toml`, `src/index.html`, `src/index.js`,
+`src/serviceworker.js`, and `.gitignore`. Use `oroc init --config` to create
+only the configuration.

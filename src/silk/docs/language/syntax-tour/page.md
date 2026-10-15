@@ -573,7 +573,7 @@ fn main () -> int {
 Propagating errors from calls uses postfix `?`:
 
 ```silk
-// Supported when `main` declares a compatible error set.
+// Works today when `main` declares a compatible error set.
 fn main () -> int | OutOfBounds {
   let xs_arr: u8[3] = [1, 2, 3];
   let xs: std::arrays::Slice(u8) = { ptr: xs_arr as u64, len: 3 };
@@ -731,6 +731,17 @@ fn main () -> int {
   return add(1, 2);
 }
 ```
+
+A non-capturing Silk function value can be converted explicitly to a C
+callback pointer with a signature-compatible `c_fn` target:
+
+```silk
+let add = fn (x: i64, y: i64) -> x + y;
+let callback = add as c_fn (i64, i64) -> i64;
+```
+
+Indirect values are checked at runtime and trap if they carry a closure
+environment.
 
 ### Applied types and generics
 
@@ -951,7 +962,7 @@ fn main () -> int {
   assert (f as int) == 3;
   assert (d as int) == (d as int);
 
-  // `d` exists to demonstrate duration literal syntax. See the duration literal docs.
+  // `d` exists to demonstrate duration literal syntax. See `docs/language/literals-duration.md`.
   return 0;
 }
 ```

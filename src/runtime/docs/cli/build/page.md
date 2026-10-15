@@ -26,23 +26,25 @@ oroc build [options] [<project-or-source>]
 
 | Option | Description |
 | --- | --- |
-| `--platform=<platform>` | android \| android-emulator \| ios \| ios-simulator (default: host) |
+| `--platform=<platform>` | platform target to build application for (defaults to host):<br>- android<br>- android-emulator<br>- ios<br>- ios-simulator |
 | `--config=<path>` | use an explicit oro.toml/oro.ini file |
 | `--copy=<source:dest>` | extra copy mapping (like [build] copy; can be repeated) |
-| `--host=<host>` | load index.html from host (default: 80 when port omitted) |
-| `--port=<port>` | load index.html from port (default: localhost when host omitted) |
-| `--test[=path]` | test mode (optionally import a test file) |
-| `--headless` | build to run without a visible window |
-| `--prod` | production build (disables inspector/debugging) |
-| `-D, --debug` | debug mode |
+| `--port=<port>` | load "index.html" from a specific port (if host is not specified, defaults to localhost) |
+| `--host=<host>` | load "index.html" from a specific host (if port is not specified, defaults to 80) |
+| `--test[=path]` | indicate test mode, optionally importing a test file relative to resource files |
+| `--headless` | build application to run in headless mode (without frame or window) |
+| `--prod` | build for production (disables debugging info, inspector, etc.) |
+| `-D, --debug` | enable debug mode |
 | `-E, --env` | add environment variables |
-| `-o, --only-build` | only run the build step |
+| `-o, --only-build` | only run build step, |
 | `-p, --package` | package the app for distribution |
+| `-q, --quiet` | hint for less log output |
 | `-r, --run` | run after building |
-| `-w, --watch` | watch for changes to rerun build |
-| `--allow-exec` | allow external command execution during builds |
-| `--sanitizers` | enable ASan/UBSan on desktop core builds |
-| `--tls-keylog=<path>` | write TLS key log lines (OpenSSL provider) |
+| `-V, --verbose` | enable verbose output |
+| `-w, --watch` | watch for changes to rerun build step |
+| `--allow-exec` | allow external command execution (gates ndk-build/gradle/git/build scripts) |
+| `--sanitizers` | enable developer sanitizers (ASan/UBSan) for desktop core builds |
+| `--tls-keylog=<path>` | write NSS TLS key log lines to `<path>` (OpenSSL provider) |
 | `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Environment

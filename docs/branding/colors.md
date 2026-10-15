@@ -6,9 +6,23 @@
 | **Verdant Green** | `#3E9B65` | Accent     | Signifies growth and flow; ideal for call-to-actions or success states.                                  |
 | **Solar Orange**  | `#F47A28` | Accent     | Represents vitality and creativity. Works well for buttons, hover states, and dynamic accents.           |
 | **Dark Graphite** | `#1F1F1F` | Neutral    | Body text, headers, and dark backgrounds.                                                                |
-| **Soft Ivory**    | `#FAF8F4` | Neutral    | Primary background; creates warmth and elegance.                                                         |
+| **Soft Ivory**    | `#FAF8F4` | Neutral    | Primary text on dark surfaces; creates warmth and elegance.                                                         |
 | **Slate Gray**    | `#7A7A7A` | Supporting | Secondary text, icons, and UI dividers.                                                                  |
 
 ## Gradient Systems
 - `linear-gradient(135deg, #F6C945 0%, #F47A28 50%, #5B3BA2 100%)`
 - `radial-gradient(circle at center, #F6C945 0%, #3E9B65 70%)`
+
+## Dark website surfaces
+
+The website uses a dark presentation throughout, including documentation and code samples.
+Use warm near-black `#11100F` for the canvas, `#1F1F1F` for raised surfaces,
+Soft Ivory for primary text, and `#B8B4AD` for supporting text. Oro Gold marks
+links, current navigation, focus rings, and primary actions. Gold buttons use
+Dark Graphite text. Deep Purple is decorative; use `#C9B4FF` for readable purple
+text. Never use Slate Gray for small text on raised surfaces.
+
+Text must meet WCAG AA contrast (4.5:1, or 3:1 for large text). Controls need
+visible boundaries and keyboard focus. Code comments are supporting text, not
+decoration, and must meet the same 4.5:1 requirement. Do not reduce text opacity
+on hover or inside nested surfaces.

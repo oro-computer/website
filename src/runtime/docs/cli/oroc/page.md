@@ -18,6 +18,7 @@ githubRef: "master"
 ```bash
 oroc [SUBCOMMAND] [options] [<project-dir>]
 oroc [SUBCOMMAND] -h
+oroc help [query...]
 ```
 
 ## Subcommands
@@ -62,6 +63,8 @@ oroc [SUBCOMMAND] -h
 | `ORO_LOG_FILE` | mirror logs to a JSON file |
 | `ORO_ALLOW_EXEC` | allow external exec during builds |
 | `ORO_ENABLE_SANITIZERS` | enable ASan/UBSan on desktop builds |
+| `NO_ANDROID` | source bootstrap: skip Android when non-empty |
+| `NO_IOS` | source bootstrap: skip iOS and iOS Simulator when non-empty |
 
 ## Config discovery (project vs source)
 
@@ -69,3 +72,11 @@ Most commands accept a project directory. `build` and `run` can also take a sing
 When no `oro.toml` is found, [`oroc`](/runtime/docs/cli/oroc/) infers a minimal configuration automatically.
 
 See: [Config overview](/runtime/docs/config/overview/).
+
+`NO_ANDROID` and `NO_IOS` control source builds independently. Any non-empty
+value, including `0` or `false`, disables the named target family. Use
+`oroc build --platform=<platform>` to choose an application target.
+
+For structured command results, place `--json` after the subcommand where
+supported. The global `oroc --json <subcommand>` form streams JSON logs.
+Use `--log-file=<path>` when command output and logs need separate streams.

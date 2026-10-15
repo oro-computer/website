@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "Oro Runtime supports MCP in two complementary ways:"
+description: "Use the CLI MCP server for build automation, or expose app tools through the Runtime MCP API."
 docsCollection: "runtime"
 section: "guides"
 order: 22
@@ -11,13 +11,7 @@ githubRef: "master"
 
 # MCP and agent automation
 
-Oro Runtime supports MCP in two complementary ways:
-
-- the CLI can expose a workspace-oriented MCP server with [`oroc mcp`](/runtime/docs/cli/mcp/),
-- the app can expose runtime tools and resources through [`oro:mcp`](/runtime/docs/javascript/mcp/).
-
-Use the CLI server when the agent needs project context and command execution. Use the in-app server when the agent needs
-live application state.
+Use the CLI MCP server for build automation, or expose app tools through the Runtime MCP API.
 
 ## 1) Start with the CLI-hosted server
 
@@ -112,7 +106,7 @@ Use [`oro:mcp`](/runtime/docs/javascript/mcp/) when you want:
 - in-memory note/search/session context,
 - application-owned tools that do not make sense at the workspace level.
 
-Most serious automation stacks use both.
+
 
 ## Considerations
 

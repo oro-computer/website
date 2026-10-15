@@ -55,9 +55,9 @@ reachable from a GPU kernel and fits the device subset, the compiler includes
 its IR in the device call graph as well. An `attr(device=gpu)` helper remains
 device-only. Runtime GPU code may not call `const fn`: const functions retain
 their compile-time-only semantics, including for `const pure fn`. Device code
-may use supported literals directly or receive a host-computed value as a
-kernel parameter. Named scalar `const` materialization in device IR is outside
-GPU v1; the compiler does not emit a runtime call to a `const fn`.
+may use supported literals directly, bind named scalar constants, or receive a
+host-computed value as a kernel parameter. The compiler does not emit a runtime
+call to a `const fn`.
 
 The portable GPU-v1 subset requires a launchable GPU entry to:
 
@@ -68,9 +68,11 @@ The portable GPU-v1 subset requires a launchable GPU entry to:
  and declare no error results,
 - return `void`.
 
-The portable GPU-v1 device body supports immutable `bool`, `u32`, and `u64`
-values, literals, casts and unsigned comparisons used in the supported
-packed-`u32` graphs, scalar returns in helpers, direct calls, and the
+The NVIDIA general device body supports mutable and immutable `bool`, `u32`,
+`u64`, `f32`, and `f64` scalar values; named scalar constants; literals;
+numeric casts; scalar arithmetic, assignment, compound assignment, and
+comparisons; structured `if`, [`while`](/silk/wiki/language/flow-while/), and [`loop`](/silk/wiki/language/flow-loop/) statements; `break`,
+`continue`, and assertions; scalar returns in helpers; direct calls; and the
 target-neutral [`std::gpu::device`](/silk/docs/std/gpu-device/) global-index/load/store and boolean-to-`u64`
 primitives. Executable graphs are no-op entries, one or more parameter-backed
 stores at the global X index, and one or more parameter-backed unsigned `>=`
@@ -110,10 +112,17 @@ algorithm is visible to target-neutral IR rather than named in a backend.
 
 The implementation owns provider artifact metadata and launch packing:
 application code passes ordinary `u64` values to [`std::gpu::launch`](/silk/docs/std/gpu/) and does not
-construct a provider argument array or declare an ABI function. General
-parameter types, address-space-aware pointer types, aggregates, floating point,
-barriers, and other operations outside GPU v1 remain excluded. A runtime
-`const fn` call remains invalid.
+construct a provider argument array or declare an ABI function. NVIDIA device
+code can use typed global/shared `u32`/`u64`/`f32`/`f64` operations, workgroup
+indexes and barriers, and the capability-checked tensor-MMA fragment helpers.
+All typed shared operations address one common per-workgroup byte arena. Their
+indices are scaled by the selected element width, so an operation at index `i`
+uses byte offset `i * sizeof(T)`; different typed operations alias whenever
+those byte ranges overlap. Programs that treat shared memory as several typed
+arrays must assign disjoint byte ranges explicitly.
+General entry parameter types, aggregates, recursion, dynamic or indirect
+calls, and first-class address-space-aware pointer values remain excluded. A
+runtime `const fn` call remains invalid.
 
 ## Building a mixed executable
 
@@ -126,10 +135,10 @@ silk build app.slk -o app \
 ```
 
 `--target` remains the host target. `--gpu-target` must name a supported AMDHSA
-or NVIDIA PTX target. The GPU-v1 mixed path is supported for Linux x86_64
-executables. Supplying `--gpu-target` for another host target or output kind is
-an error. A source file containing `attr(device=gpu)` functions also requires a
-GPU target when built as an executable.
+or NVIDIA PTX target. The mixed path is supported for Linux x86_64 and Linux
+AArch64 executables. Supplying `--gpu-target` for another host target or output
+kind is an error. A source file containing `attr(device=gpu)` functions also
+requires a GPU target when built as an executable.
 
 The compiler emits one provider artifact per launchable GPU entry and appends
 all artifacts to the host executable in a versioned Silk GPU bundle. AMD

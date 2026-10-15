@@ -4,11 +4,13 @@ import { collectRedirects, type RedirectPage } from '#lib/redirects.ts'
 import { editUrl, plainText, projectCollection, validateDocVars, type Doc, type DocsData } from '#lib/docs.ts'
 
 import { readBlogPost, projectBlog, type BlogPost, type BlogData } from '#lib/blog.ts'
+import { plainTitle } from '#lib/titles.ts'
+import type { SearchEntry, SiteSearchData } from '#lib/search.ts'
 
-type IndexedPage = RedirectPage & { doc?: Doc; post?: BlogPost }
+type IndexedPage = RedirectPage & { doc?: Doc; post?: BlogPost; sitePage?: SearchEntry }
 export type DocsIndex = Map<string, IndexedPage>
 
-const globalData: GlobalDataFunction<DocsData & BlogData, Record<string, unknown>, string, DocsIndex> = async ({
+const globalData: GlobalDataFunction<DocsData & BlogData & SiteSearchData, Record<string, unknown>, string, DocsIndex> = async ({
   pages, previousState, changes, setState,
 }) => {
   const reset = changes.kind === 'reset' || previousState === undefined
@@ -40,7 +42,20 @@ const globalData: GlobalDataFunction<DocsData & BlogData, Record<string, unknown
         editUrl: editUrl(source),
       }
     }
-    if (page.vars.layout === 'blog') entry.post = await readBlogPost(page)
+    if (page.vars.layout === 'blog') {
+      entry.post = await readBlogPost(page)
+      if (!entry.post.draft) entry.sitePage = {
+        url, title: entry.post.title, summary: entry.post.description, section: 'Blog', text: plainText(entry.post.html),
+      }
+    }
+    if (!entry.doc && !entry.post && !page.vars.redirect && typeof page.vars.title === 'string' && /\/$/.test(url)) {
+      entry.sitePage = {
+        url, title: plainTitle(page.vars.title),
+        summary: typeof page.vars.description === 'string' ? page.vars.description : '',
+        section: url.startsWith('/silk/') ? 'Silk' : url.startsWith('/runtime/') ? 'Runtime' : 'Oro Computer',
+        text: '',
+      }
+    }
     index.set(source, entry)
   }
 
@@ -48,7 +63,7 @@ const globalData: GlobalDataFunction<DocsData & BlogData, Record<string, unknown
   // whether their consumers rebuild, without a second invalidation system.
   const indexedPages = [...index.values()]
   const docs: Record<Collection, Doc[]> = {
-    runtime: [], silk: [], silkWiki: [], virtnosis: [], sage: [], slg: [],
+    runtime: [], silk: [], silkWiki: [],
   }
   for (const { doc } of indexedPages) {
     if (doc) docs[doc.collection].push(doc)
@@ -58,8 +73,13 @@ const globalData: GlobalDataFunction<DocsData & BlogData, Record<string, unknown
     redirects: collectRedirects(indexedPages),
     routes: [...indexedPages.map(page => page.pageInfo.url), ...blog.blogArchives.map(archive => archive.url)].sort(),
     navigation: {},
+    siteSearch: { items: indexedPages.flatMap(({ doc, sitePage }): SearchEntry[] => {
+      if (doc) return [{ url: doc.url, title: doc.title, summary: doc.description,
+        section: collections[doc.collection].title, text: doc.searchText }]
+      return sitePage ? [sitePage] : []
+    }).sort((a, b) => a.url.localeCompare(b.url, 'en')) },
     ...blog,
-  } as DocsData & BlogData
+  } as DocsData & BlogData & SiteSearchData
   for (const collection of Object.keys(collections) as Collection[]) {
     const list = docs[collection]
     list.sort((a, b) => a.order - b.order || a.id.localeCompare(b.id, 'en'))

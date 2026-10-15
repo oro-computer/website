@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "Some apps need more than a single https://-style origin. Custom protocols let you give internal resources a stable shape and route them through service-worker logic instead of hard-coding filesystem p"
+description: "Give app resources stable URLs, then route requests through a service worker."
 docsCollection: "runtime"
 section: "guides"
 order: 15
@@ -11,8 +11,7 @@ githubRef: "master"
 
 # Custom protocols and routing
 
-Some apps need more than a single `https://`-style origin. Custom protocols let you give internal resources a stable
-shape and route them through service-worker logic instead of hard-coding filesystem paths or special-case branches in UI code.
+Give app resources stable URLs, then route requests through a service worker.
 
 ## 1) Declare the protocol and enable service workers
 

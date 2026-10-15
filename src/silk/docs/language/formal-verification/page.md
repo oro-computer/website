@@ -15,14 +15,21 @@ Formal Silk is Silk’s compile-time formal verification language. It is written
 using syntax that does not exist at runtime and is discharged at compile time
 using the Z3 SMT solver.
 
+Supported proof constructs and their
+requirements are described below.
 
+When verification is enabled and Formal Silk syntax is present, Silk generates
+verification conditions (VCs), proves them with Z3, and fails the build if any
+VC cannot be proven. This behavior applies to:
 
-When Formal Silk syntax is present, compilation generates verification
-conditions (VCs), proves them with Z3, and fails the build if any VC cannot be
-proven. This behavior applies to:
-
-- the `silk` CLI (`silk check`, `silk test`, `silk build`), and
+- the `silk` CLI (`silk check --verify`, `silk test`, and default/`--verify`
+ `silk build`), and
 - the C ABI build entrypoints (`silk_compiler_build`, `silk_compiler_build_to_bytes`).
+
+Plain `silk check` parses, resolves imports, and type-checks without discharging
+proof obligations. Pass `--verify` to check proofs without generating code.
+Builds verify by default; `silk build --no-verify` explicitly skips proof
+discharge. See the [CLI reference](/silk/docs/compiler/cli-silk/) for these controls.
 
 ## Proof requirements are opt-in by syntax
 
@@ -33,13 +40,71 @@ module set:
  `#variant`, `#monovariant`, `#const`) — including `#require` attached to
  `struct` declarations.
 
-When verification syntax is present, compilation MUST:
+When verification is enabled and verification syntax is present, compilation
+MUST:
 
 1. generate VCs,
 2. prove them using Z3, and
 3. fail compilation with clear diagnostics if any VC cannot be proven.
 
 When verification syntax is not present, compilation does not require proofs.
+
+`unsafe` does not weaken or bypass verification. Braced and unbraced unsafe
+expressions, as well as unsafe statement blocks, are transparent to the
+verifier for operations already in the modeled subset, and they introduce no
+assumptions or axioms. An unsafe operation that the verifier cannot model
+remains unsupported in verified code.
+
+### Unsafe boundaries and proof obligations
+
+The ordinary checker and Formal Silk answer different questions:
+
+- the checker decides whether source contains every required unsafe boundary;
+ a missing boundary produces `E2129` before verification starts;
+- the verifier decides whether the program satisfies its modeled contracts;
+ entering `unsafe` supplies no proposition and does not change the current
+ symbolic path condition;
+- a contract on an `unsafe fn` is processed like a contract on a safe function.
+ Calls must still establish every modeled `#require`, and successful calls may
+ contribute modeled `#assure` facts;
+- machine facts that are not represented by the current model remain outside
+ the proof. Examples include allocation provenance, mapped byte extent,
+ executable-page permission, dynamic-symbol lifetime, and agreement between
+ an integer address and a declared `c_fn` ABI.
+
+This separation allows a real platform boundary to state the portion of its
+contract Formal Silk can express without pretending that `unsafe` proves the
+rest:
+
+```silk
+#require address != 0;
+#assure result == address;
+unsafe fn preserve_registered_address (address: u64) -> u64;
+
+#require address != 0;
+#assure result == address;
+fn checked_forwarder (address: u64) -> u64 {
+  return unsafe preserve_registered_address(address);
+}
+```
+
+The wrapper is proof-transparent, so the verifier proves the callee's
+`address != 0` requirement from the caller's identical requirement and uses
+the postcondition to prove the result. This does **not** prove that the address
+is actually registered or safe to dereference; that remains the documented
+caller obligation represented by `unsafe fn`.
+
+Conversely, this call has a valid unsafe boundary but violates the formal
+precondition:
+
+```silk
+let value = unsafe preserve_registered_address(0);
+```
+
+It reports `E3007` (`Formal Silk: call precondition may not hold`). Removing the
+unsafe boundary instead reports `E2129` first. The passing and failing cases
+are covered by [`tests/silk/pass_formal_unsafe_transparent.slk`](https://github.com/oro-computer/silk/blob/master/tests/silk/pass_formal_unsafe_transparent.slk) and
+[`tests/silk/verify_fail_unsafe_call_precondition.slk`](https://github.com/oro-computer/silk/blob/master/tests/silk/verify_fail_unsafe_call_precondition.slk).
 
 ## Z3 linkage and overrides
 
@@ -647,3 +712,17 @@ and native artifacts, while keeping source-visible theory/prototype declarations
 as the authoritative import-time verification surface. Installed package
 loading and `silk package inspect` discover these bundle paths so downstream
 tooling can locate the exported Formal Silk payload directly.
+
+Qualified struct and constant names in verification resolve namespace imports
+from package-path strings (for example `import limits from "std/limits"`) as
+well as explicit package aliases. Aliasing does not change a constant value
+or exempt a struct from its formal requirements.
+
+`i128` and `u128` arithmetic is modeled with 128-bit bitvectors. Integer casts
+truncate low bits or sign/zero extend according to the source signedness,
+matching native integer conversion; checked narrowing still needs explicit
+range guards when the contract requires preserving the numerical value.
+
+Verified local bindings can omit annotations when their translated value has a
+known source or scalar type. Inferred `Some` bindings retain optional payload
+metadata, including nested optionals, without adding proof assumptions.

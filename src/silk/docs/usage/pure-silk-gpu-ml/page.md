@@ -106,11 +106,13 @@ launch, synchronization, and predictions through the fake CUDA provider.
 The opt-in installed-hardware equivalent is:
 
 ```text
-make pure-silk-gpu-ml-check \
-  PURE_SILK_GPU_TARGET=nvptx64-nvidia-cuda-sm80
+make pure-silk-gpu-ml-nvidia-check
 ```
 
+Set `SILK_NVIDIA_GPU_TARGET` to an exact maintained architecture when desired;
+GB10 uses `nvptx64-nvidia-cuda-sm121`.
+
 The example is inference-oriented and does not claim general GPU training.
-Floating-point models, gradient computation, reductions, general device
-control flow, and non-`u64` kernel parameters remain part of the broader
-Silk-IR-to-GPU work.
+The NVIDIA backend now supports scalar floating point and structured device
+control flow, but gradient graphs, reductions, aggregate device values, and
+non-`u64` kernel parameters remain separate compiler work.

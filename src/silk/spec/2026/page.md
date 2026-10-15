@@ -75,8 +75,12 @@ In Silk currently:
 - References: `&T`.
 - Arrays / slices: `T[]`, `T[N]`.
 - Maps / dictionaries: `std::map::{HashMap, TreeMap}` (standard library).
-- Function types: `fn(params) -> R` (discipline modifiers apply to function
- declarations; function types are unmodified in the Supported forms).
+- Function types: `fn(params) -> R`; use `unsafe fn(params) -> R` when invoking
+ the stored callable requires an unsafe context.
+- C callback types: `c_fn(params) -> R` and `unsafe c_fn(params) -> R`. Convert
+ a signature-compatible, non-capturing function value explicitly with
+ `value as c_fn(params) -> R` (or the unsafe target form when preserving an
+ unsafe source effect).
 - Function expressions (non-capturing, inferred `pure`):
  - expression body: `fn (x: int, y: int) -> x + y`
  - block body: `fn (x: int, y: int) -> int { return x + y; }`
@@ -135,6 +139,10 @@ Operator precedence and associativity follow the rules in `Operators`.
 - `assert expr;` or `assert(expr, "message");`
 - `break;`
 - `continue;`
+- `gpu (grid=<u64>, workspace=<u64>) { kernel(args...); }` (checked,
+ automatically synchronized GPU dispatch; returns
+ [`std::gpu::DispatchResult`](/silk/docs/std/gpu/) in value position and is discardable in statement
+ position; see [`GPU launch blocks`](/silk/docs/language/gpu-launch-blocks/)).
 - Blocks: `{ stmt* }`.
 - Expression statements: `expr;` (where allowed).
 
@@ -318,6 +326,22 @@ Notes:
 - Blocks are `{ stmt* }`.
 - The entrypoint for an executable build is `main` returning `int` (see
  ``silk` CLI` for the CLI rules and supported targets).
+
+GPU-capable mixed executables may use a checked launch form in host code:
+
+```silk
+gpu (grid=8, workspace=8) {
+  fill(output.address, 42);
+}
+```
+
+The body is exactly one direct call to a launchable `attr(device=gpu)`
+function. The form launches and synchronizes before leaving the block. In value
+position it returns [`std::gpu::DispatchResult`](/silk/docs/std/gpu/), which exposes separate launch
+and synchronization statuses; statement position discards that value. It is
+valid in ordinary, async, and task host functions. See
+[`GPU launch blocks`](/silk/docs/language/gpu-launch-blocks/); use separate manual [`std::gpu`](/silk/docs/std/gpu/) calls when
+overlapping execution is required.
 
 ### 1. Lexical Basics
 
@@ -553,7 +577,7 @@ fn add (x: int, y: int) -> int {
 }
 ```
 
-`pure fn` (restricted subset; see `Function Disciplines (`pure`, `task`, `async`)`):
+`pure fn` (restricted subset; see `Function Disciplines (`pure`, `task`, `async`, `unsafe`)`):
 
 ```silk
 pure fn inc (x: int) -> int {
@@ -819,7 +843,7 @@ fn main () -> int {
 Propagating errors from calls uses postfix `?`:
 
 ```silk
-// Supported when `main` declares a compatible error set.
+// Works today when `main` declares a compatible error set.
 fn main () -> int | OutOfBounds {
   let xs_arr: u8[3] = [1, 2, 3];
   let xs: std::arrays::Slice(u8) = { ptr: xs_arr as u64, len: 3 };
@@ -977,6 +1001,17 @@ fn main () -> int {
   return add(1, 2);
 }
 ```
+
+A non-capturing Silk function value can be converted explicitly to a C
+callback pointer with a signature-compatible `c_fn` target:
+
+```silk
+let add = fn (x: i64, y: i64) -> x + y;
+let callback = add as c_fn (i64, i64) -> i64;
+```
+
+Indirect values are checked at runtime and trap if they carry a closure
+environment.
 
 #### Applied types and generics
 
@@ -1390,7 +1425,7 @@ The lexer operates over:
  - Keywords:
  - packages and imports: `package`, `module`, `import`,
  file imports: `from`,
- - control flow: `if`, `else`, [`loop`](/silk/wiki/language/flow-loop/), [`while`](/silk/wiki/language/flow-while/), `for`, `in`, [`match`](/silk/wiki/language/flow-match/), `return`, `panic`, `break`, `continue`, `assert`, `await`, `yield`,
+ - control flow and host dispatch: `if`, `else`, [`loop`](/silk/wiki/language/flow-loop/), [`while`](/silk/wiki/language/flow-while/), `for`, `in`, [`match`](/silk/wiki/language/flow-match/), `return`, `panic`, `break`, `continue`, `assert`, `await`, `yield`, `gpu`,
  - attributes and conditional compilation: `attr`,
  - declarations and mutability: `export`, `public`, `private`, `default`, `const`, `let`, `var`, `mut`, `fn`, `test`, `theory`, `type`,
  - types and declarations: `struct`, `enum`, `error`, `interface`, `impl`, `as`, `raw`, `extends`, `pure`, `task`, `async`,
@@ -1519,7 +1554,7 @@ At a high level, the language can be structured as:
  - `FnDecl ::= FnSpecs FnExportModifier FnModifierOpt 'fn' FnGenericParamListOpt FnNameOpt FnSignature FnBody`
  - `FnBody ::= Block | ';'`
  - `FnModifierOpt ::= FnModifier*`
- - `FnModifier ::= 'const' | 'pure' | 'task' | 'async'`
+ - `FnModifier ::= 'const' | 'pure' | 'task' | 'async' | 'unsafe'`
  - `FnGenericParamListOpt ::= GenericParamList`
  - `FnNameOpt ::= NameToken`
  - `FnSpecs ::= (FnPrecondition | FnPostcondition | FnContractTheory)*`
@@ -1698,7 +1733,7 @@ At a high level, the language can be structured as:
 
  - `InterfaceDecl ::= ExportModifier 'interface' Identifier GenericParamListOpt InterfaceExtendsOpt '{' InterfaceItem* '}'`
  - `InterfaceExtendsOpt ::= ('extends' QualifiedName)`
- - `InterfaceMethodDecl ::= 'fn' NameToken FnSignature ';'`
+ - `InterfaceMethodDecl ::= ['unsafe'] 'fn' NameToken FnSignature ';'`
  - `InterfaceItem ::= InterfaceMethodDecl | UsingDecl`
 
  - `ImplDecl ::= 'impl' QualifiedName GenericParamListOpt ImplAsOpt '{' ImplMemberDecl* '}'`
@@ -1725,10 +1760,11 @@ At a high level, the language can be structured as:
  - `OptionalTypeSuffix ::= '?' | '??'`
  - `ArrayTypeSuffix ::= '[' ']' | '[' ArrayLen ']'`
  - `ArrayLen ::= IntLiteral | Identifier`
- - `BaseType ::= ReferenceType | AttrFunctionType | FunctionType | CFunctionType | '(' Type ')' | SimpleType`
+ - `BaseType ::= ReferenceType | AttrFunctionType | UnsafeFunctionType | FunctionType | CFunctionType | '(' Type ')' | SimpleType`
  - `ReferenceType ::= '&' BaseType`
  - `FunctionType ::= 'fn' '(' TypeListOpt ')' ResultTypeOpt`
  - `CFunctionType ::= 'c_fn' '(' TypeListOpt ')' ResultTypeOpt`
+ - `UnsafeFunctionType ::= 'unsafe' (FunctionType | CFunctionType)`
  - `AttrFunctionType ::= AttrAnnot FunctionType` (in the Supported forms, this is
  accepted as sugar for selecting ABI variants such as `attr(abi=c) fn (...) -> ...`)
  - `TypeListOpt ::= TypeList`
@@ -1756,7 +1792,7 @@ At a high level, the language can be structured as:
 
 - Statements (Supported forms):
 
- - `Stmt ::= AttrAnnot* (LetStmt | LetElseStmt | SpecConstStmt | SpecAssertStmt | SpecTheoryDeclStmt | SpecTheoryStmt | AsyncBlockStmt | TaskBlockStmt | ExprStmt | IfStmt | LoopStmt | WhileStmt | ForStmt | MatchStmt | ReturnStmt | PanicStmt | AssertStmt | BreakStmt | ContinueStmt)`
+ - `Stmt ::= AttrAnnot* (LetStmt | LetElseStmt | SpecConstStmt | SpecAssertStmt | SpecTheoryDeclStmt | SpecTheoryStmt | UnsafeBlockStmt | AsyncBlockStmt | TaskBlockStmt | GpuLaunchStmt | ExprStmt | IfStmt | LoopStmt | WhileStmt | ForStmt | MatchStmt | ReturnStmt | PanicStmt | AssertStmt | BreakStmt | ContinueStmt)`
 
  - `LetStmt ::= LetIntroducer LetBinder TypeAnnotationOpt InitializerOpt ';'`
  - `LetElseStmt ::= ('let' LetModifierOpt | 'var' LetModifierOpt) MatchExprPattern TypeAnnotationOpt '=' Expr 'else' Block ';'`
@@ -1779,6 +1815,11 @@ At a high level, the language can be structured as:
  - `SpecTheoryStmt ::= '#theory' QualifiedName '(' ArgListOpt ')' ';'`
  - `AsyncBlockStmt ::= 'async' Block`
  - `TaskBlockStmt ::= 'task' Block`
+ - `UnsafeBlockStmt ::= 'unsafe' Block`
+ - `GpuLaunchStmt ::= GpuLaunchExpr ';'?`
+ - `GpuLaunchExpr ::= 'gpu' '(' GpuLaunchOption ',' GpuLaunchOption ')' '{' DirectKernelCall ';' '}'`
+ - `GpuLaunchOption ::= 'grid' '=' Expr | 'workspace' '=' Expr`
+ - `DirectKernelCall ::= Identifier '(' ArgListOpt ')'`
  - `MutOpt ::= 'mut'?`
  - `ExprStmt ::= Expr ';'`
  - `IfStmt ::= 'if' IfCondition Block ('else' (IfStmt | Block))?`
@@ -1810,6 +1851,17 @@ At a high level, the language can be structured as:
  - `AssertStmt ::= 'assert' Expr ';' | 'assert' '(' Expr (',' Expr)? ')' ';'`
  - `BreakStmt ::= 'break' ';'`
  - `ContinueStmt ::= 'continue' ';'`
+
+ `GpuLaunchExpr` requires `grid` and `workspace` exactly once; the two named
+ options may appear in either order. Its body is deliberately narrower than a
+ general `Block`: it contains one unqualified, non-generic call. Semantic
+ checking requires that name to resolve to a launchable root-package
+ `attr(device=gpu)` function and checks the geometry and call arguments. The
+ form is valid in ordinary, async, and task host functions and dispatches
+ through [`std::gpu::launch_and_synchronize`](/silk/docs/std/gpu/), which invokes synchronization
+ exactly once after launch. It has type [`std::gpu::DispatchResult`](/silk/docs/std/gpu/); statement
+ position may omit the trailing semicolon and discards that value. See
+ [`GPU launch blocks`](/silk/docs/language/gpu-launch-blocks/).
 
  `LetModifierOpt` accepts at most one `mut` and at most one `move`, in either
  order. `mut` makes the introduced binders assignable. `move` consumes the
@@ -1908,7 +1960,7 @@ At a high level, the language can be structured as:
  - `ArgListOpt ::= ArgList`
  - `ArgList ::= Expr (',' Expr)*`
 
- Note: the parser treats `mut <expr>`, `new <expr>`, `await <expr>`, `await * <expr>`,
+ Note: the parser treats `unsafe <expr>`, `mut <expr>`, `new <expr>`, `await <expr>`, `await * <expr>`,
  `yield <expr>`, `yield * <expr>`, `sizeof <expr>`, `alignof <expr>`, `offsetof(Type, field_path)`,
  `typename <expr>`, and prefix `++<expr>` / `--<expr>` as unary expressions.
 
@@ -1958,6 +2010,7 @@ At a high level, the language can be structured as:
  | IfExpr
  | MatchExpr
  | FnExpr
+ | UnsafeExpr
  | AttrQueryExpr
  | AsmExpr
  | EmbedExpr
@@ -2048,6 +2101,12 @@ At a high level, the language can be structured as:
  - `IfExpr ::= 'if' Expr IfExprBlock 'else' (IfExpr | IfExprBlock)`
  - `IfExprBlock ::= '{' Expr '}'`
 
+ - `UnsafeExpr ::= 'unsafe' ('{' Expr '}' | Unary)`
+
+ The unbraced alternative establishes an unsafe context for one complete
+ unary/postfix expression. It therefore includes attached call, field,
+ indexing, and cast suffixes but stops before a binary operator. Parentheses
+ or the braced alternative delimit a compound expression.
  - `AsmExpr ::= 'asm' StringLiteral`
 
  - `ResultPattern ::= ('Ok' | 'Err') '(' (Identifier | '_') ')'`
@@ -2153,6 +2212,14 @@ This document specifies the Silk type system used by the compiler front-end and 
  - Diagnostics rule: `u128` / `f128` are language features, so any compiler
  rejection is an implementation gap in a specific compiler path, not a
  language-contract rejection.
+ - Immutable module-level bindings with constant-evaluable wide initializers
+ are available to every function in that module and lower to the same two
+ lanes as equivalent local bindings. The declaration does not need to use
+ `const` merely to be representable by the hosted backend.
+ - Local inference preserves wide operand types through arithmetic and across
+ imported-module lowering. For example, `let product = (a as i128) * (b as
+ i128);` binds `product` as `i128`; adding `: i128` does not change either
+ checking or generated code.
 - Typed errors (`error`, `panic`, and `T | ErrorType...`) are specified in
  `Typed Errors (`error`, `panic`, and `T | ErrorType...`)`. The current compiler models typed error
  contracts as an effect on function return types and expressions.
@@ -2249,14 +2316,14 @@ The core categories are:
  the effective end bound.
  A `range` value can be used for slicing via `&xs[r]` / `mut &xs[r]`, enabling
  composed ranges (including inclusive ranges) to drive slicing.
-- Function Types: `fn(params) -> R`
- - Examples: `fn(i32) -> i32`.
+- Function Types: `fn(params) -> R` and `unsafe fn(params) -> R`
+ - Examples: `fn(i32) -> i32`, `unsafe fn(u64) -> u8`.
  - Notes: function types are part of the type grammar and function-typed
  values are supported as function values (including capturing closures) in
  Silk currently.
- Concurrency disciplines (`task` / `async`) are implemented on function
- *declarations* (see [`Concurrency`](/silk/docs/language/concurrency/)); function types in type
- positions do not currently include discipline modifiers.
+ The `unsafe` call effect is represented in function types. Concurrency
+ disciplines (`task` / `async`) and explicit `pure` remain declaration-only
+ in the Supported forms (see [`Concurrency`](/silk/docs/language/concurrency/)).
 - Capturing Closures:
  - Notes: capturing closures are supported as function values with an
  environment; see “Function Types and Closures” below for Supported forms
@@ -2630,9 +2697,10 @@ Silk currently:
  structs/arrays, and called indirectly.
  - the runtime representation is a pair `{ func_ptr, env_ptr }` as specified
  in [`Memory Model (Stack, Heap, and Moves)`](/silk/docs/language/memory-model/).
-- Discipline modifiers for function declarations (`pure` / `task` / `async`) are
- implemented. Function types in type positions do not currently include
- discipline modifiers.
+- Discipline modifiers for function declarations (`pure` / `task` / `async` /
+ `unsafe`) are implemented. In type positions, `unsafe fn (...) -> R` and
+ `unsafe c_fn (...) -> R` represent the unsafe call effect; concurrency and
+ explicit-purity modifiers are not type syntax in the Supported forms.
 
 #### C Function Pointers (`c_fn`)
 
@@ -2646,11 +2714,31 @@ callbacks to foreign code.
 
 Rules (Supported forms):
 
-- A `c_fn` value may be formed only from:
+- A `c_fn` value may be formed contextually from:
  - a top-level function name, or
  - a non-capturing `fn (...) -> ...` expression.
-- Capturing closures are rejected when a `c_fn` is required.
+- A signature-compatible stored or indirect `fn (...) -> R` value may be
+ converted explicitly with `value as c_fn (...) -> R` (or an alias of the
+ target type).
+- Direct capturing expressions are rejected with `E2128`. An indirect value is
+ checked at runtime and traps if its closure environment is nonzero, so a
+ cast cannot discard captures.
 - `c_fn` values are ABI-lowered as a single `u64` code pointer.
+- `unsafe fn (...) -> R` and `unsafe c_fn (...) -> R` preserve a call-site
+ safety obligation. The effect is part of callable assignability and cannot
+ be erased by storing the value in a safe callable type.
+
+Native wide integer compound assignments to locals and direct struct fields
+use the same arithmetic and narrowing rules as their explicit binary-expression
+assignment equivalents, including fields accessed through mutable references.
+
+Struct-valued conditional expressions use the checker-unified branch type.
+A concrete shape inferred from either branch supplies the context for both
+branches, recursively through `else if` chains.
+
+Local inference applies to optional constructors, optional-valued branches and
+coalescing, and enum-valued conditionals. Explicit annotations continue to
+provide context to literals; inferred types do not permit incompatible payloads.
 
 ## Literals Overview
 
@@ -2719,9 +2807,11 @@ What works end-to-end today (lexer → parser → checker → lowering → codeg
  - float literals default to `f64`, but adopt `f32`/`f64`/`f128` from context.
 - Duration literal tokens of the form `<number><unit>` (no whitespace) such as
  `500ms` and `1.5s` (specified in [`Duration Literals`](/silk/docs/language/literals-duration/)).
-- Lowering note (current IR backend subset): unannotated local `let` bindings
- participate only in the integer subset. Prefer explicit type annotations for
- `bool` and float locals when you intend to build an executable/library.
+- Lowering note (current IR backend subset): an unannotated local `let` binding
+ retains the type inferred for its initializer. In particular, arithmetic over
+ explicitly widened `i128`, `u128`, or `f128` operands lowers identically with
+ or without a redundant annotation on the local binding. This rule applies in
+ imported modules as well as the executable entry module.
 
 Not implemented yet:
 
@@ -2921,6 +3011,10 @@ Not implemented yet (or not specified as stable):
  escape forms (notably `\xNN`) can construct byte sequences that are not valid
  UTF-8. Avoid this unless you are intentionally working with raw bytes.
 - String literals are immutable.
+- Literal storage has static program lifetime. Evaluating a comparison does not
+ consume, clear, or otherwise invalidate either string operand, and the same
+ literal or string binding may be compared again after short-circuit boolean
+ expressions and value-position conditionals.
 - Unless otherwise specified for a particular FFI surface, string literals do
  not implicitly include a trailing `\0` byte; length is carried explicitly.
 
@@ -3562,6 +3656,14 @@ limited struct subset described in [`Structs, Impl Blocks, and Memory Layout`](/
 - no duplicate field initializers are permitted,
 - field order is not semantically significant.
 
+Fixed-array literals infer POD struct element layouts from local values and
+struct-valued field accesses, and copy every element slot into array storage.
+
+Fixed-array elements currently exclude optional types, even when `Some(value)`
+can infer the element type. Use a supported struct element with an optional
+field when aggregate storage is needed. This is an array-layout limitation,
+not a requirement to annotate `Some` constructors.
+
 ## Boolean Literals
 
 Boolean literals are the two built-in logical values:
@@ -3579,6 +3681,7 @@ What works end-to-end today (lexer → parser → checker → lowering → codeg
 - `bool` variables, parameters, and return values.
 - `if` / [`while`](/silk/wiki/language/flow-while/) conditions must have type `bool`.
 - Boolean operators:
+ - equality `==` and inequality `!=`, including Boolean field values,
  - unary `!`,
  - short-circuit `&&` and `||` (left-to-right, skip evaluation of the right
  operand when the result is already determined).
@@ -3804,9 +3907,8 @@ See the dedicated documents:
 
 The `if` / `else` construct provides branching based on a boolean condition.
 
-In Silk currently, `if` is a **statement** that selects which
-block of statements executes. The broader language design also includes
-expression-oriented forms; those are documented as planned where relevant.
+`if` is available both as a statement and as a value expression. Both forms
+evaluate the condition once and execute only the selected branch.
 
 ### Surface Syntax
 
@@ -3827,6 +3929,30 @@ if <condition> {
   ...
 }
 ```
+
+### Value expression
+
+A value-position conditional has an expression at the end of each branch:
+
+```silk
+let label = if ready {
+  "ready"
+} else {
+  "not ready"
+};
+```
+
+An expression form requires `else`, and both branch values must have one
+compatible type. The selected value becomes the result; the other expression
+is not evaluated. This contract applies to strings, scalars, optionals,
+results, and the other value categories accepted by the checker and hosted
+lowerer.
+
+Lowering a value-position conditional is type-directed before it emits either
+branch. Type classification must not evaluate the condition or leave partial
+control flow behind. The condition is therefore evaluated exactly once even
+when the result binding omits an explicit type annotation, and values borrowed
+by the condition (including string views) remain valid after the conditional.
 
 ### `if let` (Pattern-Destructuring Statement Form)
 
@@ -4843,6 +4969,22 @@ fn main () -> int {
  without introducing a binder.
 - The result type of a [`match`](/silk/wiki/language/flow-match/) expression is the common type of its arms; all
  arms must type-check to the same result type in the initial subset.
+- Pattern binders for ownership-tracked payloads are owners, not borrowed
+ aliases. When an arm consumes such a binder as its result, including by
+ wrapping it in another enum or optional constructor, ownership transfers to
+ the result and the selected payload in the scrutinee becomes uninitialized.
+ Cleanup therefore destroys the returned owner exactly once and does not
+ destroy the transferred source payload. Arms that do not consume their
+ binder leave the selected payload owned by the scrutinee.
+- A tuple variant may contain multiple ownership-tracked payloads. If an arm
+ transfers only some payload binders, the selected arm destroys every
+ unconsumed payload before invalidating the source variant; transferred
+ payloads remain live only in the arm result. An `_` payload binder is
+ unconsumed and follows the same destruction rule.
+- This path-sensitive transfer rule applies uniformly to user enums,
+ `Some(T)`, and the `Ok(T)` / `Err(E)` payloads of recoverable results. It is
+ preserved across nested compositions such as an enum payload returned as an
+ optional or an optional payload returned as another enum.
 
 ### [`match`](/silk/wiki/language/flow-match/) Statement (Block Arms)
 
@@ -5620,6 +5762,10 @@ fn main () -> int {
 Notes:
 
 - `E::A()` and `A()` are invalid in the Supported forms (unit variants are not callable).
+- A unit variant is an ordinary value of its enum type. It may initialize a
+ binding or aggregate field, be returned or passed to a function, and be
+ assigned to an existing mutable binding or struct field. These value uses
+ accept both the qualified `E::A` form and the type-directed `A` shorthand.
 
 ### Two-Variant `??` Shortcut
 
@@ -7056,6 +7202,11 @@ Rules:
  - `interface` declarations (`export interface Name { ... }`),
  - static members inside `impl` blocks (`impl T { export fn ... }` with no
  `self` receiver).
+- Immutable module-level `let` bindings are initialized once according to the
+ language model. In the current hosted backend, constant-evaluable scalar and
+ wide-scalar initializers may be folded into each referencing function's IR;
+ that implementation detail does not change their module-level identity or
+ type. Wide values use their normal two-lane representation.
 - The `export` modifier marks a declaration as part of the package’s
  externally visible surface. The exact visibility rules across packages
  (including how exports appear in the resolver and back-end symbol tables)
@@ -7310,16 +7461,30 @@ Implementation
  Nested optionals (`T??`) are supported in this backend subset for the same
  payload subset (scalars, `string`, enums, and the supported `struct` subset).
 
+ Reading an optional-valued struct field produces the complete optional value,
+ including its presence tag and all payload slots. For example, if `draft.risk`
+ has type `Risk?`, `let risk = draft.risk` infers `Risk?` and preserves both
+ `Some(...)` and `None`. Explicit annotations, nested fields, reference-backed
+ fields, assignments, arguments, returns, and containing aggregate values obey
+ the same rule. A plain-data payload is copied independently of subsequent
+ writes to the source; an owning payload follows the ordinary move and
+ reinitialization rules. Projecting a non-optional aggregate field through `?.`
+ likewise produces an optional aggregate that can be bound without annotation.
+
  In this subset, `T??` is represented as an outer optional whose payload is
  the full inner optional representation: for example `int??` lowers as
  `(Bool tag0, Bool tag1, i64 payload)`.
+ Scope cleanup respects every presence tag: an owning payload inside nested
+ `Some` values is released once, while `None` and `Some(None)` release no payload.
+
+ Optional-valued [`match`](/silk/wiki/language/flow-match/) expressions also support boolean, integer, and string
+ scrutinees, including wildcard arms. The scrutinee is evaluated once and only
+ the selected arm runs. Payload inference can use a later non-`None` arm.
 
 - Not yet implemented:
  - optional chaining beyond the current optional-struct field access and
- optional method call subsets (for example chaining through optional fields
- and optional indexing),
- - [`match`](/silk/wiki/language/flow-match/) over non-optional scrutinee types (and richer pattern forms beyond
- `None`/`Some(...)`),
+ optional method call subsets (projecting a field that is itself optional,
+ as in `opt?.optional_field`, and optional indexing remain unsupported),
  - and richer optional forms beyond the backend.
 
 Note: optional payload equality (`==` / `!=`) is still limited in the current
@@ -7345,7 +7510,11 @@ Examples from the spec:
 - `struct User = { profile: None };`
 - `profile: Some({ email: "some@example.com", age: Some(30) })`
 
-The compiler infers the optional’s element type from context when possible.
+The compiler uses an expected optional type when one is available, including
+its payload's literal width. Otherwise `Some(value)` infers the payload type
+from `value`: `let x = Some(2);` has type `int?`, and `Some("text")` has type
+`string?`. This also applies to typed values and nested `Some` constructors.
+`None` alone has no payload from which to infer a type and requires context.
 
 Equality comparisons provide optional type
 context for `None` / `Some(...)` operands, so forms like `opt == None` and
@@ -7372,6 +7541,14 @@ Key points:
 - The type of `Some(value)` is `T?` (or `Option(T)`).
 - Nested optionals are allowed (e.g. a struct containing fields that are `T?`).
 
+Without an enclosing type annotation, an `if` or [`match`](/silk/wiki/language/flow-match/) arm with a concrete
+payload supplies the type for sibling `None`/`Some(None)` arms. Source arm order
+and runtime evaluation order do not change. Constructor-only optional equality
+can likewise infer its payload; two bare `None` values still need context.
+Wrapping an owning value in `Some` transfers ownership into the optional.
+Struct payload types also propagate through `unwrap_or` and `unwrap_or_else`
+into unannotated bindings, including calls directly on `Some(value)`.
+
 ### Optional-Coalescing Operator `??`
 
 The `??` operator unwraps an optional by providing a fallback value if it is `None`.
@@ -7380,6 +7557,11 @@ From the spec:
 
 - It “coalesces” the optional’s value and the default into a single, non‑optional result.
 - The expression `opt ?? default_value` has type `T` when `opt` has type `T?`.
+- When `T` is a struct, the left operand supplies the contextual type for an
+ anonymous aggregate fallback. For example, `failed_opt ?? { code: 0 }` is
+ equivalent to `failed_opt ?? Failed{ code: 0 }` when `failed_opt` has type
+ `Failed?`; an explicit type annotation on the surrounding `let` is not
+ required.
 - When `opt` has type `T??`, the expression `opt ?? default_value` has type
  `T?` (it unwraps one optional layer).
 - It composes naturally with optional chaining.
@@ -8291,6 +8473,10 @@ Rule: values created without `new` are stack values by default.
  assignment from a name (for example `y = x;`) also consume `x` when the value
  type requires ownership tracking (for example `Drop` types and task/promise
  handles). After the move, using `x` is rejected by the checker.
+- Assigning such a value to an aggregate field consumes the source under the
+ same rule. The previous field owner is dropped once before replacement; the
+ new value is thereafter owned by the aggregate, including when mutation is
+ performed through a `mut &Struct` parameter.
 - `let move` / `var move` are the binding-level ownership-transfer spellings.
  For a simple binding, `let move y = x;` and `var move y = x;` consume `x`
  under the same ownership-tracking rules as `let y = move x;`. `mut` may be
@@ -8430,6 +8616,12 @@ Automatic invocation :
  and `return Some(value);` treat `value` as moved in the Supported forms).
 - **Overwrite:** assigning to an existing value drops the old value before the
  new value is copied in.
+- **Field take and reinitialization:** moving an ownership-tracked direct field
+ into another owner marks the source field uninitialized. Installing a
+ replacement in that field does not drop the transferred value; it restores
+ the field to initialized state. A subsequent overwrite drops the installed
+ value normally. A partially moved aggregate may not leave its current
+ block/function or be otherwise used before reinitialization.
 - **Heap last-release:** for `new` allocations managed by compiler-inserted RC,
  `drop` is called before freeing the backing allocation when the refcount
  reaches zero.
@@ -8474,6 +8666,14 @@ Calling convention:
  call: `func_ptr(user_args...)`.
 - When `env_ptr != 0`, the backend passes `env_ptr` as a hidden first argument
  to the closure function: `func_ptr(env_ptr, user_args...)`.
+
+Conversion to C callback pointers:
+
+- An explicit `value as c_fn (...) -> R` cast from a signature-compatible
+ `fn (...) -> R` value checks `env_ptr == 0` and yields `func_ptr`.
+- A nonzero `env_ptr` traps; the environment is never silently discarded.
+- The resulting `c_fn` is one code-pointer slot and is invoked without a hidden
+ environment argument.
 
 Environment allocation and lifetime (Supported forms):
 
@@ -8786,6 +8986,42 @@ In the Supported forms, ownership transfer is intentionally conservative:
  assignment from a name are also treated as moves:
  - `let y = x;` consumes `x`,
  - `y = x;` consumes `x`.
+- Passing an ownership-tracked value as an enum payload consumes that value.
+ This applies equally to qualified constructors such as `Result::Ok(value)`
+ and type-directed constructors such as `Ok(value)`, including constructors
+ of monomorphized generic enums. Returning the constructed enum transfers the
+ payload to the caller; function-scope cleanup must not destroy the consumed
+ local after its slots have been copied into the return value.
+- Assignment of a value into a struct field, including through a mutable
+ reference parameter (`owner.field = value`), follows the same rule when the
+ field type requires ownership tracking. The source binding is consumed, the
+ old field value is released exactly once, and the installed value becomes
+ the aggregate's owned field.
+- Reading a direct ownership-tracked field in an ownership-consuming position
+ moves that field. For example, both `let item = owner.item;` and
+ `item = owner.item;` transfer the field out of `owner`; `owner.item` cannot
+ be read or moved again until that exact field is reinitialized. This applies
+ equally when `owner` is a mutable local or a mutable reference parameter and
+ includes transfers nested inside a newly constructed struct, enum payload,
+ optional, or other aggregate. This supports explicit take operations that
+ immediately install an empty or invalid value in the source aggregate.
+ Ownership classification is
+ transparent through named aliases, applied generic aliases such as
+ `Vector(Item)`, and optional wrappers around an owning type.
+- Reinitializing a moved-out field does not run `Drop` for the field's stale
+ storage, because ownership has already transferred. Once the replacement is
+ installed, the field is initialized again and later overwrites release the
+ then-current value normally.
+- A partially moved aggregate must be reinitialized before it is otherwise
+ used or leaves the current block/function. The Supported forms deliberately
+ rejects other aggregate access while a direct field is moved, which keeps a
+ custom aggregate `Drop` implementation from observing stale field storage.
+- Constructing a struct consumes each ownership-tracked field initializer at
+ the construction site. Wrapping a moved field in a returned struct does not
+ exempt its original owner from the reinitialization requirement.
+- Consequently, `return owner.item;` is rejected when `item` requires
+ ownership tracking. A function that transfers the field must first take it
+ into a local, reinitialize `owner.item`, and then return that local.
 - `let move` / `var move` are the equivalent binding-level spellings for an
  explicit initialization-time move:
  - `let move y = x;` and `var move y = x;` consume `x` when `x` requires
@@ -8809,6 +9045,352 @@ Any such extension must be specified in [`Formal Grammar Spec`](/silk/docs/langu
 document before implementation lands, and must be reflected in diagnostics
 ([`Compiler Diagnostics`](/silk/docs/compiler/diagnostics/)) and tests.
 
+Nested POD field writes, including strings, wide integers and non-owning enums,
+update the original aggregate through local values or mutable references.
+Nested owning field replacement still requires borrowing the containing struct
+and assigning its direct field, so the move/reinitialization state is tracked.
+
+## Unsafe Boundaries
+
+
+
+Silk uses `unsafe` to mark operations whose validity depends on an invariant
+the compiler cannot prove. An unsafe boundary does not disable the type
+checker, ownership rules, borrow checking, purity checking, target checks, or
+ABI validation. It authorizes only the operations listed in this document.
+
+`unsafe` is a last resort, not a label inferred from an operation merely
+looking low-level. The language applies this decision order:
+
+1. If the compiler can validate the invariant statically, the operation is
+ safe.
+2. If a runtime check can trap before an invalid access or call, the checked
+ operation is safe.
+3. Only an operation that must trust an invariant supplied by the programmer
+ requires an unsafe context.
+
+Adding a new primitive, cast, or ABI form does not make it unsafe by default.
+Its specification must identify the concrete invariant that cannot be checked
+and why a trapping checked form cannot provide the required semantics before
+the operation may be added to the gated list below.
+
+### Syntax
+
+An unsafe statement block contains ordinary statements:
+
+```silk
+unsafe {
+  asm "pause";
+}
+```
+
+An unsafe expression contains exactly one expression and yields its value:
+
+```silk
+let callback = unsafe {
+  address as raw c_fn (i64, i64) -> i64
+};
+```
+
+When the boundary contains one unary or postfix expression, braces are
+optional:
+
+```silk
+unsafe operation();
+let callback = unsafe address as raw c_fn (i64, i64) -> i64;
+```
+
+The first line is exactly equivalent to `unsafe { operation() };`. The prefix
+form owns one complete unary/postfix expression, including its calls, field or
+index accesses, and cast suffixes. It does not absorb a following binary
+operator: `unsafe operation() + other()` authorizes only `operation()`. Use
+`unsafe (operation() + other())` or `unsafe { operation() + other() }` when the
+whole compound expression must share the boundary.
+
+At statement position, punctuation disambiguates the two forms:
+`unsafe { operation(); }` is a statement block, while
+`unsafe { operation() };` is an unsafe expression used as an expression
+statement. An unbraced `unsafe operation();` always uses the single-expression
+form. In value position, such as after `=`, the expression forms are
+unambiguous.
+
+Functions may declare an unsafe calling contract:
+
+```silk
+unsafe fn read_device_register (address: u64) -> u64 {
+  return std::runtime::mem::load_u64(address, 0);
+}
+```
+
+The body of an `unsafe fn` is an unsafe context. Calling it from safe code
+requires an enclosing `unsafe` expression/block. `unsafe` is orthogonal to
+`const`, `pure`, `task`, and `async`; all existing discipline rules continue to
+apply.
+
+Callable types retain the effect:
+
+```silk
+type RawReader = unsafe fn (u64) -> u64;
+type ForeignRawReader = unsafe c_fn (u64) -> u64;
+```
+
+A safe callable may be stored where an unsafe callable is expected. An unsafe
+callable may not be stored in a safe callable type, because doing so would erase
+the call-site obligation.
+
+Interface methods may use the same effect:
+
+```silk
+interface RawReadable {
+  unsafe fn read_at (address: u64) -> u64;
+}
+```
+
+A safe implementation may satisfy an unsafe interface method. An unsafe
+implementation cannot satisfy a safe interface method, because that would
+erase the caller's obligation from the interface contract.
+
+### Operations That Require an Unsafe Context
+
+The current compiler requires `unsafe` for:
+
+- constructing an array/slice or string view from a raw `u64`/`usize` address,
+ including `ptr as T[]`, `ptr as T[](/silk/docs/len)`, and `ptr as string(len)`;
+- constructing a `c_fn`/`unsafe c_fn` from a raw `u64`/`usize` address with
+ `as raw`;
+- indexing or assigning through a slice whose runtime length is the
+ unknown-length sentinel; safe indexing traps instead of performing an
+ unchecked access, while the same index expression inside `unsafe` may use
+ that sentinel;
+- the raw memory load/store and pointer-to-string primitives declared as
+ `unsafe fn` by [`std::runtime::mem`](/silk/docs/std/runtime-mem/);
+- inline assembly;
+- calling an `unsafe fn` or `unsafe c_fn`, directly, through a method, or
+ through a stored callable value.
+
+Each gate corresponds to a concrete unchecked obligation: a raw view needs a
+valid, suitably aligned allocation with the claimed extent; a raw callback
+needs an executable address with the claimed ABI and signature; a raw memory
+primitive needs valid accessible storage; inline assembly may violate machine
+state invariants; and an unsafe callable documents an obligation its body
+cannot establish for the caller. The checker must not extend this list by
+analogy alone.
+
+Raw address-to-reference construction is not implemented. If it is added, it
+must require an unsafe context under the same rule as other pointer-backed
+views.
+
+### Operations That Remain Safe
+
+The following do not require `unsafe`:
+
+- checked `fn (...) -> R` to `c_fn (...) -> R` conversion, which rejects or
+ traps on a nonzero closure environment;
+- storing, returning, passing, or calling a verified function/callback value;
+- scalar `as raw` bit reinterpretation;
+- extracting a string/reference/slice/array/`c_fn` address as an inert
+ `u64`/`usize` value;
+- layout-proven struct and reference shape casts;
+- calling a safe `c_fn`, including one produced from a verified
+ non-capturing Silk function.
+
+### Worked Example: Checked Silk Callback Conversion
+
+No unsafe boundary is needed when Silk can validate the conversion. The
+compiler checks that the signatures match, rejects a directly visible capture,
+and emits a runtime environment check for an indirect function value:
+
+```silk
+let add = fn (x: int, y: int) -> x + y;
+let callback = add as c_fn (int, int) -> int;
+let answer = callback(20, 22);
+```
+
+The conversion either produces a valid environment-free callback or traps
+before producing one. Adding `unsafe` here would communicate no caller-owned
+invariant and is unnecessary.
+
+### Worked Example: Dynamic Symbol Lookup
+
+A dynamic loader returns an untyped address. Only the program and the foreign
+library's documentation can establish that the address is executable, has the
+declared signature and calling convention, and remains live while it is used.
+That assertion belongs at the address-to-callback cast:
+
+```silk
+import { Library, Symbol, is_supported, open_self } from "std/dylib";
+
+type StrLen = c_fn (u64) -> u64;
+
+fn main () -> int {
+  if !is_supported() {
+    return 0;
+  }
+
+  let library_opt: Library? = open_self().unwrap();
+  if library_opt == None {
+    return 1;
+  }
+  let library = library_opt ?? Library.invalid();
+
+  let symbol_opt: Symbol? = library.symbol("strlen").unwrap();
+  if symbol_opt == None {
+    return 1;
+  }
+  let symbol = symbol_opt ?? Symbol.invalid();
+
+  let strlen: StrLen = unsafe { symbol.address() as raw StrLen };
+  let length = strlen("dynamic" as raw u64);
+  if length != 7 {
+    return 1;
+  }
+  return 0;
+}
+```
+
+The `strlen(...)` call is safe after the cast because the narrow unsafe
+boundary established a safe `c_fn` value. The `Library` must remain open until
+after the call. Closing it earlier, selecting a data symbol, or declaring the
+wrong parameter/result types would violate the asserted invariant; Silk cannot
+discover any of those facts from the integer address.
+
+The runnable source is `an example program`.
+
+### Worked Example: Raw Memory Owned by an Allocation
+
+Raw memory access needs a live allocation, a non-overflowing in-bounds offset,
+the required alignment, and suitable read/write permission. A helper that
+cannot establish those facts from its `u64` and length arguments exposes an
+unsafe calling contract:
+
+```silk
+import { alloc, free, load_u8, store_u8 } from "std/runtime/mem";
+
+unsafe fn checksum_bytes (ptr: u64, len: i64) -> u64 {
+  var index: i64 = 0;
+  var sum: u64 = 0;
+  while index < len {
+    sum += load_u8(ptr, index) as u64;
+    index += 1;
+  }
+
+  return sum;
+}
+
+fn main () -> int {
+  let ptr = alloc(4);
+  if ptr == 0 {
+    return 1;
+  }
+
+  unsafe {
+    store_u8(ptr, 0, 10);
+    store_u8(ptr, 1, 20);
+    store_u8(ptr, 2, 5);
+    store_u8(ptr, 3, 7);
+  }
+
+  let sum = unsafe { checksum_bytes(ptr, 4) };
+  free(ptr);
+
+  if sum != 42 {
+    return 1;
+  }
+  return 0;
+}
+```
+
+Here `main` owns the allocation, checks allocation failure, uses only offsets
+`0..3`, calls the helper before `free`, and never publishes the pointer. Those
+facts justify both narrow boundaries. Moving `free(ptr)` before the checksum or
+passing a length greater than four would violate the contract. The runnable
+source is `an example program`.
+
+### Formal Silk Integration
+
+Unsafe permission and formal proof are independent:
+
+- the ordinary checker runs first, so a missing boundary reports `E2129`
+ before formal verification;
+- unsafe expression and statement wrappers are transparent to the Formal Silk
+ translator and add no path condition, assumption, or axiom;
+- `#require`, `#assure`, `#assert`, loop obligations, and contracted-call
+ preconditions are checked inside unsafe wrappers exactly as outside them;
+- contracts can prove modeled facts such as `address != 0` or `len > 0`, but
+ the current model cannot prove that an integer denotes live readable memory
+ or executable code with a particular C ABI.
+
+For example, a declaration-only platform primitive can expose both a formal
+condition and a broader unsafe machine contract:
+
+```silk
+#require address != 0;
+#assure result == address;
+unsafe fn preserve_registered_address (address: u64) -> u64;
+
+#require address != 0;
+#assure result == address;
+fn checked_forwarder (address: u64) -> u64 {
+  return unsafe preserve_registered_address(address);
+}
+```
+
+The verifier proves that `checked_forwarder` supplies the declared nonzero
+precondition and may use the callee's postcondition. The unsafe boundary does
+not prove that the address is registered, mapped, executable, or associated
+with a particular device. Those machine facts remain part of the documented
+unsafe contract. Calling the primitive with literal `0` inside an unsafe block
+passes the unsafe-context check but fails formal call-precondition verification
+with `E3007`.
+
+See `Formal Silk` for the complete modeled subset.
+
+### Encapsulation
+
+Safe functions may contain a narrow unsafe block after validating the
+invariants needed by the operation. Callers then rely on the safe function's
+documented contract rather than repeating `unsafe`.
+
+For example, a collection implementation may bounds-check an index and use an
+unsafe raw-memory operation internally. The collection's public checked method
+can remain safe. A function that cannot establish the necessary invariant must
+instead be declared `unsafe fn` and document the caller's obligation.
+
+### Diagnostics
+
+Using a gated operation outside an unsafe context reports `E2129`. The
+diagnostic identifies the operation and suggests a narrow `unsafe` prefix, an
+`unsafe { ... }` boundary, or a safe wrapper.
+
+For example:
+
+```silk
+fn main () -> int {
+  let address: u64 = 1;
+  let callback = address as raw c_fn (int) -> int;
+  return 0;
+}
+```
+
+reports:
+
+```text
+error[E2129]: unsafe operation requires an unsafe context
+  |
+  |   let callback = address as raw c_fn (int) -> int;
+  |                             ^^^ raw address-to-callback cast
+  = help: prefix the operation with `unsafe` or wrap it in `unsafe { ... }` after validating its safety invariants
+  = help: or declare the containing function `unsafe fn` when callers must uphold those invariants
+```
+
+The compiler anchors the diagnostic at the gated operation rather than the
+containing function. CLI, C ABI diagnostic adapters, and LSP diagnostics use
+the same stable `E2129` code and operation-specific detail.
+
+`E2128` is distinct: it reports a known capturing `fn` converted to `c_fn`.
+That conversion is invalid rather than an operation an unsafe boundary may
+authorize, so adding `unsafe` does not suppress `E2128`.
+
 ## Attributes (`attr(...)`)
 
 Silk supports first-class **attributes** that can annotate declarations and can
@@ -8818,6 +9400,10 @@ Attributes come in two forms:
 
 - **Tags**: `attr(one, two, three)`
 - **Key/value pairs**: `attr(arch="x86_64", feature="tui")`
+
+`attr(device=gpu)` is a key/value execution-placement attribute. It marks a
+function for GPU compilation without conditionally removing the declaration.
+See [`GPU execution placement`](/silk/docs/language/gpu-execution/).
 
 Values may be:
 
@@ -8858,6 +9444,13 @@ Defined in Silk currently:
  - `attr(task_pool)` is accepted as a tag-form synonym for `attr(task=pool)`.
  - `attr(task=thread)` / `attr(task="thread")` forces a dedicated OS thread
  for each call instead of the default task-pool schedule.
+- GPU function placement:
+ - `attr(device=gpu)` marks a normal function as GPU-resident device code; a
+ function matching the current entry ABI is launchable, while other
+ reachable annotated functions are device-only helpers,
+ - the placement is preserved after attribute normalization so mixed builds
+ can type-check the declaration, emit device code, and omit it from host
+ machine code.
 
 Not yet fully implemented:
 
@@ -8900,7 +9493,16 @@ Attributes may prefix most declarations:
 attr(one) fn hello () -> int { return 0; }
 attr(feature="tui") struct TTY { /* ... */ }
 attr(arch="x86_64", os="linux") interface Builder { /* ... */ }
+attr(device=gpu) fn device_work () {}
 ```
+
+`device` is valid only on function declarations. Its only current value is
+`gpu`, its operator must be `=`, and duplicate or conflicting device placement
+attributes are invalid. Unlike `arch`, `os`, `target`, and `feature`, it does
+not conditionally remove the declaration. Host code launches a suitable entry
+with a checked `gpu (grid=..., workspace=...) { function(args...); }` block or
+through the manual [`std::gpu::launch`](/silk/docs/std/gpu/) API; it cannot call the function as an
+ordinary host function.
 
 Attributes may also prefix statements inside blocks:
 
@@ -9085,6 +9687,13 @@ if attr(feature="tui") {
   // code compiled when the build enables the "tui" feature
 }
 ```
+
+The query is a compile-time condition. Before hosted code generation, the
+compiler removes the unselected branch and retains the selected branch's full
+call/type/resource environment. A selected branch may call an enabled helper
+that owns a `Drop` value or participates in a mixed CPU/GPU program; disabling
+the feature removes that reference rather than asking the backend to lower an
+unreachable call.
 
 #### Feature scoping (package builds)
 
@@ -9335,6 +9944,15 @@ Limitations (Supported forms):
 
 - The region backing store is currently restricted to `u8[N]` (a fixed-size
  byte array type annotation).
+- Hosted native lowering currently keeps the active-region selector
+ process-global, and the backing bytes/cursor generated for each anonymous
+ `with <bytes>` site are static. Overlapping `with` dynamic extents on
+ multiple OS threads are therefore unsupported, even when the source sites
+ or named regions differ. Programs must not enter `with` concurrently from
+ task workers; use thread-safe heap/runtime operations or serialize the whole
+ region extent. A future backend change must make both the selector and
+ anonymous storage invocation-local or thread-local before this restriction
+ can be removed.
 - Only the existing `new` subset is affected (non-opaque `struct` allocations
  that produce `&Struct`).
 - Region-backed `new` allocations are still reference-counted:
@@ -9362,14 +9980,14 @@ store and cursor.
 A region declaration has the surface form:
 
 ```silk
-const region region_buf: u8[1024];
+const region arena: u8[1024];
 ```
 
 The backing-size expression may also use literal arithmetic that folds at parse
 time:
 
 ```silk
-const region region_buf: u8[1024 * 1024];
+const region arena: u8[1024 * 1024];
 ```
 
 Rules:
@@ -9397,9 +10015,9 @@ Rules:
 struct Frame { x: int }
 
 fn main () -> int {
-  const region region_buf: u8[1024];
+  const region arena: u8[1024];
 
-  with region_buf {
+  with arena {
     let p: &Frame = new Frame{ x: 1 };
     // ...
   }
@@ -9452,9 +10070,9 @@ first `<bytes>` bytes of `<region>`:
 struct Frame { x: int }
 
 fn main () -> int {
-  const region region_buf: u8[2048];
+  const region arena: u8[2048];
 
-  with 1024 from region_buf {
+  with 1024 from arena {
     let p: &Frame = new Frame{ x: 1 };
     // ...
   }
@@ -9466,12 +10084,12 @@ fn main () -> int {
 You may also specify a byte slice of the source region:
 
 ```silk
-with 1024 from region_buf[64..] {
-  // uses bytes 64..(64 + 1024) of `region_buf`
+with 1024 from arena[64..] {
+  // uses bytes 64..(64 + 1024) of `arena`
 }
 
-with 1024 from region_buf[64..1088] {
-  // uses bytes 64..1088 of `region_buf`
+with 1024 from arena[64..1088] {
+  // uses bytes 64..1088 of `arena`
 }
 ```
 
@@ -9566,7 +10184,7 @@ Important limitation:
 Region declarations may be exported and imported like other top-level bindings:
 
 ```silk
-export const region global_region_buf: u8[4096];
+export const region global_arena: u8[4096];
 ```
 
 Exporting a region exports a `Region` handle that refers to the same backing
@@ -9712,6 +10330,10 @@ In Silk currently:
 - Shared mutable state must be synchronized explicitly (for example via
  [`std::sync`](/silk/docs/std/sync/) primitives, [`std::atomic`](/silk/docs/std/atomic/) atomics, or by communicating through
  channels).
+- The current hosted region backend is not reentrant across OS threads. Do not
+ overlap `with` region extents across task workers; see
+ [`Regions`](/silk/docs/language/regions/). Thread-safe stdlib worker APIs must not use that
+ process-global region path internally.
 - To share a runtime handle across tasks without transferring ownership, prefer
  stdlib APIs that follow the `T` / `TBorrow` pattern (for example
  `Channel(T)` + `ChannelBorrow(T)` and `AbortSignal` + `AbortSignalBorrow`).
@@ -9776,7 +10398,7 @@ must be synchronized by the program.
  for timers, fd readiness, I/O, and TCP connect/accept; wider cancellation and
  platform parity remains follow-up work.
 - For cooperative cancellation across tasks and `async` functions, `std::`
- provides WHATWG-style abort signals via [`std::abort_controller`](/silk/docs/std/abort_controller/) (see
+ provides WHATWG-style abort signals via [`std::abort_controller`](/silk/docs/std/abort-controller/) (see
  `the standard library`).
 
 ### Core Keywords: `async` and `task`
@@ -10031,6 +10653,63 @@ When verification syntax is present, compilation MUST:
 3. fail compilation with clear diagnostics if any VC cannot be proven.
 
 When verification syntax is not present, compilation does not require proofs.
+
+`unsafe` does not weaken or bypass verification. Braced and unbraced unsafe
+expressions, as well as unsafe statement blocks, are transparent to the
+verifier for operations already in the modeled subset, and they introduce no
+assumptions or axioms. An unsafe operation that the verifier cannot model
+remains unsupported in verified code.
+
+#### Unsafe boundaries and proof obligations
+
+The ordinary checker and Formal Silk answer different questions:
+
+- the checker decides whether source contains every required unsafe boundary;
+ a missing boundary produces `E2129` before verification starts;
+- the verifier decides whether the program satisfies its modeled contracts;
+ entering `unsafe` supplies no proposition and does not change the current
+ symbolic path condition;
+- a contract on an `unsafe fn` is processed like a contract on a safe function.
+ Calls must still establish every modeled `#require`, and successful calls may
+ contribute modeled `#assure` facts;
+- machine facts that are not represented by the current model remain outside
+ the proof. Examples include allocation provenance, mapped byte extent,
+ executable-page permission, dynamic-symbol lifetime, and agreement between
+ an integer address and a declared `c_fn` ABI.
+
+This separation allows a real platform boundary to state the portion of its
+contract Formal Silk can express without pretending that `unsafe` proves the
+rest:
+
+```silk
+#require address != 0;
+#assure result == address;
+unsafe fn preserve_registered_address (address: u64) -> u64;
+
+#require address != 0;
+#assure result == address;
+fn checked_forwarder (address: u64) -> u64 {
+  return unsafe preserve_registered_address(address);
+}
+```
+
+The wrapper is proof-transparent, so the verifier proves the callee's
+`address != 0` requirement from the caller's identical requirement and uses
+the postcondition to prove the result. This does **not** prove that the address
+is actually registered or safe to dereference; that remains the documented
+caller obligation represented by `unsafe fn`.
+
+Conversely, this call has a valid unsafe boundary but violates the formal
+precondition:
+
+```silk
+let value = unsafe preserve_registered_address(0);
+```
+
+It reports `E3007` (`Formal Silk: call precondition may not hold`). Removing the
+unsafe boundary instead reports `E2129` first. The passing and failing cases
+are covered by [`examples/`](https://github.com/oro-computer/silk/tree/master/examples/) and
+[`examples/`](https://github.com/oro-computer/silk/tree/master/examples/).
 
 ### Z3 linkage and overrides
 
@@ -10354,6 +11033,9 @@ Implemented end-to-end (Z3-backed, Supported forms):
  Silk annotations of their own, the verifier proves the callee’s
  preconditions (explicit `#require` and any attached-theory `#require`) under
  the caller’s current path condition; errors report `E3007`,
+ - the caller path condition begins with its own explicit and attached-theory
+ preconditions plus inherited requirements on aggregate parameters, so a
+ contracted wrapper may delegate every input obligation it declares,
  - after the call, the verifier assumes the callee’s postconditions (explicit
  `#assure` plus attached-theory `#assure`/`#invariant`) into verified
  callers' symbolic state so subsequent proofs can use them,
@@ -10635,6 +11317,20 @@ and native artifacts, while keeping source-visible theory/prototype declarations
 as the authoritative import-time verification surface. Installed package
 loading and `silk package inspect` discover these bundle paths so downstream
 tooling can locate the exported Formal Silk payload directly.
+
+Qualified struct and constant names in verification resolve namespace imports
+from package-path strings (for example `import limits from "std/limits"`) as
+well as explicit package aliases. Aliasing does not change a constant value
+or exempt a struct from its formal requirements.
+
+`i128` and `u128` arithmetic is modeled with 128-bit bitvectors. Integer casts
+truncate low bits or sign/zero extend according to the source signedness,
+matching native integer conversion; checked narrowing still needs explicit
+range guards when the contract requires preserving the numerical value.
+
+Verified local bindings can omit annotations when their translated value has a
+known source or scalar type. Inferred `Some` bindings retain optional payload
+metadata, including nested optionals, without adding proof assumptions.
 
 ## Generics (Monomorphized)
 
@@ -11057,7 +11753,7 @@ Rules (Supported forms):
 
 See `Formal Silk`.
 
-## Function Disciplines (`pure`, `task`, `async`)
+## Function Disciplines (`pure`, `task`, `async`, `unsafe`)
 
 This document specifies Silk’s intended “function discipline” system: how
 functions declare whether they are pure, asynchronous, or safe to run as
@@ -11091,6 +11787,9 @@ The language design distinguishes:
  awaitable).
 - `async task fn` — async function executed as a separate task (self-contained
  worker).
+- `unsafe fn` — function whose caller must establish a documented invariant
+ that the compiler cannot prove. The unsafe effect is orthogonal to the
+ execution and purity disciplines above.
 
 ### Intended Call Rules (Design)
 
@@ -11121,6 +11820,12 @@ These APIs are not yet present in the in-tree [`std/`](https://github.com/oro-co
 ### Implementation Notes
 
 Today:
+
+- `unsafe fn` declarations and `unsafe fn` / `unsafe c_fn` callable types
+ preserve an unsafe call effect. Calls require an unsafe expression or block;
+ both `unsafe operation()` and `unsafe { operation() }` establish the same
+ one-expression context. A safe callable may be widened to an unsafe callable
+ type, but the reverse is rejected.
 
 - `pure fn` is parsed and checked (Supported forms):
  - a `pure fn` may call only `pure` functions; `ext` is treated as impure,
@@ -11208,6 +11913,10 @@ Today:
  whose body satisfies the `pure` rules is callable from `pure` code).
  - Function values (both non-capturing and capturing) are supported end-to-end:
  they may be passed, returned, stored, and called indirectly.
+ - A signature-identical `fn (P...) -> R` value may be converted explicitly
+ to `c_fn (P...) -> R` with `as` when it has no closure environment. Direct
+ capturing expressions are rejected during checking; indirect values are
+ guarded at runtime and trap if their environment pointer is nonzero.
 
 ## Const Functions (`const fn`)
 
@@ -11248,12 +11957,17 @@ const pure fn add2 (a: int, b: int) -> int {
 Notes:
 
 - `const pure fn` is simply a `const fn` that also opts into the `pure` rules
- (see `Function Disciplines (`pure`, `task`, `async`)`).
+ (see `Function Disciplines (`pure`, `task`, `async`, `unsafe`)`).
 - `const fn` is a **compile-time-only** function:
  - it may be called only from compile-time contexts (for example `const`
  initializers and Formal Silk specifications),
  - it is not emitted as a runtime/linkable symbol in executable, object, or
- library outputs.
+ library outputs,
+ - GPU placement does not change this rule. Device code may consume a value
+ produced by const evaluation, but it may not make a runtime call to a
+ `const fn` or `const pure fn`. Use an ordinary `pure fn` for a helper that
+ must execute on both CPU and GPU, or `attr(device=gpu)` for a device-only
+ helper.
 
 ### Compile-Time Values
 
@@ -11619,7 +12333,10 @@ The language includes the following operators and delimiters:
  - Currently, comparisons are defined for both integer
  operands and floating-point operands of the same type.
  - In the backend, `==` and `!=` are also defined for `bool`
- operands.
+ operands, including values read from struct fields and references. The
+ result is `bool` in inferred bindings, conditions, arguments, returns,
+ assignments, and aggregate initializers. Both operands are evaluated once,
+ from left to right.
  - In the backend, comparisons are also defined for `Duration`
  and `Instant` when both operands have the same time type.
  - In the backend, `==` and `!=` are also defined for `string`
@@ -11729,9 +12446,24 @@ Rules:
  - a `mut` borrowed reference parameter (`mut name: &Struct`).
  In the backend, nested field assignment is supported only
  when the **leaf field** lowers to a single scalar slot (for example `bool`,
- integer scalars, and `f32`/`f64`).
+ integer scalars, `f32`/`f64`, and unit-only enum tags). Direct field
+ assignment also supports the complete hosted enum layout, including
+ payload-carrying enums, through both mutable local aggregates and `mut`
+ borrowed aggregate parameters.
 - Identifier lvalues must refer to `let mut` local bindings.
 - The type of `expr` must match the binding’s type.
+- When a direct field stores an ownership-tracked value, `name.field = source`
+ consumes the source binding, drops the old field value exactly once, and
+ installs the new owner. This applies to mutable local aggregates and
+ `mut &Struct` parameters.
+- A direct owned field on the right-hand side is consumed under the same rule
+ whether it initializes a new local or replaces an existing local. Thus
+ `target = owner.field; owner.field = empty;` is a valid take/reinitialize
+ sequence and the sentinel assignment does not destroy `target`.
+- If that exact field was previously moved out, it has no displaced owner to
+ destroy. Assignment installs the replacement directly and marks the field
+ initialized again; reading the field between the move and reinitialization
+ is a use-after-move error.
 - The assignment expression has type `void`.
 
 #### Compound assignment (`+=`, `-=`, `*=`, `/=`)
@@ -12084,7 +12816,13 @@ conversions:
  `T[]` slice.
  - `arr as u64` / `arr as usize` extracts the address of element `0` of a
  fixed array `T[N]` (for `N == 0`, the result is `0`).
- - These casts remain **unsafe**:
+ - Raw-address-to-view construction requires an enclosing `unsafe` context:
+
+    ```silk
+    let bytes = unsafe { address as u8[](length) };
+    ```
+
+ - These casts are unsafe because:
  - the compiler does not validate pointer provenance (whether the address is
  valid for the claimed element type).
  - in the current scalar-slot subset, `T[]` / `T[N]` indexing assumes the
@@ -12121,6 +12859,28 @@ conversions:
  - The conversion is explicit (it does not introduce implicit coercions).
  - The `deserialize` method must be infallible (no typed errors).
  - Purity rules apply: inside `pure fn`, the `deserialize` method must be `pure`.
+- Function-pointer casts:
+ - `value as c_fn (P...) -> R` converts a Silk `fn (P...) -> R` value to a
+ code-pointer-only C callback value when the parameter and result types
+ match exactly and the source satisfies the target's purity and unsafe-effect
+ requirements. A safe source may widen to `unsafe c_fn (...) -> R`; an
+ unsafe source cannot convert to a safe `c_fn (...) -> R` because that would
+ erase the call-site obligation.
+ - The conversion is explicit; ordinary `fn` values are not implicitly
+ coerced to `c_fn` after they have been stored, returned, or carried in an
+ aggregate.
+ - A syntactically known capturing function expression is rejected at compile
+ time. For an indirect `fn` value, the conversion checks the value's closure
+ environment at runtime and traps when it is nonzero. It is therefore never
+ valid to use this cast to discard captures.
+ - On success, the result is the value's single code-pointer slot and follows
+ the `c_fn` calling convention with no hidden environment argument.
+
+```silk
+let add = fn (x: i64, y: i64) -> x + y;
+let cb = add as c_fn (i64, i64) -> i64;
+let answer = cb(40, 2);
+```
 
 Examples (Supported forms):
 
@@ -12191,9 +12951,11 @@ Rules (Supported forms):
  - 128-bit wide primitives: `i128`/`u128`/`f128` (two 8-byte lanes; `f128`
  stores the raw IEEE-754 binary128 bit pattern).
 - `as raw` is not permitted for `void`, optionals, arrays, maps, Silk function
- value types (`fn (...) -> R`), or structs/enums.
+ value types (`fn (...) -> R`), or structs/enums. Use the checked normal
+ `fn`-to-`c_fn` cast above before extracting a callback's raw address.
 - Special-case: `u64 as raw c_fn (...) -> R` (and `usize as raw c_fn (...) -> R`)
- is permitted for dynamic symbol loading and C ABI interop. The reverse
+ is permitted inside an `unsafe` context for dynamic symbol loading and C ABI
+ interop. The reverse
  direction, `c_fn (...) -> R as raw u64` (or `usize`), extracts the raw code
  pointer. This does not apply to Silk closure-carrying `fn (...) -> R` values.
 - Special-case: `string as raw u64` (and `string as raw usize`) is permitted
@@ -12235,6 +12997,375 @@ let s: string = "hello";
 let ptr: u64 = s as raw u64;
 let len: usize = sizeof s;
 ```
+
+## GPU execution placement
+
+Silk functions run on the program's host CPU unless their declaration carries
+the GPU placement attribute:
+
+```silk
+attr(device=gpu)
+fn clear_tile () {
+  return;
+}
+```
+
+`device` is execution-placement metadata, not a conditional-compilation key.
+`attr(device=gpu)` therefore keeps the declaration in the semantic program and
+marks it for device compilation. This is distinct from `attr(target=...)`,
+which enables or removes a declaration according to the current compilation
+target.
+
+### Host/device boundary
+
+An `attr(device=gpu)` function is device code. A function satisfying the
+launchable entry signature is a kernel entrypoint; other reachable GPU
+functions are device helpers. Neither form is an ordinary host-callable
+function:
+
+- a host function launches it by name through [`std::gpu::launch`](/silk/docs/std/gpu/),
+- or a host function uses a checked `gpu (grid=..., workspace=...)` launch
+ block and lets the compiler supply that lexical name,
+- the launch supplies grid and work-group sizes,
+- trailing launch arguments are packed as the kernel's explicit `u64`
+ parameters in declaration order,
+- a checked launch automatically calls [`std::gpu::synchronize`](/silk/docs/std/gpu/) before leaving
+ the form and may return both launch/completion statuses as
+ [`std::gpu::DispatchResult`](/silk/docs/std/gpu/); manual launch calls require an explicit
+ completion boundary,
+- the compiler emits the kernel for the selected GPU target and omits it from
+ host machine code,
+- an ordinary Silk call from host code to a GPU function is invalid,
+- a GPU function may directly call another suitable GPU function or an
+ explicitly declared suitable `pure fn`.
+
+An ordinary `pure fn` remains target-neutral and host-callable. When it is
+reachable from a GPU kernel and fits the device subset, the compiler includes
+its IR in the device call graph as well. An `attr(device=gpu)` helper remains
+device-only. Runtime GPU code may not call `const fn`: const functions retain
+their compile-time-only semantics, including for `const pure fn`. Device code
+may use supported literals directly, bind named scalar constants, or receive a
+host-computed value as a kernel parameter. The compiler does not emit a runtime
+call to a `const fn`.
+
+The portable GPU-v1 subset requires a launchable GPU entry to:
+
+- be in the executable's root package,
+- have a lexical name no longer than 255 UTF-8 bytes,
+- be non-generic and use normal (not `async` or `task`) discipline,
+- declare at most 32 immutable `u64` parameters, with no varargs or defaults,
+ and declare no error results,
+- return `void`.
+
+The NVIDIA general device body supports mutable and immutable `bool`, `u32`,
+`u64`, `f32`, and `f64` scalar values; named scalar constants; literals;
+numeric casts; scalar arithmetic, assignment, compound assignment, and
+comparisons; structured `if`, [`while`](/silk/wiki/language/flow-while/), and [`loop`](/silk/wiki/language/flow-loop/) statements; `break`,
+`continue`, and assertions; scalar returns in helpers; direct calls; and the
+target-neutral [`std::gpu::device`](/silk/docs/std/gpu-device/) global-index/load/store and boolean-to-`u64`
+primitives. Executable graphs are no-op entries, one or more parameter-backed
+stores at the global X index, and one or more parameter-backed unsigned `>=`
+threshold classifications. A direct call through a module-scope function
+`using` alias resolves to the target's lexical declaration before device IR is
+emitted. Direct helper calls must resolve uniquely within the root package.
+Reachable helpers must be explicitly `pure fn` or carry `attr(device=gpu)`, use
+supported scalar signatures, and form an acyclic call graph. Low-level
+[`std::gpu::isa`](/silk/docs/std/gpu-isa/) calls remain available through the older target-specific source
+path.
+
+Device-operation selection follows ordinary binding resolution. Renaming a
+named [`std::gpu::device`](/silk/docs/std/gpu-device/) import or qualifying it through a package alias does
+not change its semantic operation. Conversely, a visible root-package helper
+whose lexical name happens to be `global_id_x`, `load_u32`, `store_u32`, or
+another device-operation spelling remains an ordinary helper call; its text
+alone cannot turn it into a compiler intrinsic.
+
+Every low-level [`std::gpu::isa`](/silk/docs/std/gpu-isa/) instruction-helper operand is an unsigned
+integer literal. In the standalone AMD source-intrinsic object path, the
+compatibility `store_u32_at_global_x(base_address, value)` helper instead
+requires two direct names of `u64` entry parameters. Mixed GPU-v1 device IR
+accepts supported scalar expressions at the same compatibility call. For each
+dispatched work item it writes the low 32 bits of `value` at
+`base_address + global_id_x * 4`. The application must ensure that the buffer
+contains at least `grid_size * 4` writable bytes. Processor support, operand
+ranges, parameter use, and launch arity are checked by the compiler or runtime.
+These restrictions produce a diagnostic at the rejected declaration,
+statement, or launch. The compiler never falls back to emitting the function
+for the CPU.
+
+The older
+`classify_u32_at_global_x(input_address, output_address, threshold)` helper
+remains a compatibility operation. New code should compose `global_id_x`,
+`load_u32`, ordinary Silk comparison/helper calls, and `store_u32` so the
+algorithm is visible to target-neutral IR rather than named in a backend.
+
+The implementation owns provider artifact metadata and launch packing:
+application code passes ordinary `u64` values to [`std::gpu::launch`](/silk/docs/std/gpu/) and does not
+construct a provider argument array or declare an ABI function. NVIDIA device
+code can use typed global/shared `u32`/`u64`/`f32`/`f64` operations, workgroup
+indexes and barriers, and the capability-checked tensor-MMA fragment helpers.
+All typed shared operations address one common per-workgroup byte arena. Their
+indices are scaled by the selected element width, so an operation at index `i`
+uses byte offset `i * sizeof(T)`; different typed operations alias whenever
+those byte ranges overlap. Programs that treat shared memory as several typed
+arrays must assign disjoint byte ranges explicitly.
+General entry parameter types, aggregates, recursion, dynamic or indirect
+calls, and first-class address-space-aware pointer values remain excluded. A
+runtime `const fn` call remains invalid.
+
+### Building a mixed executable
+
+Mixed CPU/GPU output is selected independently for each side:
+
+```text
+silk build app.slk -o app \
+  --target linux-x86_64 \
+  --gpu-target amdgcn-amd-amdhsa-gfx1151
+```
+
+`--target` remains the host target. `--gpu-target` must name a supported AMDHSA
+or NVIDIA PTX target. The mixed path is supported for Linux x86_64 and Linux
+AArch64 executables. Supplying `--gpu-target` for another host target or output
+kind is an error. A source file containing `attr(device=gpu)` functions also
+requires a GPU target when built as an executable.
+
+The compiler emits one provider artifact per launchable GPU entry and appends
+all artifacts to the host executable in a versioned Silk GPU bundle. AMD
+artifacts are AMDHSA code objects; NVIDIA artifacts are null-terminated PTX.
+Reachable helper functions participate in that entry's target-neutral device
+IR and are not separately launchable merely because they are called. The native
+loader ignores this non-loadable trailer. [`std::gpu`](/silk/docs/std/gpu/) validates and reads it from
+the running executable, then asks the bundle's HIP or CUDA provider to load the
+selected kernel. A malformed bundle, missing kernel, unavailable provider,
+failed launch, or failed transfer is reported through an ordinary status code
+and [`std::gpu::last_error()`](/silk/docs/std/gpu/).
+
+Application source remains pure Silk. The bundled standard-library runtime owns
+the platform ABI boundary with HIP or the CUDA Driver API; application modules
+do not declare `ext` symbols and the compiler does not invoke a C/C++ compiler,
+HIP compiler, or CUDA compiler while lowering Silk kernels.
+
+The `gpu` launch form is target-neutral syntax and does not expose that runtime
+ABI. It checks the kernel declaration and arguments statically, then uses the
+replaceable [`std::gpu::launch_and_synchronize`](/silk/docs/std/gpu/) implementation. Statement
+position discards the returned [`std::gpu::DispatchResult`](/silk/docs/std/gpu/); value position lets
+the caller inspect `launch_status` and `synchronize_status` independently. It
+returns only after synchronization and is valid in ordinary, async, and task
+host functions; synchronization remains a blocking call in the executing host
+context. The shipped runtime mutex protects process-global state and provider
+calls when task-worker threads enter the API concurrently. Use separate manual
+calls when GPU work should overlap with host work or diagnostic text must be
+read between phases. See [`GPU launch blocks`](/silk/docs/language/gpu-launch-blocks/) for the exact single-call
+grammar and `--nostd` behavior.
+
+### Data-producing program
+
+```silk
+import { Buffer, is_supported } from "std/gpu";
+import { store_u32_at_global_x } from "std/gpu/device";
+
+attr(device=gpu)
+fn fill (output: u64, value: u64) {
+  store_u32_at_global_x(output, value);
+}
+
+fn main () -> int {
+  if !is_supported() {
+    let gpu_unavailable: int = 77;
+    return gpu_unavailable;
+  }
+
+  var output: Buffer = Buffer.alloc(16);
+  if !output.is_valid() {
+    return 1;
+  }
+
+  let dispatch = gpu (grid=4, workspace=4) {
+    fill(output.address, 42);
+  };
+  if dispatch.launch_failed() || dispatch.synchronize_failed() {
+    return 1;
+  }
+
+  return 0;
+}
+```
+
+The maintained vector-fill example additionally downloads and verifies all
+eight values. `an example program` trains a one-dimensional
+nearest-centroid threshold on the CPU, then uses portable index/load/store
+primitives and ordinary Silk helper calls for batched GPU inference.
+See `the standard library`, `the standard library`, `the standard library`, and
+[`Target-neutral GPU compilation`](/silk/docs/compiler/backend-gpu/) for the runtime API and implemented
+device-operation/call-graph subset.
+
+## GPU launch blocks
+
+Silk provides a checked host-side form for launching one GPU kernel without
+importing a launch function or repeating the kernel name as a string:
+
+```silk
+gpu (grid=8, workspace=8) {
+  fill(output.address, 42);
+}
+```
+
+The existing statement form discards the result. The same form may be used in
+value position to inspect both runtime phases:
+
+```silk
+import { DispatchResult } from "std/gpu";
+
+let dispatch: DispatchResult = gpu (grid=8, workspace=8) {
+  fill(output.address, 42);
+};
+if dispatch.launch_failed() {
+  return 2;
+}
+if dispatch.synchronize_failed() {
+  return 3;
+}
+```
+
+`gpu` is a reserved keyword. A launch block is valid in ordinary host
+functions, `async fn`, `task fn`, and combined async/task host functions. It is
+not valid inside `attr(device=gpu)` code. The block contains exactly one direct
+call to a launchable GPU function in the executable's root package.
+
+### Syntax
+
+The header contains exactly two named options:
+
+- `grid=<expression>` is the total one-dimensional work-item count.
+- `workspace=<expression>` is the one-dimensional work-group size.
+
+Both options are required exactly once and may appear in either order. Their
+expressions must have type `u64`. The body must contain exactly one direct,
+unqualified function call followed by `;`. Field calls, qualified calls,
+function values, generic call arguments, declarations, control flow, and
+multiple calls are rejected in this initial form. A statement-position launch
+needs no semicolon after `}`. Normal expression-containing syntax supplies its
+own delimiter, such as the `;` that ends a `let` initializer.
+
+Runtime geometry must be nonzero and exactly divisible, the workgroup must not
+exceed 1024 work items, the total grid must not exceed `4294967295` work items,
+and `grid / workspace` must not exceed `2147483647` provider blocks. Invalid
+geometry returns a nonzero launch status and is still followed by the checked
+form's one synchronization attempt.
+
+The called declaration must satisfy the launchable-entry contract from
+[`GPU execution placement`](/silk/docs/language/gpu-execution/): it is a normal, non-generic root-package
+`attr(device=gpu)` function returning `void`, with at most 32 immutable `u64`
+parameters and no defaults, varargs, or typed errors. The compiler resolves the
+name and checks the call arguments against that declaration at compile time. A
+same-package import alias is permitted; the compiler records the declaration's
+lexical name in the runtime launch rather than treating the alias as a kernel
+symbol. An ordinary host function, a dependency-package GPU function, or a
+device-only helper with a non-launchable signature cannot be used as the
+target.
+
+### Desugaring and execution
+
+For a valid target, the form
+
+```silk
+gpu (grid=grid_size, workspace=group_size) {
+  classify(input.address, output.address, threshold);
+}
+```
+
+has the execution behavior of:
+
+```silk
+launch_and_synchronize(
+  "classify",
+  grid_size,
+  group_size,
+  input.address,
+  output.address,
+  threshold
+);
+```
+
+The compiler supplies a hidden binding to the shipped
+[`std::gpu::launch_and_synchronize`](/silk/docs/std/gpu/) implementation, so the source file need not
+import that function. The binding uses a compiler-only name outside the Silk
+identifier grammar, so an application declaration cannot collide with it. The
+standard library remains the replaceable runtime implementation behind the
+form; `--nostd` rejects a launch block because no implementation is available.
+
+`launch_and_synchronize` calls `launch` and then calls `synchronize` exactly
+once, including when launch reports a nonzero status. It returns a
+[`std::gpu::DispatchResult`](/silk/docs/std/gpu/) with independent `launch_status` and
+`synchronize_status` fields. Status `0` means success for that phase. The
+`is_ok()`, `launch_failed()`, and `synchronize_failed()` methods provide the
+corresponding queries without hiding either raw status.
+
+Statement position discards this result for source compatibility. Value
+position retains it as an ordinary value, so it may be bound, returned, placed
+in an aggregate, passed to a host function, or queried directly wherever its
+type is accepted. The result belongs to that dispatch; no process-global last
+status is involved, so task workers cannot read one another's result.
+
+A statement-level `attr(...)` prefix applies to the launch block as one source
+statement. The compiler preserves that metadata on the generated combined
+operation, so synchronization cannot escape metadata attached to its launch.
+
+Inside an `async fn` or `task fn`, this completion boundary is an ordinary
+blocking host runtime call. It does not suspend the coroutine, yield a task, or
+free the current executor thread while the GPU runs. Use the manual APIs when a
+program needs overlap between dispatches, immediate diagnostic text between
+phases, or a different scheduling strategy. The shipped process-global runtime
+serializes its public operations so task-worker threads cannot race runtime
+state. Separate tasks may still interleave between the combined operation's
+launch and synchronize calls; the device-wide synchronize operation completes
+all work submitted before it.
+
+The checked form is the preferred status-aware path when automatic completion
+is wanted. The separate public manual APIs remain available for explicit
+overlap:
+
+```silk
+import { launch } from "std/gpu";
+
+if launch("classify", grid_size, group_size, input, output, threshold) != 0 {
+  return 2;
+}
+```
+
+Code that intentionally uses the string-name convention but still wants one
+completed-dispatch result may call the same public facade directly:
+
+```silk
+import { DispatchResult, launch_and_synchronize } from "std/gpu";
+
+let dispatch: DispatchResult = launch_and_synchronize(
+  "classify",
+  grid_size,
+  group_size,
+  input,
+  output,
+  threshold
+);
+```
+
+The manual string-name convention remains supported. It is also the current
+escape hatch for reading `last_error()` immediately after launch, overlapping
+host work, and choosing when to synchronize. The compiler cannot prove that a
+runtime device, runtime library, or embedded artifact is available merely from
+a valid launch block.
+
+### Portability
+
+The syntax is target-neutral. It names execution geometry and a Silk GPU
+function, not HIP, CUDA, AMD, or NVIDIA ABI details. The selected GPU backend
+owns artifact generation and runtime adaptation. GPU v1 targets AMDHSA through
+HIP and NVIDIA PTX through the CUDA Driver API with the same source form and
+checker rules.
+
+See [`GPU execution placement`](/silk/docs/language/gpu-execution/) for placement and device-call rules,
+`the standard library` for buffers and synchronization, and
+[`Target-neutral GPU compilation`](/silk/docs/compiler/backend-gpu/) for the shared backend boundary.
 
 ## `Duration` & `Instant`
 
@@ -12400,10 +13531,15 @@ Currently supported:
  - unlike `fn (...) -> R` function values, `c_fn (...) -> R` values do not carry a
  closure environment and are safe to store in locals/struct fields and pass
  through APIs,
- - a `c_fn` value may be formed only from:
+ - a `c_fn` value may be formed contextually from:
  - a top-level function name, or
  - a non-capturing `fn (...) -> ...` expression,
- - capturing closures are rejected when a `c_fn` is required.
+ - a stored or otherwise indirect signature-identical Silk function value may
+ be converted explicitly with `value as c_fn (...) -> R` (or an alias of
+ that target type),
+ - the explicit conversion checks that the function value's closure
+ environment is zero and traps if an indirect value captures; a directly
+ written capturing expression is rejected during checking.
 - `ext` **variables** of scalar type (`ext name = T;` where `T` is a supported
  scalar such as `int`, fixed-width ints, `bool`, `char`, or `f32`/`f64`) as
  readable values in Silk,
@@ -12426,7 +13562,8 @@ Currently supported:
  - `silk build --kind executable`,
  producing relocations against undefined external symbols in the generated
  `.o` / `.a`, dynamic imports in the generated `.so`, or dynamic imports in
- the generated dynamically-linked executable (linux/x86_64).
+ the generated dynamically-linked executable (Linux x86_64 and Linux
+ AArch64 for each backend's documented scalar subset).
  - for shared libraries and dynamically-linked executables, external calls are
  routed through a GOT slot that is filled by the dynamic loader.
  - `ext` variable reads are supported for the same outputs, producing
@@ -12474,10 +13611,26 @@ fn main () -> int {
 Notes:
 
 - `c_fn` values are code pointers only; they cannot capture local variables.
+- A stored non-capturing Silk function value can be converted explicitly:
+
+  ```silk
+  let silk_fn = fn (a: i64, b: i64) -> a + b;
+  let cb = silk_fn as c_fn (i64, i64) -> i64;
+  ```
+
+ Parameter and result types must match exactly, and the source must satisfy
+ the target's purity requirement. An indirect source value is checked at
+ runtime and traps if it carries a closure environment.
 - A raw dynamic symbol address can be converted explicitly with
- `addr as raw c_fn (...) -> R` or an alias of that type. This is intended for
- loader APIs such as [`std::dylib`](/silk/docs/std/dylib/); Silk does not validate the symbol signature
- at runtime, so the declared `c_fn` type must match the foreign ABI exactly.
+ `unsafe addr as raw c_fn (...) -> R`, or with the equivalent braced form
+ `unsafe { addr as raw c_fn (...) -> R }`; either spelling may target an alias
+ of the callback type. This is intended for loader APIs such as [`std::dylib`](/silk/docs/std/dylib/);
+ Silk does not validate the symbol signature at runtime, so the declared
+ `c_fn` type must match the foreign ABI exactly.
+- An external binding can use `unsafe fn (...) -> R` or
+ `unsafe c_fn (...) -> R` when its contract cannot be verified by Silk.
+ Calls then require an unsafe context; safe stdlib facades should validate
+ their inputs and contain the smallest practical unsafe boundary.
 - A `c_fn` value can be called directly from Silk using the same call syntax as
  ordinary function values. The current value is invoked as a plain C code
  pointer with no closure environment.
@@ -12594,6 +13747,9 @@ Notes:
 
 - For FFI with APIs that use a C `int` (for example many POSIX syscalls),
  prefer `i32`/`u32` in your `ext` declarations rather than `int`.
+ The Linux abort runtime uses the same C-width declaration for `prctl`: an
+ `i32` operation and return value, followed by four `u64` argument slots.
+ A user declaration with that signature can coexist with `std::abort`.
 - The stable C99 ABI does **not** use compiler-specific `__int128` or
  `__float128` types for these primitives; it uses explicit `{ lo, hi }`
  structs so the ABI is portable and can be expressed in strict C99.
@@ -12742,7 +13898,9 @@ with the standard library or `ext` bindings.
 
 ```silk
 fn spin_pause () -> void {
-  asm "pause";
+  unsafe {
+    asm "pause";
+  }
 }
 ```
 
@@ -12751,7 +13909,8 @@ statement.
 
 ### Semantics
 
-- `asm "<text>";` emits the machine instructions assembled from `<text>`.
+- `asm "<text>";` requires an unsafe context and emits the machine
+ instructions assembled from `<text>`.
 - The assembly text must be a **string literal**; it is not computed at
  runtime.
 - Inline asm produces no values (type `void`).
@@ -12764,21 +13923,24 @@ In the current implementation, `<text>` is assembled by the system assembler
 (`as`) for the active native host backend:
 
 - `linux/x86_64`: GNU `as` in **Intel syntax** (`.intel_syntax noprefix`)
+- `linux/aarch64`: GNU `as` in its native AArch64 syntax
 - `macos/aarch64`: Apple `as` in its native arm64 syntax
 
 The assembly may contain multiple instructions, for example:
 
 ```silk
 fn main () -> int {
-  asm "mov rax, rax\nnop";
+  unsafe {
+    asm "mov rax, rax\nnop";
+  }
   return 0;
 }
 ```
 
 #### Restrictions
 
-- `asm` is currently implemented only for the native `linux/x86_64` and
- `macos/aarch64` backends.
+- `asm` is currently implemented for the native `linux/x86_64`,
+ `linux/aarch64`, and `macos/aarch64` backends.
 - The assembled output must not require **relocations**. As a result, inline
  asm may not refer to external symbols (for example `call foo` where `foo` is
  not defined within the asm text).
@@ -12789,7 +13951,8 @@ fn main () -> int {
 ### Portability and safety notes
 
 - `asm` is target-dependent by nature. The current implementation is supported
- only for the native `linux/x86_64` and `macos/aarch64` backends.
+ only for the native `linux/x86_64`, `linux/aarch64`, and `macos/aarch64`
+ backends.
 - Using `asm` can make programs non-portable. Prefer standard library
  facilities and compiler-provided intrinsics when possible.
 
@@ -12803,6 +13966,7 @@ fn main () -> int {
  - assigns the expression type `void`.
 - Code generation:
  - emits the assembled bytes in the `linux/x86_64` IR→ELF backend,
+ - emits the assembled bytes in the `linux/aarch64` IR→ELF backend,
  - emits the assembled bytes in the temporary `macos/aarch64` host Mach-O backend.
 - Tests:
  - end-to-end coverage via:
@@ -12814,8 +13978,8 @@ fn main () -> int {
 Not yet implemented:
 
 - inline asm with operands (inputs/outputs), clobbers, or options,
-- any `asm` support on non-`linux/x86_64` targets/backends.
- except for the current `macos/aarch64` host Mach-O subset.
+- any `asm` support outside the native Linux x86_64/AArch64 and
+ `macos/aarch64` host backends.
 
 ## Blocks and Statement Composition
 
@@ -13397,6 +14561,9 @@ Current compiler target set and values:
  - `OS_PLATFORM == "unknown"`
 - `wasm32-wasi`:
  - `OS_PLATFORM == "wasi"`
+- `amdgcn-amd-amdhsa-gfx942`, `amdgcn-amd-amdhsa-gfx1100`, and
+ `amdgcn-amd-amdhsa-gfx1151`:
+ - `OS_PLATFORM == "amdhsa"`
 
 #### `OS_ARCH`
 
@@ -13413,6 +14580,9 @@ Current compiler target set and values:
  - Formal Silk comparisons also accept the ARM64 aliases `"arm64"` and `"aarch"` in any letter case, including through compile-time string constants, even though the canonical `OS_ARCH` value remains `"aarch64"`.
 - `wasm32-unknown-unknown` and `wasm32-wasi`:
  - `OS_ARCH == "wasm32"`
+- `amdgcn-amd-amdhsa-gfx942`, `amdgcn-amd-amdhsa-gfx1100`, and
+ `amdgcn-amd-amdhsa-gfx1151`:
+ - `OS_ARCH == "amdgcn"`
 
 #### `OS_IS_UNIX`
 
@@ -13434,6 +14604,9 @@ Current compiler target set:
 - `windows-aarch64`: `false`
 - `wasm32-unknown-unknown`: `false`
 - `wasm32-wasi`: `false`
+- `amdgcn-amd-amdhsa-gfx942`: `false`
+- `amdgcn-amd-amdhsa-gfx1100`: `false`
+- `amdgcn-amd-amdhsa-gfx1151`: `false`
 
 #### `OS_IS_POSIX`
 
@@ -13455,6 +14628,9 @@ Current compiler target set:
 - `windows-aarch64`: `false`
 - `wasm32-unknown-unknown`: `false`
 - `wasm32-wasi`: `false`
+- `amdgcn-amd-amdhsa-gfx942`: `false`
+- `amdgcn-amd-amdhsa-gfx1100`: `false`
+- `amdgcn-amd-amdhsa-gfx1151`: `false`
 
 ### Relationship to [`std::os`](/silk/docs/std/os/)
 
@@ -14548,7 +15724,10 @@ canonical type constructors while keeping the stdlib source on namespace
 imports.
 
 The alias is transparent: using `Alias` is equivalent to using the target
-symbol directly.
+symbol directly. For functions this includes purity, `const fn` discipline,
+execution placement such as `attr(device=gpu)`, compiler-recognized device
+intrinsic status, and the target's lexical/package identity. A function cannot
+be made host-callable, runtime-callable, or launchable merely by aliasing it.
 
 Name conflicts are errors, except when the alias already refers to the same
 symbol as the target (a redundant alias). In that case the `using` declaration
@@ -14560,6 +15739,17 @@ Module-scope aliases may also be exported:
 export using Alias = QualifiedName;
 public using Alias = QualifiedName;
 ```
+
+Package-qualified function targets use the same form:
+
+```silk
+import std::io;
+using sayln = std::io::println;
+```
+
+`sayln(...)` has the exact callable contract and metadata of
+[`std::io::println(...)`](/silk/docs/std/io/); it is not interpreted as a type alias merely because
+the target is package-qualified.
 
 - `export using` and `public using` are equivalent at module scope.
 - Exported aliases participate in the module/package surface just like other
@@ -14972,6 +16162,55 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2127` — invalid atomic memory ordering; for example, `load` may not use
  `Release` / `AcqRel`, `store` may not use `Acquire` / `AcqRel`, and
  `compare_exchange` failure ordering may not use `Release` / `AcqRel`.
+- `E2128` — a capturing function expression cannot be used as or converted to
+ `c_fn`; remove the capture or pass the captured state as an explicit callback
+ parameter/context pointer. This is a type/representation error, not an unsafe
+ permission error; an `unsafe` wrapper does not make capture erasure valid.
+- `E2129` — an operation requiring a programmer-verified invariant was used
+ outside an unsafe context. Prefix the narrow operation with `unsafe`, wrap it
+ in `unsafe { ... }`, or call it through a safe abstraction that establishes
+ the required invariant.
+ The diagnostic detail names the exact operation, such as
+ `raw address-to-callback cast`, `raw address-to-slice view cast`, `inline
+ assembly`, or `call to unsafe function`.
+
+For example, converting a dynamic-loader address without a boundary:
+
+```silk
+type Callback = c_fn (int) -> int;
+let callback: Callback = address as raw Callback;
+```
+
+produces a checker diagnostic shaped as:
+
+```text
+error[E2129]: unsafe operation requires an unsafe context
+  |
+  | let callback: Callback = address as raw Callback;
+  |                                     ^^^ raw address-to-callback cast
+  = help: prefix the operation with `unsafe` or wrap it in `unsafe { ... }` after validating its safety invariants
+  = help: or declare the containing function `unsafe fn` when callers must uphold those invariants
+```
+
+The accepted form keeps the assertion narrow:
+
+```silk
+let callback: Callback = unsafe address as raw Callback;
+```
+
+`E2129` is emitted during ordinary checking and therefore precedes Formal Silk
+verification. Once the unsafe-context check succeeds, formal obligations are
+unchanged: a violated `#require` at an unsafe call still reports `E3007`.
+
+#### Code Quality
+
+- `L5001` — a function, method, anonymous function, or test body exceeds the
+ configured cyclomatic-complexity maximum. Its severity is selected by
+ `[check.rules.cyclomatic_complexity].severity`; the diagnostic identifies a
+ scope-qualified body, reports the amount over budget, and includes the shared
+ analyzer's baseline/decision equation, deepest nesting, and category
+ breakdown. See [`Complexity Analysis API`](/silk/docs/compiler/complexity-analysis/) for the structured
+ evidence available to compiler and editor tools.
 
 #### Formal Silk Verification
 
@@ -15026,10 +16265,35 @@ Notes:
 - When lowering cannot isolate a narrower statement / expression site, `E4001`
  falls back to the offending function or declaration collector stage and names
  that function / declaration directly.
+- A module-level binding that cannot be represented or initialized for the
+ requested target is a declaration-stage failure. Its `E4001` diagnostic must
+ point at that binding and name the unsupported declaration/initializer; it
+ must not blame an otherwise supported function merely because that function
+ reads the binding.
 - For declaration-stage layout collection failures, the note should carry the
  collector context and, when available, the rejected field or payload type
  shape so users do not have to infer it from a generic carrier such as
  `Result`.
+- GPU execution-boundary violations use `E4001` with a precise message. A host
+ function cannot call an `attr(device=gpu)` function or a public/compiler-owned
+ portable GPU device operation directly, and a GPU function cannot call an
+ impure host function. A GPU function may call another GPU function or a pure
+ host function; a `const fn` remains compile-time-only and is not a runtime
+ GPU helper. Raw `__silk_amdgpu_*` declarations remain accepted only as input
+ to the documented standalone AMDGPU source-intrinsic object path, whose
+ target-specific selector validates them.
+- GPU launch-block violations also use `E4001` and identify the rejected
+ contract directly: malformed `grid`/`workspace` headers and non-call bodies
+ are parse diagnostics; semantic diagnostics distinguish unknown targets,
+ known non-GPU functions, non-launchable GPU helper signatures,
+ dependency-package targets outside the executable bundle, argument mismatch,
+ use from device code, and use without an available standard library. A
+ launch-block diagnostic must point at the target call or rejected option
+ rather than the compiler-generated [`std::gpu::launch_and_synchronize`](/silk/docs/std/gpu/) call.
+- A mixed executable requested with `--gpu-target` requires at least one
+ launchable root-package `attr(device=gpu)` entry. If the package contains
+ only non-entry GPU helpers, the diagnostic must say that no launchable entry
+ exists; it must not incorrectly claim that the package has no GPU function.
 
 ### Tooling Integration Notes
 
@@ -15091,6 +16355,17 @@ Practical consequence:
 Embedders should prefer `#include <silk/silk.h>`. The flat [`include/silk.h`](https://github.com/oro-computer/silk/blob/master/include/silk.h)
 wrapper remains available for compatibility during the transition.
 
+Each `silk_compiler_build` and `silk_compiler_build_to_bytes` call separates
+temporary type-checker storage from the AST storage retained through code
+generation. Checker buffers are reclaimed during checking instead of
+accumulating for the entire build. All remaining scratch storage is released
+when the call returns, including on errors; the compiler-owned last-error
+message remains valid until the next operation or compiler destruction.
+Compiler memory consumption depends on the input and loaded modules. The C99
+regression suite exercises ordinary prelude-backed builds under a 2 GiB
+address-space limit on Linux; this is a regression bound, not a public memory
+quota or a guarantee for arbitrary programs.
+
 #### Linking When Static Z3 Is Bundled
 
 When the host-native [`vendor/lib/<host-layout>/libz3.a`](https://github.com/oro-computer/silk/blob/master/vendor/lib/<host-layout>/libz3.a) archive is present,
@@ -15122,6 +16397,7 @@ The header must define:
  - configuring compilation (target triple, stdlib name, optimization level),
  - adding source buffers,
  - compiling Silk source to executables, libraries, or object files,
+ - serializing AMDGPU AQL dispatch packets for embedder-owned runtime paths,
  - interacting with diagnostics and error reporting.
 
 #### Initial C Header Shape ([`include/silk/silk.h`](https://github.com/oro-computer/silk/blob/master/include/silk/silk.h))
@@ -15166,6 +16442,17 @@ The initial C header provided in the Silk compiler repository defines:
  - bit 0: `has_end` (when unset, `end` is ignored),
  - bit 1: `inclusive` (only valid when `has_end` is set).
 
+- Generated C callback values use the `c_fn (P...) -> R` language type and
+ occupy one native code-pointer slot. A Silk `fn (P...) -> R` value occupies
+ two internal slots (`func_ptr`, `env_ptr`) and is not itself C-compatible.
+ An explicit signature-identical `fn`-to-`c_fn` cast checks that `env_ptr` is
+ zero before exposing the code pointer; a nonzero environment traps. This
+ conversion does not change the public `libsilk` API or the generated C
+ callback calling convention.
+- `unsafe fn` and `unsafe c_fn` use the same machine calling conventions as
+ their safe counterparts. `unsafe` is a Silk compile-time call effect and
+ does not add fields, hidden parameters, or public `libsilk` ABI state.
+
 - 128-bit scalar primitives (`i128` / `u128` / `f128`) used by generated C
  headers for exported Silk interfaces:
 
@@ -15190,6 +16477,37 @@ The initial C header provided in the Silk compiler repository defines:
  - `SilkF128` stores the IEEE‑754 binary128 bit pattern. It is not C `long double`.
  - These types are passed and returned as two integer-like 8-byte slots in the
  current `linux/x86_64` backend subset.
+
+- Package export symbol helpers for C/Objective-C bridge headers:
+
+  ```c
+  SILK_C_ABI_EXPORT_FN(lumen_trail, silk_ios_daily_score)
+  /* expands to lumen_trail_silk_ios_daily_score */
+
+  SILK_PACKAGE_EXPORT_FN(lumen_trail, silk_ios_daily_score)
+  /* expands to __silk_export_fn__lumen_trail__silk_ios_daily_score */
+
+  SILK_PACKAGE_EXPORT_DATA(my_pkg, answer)
+  /* expands to __silk_export_data__my_pkg__answer */
+  ```
+
+ Notes:
+ - The macro arguments must be C identifier tokens.
+ - For nested Silk packages, pass the spelling that matches the selected
+ symbol family. `SILK_C_ABI_EXPORT_FN` uses the clean C ABI package spelling
+ with namespace separators collapsed to one `_`, so package `ui::model` is
+ passed as `ui_model`. `SILK_PACKAGE_EXPORT_FN` and
+ `SILK_PACKAGE_EXPORT_DATA` use the reserved default Silk package spelling
+ where each `:` becomes `_`, so the same package is passed as `ui__model`.
+ - `SILK_C_ABI_EXPORT_FN` matches exported functions declared as
+ `export attr(abi=c) fn ...` or `attr(abi=c) export fn ...` in a named
+ package.
+ - `SILK_PACKAGE_EXPORT_FN` and `SILK_PACKAGE_EXPORT_DATA` match the default
+ Silk package export symbols that keep the reserved `__silk_export_*__`
+ prefixes.
+ - These helpers are spelling aids for named-package bridge headers. They do
+ not change Silk import/export semantics, and they do not make named-package
+ exports part of the generated `--c-header` surface.
 
 - Opaque handles:
 
@@ -15216,6 +16534,41 @@ The initial C header provided in the Silk compiler repository defines:
   void silk_abi_get_version(int *out_major,
                             int *out_minor,
                             int *out_patch);
+  ```
+
+- AMDGPU AQL packet helpers:
+
+  ```c
+  #define SILK_AMDGPU_AQL_DISPATCH_PACKET_SIZE 64
+
+  typedef enum SilkAmdGpuAqlFenceScope {
+      SILK_AMDGPU_AQL_FENCE_SCOPE_NONE = 0,
+      SILK_AMDGPU_AQL_FENCE_SCOPE_AGENT = 1,
+      SILK_AMDGPU_AQL_FENCE_SCOPE_SYSTEM = 2,
+  } SilkAmdGpuAqlFenceScope;
+
+  typedef struct SilkAmdGpuAqlDispatchPacketConfig {
+      uint16_t dimensions;
+      uint16_t workgroup_size_x;
+      uint16_t workgroup_size_y;
+      uint16_t workgroup_size_z;
+      uint32_t grid_size_x;
+      uint32_t grid_size_y;
+      uint32_t grid_size_z;
+      uint32_t private_segment_size;
+      uint32_t group_segment_size;
+      uint32_t max_flat_workgroup_size;
+      uint64_t kernel_object;
+      uint64_t kernarg_address;
+      uint64_t completion_signal;
+      uint8_t  barrier;
+      int32_t  acquire_fence_scope;
+      int32_t  release_fence_scope;
+  } SilkAmdGpuAqlDispatchPacketConfig;
+
+  bool silk_amdgpu_aql_dispatch_packet_build(
+      const SilkAmdGpuAqlDispatchPacketConfig *config,
+      uint8_t                                *out_packet);
   ```
 
 - Compiler lifecycle:
@@ -15280,12 +16633,9 @@ The initial C header provided in the Silk compiler repository defines:
  `target_triple` string is copied. The implementation recognizes the
  same targets as the CLI (`silk build --list-targets`), including:
 
- - `linux-x86_64` (default), and common `x86_64-*-linux-gnu` triples such as
+ - `linux-x86_64` (default), and common `x86_64-*-linux-*` triples such as
  `x86_64-linux-gnu` and `x86_64-unknown-linux-gnu`,
- - `linux-x86_64-musl`, and common `x86_64-*-linux-musl` triples such as
- `x86_64-unknown-linux-musl`,
  - `linux-aarch64`,
- - `linux-aarch64-musl`,
  - `android-aarch64`,
  - `macos-x86_64`,
  - `macos-aarch64`,
@@ -15295,12 +16645,70 @@ The initial C header provided in the Silk compiler repository defines:
  - `windows-x86_64`,
  - `windows-aarch64`,
  - `wasm32-unknown-unknown`,
- - `wasm32-wasi` (and other `wasm32` triples containing `wasi`).
+ - `wasm32-wasi` (and other `wasm32` triples containing `wasi`),
+ - `amdgcn-amd-amdhsa-gfx942`,
+ - `amdgcn-amd-amdhsa-gfx1100`,
+ - `amdgcn-amd-amdhsa-gfx1151`.
+
+ For `linux-aarch64` and `linux-aarch64-musl`,
+ `SILK_OUTPUT_EXECUTABLE` first attempts the direct AArch64 IR backend. Its
+ current AAPCS64 subset covers integer and `f32`/`f64` scalar constants,
+ numeric/raw casts, arithmetic, bitwise operations, shifts, comparisons,
+ stack/data memory, function/data addresses, CFG branches,
+ direct/indirect helpers, and external scalar function/data imports. Integer
+ parameters/results use `x0`…`x7`, floating-point parameters/results use
+ `v0`…`v7`, and the two register banks advance independently. Additional
+ classified arguments spill to the aligned caller stack. External C calls
+ return one or two flattened scalar slots in the classified result registers;
+ larger C aggregate results use the AAPCS64 indirect-result pointer in `x8`.
+ Compiler-internal Silk calls keep their eight-slot result-register contract
+ and use hidden caller-provided storage only for larger results. External imports
+ or configured needed/runpath metadata select a dynamically linked GNU- or
+ musl-interpreted PIE. Executable/shared output can select and relocate the
+ required bundled-runtime archive closure and consume explicit AArch64
+ relocatable-object/archive inputs without an external linker.
+ `SILK_OUTPUT_OBJECT`,
+ `SILK_OUTPUT_STATIC_LIBRARY`, and `SILK_OUTPUT_SHARED_LIBRARY` use the same
+ scalar selector to emit `EM_AARCH64` ELF64 objects, indexed GNU archives, and
+ loadable `ET_DYN` shared objects. Object/archive output carries AArch64
+ relocations; shared output supports exported data, external scalar imports,
+ embedded-pointer relocations, and configured needed/runpath/soname metadata.
+ When compilation runs natively on Linux AArch64, `.c`/`.h` inputs, link-only
+ C executables, `-L` plus `-l`/`-l:<file>`, and relocation-free inline
+ assembly are supported. Framework options remain Apple-only, and
+ unrecognized raw linker flags remain outside the Linux AArch64 in-process
+ linker.
+ A program that reduces
+ to a constant `main` can still use the target-aware const-main fallback. For
+ `main(argc: int, argv: u64)`, the entry stub passes the Linux process argument
+ count in `x0` and the raw argv-list pointer in `x1`. Direct and
+ constant-fallback ELF images declare an explicit read/write, non-executable
+ stack with `PT_GNU_STACK`.
 
  For `wasm32` targets, only `SILK_OUTPUT_EXECUTABLE` is supported. The output
  bytes are a final WebAssembly module (`.wasm`) produced by the IR-backed wasm
  backend (`the implementation`), with a smaller constant-only fallback for
  programs that fit the constant subset.
+
+ For AMDGPU targets, `SILK_OUTPUT_OBJECT` emits an AMDHSA `.hsaco` code object
+ for the current source-kernel subset: exactly one exported root-package
+ void function with up to 32 immutable `u64` parameters whose body is empty or
+ contains only supported compiler-backed GPU call statements. Low-level
+ `__silk_amdgpu_*` calls retain integer-literal operands; the semantic
+ [`std::gpu::device::store_u32_at_global_x`](/silk/docs/std/gpu-device/) and
+ [`std::gpu::device::classify_u32_at_global_x`](/silk/docs/std/gpu-device/) helpers accept direct kernel
+ parameter names.
+ Dependency-package exports do not count as kernels. The function name becomes
+ the AMDHSA kernel metadata name and the descriptor symbol is `kernel_name.kd`.
+ Metadata register counts are derived from the highest SGPR/VGPR referenced by
+ the accepted source intrinsics, with 32 SGPRs and 64 VGPRs as minimum values.
+ [`AMDGPU Backend`](/silk/docs/compiler/backend-amdgpu/) documents the canonical source-intrinsic
+ declaration sets and authoring diagnostics.
+
+ The provider-neutral mixed CPU/GPU executable option is currently a `silk
+ build --gpu-target` CLI surface, not a `libsilk` compiler-setting function.
+ This GPU-v1 work does not change the C99 ABI. Embedders retain the documented
+ standalone AMDGPU object and AQL packet APIs.
 
  The wasm backend is still early-stage, but it is no longer limited
  to single-module constant programs:
@@ -15331,21 +16739,31 @@ The initial C header provided in the Silk compiler repository defines:
  executable and shared library outputs (emitted as `DT_NEEDED`). The `soname`
  string is copied; the function may be called multiple times (duplicates are
  ignored). For static library and object outputs, the value is ignored.
+ Linux AArch64 executable output emits a dynamically linked PIE when
+ `DT_NEEDED` metadata or external scalar imports are present. GNU targets use
+ `/lib/ld-linux-aarch64.so.1`; musl targets use
+ `/lib/ld-musl-aarch64.so.1`.
  `DT_NEEDED` entries starting with `libsilk_rt` are rejected: bundled runtime
- helpers are linked statically from `libsilk_rt.a` / `libsilk_rt_noheap.a` and
- must not become runtime loader dependencies.
- On `linux/x86_64`, when an executable or shared library imports any external
- symbols, the compiler automatically adds the selected libc as a `DT_NEEDED`
- dependency (`libc.so.6` for glibc, `libc.so` for musl), so embedders do not
- need to manually add libc when using hosted `std::` modules like [`std::io`](/silk/docs/std/io/)
- and [`std::fs`](/silk/docs/std/fs/). Additional non-libc dependencies must still be declared via
- `silk_compiler_add_needed_library`.
+ helpers are linked statically from the target/libc-matched archive and must
+ not become runtime loader dependencies. Linux AArch64 glibc and musl outputs
+ use distinct archives so C-library structure layouts and constants cannot
+ cross the target ABI boundary. The AArch64 musl archive supplies the async
+ runtime's private AAPCS64 context switch, so generated async executables do
+ not import musl's unimplemented `getcontext`, `makecontext`, or `swapcontext`
+ declarations.
+ On Linux x86_64 and Linux AArch64, when an executable or shared library
+ imports external system symbols, the compiler automatically adds the selected
+ libc as a `DT_NEEDED` dependency (`libc.so.6` for glibc, `libc.so` for musl),
+ so embedders do not need to manually add libc when using hosted `std::`
+ modules like [`std::io`](/silk/docs/std/io/) and [`std::fs`](/silk/docs/std/filesystem/). Additional non-libc dependencies must
+ still be declared via `silk_compiler_add_needed_library`.
 
  `silk_compiler_add_runpath` records a dynamic loader search path element for
  executable and shared library outputs (emitted as `DT_RUNPATH`). The `path`
  string is copied; the function may be called multiple times (duplicates are
  ignored) and the final `DT_RUNPATH` string is formed by joining all entries
- with ':'.
+ with ':'. Linux AArch64 dynamically linked executables and shared libraries
+ preserve the resulting value as `DT_RUNPATH`.
 
  `silk_compiler_set_soname` configures the shared library soname recorded as
  `DT_SONAME` for shared library outputs. The `soname` string is copied; passing
@@ -15397,7 +16815,8 @@ The initial C header provided in the Silk compiler repository defines:
   ```
 
  The returned bytes are target-specific: for example an ELF64 binary on
- `linux-x86_64`, or a `.wasm` module on `wasm32` targets.
+ `linux-x86_64`, a `.wasm` module on `wasm32` targets, or an AMDHSA `.hsaco`
+ code object on AMDGPU object outputs.
 
  Ownership rules:
 
@@ -15412,17 +16831,40 @@ The initial C header provided in the Silk compiler repository defines:
  Note: the compiler may still consult the filesystem to auto-load `std::...`
  modules unless `silk_compiler_set_nostd(compiler, true)` has been set.
 
+ AMDGPU runtime packet helper:
+
+ - `silk_amdgpu_aql_dispatch_packet_build` serializes a host-endian
+ `SilkAmdGpuAqlDispatchPacketConfig` into a 64-byte HSA AQL
+ kernel-dispatch packet.
+ - The packet bytes use the HSA field offsets documented in
+ [`AMDGPU Backend`](/silk/docs/compiler/backend-amdgpu/): header at `0..2`, setup at `2..4`,
+ workgroup sizes at `4..10`, grid sizes at `12..24`, segment sizes at
+ `24..32`, `kernel_object` at `32..40`, `kernarg_address` at `40..48`,
+ and `completion_signal` at `56..64`.
+ - The function returns `false` for null pointers, invalid fence-scope values,
+ dimensions outside `1..3`, zero workgroup or grid sizes, grids smaller than
+ workgroups, non-1 unused dimensions, or flat work-group sizes larger than
+ `max_flat_workgroup_size`. A zero `max_flat_workgroup_size` in the C config
+ selects the conservative default of 1024 work-items. When `out_packet` is
+ non-null, it is zeroed before validation, so failed calls leave no stale
+ packet bytes.
+ - The helper is independent of `SilkCompiler` and does not read or write the
+ compiler last-error state.
+ - The helper only builds the packet. Queue creation, executable loading,
+ signal allocation, and doorbell submission remain the embedder or future
+ ROCR runtime driver's responsibility.
+
  Current Apple host-backed note:
 
  - the CLI / driver now supports non-const `ios-aarch64`,
- `ios-simulator-aarch64`, and `ios-simulator-x86_64` executable builds on
- Apple Silicon macOS for the current pure-Silk scalar subset, including
- reachable float-to-int lowering and portable bundled runtime helper
- families
+ `ios-simulator-aarch64`, and `ios-simulator-x86_64` executable, object,
+ static-library, and shared-library builds on Apple Silicon macOS for the
+ current pure-Silk scalar/library subset, including reachable float-to-int
+ lowering and portable bundled runtime helper families
  (number / regex / unicode / filesystem / dns / process / signal / term /
  pty / readline / task-pool / async),
  - `silk_compiler_build(...)` and `silk_compiler_build_to_bytes(...)` now
- support that same iOS host-backed subset on Apple Silicon macOS,
+ support that same iOS host-backed artifact subset on Apple Silicon macOS,
  - the remaining explicit `E4001` iOS limitation is narrower:
  it now applies only to narrower unsupported bundled runtime-internal
  helper families, while portable bundled helpers, hosted async/task
@@ -15433,6 +16875,11 @@ The initial C header provided in the Silk compiler repository defines:
  - `silk_compiler_build` always performs full front‑end validation for all modules
  added via `silk_compiler_add_source_buffer`:
  - it lexes and parses each module into an internal representation,
+ - it applies `attr(...)` declarations against the selected target before
+ monomorphization and type checking, matching the CLI pipeline; this is
+ required for `attr(device=gpu)` functions and target-gated declarations
+ to retain their intended execution contract through both filesystem and
+ in-memory output APIs,
  - it then type‑checks the *set* of modules as a unit, taking into account
  package/import relationships and exported constants, according to the
  language grammar and semantics documented under this specification,
@@ -15476,10 +16923,13 @@ The initial C header provided in the Silk compiler repository defines:
  - if the embedder explicitly provides a `std::...` module via
  `silk_compiler_add_source_buffer`, that module is treated as authoritative
  for its package (auto-loading does not replace already-provided packages).
- - standard library archive linking (`linux/x86_64`, current archive layout):
+ - standard library archive linking (`linux/x86_64` and `linux/aarch64`,
+ current archive layout):
  - the toolchain can build a target-specific stdlib static archive
  (`libsilk_std.a`) containing one ELF object per std module (for example
  via `make stdlib`),
+ - the archive must match the selected target architecture; native Linux
+ x86_64 and AArch64 staged builds produce their corresponding archive,
  - for supported executable builds, the compiler treats *auto-loaded*
  `std::...` modules as external during code generation and resolves their
  exported functions from the archive when available (while still
@@ -15543,7 +16993,10 @@ The initial C header provided in the Silk compiler repository defines:
  - within the current `linux/x86_64` IR subset, `i128`/`u128`/`f128` values are supported at ABI boundaries using the stable C99 `{ lo, hi }` struct shapes:
  - parameters lower to two integer-like scalars (`u64 lo`, then `u64`/`i64 hi`) and consume integer argument locations,
  - results return as two integer-like scalars in `rax`/`rdx`,
- - `f128` values are transported as raw IEEE binary128 bits in the two lanes (not via SSE registers).
+ - `f128` values are transported as raw IEEE binary128 bits in the two lanes (not via SSE registers),
+ - module-level constant-evaluable wide bindings and inferred local wide
+ arithmetic use this same lane representation; source placement and a
+ redundant local type annotation do not alter the ABI or lowering.
  - within the current `linux/x86_64` IR subset, a limited `struct` subset is supported at ABI boundaries:
  - within function bodies and internal helper calls, `struct` declarations with 0+ fields of supported value types are supported (scalar primitives, `string`, nested structs, and supported optionals),
  - at ABI boundaries for exported/FFI functions, only ABI-safe structs are currently supported: after slot-flattening, all scalar slots must be `i64`/`u64`/`f64` (until packed ABI mapping for smaller fields is implemented),
@@ -15551,14 +17004,39 @@ The initial C header provided in the Silk compiler repository defines:
  - named-package Silk object exports may accept slice parameters (`T[]`) in the compiler-owned package ABI; these lower to two integer-like scalars (`u64` pointer, then `i64` element count) and are not emitted through C header generation,
  - at the C ABI surface, exported function *parameters* support 1+ slot ABI-safe structs by lowering the struct to its scalar slots in order; downstream C callers should declare separate parameters for 3+ slot structs (by-value C struct parameters are ABI-compatible only for the 1–2 slot cases), while exported function *returns* support 1+ slot ABI-safe structs (3+ slot returns use the native backend’s sret return path and are ABI-compatible with returning an equivalent C struct by value),
  - in all cases, the compiler lowers a struct value into N scalar slots in field order and assigns argument/result locations according to System V AMD64 integer/SSE classification for those slots.
+ - named-package exported functions use the default package-qualified
+ symbol `__silk_export_fn__pkg__name` unless the declaration uses
+ `export attr(abi=c) fn ...` / `attr(abi=c) export fn ...`; C ABI
+ exports omit the reserved prefix and emit clean C symbols by collapsing
+ package `::` namespace separators to `_` and placing a single `_`
+ between the package namespace and function name; declaration-level
+ `attr(abi=c)` is currently supported only on top-level exported
+ functions, with functions nested inside inline `module Name { ... }`
+ blocks rejected until that export path is implemented end to end;
+ clean C ABI symbols that collide with another C ABI export or any other
+ function symbol emitted for the selected output are rejected before
+ object or library emission; library outputs apply this check to the root
+ package's public C ABI symbols and the dependency functions as they are
+ actually emitted into that output, including internal raw dependency
+ symbols,
+ - named-package exported data currently uses the default
+ package-qualified symbol `__silk_export_data__pkg__name`,
+ - C/Objective-C bridge headers should spell those symbols through
+ `SILK_C_ABI_EXPORT_FN(pkg, name)`, `SILK_PACKAGE_EXPORT_FN(pkg, name)`,
+ or `SILK_PACKAGE_EXPORT_DATA(pkg, name)` from `silk/silk.h` instead of
+ hardcoding generated spellings,
  - within the current `linux/x86_64` IR subset, optionals (`T?`) are supported at ABI boundaries for the supported payload subset (scalar payloads, `string?`, and optionals of ABI-safe structs):
  - an optional lowers to a `Bool` tag followed by the payload scalar slots: `(tag, payload0, payload1, ...)` with `tag=0` for `None` and `tag=1` for `Some(...)`,
  - nested optionals (`T??`) lower by treating the payload slots as the full inner optional representation (for example `int??` lowers as `(tag0, tag1, i64 payload)`),
  - optional parameters are passed as these scalar slots in order (so downstream C callers should declare separate parameters, treating `tag` as an integer-like 0/1 value),
  - optional results return as the same scalar slots (1–2 slots in registers; 3+ slots via a hidden sret pointer as described above).
  - for object outputs (`SILK_OUTPUT_OBJECT`):
- - on `linux/x86_64`, the compiler can emit an ELF64 relocatable object
- (`ET_REL`) for the supported IR subset, emitting supported functions
+ - on `linux/x86_64` and `linux/aarch64`, the compiler can emit an ELF64
+ relocatable object (`ET_REL`) for each backend's documented IR subset;
+ on Apple Silicon macOS hosts,
+ `macos-aarch64`, `ios-aarch64`, `ios-simulator-aarch64`, and
+ `ios-simulator-x86_64` can emit a Mach-O 64-bit relocatable object for
+ the same current host-backed library subset, emitting supported functions
  (scalar-returning, `void`-returning, and a limited `string` subset) and supported exported constants
  (`export let`/`export const`; scalar exports require an explicit type annotation and a literal initializer, and string exports may omit `: string` when the initializer is a string literal), and marking `export fn`
  declarations, supported exported constants, and a valid executable `main`
@@ -15570,12 +17048,23 @@ The initial C header provided in the Silk compiler repository defines:
  - for programs outside that subset (or on unsupported targets),
  `silk_compiler_build` returns `false` with an `E4001` / `E4002` formatted diagnostic (via `silk_compiler_last_error` / `silk_error_format`)
  and does not write an output file.
+ - on `amdgcn-amd-amdhsa-gfx942`, `amdgcn-amd-amdhsa-gfx1100`, and
+ `amdgcn-amd-amdhsa-gfx1151`, the compiler emits an AMDHSA `.hsaco` for
+ exactly one exported source kernel in the AMDGPU intrinsic-call subset.
+ The intrinsic declarations and user-facing diagnostics are documented in
+ [`AMDGPU Backend`](/silk/docs/compiler/backend-amdgpu/). Arbitrary Silk IR lowering is not
+ part of this C ABI output path yet.
  - when lowering cannot isolate a narrower statement / expression span,
  that `E4001` diagnostic falls back to the offending function
  declaration and names that function directly.
  - for static library outputs (`SILK_OUTPUT_STATIC_LIBRARY`):
- - on `linux/x86_64`, the compiler can emit a static library archive
- (`.a`) containing an object file for the supported IR subset, emitting
+ - on `linux/x86_64` and `linux/aarch64`, the compiler can emit a static
+ library archive (`.a`) containing an object file for each backend's
+ documented IR subset; on Apple
+ Silicon macOS hosts, `macos-aarch64`, `ios-aarch64`,
+ `ios-simulator-aarch64`, and `ios-simulator-x86_64` can emit a Mach-O
+ static archive via Apple `libtool -static` for the same current
+ host-backed library subset, emitting
  supported functions (scalar-returning, `void`-returning, and a limited `string` subset) and supported
  exported constants (`export let`/`export const`; scalar exports require an explicit type annotation and a literal initializer, and string exports may omit `: string` when the initializer is a string literal), and
  marking `export fn` declarations, supported exported constants, and a
@@ -15588,8 +17077,12 @@ The initial C header provided in the Silk compiler repository defines:
  `silk_compiler_build` returns `false` with an `E4001` / `E4002` formatted diagnostic (via `silk_compiler_last_error` / `silk_error_format`)
  and does not write an output file.
  - for shared library outputs (`SILK_OUTPUT_SHARED_LIBRARY`):
- - on `linux/x86_64`, the compiler can emit an ELF64 shared library
- (`ET_DYN`, typically with a `.so` filename) for the supported IR subset,
+ - on `linux/x86_64` and `linux/aarch64`, the compiler can emit an ELF64
+ shared library (`ET_DYN`, typically with a `.so` filename) for each
+ backend's documented IR subset;
+ on Apple Silicon macOS hosts, `macos-aarch64`, `ios-aarch64`,
+ `ios-simulator-aarch64`, and `ios-simulator-x86_64` can emit a Mach-O
+ dylib for the same current host-backed library subset,
  emitting supported functions (scalar-returning, `void`-returning, and a limited `string` subset) and
  supported exported constants (`export let`/`export const`; scalar exports require an explicit type annotation and a literal initializer, and string exports may omit `: string` when the initializer is a string literal), and
  marking `export fn` declarations, supported exported constants, and a
@@ -15768,10 +17261,10 @@ The initial C header provided in the Silk compiler repository defines:
  - evaluates the constant integer expression in the body of `main`,
  - emits a tiny native executable image directly using a Silk‑owned
  backend (no C stub, no external C compiler),
- - currently this backend writes a minimal target-specific executable
- that terminates the process with the evaluated `main` value:
- - ELF64 for `linux-x86_64`, `linux-x86_64-musl`,
- `linux-aarch64`, `linux-aarch64-musl`, and `android-aarch64`,
+ - when the IR-backed target path does not apply, this backend writes a
+ minimal target-specific executable that terminates the process with
+ the evaluated `main` value:
+ - ELF64 for `linux-x86_64`, `linux-aarch64`, and `android-aarch64`,
  - Mach-O 64-bit for `macos-x86_64`, `macos-aarch64`, `ios-aarch64`, `ios-simulator-aarch64`, and `ios-simulator-x86_64`,
  - PE32+ for `windows-x86_64` and `windows-aarch64`,
  - returns `true` on success with no last error recorded.
@@ -15811,6 +17304,36 @@ In addition, the embedding ABI must clearly distinguish:
 - functions that take ownership of data supplied by the embedder (and are responsible for freeing it via documented APIs).
 
 Any deviation from the mappings documented in `External Declarations (`ext`)` must be justified here and reflected in tests.
+
+### Process containment runtime
+
+The Linux abort runtime declares libc `prctl` with a C `int` first argument and
+return value (`i32` in Silk), followed by four `u64` argument slots on the
+Linux 64-bit targets. A matching user `ext prctl` declaration shares that
+external symbol with `std::abort`.
+
+The C99 runtime header `<silk/rt.h>` exposes process containment helpers:
+`silk_rt_process_set_dumpable(int64_t)`,
+`silk_rt_process_close_inherited_fds(void)`, and
+`silk_rt_process_resource_limits(uint64_t, uint64_t)`, each returning `int64_t`
+zero on success or native errno on failure. Dumpability and descriptor-table
+closure require Linux; other hosts return `ENOTSUP`. Resource limits use POSIX
+`rlimit`; zero/unrepresentable inputs are invalid. Limit updates can partially
+succeed and must be used in a disposable pre-exec child. No helper allocates.
+
+#### Resource limits and privilege readback
+
+The runtime C99 header exports `silk_rt_process_data_limit(uint64_t)`
+(returning errno or zero), `silk_rt_process_get_dumpable(void)` and
+`silk_rt_process_get_no_new_privileges(void)` (nonnegative state or negative
+errno), and `silk_rt_process_set_no_new_privileges(int64_t)` (errno or zero).
+Queries/setters specific to Linux report ENOTSUP on other hosts.
+`silk_rt_process_get_resource_limit(int64_t pid, int64_t resource, uint64_t *out)`
+writes soft/hard values to two caller-owned words only on success. Resource
+selectors 0/1/2/3 mean CPU/data/address-space/core; infinity is UINT64_MAX.
+It returns errno or zero; invalid selectors, negative PIDs, and null output
+are EINVAL. Nonzero PID readback requires Linux. Existing runtime symbols and
+signatures remain unchanged.
 
 ### See Also
 

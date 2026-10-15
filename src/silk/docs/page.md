@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "Silk is a high performance general purpose programming language with formal verification built in. Silk targets computer systems, mobile / tablet devices, WASM / WASI runtimes, and the web."
+description: "Write a program, share a module, and add checked contracts."
 docsCollection: "silk"
 section: "overview"
 order: 0
@@ -11,62 +11,24 @@ githubRef: "master"
 
 # Silk Documentation
 
-Silk is a high performance general purpose programming language with formal verification built in. Silk targets computer
-systems, mobile / tablet devices, WASM / WASI runtimes, and the web.
+Silk compiles native programs and libraries, with formal verification built into the language.
 
-This documentation site is written for downstream users. It is organized into:
+## Start with an order
 
-- **Guides** — purpose, mental model, hello worlds, and practical workflows.
-- **Reference** — the detailed language, standard library, CLI, and ABI surfaces.
+[Build an order calculator](/silk/learn/getting-started/), then plan packing, share pricing rules, and handle a delivery choice. Each chapter gives you a result to run and check.
 
-If you’re setting up a workspace, start with: [Getting started](/silk/docs/usage/getting-started/).
+Need the toolchain first? Follow [setup](/silk/docs/usage/getting-started/#build-from-source-reference-compiler).
 
-## A minimal “hello world”
+## Take the next step
 
-Silk programs are ordinary `.slk` files. A small program can look like this:
+[Extract a reusable module](/silk/docs/guides/modules-and-packages/), [use the standard library](/silk/docs/guides/standard-library/), or [prove a function contract](/silk/docs/guides/formal-silk/).
 
-```silk
-import { println } from "std/io";
-fn main () -> int {
-  println("hello from silk");
-  return 0;
-}
-```
+For host integration, start with [embedding Silk](/silk/docs/compiler/libsilk-quickstart/). For device work, see the [CPU/GPU walkthrough](/silk/docs/usage/pure-silk-gpu/).
 
-From here, you can:
+## Look up a detail
 
-- explore the guided path in **Guides**
-- jump straight to a topic in **Reference** (language, `std::`, tooling)
-- use search to find concepts by name
+Use the [language specification](/silk/spec/2026/), [standard library reference](/silk/docs/std/overview/), or [CLI](/silk/docs/compiler/cli-silk/). The [implementation status](/silk/docs/compiler/implementation-status/) records current limits.
 
-## Recommended reading path
-
-If you’re new to Silk, this is a good order:
-
-1. **What Silk is for**: design goals, constraints, and the mental model.
-2. **Hello world**: the smallest working program and the `check → test → build` loop.
-3. **Language tour**: the shape of real programs (types, functions, control flow, errors).
-4. **Modules & packages**: how code is organized and how imports/exports create clean dependency boundaries.
-5. **Project dependencies**: how to build an application with path and package-search dependencies, using Cove as the reference layout.
-6. **Practical logger module**: a reusable logging package walkthrough with configuration, sinks, targets, ABI notes, and publication.
-7. **Standard library**: what lives in `std::` and the common patterns it uses.
-8. **CLI and toolchain**: module sets, build targets, package manifests, package distribution, docs/man, and diagnostics.
-9. **Testing**: language-level tests and TAP output for CI and tooling.
-10. **Formal Silk**: opt-in proofs with Z3; how to write verified code with zero runtime cost.
-11. **GPU programming**: portable device functions, checked launch blocks, [`std::gpu`](/silk/docs/std/gpu/), and AMD/NVIDIA backends.
-12. **Platform applications**: manifest-driven iOS bundles plus device and signing workflows.
-
-Start here:
-
-- Usage: [Getting started](/silk/docs/usage/getting-started/)
-- Reference: [Implementation status](/silk/docs/compiler/implementation-status/) · [Diagnostics](/silk/docs/compiler/diagnostics/)
-- Reference: [Package manifests](/silk/docs/compiler/package-manifests/) · [Package distribution](/silk/docs/compiler/package-distribution/)
-- Reference: [`silk` CLI](/silk/docs/compiler/cli-silk/) · [`silk-package` (1)](/silk/docs/man/silk-package.1/)
-- Guides: [What Silk is for](/silk/docs/guides/purpose/)
-- Guides: [Hello world](/silk/docs/guides/hello-world/) · [Language tour](/silk/docs/guides/language-tour/) · [Modules & packages](/silk/docs/guides/modules-and-packages/) · [Project dependencies](/silk/docs/guides/project-dependencies/)
-- Guides: [Practical logger module](/silk/docs/guides/practical-logger-module/) · [Standard library](/silk/docs/guides/standard-library/) · [CLI and toolchain](/silk/docs/guides/cli/)
-- Guides: [Testing](/silk/docs/guides/testing/) · [Formal Silk](/silk/docs/guides/formal-silk/)
-- Tutorials: [Concurrency basics](/silk/docs/usage/tutorials/05-concurrency/) · [Async I/O + Streams + Abort Signals](/silk/docs/usage/tutorials/06-async-io-streams-abort/) · [Formal Silk in real code](/silk/docs/usage/tutorials/07-formal-silk/)
-- GPU: [Execution placement](/silk/docs/language/gpu-execution/) · [Launch blocks](/silk/docs/language/gpu-launch-blocks/) · [`std::gpu`](/silk/docs/std/gpu/) · [Pure-Silk CPU/GPU program](/silk/docs/usage/pure-silk-gpu/)
-- Platform apps: [Build LumenTrail for iOS](/silk/docs/usage/howto-lumen-trail/) · [`silk-devices(1)`](/silk/docs/man/silk-devices.1/) · [`silk-codesign(1)`](/silk/docs/man/silk-codesign.1/)
-- Spec: [Silk Spec (2026)](/silk/spec/2026/)
+<!-- Preserve existing section links; details now live in the linked references. -->
+<span id="a-minimal-hello-world"></span>
+<span id="recommended-reading-path"></span>

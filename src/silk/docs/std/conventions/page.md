@@ -28,9 +28,12 @@ This document exists to keep `std::` APIs consistent across modules.
 
 ## Naming
 
-- Packages use `std::area` naming ([`std::strings`](/silk/docs/std/strings/), [`std::fs`](/silk/docs/std/fs/), [`std::net`](/silk/docs/std/networking/)).
+- Packages use `std::area` naming ([`std::strings`](/silk/docs/std/strings/), [`std::fs`](/silk/docs/std/filesystem/), [`std::net`](/silk/docs/std/net/)).
 - Types use `PascalCase` (`String`, `Vector(T)`, `Path`, `File`).
 - Functions and methods use `snake_case` (`read_all`, `push`, `starts_with`).
+ Do not expose camel-case, Pascal-case, or acronym-cased aliases merely to
+ mirror a foreign library. Compatibility documentation should map the foreign
+ name to the canonical Silk spelling without expanding the public API.
 - Constants use `SCREAMING_SNAKE_CASE`.
 - Public parameter names must describe the role of the value. Avoid
  underscore-prefixed public parameters such as `_fd` or `_value`; if a backend
@@ -194,7 +197,7 @@ Conventions:
  - `TBorrow` is a non-owning, copyable view intended for passing across tasks
  while keeping ownership with the creator.
 - Cancellation must be explicit:
- - abortable operations should accept [`std::abort_controller::AbortSignalBorrow`](/silk/docs/std/abort_controller/)
+ - abortable operations should accept [`std::abort_controller::AbortSignalBorrow`](/silk/docs/std/abort-controller/)
  (often as an optional parameter),
  - callers should create and own an `AbortController` and call `abort()` to
  request cancellation.

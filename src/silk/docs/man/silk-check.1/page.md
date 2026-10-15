@@ -27,6 +27,32 @@ githubRef: "master"
 
 `silk check` parses and type-checks a module set and reports any diagnostics. It does not emit an output artifact.
 
+After successful type checking, it applies code-quality rules from the package
+manifest. The first configurable rule is cyclomatic complexity:
+
+```toml
+[check]
+deny_warnings = false
+max_warnings = 0
+
+[check.rules.cyclomatic_complexity]
+severity = "warn"
+max = 20
+variant = "classic"
+```
+
+The rule measures named functions, methods, anonymous functions, and tests
+independently and emits `L5001` when a body exceeds `max`. `classic` counts
+non-catch-all [`match`](/silk/wiki/language/flow-match/) alternatives separately; `modified` charges one decision
+per [`match`](/silk/wiki/language/flow-match/). Both variants count conditionals, loops, short-circuit/coalescing
+expressions, optional access, error propagation, and parameter defaults. See
+the package-manifest documentation for the exact decision-point table.
+
+Diagnostics identify scope-qualified bodies and explain the measurement as one
+baseline path plus contributed decisions. They also report deepest decision
+nesting and a category breakdown, making a threshold failure actionable without
+requiring users to reconstruct the control-flow count manually.
+
 Use `--json` when a caller needs a schema-versioned result or diagnostic
 packet instead of terminal prose. The JSON surface is intended for editors, CI,
 and automation that should not scrape human-readable diagnostics.
@@ -108,8 +134,10 @@ shape with `ok: false` and one or more diagnostic entries. Each entry includes
 
 ## Exit status
 
-- `0` on success.
-- non-zero on error.
+- `0` on success, including ordinary rule warnings within the configured
+ warning budget.
+- non-zero on compiler errors, code-quality errors, denied warnings, or an
+ exceeded `[check].max_warnings` budget.
 
 ## See Also
 

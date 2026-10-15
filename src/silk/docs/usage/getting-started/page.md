@@ -68,12 +68,14 @@ Reference:
 
 ## Build from source (reference compiler)
 
-The reference Silk compiler/toolchain is built with Zig.
+The reference Silk compiler/toolchain requires **Zig 0.16.0** on `PATH`.
 
 From the Silk compiler repository root:
 
 ```bash
+zig version
 make build
+export PATH="$PWD/build/bin:$PATH"
 ```
 
 This builds missing hosted dependencies on supported native hosts and stages a
@@ -97,6 +99,10 @@ To fetch or rebuild only the pinned hosted dependency archives:
 ```bash
 make deps
 ```
+
+On Linux x86_64, Linux AArch64, and Apple Silicon macOS, `make build` stages
+the native toolchain and hosted libraries together. If a static Z3 archive is
+unavailable, select a dynamic solver with `--z3-lib <path>` or `SILK_Z3_LIB`.
 
 Reference: [Built-in dependencies](/silk/docs/compiler/builtin-deps/)
 

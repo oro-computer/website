@@ -43,3 +43,12 @@ Use the following owning docs for the substantive API/design context for this mo
  group led by itself; the signal helper requires a positive, private group
  identity and negates it internally for POSIX `kill(2)`.
 - This page is intentionally implementation-oriented. Downstream users should usually start with the higher-level std module docs listed above unless they are working on the runtime layer itself.
+
+The internal `apply_resource_limits(cpu: u64, address_space: u64) -> int`
+helper applies hard/soft CPU and address-space limits and zero core limits in
+the current process. It returns zero or a native errno, and is called only in
+a pre-exec child; partial failure has no rollback.
+
+`apply_data_limit(bytes: u64) -> int` installs equal finite, positive
+RLIMIT_DATA soft/hard limits in a disposable child. Zero means success;
+otherwise the return value is errno. No parent-side limit is modified.

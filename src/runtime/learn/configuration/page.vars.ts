@@ -3,7 +3,7 @@ import type { CheckedPageVars } from '#lib/page-vars.ts'
 const vars = {
   "layout": "learn" as const,
   "title": "Configuration · Learn Oro Runtime",
-  "description": "Chapter 3 of Learn Oro Runtime: configure shared app settings, permissions, and local .ororc overrides.",
+  "description": "Configure Field Notes and verify a local build-directory override using .ororc and oroc print-build-dir.",
   "bodyClass": "site-dark product-page learn-page learn-lesson-page runtime-learn-page",
   "bodyAttrs": {},
   "product": "runtime",

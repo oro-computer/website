@@ -19,7 +19,7 @@ pending signals as a readable file descriptor. This integrates naturally with:
 
 - [`std::runtime::event_loop::{fd_wait_readable2, fd_wait_readable_any, ...}`](/silk/docs/std/runtime-event_loop/)
 - [`std::sync::ChannelBorrow(T).wait_fd()`](/silk/docs/std/sync/)
-- [`std::abort_controller::AbortSignalBorrow.wait_fd()`](/silk/docs/std/abort_controller/)
+- [`std::abort_controller::AbortSignalBorrow.wait_fd()`](/silk/docs/std/abort-controller/)
 
 ## `signalfd(2)` integration
 

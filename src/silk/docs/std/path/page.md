@@ -223,7 +223,7 @@ Notes:
 
 - This is a lexical normalization. It does not access the filesystem and does
  not resolve symlinks.
-- Use [`std::fs::realpath(path)`](/silk/docs/std/fs/) or the convenience wrapper
+- Use [`std::fs::realpath(path)`](/silk/docs/std/filesystem/) or the convenience wrapper
  [`std::path::realpath(path)`](/silk/docs/std/path/) when you need filesystem-backed canonicalization
  of an existing local path.
 

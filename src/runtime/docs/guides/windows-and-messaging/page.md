@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "Oro Runtime apps can create multiple windows. Windows are identified by a numeric index."
+description: "Open a second native window and send it data."
 docsCollection: "runtime"
 section: "guides"
 order: 8
@@ -11,7 +11,7 @@ githubRef: "master"
 
 # Windows and messaging
 
-Oro Runtime apps can create multiple windows. Windows are identified by a numeric index.
+Open a second native window and send it data. Each window has a numeric index.
 
 ## Create a second window
 

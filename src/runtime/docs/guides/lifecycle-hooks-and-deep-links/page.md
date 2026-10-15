@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "Lifecycle hooks are where the application stops being a generic page and starts reacting like a native application. Use them for readiness, connectivity, backgrounding, and OS-delivered URLs."
+description: "React when the app becomes ready, changes connectivity, enters the background, or receives a deep link."
 docsCollection: "runtime"
 section: "guides"
 order: 16
@@ -11,8 +11,7 @@ githubRef: "master"
 
 # Lifecycle hooks and deep links
 
-Lifecycle hooks are where the application stops being a generic page and starts reacting like a native application. Use
-them for readiness, connectivity, backgrounding, and OS-delivered URLs.
+React when the app becomes ready, changes connectivity, enters the background, or receives a deep link.
 
 ## 1) Centralize lifecycle subscriptions
 

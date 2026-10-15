@@ -102,6 +102,10 @@ message, field, oneof, enum, service, and RPC descriptors, including generated
 Silk module/type names, resolved protobuf type names, reserved declarations,
 packed field status, map key/value metadata, and streaming RPC flags.
 
+Decoded strings borrow the input buffer. Keep that buffer alive and unchanged
+while using the decoded strings. Generated decoders validate byte bounds before
+performing the narrow unsafe conversion from bytes to a string view.
+
 Generated modules type-check as Silk source, build as object code, and can be
 imported by Silk programs that construct messages, encode them, decode them,
 and inspect decoded fields.

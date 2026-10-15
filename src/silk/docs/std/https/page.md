@@ -13,7 +13,7 @@ githubRef: "master"
 
 [`std::https`](/silk/docs/std/https/) provides a
 small HTTPS client/server connection API on top of [`std::tls`](/silk/docs/std/tls/) (currently the
-built-in mbedTLS provider) and [`std::net::TCPStream`](/silk/docs/std/networking/), plus URL and stream
+built-in mbedTLS provider) and [`std::net::TCPStream`](/silk/docs/std/net/), plus URL and stream
 convenience helpers.
 
 See also:
@@ -163,7 +163,7 @@ Notes:
  without blocking its executor owner thread.
 - `request_url(...)` accepts absolute `https://...` URLs. It parses with
  [`std::url`](/silk/docs/std/url/), uses port `443` when the URL has no explicit non-default port,
- resolves/connects with [`std::net::resolve_host(...)`](/silk/docs/std/networking/), establishes a verified
+ resolves/connects with [`std::net::resolve_host(...)`](/silk/docs/std/net/), establishes a verified
  TLS session with SNI/hostname verification, derives the request target from
  `path` + `?query`, and derives the `Host` header from the URL host and port.
 - URL helpers reject missing hosts, parse failures, unsupported schemes, and

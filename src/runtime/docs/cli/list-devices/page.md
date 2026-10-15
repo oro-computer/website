@@ -23,7 +23,11 @@ oroc list-devices [options] --platform=<platform>
 
 | Option | Description |
 | --- | --- |
-| `--platform=<platform>` | android \| ios |
-| `--ecid` | show device ECID (iOS only) |
-| `--udid` | show device UDID (iOS only) |
-| `--only` | print only the first device identifier (iOS only) |
+| `--platform=<platform>` | platform target to list devices for:<br>- android<br>- ios |
+| `-f, --format=<format>` | print as 'text' or 'json' |
+| `--json` | shorthand for '--format=json' |
+| `--ecid` | show device ECID (ios only) |
+| `--udid` | show device UDID (ios only) |
+| `--only` | only show ECID or UDID of the first device (ios only) |
+| `-V, --verbose` | enable verbose output |
+| `--log-file=<path>` | mirror logs to a JSON file |

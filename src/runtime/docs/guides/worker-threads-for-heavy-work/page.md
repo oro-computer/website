@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "The main window should stay responsive. If a task is CPU-heavy or processes large blobs of text or binary data, move it to oro:worker_threads."
+description: "Move CPU-heavy work to oro:worker_threads so the main window stays responsive."
 docsCollection: "runtime"
 section: "guides"
 order: 12
@@ -11,11 +11,7 @@ githubRef: "master"
 
 # Worker threads for heavy work
 
-The main window should stay responsive. If a task is CPU-heavy or processes large blobs of text or binary data, move it to
-[`oro:worker_threads`](/runtime/docs/javascript/worker_threads/).
-
-This pattern is useful for markdown indexing, import parsing, thumbnailing, encryption, and other work that should not
-block user interaction.
+Move CPU-heavy work to `oro:worker_threads` so the main window stays responsive.
 
 ## 1) Start a worker from the main window
 

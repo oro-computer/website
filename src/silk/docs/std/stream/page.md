@@ -269,9 +269,9 @@ Typical wiring:
  `take_transform_writable()`,
 - consumer reads from `take_readable()`.
 
-### File I/O adapters ([`std::fs`](/silk/docs/std/fs/))
+### File I/O adapters ([`std::fs`](/silk/docs/std/filesystem/))
 
-[`std::fs`](/silk/docs/std/fs/) provides task-based helpers for piping files into/out of streams:
+[`std::fs`](/silk/docs/std/filesystem/) provides task-based helpers for piping files into/out of streams:
 
 ```silk
 import std::fs;
@@ -315,7 +315,7 @@ async fn main () -> int {
 - aborts/cancels on error.
 
 To make piping cooperatively cancellable, use `pipe_to_abortable` with an
-[`std::abort_controller::AbortSignalBorrow`](/silk/docs/std/abort_controller/). In the Supported forms, aborts are
+[`std::abort_controller::AbortSignalBorrow`](/silk/docs/std/abort-controller/). In the Supported forms, aborts are
 observed between read/write steps; they do not yet interrupt a blocking
 `ReadableStream.read()` call.
 

@@ -564,11 +564,10 @@ declare module "oro:ai/llm" {
         #private;
     }
     /**
-     * @typedef {
-     *   context: Context,
-     *   model: Model,
-     *   lora: LoRA
-     * {}} LoRAAttachmentOptions
+     * @typedef {object} LoRAAttachmentOptions
+     * @property {Context} context
+     * @property {Model} model
+     * @property {LoRA} lora
      */
     export class LoRAAttachment {
         /**
@@ -588,9 +587,22 @@ declare module "oro:ai/llm" {
          */
         get lora(): LoRA;
         toJSON(): {
-            context: any;
-            model: any;
-            lora: any;
+            context: {
+                id: string;
+                size: number;
+                model: {
+                    name: string;
+                };
+            };
+            model: {
+                name: string;
+            };
+            lora: {
+                name: string;
+                model: {
+                    name: string;
+                };
+            };
         };
         #private;
     }
@@ -690,13 +702,11 @@ declare module "oro:ai/llm" {
     export type LoraAttachOptions = {
         scale?: number;
     };
-    /**
-     * : Context,
-     *   model: Model,
-     *   lora: LoRA
-     * {}} LoRAAttachmentOptions
-     */
-    export type context = any;
+    export type LoRAAttachmentOptions = {
+        context: Context;
+        model: Model;
+        lora: LoRA;
+    };
     export type ContextOptions = {
         size?: number;
         minP?: number;

@@ -3,7 +3,7 @@ import type { CheckedPageVars } from '#lib/page-vars.ts'
 const vars = {
   "layout": "learn" as const,
   "title": "Windows and Messaging · Learn Oro Runtime",
-  "description": "Chapter 4 of Learn Oro Runtime: create a second native window and pass messages between windows.",
+  "description": "Open and reuse a native draft preview, using a ready-message handshake before sending content.",
   "bodyClass": "site-dark product-page learn-page learn-lesson-page runtime-learn-page",
   "bodyAttrs": {},
   "product": "runtime",

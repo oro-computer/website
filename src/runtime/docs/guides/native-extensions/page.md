@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "Use a native extension when app code needs a capability that should not live in JavaScript: an existing C/C++ library, platform-specific code, long-running native work, or a Wasm module that should be"
+description: "Wrap an existing C/C++ library, platform feature, or Wasm module in a native extension."
 docsCollection: "runtime"
 section: "guides"
 order: 18
@@ -11,12 +11,7 @@ githubRef: "master"
 
 # Native extensions
 
-Use a native extension when app code needs a capability that should not live in JavaScript: an existing C/C++ library,
-platform-specific code, long-running native work, or a Wasm module that should be loaded through the same runtime
-extension boundary as shared libraries.
-
-Extensions are loaded by name from the app bundle. They register themselves with the runtime, usually map IPC routes,
-and are then called from JavaScript with [`oro:ipc`](/runtime/docs/javascript/ipc/).
+Wrap an existing C/C++ library, platform feature, or Wasm module in a native extension.
 
 ## 1) Choose the extension shape
 

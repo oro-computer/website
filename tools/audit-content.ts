@@ -1,6 +1,6 @@
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { runSiteAudit, withSourceInventory } from './audits/common.ts'
+import { withSourceInventory } from './audits/common.ts'
 import type { AuditContext, Reporter } from './audits/common.ts'
 import { runRuntimeAudit } from './audits/runtime.ts'
 import { runSilkAudit, runStdlibAudit } from './audits/silk.ts'
@@ -15,11 +15,7 @@ export function auditContext(env: NodeJS.ProcessEnv = process.env): AuditContext
 }
 export function runContentAudit(context = auditContext(), reporter: Reporter = console): number {
   context = withSourceInventory(context)
-  // Match the former package script's order and && short-circuit behavior.
-  const audits = [runRuntimeAudit, runSilkAudit, runStdlibAudit,
-    ...(['sage', 'slg', 'virtnosis'] as const).map(collection =>
-      (ctx: AuditContext, output: Reporter) => runSiteAudit(ctx, collection, output)),
-  ]
+  const audits = [runRuntimeAudit, runSilkAudit, runStdlibAudit]
   for (const audit of audits) {
     const rc = audit(context, reporter)
     if (rc !== 0) return rc

@@ -180,6 +180,12 @@ Notes / current constraints (baseline):
 - `start` is executed automatically during `Module.instantiate` after
  instantiation initialization.
  - the start function must have signature `[] -> []` (no parameters, no results).
+ - module ownership remains with the caller while the start function runs and
+ transfers to the returned `Instance` only after start completes
+ successfully.
+ - a start trap releases only the temporary instance state; callers may retry
+ instantiation or drop the original module without use-after-free or
+ double-free behavior.
 - `data_count` and all non-baseline extensions are rejected as `Unsupported`.
 
 ### Values and Function Calls
@@ -217,12 +223,20 @@ pointing at the opcode.
  `BufferU8.drop()` and then releases the remaining metadata exactly once.
 - An `Instance` owns its own runtime state and takes ownership of the module’s
  owned allocations during instantiation.
- - `Module.instantiate(mut self: &Module)` consumes the module by moving its
- owned allocations into the returned `Instance`.
+ - `Module.instantiate`, `Module.instantiate_with_imports`, and
+ `Module.instantiate_with_named_func_imports` consume the module by moving
+ its owned allocations into the returned `Instance`.
  - after a successful call, the original `Module` is left in an empty, inert
  state.
  - if instantiation fails (including start traps), no instance is produced and
- the original `Module` remains intact.
+ the original `Module` retains all owned allocations. Repeated failed
+ instantiation attempts are valid, and the caller may subsequently retry or
+ drop that module exactly once.
+ - while executing `start`, the provisional instance holds the byte buffer.
+ The implementation takes it into a local and immediately installs an empty
+ buffer in the source before reading any other module field. A failed start
+ restores that buffer before releasing the provisional instance; a successful
+ start commits the ownership transfer.
 - `Func` is a lightweight view into an `Instance`, and memory is accessed by
  calling `Instance.memory_bytes()` when present.
 

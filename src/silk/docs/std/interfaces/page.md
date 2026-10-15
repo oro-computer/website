@@ -234,8 +234,8 @@ Notes:
  `ReserveAdditional`, and `Drop`; `TreeSet(T)` implements `Len`,
  `IsEmpty`, `Clear`, and `Drop`; both iterator types implement
  `Iterator(...)`.
- - [`std::fs::File`](/silk/docs/std/fs/) implements `Drop`, [`std::fs::Dir`](/silk/docs/std/fs/) implements
- `Iterator(DirEntryResult)` and `Drop`, and [`std::fs::MMap`](/silk/docs/std/fs/) implements
+ - [`std::fs::File`](/silk/docs/std/filesystem/) implements `Drop`, [`std::fs::Dir`](/silk/docs/std/filesystem/) implements
+ `Iterator(DirEntryResult)` and `Drop`, and [`std::fs::MMap`](/silk/docs/std/filesystem/) implements
  `Len`, `IsEmpty`, and `Drop`.
 - Current regression coverage for that protocol story is intentionally split:
  - [`tests/silk/pass_std_interfaces_core_containers.slk`](https://github.com/oro-computer/silk/blob/master/tests/silk/pass_std_interfaces_core_containers.slk) is the focused shared
@@ -246,17 +246,17 @@ Notes:
  iterator call expressions and iterator value bindings, with the empty and
  populated checks split across the in-memory/container set.
  - [`tests/silk/pass_std_fs_file_drop_and_helpers.slk`](https://github.com/oro-computer/silk/blob/master/tests/silk/pass_std_fs_file_drop_and_helpers.slk) is the stronger
- end-to-end regression for [`std::fs::File as Drop`](/silk/docs/std/fs/), including proof that
+ end-to-end regression for [`std::fs::File as Drop`](/silk/docs/std/filesystem/), including proof that
  `drop()` actually closes the saved OS file descriptor.
  - [`tests/silk/pass_std_fs_file_drop_basic.slk`](https://github.com/oro-computer/silk/blob/master/tests/silk/pass_std_fs_file_drop_basic.slk) is the narrower companion pin
  for post-drop invalidation and idempotent cleanup on invalid handles.
- - Compiler-inserted `Drop` glue for [`std::fs::File`](/silk/docs/std/fs/) is covered separately by
+ - Compiler-inserted `Drop` glue for [`std::fs::File`](/silk/docs/std/filesystem/) is covered separately by
  [`tests/silk/pass_drop_scope_exit_file_close.slk`](https://github.com/oro-computer/silk/blob/master/tests/silk/pass_drop_scope_exit_file_close.slk),
  [`tests/silk/pass_drop_overwrite_file_close.slk`](https://github.com/oro-computer/silk/blob/master/tests/silk/pass_drop_overwrite_file_close.slk),
  [`tests/silk/pass_drop_heap_ref_file_close.slk`](https://github.com/oro-computer/silk/blob/master/tests/silk/pass_drop_heap_ref_file_close.slk), and
  [`tests/silk/pass_drop_overwrite_heap_ref_file_close.slk`](https://github.com/oro-computer/silk/blob/master/tests/silk/pass_drop_overwrite_heap_ref_file_close.slk).
  - [`tests/silk/pass_std_fs_read_dir_basic.slk`](https://github.com/oro-computer/silk/blob/master/tests/silk/pass_std_fs_read_dir_basic.slk) remains the dedicated
- end-to-end regression for [`std::fs::Dir.next()`](/silk/docs/std/fs/) and real directory-handle
+ end-to-end regression for [`std::fs::Dir.next()`](/silk/docs/std/filesystem/) and real directory-handle
  iteration.
 - Stdlib conversion convention:
  - `Serialize(string)` is reserved for infallible textual views of the

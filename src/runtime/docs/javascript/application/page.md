@@ -172,7 +172,7 @@ declare module "oro:application" {
      * @param {boolean=} [opts.frameless=false] - whether the window is frameless
      * @param {boolean=} [opts.utility=false] - whether the window is utility (macOS only)
      * @param {boolean=} [opts.shouldExitApplicationOnClose=false] - whether the window can exit the app
-     * @param {boolean=} [opts.headless=false] - whether the window will be headless or not (no frame)
+     * @param {boolean=} opts.headless - overrides the project headless setting for this window
      * @param {string=} [opts.userScript=null] - A user script that will be injected into the window (desktop only)
      * @param {string[]=} [opts.protocolHandlers] - An array of protocol handler schemes to register with the new window (requires service worker)
      * @param {Record<string, string|number|boolean|(string|number|boolean)[]>=} [opts.config] - additional configuration key/value pairs
@@ -344,10 +344,10 @@ declare module "oro:application" {
     export function setTrayMenu(options: ApplicationMenuOptions): Promise<ipc.Result>;
     /**
      * Set the enabled state of the system menu.
-     * @param {object} value - an options object
+     * @param {ApplicationMenuItemEnabledOptions} value - an options object
      * @return {Promise<ipc.Result>}
      */
-    export function setSystemMenuItemEnabled(value: object): Promise<ipc.Result>;
+    export function setSystemMenuItemEnabled(value: ApplicationMenuItemEnabledOptions): Promise<ipc.Result>;
     /**
      * Predicate function to determine if application is in a "paused" state.
      * @return {boolean}
@@ -365,6 +365,13 @@ declare module "oro:application" {
      * @property {string} value - Menu layout expressed with the native menu DSL.
      * @property {number=} [index] - Window index to target when the menu is
      * window-scoped on the active platform.
+     */
+    /**
+     * Options for `setSystemMenuItemEnabled()`.
+     * @typedef {object} ApplicationMenuItemEnabledOptions
+     * @property {boolean} enabled - Whether the menu item is enabled.
+     * @property {number} indexMain - Zero-based top-level menu index.
+     * @property {number} indexSub - Zero-based submenu item index.
      */
     /**
      * Maximum number of concurrently tracked application windows.
@@ -462,7 +469,6 @@ declare module "oro:application" {
     }
     /**
      * Oro Runtime semantic version metadata mirrored from `process.versions.oro`.
-     * The legacy `process.versions.socket` string remains frozen for compatibility.
      * @type {object} - an object containing the version information
      */
     export const runtimeVersion: object;
@@ -514,6 +520,23 @@ declare module "oro:application" {
          * window-scoped on the active platform.
          */
         index?: number | undefined;
+    };
+    /**
+     * Options for `setSystemMenuItemEnabled()`.
+     */
+    export type ApplicationMenuItemEnabledOptions = {
+        /**
+         * - Whether the menu item is enabled.
+         */
+        enabled: boolean;
+        /**
+         * - Zero-based top-level menu index.
+         */
+        indexMain: number;
+        /**
+         * - Zero-based submenu item index.
+         */
+        indexSub: number;
     };
     import { ApplicationURLEvent } from "oro:internal/events";
     import ApplicationWindow from "oro:window";
@@ -646,12 +669,12 @@ declare module "oro:application/menu" {
          * @ignore
          * @type {function(MenuItemEvent)?}
          */
-        set onmenuitem(onmenuitem: ((arg0: menuitemEvent) => any) | null);
+        set onmenuitem(onmenuitem: ((arg0: MenuItemEvent) => any) | null);
         /**
          * Level 1 'menuitem'` event listener.
-         * @type {function(menuitemEvent)?}
+         * @type {function(MenuItemEvent)?}
          */
-        get onmenuitem(): ((arg0: menuitemEvent) => any) | null;
+        get onmenuitem(): ((arg0: MenuItemEvent) => any) | null;
         /**
          * Set the menu layout for this `Menu` instance.
          * @param {string|object} layoutOrOptions
@@ -686,12 +709,12 @@ declare module "oro:application/menu" {
          * @ignore
          * @type {function(MenuItemEvent)?}
          */
-        set onmenuitem(onmenuitem: ((arg0: menuitemEvent) => any) | null);
+        set onmenuitem(onmenuitem: ((arg0: MenuItemEvent) => any) | null);
         /**
          * Level 1 'menuitem'` event listener.
-         * @type {function(menuitemEvent)?}
+         * @type {function(MenuItemEvent)?}
          */
-        get onmenuitem(): ((arg0: menuitemEvent) => any) | null;
+        get onmenuitem(): ((arg0: MenuItemEvent) => any) | null;
         /**
          * The `TrayMenu` instance for the application.
          * @type {TrayMenu}
@@ -749,6 +772,7 @@ declare module "oro:application/menu" {
     export const container: MenuContainer;
     export default container;
     import ipc from "oro:ipc";
+    import { MenuItemEvent } from "oro:internal/events";
 }
 ```
 

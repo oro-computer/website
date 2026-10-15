@@ -29,6 +29,10 @@ Use the following owning docs for the substantive API/design context for this mo
 
 ## Notes
 
+- `write(fd, buf, len)` sends with `MSG_NOSIGNAL`: `0x4000` on Linux and
+ `0x80000` on macOS, matching the host socket headers. A closed socket peer
+ reports an error (including `EPIPE`) rather than terminating the process
+ with `SIGPIPE`. This does not change the process-wide signal disposition.
 - The shipped source for this module is [`std/runtime/posix/net.slk`](https://github.com/oro-computer/silk/blob/master/std/runtime/posix/net.slk).
 - The canonical module name is [`std::runtime::posix::net`](/silk/docs/std/runtime-posix-net/).
 - This page is intentionally implementation-oriented. Downstream users should usually start with the higher-level std module docs listed above unless they are working on the runtime layer itself.

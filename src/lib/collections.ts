@@ -17,24 +17,6 @@ export const collections = {
     product: 'silk',
     repo: 'oro-computer/silk',
   },
-  virtnosis: {
-    base: '/virtnosis/docs/',
-    title: 'Virtnosis Docs',
-    product: 'virtnosis',
-    repo: 'oro-computer/virtnosis',
-  },
-  sage: {
-    base: '/sage/docs/',
-    title: 'Sage Docs',
-    product: 'sage',
-    repo: 'oro-computer/sage',
-  },
-  slg: {
-    base: '/slg/docs/',
-    title: 'slg Docs',
-    product: 'slg',
-    repo: 'oro-computer/slg',
-  },
 } as const
 export type Collection = keyof typeof collections
 export function docUrl(collection: Collection, id: string): string {

@@ -3,9 +3,6 @@ import { html, render } from 'fragtml'
 export const names: Record<string, string> = {
   runtime: 'Runtime',
   silk: 'Silk',
-  virtnosis: 'Virtnosis',
-  sage: 'Sage',
-  slg: 'slg',
 }
 
 export function header(
@@ -57,7 +54,6 @@ export function header(
             ${[
               ['Runtime', '/runtime/'],
               ['Silk', '/silk/'],
-              ['Virtnosis', '/virtnosis/'],
               ['Blog', '/blog/'],
               ['Docs', '/docs/'],
               ['Contact', 'mailto:info@oro.computer'],
@@ -69,6 +65,10 @@ export function header(
                   >${text}</a
                 >`,
             )}
+            <button type="button" class="site-search-trigger" aria-label="Search site" aria-haspopup="dialog" aria-controls="site-search" hidden>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>
+              <span>Search</span><kbd aria-hidden="true">Ctrl K</kbd>
+            </button>
           </nav>
           ${label
             ? html`<div
@@ -97,44 +97,15 @@ export function header(
   )
 }
 
-export function footer(
-  label: string,
-  editorial: boolean,
-  editHref: string,
-): string {
-  return render(
-    editorial
-      ? html`<footer class="site-footer editorial-footer">
-          <div class="editorial-footer-contact">
-            <span>Keep up to date</span
-            ><a href="mailto:info@oro.computer">info@oro.computer</a>
-          </div>
-          <div
-            class="editorial-footer-links"
-            aria-label="Oro links"
-          >
-            <a href="https://github.com/oro-computer">github</a
-            ><a href="https://github.com/oro-computer/runtime">runtime</a
-            ><a href="mailto:contributors@oro.computer">contributors</a>
-          </div>
-          <div class="editorial-footer-links">
-            <a href="/docs/">Docs</a>
-          </div>
-          <div class="footer-meta">
-            <span>© <span data-year>2026</span> Oro Computer</span>
-            <a class="page-edit" href="${editHref}">Edit this page</a>
-          </div>
-        </footer>`
-      : html`<footer class="site-footer">
-          <div class="container">
-            <div class="footer-inner">
-              <strong>${label || 'Oro Computer'}</strong>
-              <div class="footer-meta">
-                <span>© <span data-year>2026</span> Oro Computer.</span>
-                <a class="page-edit" href="${editHref}">Edit this page</a>
-              </div>
-            </div>
-          </div>
-        </footer>`,
-  )
+export function footer(editHref?: string): string {
+  return render(html`<footer class="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div><a class="footer-wordmark" href="/">oro<span>computer</span></a><p>Open tools. Native possibilities.</p></div>
+        <nav aria-label="Technology links"><a href="/runtime/">Oro Runtime</a><a href="/silk/">Silk</a><a href="/docs/">Documentation</a><a href="/blog/">Blog</a></nav>
+        <nav aria-label="Community links"><a href="https://github.com/oro-computer">GitHub ↗</a><a href="mailto:info@oro.computer">Get in touch ↗</a><a href="mailto:contributors@oro.computer">Contribute ↗</a></nav>
+      </div>
+      <div class="footer-meta"><span>© <span data-year>2026</span> Oro Computer</span>${editHref ? html`<a class="page-edit" href="${editHref}">Edit this page</a>` : null}</div>
+    </div>
+  </footer>`)
 }

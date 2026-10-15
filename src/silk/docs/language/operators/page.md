@@ -46,7 +46,10 @@ The language includes the following operators and delimiters:
  - Currently, comparisons are defined for both integer
  operands and floating-point operands of the same type.
  - In Silk, `==` and `!=` are also defined for `bool`
- operands.
+ operands, including values read from struct fields and references. The
+ result is `bool` in inferred bindings, conditions, arguments, returns,
+ assignments, and aggregate initializers. Both operands are evaluated once,
+ from left to right.
  - In Silk, comparisons are also defined for `Duration`
  and `Instant` when both operands have the same time type.
  - In Silk, `==` and `!=` are also defined for `string`
@@ -526,7 +529,13 @@ conversions:
  `T[]` slice.
  - `arr as u64` / `arr as usize` extracts the address of element `0` of a
  fixed array `T[N]` (for `N == 0`, the result is `0`).
- - These casts remain **unsafe**:
+ - Raw-address-to-view construction requires an enclosing `unsafe` context:
+
+    ```silk
+    let bytes = unsafe { address as u8[](length) };
+    ```
+
+ - These casts are unsafe because:
  - the compiler does not validate pointer provenance (whether the address is
  valid for the claimed element type).
  - in the current scalar-slot subset, `T[]` / `T[N]` indexing assumes the
@@ -563,6 +572,28 @@ conversions:
  - The conversion is explicit (it does not introduce implicit coercions).
  - The `deserialize` method must be infallible (no typed errors).
  - Purity rules apply: inside `pure fn`, the `deserialize` method must be `pure`.
+- Function-pointer casts:
+ - `value as c_fn (P...) -> R` converts a Silk `fn (P...) -> R` value to a
+ code-pointer-only C callback value when the parameter and result types
+ match exactly and the source satisfies the target's purity and unsafe-effect
+ requirements. A safe source may widen to `unsafe c_fn (...) -> R`; an
+ unsafe source cannot convert to a safe `c_fn (...) -> R` because that would
+ erase the call-site obligation.
+ - The conversion is explicit; ordinary `fn` values are not implicitly
+ coerced to `c_fn` after they have been stored, returned, or carried in an
+ aggregate.
+ - A syntactically known capturing function expression is rejected at compile
+ time. For an indirect `fn` value, the conversion checks the value's closure
+ environment at runtime and traps when it is nonzero. It is therefore never
+ valid to use this cast to discard captures.
+ - On success, the result is the value's single code-pointer slot and follows
+ the `c_fn` calling convention with no hidden environment argument.
+
+```silk
+let add = fn (x: i64, y: i64) -> x + y;
+let cb = add as c_fn (i64, i64) -> i64;
+let answer = cb(40, 2);
+```
 
 Examples (Supported forms):
 
@@ -633,9 +664,11 @@ Rules (Supported forms):
  - 128-bit wide primitives: `i128`/`u128`/`f128` (two 8-byte lanes; `f128`
  stores the raw IEEE-754 binary128 bit pattern).
 - `as raw` is not permitted for `void`, optionals, arrays, maps, Silk function
- value types (`fn (...) -> R`), or structs/enums.
+ value types (`fn (...) -> R`), or structs/enums. Use the checked normal
+ `fn`-to-`c_fn` cast above before extracting a callback's raw address.
 - Special-case: `u64 as raw c_fn (...) -> R` (and `usize as raw c_fn (...) -> R`)
- is permitted for dynamic symbol loading and C ABI interop. The reverse
+ is permitted inside an `unsafe` context for dynamic symbol loading and C ABI
+ interop. The reverse
  direction, `c_fn (...) -> R as raw u64` (or `usize`), extracts the raw code
  pointer. This does not apply to Silk closure-carrying `fn (...) -> R` values.
 - Special-case: `string as raw u64` (and `string as raw usize`) is permitted

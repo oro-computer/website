@@ -34,7 +34,8 @@ This document now serves two roles:
 The current hosted async runtime is implemented in C in [`src/silk_rt_async.c`](https://github.com/oro-computer/silk/blob/master/src/silk_rt_async.c) and wired
 into lowering in [`src/lower_ir.zig`](https://github.com/oro-computer/silk/blob/master/src/lower_ir.zig). It provides:
 
-- stackful coroutines (fibers) using `ucontext`,
+- stackful coroutines (fibers) using the host `ucontext` implementation on
+ glibc/Apple targets and a bundled AAPCS64 context switch on AArch64 musl,
 - a single-threaded executor/event loop that can drive `async fn main () -> int`,
 - `await` as a true suspension point (parks the current fiber instead of blocking the OS thread),
 - basic async timers, fd readiness wait, and async `read`/`write`,
@@ -162,11 +163,15 @@ The current executor is single-threaded and cooperative:
 
 Note on signal masks:
 
-- `ucontext` saves/restores the thread signal mask as part of the context.
-- The runtime syncs coroutine and executor contexts to the current thread mask before
- swapping contexts, so `await`/executor polling does not restore a stale mask.
- This is required for thread-level signal masking patterns like [`std::signal`](/silk/docs/std/signal/)
- (`signalfd(2)` on Linux).
+- System `ucontext` saves/restores the thread signal mask as part of the context.
+ The runtime syncs coroutine and executor contexts to the current thread mask
+ before swapping so `await`/executor polling does not restore a stale mask.
+- AArch64 musl does not export `getcontext`, `makecontext`, or `swapcontext`.
+ Its bundled context switch preserves the AAPCS64 call-preserved integer and
+ floating-point registers plus SP. It does not replace the process signal mask,
+ so the current thread mask naturally remains active across a cooperative
+ switch. Both paths preserve thread-level masking patterns such as
+ [`std::signal`](/silk/docs/std/signal/) with `signalfd(2)` on Linux.
 
 On Linux, the runtime attempts to initialize an `io_uring` instance. When available, it
 uses:
@@ -262,11 +267,12 @@ The compiler is responsible for:
 - computing which locals must be stored in the frame across each suspension point,
 - preserving typed-error and `panic` semantics during the transform.
 
-Note: the current shipped bring-up does **not** yet implement this state-machine transform.
-Instead, `async fn` bodies execute on stackful coroutines provided by the runtime (`ucontext`)
-and suspension points yield back to the executor by swapping contexts. The long-term plan is
-to migrate from stackful coroutines to an explicit compiler transform once the async surface
-stabilizes.
+Note: the current shipped bring-up does **not** yet implement this state-machine
+transform. Instead, `async fn` bodies execute on stackful coroutines provided by
+the runtime (system `ucontext` or the bundled AArch64 musl switch), and suspension
+points yield back to the executor by swapping contexts. The long-term plan is to
+migrate from stackful coroutines to an explicit compiler transform once the
+async surface stabilizes.
 
 ### `await` behavior
 
@@ -306,7 +312,7 @@ Current shipped guarantees:
 Current non-goals:
 
 - no implicit nested executor creation,
-- no automatic [`std::abort_controller`](/silk/docs/std/abort_controller/) injection,
+- no automatic [`std::abort_controller`](/silk/docs/std/abort-controller/) injection,
 - and no general cancellation registry for arbitrary child operations beyond
  the explicit handles that are currently live in scope.
 
@@ -401,7 +407,7 @@ CI; prefer structural checks (operation counts, allocations, syscalls) where fea
  - implement async timers (`sleep_ms`, `sleep_until`) on the event loop.
 2. **Portable I/O readiness backend**:
  - expose async fd readiness in [`std::runtime::event_loop`](/silk/docs/std/runtime-event_loop/),
- - add async wrappers in [`std::io`](/silk/docs/std/io/) / [`std::net`](/silk/docs/std/networking/) (opt-in, minimal initial surface).
+ - add async wrappers in [`std::io`](/silk/docs/std/io/) / [`std::net`](/silk/docs/std/net/) (opt-in, minimal initial surface).
 3. **Linux `io_uring` backend**:
  - implement submission/completion for core ops (read/write/accept/connect/timeout),
  - wire completions to coroutine wakeups,

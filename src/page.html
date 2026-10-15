@@ -1,39 +1,71 @@
-<main class="editorial-main" id="main">
-      <section class="editorial-hero" aria-labelledby="home-title">
-        <h1 id="home-title">Edge software for humans and AI agents.</h1>
-        <div class="editorial-actions">
-          <a class="button button-primary" href="/runtime/">Explore Oro Runtime</a>
-          <a class="button button-quiet" href="/silk/docs/">Read Silk docs</a>
-        </div>
-      </section>
+<main id="main">
+  <section class="home-hero container" aria-labelledby="home-title">
+    <div class="home-hero-copy">
+      <p class="section-kicker">Oro Computer / Open source technology</p>
+      <h1 id="home-title">Software.<br>Closer to <em>you.</em></h1>
+      <p class="home-lede">Native applications. A language for systems.<br>Open foundations for what you build next.</p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="/runtime/">Explore Runtime <span aria-hidden="true">↗</span></a>
+        <a class="button" href="/silk/">Discover Silk <span aria-hidden="true">↗</span></a>
+      </div>
+    </div>
+    <div class="home-art" aria-hidden="true">
+      <svg viewBox="0 0 600 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="petal-gold" x1="80" y1="80" x2="510" y2="520" gradientUnits="userSpaceOnUse"><stop stop-color="#FAF8F4"/><stop offset=".45" stop-color="#F6C945"/><stop offset="1" stop-color="#F47A28"/></linearGradient>
+          <linearGradient id="petal-purple" x1="500" y1="100" x2="100" y2="500" gradientUnits="userSpaceOnUse"><stop stop-color="#C9B4FF"/><stop offset="1" stop-color="#5B3BA2"/></linearGradient>
+          <path id="petal" d="M300 300C155 300 76 224 100 140C124 56 282 87 300 300Z"/>
+        </defs>
+        <circle cx="300" cy="300" r="252" stroke="#FAF8F4" stroke-opacity=".1" stroke-dasharray="2 10"/>
+        <path d="M300 20V580M20 300H580" stroke="#FAF8F4" stroke-opacity=".08"/>
+        <g stroke="url(#petal-gold)" stroke-width="1.1">
+          <use href="#petal"/><use href="#petal" transform="rotate(90 300 300)"/><use href="#petal" transform="rotate(180 300 300)"/><use href="#petal" transform="rotate(270 300 300)"/>
+          <g transform="translate(300 300) scale(.9) translate(-300 -300)"><use href="#petal"/><use href="#petal" transform="rotate(90 300 300)"/><use href="#petal" transform="rotate(180 300 300)"/><use href="#petal" transform="rotate(270 300 300)"/></g>
+          <g transform="translate(300 300) scale(.8) translate(-300 -300)"><use href="#petal"/><use href="#petal" transform="rotate(90 300 300)"/><use href="#petal" transform="rotate(180 300 300)"/><use href="#petal" transform="rotate(270 300 300)"/></g>
+          <g transform="translate(300 300) scale(.7) translate(-300 -300)"><use href="#petal"/><use href="#petal" transform="rotate(90 300 300)"/><use href="#petal" transform="rotate(180 300 300)"/><use href="#petal" transform="rotate(270 300 300)"/></g>
+          <g transform="translate(300 300) scale(.6) translate(-300 -300)"><use href="#petal"/><use href="#petal" transform="rotate(90 300 300)"/><use href="#petal" transform="rotate(180 300 300)"/><use href="#petal" transform="rotate(270 300 300)"/></g>
+          <g transform="translate(300 300) scale(.5) translate(-300 -300)"><use href="#petal"/><use href="#petal" transform="rotate(90 300 300)"/><use href="#petal" transform="rotate(180 300 300)"/><use href="#petal" transform="rotate(270 300 300)"/></g>
+        </g>
+        <g stroke="url(#petal-purple)" stroke-width=".8" transform="rotate(45 300 300)"><use href="#petal"/><use href="#petal" transform="rotate(90 300 300)"/><use href="#petal" transform="rotate(180 300 300)"/><use href="#petal" transform="rotate(270 300 300)"/></g>
+        <circle cx="300" cy="300" r="7" fill="#F6C945"/>
+      </svg>
+      <span class="art-caption">Independent by design. Open by nature.</span>
+    </div>
+    <div class="home-hero-bottom"><span>Built in the open. Built for the device.</span><a href="#technology">Meet the technology <span aria-hidden="true">↓</span></a></div>
+  </section>
+  <section class="home-technologies container" id="technology" aria-labelledby="technology-title">
+    <div class="home-section-heading"><p class="section-kicker">Our technology</p><h2 id="technology-title">Two foundations.<br>Room to build.</h2><p>From the interface to the systems underneath.<br>Choose your starting point.</p></div>
+    <article class="home-product" aria-labelledby="runtime-title">
+      <div class="home-product-copy"><p class="product-number">01 / Application runtime</p><h3 id="runtime-title">The web.<br>With native reach.</h3><p>Build native apps with HTML, CSS, and JavaScript. Add windows, files, and local data through Runtime APIs.</p><div class="home-product-links"><a href="/runtime/">Explore Oro Runtime <span aria-hidden="true">↗</span></a><a href="/runtime/learn/getting-started/">Get started <span aria-hidden="true">→</span></a></div><p class="product-footnote">Linux · macOS · Windows · Android · iOS</p></div>
+      <div class="home-code"><div class="home-code-heading"><span>Oro Runtime</span><span>JavaScript / native APIs</span></div><pre><code class="language-javascript">import { open } from 'oro:sqlite'
 
-      <section class="editorial-products" aria-label="Technology">
-        <div class="editorial-section-heading">
-          <p class="section-kicker">Technology</p>
-        </div>
+const db = open(':memory:')
 
-        <article class="editorial-product" id="runtime">
-          <div class="editorial-product-index">01</div>
-          <div>
-            <h3>Oro Runtime</h3>
-            <p>Native delivery for local apps, tools, and agent-facing interfaces.</p>
-          </div>
-        </article>
+db.exec('CREATE TABLE notes (body TEXT)')
+db.exec('INSERT INTO notes (body) VALUES (?)', {
+  params: ['An idea, kept close.'],
+})
 
-        <article class="editorial-product" id="silk">
-          <div class="editorial-product-index">02</div>
-          <div>
-            <h3>Silk</h3>
-            <p>Systems language for explicit packages, verification, and edge services.</p>
-          </div>
-        </article>
+const { rows } = db.exec('SELECT body FROM notes')
+console.log(rows[0].body)
+db.close()</code></pre><div class="home-code-footer"><span class="status-dot"></span>Your code. Your device. Your data.</div></div>
+    </article>
+    <article class="home-product home-product-silk" aria-labelledby="silk-title">
+      <div class="home-product-copy"><p class="product-number">02 / Systems language</p><h3 id="silk-title">Native software.<br>Proof built in.</h3><p>Write native tools and libraries. Use the standard library and prove contracts at compile time.</p><div class="home-product-links"><a href="/silk/">Explore Silk <span aria-hidden="true">↗</span></a><a href="/silk/learn/getting-started/">Write your first program <span aria-hidden="true">→</span></a></div><p class="product-footnote">Native compilation · C interoperability · Formal verification</p></div>
+      <div class="home-code"><div class="home-code-heading"><span>Silk</span><span>contracts.slk</span></div><pre><code class="language-silk">#require balance &gt;= 0;
+#require amount &gt;= 0 &amp;&amp; amount &lt;= balance;
+#assure result == balance - amount;
+#assure result &gt;= 0;
+fn withdraw (balance: int, amount: int) -&gt; int {
+  return balance - amount;
+}
 
-        <article class="editorial-product" id="virtnosis">
-          <div class="editorial-product-index">03</div>
-          <div>
-            <h3>Virtnosis</h3>
-            <p>Read-only infrastructure diagnostics for operators and agents.</p>
-          </div>
-        </article>
-      </section>
-    </main>
+fn main () -&gt; int {
+  let remaining = withdraw(100, 30);
+  #assert remaining == 70;
+  return 0;
+}</code></pre><div class="home-code-footer"><span class="status-dot"></span>Contracts checked at compile time.</div></div>
+    </article>
+  </section>
+  <section class="home-invitation container" aria-labelledby="invitation-title"><p class="section-kicker">Made to be built on</p><h2 id="invitation-title">Your next idea<br>starts here.</h2><div><p>Read the source. Explore the docs.<br>Make something of your own.</p><div class="hero-actions"><a class="button button-primary" href="/docs/">Open the documentation <span aria-hidden="true">↗</span></a><a class="button button-quiet" href="https://github.com/oro-computer">Find us on GitHub ↗</a></div></div></section>
+</main>

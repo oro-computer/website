@@ -161,7 +161,7 @@ At a high level, the language can be structured as:
  - `FnDecl ::= FnSpecs FnExportModifier FnModifierOpt 'fn' FnGenericParamListOpt FnNameOpt FnSignature FnBody`
  - `FnBody ::= Block | ';'`
  - `FnModifierOpt ::= FnModifier*`
- - `FnModifier ::= 'const' | 'pure' | 'task' | 'async'`
+ - `FnModifier ::= 'const' | 'pure' | 'task' | 'async' | 'unsafe'`
  - `FnGenericParamListOpt ::= GenericParamList`
  - `FnNameOpt ::= NameToken`
  - `FnSpecs ::= (FnPrecondition | FnPostcondition | FnContractTheory)*`
@@ -340,7 +340,7 @@ At a high level, the language can be structured as:
 
  - `InterfaceDecl ::= ExportModifier 'interface' Identifier GenericParamListOpt InterfaceExtendsOpt '{' InterfaceItem* '}'`
  - `InterfaceExtendsOpt ::= ('extends' QualifiedName)`
- - `InterfaceMethodDecl ::= 'fn' NameToken FnSignature ';'`
+ - `InterfaceMethodDecl ::= ['unsafe'] 'fn' NameToken FnSignature ';'`
  - `InterfaceItem ::= InterfaceMethodDecl | UsingDecl`
 
  - `ImplDecl ::= 'impl' QualifiedName GenericParamListOpt ImplAsOpt '{' ImplMemberDecl* '}'`
@@ -367,10 +367,11 @@ At a high level, the language can be structured as:
  - `OptionalTypeSuffix ::= '?' | '??'`
  - `ArrayTypeSuffix ::= '[' ']' | '[' ArrayLen ']'`
  - `ArrayLen ::= IntLiteral | Identifier`
- - `BaseType ::= ReferenceType | AttrFunctionType | FunctionType | CFunctionType | '(' Type ')' | SimpleType`
+ - `BaseType ::= ReferenceType | AttrFunctionType | UnsafeFunctionType | FunctionType | CFunctionType | '(' Type ')' | SimpleType`
  - `ReferenceType ::= '&' BaseType`
  - `FunctionType ::= 'fn' '(' TypeListOpt ')' ResultTypeOpt`
  - `CFunctionType ::= 'c_fn' '(' TypeListOpt ')' ResultTypeOpt`
+ - `UnsafeFunctionType ::= 'unsafe' (FunctionType | CFunctionType)`
  - `AttrFunctionType ::= AttrAnnot FunctionType` (in the Supported forms, this is
  accepted as sugar for selecting ABI variants such as `attr(abi=c) fn (...) -> ...`)
  - `TypeListOpt ::= TypeList`
@@ -398,7 +399,7 @@ At a high level, the language can be structured as:
 
 - Statements (Supported forms):
 
- - `Stmt ::= AttrAnnot* (LetStmt | LetElseStmt | SpecConstStmt | SpecAssertStmt | SpecTheoryDeclStmt | SpecTheoryStmt | AsyncBlockStmt | TaskBlockStmt | GpuLaunchStmt | ExprStmt | IfStmt | LoopStmt | WhileStmt | ForStmt | MatchStmt | ReturnStmt | PanicStmt | AssertStmt | BreakStmt | ContinueStmt)`
+ - `Stmt ::= AttrAnnot* (LetStmt | LetElseStmt | SpecConstStmt | SpecAssertStmt | SpecTheoryDeclStmt | SpecTheoryStmt | UnsafeBlockStmt | AsyncBlockStmt | TaskBlockStmt | GpuLaunchStmt | ExprStmt | IfStmt | LoopStmt | WhileStmt | ForStmt | MatchStmt | ReturnStmt | PanicStmt | AssertStmt | BreakStmt | ContinueStmt)`
 
  - `LetStmt ::= LetIntroducer LetBinder TypeAnnotationOpt InitializerOpt ';'`
  - `LetElseStmt ::= ('let' LetModifierOpt | 'var' LetModifierOpt) MatchExprPattern TypeAnnotationOpt '=' Expr 'else' Block ';'`
@@ -421,6 +422,7 @@ At a high level, the language can be structured as:
  - `SpecTheoryStmt ::= '#theory' QualifiedName '(' ArgListOpt ')' ';'`
  - `AsyncBlockStmt ::= 'async' Block`
  - `TaskBlockStmt ::= 'task' Block`
+ - `UnsafeBlockStmt ::= 'unsafe' Block`
  - `GpuLaunchStmt ::= GpuLaunchExpr ';'?`
  - `GpuLaunchExpr ::= 'gpu' '(' GpuLaunchOption ',' GpuLaunchOption ')' '{' DirectKernelCall ';' '}'`
  - `GpuLaunchOption ::= 'grid' '=' Expr | 'workspace' '=' Expr`
@@ -565,7 +567,7 @@ At a high level, the language can be structured as:
  - `ArgListOpt ::= ArgList`
  - `ArgList ::= Expr (',' Expr)*`
 
- Note: the parser treats `mut <expr>`, `new <expr>`, `await <expr>`, `await * <expr>`,
+ Note: the parser treats `unsafe <expr>`, `mut <expr>`, `new <expr>`, `await <expr>`, `await * <expr>`,
  `yield <expr>`, `yield * <expr>`, `sizeof <expr>`, `alignof <expr>`, `offsetof(Type, field_path)`,
  `typename <expr>`, and prefix `++<expr>` / `--<expr>` as unary expressions.
 
@@ -615,6 +617,7 @@ At a high level, the language can be structured as:
  | IfExpr
  | MatchExpr
  | FnExpr
+ | UnsafeExpr
  | AttrQueryExpr
  | AsmExpr
  | EmbedExpr
@@ -705,6 +708,12 @@ At a high level, the language can be structured as:
  - `IfExpr ::= 'if' Expr IfExprBlock 'else' (IfExpr | IfExprBlock)`
  - `IfExprBlock ::= '{' Expr '}'`
 
+ - `UnsafeExpr ::= 'unsafe' ('{' Expr '}' | Unary)`
+
+ The unbraced alternative establishes an unsafe context for one complete
+ unary/postfix expression. It therefore includes attached call, field,
+ indexing, and cast suffixes but stops before a binary operator. Parentheses
+ or the braced alternative delimit a compound expression.
  - `AsmExpr ::= 'asm' StringLiteral`
 
  - `ResultPattern ::= ('Ok' | 'Err') '(' (Identifier | '_') ')'`

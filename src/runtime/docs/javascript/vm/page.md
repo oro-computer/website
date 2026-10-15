@@ -35,6 +35,7 @@ console.log(result)
 ```text
 oro:vm
 oro:vm/init
+oro:vm/worker
 oro:vm/world
 ```
 
@@ -264,10 +265,10 @@ declare module "oro:vm" {
         /**
          * Predicate function to determine if a `value` is an internal or external
          * script reference value.
-         * @param {amy} value
+         * @param {any} value
          * @return {boolean}
          */
-        static isReference(value: amy): boolean;
+        static isReference(value: any): boolean;
         /**
          * `Reference` class constructor.
          * @param {string} id
@@ -454,6 +455,14 @@ declare module "oro:vm" {
 
 ```ts
 declare module "oro:vm/init" {
+    export {};
+}
+```
+
+#### `oro:vm/worker`
+
+```ts
+declare module "oro:vm/worker" {
     export {};
 }
 ```

@@ -27,7 +27,10 @@ export function canonicalLink(
         entry[1],
       ]
     if (target) {
-      const id = url.searchParams.get('p')!.replace(/^docs\//, '')
+      const rawId = url.searchParams.get('p')!
+      const id = rawId.replace(/^docs\//, '')
+      // Explicit upstream docs paths cross from the Silk wiki to its reference.
+      if (target[0] === 'silkWiki' && (rawId.startsWith('docs/') || id.startsWith('compiler/'))) target = ['silk', collections.silk]
       url.searchParams.delete('p')
       return (
         docUrl(target[0] as Collection, id) +

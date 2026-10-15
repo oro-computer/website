@@ -40,6 +40,9 @@ User-facing diagnostics should distinguish at least these categories:
  target-specific lowering/codegen path cannot yet emit the requested output.
 - **Stdlib/module availability gap**: the program refers to a standard-library
  or package surface that is absent or unavailable for the current build/host.
+- **Resource exhaustion**: module-set type checking could not allocate scratch
+ or AST storage. Report `out of memory while type checking` without a language
+ feature code; allocation failure must not be mislabeled `E2002`.
 - **Internal compiler error**: the compiler lost required context or reached an
  unexpected internal failure.
 
@@ -332,6 +335,55 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2127` — invalid atomic memory ordering; for example, `load` may not use
  `Release` / `AcqRel`, `store` may not use `Acquire` / `AcqRel`, and
  `compare_exchange` failure ordering may not use `Release` / `AcqRel`.
+- `E2128` — a capturing function expression cannot be used as or converted to
+ `c_fn`; remove the capture or pass the captured state as an explicit callback
+ parameter/context pointer. This is a type/representation error, not an unsafe
+ permission error; an `unsafe` wrapper does not make capture erasure valid.
+- `E2129` — an operation requiring a programmer-verified invariant was used
+ outside an unsafe context. Prefix the narrow operation with `unsafe`, wrap it
+ in `unsafe { ... }`, or call it through a safe abstraction that establishes
+ the required invariant.
+ The diagnostic detail names the exact operation, such as
+ `raw address-to-callback cast`, `raw address-to-slice view cast`, `inline
+ assembly`, or `call to unsafe function`.
+
+For example, converting a dynamic-loader address without a boundary:
+
+```silk
+type Callback = c_fn (int) -> int;
+let callback: Callback = address as raw Callback;
+```
+
+produces a checker diagnostic shaped as:
+
+```text
+error[E2129]: unsafe operation requires an unsafe context
+  |
+  | let callback: Callback = address as raw Callback;
+  |                                     ^^^ raw address-to-callback cast
+  = help: prefix the operation with `unsafe` or wrap it in `unsafe { ... }` after validating its safety invariants
+  = help: or declare the containing function `unsafe fn` when callers must uphold those invariants
+```
+
+The accepted form keeps the assertion narrow:
+
+```silk
+let callback: Callback = unsafe address as raw Callback;
+```
+
+`E2129` is emitted during ordinary checking and therefore precedes Formal Silk
+verification. Once the unsafe-context check succeeds, formal obligations are
+unchanged: a violated `#require` at an unsafe call still reports `E3007`.
+
+### Code Quality
+
+- `L5001` — a function, method, anonymous function, or test body exceeds the
+ configured cyclomatic-complexity maximum. Its severity is selected by
+ `[check.rules.cyclomatic_complexity].severity`; the diagnostic identifies a
+ scope-qualified body, reports the amount over budget, and includes the shared
+ analyzer's baseline/decision equation, deepest nesting, and category
+ breakdown. See [complexity analysis](/silk/docs/compiler/complexity-analysis/) for the structured
+ evidence available to compiler and editor tools.
 
 ### Formal Silk Verification
 
@@ -386,6 +438,11 @@ Notes:
 - When lowering cannot isolate a narrower statement / expression site, `E4001`
  falls back to the offending function or declaration collector stage and names
  that function / declaration directly.
+- A module-level binding that cannot be represented or initialized for the
+ requested target is a declaration-stage failure. Its `E4001` diagnostic must
+ point at that binding and name the unsupported declaration/initializer; it
+ must not blame an otherwise supported function merely because that function
+ reads the binding.
 - For declaration-stage layout collection failures, the note should carry the
  collector context and, when available, the rejected field or payload type
  shape so users do not have to infer it from a generic carrier such as

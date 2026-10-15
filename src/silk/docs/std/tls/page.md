@@ -17,7 +17,7 @@ primitives for the hosted POSIX baseline using the built-in mbedTLS provider.
 The initial goals are:
 
 - a small but usable [`std::tls`](/silk/docs/std/tls/) session API for clients and servers,
-- a transport-agnostic I/O model so TLS can be layered over [`std::net::TCPStream`](/silk/docs/std/networking/)
+- a transport-agnostic I/O model so TLS can be layered over [`std::net::TCPStream`](/silk/docs/std/net/)
  or custom runtimes ,
 - end-to-end runnable tests that do not depend on real sockets (to keep the
  test suite runnable in sandboxed environments).
@@ -66,6 +66,11 @@ This is surfaced as a `TLSFailed` whose `kind()` is:
 
 - `TLSErrorKind::WouldBlockRead`
 - `TLSErrorKind::WouldBlockWrite`
+
+The hosted descriptor transport suppresses `SIGPIPE` per socket send on both
+Linux and macOS. A peer closing during a write or TLS shutdown is reported
+through the TLS error path; it must not terminate the process or alter its
+signal handlers.
 
 On TLS 1.3 connections, servers may send post-handshake `NewSessionTicket`
 messages. mbedTLS reports these via `MBEDTLS_ERR_SSL_RECEIVED_NEW_SESSION_TICKET`.
@@ -119,7 +124,7 @@ Key operations:
 - `set_bio_mempipe(bio: u64) -> void` — attach a `MemPipe` endpoint context via
  mbedTLS `ssl_set_bio` using [`std::tls::mem_send`](/silk/docs/std/tls/) and [`std::tls::mem_recv`](/silk/docs/std/tls/).
 - `set_bio_fd(fd: int) -> void` — attach a hosted POSIX file descriptor as the
- underlying stream transport (for example a [`std::net::TCPStream`](/silk/docs/std/networking/) socket).
+ underlying stream transport (for example a [`std::net::TCPStream`](/silk/docs/std/net/) socket).
 - `set_hostname(hostname: string) -> TLSFailed?` — set the TLS hostname (SNI)
  and enable hostname verification for verified client sessions.
 - `handshake_step() -> TLSIntResult` — advance the handshake state machine by
@@ -152,12 +157,17 @@ These pointers can be passed to `Session.set_bio_mempipe(...)`.
 
 ## Considerations
 
-- The current [`std::tls`](/silk/docs/std/tls/) API is intentionally small; higher-level features
- (hostname verification, CA stores, ALPN, session resumption, etc.) will be
- specified and implemented as the language and stdlib grow.
+- The current [`std::tls`](/silk/docs/std/tls/) API is intentionally small. Verified system/custom-CA
+ clients and certificate hostname checks are implemented; ALPN, session
+ resumption, and richer CA-store management remain future work.
 - The Supported forms wires `Session` to transports via `MemPipe` and hosted
  POSIX file descriptors (`set_bio_fd`). General user-provided transport
  callbacks are planned but require additional FFI expressiveness beyond the
  current implementation.
+- [`std::websocket`](/silk/docs/std/websocket/) composes its secure client/server path with `Session` over a
+ retained [`std::net::TCPStream`](/silk/docs/std/net/). The WebSocket owner sets verified client
+ hostnames before handshaking, applies phase deadlines to the socket, and
+ releases the TLS session before closing the descriptor. This is the supported
+ `wss://` composition path; callers do not need to duplicate TLS or RFC 6455.
 - The initial tests use `MemPipe` instead of real sockets so `make test` can run
  in environments where `socket(2)` is restricted.

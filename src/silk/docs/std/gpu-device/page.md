@@ -33,6 +33,22 @@ does not acquire device-operation semantics merely from its spelling.
  `base_address + index * 4`.
 - `bool_to_u64(value: bool) -> u64` converts `false` to `0` and `true` to `1`
  inside portable device code.
+- `local_id_x()`, `local_size_x()`, and `group_id_x()` expose the current
+ work-item, workgroup width, and workgroup index on the X dimension.
+- `barrier()` synchronizes the workgroup and publishes prior shared-memory
+ writes to its members. Every live work item in the workgroup must reach the
+ same barrier.
+- `load_u64`/`store_u64`, `load_f32`/`store_f32`, and
+ `load_f64`/`store_f64` provide typed indexed global-memory access alongside
+ the existing packed `u32` functions.
+- `shared_load_u32`/`shared_store_u32`, `shared_load_u64`/`shared_store_u64`,
+ `shared_load_f32`/`shared_store_f32`, and
+ `shared_load_f64`/`shared_store_f64` address the NVIDIA backend's 16 KiB
+ per-workgroup shared arena by typed element index. Every type shares the same
+ byte arena: byte offset is `index * sizeof(element)`, and callers must use
+ disjoint resulting byte ranges when several typed arrays coexist.
+- `nvidia_mma_f32_m16n8k8_f16_d0` through `_d3` expose the four f32 output
+ registers of the sm80-or-newer m16n8k8 packed-f16 tensor-MMA fragment.
 - `store_u32_at_global_x(base_address: u64, value: u64) -> void` stores the low
  32 bits of `value` in little-endian order at
  `base_address + global_id_x * 4`.
@@ -43,9 +59,12 @@ does not acquire device-operation semantics merely from its spelling.
  of `u64` parameters declared by the containing GPU function in the
  standalone AMD source-intrinsic object path.
 
-The first four operations are the portable composition surface. The latter
-two are retained for source compatibility with the initial AMDGPU vertical
-slice; new algorithms should be written from the portable primitives and
+The global-X, packed-u32, and boolean conversion operations are the portable
+GPU-v1 composition surface. Typed global/shared operations, barriers, and
+tensor-MMA helpers are selected by the NVIDIA general device backend. The
+`store_u32_at_global_x` and `classify_u32_at_global_x` compatibility operations
+are retained for source compatibility with the initial AMDGPU vertical slice;
+new portable algorithms should be written from the portable primitives and
 ordinary Silk helpers.
 
 Mixed GPU-v1 device IR accepts supported scalar expressions as arguments to

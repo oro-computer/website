@@ -30,9 +30,12 @@ Use `--json` for tooling that needs the same environment facts without parsing
 
 ## Output format
 
-- One `NAME=value` entry per line.
-- Unset variables are printed as `NAME=<unset>`.
-- Variables set to an empty string are printed as `NAME=<empty>`.
+- Set variables are printed as POSIX shell assignments with single-quoted,
+ escaped values. Embedded newlines remain inside the quoted value.
+- Unset variables are omitted.
+- Variables set to an empty string are printed as `NAME=''`.
+- Use `eval "$(silk env)"` to preserve whitespace and newlines exactly.
+ Assignments do not add exports or unset omitted variables.
 
 JSON output is newline-terminated and contains `schemaVersion`, `command`, and
 `vars`. Each variable entry includes `name`, `state` (`unset`, `empty`, or
@@ -40,7 +43,7 @@ JSON output is newline-terminated and contains `schemaVersion`, `command`, and
 
 ## Variables
 
-The output includes, at minimum:
+The following variables are reported when set (JSON also reports unset ones):
 
 - `SILK_DEBUG_BACKEND` — enable backend debug output when set to a non-empty, non-`0` value.
 - `SILK_DEBUG_BACKEND_ENUMS` — enable enum-lowering debug output.
@@ -78,6 +81,7 @@ The output includes, at minimum:
 ```sh
 silk env
 silk env --json
+eval "$(silk env)"
 ```
 
 ## See Also

@@ -1,7 +1,7 @@
 # Oro Website
 
 Oro Computer's static website uses DOMStack to build marketing pages, learning
-chapters, and documentation for Runtime, Silk, Virtnosis, Sage, and slg.
+chapters, and documentation for Runtime and Silk.
 
 ## Local development
 
@@ -232,9 +232,8 @@ in the sitemap. Publishing an older-year draft keeps it in its original year
 archive even when its publication date is newer. Removing the last post from a
 year removes that archive during watch builds.
 
-Every page has an **Edit this page** footer link to its source in GitHub, matching
-the repository browser/edit workflow. Generated redirect pages link to the
-source page that declares their alias, rather than a nonexistent output file.
+Documentation, blog, and learning pages have an **Edit this page** footer link
+to their source in GitHub. Homepage, product overview, and redirect pages omit it.
 
 ## Refreshing upstream content
 
@@ -296,7 +295,7 @@ npm run test:reproducibility
 ```
 
 The crawler checks every generated internal link and fragment. Site tests cover
-all original 27 HTML routes and 585 documentation routes, raw-source parity,
+the 21 retained original HTML routes and 523 documentation routes, raw-source parity,
 search text, and LLM packs. Browser tests cover desktop/mobile layouts,
 no-JavaScript rendering, compatibility redirects, search, tabs, copy controls,
 Ask AI, specification heading search, and fragments inside tabs. Tooling tests
@@ -325,3 +324,41 @@ lockfile; CI uses `npm ci` for reproducible installs. To refresh to the current
 beta, run `npm install --save-dev --save-exact @domstack/static@beta`, run the
 complete validation sequence, and compare representative desktop and mobile
 screenshots. Commit both `package.json` and `package-lock.json`.
+
+
+## Technology and presentation review
+
+The website focuses on Oro Runtime and Silk. The retired Sage, slg, and Virtnosis
+routes were intentionally removed, including their raw docs, search indexes,
+LLM packs, and compatibility-fixture entries.
+
+The October 15, 2026 content review used clean `master` snapshots, verified against
+remote branch heads: Runtime `cb74663ac824c8a2bb9a686ee334dd2550c90f98` and Silk
+`66bf2f4f93b3caa39e3128754399ab9af78d5f85`. Runtime API declarations and Silk docs/wiki/spec
+were refreshed with the ingestion commands above. Runtime CLI usage/options were
+compared against `api/CLI.md`; authored setup, scaffold, platform support, and Silk
+build prerequisites were checked against source. The npm registry confirmed Runtime
+`0.1.7` with Node.js 22+; the older release-status paragraph in Runtime's README
+was superseded by its published package metadata.
+
+The shared dark design follows `docs/branding/`, drawing on Spotify Technology's
+product hierarchy and Reflection's generous typography and spacing. CDP browser
+review and WCAG AA checks cover desktop and mobile layouts, syntax highlighting,
+interactive states, and documentation controls. Run `npm run test:browser` to keep
+those presentation checks alongside the existing interaction regressions.
+
+## Learning examples
+
+The five Runtime and five Silk lessons live as Markdown under `src/*/learn/`.
+Give each page one task, a working example, and a next step. Keep setup and
+expected results brief; link to the reference for detail. Continuing chapters
+show only the new code and say where to put it.
+Runtime chapters build the same Field Notes app; Silk chapters explicitly identify
+when they use an independent file or a new package directory.
+
+With a native Silk toolchain and standard library installed, run
+`npm run test:examples`. It extracts the published source blocks, checks and tests
+them, builds all five native executables, and verifies stdout and failure exit
+codes. The normal browser suite checks every lesson, copy controls, and Runtime
+application behavior with a substituted native bridge. Native Runtime packaging
+and host-specific capabilities still need an installed host toolchain.

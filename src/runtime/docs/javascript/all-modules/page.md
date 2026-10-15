@@ -198,7 +198,7 @@ above instead of browsing this list line by line.
 - [`oro:commonjs`](/runtime/docs/javascript/commonjs/), `oro:commonjs/builtins`, `oro:commonjs/cache`, `oro:commonjs/loader`, `oro:commonjs/module`, `oro:commonjs/package`, `oro:commonjs/require`
 - [`oro:module`](/runtime/docs/javascript/module/)
 - `oro:npm/module`, `oro:npm/service-worker`
-- [`oro:vm`](/runtime/docs/javascript/vm/), `oro:vm/init`, `oro:vm/world`
+- [`oro:vm`](/runtime/docs/javascript/vm/), `oro:vm/init`, `oro:vm/worker`, `oro:vm/world`
 - [`oro:util`](/runtime/docs/javascript/util/), `oro:util/types`
 
 </details>

@@ -121,29 +121,53 @@ The same source builds for NVIDIA `sm80` with
 adapter without requiring GPU hardware. `silk build --list-gpu-targets` prints
 all canonical mixed-executable GPU targets and their providers.
 
-On installed NVIDIA `sm80` hardware, the maintained hardware check is the same
-command with the NVIDIA target selected:
+On installed NVIDIA hardware, the maintained vector gate defaults to the
+portable `sm80` target:
 
 ```text
-make pure-silk-gpu-check \
-  PURE_SILK_GPU_TARGET=nvptx64-nvidia-cuda-sm80
+make pure-silk-gpu-nvidia-check
 ```
+
+Set `SILK_NVIDIA_GPU_TARGET` to select the exact installed architecture. For
+an NVIDIA GB10, the native vector, ML, and general-device gates are:
+
+```text
+SILK_NVIDIA_REQUIRE=1 \
+SILK_NVIDIA_GPU_TARGET=nvptx64-nvidia-cuda-sm121 \
+make pure-silk-gpu-nvidia-check \
+  pure-silk-gpu-ml-nvidia-check \
+  pure-silk-gpu-nvidia-general-check
+```
+
+The general-device gate runs
+[`examples/pure_silk_gpu_nvidia_general.slk`](https://github.com/oro-computer/silk/blob/master/examples/pure_silk_gpu_nvidia_general.slk). One complete 32-thread workgroup
+checks work-item/workgroup ids, mutable scalar control flow, typed global and
+shared `u64`/`f32`/`f64` memory, a barrier, floating-point arithmetic, and the
+sm80-or-newer tensor-MMA selector against downloaded result bytes. Those typed
+shared arrays use disjoint byte ranges because their element indices address
+one common shared arena. If the general gate fails, its Make diagnostic names
+allocation, launch, synchronization, host-result preparation, download, or the
+specific integer, `f32`, tensor-MMA, or `f64` byte check.
 
 For AMD, use the target reported by `rocminfo` or the corresponding supported
 target from `silk build --list-gpu-targets`. Current AMD processors are
 `gfx942`, `gfx1100`, and `gfx1151`.
 
-The current useful portable device-body surface provides global-X indexing,
-packed indexed `u32` load/store, boolean-to-`u64` conversion, immutable scalar
-locals, comparisons, and direct calls to eligible pure/device helpers. The
-older [`std::gpu::device::store_u32_at_global_x`](/silk/docs/std/gpu-device/) remains a concise compatibility
-operation. GPU entries may declare up to 32 immutable `u64` parameters, and
-[`std::gpu::launch`](/silk/docs/std/gpu/) automatically packs the same number of trailing values. The
-compiler and embedded bundle own the provider layout; application code does not
-declare HIP/CUDA functions or pack argument bytes.
+The portable GPU-v1 device-body surface provides global-X indexing, packed
+indexed `u32` load/store, boolean-to-`u64` conversion, immutable scalar locals,
+comparisons, and direct calls to eligible pure/device helpers. The NVIDIA
+general-device surface additionally accepts mutable scalar locals, named scalar
+constants, `if`/[`while`](/silk/wiki/language/flow-while/)/[`loop`](/silk/wiki/language/flow-loop/), scalar integer and floating-point arithmetic,
+typed global/shared memory, barriers, and the documented tensor-MMA fragment
+operation. The older [`std::gpu::device::store_u32_at_global_x`](/silk/docs/std/gpu-device/) remains a concise
+compatibility operation. GPU entries may declare up to 32 immutable `u64`
+parameters, and [`std::gpu::launch`](/silk/docs/std/gpu/) automatically packs the same number of
+trailing values. The compiler and embedded bundle own the provider layout;
+application code does not declare HIP/CUDA functions or pack argument bytes.
 
-General parameter types, mutable device locals, named constants,
-address-space-aware device pointer types, structured device control flow,
-floating point, aggregates, and general arithmetic remain outside portable GPU
-v1. Low-level AMD instruction work remains available separately through the
-standalone [`std::gpu::isa`](/silk/docs/std/gpu-isa/) source-kernel path.
+First-class address-space pointer types, aggregate device values, recursion,
+and indirect device calls are not part of either current device subset. The
+typed indexed memory operations cover ordinary global/shared data movement
+without exposing provider address-space syntax. Low-level AMD instruction work
+remains available separately through the standalone [`std::gpu::isa`](/silk/docs/std/gpu-isa/)
+source-kernel path.

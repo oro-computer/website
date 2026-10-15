@@ -27,10 +27,14 @@ oroc config [options] [<key-or-path>]
 | `--list` | list known configuration keys with current and default values |
 | `--key=<name>` | print the current value for a specific key |
 | `--describe=<name>` | print help and metadata for a specific key |
-| `-f, --format=<format>` | print the full configuration as toml \| ini \| json |
+| `-f, --format=<format>` | print the full configuration as 'toml', 'ini', or 'json' |
+| `--json` | shorthand for '--format=json' |
 | `--strict` | treat unknown or unset keys as errors (non-zero exit) |
+| `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Notes
+
+- The current `--format` implementation serializes the active project configuration source. It can omit local `.ororc` overrides applied during a build; verify the override with the command that uses it (for example `oroc print-build-dir` for `build.output`) or in the built app.
 
 - Keys may be provided in flattened form (for example `filesystem_sandbox_enabled`) or TOML-style paths (for example `filesystem.sandbox_enabled`).
 - A bare argument after `config` is treated as a key query (for example `oroc config filesystem.sandbox_enabled`).

@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "Shipping the app is only half of the release story. The other half is producing update artifacts that can be verified, served, and diagnosed later without improvisation."
+description: "Package an update, sign its manifest, and verify it before distribution."
 docsCollection: "runtime"
 section: "guides"
 order: 20
@@ -11,10 +11,7 @@ githubRef: "master"
 
 # Release packaging and signed updates
 
-Shipping the app is only half of the release story. The other half is producing update artifacts that can be verified,
-served, and diagnosed later without improvisation.
-
-This guide walks through a practical release flow for one runtime app.
+Package an update, sign its manifest, and verify it before distribution.
 
 ## 1) Build a production package
 

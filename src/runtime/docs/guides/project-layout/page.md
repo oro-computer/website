@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "An Oro Runtime project is a directory with:"
+description: "Keep app configuration, web source, and generated builds in separate places."
 docsCollection: "runtime"
 section: "guides"
 order: 3
@@ -11,25 +11,7 @@ githubRef: "master"
 
 # Project layout
 
-An Oro Runtime project is a directory with:
-
-- an app configuration (`oro.toml`)
-- a copy-map ([`copy_map`](/runtime/docs/config/copy-map/)) that defines what gets bundled
-- one or more web roots (HTML/CSS/JS that the WebView loads)
-- optional backend code for platform work or long-running tasks
-
-A common layout:
-
-```text
-my-app/
-  oro.toml
-  copy-map.toml
-  src/
-    index.html
-    main.js
-  backend/
-    backend.js
-```
+Keep app configuration, web source, and generated builds in separate places.
 
 ## `oro.toml` at a glance
 

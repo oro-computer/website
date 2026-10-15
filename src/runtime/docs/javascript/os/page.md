@@ -45,7 +45,7 @@ These declarations are generated from the runtime's published TypeScript surface
 ```ts
 declare module "oro:os" {
     /**
-     * Returns the operating system CPU architecture for which Socket was compiled.
+     * Returns the operating system CPU architecture for which Oro Runtime was compiled.
      * @returns {string} - 'arm64', 'ia32', 'x64', or 'unknown'
      */
     export function arch(): string;
@@ -127,6 +127,7 @@ declare module "oro:os" {
     /**
      * The host operating system. This value can be one of:
      * - android
+     * - androidos
      * - android-emulator
      * - iphoneos
      * - iphone-simulator
@@ -136,9 +137,9 @@ declare module "oro:os" {
      * - unknown
      * - win32
      * @ignore
-     * @return {'android'|'android-emulator'|'iphoneos'|iphone-simulator'|'linux'|'macosx'|unix'|unknown'|win32'}
+     * @return {'android'|'androidos'|'android-emulator'|'iphoneos'|'iphone-simulator'|'linux'|'macosx'|'unix'|'unknown'|'win32'}
      */
-    export function host(): "android" | "android-emulator" | "iphoneos" | iphone;
+    export function host(): "android" | "androidos" | "android-emulator" | "iphoneos" | "iphone-simulator" | "linux" | "macosx" | "unix" | "unknown" | "win32";
     /**
      * Returns the home directory of the current user.
      * @return {string}

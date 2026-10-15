@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "Application data and application secrets are not the same thing. Put notes, caches, and drafts in the filesystem or SQLite. Put refresh tokens, client secrets, and other credentials in oro:secure-stor"
+description: "Keep notes in files or SQLite."
 docsCollection: "runtime"
 section: "guides"
 order: 10
@@ -11,8 +11,7 @@ githubRef: "master"
 
 # Secure storage and sessions
 
-Application data and application secrets are not the same thing. Put notes, caches, and drafts in the filesystem or
-SQLite. Put refresh tokens, client secrets, and other credentials in [`oro:secure-storage`](/runtime/docs/javascript/secure-storage/).
+Keep notes in files or SQLite. Store credentials with `oro:secure-storage`, then restore the session on launch.
 
 ## 1) Store a session token after sign-in
 

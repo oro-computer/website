@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "Oro Runtime applications stay web-first, but the point of the runtime is that you do not stop at the browser boundary. This guide shows how to add four integrations users actually notice: notification"
+description: "Add notifications, clipboard access, file pickers, and native menus to a desktop app."
 docsCollection: "runtime"
 section: "guides"
 order: 6
@@ -11,8 +11,7 @@ githubRef: "master"
 
 # Desktop integrations
 
-Oro Runtime applications stay web-first, but the point of the runtime is that you do not stop at the browser boundary.
-This guide shows how to add four integrations users actually notice: notifications, clipboard, file pickers, and native menus.
+Add notifications, clipboard access, file pickers, and native menus to a desktop app.
 
 ## 1) Request and use notifications
 

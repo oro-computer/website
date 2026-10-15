@@ -45,12 +45,14 @@ type StrLenFn = c_fn (u64) -> u64;
 Then resolve the symbol and cast the raw address:
 
 ```silk
-let strlen: StrLenFn = sym.address() as raw StrLenFn;
+let strlen: StrLenFn = unsafe { sym.address() as raw StrLenFn };
 let n: u64 = strlen("dynamic" as raw u64);
 ```
 
 The cast is the boundary where the program asserts that the symbol really has
-that C ABI. Silk cannot inspect the foreign function signature at runtime.
+that C ABI. Silk cannot inspect the foreign function signature at runtime, so
+the raw address-to-callback conversion requires `unsafe`; calling the verified
+`StrLenFn` value afterward does not require another boundary.
 
 ## Full Pattern
 
@@ -76,7 +78,7 @@ fn main () -> int {
   }
   let sym: Symbol = sym_opt ?? Symbol.invalid();
 
-  let strlen: StrLenFn = sym.address() as raw StrLenFn;
+  let strlen: StrLenFn = unsafe { sym.address() as raw StrLenFn };
   let n: u64 = strlen("dynamic" as raw u64);
 
   assert(n == 7, "strlen should count the dynamic string bytes");
@@ -131,6 +133,8 @@ Before calling a resolved symbol:
 
 - Confirm the symbol name is correct for the target platform.
 - Declare the `c_fn` alias with the exact C ABI shape.
+- Put only the raw address-to-`c_fn` cast inside `unsafe`; the loader lookup,
+ error handling, and later call do not need a wider boundary.
 - Use `u64` or a documented C alias for pointer parameters.
 - Keep the `Library` open for as long as any `Symbol` or function pointer is
  used.
@@ -153,5 +157,6 @@ Before calling a resolved symbol:
 ## Related Reference
 
 - [dylib](/silk/docs/std/dylib/)
+- [unsafe](/silk/docs/language/unsafe/)
 - [ext](/silk/docs/language/ext/)
 - [operators](/silk/docs/language/operators/)

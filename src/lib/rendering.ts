@@ -6,6 +6,7 @@ export function article(
   spec = false,
 ): { body: string; toc: string } {
   const $ = load(content, {}, false)
+  accessibleScrollRegions($)
   const headings: { id: string; title: string; level: string }[] = []
   $('h2,h3,h4,h5').each((_i, h) => {
     const id = $(h).attr('id') || ''
@@ -55,9 +56,15 @@ export function article(
   }
 }
 
+function accessibleScrollRegions($: ReturnType<typeof load>): void {
+  $('pre').attr('tabindex', '0').attr('role', 'group').attr('aria-label', 'Code sample')
+  $('table').wrap('<div class="table-scroll" tabindex="0" role="group" aria-label="Table"></div>')
+}
+
 export function rootContent(content: string): string {
-  if (!content.includes('<pre')) return content
+  if (!content.includes('<pre') && !content.includes('<table')) return content
   const $ = load(content, {}, false)
+  accessibleScrollRegions($)
   $('pre code').each((_i, el) => {
     const language = $(el).attr('class')?.match(/language-([\w+-]+)/)?.[1]
     if (language) {

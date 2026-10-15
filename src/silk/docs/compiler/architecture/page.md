@@ -44,7 +44,10 @@ In terms of concrete targets and file formats, the back-end MUST eventually supp
 
 - ELF for Unix-like systems:
  - `linux/x86_64` is the initial full IR-backed target (executables, objects, static libraries, and shared libraries).
- - `linux/aarch64` (ARM64) is a required future IR-backed target (beyond const-only executables).
+ - `linux/aarch64` (ARM64) has a direct ELF64 backend for the documented
+ integer/scalar IR subset. It emits executables, relocatable objects, GNU
+ static archives, and loadable shared objects without an external assembler
+ or linker.
  - position-independent code and shared objects (`.so`) for dynamic libraries.
 - Mach-O for macOS:
  - both Intel (`x86_64`) and Apple Silicon (`arm64`) MUST be supported,
@@ -67,6 +70,74 @@ Current snapshot (Silk (ABI) 0.1.1):
  - when the host is macOS and the output target is `macos-x86_64` or
  `macos-aarch64`, the driver still performs an ad hoc host `codesign -s -`
  pass so the generated executable is runnable immediately on macOS hosts.
+- [`src/backend_ir_elf_aarch64.zig`](https://github.com/oro-computer/silk/blob/master/src/backend_ir_elf_aarch64.zig) provides a **Silk-owned Linux/AArch64
+ IR and ELF backend**:
+ - lowers the target-neutral integer and `f32`/`f64` scalar IR subset directly to AArch64
+ instructions and writes `EM_AARCH64` ELF64 images without C, an external
+ assembler, or another compiler,
+ - implements distinct AAPCS64 `x0`…`x7` integer and `v0`…`v7`
+ floating-point parameter/result banks, with additional classified scalar
+ arguments in the caller's aligned outgoing stack area. External C calls
+ return at most two flattened scalar slots in registers and use the AAPCS64
+ `x8` indirect-result pointer for larger aggregates. Compiler-internal Silk
+ calls preserve the same typed register banks and use hidden result storage
+ only beyond the compiler ABI's eight-slot result capacity. Calls through
+ Silk function values retain that internal contract rather than switching
+ to the external C aggregate-return threshold; direct and indirect helper
+ calls, integer
+ arithmetic/logic/shifts/comparisons, stack and data memory operations,
+ IEEE-754 arithmetic/comparisons/casts, function/data addresses, CFG
+ branches, and Linux `exit_group` startup so hosted worker threads terminate
+ with the process,
+ - addresses value frames through 1 MiB, materializes stack addresses beyond
+ AArch64's scaled load/store immediate range, and lowers conditional edges
+ through a local conditional branch plus long-range unconditional branches
+ so generated functions are not limited to the conditional branch's
+ +/-1 MiB displacement,
+ - emits an explicit trap guard for signed `i64` division and remainder of
+ `minInt(i64)` by `-1`, matching the Linux x86_64 `idiv` overflow contract
+ instead of exposing AArch64 `sdiv`'s wrapped result,
+ - emits an explicit read/write, non-executable `PT_GNU_STACK` program header;
+ the constant ELF fallback uses the same explicit stack policy,
+ - is attempted for `linux-aarch64` and `linux-aarch64-musl` executable output
+ before the const-main stub fallback,
+ - emits scalar library output directly as `EM_AARCH64` ELF64 relocatable
+ objects, GNU/SysV static archives with an archive symbol index, and
+ position-independent `ET_DYN` shared objects with exported dynamic symbols;
+ object/archive output carries AArch64 code/data relocations, while shared
+ output exports data, applies relative relocations for embedded pointers,
+ and resolves external scalar functions/data through a loader-populated GOT,
+ - emits a dynamically linked PIE executable with `PT_INTERP`, `DT_NEEDED`,
+ `DT_RUNPATH`, SysV hash/dynamic symbol tables, and AArch64 GOT relocations
+ when external imports or executable dynamic metadata are present,
+ - contains a Silk-owned AArch64 relocatable-object/archive reader that selects
+ the required target-libc runtime archive member closure, applies its AArch64
+ relocations, resolves archive-defined GOT address pairs directly against the
+ linked text/data image, and retains unresolved system symbols as dynamic
+ imports. Linux AArch64 glibc output uses
+ `libsilk_rt_linux_aarch64_glibc.a` (or its `_noheap` variant), while musl
+ output uses `libsilk_rt_linux_aarch64_musl.a` (or its `_noheap` variant),
+ so libc-sensitive pthread and signal layouts are never reused across libc
+ ABIs. The musl archive also contains a private AAPCS64 context switch because
+ musl declares but does not export the three `ucontext` switching functions.
+ Hosted runtime calls therefore do not invoke `cc` or a system linker,
+ - automatically records the target libc and, on glibc, `libdl.so.2` when the
+ selected runtime member graph requires the dynamic-loader API,
+ - resolves hosted built-in dependencies from target/libc layouts
+ `aarch64-linux` and `aarch64-linux-musl`, matching the x86_64 and macOS
+ staging contract without borrowing foreign-architecture archives,
+ - supports native Linux AArch64 hosted executable workflows, including the
+ std runtime, `silk test`, build-module runners, the REPL, and mixed NVIDIA
+ PTX executables through the dynamically loaded CUDA Driver API,
+ - accepts native Linux AArch64 `.c`/`.h` inputs and explicit AArch64
+ object/archive inputs for executable/shared links; link-only C executables
+ receive a Silk-owned process-entry stub, and static archives are indexed in
+ process,
+ - resolves `-L` plus `-l`/`-l:<file>` into shared-library metadata or selected
+ AArch64 archive members without a system linker,
+ - accepts relocation-free inline assembly assembled by native GNU `as` on a
+ Linux AArch64 host; Apple frameworks are not a Linux link concept, and raw
+ linker flags remain separate semantic-mapping work.
 - [`src/backend_macho_aarch64_host.zig`](https://github.com/oro-computer/silk/blob/master/src/backend_macho_aarch64_host.zig) provides a **temporary Apple Silicon
  host-backed Mach-O backend**:
  - it currently covers the validated scalar IR executable subset on
@@ -137,8 +208,9 @@ Current snapshot (Silk (ABI) 0.1.1):
  `--gpu-target amdgcn-*`: `attr(device=gpu)` functions are compiled into
  individual code objects, removed from host lowering, and appended in a
  provider-tagged versioned bundle consumed by [`std::gpu`](/silk/docs/std/gpu/) through the bundled
- GPU runtime. The same path accepts NVIDIA `sm80` and embeds Silk-emitted PTX
- for the CUDA Driver API.
+ GPU runtime. The same path accepts NVIDIA `sm80`, `sm90`, `sm100`, `sm120`,
+ and `sm121` and embeds target-matched Silk-emitted PTX for the CUDA Driver
+ API.
  The checked `gpu (grid=..., workspace=...) { kernel(args...); }` form
  resolves the entry name at compile time and dispatches through
  [`std::gpu::launch_and_synchronize`](/silk/docs/std/gpu/). It returns both phase statuses as
@@ -159,7 +231,11 @@ Current snapshot (Silk (ABI) 0.1.1):
  dependency or an external compilation command. See
  [backend nvidia](/silk/docs/compiler/backend-nvidia/).
 
-Portable Silk-owned Mach-O and PE/COFF IR-backed object/static/shared library emission, and additional IR-backed architectures (notably AArch64) are explicit future requirements and MUST be planned and implemented as the back-end matures. The current Apple target object/static/shared support is Apple Silicon host-backed bring-up, not the final portable Mach-O backend.
+Portable Silk-owned Mach-O and PE/COFF IR-backed object/static/shared library
+emission, Linux AArch64 object/library and hosted-runtime coverage, Android
+AArch64 IR emission, and additional native architectures remain explicit
+future requirements. The current Apple target object/static/shared support is
+Apple Silicon host-backed bring-up, not the final portable Mach-O backend.
 
 An initial IR-driven, native backend is being prototyped alongside the existing constant-expression emitter:
 

@@ -65,8 +65,12 @@ In Silk currently:
 - References: `&T`.
 - Arrays / slices: `T[]`, `T[N]`.
 - Maps / dictionaries: `std::map::{HashMap, TreeMap}` (standard library).
-- Function types: `fn(params) -> R` (discipline modifiers apply to function
- declarations; function types are unmodified in the Supported forms).
+- Function types: `fn(params) -> R`; use `unsafe fn(params) -> R` when invoking
+ the stored callable requires an unsafe context.
+- C callback types: `c_fn(params) -> R` and `unsafe c_fn(params) -> R`. Convert
+ a signature-compatible, non-capturing function value explicitly with
+ `value as c_fn(params) -> R` (or the unsafe target form when preserving an
+ unsafe source effect).
 - Function expressions (non-capturing, inferred `pure`):
  - expression body: `fn (x: int, y: int) -> x + y`
  - block body: `fn (x: int, y: int) -> int { return x + y; }`

@@ -16,7 +16,7 @@ Print environment variables relevant to the Oro CLI and build configuration.
 ## Usage
 
 ```bash
-oroc env
+oroc env [options]
 ```
 
 ## Notes

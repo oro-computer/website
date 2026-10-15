@@ -136,7 +136,7 @@ Fallibility:
 - [`std::uuid::timestamp_100ns_from_unix_ns`](/silk/docs/std/uuid/) returns `Result(u64, UUIDFailed)` and
  may fail with `Overflow`.
 - [`std::uuid::random::*`](/silk/docs/std/uuid-random/) returns [`std::uuid::UUIDResult`](/silk/docs/std/uuid/) and may fail due to
- `InitFailed` (libsodium) or `NoTime` (missing clock).
+ `InitFailed` (active randomness provider) or `NoTime` (missing clock).
 
 [`std::uuid::random`](/silk/docs/std/uuid-random/) also provides `v1_now` / `v6_now` / `v7_now` using
 [`std::runtime::time::unix_now_ns`](/silk/docs/std/runtime-time/) / `unix_now_ms` so callers can generate UUIDs

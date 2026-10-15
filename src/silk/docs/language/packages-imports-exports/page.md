@@ -492,6 +492,12 @@ This mirrors the common JS convention that relative file imports must start
 with `./` or `../`. Silk additionally reserves the [`std/`](https://github.com/oro-computer/silk/tree/master/std/) prefix for stdlib
 package imports backed by the linked stdlib.
 
+Source files loaded by the CLI use canonical filesystem paths as their module
+identity. Relative file imports follow the physical source directory when a
+source path is a symlink; repeated imports through symlink aliases refer to the
+same module. In-memory compiler API inputs retain lexical, metadata-based import
+resolution.
+
 Examples (namespace-style imports):
 
 ```silk
@@ -794,6 +800,11 @@ Rules:
  - `interface` declarations (`export interface Name { ... }`),
  - static members inside `impl` blocks (`impl T { export fn ... }` with no
  `self` receiver).
+- Immutable module-level `let` bindings are initialized once according to the
+ language model. In the current hosted backend, constant-evaluable scalar and
+ wide-scalar initializers may be folded into each referencing function's IR;
+ that implementation detail does not change their module-level identity or
+ type. Wide values use their normal two-lane representation.
 - The `export` modifier marks a declaration as part of the package’s
  externally visible surface. The exact visibility rules across packages
  (including how exports appear in the resolver and back-end symbol tables)

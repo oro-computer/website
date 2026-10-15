@@ -37,6 +37,7 @@ The currently advertised capability surface includes:
 - `textDocument/references`,
 - `textDocument/rename`,
 - `textDocument/completion`,
+- `textDocument/formatting`,
 - `textDocument/signatureHelp`,
 - `textDocument/documentSymbol`,
 - `textDocument/semanticTokens/full`,
@@ -53,6 +54,20 @@ Diagnostics carry stable compiler error codes when available. Parse diagnostics
 publish `E0001`, and structured resolve/type-check diagnostics include
 `silk error <code>` follow-up help in the diagnostic message/data so users can
 open the same reference exposed by the CLI.
+
+Configured `[check.rules.cyclomatic_complexity]` findings publish stable code
+`L5001` with the configured Warning/Error severity. The server uses the shared
+complexity report, so the diagnostic message and structured data include the
+scope-qualified body, amount over budget, baseline-plus-decisions equation,
+decision-event count, deepest nesting, and category breakdown also shown by
+`silk check`.
+
+Whole-document formatting uses the same policy resolver as `silk format`.
+The nearest `.silk/format.toml` is a partial developer/user overlay on the
+nearest `silk.toml` `[format]` table: explicit local fields win and omitted
+fields inherit. The overlay may live above the project manifest and may be
+ignored by version control. This keeps editor formatting aligned with the
+effective CLI policy for the same source file.
 
 The LSP behavior and supported requests are documented at [lsp silk](/silk/docs/compiler/lsp-silk/).
 

@@ -51,7 +51,7 @@ export fn executable_path () -> ExecutablePathResult;
 [`std::process::effective_user_id()`](/silk/docs/std/process/) returns the operating system's effective
 user ID for the calling process. On the hosted POSIX baseline this is the
 unsigned value returned by `geteuid(2)` and can be compared directly with
-[`std::fs::Stats.uid`](/silk/docs/std/fs/) before accepting a security-sensitive path.
+[`std::fs::Stats.uid`](/silk/docs/std/filesystem/) before accepting a security-sensitive path.
 
 WASI Preview 1 does not expose a POSIX user identity. The shipped WASI runtime
 returns `0` for this operation, matching its existing process-ID placeholder;
@@ -173,6 +173,15 @@ responsibility to the containing struct.
 master fd and drops the underlying child handle. If you want to drive the PTY
 yourself, call `take_master()` and then manage that fd explicitly.
 
+Keep the master open while collecting output and waiting for normal child
+exit: closing the last master descriptor while the controlling-terminal
+child is alive can deliver `SIGHUP`. `PtyChild.wait()` does not close the
+master. Reads may return only part of a child's write, so accumulate bytes
+until the application's message boundary. For a known bounded response,
+read that response, wait for the child, and then close the master. For
+unbounded output, continue draining while supervising termination so a
+full terminal buffer cannot prevent the child from exiting.
+
 ### Child stdio pipes and [`std::stream`](/silk/docs/std/stream/)
 
 When a child is spawned with piped stdio (`Stdio::Pipe`), [`std::process::child`](/silk/docs/std/process-child/)
@@ -255,3 +264,31 @@ Notes:
  executable path is unavailable; use [`std::args::current().get(0)`](/silk/docs/std/args/) or
  [`std::env::executable_path_from_args`](/silk/docs/std/env/) when argv is available.
  [`std::process::child`](/silk/docs/std/process-child/) operations remain unsupported.
+
+## Linux process containment
+
+`set_dumpable(enabled: bool) -> ContainmentFailed?` sets Linux process
+dumpability. `close_inherited_fds() -> ContainmentFailed?` closes descriptors
+3 and higher in a private descriptor table (`close_range` with `UNSHARE`),
+preserving standard input/output/error. Use it at isolated worker startup,
+before opening application descriptors. Both return `None` on success or a
+`ContainmentFailed { code: int }` containing the native errno on failure.
+Unsupported hosts/kernels return an error; no operation silently succeeds.
+These operations affect the calling process and do not apply resource limits.
+
+## Containment readback
+
+`get_dumpable() -> bool?` and `get_no_new_privileges() -> bool?` query Linux
+process state; `None` means the query failed or the host is unsupported.
+`set_no_new_privileges(enabled: bool) -> ContainmentFailed?` sets Linux's
+irreversible no-new-privileges flag when true; false is rejected by the kernel.
+These operations affect the calling process, so workers should set them after
+fork. They do not install a seccomp policy or disable dumpability implicitly.
+
+`get_resource_limit(resource: int, pid: int = 0) -> ResourceLimitResult` reads
+soft/hard limits without modifying them. `LIMIT_CPU`, `LIMIT_DATA`,
+`LIMIT_ADDRESS_SPACE`, and `LIMIT_CORE` are portable selectors 0 through 3.
+`ResourceLimit { soft: u64, hard: u64 }` uses `LIMIT_INFINITY` (`u64` maximum)
+for infinity. CPU values are seconds; the other limits are bytes. PID zero
+means self; Linux also accepts another process PID subject to kernel access
+checks. Other POSIX targets support self only. Errors preserve native errno.

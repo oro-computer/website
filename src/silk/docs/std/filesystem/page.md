@@ -9,14 +9,14 @@ githubRepo: "oro-computer/silk"
 githubRef: "master"
 ---
 
-# [`std::fs`](/silk/docs/std/fs/)
+# [`std::fs`](/silk/docs/std/filesystem/)
 
-[`std::fs`](/silk/docs/std/fs/) provides a small hosted
+[`std::fs`](/silk/docs/std/filesystem/) provides a small hosted
 filesystem API backed by [`std::runtime::fs`](/silk/docs/std/runtime-fs/). It exposes low-level `File`
 handles, path/file metadata queries, whole-file helpers, directory iteration,
 and byte-oriented I/O primitives.
 
-The public [`std::fs`](/silk/docs/std/fs/) surface does not expose POSIX `errno`. Runtime-specific
+The public [`std::fs`](/silk/docs/std/filesystem/) surface does not expose POSIX `errno`. Runtime-specific
 details live under [`std::runtime`](/silk/docs/std/runtime/).
 
 See also:
@@ -42,8 +42,8 @@ See also:
  - `stat(path)` follows symlinks before reporting metadata for the resolved
  target.
  - `lstat(path)` reports the symlink itself, so
- `Stats.is_symbolic_link()` / `Stats.isSymbolicLink()` are only true for
- `lstat(...)` results that actually describe a link.
+ `Stats.is_symbolic_link()` is only true for `lstat(...)` results that
+ actually describe a link.
  - `birthtime*` falls back to `ctime*` on targets where creation time is not
  available from the runtime metadata source (currently the hosted Linux
  baseline and the shipped `wasm32-wasi` preview1 backend).
@@ -152,15 +152,6 @@ impl Stats {
   public fn is_symbolic_link (self: &Stats) -> bool;
   public fn is_fifo (self: &Stats) -> bool;
   public fn is_socket (self: &Stats) -> bool;
-
-  // Node-compatible aliases on top of the snake_case Silk methods.
-  public fn isFile (self: &Stats) -> bool;
-  public fn isDirectory (self: &Stats) -> bool;
-  public fn isBlockDevice (self: &Stats) -> bool;
-  public fn isCharacterDevice (self: &Stats) -> bool;
-  public fn isSymbolicLink (self: &Stats) -> bool;
-  public fn isFIFO (self: &Stats) -> bool;
-  public fn isSocket (self: &Stats) -> bool;
 }
 
 export struct OpenOptions {
@@ -351,10 +342,10 @@ Notes:
  import external libc symbols. On `linux/x86_64`, `silk` automatically adds
  the selected libc as a `DT_NEEDED` dependency when external symbols are
  present (`libc.so.6` for glibc, `libc.so` for musl), so a manual libc
- `--needed` entry is not required for typical [`std::fs`](/silk/docs/std/fs/) use.
- - This applies to other [`std::fs`](/silk/docs/std/fs/) POSIX bindings as well (`open(2)`,
+ `--needed` entry is not required for typical [`std::fs`](/silk/docs/std/filesystem/) use.
+ - This applies to other [`std::fs`](/silk/docs/std/filesystem/) POSIX bindings as well (`open(2)`,
  `read(2)`, `close(2)`, etc.).
- - [`std::fs`](/silk/docs/std/fs/) maps runtime failures into a portable `FSErrorKind` set; the raw
+ - [`std::fs`](/silk/docs/std/filesystem/) maps runtime failures into a portable `FSErrorKind` set; the raw
  platform error mechanism (for example POSIX `errno`) is not part of the
  public API. The mapping from the platform mechanism into stable
  `FSFailed.code` values is performed by [`std::runtime::fs`](/silk/docs/std/runtime-fs/).
@@ -384,7 +375,7 @@ Notes:
  `funlock(...)`.
  - `read_dir` returns a `Dir` handle for iteration. `Dir.next()` yields
  `Some(Ok(DirEntry))` for entries, `Some(Err(FSFailed))` on error, and
- `None` on end-of-directory. [`std::fs`](/silk/docs/std/fs/) skips `"."` and `".."`.
+ `None` on end-of-directory. [`std::fs`](/silk/docs/std/filesystem/) skips `"."` and `".."`.
  - `Dir.next_view()` yields borrowed zero-copy `DirEntryView` entries with a
  decoded `DirEntryType` when the runtime reports one. The entry name slice
  is valid only until the next directory read on that handle or until the
@@ -407,12 +398,11 @@ Notes:
  `atime_ns`, `mtime_ns`, `ctime_ns`, `birthtime_ns`,
  - `atime`, `mtime`, `ctime`, and `birthtime` are materialized
  [`std::temporal::DateTime`](/silk/docs/std/temporal/) views of the same timestamps,
- - Silk exposes snake_case predicate methods and exact Node-style aliases:
- `is_file` / `isFile`, `is_directory` / `isDirectory`,
- `is_block_device` / `isBlockDevice`,
- `is_character_device` / `isCharacterDevice`,
- `is_symbolic_link` / `isSymbolicLink`,
- `is_fifo` / `isFIFO`, and `is_socket` / `isSocket`.
+ - Silk exposes only the canonical snake-case predicate methods:
+ `is_file`, `is_directory`, `is_block_device`, `is_character_device`,
+ `is_symbolic_link`, `is_fifo`, and `is_socket`. These correspond to the
+ familiar Node.js metadata predicates without importing Node's camel-case
+ spelling into the Silk API.
  - `stat(path)` returns `Stats` for the resolved filesystem object.
  - on the hosted POSIX baseline and on the current WASI backend this follows
  symlinks.
@@ -436,7 +426,7 @@ Notes:
  and resolves symlinks on the hosted POSIX backend,
  - on `wasm32-wasi` this helper is currently unsupported and reports
  `InvalidInput`.
- - [`std::fs::stream`](/silk/docs/std/fs-stream/) provides task-based adapters that connect [`std::fs`](/silk/docs/std/fs/) with
+ - [`std::fs::stream`](/silk/docs/std/fs-stream/) provides task-based adapters that connect [`std::fs`](/silk/docs/std/filesystem/) with
  [`std::stream`](/silk/docs/std/stream/) using producer/consumer loops
  ([`std::fs::stream::pipe_file_to_stream`](/silk/docs/std/fs-stream/) and
  [`std::fs::stream::pipe_stream_to_file`](/silk/docs/std/fs-stream/)). These are blocking OS-thread
@@ -444,18 +434,18 @@ Notes:
  - The runtime filesystem layer ([`std::runtime::fs`](/silk/docs/std/runtime-fs/)) also exposes
  `mkstemp(template_ptr)` as a low-level primitive for creating unique
  temporary files from writable NUL-terminated templates (hosted POSIX
- baseline). [`std::fs`](/silk/docs/std/fs/) does not yet wrap this in a higher-level temp-file
+ baseline). [`std::fs`](/silk/docs/std/filesystem/) does not yet wrap this in a higher-level temp-file
  API.
 
 ## Scope
 
-[`std::fs`](/silk/docs/std/fs/) is responsible for:
+[`std::fs`](/silk/docs/std/filesystem/) is responsible for:
 
 - File and directory creation, deletion, and enumeration.
 - Basic metadata operations.
 
 Path manipulation is provided by [`std::path`](/silk/docs/std/path/) (see [path](/silk/docs/std/path/)). In the
-Supported forms, [`std::fs`](/silk/docs/std/fs/) APIs still accept raw `string` paths.
+Supported forms, [`std::fs`](/silk/docs/std/filesystem/) APIs still accept raw `string` paths.
 
 Hosted baseline:
 

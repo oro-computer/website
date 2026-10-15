@@ -244,6 +244,14 @@ Calling convention:
 - When `env_ptr != 0`, the backend passes `env_ptr` as a hidden first argument
  to the closure function: `func_ptr(env_ptr, user_args...)`.
 
+Conversion to C callback pointers:
+
+- An explicit `value as c_fn (...) -> R` cast from a signature-compatible
+ `fn (...) -> R` value checks `env_ptr == 0` and yields `func_ptr`.
+- A nonzero `env_ptr` traps; the environment is never silently discarded.
+- The resulting `c_fn` is one code-pointer slot and is invoked without a hidden
+ environment argument.
+
 Environment allocation and lifetime (Supported forms):
 
 - Captures are by-value copies of **scalar** locals/parameters (`int`, fixed

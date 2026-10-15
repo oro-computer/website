@@ -324,6 +324,9 @@ In the Supported forms, ownership transfer is intentionally conservative:
  used or leaves the current block/function. The Supported forms deliberately
  rejects other aggregate access while a direct field is moved, which keeps a
  custom aggregate `Drop` implementation from observing stale field storage.
+- Constructing a struct consumes each ownership-tracked field initializer at
+ the construction site. Wrapping a moved field in a returned struct does not
+ exempt its original owner from the reinitialization requirement.
 - Consequently, `return owner.item;` is rejected when `item` requires
  ownership tracking. A function that transfers the field must first take it
  into a local, reinitialize `owner.item`, and then return that local.
@@ -349,3 +352,8 @@ rules, but those are not treated as pre-declared borrow-checker roadmap items.
 Any such extension must be specified in [grammar](/silk/docs/language/grammar/) and in this
 document before implementation lands, and must be reflected in diagnostics
 ([diagnostics](/silk/docs/compiler/diagnostics/)) and tests.
+
+Nested POD field writes, including strings, wide integers and non-owning enums,
+update the original aggregate through local values or mutable references.
+Nested owning field replacement still requires borrowing the containing struct
+and assigning its direct field, so the move/reinitialization state is tracked.

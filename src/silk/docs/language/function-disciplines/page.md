@@ -9,7 +9,7 @@ githubRepo: "oro-computer/silk"
 githubRef: "master"
 ---
 
-# Function Disciplines (`pure`, `task`, `async`)
+# Function Disciplines (`pure`, `task`, `async`, `unsafe`)
 
 This document specifies Silk’s intended “function discipline” system: how
 functions declare whether they are pure, asynchronous, or safe to run as
@@ -43,6 +43,9 @@ The language design distinguishes:
  awaitable).
 - `async task fn` — async function executed as a separate task (self-contained
  worker).
+- `unsafe fn` — function whose caller must establish a documented invariant
+ that the compiler cannot prove. The unsafe effect is orthogonal to the
+ execution and purity disciplines above.
 
 ## Intended Call Rules (Design)
 
@@ -73,6 +76,12 @@ These APIs are not yet present in the in-tree [`std/`](https://github.com/oro-co
 ## Implementation Notes
 
 Today:
+
+- `unsafe fn` declarations and `unsafe fn` / `unsafe c_fn` callable types
+ preserve an unsafe call effect. Calls require an unsafe expression or block;
+ both `unsafe operation()` and `unsafe { operation() }` establish the same
+ one-expression context. A safe callable may be widened to an unsafe callable
+ type, but the reverse is rejected.
 
 - `pure fn` is parsed and checked (Supported forms):
  - a `pure fn` may call only `pure` functions; `ext` is treated as impure,
@@ -160,3 +169,7 @@ Today:
  whose body satisfies the `pure` rules is callable from `pure` code).
  - Function values (both non-capturing and capturing) are supported end-to-end:
  they may be passed, returned, stored, and called indirectly.
+ - A signature-identical `fn (P...) -> R` value may be converted explicitly
+ to `c_fn (P...) -> R` with `as` when it has no closure environment. Direct
+ capturing expressions are rejected during checking; indirect values are
+ guarded at runtime and trap if their environment pointer is nonzero.

@@ -6,7 +6,7 @@ function siteRoot(): URL {
 }
 
 function llmsUrl(): string {
-  const product = ['silk', 'runtime', 'sage', 'slg', 'virtnosis'].find((name) =>
+  const product = ['silk', 'runtime'].find((name) =>
     location.pathname.includes(`/${name}/`) || location.pathname.endsWith(`/${name}`),
   )
   return new URL(product ? `${product}/llms.txt` : 'llms.txt', siteRoot()).href

@@ -32,9 +32,9 @@ Use the following owning docs for the substantive API/design context for this mo
 - The shipped source for this module is [`std/runtime/posix/fs.slk`](https://github.com/oro-computer/silk/blob/master/std/runtime/posix/fs.slk).
 - The canonical module name is [`std::runtime::posix::fs`](/silk/docs/std/runtime-posix-fs/).
 - The shipped POSIX backend now exposes the stable raw-stat fill helpers used
- by [`std::runtime::fs::{stat,lstat,fstat}`](/silk/docs/std/runtime-fs/) and therefore by [`std::fs::Stats`](/silk/docs/std/fs/),
+ by [`std::runtime::fs::{stat,lstat,fstat}`](/silk/docs/std/runtime-fs/) and therefore by [`std::fs::Stats`](/silk/docs/std/filesystem/),
  plus `fstat_size` for allocation-free descriptor size probes.
 - It exposes a borrowed `readdir(3)` entry-fill helper for
- [`std::fs::Dir.next_view()`](/silk/docs/std/fs/), including stable directory-entry type codes when
+ [`std::fs::Dir.next_view()`](/silk/docs/std/filesystem/), including stable directory-entry type codes when
  `d_type` is available.
 - This page is intentionally implementation-oriented. Downstream users should usually start with the higher-level std module docs listed above unless they are working on the runtime layer itself.

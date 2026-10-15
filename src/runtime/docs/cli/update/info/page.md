@@ -28,20 +28,20 @@ oroc update info [--transport=<http|tcp|udp>] [options]
 | `--http` | shorthand for --transport=http |
 | `--tcp` | shorthand for --transport=tcp |
 | `--udp` | shorthand for --transport=udp |
-| `--follow-manifest` | fetch and inspect the manifest referenced by a server RESPONSE |
+| `--follow-manifest` | when contacting servers, follow 'manifestUrl' in the RESPONSE and fetch/validate that manifest over HTTP(S) |
 | `--timeout-ms=<ms>` | optional timeout for TCP/UDP CHECK requests (0 = no timeout) |
-| `--manifest-url=<url>` | HTTP(S) URL of a statically hosted manifest.json |
-| `--signature-url=<url>` | HTTP(S) URL of the corresponding signature JSON |
-| `--keys=<file>` | JSON file containing a public key ("publicKey" or "key" field) |
-| `--public-key=<hex>` | Ed25519 public key as a hex string |
+| `--manifest-url=<url>` | HTTP(S) URL of a manifest.json hosted statically |
+| `--signature-url=<url>` | optional HTTP(S) URL of the corresponding signature JSON (default: derived from --manifest-url) |
+| `--keys=<file>` | JSON file containing a public key ("publicKey" or "key" field) for manifest verification |
+| `--public-key=<hex>` | Ed25519 public key as a hex string for manifest verification |
 | `--host=<host>` | host for HTTP/TCP/UDP update servers (default: 127.0.0.1) |
 | `--port=<port>` | port for HTTP/TCP/UDP update servers (default: 8080) |
-| `--app-id=<id>` | application identifier to send in CHECK messages |
-| `--channel=<name>` | update channel hint |
-| `--current-version=<version>` | current application version hint |
-| `--runtime-version=<version>` | runtime version hint advertised in CHECK |
-| `--platform=<id>` | platform hint advertised in CHECK |
-| `--arch=<id>` | architecture hint advertised in CHECK |
+| `--app-id=<id>` | application identifier to send in CHECK messages (default: active config meta.bundle_identifier when available) |
+| `--channel=<name>` | update channel hint (default: active config update_channel or "stable") |
+| `--current-version=<version>` | current application version hint (default: active config meta.version when available) |
+| `--runtime-version=<version>` | runtime version hint advertised in CHECK (optional) |
+| `--platform=<id>` | platform hint advertised in CHECK (optional) |
+| `--arch=<id>` | architecture hint advertised in CHECK (optional) |
 | `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples

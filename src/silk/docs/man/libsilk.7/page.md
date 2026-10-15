@@ -17,6 +17,12 @@ githubRef: "master"
 
 `libsilk` — C99-compatible embedding ABI for the Silk compiler.
 
+The installed `libsilk.a` bundles compiler runtime helpers, including internal
+quad-precision arithmetic. C99 embedders can use the platform linker without
+installing Zig or locating a separate compiler runtime archive. Module-set
+checker allocation exhaustion reports `out of memory while type checking`
+without a language-feature diagnostic code.
+
 ## Synopsis
 
 ```c
@@ -232,7 +238,11 @@ typedef enum SilkOutputKind {
 } SilkOutputKind;
 ```
 
-Selects the kind of build artifact requested by `silk_compiler_build`. At the current stage of implementation, all kinds perform full front‑end validation; code generation is implemented only for a small, constant‑expression subset of executable builds on `linux/x86_64` (see **Build behavior**).
+Selects the kind of build artifact requested by `silk_compiler_build`. All
+kinds perform full front-end validation. Native IR backends implement the
+documented executable, object, static-library, and shared-library subsets for
+Linux x86_64 and Linux AArch64; other targets retain narrower subsets (see
+**Build behavior**).
 
 ## Versioning
 
@@ -392,8 +402,8 @@ bool silk_compiler_set_debug(SilkCompiler *compiler,
 
 - Enables the same debug build mode as the CLI (`silk --debug` / `-g`) for the
  supported subset:
- - debug-mode lowering for supported native outputs (e.g. stack traces on
- failed `assert` for `linux/x86_64`),
+ - debug-mode lowering for supported native outputs (including stack traces
+ on failed `assert` for native Linux x86_64 and AArch64),
  - additional Z3 debug output and `.smt2` dump emission on failing Formal Silk
  verification (see [formal verification](/silk/docs/language/formal-verification/)).
 - `--debug` is currently incompatible with `--noheap`.
@@ -433,6 +443,33 @@ bool silk_compiler_set_target(SilkCompiler *compiler,
  - `wasm32-wasi` (IR-backed wasm32 WASI mode; emits `memory` and `_start () -> void`, imports `wasi_snapshot_preview1.proc_exit`, and calls Silk `fn main () -> int`; also supports export-only modules for embedding, which do not include `_start`),
  - `amdgcn-amd-amdhsa-gfx942`, `amdgcn-amd-amdhsa-gfx1100`, and
  `amdgcn-amd-amdhsa-gfx1151` (AMDHSA object output for source-intrinsic kernels).
+- For `linux-aarch64` and `linux-aarch64-musl`,
+ `SILK_OUTPUT_EXECUTABLE` supports the direct AArch64 scalar IR
+ subset (constants, copies/casts, arithmetic/bitwise/shifts/comparisons, CFG
+ branches, stack/data memory, function/data addresses, direct/indirect
+ helpers, IEEE-754 `f32`/`f64` operations and casts, and external scalar
+ function/data imports) plus the const-main fallback. AAPCS64 integer and
+ floating-point parameters/results use independent `x0`…`x7` and `v0`…`v7`
+ register banks; additional classified arguments use the aligned outgoing
+ stack area. External C calls return at most two flattened scalar slots in
+ registers and use the AAPCS64 `x8` indirect-result pointer for larger
+ aggregates. Compiler-internal Silk calls use hidden result storage only past
+ their eight-slot result-register contract. External
+ imports or configured needed/runpath metadata select a GNU- or
+ musl-interpreted PIE. The object, static-library, and shared-library output
+ kinds use the same selector to emit `EM_AARCH64` relocatable objects, indexed
+ GNU archives, and loadable `ET_DYN` objects; objects/archives carry AArch64
+ relocations and shared output supports exported data, external imports, and
+ needed/runpath/soname metadata. Executable/shared builds select and relocate
+ the required members from target-native bundled runtime and stdlib archives
+ in process, and explicit AArch64 `.o`/`.a` inputs participate in the same
+ link. Native Linux AArch64 `.c`/`.h` compilation, link-only C executables,
+ `-L` plus `-l`/`-l:<file>`, and relocation-free inline assembly are
+ supported. Framework configuration remains Apple-only, and unrecognized raw
+ linker flags remain outside this AArch64 path. The
+ two-parameter `main` form receives the Linux process argument count in `x0`
+ and the raw argv-list pointer in `x1`. Direct and constant-fallback ELF images
+ declare an explicit read/write, non-executable stack with `PT_GNU_STACK`.
 - Note: for `wasm32` targets, only `SILK_OUTPUT_EXECUTABLE` is supported. `wasm32-wasi` currently supports only `fn main () -> int` (no argv).
 - Note: for AMDGPU targets, `SILK_OUTPUT_OBJECT` emits a `.hsaco` only when
  the input contains exactly one exported root-package void source kernel with
@@ -469,12 +506,16 @@ bool silk_compiler_set_std_archive(SilkCompiler *compiler,
  `silk --std-lib <path>`).
 - Passing an empty string clears the override and returns to normal stdlib
  archive resolution (including honoring `SILK_STD_LIB`).
+- On Linux AArch64, file and byte executable builds reject an explicit archive
+ missing a required generated Silk symbol and name that symbol in the error.
+ Incomplete automatically discovered archives fall back to std sources,
+ including consumer-specific generic specializations.
 
 ### Dynamic linker metadata
 
-These configuration functions affect dynamic metadata emitted for executable and
-shared library outputs on platforms/backends that support dynamic linking (the
-current target: `linux/x86_64`).
+These configuration functions affect dynamic metadata emitted for executable
+and shared library outputs on platforms/backends that support dynamic linking
+(currently Linux x86_64 and Linux AArch64, including their musl identities).
 
 #### `silk_compiler_add_needed_library`
 
@@ -488,15 +529,20 @@ bool silk_compiler_add_needed_library(SilkCompiler *compiler,
 - The `soname` string is copied; the function may be called multiple times
  (duplicates are ignored).
 - Ignored for static library and object outputs.
-- On `linux/x86_64`, when an executable or shared library imports any external
- symbols, the compiler automatically adds the selected libc as a `DT_NEEDED`
- dependency (`libc.so.6` for glibc, `libc.so` for musl), so hosted `std::`
- modules like [`std::io`](/silk/docs/std/io/) and [`std::fs`](/silk/docs/std/fs/) do not require manually adding libc.
- Additional non-libc dependencies still require explicit `DT_NEEDED` entries
- via this API.
+- Linux AArch64 executable output emits a dynamically linked PIE when
+ `DT_NEEDED` metadata or external scalar imports are present. GNU targets use
+ `/lib/ld-linux-aarch64.so.1`; musl targets use
+ `/lib/ld-musl-aarch64.so.1`.
+- On Linux x86_64 and Linux AArch64, when an executable or shared library
+ imports external system symbols, the compiler automatically adds the selected
+ libc as a `DT_NEEDED` dependency (`libc.so.6` for glibc, `libc.so` for musl),
+ so hosted `std::` modules like [`std::io`](/silk/docs/std/io/) and [`std::fs`](/silk/docs/std/filesystem/) do not require manually
+ adding libc. Additional non-libc dependencies still require explicit
+ `DT_NEEDED` entries via this API.
 - `DT_NEEDED` entries starting with `libsilk_rt` are rejected: bundled runtime
- helpers are linked statically from `libsilk_rt.a` / `libsilk_rt_noheap.a` and
- must not become runtime loader dependencies.
+ helpers are linked statically from the target/libc-matched archive and must
+ not become runtime loader dependencies. Linux AArch64 glibc and musl outputs
+ use distinct archives, including distinct no-heap variants.
 
 #### `silk_compiler_add_runpath`
 
@@ -511,6 +557,8 @@ bool silk_compiler_add_runpath(SilkCompiler *compiler,
  (duplicates are ignored) and the final `DT_RUNPATH` string is formed by
  joining entries with `:`.
 - Ignored for static library and object outputs.
+- Linux AArch64 dynamically linked executables and shared libraries preserve
+ the joined value as `DT_RUNPATH`.
 
 #### `silk_compiler_set_soname`
 
@@ -859,10 +907,10 @@ Typical integration in a C99 project:
 At this stage, successful builds are limited to the backends implemented by the
 compiler:
 
-- On `linux/x86_64`, the compiler can emit native ELF64 executables, objects,
- static libraries, and shared libraries for the current IR subset documented
+- On Linux x86_64 and AArch64, the compiler can emit native ELF64 executables,
+ objects, static libraries, and shared libraries for each current IR subset documented
  in [abi libsilk](/silk/docs/compiler/abi-libsilk/) (structured control flow, helper calls,
- limited `string`/`struct`/optional support, and a limited FFI subset).
+ hosted runtime calls, native inputs, and external ABI calls).
 - On `wasm32-unknown-unknown` and `wasm32-wasi`, executable builds emit `.wasm`
  modules for the current IR-backed wasm32 subset documented in
  [abi libsilk](/silk/docs/compiler/abi-libsilk/) (including multi-module builds, export-only
@@ -873,7 +921,8 @@ compiler:
  `silk-build(1)` and the
  [AMDGPU backend guide](/silk/docs/compiler/backend-amdgpu/)
  for the canonical declaration sets.
-- On other targets, no code generation backend is available yet.
+- Other recognized targets retain the narrower backend coverage documented by
+ `silk targets` and `silk-build(1)`.
 - For well‑typed programs outside these subsets, `silk_compiler_build` fails
  with `E4001` / `E4002` diagnostics (or a more specific build error) until the
  back‑end is extended.

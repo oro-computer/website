@@ -3,7 +3,7 @@ import type { CheckedPageVars } from '#lib/page-vars.ts'
 const vars = {
   "layout": "learn" as const,
   "title": "Project Layout · Learn Oro Runtime",
-  "description": "Chapter 2 of Learn Oro Runtime: understand oro.toml, copy maps, bundled web files, and the project shape.",
+  "description": "Make the Field Notes bundle explicit with a copy map, then add and verify a stylesheet.",
   "bodyClass": "site-dark product-page learn-page learn-lesson-page runtime-learn-page",
   "bodyAttrs": {},
   "product": "runtime",

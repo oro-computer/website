@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "If one background coordinator should serve multiple windows at the same time, use a shared worker instead of one worker per window. This is a strong fit for search indexing, presence state, websocket "
+description: "Share one background coordinator across windows—for example, one search index or WebSocket connection."
 docsCollection: "runtime"
 section: "guides"
 order: 13
@@ -11,8 +11,7 @@ githubRef: "master"
 
 # Shared workers across windows
 
-If one background coordinator should serve multiple windows at the same time, use a shared worker instead of one worker
-per window. This is a strong fit for search indexing, presence state, websocket multiplexing, and single-writer sync loops.
+Share one background coordinator across windows—for example, one search index or WebSocket connection.
 
 ## 1) Launch one shared worker from every window
 

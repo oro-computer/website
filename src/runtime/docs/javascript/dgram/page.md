@@ -106,7 +106,7 @@ declare module "oro:dgram" {
             connectState: number;
             reuseAddr: boolean;
             ipv6Only: boolean;
-            remoteAddress: {};
+            remoteAddress: any;
         };
         enableDataEventFallback(): void;
         disableDataEventFallback(): void;

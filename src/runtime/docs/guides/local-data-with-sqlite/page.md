@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "Once an app moves beyond a few JSON files, SQLite is the right default. It gives you transactions, indexes, and queryable data without adding another service to your deployment story."
+description: "Give Field Notes a SQLite database so it can store and query multiple notes on the device."
 docsCollection: "runtime"
 section: "guides"
 order: 9
@@ -11,10 +11,7 @@ githubRef: "master"
 
 # Local data with SQLite
 
-Once an app moves beyond a few JSON files, SQLite is the right default. It gives you transactions, indexes, and queryable
-data without adding another service to your deployment story.
-
-This guide turns the `Field Notes` example into a local-first app with a real database.
+Give Field Notes a SQLite database so it can store and query multiple notes on the device.
 
 ## 1) Create the database directory
 

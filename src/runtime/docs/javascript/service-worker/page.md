@@ -146,7 +146,13 @@ declare module "oro:service-worker/container" {
          * @ignore
          */
         init(): Promise<any>;
-        register(scriptURL: any, options?: any): Promise<globalThis.ServiceWorkerRegistration | ServiceWorkerRegistration>;
+        /**
+         * Registers a service worker and returns its registration.
+         * @param {string|URL} scriptURL
+         * @param {RegistrationOptions} [options]
+         * @returns {Promise<ServiceWorkerRegistration>}
+         */
+        register(scriptURL: string | URL, options?: RegistrationOptions): Promise<ServiceWorkerRegistration>;
         getRegistration(clientURL: any): Promise<globalThis.ServiceWorkerRegistration | ServiceWorkerRegistration>;
         getRegistrations(options: any): Promise<readonly globalThis.ServiceWorkerRegistration[] | ServiceWorkerRegistration[]>;
         startMessages(): void;
@@ -178,9 +184,9 @@ declare module "oro:service-worker/context" {
         data: any | null;
         /**
          * The `ExtendableEvent` for this `Context` instance.
-         * @type {ExtendableEvent}
+         * @type {import('./events.js').ExtendableEvent}
          */
-        get event(): ExtendableEvent;
+        get event(): import("oro:service-worker/events").ExtendableEvent;
         /**
          * An environment context object.
          * @type {object?}
@@ -201,7 +207,7 @@ declare module "oro:service-worker/context" {
          * It can also be used to detect whether that work was successful.
          * @param {Promise} promise
          */
-        waitUntil(promise: Promise<any>): Promise<any>;
+        waitUntil(promise: Promise<any>): Promise<void>;
         /**
          * TODO
          */
@@ -460,6 +466,7 @@ declare module "oro:service-worker/events" {
          * default fetch handling, and allows you to provide a promise for a
          * `Response` yourself.
          * @param {Response|Promise<Response>} response
+         * @returns {void}
          */
         respondWith(response: Response | Promise<Response>): void;
         #private;
@@ -582,7 +589,19 @@ declare module "oro:service-worker/init" {
 
 ```ts
 declare module "oro:service-worker/instance" {
-    export function createServiceWorker(currentState?: any, options?: any): any;
+    /**
+     * @typedef {object} ServiceWorkerOptions
+     * @property {string|null} [id]
+     * @property {string|null} [scriptURL]
+     * @property {boolean} [subscribe]
+     */
+    /**
+     * Creates an observable handle to a worker registration.
+     * @param {string|null} [currentState]
+     * @param {ServiceWorkerOptions} [options]
+     * @returns {globalThis.ServiceWorker}
+     */
+    export function createServiceWorker(currentState?: string | null, options?: ServiceWorkerOptions): globalThis.ServiceWorker;
     export const channel: BroadcastChannel;
     export const ServiceWorker: {
         new (): ServiceWorker;
@@ -604,6 +623,11 @@ declare module "oro:service-worker/instance" {
         };
     };
     export default createServiceWorker;
+    export type ServiceWorkerOptions = {
+        id?: string | null;
+        scriptURL?: string | null;
+        subscribe?: boolean;
+    };
 }
 ```
 
@@ -637,6 +661,10 @@ declare module "oro:service-worker/registration" {
         get navigationPreload(): any;
         getNotifications(): Promise<any>;
         showNotification(title: any, options: any): Promise<void>;
+        /**
+         * Removes this registration from the native service worker container.
+         * @returns {Promise<boolean>}
+         */
         unregister(): Promise<boolean>;
         update(): Promise<void>;
         #private;
@@ -870,14 +898,6 @@ declare module "oro:service-worker/storage" {
      * application and through service worker restarts.
      */
     export class SessionStorageProvider extends Provider {
-        /**
-         * Remove a value by `key`.
-         * @param {string} key
-         * @return {string?}
-         * @throws DOMException
-         * @throws NotFoundError
-         */
-        remove(key: string): string | null;
     }
     /**
      * A local storage provider that persists until the data is cleared.

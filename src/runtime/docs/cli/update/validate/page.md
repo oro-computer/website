@@ -23,10 +23,10 @@ oroc update validate [--manifest=<path>] [options]
 
 | Option | Description |
 | --- | --- |
-| `--manifest=<path>` | path to the manifest JSON file |
+| `--manifest=<path>` | path to the manifest JSON file (default: manifest-name or ORO_UPDATE_MANIFEST_FILENAME) |
 | `--manifest-name=<name>` | manifest filename to use when --manifest is not provided |
-| `--strict` | enable additional consistency checks |
-| `--json` | print a machine-readable JSON result object |
+| `--strict` | enable additional consistency checks (for example, channels vs updates, artifactUrl shape) |
+| `--json` | print a machine-readable JSON result object (for CI) |
 | `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples

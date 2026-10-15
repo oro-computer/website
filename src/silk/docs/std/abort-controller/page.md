@@ -9,7 +9,7 @@ githubRepo: "oro-computer/silk"
 githubRef: "master"
 ---
 
-# [`std::abort_controller`](/silk/docs/std/abort_controller/)
+# [`std::abort_controller`](/silk/docs/std/abort-controller/)
 
 This module provides a WHATWG-style
 `AbortController` / `AbortSignal` pair for cooperative cancellation across

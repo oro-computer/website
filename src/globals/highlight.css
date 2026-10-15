@@ -1,5 +1,5 @@
 :root {
-  --hljs-comment: rgba(250, 248, 244, 0.52);
+  --hljs-comment: #b8b4ad;
   --hljs-keyword: #f6c945;
   --hljs-string: #88d4a7;
   --hljs-number: #ffb17b;

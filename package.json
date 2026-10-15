@@ -22,10 +22,12 @@
     "test:browser": "playwright test",
     "test:reproducibility": "node tools/reproducibility.ts",
     "audit:content": "node tools/audit-content.ts",
+    "test:examples": "node tools/verify-examples.ts",
     "test:tooling": "node --test tests/tooling/*.test.ts",
     "check": "npm run typecheck && npm test && npm run build && npm run audit && npm run audit:content && npm run test:site && npm run test:browser && npm run test:tooling && npm run test:reproducibility"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@domstack/static": "12.0.0-beta.9",
     "@playwright/test": "^1.55.0",
     "@types/markdown-it": "^14.1.2",

@@ -24,7 +24,9 @@ with the standard library or `ext` bindings.
 
 ```silk
 fn spin_pause () -> void {
-  asm "pause";
+  unsafe {
+    asm "pause";
+  }
 }
 ```
 
@@ -33,7 +35,8 @@ statement.
 
 ## Semantics
 
-- `asm "<text>";` emits the machine instructions assembled from `<text>`.
+- `asm "<text>";` requires an unsafe context and emits the machine
+ instructions assembled from `<text>`.
 - The assembly text must be a **string literal**; it is not computed at
  runtime.
 - Inline asm produces no values (type `void`).
@@ -46,21 +49,24 @@ Currently, `<text>` is assembled by the system assembler
 (`as`) for the active native host backend:
 
 - `linux/x86_64`: GNU `as` in **Intel syntax** (`.intel_syntax noprefix`)
+- `linux/aarch64`: GNU `as` in its native AArch64 syntax
 - `macos/aarch64`: Apple `as` in its native arm64 syntax
 
 The assembly may contain multiple instructions, for example:
 
 ```silk
 fn main () -> int {
-  asm "mov rax, rax\nnop";
+  unsafe {
+    asm "mov rax, rax\nnop";
+  }
   return 0;
 }
 ```
 
 ### Restrictions
 
-- `asm` is currently implemented only for the native `linux/x86_64` and
- `macos/aarch64` backends.
+- `asm` is currently implemented for the native `linux/x86_64`,
+ `linux/aarch64`, and `macos/aarch64` backends.
 - The assembled output must not require **relocations**. As a result, inline
  asm may not refer to external symbols (for example `call foo` where `foo` is
  not defined within the asm text).
@@ -71,7 +77,8 @@ fn main () -> int {
 ## Portability and safety notes
 
 - `asm` is target-dependent by nature. The implementation is supported
- only for the native `linux/x86_64` and `macos/aarch64` backends.
+ only for the native `linux/x86_64`, `linux/aarch64`, and `macos/aarch64`
+ backends.
 - Using `asm` can make programs non-portable. Prefer standard library
  facilities and compiler-provided intrinsics when possible.
 
@@ -85,6 +92,7 @@ fn main () -> int {
  - assigns the expression type `void`.
 - Code generation:
  - emits the assembled bytes in the `linux/x86_64` IR→ELF backend,
+ - emits the assembled bytes in the `linux/aarch64` IR→ELF backend,
  - emits the assembled bytes in the temporary `macos/aarch64` host Mach-O backend.
 - Tests:
  - end-to-end coverage via:
@@ -92,5 +100,5 @@ fn main () -> int {
 Not yet implemented:
 
 - inline asm with operands (inputs/outputs), clobbers, or options,
-- any `asm` support on non-`linux/x86_64` targets/backends.
- except for the current `macos/aarch64` host Mach-O subset.
+- any `asm` support outside the native Linux x86_64/AArch64 and
+ `macos/aarch64` host backends.

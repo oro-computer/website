@@ -279,7 +279,7 @@ declare module "oro:commonjs/cache" {
      * instances in the application context, including windows and workers.
      */
     export class Cache {
-        [x: number]: () => gc.Finalizer;
+        [x: number]: () => import("oro:gc").Finalizer;
         /**
          * A globally shared type mapping for the cache to use when
          * derserializing a value.
@@ -680,11 +680,11 @@ declare module "oro:commonjs/loader" {
         };
         /**
          * Creates a `Response` from JSON input
-         * @param {obejct} json
+         * @param {object} json
          * @param {ResponseOptions=} [options]
          * @return {Response}
          */
-        static from(json: obejct, options?: ResponseOptions | undefined): Response;
+        static from(json: object, options?: ResponseOptions | undefined): Response;
         /**
          * `Response` class constructor.
          * @param {Request|ResponseOptions} request
@@ -901,6 +901,9 @@ declare module "oro:commonjs/module" {
      */
     /**
      * @typedef {import('./package.js').PackageOptions} PackageOptions
+     */
+    /**
+     * @typedef {import('./require.js').RequireOptions} RequireOptions
      */
     /**
      * @typedef {{
@@ -1266,6 +1269,7 @@ declare module "oro:commonjs/module" {
     export type ModuleResolver = (arg0: string, arg1: Module, arg2: (arg0: string) => any) => any;
     export type RequireFunction = import("oro:commonjs/require").RequireFunction;
     export type PackageOptions = import("oro:commonjs/package").PackageOptions;
+    export type RequireOptions = import("oro:commonjs/require").RequireOptions;
     export type CreateRequireOptions = {
         prefix?: string;
         request?: import("oro:commonjs/loader").RequestOptions;
@@ -1320,13 +1324,16 @@ declare module "oro:commonjs/package" {
      * }} PackageLoadOptions
      */
     /**
-     * {import('./loader.js').RequestOptions & {
+     * @typedef {import('./loader.js').RequestOptions & {
      *   load?: boolean,
      *   type?: 'commonjs' | 'module',
      *   browser?: boolean,
      *   children?: string[]
      *   extensions?: string[] | Set<string>
      * }} PackageResolveOptions
+     */
+    /**
+     * @typedef {ParsedPackageName} NameOptions
      */
     /**
      * @typedef {{
@@ -1343,7 +1350,6 @@ declare module "oro:commonjs/package" {
      * @typedef {{
      *   require?: string | string[],
      *   import?: string | string[],
-     *   default?: string | string[],
      *   default?: string | string[],
      *   worker?: string | string[],
      *   browser?: string | string[]
@@ -1648,6 +1654,14 @@ declare module "oro:commonjs/package" {
         type?: "commonjs" | "module";
         prefix?: string;
     };
+    export type PackageResolveOptions = import("oro:commonjs/loader").RequestOptions & {
+        load?: boolean;
+        type?: "commonjs" | "module";
+        browser?: boolean;
+        children?: string[];
+        extensions?: string[] | Set<string>;
+    };
+    export type NameOptions = ParsedPackageName;
     export type ParsedPackageName = {
         organization: string | null;
         name: string;
@@ -1664,7 +1678,6 @@ declare module "oro:commonjs/package" {
     export type PackageExports = {
         require?: string | string[];
         import?: string | string[];
-        default?: string | string[];
         default?: string | string[];
         worker?: string | string[];
         browser?: string | string[];
@@ -1706,11 +1719,9 @@ declare module "oro:commonjs/require" {
      * @typedef {import('./package.js').PackageResolveOptions} PackageResolveOptions
      */
     /**
-     * @typedef {
-     *   PackageResolveOptions &
-     *   PackageOptions &
-     *   { origins?: string[] | URL[] }
-     * } ResolveOptions
+     * @typedef {PackageResolveOptions & PackageOptions & {
+     *   origins?: string[] | URL[]
+     * }} ResolveOptions
      */
     /**
      * @typedef {ResolveOptions & {
@@ -1758,11 +1769,15 @@ declare module "oro:commonjs/require" {
     export type RequireFunction = (arg0: string) => any;
     export type PackageOptions = import("oro:commonjs/package").PackageOptions;
     export type PackageResolveOptions = import("oro:commonjs/package").PackageResolveOptions;
+    export type ResolveOptions = PackageResolveOptions & PackageOptions & {
+        origins?: string[] | URL[];
+    };
     export type RequireOptions = ResolveOptions & {
         resolvers?: RequireResolver[];
         importmap?: import("oro:commonjs/module").ImportMap;
         cache?: boolean;
     };
+    import URL from "oro:url";
 }
 ```
 

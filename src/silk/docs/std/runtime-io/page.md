@@ -29,6 +29,10 @@ Use the following owning docs for the substantive API/design context for this mo
 
 ## Notes
 
+- `set_cloexec(fd)` preserves existing descriptor flags and sets `FD_CLOEXEC`
+ through the POSIX runtime's fixed-signature integer `fcntl` wrapper. It
+ returns `None` on success or the mapped I/O error on failure.
+
 - The shipped source for this module is [`std/runtime/io.slk`](https://github.com/oro-computer/silk/blob/master/std/runtime/io.slk).
 - The canonical module name is [`std::runtime::io`](/silk/docs/std/runtime-io/).
 - This page is intentionally implementation-oriented. Downstream users should usually start with the higher-level std module docs listed above unless they are working on the runtime layer itself.

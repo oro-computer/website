@@ -3,7 +3,7 @@ import type { CheckedPageVars } from '#lib/page-vars.ts'
 const vars = {
   "layout": "learn" as const,
   "title": "Modules and Packages · Learn Silk",
-  "description": "Chapter 3 of Learn Silk: create a package root, export a small module, and import it from a downstream program.",
+  "description": "Split reusable pricing rules from a receipt executable using a complete Silk package manifest.",
   "bodyClass": "site-dark product-page learn-page learn-lesson-page silk-learn-page",
   "bodyAttrs": {},
   "product": "silk",

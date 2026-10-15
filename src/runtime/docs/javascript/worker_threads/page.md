@@ -65,9 +65,9 @@ declare module "oro:worker_threads" {
     /**
 
      * A pool of known worker threads.
-     * @type {<Map<string, Worker>}
+     * @type {Map<string, Worker>}
      */
-    export const workers: <Map>() => <string, Worker>() => any;
+    export const workers: Map<string, Worker>;
     /**
      * `true` if this is the "main" thread, otherwise `false`
      * The "main" thread is the top level webview window.
@@ -168,6 +168,11 @@ declare module "oro:worker_threads" {
          */
         get id(): number;
         get threadId(): number;
+        /**
+         * `true` after the worker has loaded and can receive application messages.
+         * @type {boolean}
+         */
+        get online(): boolean;
         /**
          * A `Writable` standard input stream if `{ stdin: true }` was set when
          * creating this `Worker` instance.

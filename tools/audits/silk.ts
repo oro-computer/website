@@ -1,10 +1,17 @@
+import { preserveFences } from '../source-pages.ts'
 import { existsSync } from 'node:fs'
 import { relative } from 'node:path'
 import { checkDocLinks, checkRawOutputs, checkLines, checkPLinks, collectionConfig, lines, collectionIds, withSourceInventory, markdownFiles, pathJoin, pattern, read, reportIssues, trim } from './common.ts'
 import type { AuditContext, Issue, Reporter } from './common.ts'
 
 function checkText(source: string, expression: RegExp, message: string): Issue[] {
-  return markdownFiles(source).filter(path => expression.test(read(path))).map(path => ({ path, message }))
+  // Editorial rules apply to prose. Upstream code examples remain byte-for-byte
+  // accurate, including identifiers and comments used in the language reference.
+  return markdownFiles(source).filter(path => {
+    let matches = false
+    preserveFences(read(path), prose => { matches = expression.test(prose); return prose })
+    return matches
+  }).map(path => ({ path, message }))
 }
 export function runSilkAudit(context: AuditContext, reporter: Reporter = console): number {
   context = withSourceInventory(context)

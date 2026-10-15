@@ -16,6 +16,15 @@ Run an Oro Runtime application.
 You can provide a project directory, HTML file, or JavaScript module. When no `oro.toml` is found, [`oroc`](/runtime/docs/cli/oroc/) can infer a
 minimal configuration automatically.
 
+Build before launching, and rebuild after changing bundled source or configuration:
+
+```bash
+oroc build .
+oroc run .
+```
+
+The current `run` implementation launches an existing artifact. Its help examples describe a build-and-launch flow, but `run` itself does not rebuild the project.
+
 ## Usage
 
 ```bash
@@ -26,18 +35,19 @@ oroc run [options] [<project-or-source>]
 
 | Option | Description |
 | --- | --- |
-| `--headless` | run without a visible window |
-| `--platform=<platform>` | android \| android-emulator \| ios \| ios-simulator (default: host) |
+| `--headless` | run application in headless mode (without frame or window) |
+| `--platform=<platform>` | platform target to run application on (defaults to host):<br>- android<br>- android-emulator<br>- ios<br>- ios-simulator |
 | `--config=<path>` | use an explicit oro.toml/oro.ini file |
-| `--host=<host>` | load index.html from host (default: 80 when port omitted) |
-| `--port=<port>` | load index.html from port (default: localhost when host omitted) |
-| `--prod` | production build (disables inspector/debugging) |
-| `--test[=path]` | test mode (optionally import a test file) |
-| `-D, --debug` | debug mode |
+| `--port=<port>` | load "index.html" from a specific port (if host is not specified, defaults to localhost) |
+| `--host=<host>` | load "index.html" from a specific host (if port is not specified, defaults to 80) |
+| `--prod` | build for production (disables debugging info, inspector, etc.) |
+| `--test[=path]` | indicate test mode, optionally importing a test file relative to resource files |
+| `-D, --debug` | enable debug mode |
+| `-q, --quiet` | hint for less log output |
 | `-E, --env` | add environment variables |
-| `-V, --verbose` | verbose output |
-| `--allow-exec` | allow external command execution during builds |
-| `--tls-keylog=<path>` | write TLS key log lines (OpenSSL provider) |
+| `-V, --verbose` | enable verbose output |
+| `--allow-exec` | allow external command execution (gates ndk-build/gradle/git/build scripts) |
+| `--tls-keylog=<path>` | write NSS TLS key log lines to `<path>` (OpenSSL provider) |
 | `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Environment

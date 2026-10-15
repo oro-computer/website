@@ -38,7 +38,7 @@ export function sanitizeMarkdown(markdown: string, { currentFile = "", kind = "d
     }
 
     function rewriteOutsideCode(text: string): string {
-      let out = text;
+      let out = text.replace(/^\s*Current support:\s*$/i, "Supported platforms:");
 
       // Headings
       out = out.replace(/^(\s*#{1,6}\s+)Relevant Tests\b/gi, "$1Tests");
@@ -359,7 +359,7 @@ export function sanitizeSpecMarkdown(markdown: string): string {
     }
 
     function rewriteOutsideCode(text: string): string {
-      let out = text;
+      let out = text.replace(/^\s*Current support:\s*$/i, "Supported platforms:");
 
       // Generated-spec phrasing: make the single-file edition self-contained.
       out = out.replace(/Silk['’]s\s+this\s+specification\s+are\b/gi, "This specification is");

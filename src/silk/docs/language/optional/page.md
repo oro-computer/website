@@ -87,16 +87,30 @@ Implementation
  Nested optionals (`T??`) are supported in this backend subset for the same
  payload subset (scalars, `string`, enums, and the supported `struct` subset).
 
+ Reading an optional-valued struct field produces the complete optional value,
+ including its presence tag and all payload slots. For example, if `draft.risk`
+ has type `Risk?`, `let risk = draft.risk` infers `Risk?` and preserves both
+ `Some(...)` and `None`. Explicit annotations, nested fields, reference-backed
+ fields, assignments, arguments, returns, and containing aggregate values obey
+ the same rule. A plain-data payload is copied independently of subsequent
+ writes to the source; an owning payload follows the ordinary move and
+ reinitialization rules. Projecting a non-optional aggregate field through `?.`
+ likewise produces an optional aggregate that can be bound without annotation.
+
  In this subset, `T??` is represented as an outer optional whose payload is
  the full inner optional representation: for example `int??` lowers as
  `(Bool tag0, Bool tag1, i64 payload)`.
+ Scope cleanup respects every presence tag: an owning payload inside nested
+ `Some` values is released once, while `None` and `Some(None)` release no payload.
+
+ Optional-valued [`match`](/silk/wiki/language/flow-match/) expressions also support boolean, integer, and string
+ scrutinees, including wildcard arms. The scrutinee is evaluated once and only
+ the selected arm runs. Payload inference can use a later non-`None` arm.
 
 - Not yet implemented:
  - optional chaining beyond the current optional-struct field access and
- optional method call subsets (for example chaining through optional fields
- and optional indexing),
- - [`match`](/silk/wiki/language/flow-match/) over non-optional scrutinee types (and richer pattern forms beyond
- `None`/`Some(...)`),
+ optional method call subsets (projecting a field that is itself optional,
+ as in `opt?.optional_field`, and optional indexing remain unsupported),
  - and richer optional forms beyond the backend.
 
 Note: optional payload equality (`==` / `!=`) is still limited in the current
@@ -122,7 +136,11 @@ Examples from the spec:
 - `struct User = { profile: None };`
 - `profile: Some({ email: "some@example.com", age: Some(30) })`
 
-The compiler infers the optional’s element type from context when possible.
+The compiler uses an expected optional type when one is available, including
+its payload's literal width. Otherwise `Some(value)` infers the payload type
+from `value`: `let x = Some(2);` has type `int?`, and `Some("text")` has type
+`string?`. This also applies to typed values and nested `Some` constructors.
+`None` alone has no payload from which to infer a type and requires context.
 
 Equality comparisons provide optional type
 context for `None` / `Some(...)` operands, so forms like `opt == None` and
@@ -148,6 +166,14 @@ Key points:
 
 - The type of `Some(value)` is `T?` (or `Option(T)`).
 - Nested optionals are allowed (e.g. a struct containing fields that are `T?`).
+
+Without an enclosing type annotation, an `if` or [`match`](/silk/wiki/language/flow-match/) arm with a concrete
+payload supplies the type for sibling `None`/`Some(None)` arms. Source arm order
+and runtime evaluation order do not change. Constructor-only optional equality
+can likewise infer its payload; two bare `None` values still need context.
+Wrapping an owning value in `Some` transfers ownership into the optional.
+Struct payload types also propagate through `unwrap_or` and `unwrap_or_else`
+into unannotated bindings, including calls directly on `Some(value)`.
 
 ## Optional-Coalescing Operator `??`
 

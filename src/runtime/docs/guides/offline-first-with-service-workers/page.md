@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "For applications that need to keep working without reliable connectivity, service workers are the right boundary. Use them to cache the application shell, serve known assets, and provide controlled fa"
+description: "Cache the app shell and provide a fallback so the interface still loads without a network."
 docsCollection: "runtime"
 section: "guides"
 order: 14
@@ -11,8 +11,7 @@ githubRef: "master"
 
 # Offline-first with service workers
 
-For applications that need to keep working without reliable connectivity, service workers are the right boundary. Use
-them to cache the application shell, serve known assets, and provide controlled fallback behavior when the network is gone.
+Cache the app shell and provide a fallback so the interface still loads without a network.
 
 ## 1) Enable service workers in project config
 
@@ -50,7 +49,7 @@ if (navigator.serviceWorker) {
 }
 ```
 
-That is the same mental model as the web platform, which is exactly what you want.
+
 
 ## 4) Cache the application shell
 

@@ -23,9 +23,9 @@ oroc setup [options] [--platform=<platform>] [-y|--yes]
 
 | Option | Description |
 | --- | --- |
-| `--platform=<platform>` | android \| ios \| linux \| windows (default: host) |
+| `--platform=<platform>` | platform target to run setup for (defaults to host):<br>- android<br>- ios<br>- linux<br>- windows |
 | `-q, --quiet` | hint for less log output |
-| `-y, --yes` | answer yes to prompts |
+| `-y, --yes` | answer yes to any prompts |
 
 ## Notes
 

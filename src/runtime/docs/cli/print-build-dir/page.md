@@ -23,6 +23,6 @@ oroc print-build-dir [--platform=<platform>] [--prod] [--root] [<project-dir>]
 
 | Option | Description |
 | --- | --- |
-| `--platform=<platform>` | android \| android-emulator \| ios \| ios-simulator (default: host) |
-| `--prod` | use production build directory |
-| `--root` | print only the root build directory |
+| `--platform` | platform to print build directory for (defaults to host):<br>- android<br>- android-emulator<br>- ios<br>- ios-simulator |
+| `--prod` | indicate production build directory |
+| `--root` | print the root build directory |

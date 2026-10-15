@@ -338,9 +338,9 @@ declare module "oro:notification" {
         get id(): string;
         /**
          * `true` if the notification was closed, otherwise `false`.
-         * @type {boolea}
+         * @type {boolean}
          */
-        get closed(): boolea;
+        get closed(): boolean;
         /**
          * The last action identifier associated with this notification.
          * Empty string represents the default action.

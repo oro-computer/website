@@ -35,7 +35,7 @@ let s: string = "hello";
 let maybe: int? = None;
 
 // References (borrows)
-// (Receiver/borrow rules are in the mutability docs.)
+// (Receiver/borrow rules are in `docs/language/mutability.md`.)
 // let r: &MyStruct = ...;
 
 // Arrays and slices

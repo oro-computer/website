@@ -18,7 +18,7 @@ exists under [`std/`](https://github.com/oro-computer/silk/tree/master/std/) (us
 As of the compiler, the in-tree stdlib includes a
 small but functional set of utilities implemented purely in Silk (including
 monomorphized, type-parameter generics for core collection types),
-plus a tiny hosted POSIX baseline for OS-facing modules ([`std::fs`](/silk/docs/std/fs/), [`std::task`](/silk/docs/std/task/),
+plus a tiny hosted POSIX baseline for OS-facing modules ([`std::fs`](/silk/docs/std/filesystem/), [`std::task`](/silk/docs/std/task/),
 [`std::sync`](/silk/docs/std/sync/), [`std::io`](/silk/docs/std/io/)) implemented via the [`std::runtime`](/silk/docs/std/runtime/) interface layer
 (the shipped POSIX runtime backend uses `ext` and therefore requires linking
 libc for executable outputs).
@@ -88,7 +88,8 @@ distribution:
 - [`std::limits`](/silk/docs/std/limits/) — numeric min/max limits for primitive types (see [limits](/silk/docs/std/limits/)).
 - [`std::crypto`](/silk/docs/std/crypto/) — cryptography primitives (hosted baseline via libsodium; see
  [crypto](/silk/docs/std/crypto/)).
-- [`std::ggml`](/silk/docs/std/ggml/) — ggml tensor library bindings (early bring-up; see [ggml](/silk/docs/std/ggml/)).
+- [`std::ggml`](/silk/docs/std/ggml/) — context-owned ggml graph, deterministic CPU/configured-GPU
+ execution, and bounded adapter-training bindings (see [ggml](/silk/docs/std/ggml/)).
 - [`std::uuid`](/silk/docs/std/uuid/) — UUID primitives (v1/v3/v4/v5/v6/v7/v8) with parsing/formatting
  (see [uuid](/silk/docs/std/uuid/)).
 - [`std::semver`](/silk/docs/std/semver/) — Semantic Versioning (SemVer 2.0.0) parsing and precedence
@@ -123,7 +124,7 @@ distribution:
 - [`std::task`](/silk/docs/std/task/) — task/runtime helpers, including reusable `Task(T)` join helpers
  for async code (hosted baseline; see [task](/silk/docs/std/task/)).
 - [`std::sync`](/silk/docs/std/sync/) — synchronization primitives (hosted baseline; see [sync](/silk/docs/std/sync/)).
-- [`std::abort_controller`](/silk/docs/std/abort_controller/) — WHATWG-style abort signals for cancellation (see
+- [`std::abort_controller`](/silk/docs/std/abort-controller/) — WHATWG-style abort signals for cancellation (see
  [abort controller](/silk/docs/std/abort_controller/); detailed semantics in
  [abort controller](/silk/docs/std/abort-controller/)).
 - [`std::signal`](/silk/docs/std/signal/) — pollable signal waiting for TUI programs (Linux `signalfd(2)`
@@ -146,17 +147,17 @@ distribution:
 - [`std::io`](/silk/docs/std/io/) — basic I/O (unbuffered fd reads/writes, formatting, stdout/stderr;
  see [io](/silk/docs/std/io/)). Stream adapters live under [`std::io::stream`](/silk/docs/std/io-stream/).
 - [`std::fmt`](/silk/docs/std/fmt/) — shared formatting layer used by [`std::io`](/silk/docs/std/io/) and string builders.
-- [`std::fs`](/silk/docs/std/fs/) — filesystem access (POSIX baseline; canonical module doc:
+- [`std::fs`](/silk/docs/std/filesystem/) — filesystem access (POSIX baseline; canonical module doc:
  [fs](/silk/docs/std/fs/); detailed hosted API notes in [filesystem](/silk/docs/std/filesystem/);
  stream adapters under [`std::fs::stream`](/silk/docs/std/fs-stream/)).
-- [`std::net`](/silk/docs/std/networking/) — networking primitives (POSIX baseline; canonical module doc:
+- [`std::net`](/silk/docs/std/net/) — networking primitives (POSIX baseline; canonical module doc:
  [net](/silk/docs/std/net/); detailed hosted API notes in [networking](/silk/docs/std/networking/);
  stream adapters under [`std::net::stream`](/silk/docs/std/net-stream/)).
-- [`std::http`](/silk/docs/std/http/) — HTTP/1.1 parsing + blocking client/server on top of [`std::net`](/silk/docs/std/networking/),
+- [`std::http`](/silk/docs/std/http/) — HTTP/1.1 parsing + blocking client/server on top of [`std::net`](/silk/docs/std/net/),
  plus async-friendly one-shot request wrappers (see [http](/silk/docs/std/http/)).
-- [`std::https`](/silk/docs/std/https/) — HTTPS (HTTP over TLS) on top of [`std::tls`](/silk/docs/std/tls/) + [`std::net`](/silk/docs/std/networking/),
+- [`std::https`](/silk/docs/std/https/) — HTTPS (HTTP over TLS) on top of [`std::tls`](/silk/docs/std/tls/) + [`std::net`](/silk/docs/std/net/),
  plus async-friendly one-shot request wrappers (see [https](/silk/docs/std/https/)).
-- [`std::websocket`](/silk/docs/std/websocket/) — RFC 6455 WebSocket (handshake + framing) on top of [`std::net`](/silk/docs/std/networking/)
+- [`std::websocket`](/silk/docs/std/websocket/) — RFC 6455 WebSocket (handshake + framing) on top of [`std::net`](/silk/docs/std/net/)
  (see [websocket](/silk/docs/std/websocket/)).
 - [`std::tls`](/silk/docs/std/tls/) — TLS client/server primitives (POSIX baseline via mbedTLS; see
  [tls](/silk/docs/std/tls/)).

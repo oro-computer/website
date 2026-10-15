@@ -13,6 +13,11 @@ githubRef: "master"
 
 This document defines the C99 ABI and the interface of the `libsilk.a` static library.
 
+The installed archive bundles the Zig compiler runtime helpers used internally
+by the compiler, including quad-precision arithmetic. Linking a C99 embedder
+with the platform C linker does not require a Zig installation or a separately
+located compiler runtime archive.
+
 ## Goals
 
 - Provide a stable C ABI for embedders.
@@ -58,6 +63,20 @@ Practical consequence:
 
 Embedders should prefer `#include <silk/silk.h>`. The flat [`include/silk.h`](https://github.com/oro-computer/silk/blob/master/include/silk.h)
 wrapper remains available for compatibility during the transition.
+
+Each `silk_compiler_build` and `silk_compiler_build_to_bytes` call separates
+temporary type-checker storage from the AST storage retained through code
+generation. Checker buffers are reclaimed during checking instead of
+accumulating for the entire build. All remaining scratch storage is released
+when the call returns, including on errors; the compiler-owned last-error
+message remains valid until the next operation or compiler destruction.
+Module-set checker allocation exhaustion is reported as `out of memory while
+type checking`, without a language-feature diagnostic code.
+
+Compiler memory consumption depends on the input and loaded modules. The C99
+regression suite exercises ordinary prelude-backed builds under a 2 GiB
+address-space limit on Linux; this is a regression bound, not a public memory
+quota or a guarantee for arbitrary programs.
 
 ### Linking When Static Z3 Is Bundled
 
@@ -134,6 +153,17 @@ The initial C header provided in the Silk compiler repository defines:
  - `flags` is a bitfield:
  - bit 0: `has_end` (when unset, `end` is ignored),
  - bit 1: `inclusive` (only valid when `has_end` is set).
+
+- Generated C callback values use the `c_fn (P...) -> R` language type and
+ occupy one native code-pointer slot. A Silk `fn (P...) -> R` value occupies
+ two internal slots (`func_ptr`, `env_ptr`) and is not itself C-compatible.
+ An explicit signature-identical `fn`-to-`c_fn` cast checks that `env_ptr` is
+ zero before exposing the code pointer; a nonzero environment traps. This
+ conversion does not change the public `libsilk` API or the generated C
+ callback calling convention.
+- `unsafe fn` and `unsafe c_fn` use the same machine calling conventions as
+ their safe counterparts. `unsafe` is a Silk compile-time call effect and
+ does not add fields, hidden parameters, or public `libsilk` ABI state.
 
 - 128-bit scalar primitives (`i128` / `u128` / `f128`) used by generated C
  headers for exported Silk interfaces:
@@ -332,6 +362,41 @@ The initial C header provided in the Silk compiler repository defines:
  - `amdgcn-amd-amdhsa-gfx1100`,
  - `amdgcn-amd-amdhsa-gfx1151`.
 
+ For `linux-aarch64` and `linux-aarch64-musl`,
+ `SILK_OUTPUT_EXECUTABLE` first attempts the direct AArch64 IR backend. Its
+ current AAPCS64 subset covers integer and `f32`/`f64` scalar constants,
+ numeric/raw casts, arithmetic, bitwise operations, shifts, comparisons,
+ stack/data memory, function/data addresses, CFG branches,
+ direct/indirect helpers, and external scalar function/data imports. Integer
+ parameters/results use `x0`…`x7`, floating-point parameters/results use
+ `v0`…`v7`, and the two register banks advance independently. Additional
+ classified arguments spill to the aligned caller stack. External C calls
+ return one or two flattened scalar slots in the classified result registers;
+ larger C aggregate results use the AAPCS64 indirect-result pointer in `x8`.
+ Compiler-internal Silk calls keep their eight-slot result-register contract
+ and use hidden caller-provided storage only for larger results. External imports
+ or configured needed/runpath metadata select a dynamically linked GNU- or
+ musl-interpreted PIE. Executable/shared output can select and relocate the
+ required bundled-runtime archive closure and consume explicit AArch64
+ relocatable-object/archive inputs without an external linker.
+ `SILK_OUTPUT_OBJECT`,
+ `SILK_OUTPUT_STATIC_LIBRARY`, and `SILK_OUTPUT_SHARED_LIBRARY` use the same
+ scalar selector to emit `EM_AARCH64` ELF64 objects, indexed GNU archives, and
+ loadable `ET_DYN` shared objects. Object/archive output carries AArch64
+ relocations; shared output supports exported data, external scalar imports,
+ embedded-pointer relocations, and configured needed/runpath/soname metadata.
+ When compilation runs natively on Linux AArch64, `.c`/`.h` inputs, link-only
+ C executables, `-L` plus `-l`/`-l:<file>`, and relocation-free inline
+ assembly are supported. Framework options remain Apple-only, and
+ unrecognized raw linker flags remain outside the Linux AArch64 in-process
+ linker.
+ A program that reduces
+ to a constant `main` can still use the target-aware const-main fallback. For
+ `main(argc: int, argv: u64)`, the entry stub passes the Linux process argument
+ count in `x0` and the raw argv-list pointer in `x1`. Direct and
+ constant-fallback ELF images declare an explicit read/write, non-executable
+ stack with `PT_GNU_STACK`.
+
  For `wasm32` targets, only `SILK_OUTPUT_EXECUTABLE` is supported. The output
  bytes are a final WebAssembly module (`.wasm`) produced by the IR-backed wasm
  backend ([`src/backend_wasm_ir.zig`](https://github.com/oro-computer/silk/blob/master/src/backend_wasm_ir.zig)), with a smaller constant-only fallback for
@@ -386,21 +451,31 @@ The initial C header provided in the Silk compiler repository defines:
  executable and shared library outputs (emitted as `DT_NEEDED`). The `soname`
  string is copied; the function may be called multiple times (duplicates are
  ignored). For static library and object outputs, the value is ignored.
+ Linux AArch64 executable output emits a dynamically linked PIE when
+ `DT_NEEDED` metadata or external scalar imports are present. GNU targets use
+ `/lib/ld-linux-aarch64.so.1`; musl targets use
+ `/lib/ld-musl-aarch64.so.1`.
  `DT_NEEDED` entries starting with `libsilk_rt` are rejected: bundled runtime
- helpers are linked statically from `libsilk_rt.a` / `libsilk_rt_noheap.a` and
- must not become runtime loader dependencies.
- On `linux/x86_64`, when an executable or shared library imports any external
- symbols, the compiler automatically adds the selected libc as a `DT_NEEDED`
- dependency (`libc.so.6` for glibc, `libc.so` for musl), so embedders do not
- need to manually add libc when using hosted `std::` modules like [`std::io`](/silk/docs/std/io/)
- and [`std::fs`](/silk/docs/std/fs/). Additional non-libc dependencies must still be declared via
- `silk_compiler_add_needed_library`.
+ helpers are linked statically from the target/libc-matched archive and must
+ not become runtime loader dependencies. Linux AArch64 glibc and musl outputs
+ use distinct archives so C-library structure layouts and constants cannot
+ cross the target ABI boundary. The AArch64 musl archive supplies the async
+ runtime's private AAPCS64 context switch, so generated async executables do
+ not import musl's unimplemented `getcontext`, `makecontext`, or `swapcontext`
+ declarations.
+ On Linux x86_64 and Linux AArch64, when an executable or shared library
+ imports external system symbols, the compiler automatically adds the selected
+ libc as a `DT_NEEDED` dependency (`libc.so.6` for glibc, `libc.so` for musl),
+ so embedders do not need to manually add libc when using hosted `std::`
+ modules like [`std::io`](/silk/docs/std/io/) and [`std::fs`](/silk/docs/std/filesystem/). Additional non-libc dependencies must
+ still be declared via `silk_compiler_add_needed_library`.
 
  `silk_compiler_add_runpath` records a dynamic loader search path element for
  executable and shared library outputs (emitted as `DT_RUNPATH`). The `path`
  string is copied; the function may be called multiple times (duplicates are
  ignored) and the final `DT_RUNPATH` string is formed by joining all entries
- with ':'.
+ with ':'. Linux AArch64 dynamically linked executables and shared libraries
+ preserve the resulting value as `DT_RUNPATH`.
 
  `silk_compiler_set_soname` configures the shared library soname recorded as
  `DT_SONAME` for shared library outputs. The `soname` string is copied; passing
@@ -416,6 +491,13 @@ The initial C header provided in the Silk compiler repository defines:
  (equivalent to the CLI `--std-lib <path>`). Passing an empty string clears
  the override and returns to the normal stdlib archive selection rules
  (including honoring `SILK_STD_LIB`).
+
+ On Linux AArch64, both executable build APIs reject an explicitly selected
+ archive that leaves referenced generated Silk functions, methods, or data
+ unresolved. The error names the missing symbol. Automatically discovered
+ incomplete archives instead fall back to compiling std sources, including
+ consumer-specific generic specializations. Ordinary native dynamic imports
+ remain supported; no C99 signatures or layouts change.
 
  `silk_compiler_set_c_header` configures C header generation for non-executable
  outputs (equivalent to the CLI `--c-header <path>`). The header is written
@@ -491,6 +573,16 @@ The initial C header provided in the Silk compiler repository defines:
  signal allocation, and doorbell submission remain the embedder or future
  ROCR runtime driver's responsibility.
 
+ Bundled POSIX runtime descriptor control:
+
+ - [`include/silk/rt.h`](https://github.com/oro-computer/silk/blob/master/include/silk/rt.h) declares
+ `int silk_rt_fs_fcntl_int(int fd, int cmd, int arg)` in the runtime support
+ library. It forwards integer-valued `fcntl` commands to libc with the
+ host's variadic convention and preserves libc's return value and `errno`.
+ Pointer-valued commands are outside this helper's contract. Silk binds its
+ three parameters as `i32`, including on Apple ARM64. This adds no entry
+ point to the `SilkCompiler` API or change to its object layouts.
+
  Current Apple host-backed note:
 
  - the CLI / driver now supports non-const `ios-aarch64`,
@@ -560,10 +652,13 @@ The initial C header provided in the Silk compiler repository defines:
  - if the embedder explicitly provides a `std::...` module via
  `silk_compiler_add_source_buffer`, that module is treated as authoritative
  for its package (auto-loading does not replace already-provided packages).
- - standard library archive linking (`linux/x86_64`, current archive layout):
+ - standard library archive linking (`linux/x86_64` and `linux/aarch64`,
+ current archive layout):
  - the toolchain can build a target-specific stdlib static archive
  (`libsilk_std.a`) containing one ELF object per std module (for example
  via `make stdlib`),
+ - the archive must match the selected target architecture; native Linux
+ x86_64 and AArch64 staged builds produce their corresponding archive,
  - for supported executable builds, the compiler treats *auto-loaded*
  `std::...` modules as external during code generation and resolves their
  exported functions from the archive when available (while still
@@ -627,7 +722,10 @@ The initial C header provided in the Silk compiler repository defines:
  - within the current `linux/x86_64` IR subset, `i128`/`u128`/`f128` values are supported at ABI boundaries using the stable C99 `{ lo, hi }` struct shapes:
  - parameters lower to two integer-like scalars (`u64 lo`, then `u64`/`i64 hi`) and consume integer argument locations,
  - results return as two integer-like scalars in `rax`/`rdx`,
- - `f128` values are transported as raw IEEE binary128 bits in the two lanes (not via SSE registers).
+ - `f128` values are transported as raw IEEE binary128 bits in the two lanes (not via SSE registers),
+ - module-level constant-evaluable wide bindings and inferred local wide
+ arithmetic use this same lane representation; source placement and a
+ redundant local type annotation do not alter the ABI or lowering.
  - within the current `linux/x86_64` IR subset, a limited `struct` subset is supported at ABI boundaries:
  - within function bodies and internal helper calls, `struct` declarations with 0+ fields of supported value types are supported (scalar primitives, `string`, nested structs, and supported optionals),
  - at ABI boundaries for exported/FFI functions, only ABI-safe structs are currently supported: after slot-flattening, all scalar slots must be `i64`/`u64`/`f64` (until packed ABI mapping for smaller fields is implemented),
@@ -662,8 +760,9 @@ The initial C header provided in the Silk compiler repository defines:
  - optional parameters are passed as these scalar slots in order (so downstream C callers should declare separate parameters, treating `tag` as an integer-like 0/1 value),
  - optional results return as the same scalar slots (1–2 slots in registers; 3+ slots via a hidden sret pointer as described above).
  - for object outputs (`SILK_OUTPUT_OBJECT`):
- - on `linux/x86_64`, the compiler can emit an ELF64 relocatable object
- (`ET_REL`) for the supported IR subset; on Apple Silicon macOS hosts,
+ - on `linux/x86_64` and `linux/aarch64`, the compiler can emit an ELF64
+ relocatable object (`ET_REL`) for each backend's documented IR subset;
+ on Apple Silicon macOS hosts,
  `macos-aarch64`, `ios-aarch64`, `ios-simulator-aarch64`, and
  `ios-simulator-x86_64` can emit a Mach-O 64-bit relocatable object for
  the same current host-backed library subset, emitting supported functions
@@ -688,8 +787,9 @@ The initial C header provided in the Silk compiler repository defines:
  that `E4001` diagnostic falls back to the offending function
  declaration and names that function directly.
  - for static library outputs (`SILK_OUTPUT_STATIC_LIBRARY`):
- - on `linux/x86_64`, the compiler can emit a static library archive
- (`.a`) containing an object file for the supported IR subset; on Apple
+ - on `linux/x86_64` and `linux/aarch64`, the compiler can emit a static
+ library archive (`.a`) containing an object file for each backend's
+ documented IR subset; on Apple
  Silicon macOS hosts, `macos-aarch64`, `ios-aarch64`,
  `ios-simulator-aarch64`, and `ios-simulator-x86_64` can emit a Mach-O
  static archive via Apple `libtool -static` for the same current
@@ -706,8 +806,9 @@ The initial C header provided in the Silk compiler repository defines:
  `silk_compiler_build` returns `false` with an `E4001` / `E4002` formatted diagnostic (via `silk_compiler_last_error` / `silk_error_format`)
  and does not write an output file.
  - for shared library outputs (`SILK_OUTPUT_SHARED_LIBRARY`):
- - on `linux/x86_64`, the compiler can emit an ELF64 shared library
- (`ET_DYN`, typically with a `.so` filename) for the supported IR subset;
+ - on `linux/x86_64` and `linux/aarch64`, the compiler can emit an ELF64
+ shared library (`ET_DYN`, typically with a `.so` filename) for each
+ backend's documented IR subset;
  on Apple Silicon macOS hosts, `macos-aarch64`, `ios-aarch64`,
  `ios-simulator-aarch64`, and `ios-simulator-x86_64` can emit a Mach-O
  dylib for the same current host-backed library subset,
@@ -889,8 +990,9 @@ The initial C header provided in the Silk compiler repository defines:
  - evaluates the constant integer expression in the body of `main`,
  - emits a tiny native executable image directly using a Silk‑owned
  backend (no C stub, no external C compiler),
- - currently this backend writes a minimal target-specific executable
- that terminates the process with the evaluated `main` value:
+ - when the IR-backed target path does not apply, this backend writes a
+ minimal target-specific executable that terminates the process with
+ the evaluated `main` value:
  - ELF64 for `linux-x86_64`, `linux-aarch64`, and `android-aarch64`,
  - Mach-O 64-bit for `macos-x86_64`, `macos-aarch64`, `ios-aarch64`, `ios-simulator-aarch64`, and `ios-simulator-x86_64`,
  - PE32+ for `windows-x86_64` and `windows-aarch64`,
@@ -931,6 +1033,36 @@ In addition, the embedding ABI must clearly distinguish:
 - functions that take ownership of data supplied by the embedder (and are responsible for freeing it via documented APIs).
 
 Any deviation from the mappings documented in [ext](/silk/docs/language/ext/) must be justified here and reflected in tests.
+
+## Process containment runtime
+
+The Linux abort runtime declares libc `prctl` with a C `int` first argument and
+return value (`i32` in Silk), followed by four `u64` argument slots on the
+Linux 64-bit targets. A matching user `ext prctl` declaration shares that
+external symbol with `std::abort`.
+
+The C99 runtime header `<silk/rt.h>` exposes process containment helpers:
+`silk_rt_process_set_dumpable(int64_t)`,
+`silk_rt_process_close_inherited_fds(void)`, and
+`silk_rt_process_resource_limits(uint64_t, uint64_t)`, each returning `int64_t`
+zero on success or native errno on failure. Dumpability and descriptor-table
+closure require Linux; other hosts return `ENOTSUP`. Resource limits use POSIX
+`rlimit`; zero/unrepresentable inputs are invalid. Limit updates can partially
+succeed and must be used in a disposable pre-exec child. No helper allocates.
+
+### Resource limits and privilege readback
+
+The runtime C99 header exports `silk_rt_process_data_limit(uint64_t)`
+(returning errno or zero), `silk_rt_process_get_dumpable(void)` and
+`silk_rt_process_get_no_new_privileges(void)` (nonnegative state or negative
+errno), and `silk_rt_process_set_no_new_privileges(int64_t)` (errno or zero).
+Queries/setters specific to Linux report ENOTSUP on other hosts.
+`silk_rt_process_get_resource_limit(int64_t pid, int64_t resource, uint64_t *out)`
+writes soft/hard values to two caller-owned words only on success. Resource
+selectors 0/1/2/3 mean CPU/data/address-space/core; infinity is UINT64_MAX.
+It returns errno or zero; invalid selectors, negative PIDs, and null output
+are EINVAL. Nonzero PID readback requires Linux. Existing runtime symbols and
+signatures remain unchanged.
 
 ## See Also
 

@@ -23,12 +23,12 @@ oroc update sign [--manifest=<path>] (--keys=<file> | --private-key=<hex>) [opti
 
 | Option | Description |
 | --- | --- |
-| `--manifest=<path>` | path to the manifest JSON file to sign |
+| `--manifest=<path>` | path to the manifest JSON file to sign (default: manifest-name or ORO_UPDATE_MANIFEST_FILENAME) |
 | `--manifest-name=<name>` | manifest filename to use when --manifest is not provided |
-| `--keys=<file>` | JSON file containing a signing key ("privateKey" or "secretKey" field) |
+| `--keys=<file>` | JSON file containing a signing key (with "privateKey" or "secretKey" field) |
 | `--private-key=<hex>` | Ed25519 private key as a hex string |
-| `--key-id=<id>` | optional key identifier to embed in manifest.sig (default: pk-1) |
-| `--out=<path>` | output path for manifest.sig (default: <manifest-without-extension>.sig) |
+| `--key-id=<id>` | optional key identifier to embed in manifest.sig (default: "pk-1") |
+| `--out=<path>` | output path for manifest.sig (default: `<manifest-without-extension>`.sig, e.g. manifest.json -> manifest.sig) |
 | `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples

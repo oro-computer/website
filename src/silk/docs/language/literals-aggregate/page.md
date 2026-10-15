@@ -217,3 +217,11 @@ limited struct subset described in [`structs-impls-layout.md`](/silk/docs/langua
  subset,
 - no duplicate field initializers are permitted,
 - field order is not semantically significant.
+
+Fixed-array literals infer POD struct element layouts from local values and
+struct-valued field accesses, and copy every element slot into array storage.
+
+Fixed-array elements currently exclude optional types, even when `Some(value)`
+can infer the element type. Use a supported struct element with an optional
+field when aggregate storage is needed. This is an array-layout limitation,
+not a requirement to annotate `Some` constructors.

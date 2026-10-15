@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "This guide summarizes the workflows downstream app developers use most:"
+description: "Build your app, package it for a target, then install it or prepare a signed update."
 docsCollection: "runtime"
 section: "guides"
 order: 7
@@ -11,12 +11,7 @@ githubRef: "master"
 
 # Build and package
 
-This guide summarizes the workflows downstream app developers use most:
-
-- run an app locally during development
-- bundle and package an app for distribution
-- install onto a device/target
-- prepare update artifacts and serve them
+Build your app, package it for a target, then install it or prepare a signed update.
 
 ## 1) Install toolchain dependencies
 
@@ -24,16 +19,16 @@ For host builds, [`oroc setup`](/runtime/docs/cli/setup/) with no `--platform` i
 
 ```bash
 oroc setup --platform=android
-oroc setup --platform=ios
 ```
 
-See: [`oroc setup`](/runtime/docs/cli/setup/).
+For Apple SDKs and device setup, follow [mobile targets](/runtime/docs/guides/mobile-targets-and-device-installs/).
 
 ## 2) Development loop
 
 From your project directory:
 
 ```bash
+oroc build .
 oroc run .
 ```
 

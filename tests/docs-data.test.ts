@@ -65,3 +65,13 @@ test('article enhancement is page-local and preserves legacy anchors', () => {
   assert.equal(rootContent('<p>Unchanged</p>'), '<p>Unchanged</p>')
   assert.ok(rootContent('<pre><code class="language-js">const x = 1</code></pre>').includes('hljs-keyword'))
 })
+
+test('scroll enhancements preserve table semantics without creating hundreds of landmarks', () => {
+  const content = '<pre><code>sample</code></pre><table><tbody><tr><td>value</td></tr></tbody></table>'
+  for (const rendered of [article(content).body, rootContent(content)]) {
+    assert.ok(rendered.includes('tabindex="0"'))
+    assert.ok(!rendered.includes('role="region"'))
+    assert.ok(rendered.includes('role="group"'))
+    assert.ok(rendered.includes('<table>'))
+  }
+})

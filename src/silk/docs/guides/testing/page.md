@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "Silk testing is language-level: tests live next to the code they exercise. The compiler discovers them, runs them with silk test, and emits TAP output (TAP v13) so results are easy to consume in CI an"
+description: "Keep tests beside the code and run them with silk test."
 docsCollection: "silk"
 section: "guides"
 order: 9
@@ -11,10 +11,7 @@ githubRef: "master"
 
 # Testing
 
-Silk testing is **language-level**: tests live next to the code they exercise. The compiler discovers them, runs them with
-`silk test`, and emits TAP output (TAP v13) so results are easy to consume in CI and existing tooling.
-
-The goal is a workflow where “write code + write tests” is the default, not a separate phase.
+Keep tests beside the code and run them with `silk test`. Results use TAP so the same command works locally and in CI.
 
 ## A basic test
 

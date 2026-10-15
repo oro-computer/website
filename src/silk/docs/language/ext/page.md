@@ -94,7 +94,10 @@ Currently supported:
 - parsing `ext` external declarations and representing them in the AST,
 - optional external symbol aliases (`ext local "extern" = ...;`),
 - `ext` **functions** with fixed parameter lists (`ext name = fn (T0, T1) -> R;`)
- as callable symbols in Silk (C variadic `...` is not implemented yet),
+ as callable symbols in Silk (C variadic `...` is not implemented yet).
+ A variadic C function must be reached through a fixed-signature C wrapper;
+ declaring its variadic parameters as fixed is not ABI-compatible on all
+ targets. The POSIX runtime's integer `fcntl` binding uses such a wrapper,
 - `ext` function parameters of **function type** (`fn(...) -> R`) as C-compatible
  function pointers:
  - at the ABI level, these are passed as a single `u64` code pointer (no closure
@@ -109,10 +112,15 @@ Currently supported:
  - unlike `fn (...) -> R` function values, `c_fn (...) -> R` values do not carry a
  closure environment and are safe to store in locals/struct fields and pass
  through APIs,
- - a `c_fn` value may be formed only from:
+ - a `c_fn` value may be formed contextually from:
  - a top-level function name, or
  - a non-capturing `fn (...) -> ...` expression,
- - capturing closures are rejected when a `c_fn` is required.
+ - a stored or otherwise indirect signature-identical Silk function value may
+ be converted explicitly with `value as c_fn (...) -> R` (or an alias of
+ that target type),
+ - the explicit conversion checks that the function value's closure
+ environment is zero and traps if an indirect value captures; a directly
+ written capturing expression is rejected during checking.
 - `ext` **variables** of scalar type (`ext name = T;` where `T` is a supported
  scalar such as `int`, fixed-width ints, `bool`, `char`, or `f32`/`f64`) as
  readable values in Silk,
@@ -135,7 +143,8 @@ Currently supported:
  - `silk build --kind executable`,
  producing relocations against undefined external symbols in the generated
  `.o` / `.a`, dynamic imports in the generated `.so`, or dynamic imports in
- the generated dynamically-linked executable (linux/x86_64).
+ the generated dynamically-linked executable (Linux x86_64 and Linux
+ AArch64 for each backend's documented scalar subset).
  - for shared libraries and dynamically-linked executables, external calls are
  routed through a GOT slot that is filled by the dynamic loader.
  - `ext` variable reads are supported for the same outputs, producing
@@ -183,10 +192,26 @@ fn main () -> int {
 Notes:
 
 - `c_fn` values are code pointers only; they cannot capture local variables.
+- A stored non-capturing Silk function value can be converted explicitly:
+
+  ```silk
+  let silk_fn = fn (a: i64, b: i64) -> a + b;
+  let cb = silk_fn as c_fn (i64, i64) -> i64;
+  ```
+
+ Parameter and result types must match exactly, and the source must satisfy
+ the target's purity requirement. An indirect source value is checked at
+ runtime and traps if it carries a closure environment.
 - A raw dynamic symbol address can be converted explicitly with
- `addr as raw c_fn (...) -> R` or an alias of that type. This is intended for
- loader APIs such as [`std::dylib`](/silk/docs/std/dylib/); Silk does not validate the symbol signature
- at runtime, so the declared `c_fn` type must match the foreign ABI exactly.
+ `unsafe addr as raw c_fn (...) -> R`, or with the equivalent braced form
+ `unsafe { addr as raw c_fn (...) -> R }`; either spelling may target an alias
+ of the callback type. This is intended for loader APIs such as [`std::dylib`](/silk/docs/std/dylib/);
+ Silk does not validate the symbol signature at runtime, so the declared
+ `c_fn` type must match the foreign ABI exactly.
+- An external binding can use `unsafe fn (...) -> R` or
+ `unsafe c_fn (...) -> R` when its contract cannot be verified by Silk.
+ Calls then require an unsafe context; safe stdlib facades should validate
+ their inputs and contain the smallest practical unsafe boundary.
 - A `c_fn` value can be called directly from Silk using the same call syntax as
  ordinary function values. The current value is invoked as a plain C code
  pointer with no closure environment.
@@ -303,6 +328,9 @@ Notes:
 
 - For FFI with APIs that use a C `int` (for example many POSIX syscalls),
  prefer `i32`/`u32` in your `ext` declarations rather than `int`.
+ The Linux abort runtime uses the same C-width declaration for `prctl`: an
+ `i32` operation and return value, followed by four `u64` argument slots.
+ A user declaration with that signature can coexist with `std::abort`.
 - The stable C99 ABI does **not** use compiler-specific `__int128` or
  `__float128` types for these primitives; it uses explicit `{ lo, hi }`
  structs so the ABI is portable and can be expressed in strict C99.

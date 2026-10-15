@@ -9,11 +9,11 @@ githubRepo: "oro-computer/silk"
 githubRef: "master"
 ---
 
-# [`std::fs`](/silk/docs/std/fs/)
+# [`std::fs`](/silk/docs/std/filesystem/)
 
-This is the canonical module doc for [`std::fs`](/silk/docs/std/fs/).
+This is the canonical module doc for [`std::fs`](/silk/docs/std/filesystem/).
 
-[`std::fs`](/silk/docs/std/fs/) provides the hosted filesystem API shipped in [`std/fs.slk`](https://github.com/oro-computer/silk/blob/master/std/fs.slk): low-level
+[`std::fs`](/silk/docs/std/filesystem/) provides the hosted filesystem API shipped in [`std/fs.slk`](https://github.com/oro-computer/silk/blob/master/std/fs.slk): low-level
 file handles, stat-style metadata queries (`stat`, `lstat`, `fstat`,
 `Stats`), whole-file helpers, directory iteration, and path-based mutation
 primitives, all backed by [`std::runtime::fs`](/silk/docs/std/runtime-fs/).

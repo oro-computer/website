@@ -34,6 +34,8 @@ The REPL keeps session state by replaying committed state-building lines:
 - runtime bindings and assignments are replayed for later runtime lines,
 - simple committed value bindings may reuse cached rendered values until state
  changes,
+- function-valued bindings are committed without a rendered-value cache and
+ remain callable by later lines,
 - failed parse, check, compile, or execution attempts are not committed,
 - one-off runtime calls such as `println("...");` execute once and are not
  replayed.

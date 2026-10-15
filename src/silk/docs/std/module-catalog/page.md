@@ -35,7 +35,7 @@ replace the exact per-module page.
 Every shipped top-level [`std/*.slk`](https://github.com/oro-computer/silk/blob/master/std/*.slk) module has an exact-name canonical doc
 page:
 
-- [`std::abort_controller`](/silk/docs/std/abort_controller/) -> [abort controller](/silk/docs/std/abort_controller/)
+- [`std::abort_controller`](/silk/docs/std/abort-controller/) -> [abort controller](/silk/docs/std/abort_controller/)
 - [`std::algorithms`](/silk/docs/std/algorithms/) -> [algorithms](/silk/docs/std/algorithms/)
 - [`std::args`](/silk/docs/std/args/) -> [args](/silk/docs/std/args/)
 - [`std::atomic`](/silk/docs/std/atomic/) -> [atomic](/silk/docs/std/atomic/)
@@ -51,7 +51,7 @@ page:
 - [`std::flag`](/silk/docs/std/flag/) -> [flag](/silk/docs/std/flag/)
 - [`std::fmt`](/silk/docs/std/fmt/) -> [fmt](/silk/docs/std/fmt/)
 - [`std::formal`](/silk/docs/std/formal/) -> [formal](/silk/docs/std/formal/)
-- [`std::fs`](/silk/docs/std/fs/) -> [fs](/silk/docs/std/fs/)
+- [`std::fs`](/silk/docs/std/filesystem/) -> [fs](/silk/docs/std/fs/)
 - [`std::function`](/silk/docs/std/function/) -> [function](/silk/docs/std/function/)
 - [`std::ggml`](/silk/docs/std/ggml/) -> [ggml](/silk/docs/std/ggml/)
 - [`std::gpu`](/silk/docs/std/gpu/) -> [gpu](/silk/docs/std/gpu/)
@@ -70,7 +70,7 @@ page:
 - [`std::math`](/silk/docs/std/math/) -> [math](/silk/docs/std/math/)
 - [`std::memory`](/silk/docs/std/memory/) -> [memory](/silk/docs/std/memory/)
 - [`std::mime`](/silk/docs/std/mime/) -> [mime](/silk/docs/std/mime/)
-- [`std::net`](/silk/docs/std/networking/) -> [net](/silk/docs/std/net/)
+- [`std::net`](/silk/docs/std/net/) -> [net](/silk/docs/std/net/)
 - [`std::number`](/silk/docs/std/number/) -> [number](/silk/docs/std/number/)
 - [`std::optional`](/silk/docs/std/optional/) -> [optional](/silk/docs/std/optional/)
 - [`std::os`](/silk/docs/std/os/) -> [os](/silk/docs/std/os/)

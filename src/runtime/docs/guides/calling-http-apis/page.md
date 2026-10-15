@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "Most production applications spend their time moving between three layers:"
+description: "Fetch notes from a remote API, attach stored credentials, and bring the response into local state."
 docsCollection: "runtime"
 section: "guides"
 order: 11
@@ -11,13 +11,7 @@ githubRef: "master"
 
 # Calling HTTP APIs
 
-Most production applications spend their time moving between three layers:
-
-- local state,
-- remote APIs,
-- UI that reflects sync state honestly.
-
-Oro Runtime gives you the standard `fetch` path plus lower-level [`oro:http`](/runtime/docs/javascript/http/) and [`oro:https`](/runtime/docs/javascript/https/) surfaces when you need them.
+Fetch notes from a remote API, attach stored credentials, and bring the response into local state.
 
 ## 1) Start with [`oro:fetch`](/runtime/docs/javascript/fetch/)
 

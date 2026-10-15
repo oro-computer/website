@@ -24,16 +24,16 @@ for (const name of cases) test(`Content audit regression: ${name}`, () => {
     writeFileSync(path, `---\ndocsCollection: ${collection}\nsourcePath: ${sourcePath}\n---\n# Source\n`)
   }
   try {
-    for (const product of ['runtime', 'silk', 'sage', 'slg', 'virtnosis']) page(product, 'start.md')
+    for (const product of ['runtime', 'silk']) page(product, 'start.md')
     if (name !== 'missing') {
-      for (const product of ['runtime', 'silk', 'sage', 'slg', 'virtnosis']) {
+      for (const product of ['runtime', 'silk']) {
         put(`${product}/docs/source/start.md`, '# Start\n')
       }
       for (const path of ['index.html', 'runtime/index.html', 'runtime/docs/index.html']) put(path, '')
     }
     if (name === 'common') {
-      page('sage', 'lost.md')
-      put('sage/docs/source/start.md', '# Heading ?p=heading\n```\n?p=fenced\n## Status\n~~~\nRaw ?p=missing and `open` (3)\n[ok](?p=start) [bad](wiki/?p=nope)\n[missing](docs/absent.md) [escape](../ignored.md)\n[absolute](/absent.txt) [remote](https://example.org/no.md)\n## Status (details)\n## API (initial surface)\n## Thing (Planned soon)\nStatus: **yes**\nInitial implementation\n## Current API\n## Future Work\n## Current APİ\n\u001c## Status\n\ufeff## Status\néinitial implementationé\n');
+      page('runtime', 'lost.md')
+      put('runtime/docs/source/start.md', '# Heading ?p=heading\n```\n?p=fenced\n## Status\n~~~\nRaw ?p=missing and `open` (3)\n[ok](?p=start) [bad](wiki/?p=nope)\n[missing](docs/absent.md) [escape](../ignored.md)\n[absolute](/absent.txt) [remote](https://example.org/no.md)\n## Status (details)\n## API (initial surface)\n## Thing (Planned soon)\nStatus: **yes**\nInitial implementation\n## Current API\n## Future Work\n## Current APİ\n\u001c## Status\n\ufeff## Status\néinitial implementationé\n');
     }
     if (name === 'silk') {
       page('silkWiki', 'wiki.md')
@@ -52,10 +52,10 @@ for (const name of cases) test(`Content audit regression: ${name}`, () => {
       put('upstream/api/CLI.md', '## oroc\n## oroc update-init\n## oroc unknown\n')
       put('index.html', 'oro-computer/oro-runtime oro-computer/legacy-runtime')
     }
-    if (name === 'cap') put('sage/docs/source/start.md', Array.from({ length: 205 }, (_, i) => `[x](?p=missing${i})`).join('\n'))
+    if (name === 'cap') put('runtime/docs/source/start.md', Array.from({ length: 205 }, (_, i) => `[x](?p=missing${i})`).join('\n'))
     const runners: Record<string, (ctx: AuditContext, reporter: Reporter) => number> = {
-      missing: runContentAudit, clean: runContentAudit, common: (ctx, reporter) => runSiteAudit(ctx, 'sage', reporter),
-      silk: runSilkAudit, stdlib: runStdlibAudit, runtime: runRuntimeAudit, cap: (ctx, reporter) => runSiteAudit(ctx, 'sage', reporter),
+      missing: runContentAudit, clean: runContentAudit, common: (ctx, reporter) => runSiteAudit(ctx, 'runtime', reporter),
+      silk: runSilkAudit, stdlib: runStdlibAudit, runtime: runRuntimeAudit, cap: (ctx, reporter) => runSiteAudit(ctx, 'runtime', reporter),
     }
     const stdout: string[] = [], stderr: string[] = []
     const status = runners[name]!(context, { log: message => stdout.push(message), error: message => stderr.push(message) })
@@ -63,7 +63,7 @@ for (const name of cases) test(`Content audit regression: ${name}`, () => {
     if (name === 'clean') {
       assert.deepEqual(stdout, [
         'OK: runtime site audit passed', 'OK: runtime docs audit passed', 'OK: silk site audit passed',
-        'Stdlib doc audit passed.', ...['sage', 'slg', 'virtnosis'].map(product => `OK: ${product} site audit passed`),
+        'Stdlib doc audit passed.',
       ])
       assert.deepEqual(stderr, [])
     } else if (name === 'cap') {
@@ -85,7 +85,7 @@ for (const name of cases) test(`Content audit regression: ${name}`, () => {
         silk: [
           [/Broken \?p= link: (wiki\/lost|docs\/oops)$/, 2],
           [/Missing link target: (spec\/missing.md|docs\/missing.txt) -> silk\/docs\/source\//, 2],
-          [/Found arena identifier/, 2], [/Found deprecated/, 2],
+          [/Found arena identifier/, 1], [/Found deprecated/, 1],
           [/Line 6: raw \?p= reference/, 1], [/Line 6: raw manpage reference/, 1],
           [/Line (3|7): avoid status-style/, 2], [/spec\/2026.md: Spec contains repo-internal/, 1],
         ],

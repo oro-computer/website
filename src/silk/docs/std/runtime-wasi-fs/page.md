@@ -33,13 +33,13 @@ Use the following owning docs for the substantive API/design context for this mo
 - The canonical module name is [`std::runtime::wasi::fs`](/silk/docs/std/runtime-wasi-fs/).
 - The shipped WASI backend now projects preview1 file metadata into the stable
  raw-stat layout used by [`std::runtime::fs::{stat,lstat,fstat}`](/silk/docs/std/runtime-fs/) and
- [`std::fs::Stats`](/silk/docs/std/fs/), with documented zero/fallback fields where preview1 lacks
+ [`std::fs::Stats`](/silk/docs/std/filesystem/), with documented zero/fallback fields where preview1 lacks
  POSIX metadata.
 - `fstat_size(fd)` reads the preview1 descriptor filestat directly without
  changing the descriptor offset. It returns `-1` and records a mapped errno
  when the syscall fails, the descriptor is invalid, allocation fails, or the
  unsigned WASI size cannot be represented as a Silk `i64`.
 - It exposes the same borrowed directory-entry fill surface as the POSIX
- backend for [`std::fs::Dir.next_view()`](/silk/docs/std/fs/), backed by the per-directory WASI
+ backend for [`std::fs::Dir.next_view()`](/silk/docs/std/filesystem/), backed by the per-directory WASI
  `fd_readdir` buffer.
 - This page is intentionally implementation-oriented. Downstream users should usually start with the higher-level std module docs listed above unless they are working on the runtime layer itself.

@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "Source: std/uuid/random.slk"
+description: "Source: std/uuid/random.slk."
 docsCollection: "silk"
 section: "std"
 order: 230
@@ -11,23 +11,23 @@ githubRef: "master"
 
 # [`std::uuid::random`](/silk/docs/std/uuid-random/)
 
-Source: [`std/uuid/random.slk`](https://github.com/oro-computer/silk/blob/master/std/uuid/random.slk)
+Source: [`std/uuid/random.slk`](https://github.com/oro-computer/silk/blob/master/std/uuid/random.slk).
 
-This is the exact canonical documentation page for [`std::uuid::random`](/silk/docs/std/uuid-random/).
+This module generates UUIDs using the active security provider through
+[`std::crypto::random`](/silk/docs/std/crypto-random/). Built-in providers use libsodium; supported Apple
+platform providers use native cryptographic randomness without requiring
+libsodium symbols.
 
-## Role
+- `v4() -> std::uuid::UUIDResult` generates random bits and sets the v4 version
+ and RFC variant.
+- `v7(unix_ms: u64) -> std::uuid::UUIDResult` combines Unix milliseconds with
+ random bits.
+- `v1(timestamp_100ns: u64)` and `v6(timestamp_100ns: u64)` return `UUIDResult`
+ using Gregorian 100ns ticks, a random clock sequence, and a random node ID
+ with the multicast bit set.
+- `v1_now()`, `v6_now()`, and `v7_now()` return `UUIDResult` using the current
+ system time.
 
-[`std::uuid::random`](/silk/docs/std/uuid-random/) is a shipped nested module in the Silk standard library.
-This exact-name page exists so the module can be discovered and referenced directly by its canonical name.
-
-## Canonical Context
-
-Use the following owning docs for the substantive API/design context for this module:
-
-- [uuid](/silk/docs/std/uuid/)
-
-## Notes
-
-- The shipped source for this module is [`std/uuid/random.slk`](https://github.com/oro-computer/silk/blob/master/std/uuid/random.slk).
-- The canonical module name is [`std::uuid::random`](/silk/docs/std/uuid-random/).
-- Family-wide semantics, examples, and cross-module relationships live in the owning docs listed above.
+Provider initialization or random-generation failure returns `InitFailed`;
+clock failures return `NoTime`. Timestamp validation errors are preserved from
+[`std::uuid`](/silk/docs/std/uuid/). See [UUIDs](/silk/docs/std/uuid/) for formats and timestamp conversions.

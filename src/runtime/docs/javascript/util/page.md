@@ -50,7 +50,13 @@ declare module "oro:util" {
         (...args: any[]): void;
         enabled: boolean;
     };
-    export function hasOwnProperty(object: any, property: any): any;
+    /**
+     * Tests whether an object owns a string or symbol property.
+     * @param {object} object
+     * @param {string|number|symbol} property
+     * @returns {boolean}
+     */
+    export function hasOwnProperty(object: object, property: string | number | symbol): boolean;
     export function isDate(object: any): boolean;
     export function isTypedArray(object: any): boolean;
     export function isArrayLike(input: any): boolean;
@@ -73,7 +79,12 @@ declare module "oro:util" {
     export function isBufferLike(object: any): boolean;
     export function isFunction(value: any): boolean;
     export function isErrorLike(error: any): boolean;
-    export function isClass(value: any): boolean;
+    /**
+     * Tests whether a value is an ECMAScript class constructor.
+     * @param {unknown} value
+     * @returns {boolean}
+     */
+    export function isClass(value: unknown): boolean;
     export function isBuffer(value: any): boolean;
     export function isPromiseLike(object: any): boolean;
     export function toString(object: any): any;

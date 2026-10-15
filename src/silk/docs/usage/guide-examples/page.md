@@ -65,6 +65,7 @@ silk guide http request
 silk guide mime content type
 silk guide atomic counter
 silk guide protobuf schema roundtrip
+silk guide unsafe raw memory
 ```
 
 Exact metadata filters:
@@ -100,6 +101,7 @@ Exact guide id:
 ```sh
 silk guide fs/file-roundtrip
 silk guide --show fs/file-roundtrip
+silk guide --show unsafe/raw-memory-checksum
 ```
 
 List seeded guides:

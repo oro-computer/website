@@ -23,17 +23,11 @@ oroc install-app [--platform=<platform>] [--device=<identifier>] [options]
 
 | Option | Description |
 | --- | --- |
-| `-D, --debug` | debug output |
-| `--device[=identifier]` | device identifier (ECID/UDID/ID) |
-| `--platform=<platform>` | android \| ios (default: host) |
-| `--prod` | install production build |
-| `-V, --verbose` | verbose output |
-
-macOS only:
-
-| Option | Description |
-| --- | --- |
-| `--target=<target>` | install into '$target/Applications' (default: /) |
+| `-D, --debug` | enable debug output |
+| `--device[=identifier]` | identifier (ecid, ID) of the device to install to<br>if not specified, tries to run on the current device |
+| `--platform=<platform>` | platform to install application to device (defaults to host)::<br>- android<br>- ios |
+| `--prod` | install production application |
+| `-V, --verbose` | enable verbose output |
 
 ## Common errors
 

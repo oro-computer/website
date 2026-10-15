@@ -22,10 +22,10 @@ Full reference: [regions](/silk/wiki/language/regions/).
 
 ## Syntax
 ```silk
-const region region_buf: u8[1024];
+const region arena: u8[1024];
 
-with region_buf {
-  // `new` allocations use `region_buf` as backing storage.
+with arena {
+  // `new` allocations use `arena` as backing storage.
 }
 ```
 
@@ -37,8 +37,8 @@ struct Point {
 }
 
 fn main () -> int {
-  const region region_buf: u8[1024];
-  with region_buf {
+  const region arena: u8[1024];
+  with arena {
     let p: &Point = new Point{ x: 1, y: 2 };
     return p.x + p.y;
   }

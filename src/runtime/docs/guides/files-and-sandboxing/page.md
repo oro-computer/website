@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "Most serious applications need two kinds of file access:"
+description: "Store app data in its sandbox."
 docsCollection: "runtime"
 section: "guides"
 order: 5
@@ -11,12 +11,7 @@ githubRef: "master"
 
 # Files and sandboxing
 
-Most serious applications need two kinds of file access:
-
-- bundled resources that ship with the app,
-- mutable user data created at runtime.
-
-Oro Runtime supports both, but you should treat the filesystem sandbox as a feature, not an obstacle.
+Store app data in its sandbox. Use a native picker when the user chooses a file outside it.
 
 ## 1) Start with a dedicated app-data directory
 

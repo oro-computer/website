@@ -77,12 +77,10 @@ declare module "oro:enumeration" {
         contains(value: any): boolean;
         /**
          * @ignore
+         * @param {any} value
+         * @return {this}
          */
-        add(): void;
-        /**
-         * @ignore
-         */
-        delete(): void;
+        add(_value: any): this;
         /**
          * JSON represenation of a `Enumeration` instance.
          * @ignore
@@ -92,9 +90,9 @@ declare module "oro:enumeration" {
         /**
          * Internal inspect function.
          * @ignore
-         * @return {LanguageQueryResult}
+         * @return {string}
          */
-        inspect(): LanguageQueryResult;
+        inspect(): string;
     }
     export default Enumeration;
 }

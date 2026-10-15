@@ -122,11 +122,11 @@ workspace module set.
  - boolean literals (`true`/`false`) as “bool literal”,
  - string and character literals as “string literal” and “char literal”,
  - the context-sensitive keyword forms `panic`, `await`, `await *`, `yield`,
- `yield *`, `sizeof`, and `as raw` as Markdown usage help, including
+ `yield *`, `sizeof`, `unsafe`, and `as raw` as Markdown usage help, including
  hovering either token in the two-token `*` and `as raw` forms,
  - identifiers are reported as `identifier 'name'`.
 - Hover now includes lightweight semantic hints:
- - function identifiers show their `fn name (...) -> result` signature when available,
+ - function identifiers show their `fn name (...) -> result` signature when available, preserving an `unsafe fn` calling contract,
  - `let` bindings show the declared (or literal-inferred) type when available,
  - struct / enum / interface / error identifiers report `struct Name` / `enum Name` / `interface Name` / `error Name`,
  - `ext` declarations report `ext name: <type>` when available,
@@ -217,7 +217,7 @@ module set.
  - all language keywords defined in [`src/token.zig`](https://github.com/oro-computer/silk/blob/master/src/token.zig) (via `keywordTable()`),
  tagged with LSP keyword kind,
  - guided keyword-help completions for `panic`, `await`, `await *`, `yield`,
- `yield *`, `sizeof`, `#embed`, and `as raw`, with compact detail strings
+ `yield *`, `sizeof`, `#embed`, `unsafe`, and `as raw`, with compact detail strings
  and Markdown documentation for the typed-error, Promise, Task, byte-size,
  compile-time file embedding, and raw-cast usage contracts,
  - all distinct identifiers lexed from the current document (names that are not recognized as keywords),
@@ -299,6 +299,8 @@ As richer front-end support becomes available, completion may be extended to:
 The server provides a minimal implementation of `textDocument/signatureHelp`:
 
 - Signature help is computed for the innermost call expression at the cursor.
+- Rendered function and method labels preserve the `unsafe fn` calling
+ contract from the indexed declaration.
 - The server supports:
  - direct calls to named functions (`foo(...)`),
  - qualified calls (`std::pkg::foo(...)` and `alias::foo(...)` for namespace imports),
@@ -399,12 +401,63 @@ The server provides `textDocument/formatting` for open documents.
 - The response is whole-document oriented:
  - if the open document is already formatted, the server returns an empty edit list,
  - otherwise it returns one full-range `TextEdit` that replaces the document text with the formatted text.
-- Newline-based `if` / `else if` headers use the same canonical layout as the CLI formatter: chained condition lines are indented one level deeper than the control keyword, and the following standalone `{` aligns back to the control keyword.
+- Multiline `if` / `else if` headers use the same canonical layout as the CLI
+ formatter: continued condition lines are indented one level deeper than the
+ control keyword, and the following standalone `{` aligns back to the control
+ keyword. This also applies when the first condition operand shares the `if`
+ line and later operands continue on following lines.
+- Binary continuation operators end the preceding physical line and
+ comment-free continuations rejoin when the complete line fits the resolved
+ formatter `line_width`. Over-width expressions break after a shallow,
+ low-precedence infix operator. A wrapped flat same-precedence chain keeps its
+ first operand on the header line and gives every later top-level operand a
+ separate continuation line, with the operator trailing; nested
+ higher-precedence expressions remain grouped. Assignment keeps its target,
+ `=`, and a useful first RHS fragment together. A short RHS remains attached
+ even when a long target leaves the line over-width; only a substantial
+ indivisible value with no legal internal breakpoint, or a comment-protected
+ continuation, falls back to starting on the next line.
+- Structured RHS values use the same preferred breakpoints as the CLI:
+ over-width record literals retain their qualified type and opening `{`
+ beside `=` while fields expand, and calls, arrays, and tuple-like lists
+ expand their top-level items before assignment wraps.
+- Record literals in other value positions, including returns, call
+ arguments, match arms, and coalescing expressions, make the same
+ compact-or-field-per-line decision. A sole record argument expands its own
+ fields before the surrounding call is split.
+- Postfix field access breaks before `.` or `?.`; unary and namespace
+ operators stay attached; and `as`, `is`, `->`, and `=>` stay with the type or
+ body they introduce. Multiline match expressions place one top-level arm on
+ each line.
+- Prefix operators/modifiers, postfix `?` / `++` / `--`, variadic `...`, and
+ postfix call/index openers remain attached to the operand they modify.
+ Relation/separator tokens `in`, `from`, `extends`, and `:` use trailing
+ continuations as late fallbacks after clearer RHS structure.
 
 Limitations:
 
-- LSP formatting currently uses the default formatter configuration; editor-specific `FormattingOptions` and `.silk/format.toml` discovery are not yet applied inside the server.
+- LSP formatting independently resolves the nearest `silk.toml` and nearest
+ `.silk/format.toml` from the formatted document's file URI. Explicit local
+ overlay fields refine the manifest policy, omitted fields inherit, and
+ built-in defaults supply any remaining values. The merged policy flows
+ through the same resolver and formatter used by `silk format`.
+- Project configuration takes precedence over editor `FormattingOptions`.
+ This keeps save-time edits identical to `silk format --check` in CI. Clients
+ may still choose whether and when to request formatting.
 - Range formatting is not advertised.
+
+Configured code-quality rules use the same nearest-manifest resolution.
+`[check.rules.cyclomatic_complexity]` findings are published after successful
+parsing, resolution, and type checking with code `L5001`; `warn` maps to LSP
+Warning and `error` maps to LSP Error. Disabling the rule removes its published
+diagnostics on the next analysis pass. An invalid nearest `[check]` policy is
+published as an error on the affected source with the owning manifest path and
+validation detail instead of silently disabling configured analysis.
+The server consumes the same evidence-rich report as the CLI, including
+scope-qualified body names, exact body anchors, baseline/decision equations,
+nesting, and category breakdowns. The structured body and decision model is
+documented in [complexity analysis](/silk/docs/compiler/complexity-analysis/) for future code lenses,
+hovers, navigation, and heat-map consumers.
 
 ## Text Document Lifetime and Diagnostics
 
@@ -477,6 +530,11 @@ Diagnostics are derived from the existing compiler front-end:
 
 - Parsing uses `parser.Parser` and the existing grammar in [grammar](/silk/docs/language/grammar/).
 - Type checking uses `checker.checkModule` and the rules from [types](/silk/docs/language/types/) and related concept docs.
+
+Module-set diagnostics use reclaimable checker scratch independently of document
+AST storage. Allocation exhaustion reports `out of memory while type checking`
+without an unimplemented-language-feature code, consistent with CLI and C99
+diagnostics.
 
 For responsiveness while typing:
 

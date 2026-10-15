@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "This is a guided walkthrough of the core ideas you’ll use in real Silk programs: explicit structure, readable types, predictable control flow, and clear boundaries."
+description: "Read a Silk program through its values, functions, branches, and types."
 docsCollection: "silk"
 section: "guides"
 order: 3
@@ -11,16 +11,7 @@ githubRef: "master"
 
 # Language tour
 
-This is a guided walkthrough of the core ideas you’ll use in real Silk programs: explicit structure, readable types,
-predictable control flow, and clear boundaries.
-
-Silk is designed for explicit structure:
-
-- Programs are organized into **packages** and **modules** with clear boundaries.
-- Types are **spelled out** when they matter (especially at public boundaries).
-- The standard library is under **`std::`** and is designed to be usable for systems programming.
-
-This guide is intentionally example-heavy. For the precise rules, use the reference pages in the sidebar.
+Read a Silk program through its values, functions, branches, and types. For a runnable story, [pack an order](/silk/learn/language-tour/).
 
 ## Program structure: packages and imports
 

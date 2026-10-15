@@ -79,7 +79,6 @@ declare module "oro:process" {
     }
     /**
      * @typedef {Object} ProcessVersionsMap
-     * @property {string} socket - Legacy `process.versions.socket` identifier (frozen at Oro 0.6.0).
      * @property {string} oro - Current Oro Runtime semantic version.
      * @property {string} [uv]
      * @property {string} [llama]
@@ -159,10 +158,6 @@ declare module "oro:process" {
     export const env: ProcessEnvironmentBinding;
     export default process;
     export type ProcessVersionsMap = {
-        /**
-         * - Legacy `process.versions.socket` identifier (frozen at Oro 0.6.0).
-         */
-        socket: string;
         /**
          * - Current Oro Runtime semantic version.
          */

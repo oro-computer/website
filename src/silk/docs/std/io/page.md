@@ -156,7 +156,7 @@ Notes:
  by the hosted async runtime (`io_uring` when available, `poll(2)` fallback).
  On other targets they complete immediately by issuing a blocking `read`/`write`.
  Abortable variants (`read_abortable` / `write_abortable`) accept an optional
- [`std::abort_controller::AbortSignalBorrow`](/silk/docs/std/abort_controller/) and return `IOErrorKind::Aborted`
+ [`std::abort_controller::AbortSignalBorrow`](/silk/docs/std/abort-controller/) and return `IOErrorKind::Aborted`
  when cancelled.
  Note: in the Supported forms, aborts are observed before starting an I/O
  attempt; they do not interrupt an in-flight operation.
@@ -252,7 +252,7 @@ export interface Reader {
 ```
 
 The concrete representation of interfaces will evolve with the language; the
-key point is that [`std::fs`](/silk/docs/std/fs/) and [`std::net`](/silk/docs/std/networking/) can reuse the same I/O traits.
+key point is that [`std::fs`](/silk/docs/std/filesystem/) and [`std::net`](/silk/docs/std/net/) can reuse the same I/O traits.
 
 ## Convenience API
 

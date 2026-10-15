@@ -216,7 +216,7 @@ must be synchronized by the program.
  for timers, fd readiness, I/O, and TCP connect/accept; wider cancellation and
  platform parity remains follow-up work.
 - For cooperative cancellation across tasks and `async` functions, `std::`
- provides WHATWG-style abort signals via [`std::abort_controller`](/silk/docs/std/abort_controller/) (see
+ provides WHATWG-style abort signals via [`std::abort_controller`](/silk/docs/std/abort-controller/) (see
  [abort controller](/silk/docs/std/abort-controller/)).
 
 ## Core Keywords: `async` and `task`

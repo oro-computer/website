@@ -62,6 +62,7 @@ const server = createServer(async (req, res) => {
     res.writeHead(error instanceof URIError ? 400 : code === 'ENOENT' || code === 'ENOTDIR' ? 404 : 500).end()
   }
 })
-server.listen(9877, '127.0.0.1', () => console.log('Serving public/ at http://127.0.0.1:9877'))
+// Omitting host listens on all IPv6 and IPv4 interfaces (dual-stack).
+server.listen(9877, () => console.log('Serving public/ on all interfaces at port 9877'))
 for (const signal of ['SIGINT', 'SIGTERM'] as const)
   process.on(signal, () => server.close())

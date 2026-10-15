@@ -59,6 +59,14 @@ This document specifies the Silk type system used by the compiler front-end and 
  - Diagnostics rule: `u128` / `f128` are language features, so any compiler
  rejection is an implementation gap in a specific compiler path, not a
  language-contract rejection.
+ - Immutable module-level bindings with constant-evaluable wide initializers
+ are available to every function in that module and lower to the same two
+ lanes as equivalent local bindings. The declaration does not need to use
+ `const` merely to be representable by the hosted backend.
+ - Local inference preserves wide operand types through arithmetic and across
+ imported-module lowering. For example, `let product = (a as i128) * (b as
+ i128);` binds `product` as `i128`; adding `: i128` does not change either
+ checking or generated code.
 - Typed errors (`error`, `panic`, and `T | ErrorType...`) are specified in
  [typed errors](/silk/docs/language/typed-errors/). The current compiler models typed error
  contracts as an effect on function return types and expressions.
@@ -155,14 +163,14 @@ The core categories are:
  the effective end bound.
  A `range` value can be used for slicing via `&xs[r]` / `mut &xs[r]`, enabling
  composed ranges (including inclusive ranges) to drive slicing.
-- Function Types: `fn(params) -> R`
- - Examples: `fn(i32) -> i32`.
+- Function Types: `fn(params) -> R` and `unsafe fn(params) -> R`
+ - Examples: `fn(i32) -> i32`, `unsafe fn(u64) -> u8`.
  - Notes: function types are part of the type grammar and function-typed
  values are supported as function values (including capturing closures) in
  Silk currently.
- Concurrency disciplines (`task` / `async`) are implemented on function
- *declarations* (see [concurrency](/silk/docs/language/concurrency/)); function types in type
- positions do not currently include discipline modifiers.
+ The `unsafe` call effect is represented in function types. Concurrency
+ disciplines (`task` / `async`) and explicit `pure` remain declaration-only
+ in the Supported forms (see [concurrency](/silk/docs/language/concurrency/)).
 - Capturing Closures:
  - Notes: capturing closures are supported as function values with an
  environment; see “Function Types and Closures” below for Supported forms
@@ -536,9 +544,10 @@ Silk currently:
  structs/arrays, and called indirectly.
  - the runtime representation is a pair `{ func_ptr, env_ptr }` as specified
  in [memory model](/silk/docs/language/memory-model/).
-- Discipline modifiers for function declarations (`pure` / `task` / `async`) are
- implemented. Function types in type positions do not currently include
- discipline modifiers.
+- Discipline modifiers for function declarations (`pure` / `task` / `async` /
+ `unsafe`) are implemented. In type positions, `unsafe fn (...) -> R` and
+ `unsafe c_fn (...) -> R` represent the unsafe call effect; concurrency and
+ explicit-purity modifiers are not type syntax in the Supported forms.
 
 ### C Function Pointers (`c_fn`)
 
@@ -552,8 +561,28 @@ callbacks to foreign code.
 
 Rules (Supported forms):
 
-- A `c_fn` value may be formed only from:
+- A `c_fn` value may be formed contextually from:
  - a top-level function name, or
  - a non-capturing `fn (...) -> ...` expression.
-- Capturing closures are rejected when a `c_fn` is required.
+- A signature-compatible stored or indirect `fn (...) -> R` value may be
+ converted explicitly with `value as c_fn (...) -> R` (or an alias of the
+ target type).
+- Direct capturing expressions are rejected with `E2128`. An indirect value is
+ checked at runtime and traps if its closure environment is nonzero, so a
+ cast cannot discard captures.
 - `c_fn` values are ABI-lowered as a single `u64` code pointer.
+- `unsafe fn (...) -> R` and `unsafe c_fn (...) -> R` preserve a call-site
+ safety obligation. The effect is part of callable assignability and cannot
+ be erased by storing the value in a safe callable type.
+
+Native wide integer compound assignments to locals and direct struct fields
+use the same arithmetic and narrowing rules as their explicit binary-expression
+assignment equivalents, including fields accessed through mutable references.
+
+Struct-valued conditional expressions use the checker-unified branch type.
+A concrete shape inferred from either branch supplies the context for both
+branches, recursively through `else if` chains.
+
+Local inference applies to optional constructors, optional-valued branches and
+coalescing, and enum-valued conditionals. Explicit annotations continue to
+provide context to literals; inferred types do not permit incompatible payloads.

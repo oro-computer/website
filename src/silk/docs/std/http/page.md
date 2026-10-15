@@ -13,11 +13,11 @@ githubRef: "master"
 
 [`std::http`](/silk/docs/std/http/) provides
 HTTP/1.1 request/response parsing, a small blocking client/server connection
-API on top of [`std::net::TCPStream`](/silk/docs/std/networking/), and ergonomic URL/stream client helpers.
+API on top of [`std::net::TCPStream`](/silk/docs/std/net/), and ergonomic URL/stream client helpers.
 
 See also:
 
-- [networking](/silk/docs/std/networking/) ([`std::net`](/silk/docs/std/networking/))
+- [networking](/silk/docs/std/networking/) ([`std::net`](/silk/docs/std/net/))
 - [https](/silk/docs/std/https/) ([`std::https`](/silk/docs/std/https/) layered on [`std::tls`](/silk/docs/std/tls/))
 - [stream](/silk/docs/std/stream/) ([`std::stream`](/silk/docs/std/stream/) byte streams)
 - [url](/silk/docs/std/url/) ([`std::url`](/silk/docs/std/url/) parsing and serialization)
@@ -29,7 +29,7 @@ See also:
 - HTTP/1.1 request line and response status line parsing.
 - Case-insensitive header scanning (`header(name)`).
 - Body handling via `Content-Length` and `Transfer-Encoding: chunked` (parse/read).
-- Blocking I/O over [`std::net::TCPStream`](/silk/docs/std/networking/).
+- Blocking I/O over [`std::net::TCPStream`](/silk/docs/std/net/).
 - One-shot client helpers:
  - blocking: `request(...)`, `request_v6(...)`
  - async-friendly: `request_async(...)`, `request_v6_async(...)`
@@ -191,7 +191,7 @@ Notes:
  blocking its executor owner thread.
 - `request_url(...)` accepts absolute `http://...` URLs. It parses with
  [`std::url`](/silk/docs/std/url/), uses port `80` when the URL has no explicit non-default port,
- resolves/connects with [`std::net::TCPStream.connect_host(...)`](/silk/docs/std/networking/), derives the
+ resolves/connects with [`std::net::TCPStream.connect_host(...)`](/silk/docs/std/net/), derives the
  request target from `path` + `?query`, and derives the `Host` header from the
  URL host and port.
 - URL helpers reject missing hosts, parse failures, unsupported schemes, and

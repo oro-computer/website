@@ -73,11 +73,12 @@ ${body}
     assert.deepEqual(bodyEdit.errors, [])
     assert.deepEqual(bodyEdit.report.pages.map(p => p.sourcePageFilePath), [pageFiles[0]])
     assert.deepEqual(bodyEdit.report.templates.map(t => t.templateInfo.templateFile.relname).sort(), [
-      'runtime/docs/search.json.template.ts', 'runtime/llms.txt.template.ts',
+      'runtime/docs/search.json.template.ts', 'runtime/llms.txt.template.ts', 'search.json.template.ts',
     ])
     assert.equal(await readFile(join(dest, 'runtime/docs/next/index.html'), 'utf8'), unchanged)
 
     assert.match(await readFile(join(dest, 'runtime/docs/search.json'), 'utf8'), /Changed body/)
+    assert.match(await readFile(join(dest, 'search.json'), 'utf8'), /Changed body/)
     assert.match(await readFile(join(dest, 'runtime/docs/source/start.md'), 'utf8'), /Changed body/)
     assert.match(await readFile(join(dest, 'runtime/llms.txt'), 'utf8'), /Changed body/)
     assert.match(await readFile(join(dest, 'runtime/docs/index.html'), 'utf8'), /id="stable-anchor"/)
@@ -90,7 +91,7 @@ ${body}
     assert.deepEqual(titleEdit.errors, [])
     assert.deepEqual(titleEdit.report.pages.map(p => p.sourcePageFilePath).sort(), [...pageFiles].sort())
     assert.deepEqual(titleEdit.report.templates.map(t => t.templateInfo.templateFile.relname).sort(), [
-      'runtime/docs/search.json.template.ts', 'runtime/llms.txt.template.ts',
+      'runtime/docs/search.json.template.ts', 'runtime/llms.txt.template.ts', 'search.json.template.ts',
     ])
     assert.match(await readFile(join(dest, 'runtime/docs/next/index.html'), 'utf8'), /Renamed/)
   } finally {

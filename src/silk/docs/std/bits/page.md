@@ -24,7 +24,7 @@ backend subset.
 See also:
 
 - [operators](/silk/docs/language/operators/) (bitwise operators and shift semantics)
-- [networking](/silk/docs/std/networking/) ([`std::net`](/silk/docs/std/networking/) byte-order helpers built on the hosted baseline)
+- [networking](/silk/docs/std/networking/) ([`std::net`](/silk/docs/std/net/) byte-order helpers built on the hosted baseline)
 
 ## Exported API
 ```silk

@@ -3,7 +3,7 @@ import type { CheckedPageVars } from '#lib/page-vars.ts'
 const vars = {
   "layout": "learn" as const,
   "title": "Results and Errors · Learn Silk",
-  "description": "Chapter 5 of Learn Silk: use Result(T, E) for recoverable failure and typed errors for contract violations.",
+  "description": "Validate a shipping choice from the command line, handle Result values, and verify success and failure exit codes.",
   "bodyClass": "site-dark product-page learn-page learn-lesson-page silk-learn-page",
   "bodyAttrs": {},
   "product": "silk",

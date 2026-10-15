@@ -4,6 +4,7 @@ import { editUrl } from '#lib/docs.ts'
 import { html, raw, render } from 'fragtml'
 import type { LayoutFunction } from '@domstack/static/types.js'
 import { header, footer } from '#lib/navigation.ts'
+import { searchDialog } from '#lib/search-dialog.ts'
 import { collections, type Collection } from '#lib/collections.ts'
 
 interface RootVars {
@@ -32,7 +33,6 @@ const root: LayoutFunction<RootVars, string> = ({
   const collection = v.docsCollection
     ? collections[v.docsCollection]
     : undefined
-  const editorial = (v.bodyClass || '').includes('editorial-layout')
   const product = collection?.product || v.product || ''
   const title = collection
     ? `${plainTitle(v.title)} · ${v.layout === 'spec' ? 'Silk Spec' : collection.title} · ${v.siteName ?? 'Oro Computer'}`
@@ -40,7 +40,12 @@ const root: LayoutFunction<RootVars, string> = ({
       ? `${plainTitle(v.title)} · ${v.siteName ?? 'Oro Computer'}`
       : v.title
   if (!collection) children = rootContent(children)
+  const bodyClass = [...new Set(('site-dark ' + (v.bodyClass ||
+    (collection ? `docs-page ${product}-${v.layout === 'spec' ? 'spec' : 'docs'}-page` : ''))).split(/\s+/))].join(' ')
   const canonical = new URL(v.redirect || page.url, v.siteUrl).href
+  const editable = !v.redirect && (
+    collection || v.product === 'docs' || ['blog', 'blog-index', 'learn'].includes(v.layout)
+  )
   return render(
     html`<!doctype html>
       <html lang="${v.lang ?? 'en'}">
@@ -49,7 +54,7 @@ const root: LayoutFunction<RootVars, string> = ({
           <meta name="viewport" content="width=device-width, initial-scale=1" />
           <title>${title}</title>
           <meta name="description" content="${v.description || ''}" />
-          <meta name="theme-color" content="#FAF8F4" />
+          <meta name="theme-color" content="#11100F" />
           <link rel="canonical" href="${canonical}" />
           <meta property="og:title" content="${title}" />
           <meta property="og:description" content="${v.description || ''}" />
@@ -95,26 +100,22 @@ const root: LayoutFunction<RootVars, string> = ({
             : null}
         </head>
         <body
-          class="${v.bodyClass ||
-          (collection
-            ? `site-dark docs-page ${product}-${v.layout === 'spec' ? 'spec' : 'docs'}-page`
-            : '')}"
+          class="${bodyClass}"
           ${v.bodyAttrs?.['data-ask-ai'] ? html`data-ask-ai="true"` : null}
         >
           <a class="skip-link" href="#main">Skip to content</a>
-          ${raw(header(product, page.url, editorial))}
+          ${raw(header(product, page.url, false))}
           ${raw(children)}
           ${raw(
             footer(
-              v.footerLabel || collection?.title || '',
-              editorial,
-              editUrl(
+              editable ? editUrl(
                 v.editSource ??
                 page.generated?.pagesFile.pagesFile.relname ??
                 page.pageFile.relname,
-              ),
+              ) : undefined,
             ),
           )}
+          ${raw(searchDialog())}
         </body>
       </html>`,
   )

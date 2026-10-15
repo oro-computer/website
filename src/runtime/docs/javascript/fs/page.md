@@ -1145,9 +1145,9 @@ declare module "oro:fs/index" {
      * @param {(object|function(Error|null, Dir|undefined):any)=} [options]
      * @param {string=} [options.encoding = 'utf8']
      * @param {boolean=} [options.withFileTypes = false]
-     * @param {function(Error|null, Dir|undefined):any)} callback
+     * @param {function(Error|null, Dir|undefined):any} [callback]
      */
-    export function opendir(path: string | Buffer | URL, options?: (object | ((arg0: Error | null, arg1: Dir | undefined) => any)) | undefined, callback: any): void;
+    export function opendir(path: string | Buffer | URL, options?: (object | ((arg0: Error | null, arg1: Dir | undefined) => any)) | undefined, callback?: (arg0: Error | null, arg1: Dir | undefined) => any): void;
     /**
      * Synchronously open a directory.
      * @see {@link https://nodejs.org/api/fs.html#fsreaddirpath-options-callback}
@@ -1206,9 +1206,9 @@ declare module "oro:fs/index" {
      * @param {object|function(Error|null, (Dirent|string)[]|undefined):any} [options]
      * @param {string=} [options.encoding = 'utf8']
      * @param {boolean=} [options.withFileTypes = false]
-     * @param {function(Error|null, (Dirent|string)[]):any} callback
+     * @param {function(Error|null, (Dirent|string)[]):any} [callback]
      */
-    export function readdir(path: string | Buffer | URL, options?: object | ((arg0: Error | null, arg1: (Dirent | string)[] | undefined) => any), callback: (arg0: Error | null, arg1: (Dirent | string)[]) => any): void;
+    export function readdir(path: string | Buffer | URL, options?: object | ((arg0: Error | null, arg1: (Dirent | string)[] | undefined) => any), callback?: (arg0: Error | null, arg1: (Dirent | string)[]) => any): void;
     /**
      * Synchronously read all entries in a directory.
      * @see {@link https://nodejs.org/api/fs.html#fsreaddirpath-options-callback}
@@ -1308,9 +1308,9 @@ declare module "oro:fs/index" {
      * @param {string=} [options.encoding = 'utf8']
      * @param {string=} [options.flag = 'r']
      * @param {AbortSignal|undefined} [options.signal]
-     * @param {function(Error|null, Stats|undefined):any} callback
+     * @param {function(Error|null, Stats|undefined):any} [callback]
      */
-    export function stat(path: string | Buffer | URL | number, options?: (object | ((arg0: Error | null, arg1: Stats | undefined) => any)) | undefined, callback: (arg0: Error | null, arg1: Stats | undefined) => any): void;
+    export function stat(path: string | Buffer | URL | number, options?: (object | ((arg0: Error | null, arg1: Stats | undefined) => any)) | undefined, callback?: (arg0: Error | null, arg1: Stats | undefined) => any): void;
     /**
      * Get the stats of a symbolic link
      * @param {string|Buffer|URL|number} path - filename or file descriptor
@@ -1318,9 +1318,9 @@ declare module "oro:fs/index" {
      * @param {string=} [options.encoding = 'utf8']
      * @param {string=} [options.flag = 'r']
      * @param {AbortSignal|undefined} [options.signal]
-     * @param {function(Error|null, Stats|undefined):any} callback
+     * @param {function(Error|null, Stats|undefined):any} [callback]
      */
-    export function lstat(path: string | Buffer | URL | number, options?: (object | ((arg0: Error | null, arg1: Stats | undefined) => any)) | undefined, callback: (arg0: Error | null, arg1: Stats | undefined) => any): void;
+    export function lstat(path: string | Buffer | URL | number, options?: (object | ((arg0: Error | null, arg1: Stats | undefined) => any)) | undefined, callback?: (arg0: Error | null, arg1: Stats | undefined) => any): void;
     /**
      * Synchronously get stats of a symbolic link
      * @param {string|Buffer|URL} path
@@ -1331,9 +1331,9 @@ declare module "oro:fs/index" {
      * Creates a symlink of `src` at `dest`.
      * @param {string} src
      * @param {string} dest
-     * @param {function(Error|null):any} callback
+     * @param {function(Error|null):any} [callback]
      */
-    export function symlink(src: string, dest: string, type: any, callback: (arg0: Error | null) => any): void;
+    export function symlink(src: string, dest: string, type?: any, callback?: (arg0: Error | null) => any): void;
     /**
      * Synchronously create a symlink
      * @param {string} src
@@ -1368,9 +1368,9 @@ declare module "oro:fs/index" {
      * @param {string=} [options.mode = 0o666]
      * @param {string=} [options.flag = 'w']
      * @param {AbortSignal|undefined} [options.signal]
-     * @param {function(Error|null):any} callback
+     * @param {function(Error|null):any} [callback]
      */
-    export function writeFile(path: string | Buffer | URL | number, data: string | Buffer | TypedArray | DataView | object, options?: (object | ((arg0: Error | null) => any)) | undefined, callback: (arg0: Error | null) => any): void;
+    export function writeFile(path: string | Buffer | URL | number, data: string | Buffer | TypedArray | DataView | object, options?: (object | ((arg0: Error | null) => any)) | undefined, callback?: (arg0: Error | null) => any): void;
     /**
      * Writes data to a file synchronously.
      * @param {string|Buffer|URL|number} path - filename or file descriptor
@@ -1482,7 +1482,6 @@ declare module "oro:fs/index" {
      */
     export function watch(path: any, options?: (Function | object) | undefined, callback?: Function | undefined): Watcher;
     export default exports;
-    export type Buffer = import("oro:buffer").Buffer;
     export type TypedArray = Uint8Array | Int8Array;
     import { Stats } from "oro:fs/stats";
     import { Buffer } from "oro:buffer";
@@ -1738,9 +1737,7 @@ declare module "oro:fs/promises" {
      * @return {Watcher}
      */
     export function watch(path: any, options?: (Function | object) | undefined): Watcher;
-    export type Stats = import("oro:fs/stats").Stats;
     export default exports;
-    export type Buffer = import("oro:buffer").Buffer;
     export type TypedArray = Uint8Array | Int8Array;
     import { Buffer } from "oro:buffer";
     import { FileHandle } from "oro:fs/handle";
@@ -1756,7 +1753,7 @@ declare module "oro:fs/promises" {
     import { WriteStream } from "oro:fs/stream";
     import * as exports from "oro:fs/promises";
 
-    export { bookmarks, constants, Dir, DirectoryHandle, Dirent, fds, FileHandle, ReadStream, Watcher, WriteStream };
+    export { bookmarks, constants, Dir, DirectoryHandle, Dirent, fds, FileHandle, ReadStream, Stats, Watcher, WriteStream };
 }
 ```
 
@@ -1771,10 +1768,10 @@ declare module "oro:fs/stats" {
         /**
          * Creates a `Stats` instance from input, optionally with `BigInt` data types
          * @param {object|Stats} [stat]
-         * @param {fromBigInt=} [fromBigInt = false]
+         * @param {boolean=} [fromBigInt = false]
          * @return {Stats}
          */
-        static from(stat?: object | Stats, fromBigInt?: any | undefined): Stats;
+        static from(stat?: object | Stats, fromBigInt?: boolean | undefined): Stats;
         /**
          * `Stats` class constructor.
          * @param {object|Stats} stat
@@ -1794,6 +1791,10 @@ declare module "oro:fs/stats" {
         mtimeMs: any;
         ctimeMs: any;
         birthtimeMs: any;
+        atimeNs: any;
+        mtimeNs: any;
+        ctimeNs: any;
+        birthtimeNs: any;
         atime: Date;
         mtime: Date;
         ctime: Date;

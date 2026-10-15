@@ -6,8 +6,7 @@
               <div class="hero-kicker">Oro Runtime</div>
               <h1>Build native applications from web projects.</h1>
               <p class="lede">
-                Oro Runtime keeps the web programming model, then adds native windows, files, notifications, service
-                workers, storage, background work, packaging, and signed updates.
+                Build a web interface, then add native windows, local storage, and desktop integration.
               </p>
               <div class="hero-actions">
                 <a class="button button-primary" href="/runtime/learn/">Start learning</a>
@@ -25,8 +24,8 @@
               </div>
               <div class="panel-body">
                 <pre><code class="language-bash">oroc init field-notes
-oroc build .
-oroc run .</code></pre>
+cd field-notes
+oroc build --run .</code></pre>
                 <p>Create a project, build it, and run it locally.</p>
               </div>
             </div>
@@ -39,8 +38,7 @@ oroc run .</code></pre>
           <div class="prose">
             <h2>Programming model</h2>
             <p>
-              The web platform is the UI toolkit. Oro Runtime adds a deliberate native capability layer and a CLI workflow
-              that turns a project directory into a native package.
+              Use the platform WebView for the interface, import native APIs, and package the app with <code>oroc</code>.
             </p>
           </div>
 
@@ -49,7 +47,7 @@ oroc run .</code></pre>
               <div class="card-body">
                 <h3 class="card-title">Service workers</h3>
                 <div class="card-meta">
-                  Route offline assets, custom protocols, and app-local requests through the same web model you already know.
+                  Cache the app shell and route offline requests.
                 </div>
                 <div class="card-links">
                   <a class="button button-quiet" href="/runtime/docs/guides/offline-first-with-service-workers/">Service worker guide</a>
@@ -61,8 +59,7 @@ oroc run .</code></pre>
               <div class="card-body">
                 <h3 class="card-title">Files and notifications</h3>
                 <div class="card-meta">
-                  Use sandboxed file APIs, file pickers, clipboard, notifications, and desktop integration where those
-                  capabilities create real user value.
+                  Let users choose files, copy content, and receive notifications.
                 </div>
                 <div class="card-links">
                   <a class="button button-quiet" href="/runtime/docs/guides/desktop-integrations/">Desktop integrations</a>
@@ -74,8 +71,7 @@ oroc run .</code></pre>
               <div class="card-body">
                 <h3 class="card-title">Window management</h3>
                 <div class="card-meta">
-                  Open secondary windows, send messages between windows, coordinate shared workers, and keep local app state
-                  predictable across native shells.
+                  Open a preview window and share data with it.
                 </div>
                 <div class="card-links">
                   <a class="button button-quiet" href="/runtime/docs/guides/windows-and-messaging/">Windows guide</a>
@@ -90,7 +86,7 @@ oroc run .</code></pre>
         <div class="container">
           <div class="prose">
             <h2>Docs map</h2>
-            <p>A short path through the CLI, configuration, and the full JavaScript API surface.</p>
+            <p>Look up commands, configuration, and JavaScript APIs.</p>
           </div>
 
           <div class="list mt-lg">

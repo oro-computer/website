@@ -11,9 +11,22 @@ import { collections } from '#lib/collections.ts'
 const baseline = JSON.parse(
   await readFile(new URL('../fixtures/legacy-routes.json', import.meta.url), 'utf8'),
 )
+test('global search covers the public site with unique local destinations', async () => {
+  const { items } = JSON.parse(await readFile('public/search.json', 'utf8'))
+  assert.ok(items.length > 500)
+  assert.equal(new Set(items.map((item: { url: string }) => item.url)).size, items.length)
+  for (const path of ['/runtime/docs/', '/silk/docs/', '/silk/wiki/', '/runtime/learn/getting-started/', '/silk/learn/getting-started/', '/blog/2026/hello-world/'])
+    assert.ok(items.some((item: { url: string }) => item.url === path), path)
+  for (const item of items) {
+    assert.match(item.url, /^\/(?!\/)/)
+    assert.doesNotMatch(item.url, /^\/(?:sage|slg|virtnosis)\//)
+    assert.ok(item.title)
+    await access('public' + item.url + 'index.html')
+  }
+})
 test('all original routes and documents have static HTML and unchanged raw endpoints', async () => {
-  assert.equal(baseline.documents.length, 585)
-  assert.equal(baseline.html.length, 27)
+  assert.equal(baseline.documents.length, 523)
+  assert.equal(baseline.html.length, 21)
   for (const route of baseline.html)
     await access('public' + route + 'index.html')
   for (const doc of baseline.documents) {
@@ -147,4 +160,26 @@ test('legacy document lookups normalize IDs and reject missing or inherited entr
   assert.equal(legacyTarget('./guides/hello-world.md', map), map['guides/hello-world'])
   assert.equal(legacyTarget('missing', map), undefined)
   assert.equal(legacyTarget('constructor', map), undefined)
+})
+
+test('CLI tables retain option alternatives and literal placeholders', async () => {
+  const { readdir } = await import('node:fs/promises')
+  const { markdown } = await import('#lib/markdown.ts')
+  const parser = markdown()
+  const root = 'src/runtime/docs/cli'
+  for (const path of (await readdir(root, { recursive: true })).filter(path => path.endsWith('page.md'))) {
+    const { body } = splitPage(await readFile(root + '/' + path, 'utf8'))
+    const tokens = parser.parse(body, {})
+    for (const token of tokens.flatMap(token => token.children ?? [])) {
+      if (token.type === 'html_inline')
+        assert.match(token.content, /^<br\s*\/?>$/i, `${path}: placeholder parsed as HTML: ${token.content}`)
+    }
+    const $ = load(parser.render(body))
+    $('tbody tr').each((_, row) => assert.equal($(row).children('td').length, 2, path))
+  }
+  const $ = load(await readFile('public/runtime/docs/cli/update/bundle/index.html', 'utf8'))
+  const option = $('.prose tbody tr').filter((_, row) => $(row).text().includes('--hash-algorithm'))
+  assert.equal(option.find('td').first().text(), '--hash-algorithm=<sha256|sha1>')
+  assert.match(option.find('td').last().text(), /hash algorithm.*default: sha256/)
+  assert.ok($('.prose').text().includes('<build_name>-<version>.tar'))
 })

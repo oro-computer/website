@@ -314,13 +314,14 @@ declare module "oro:async/context" {
          * and ensuring the environment is reverted back afterwards.
          * The function allows for the modification of a specific context's
          * state in a controlled manner, ensuring that any changes can be undone.
-         * @template T, F extends AnyFunc<null>
+         * @template T
+         * @template {AnyFunc} F
          * @param {T} value
          * @param {F} fn
-         * @param {...Parameters<F>} args
+         * @param {...any} args
          * @returns {ReturnType<F>}
          */
-        run<T_1, F>(value: T_1, fn: F, ...args: Parameters<F>[]): ReturnType<F>;
+        run<T_1, F extends AnyFunc>(value: T_1, fn: F, ...args: any[]): ReturnType<F>;
         /**
          * Get the `AsyncContext.Variable` value.
          * @template T
@@ -350,21 +351,21 @@ declare module "oro:async/context" {
          *
          * @see {@link https://github.com/tc39/proposal-async-context/blob/master/README.md#asynccontextsnapshotwrap}
          *
-         * @template F
+         * @template {AnyFunc} F
          * @param {F} fn
          * @returns {F}
          */
-        static wrap<F>(fn: F): F;
+        static wrap<F extends AnyFunc>(fn: F): F;
         /**
          * Runs the given function `fn` with arguments `args`, using a `null`
          * context and the current snapshot.
          *
-         * @template F extends AnyFunc<null>
+         * @template {AnyFunc} F
          * @param {F} fn
-         * @param {...Parameters<F>} args
+         * @param {...any} args
          * @returns {ReturnType<F>}
          */
-        run<F>(fn: F, ...args: Parameters<F>[]): ReturnType<F>;
+        run<F extends AnyFunc>(fn: F, ...args: any[]): ReturnType<F>;
         #private;
     }
     /**
@@ -492,10 +493,10 @@ declare module "oro:async/deferred" {
 declare module "oro:async/hooks" {
     /**
      * Factory for creating a `AsyncHook` instance.
-     * @param {AsyncHookCallbackOptions|AsyncHookCallbacks=} [callbacks]
+     * @param {AsyncHookCallbacks=} [callbacks]
      * @return {AsyncHook}
      */
-    export function createHook(callbacks?: (AsyncHookCallbackOptions | AsyncHookCallbacks) | undefined): AsyncHook;
+    export function createHook(callbacks?: AsyncHookCallbacks | undefined): AsyncHook;
     /**
      * A container for `AsyncHooks` callbacks.
      * @ignore

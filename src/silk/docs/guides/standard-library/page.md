@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "Silk’s standard library lives under the reserved std:: namespace. This is where “practical systems programming” shows up: I/O, filesystem, networking, parsing, collections, time, and the shared conven"
+description: "Read a file with std/fs, then choose the module for your next task."
 docsCollection: "silk"
 section: "guides"
 order: 7
@@ -11,101 +11,11 @@ githubRef: "master"
 
 # Standard library
 
-Silk’s standard library lives under the reserved `std::` namespace. This is where “practical systems programming” shows up:
-I/O, filesystem, networking, parsing, collections, time, and the shared conventions that make those modules compose.
+Read a message from disk with `std/fs`. The same import style works for the rest of Silk's standard library.
 
-This page is not a full reference (the sidebar is). It’s a guide to the **shape** of `std::`, how to use it, and what
-patterns to expect.
+## Read a file
 
-## Importing `std::` modules
-
-Use module-specifier imports for application and library code:
-
-```silk
-import io from "std/io";              // namespace import; call io::println(...)
-import { println } from "std/io";     // selected symbol import
-import fs from "std/fs";              // filesystem namespace
-```
-
-Use selected imports when a small program needs one or two names. Use namespace
-imports when a module uses a cohesive surface such as `fs::read_file_string`.
-Direct imports such as `import std::io::println;` remain available for ABI-facing
-definition modules and low-level interop code; ordinary user-space code should
-prefer `from "std/..."`.
-
-Some standard-library types are always in scope through the std prelude. `Result`
-is one of those globals, so user code writes `Result(T, E)` without importing
-[`std/result`](https://github.com/oro-computer/silk/tree/master/std/result).
-
-## The three common “return shapes”
-
-`std::` APIs intentionally reuse a small set of patterns so code stays readable.
-
-### 1) Optionals: `T?`
-
-`T?` means “a `T` or no value” (`Some(...)` / `None`).
-
-Use this when “absence” is expected and you don’t need rich error information.
-
-```silk
-fn parse_port (s: string) -> int? {
-  // Example sketch: a real parser would validate digits.
-  if s == "" { return None; }
-  return Some(8080);
-}
-```
-
-### 2) Results: `Result(T, E)`
-
-`Result(T, E)` is the standard “success or error” type used across `std::`.
-
-```silk
-type IntOrMessage = Result(int, string);
-
-fn div (a: int, b: int) -> IntOrMessage {
-  if b == 0 { return Err("division by zero"); }
-  return Ok(a / b);
-}
-```
-
-In real code you typically [`match`](/silk/wiki/language/flow-match/) on a result so success and failure paths stay explicit.
-
-### 3) Typed errors: `T | E`
-
-Silk supports typed errors directly in the language: a value is either a success type `T` or an error type `E`.
-
-This is a good fit when:
-
-- the error has structure (fields), and
-- callers are expected to handle distinct failure reasons.
-
-You’ll see both `T | E` and `Result(T, E)` in the ecosystem; `std::` uses `Result` heavily because it composes cleanly and
-is easy to pattern-match.
-
-## A quick tour of key modules
-
-### [`std::io`](/silk/docs/std/io/) — printing and stream I/O
-
-[`std::io`](/silk/docs/std/io/) covers console I/O and basic stream patterns.
-
-```silk
-import { println } from "std/io";
-
-fn main () -> int {
-  println("hello {s} answer={d}", "world", 42);
-  return 0;
-}
-```
-
-When you need lower-level I/O, [`std::io`](/silk/docs/std/io/) also exposes byte-oriented read/write primitives and stable error kinds.
-
-Reference: [`std::io`](/silk/docs/std/io/) (see the sidebar under “Standard library”).
-
-### [`std::fs`](/silk/docs/std/fs/) — filesystem operations
-
-[`std::fs`](/silk/docs/std/fs/) provides file and directory helpers and a low-level `File` handle.
-
-Whole-file helpers are intentionally common:
+With [Silk installed](/silk/docs/usage/getting-started/), save this as `read-message.slk`:
 
 ```silk
 import fs from "std/fs";
@@ -126,60 +36,44 @@ fn main () -> int {
 }
 ```
 
-Reference: [`std::fs`](/silk/docs/std/fs/), [`std::path`](/silk/docs/std/path/).
+Create the input and run the program:
 
-### [`std::strings`](/silk/docs/std/strings/) — owned strings and utilities
+```bash
+printf 'Delivery confirmed\n' > message.txt
+mkdir -p build
+silk build read-message.slk -o build/read-message
+./build/read-message
+```
 
-Silk has a built-in `string` type (an immutable view over UTF‑8 bytes). The standard library adds an owning `String` for
-when you need to build or retain dynamic strings.
+Expect `Delivery confirmed`. Remove `message.txt` and run again: expect `read failed` and exit status `1`.
 
-Reference: [`std::strings`](/silk/docs/std/strings/), [`std::unicode`](/silk/docs/std/unicode/).
+`Ok` carries the owned text; `as_string()` exposes a view for printing. [Filesystem APIs](/silk/docs/std/fs/) describe the error types and file handles.
 
-### [`std::json`](/silk/docs/std/json/) and [`std::toml`](/silk/docs/std/toml/) — configuration and structured data
+## Choose the next module
 
-Silk includes parsers for data formats used in real programs:
+| Task | Reference |
+| --- | --- |
+| Print or stream data | [`std/io`](/silk/docs/std/io/) |
+| Build an owned string | [`std/strings`](/silk/docs/std/strings/) |
+| Read configuration | [`std/toml`](/silk/docs/std/toml/) |
+| Exchange structured data | [`std/json`](/silk/docs/std/json/) |
+| Run concurrent work | [Concurrency tutorial](/silk/docs/usage/tutorials/05-concurrency/) |
+| Run device code | [CPU/GPU walkthrough](/silk/docs/usage/pure-silk-gpu/) |
 
-- [`std::toml`](/silk/docs/std/toml/) for configuration (including `silk.toml` manifests)
-- [`std::json`](/silk/docs/std/json/) for interoperability and structured data exchange
-- [`std::mime`](/silk/docs/std/mime/) for file-extension and content-type lookups in static servers,
- package publication helpers, and indexing tools
+For return types, follow [optionals](/silk/learn/types-and-optionals/) and [results](/silk/learn/results-and-errors/). The [module index](/silk/docs/std/overview/) covers the full library.
 
-Reference: [`std::toml`](/silk/docs/std/toml/), [`std::json`](/silk/docs/std/json/), [`std::mime`](/silk/docs/std/mime/).
-
-### [`std::task`](/silk/docs/std/task/), [`std::sync`](/silk/docs/std/sync/), [`std::temporal`](/silk/docs/std/temporal/)
-
-For concurrent and time-aware programs, `std::` provides:
-
-- [`std::task`](/silk/docs/std/task/) (tasks, scheduling primitives)
-- [`std::sync`](/silk/docs/std/sync/) (mutexes/locks and synchronization)
-- [`std::temporal`](/silk/docs/std/temporal/) (time types like `Duration`/`Instant`)
-
-Reference: [`std::task`](/silk/docs/std/task/), [`std::sync`](/silk/docs/std/sync/), [`std::temporal`](/silk/docs/std/temporal/).
-
-### [`std::gpu`](/silk/docs/std/gpu/) — portable device execution
-
-[`std::gpu`](/silk/docs/std/gpu/) provides runtime discovery, device selection, buffers, transfers,
-streams, launch, and synchronization for mixed CPU/GPU executables. Portable
-device functions use [`std::gpu::device`](/silk/docs/std/gpu-device/) operations and the same source can
-target the documented AMD/HIP and NVIDIA/CUDA providers.
-
-Use the checked `gpu (...) { ... }` form when launch and synchronization should
-remain one typed operation. Use the separate manual APIs when GPU work must
-overlap with host work.
-
-Reference: [`std::gpu`](/silk/docs/std/gpu/), [`std::gpu::device`](/silk/docs/std/gpu-device/),
-[GPU launch blocks](/silk/docs/language/gpu-launch-blocks/), and [Pure-Silk CPU/GPU
-program](/silk/docs/usage/pure-silk-gpu/).
-
-## How to keep `std::` code readable
-
-Two patterns pay off quickly:
-
-1. **Use small local aliases for verbose types.** For example, alias a `Result` instantiation to a short name.
-2. **Prefer [`match`](/silk/wiki/language/flow-match/) at boundaries.** Convert errors into your own types at module boundaries, so the rest of your program
- doesn’t become a chain of “plumbing”.
-
-## Next
-
-- [CLI and toolchain](/silk/docs/guides/cli/)
-- [Testing](/silk/docs/guides/testing/)
+<!-- Preserve existing section links; details now live in the linked references. -->
+<span id="importing-std-modules"></span>
+<span id="the-three-common-return-shapes"></span>
+<span id="1-optionals-t"></span>
+<span id="2-results-resultt-e"></span>
+<span id="3-typed-errors-t--e"></span>
+<span id="a-quick-tour-of-key-modules"></span>
+<span id="stdio--printing-and-stream-io"></span>
+<span id="stdfs--filesystem-operations"></span>
+<span id="stdstrings--owned-strings-and-utilities"></span>
+<span id="stdjson-and-stdtoml--configuration-and-structured-data"></span>
+<span id="stdtask-stdsync-stdtemporal"></span>
+<span id="stdgpu--portable-device-execution"></span>
+<span id="how-to-keep-std-code-readable"></span>
+<span id="next"></span>

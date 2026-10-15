@@ -26,18 +26,18 @@ oroc mcp [options] [<workspace-dir>]
 
 | Option | Description |
 | --- | --- |
-| `--stdio` | stdio transport (default) |
-| `--http` | HTTP/SSE transport |
-| `--host=<host>` | bind host (default: 127.0.0.1) |
-| `--port=<port>` | bind port (default: 0 for ephemeral) |
-| `--endpoint=<path>` | endpoint path (default: /mcp) |
-| `--token=<token>` | require bearer token (default varies) |
+| `--stdio` | use stdio transport (default) |
+| `--http` | use HTTP/SSE transport |
+| `--host=<host>` | HTTP bind host (default: 127.0.0.1) |
+| `--port=<port>` | HTTP bind port (default: 0 for ephemeral) |
+| `--endpoint=<path>` | HTTP endpoint path (default: /mcp; normalizes mcp,/mcp,/mcp/) |
+| `--token=<token>` | require this bearer token (default: auto-generated in HTTP mode) |
 | `--no-auth` | disable token auth (loopback only) |
-| `--workspace=<path>` | workspace root (default: CWD or <workspace-dir>) |
-| `--config=<path>` | oro.toml path relative to workspace (default: oro.toml) |
-| `--read-workspace-only` | restrict filesystem reads to workspace root |
-| `--allow-read-outside-workspace` | allow reading files outside workspace (default) |
-| `--replace-sse-stream` | allow a new SSE connection to replace an existing one |
+| `--workspace=<path>` | explicit workspace root (default: current directory or `<workspace-dir>`) |
+| `--config=<path>` | workspace-relative oro.toml/oro.ini path to use as the active project config |
+| `--read-workspace-only` | restrict filesystem reads to the workspace root (default; compatibility flag) |
+| `--allow-read-outside-workspace` | explicitly allow reading arbitrary files outside the workspace root |
+| `--replace-sse-stream` | allow a new SSE connection to replace an existing one for the same session id |
 
 ## Notes
 

@@ -9,11 +9,11 @@ githubRepo: "oro-computer/silk"
 githubRef: "master"
 ---
 
-# [`std::abort_controller`](/silk/docs/std/abort_controller/)
+# [`std::abort_controller`](/silk/docs/std/abort-controller/)
 
-This is the canonical module doc for [`std::abort_controller`](/silk/docs/std/abort_controller/).
+This is the canonical module doc for [`std::abort_controller`](/silk/docs/std/abort-controller/).
 
-[`std::abort_controller`](/silk/docs/std/abort_controller/) provides the WHATWG-style cooperative cancellation API
+[`std::abort_controller`](/silk/docs/std/abort-controller/) provides the WHATWG-style cooperative cancellation API
 shipped in [`std/abort_controller.slk`](https://github.com/oro-computer/silk/blob/master/std/abort_controller.slk): `AbortController`, `AbortSignal`, and
 `AbortSignalBorrow`.
 

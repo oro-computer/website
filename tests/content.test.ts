@@ -47,6 +47,12 @@ test('legacy routes and aliases resolve without dropping hashes or unrelated que
   )
 })
 
+test('wiki compiler references resolve to Silk docs during ingestion', () => {
+  for (const input of ['?p=compiler/cli-silk', '?p=docs/compiler/cli-silk']) {
+    assert.equal(canonicalLink(input, '/silk/wiki/', 'std/args.md'), '/silk/docs/compiler/cli-silk/')
+  }
+})
+
 test('public-copy normalization preserves fenced examples and literal double braces', () => {
   const code =
     '// Works today: do not rewrite this comment\nconst value = "{{ literal }}";\n'
@@ -233,4 +239,11 @@ test('refreshed linked API headings produce plain titles and new pages can refer
   } finally {
     await rm(site, { recursive: true, force: true })
   }
+})
+
+test('upstream support labels survive public-copy normalization', () => {
+  const source = '# Setup\n\nCurrent support:\n\n- Linux\n- macOS\n'
+  const result = publicContent(source, 'silk', 'usage/github-actions.md')
+  assert.ok(result.includes('Supported platforms:\n'))
+  assert.ok(!result.includes('\n:\n'))
 })

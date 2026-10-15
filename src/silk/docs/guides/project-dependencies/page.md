@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "Silk projects build dependencies from package roots on disk. A dependency can be an explicit local path, a package found under a packages/ search root, or an installed package root. The examples/proje"
+description: "Add packages from local paths or installed roots."
 docsCollection: "silk"
 section: "guides"
 order: 5
@@ -11,10 +11,7 @@ githubRef: "master"
 
 # Project Dependencies
 
-Silk projects build dependencies from package roots on disk. A dependency can be
-an explicit local path, a package found under a `packages/` search root, or an
-installed package root. The [`examples/projects/cove/`](https://github.com/oro-computer/silk/tree/master/examples/projects/cove/) project in the Silk
-compiler checkout is the concrete model for this workflow.
+Add packages from local paths or installed roots. The [Cove project](https://github.com/oro-computer/silk/tree/master/examples/projects/cove) shows the complete layout.
 
 ## Cove layout
 

@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "Oro Runtime can target Android and Apple devices from the same project model. The key is to separate three concerns:"
+description: "Build the app for Android or iOS, then install it on a device or simulator."
 docsCollection: "runtime"
 section: "guides"
 order: 19
@@ -11,11 +11,7 @@ githubRef: "master"
 
 # Mobile targets and device installs
 
-Oro Runtime can target Android and Apple devices from the same project model. The key is to separate three concerns:
-
-- installing toolchains,
-- choosing a target device,
-- building and installing the app artifact.
+Build the app for Android or iOS, then install it on a device or simulator.
 
 ## 1) Install the platform toolchains first
 
@@ -31,7 +27,7 @@ For Apple targets:
 oroc setup --platform=ios
 ```
 
-Run this before you debug device issues. Most "build is broken" reports are really missing SDK state.
+Check SDK setup before diagnosing the app build.
 
 ## 2) Keep machine-local target choices in `.ororc`
 

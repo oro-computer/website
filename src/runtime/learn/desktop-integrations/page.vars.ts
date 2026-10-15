@@ -3,7 +3,7 @@ import type { CheckedPageVars } from '#lib/page-vars.ts'
 const vars = {
   "layout": "learn" as const,
   "title": "Desktop Integrations · Learn Oro Runtime",
-  "description": "Chapter 5 of Learn Oro Runtime: add notifications, clipboard actions, and a native application menu.",
+  "description": "Copy a draft, opt into save notifications, and connect an optional native menu without breaking save behavior.",
   "bodyClass": "site-dark product-page learn-page learn-lesson-page runtime-learn-page",
   "bodyAttrs": {},
   "product": "runtime",

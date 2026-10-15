@@ -34,6 +34,11 @@ What works end-to-end today (parser → checker → lowering → codegen):
 - **Construction**:
  - unit variants as values: `E::A`,
  - tuple variants as calls: `E::Data(7)`.
+ - local bindings infer the enum type from a qualified constructor:
+ `let value = E::A;` retains the same enum identity as `let value: E = E::A;`,
+ including constructors reached through named imports or type aliases.
+ Inferred bindings from enum-valued fields likewise retain that identity;
+ copying or moving the value follows the enum's payload ownership rules.
  - type-directed shorthand:
  - when the expected type is an enum `E`, unit variants may be written as `A`
  (sugar for `E::A`),

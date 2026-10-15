@@ -6,51 +6,35 @@
               <div class="hero-kicker">Silk</div>
               <h1>Systems language with formal verification built in.</h1>
               <p class="lede">
-                Silk is designed for explicit modules, visible imports, clear ABI boundaries, target-aware code, and proofs
-                that live with the program. Start with small programs, then move into packages, stdlib APIs, embedders, and
-                Formal Silk.
+                Write native tools and libraries with practical modules, typed failures, and contracts the compiler checks.
               </p>
               <div class="hero-actions">
                 <a class="button button-primary" href="/silk/learn/">Start learning</a>
                 <a class="button" href="/silk/docs/">Read the docs</a>
                 <a class="button" href="/silk/wiki/">Wiki</a>
                 <a class="button" href="/silk/spec/2026/">Spec (2026)</a>
-                <a class="button button-quiet" href="https://github.com/oro-computer" target="_blank" rel="noreferrer">GitHub</a>
+                <a class="button button-quiet" href="https://github.com/oro-computer/silk" target="_blank" rel="noreferrer">GitHub</a>
               </div>
             </div>
 
-            <div class="panel hero-code-panel" aria-label="Hello Silk language sample">
+            <div class="panel hero-code-panel" aria-label="Silk compile-time contracts">
               <div class="panel-header">
-                <div class="panel-title">Getting Started</div>
-                <a class="button button-quiet" href="/silk/docs/guides/hello-world/">Guide</a>
+                <div class="panel-title">A checked withdrawal</div>
+                <a class="button button-quiet" href="/silk/docs/guides/formal-silk/">Walkthrough</a>
               </div>
               <div class="panel-body">
-                <pre><code class="language-silk">package hello;
-import { println } from "std/io";
-task fn score () -&gt; int { return 21 * 2; }
-async fn configured_name () -&gt; string? { return Some("silk"); }
-
-interface Greeter { fn write(n: string, s: int) -&gt; void; }
-struct ConsoleGreeter { label: string, }
-
-impl ConsoleGreeter as Greeter {
-  fn write (self: &amp;ConsoleGreeter, n: string, s: int) -&gt; void {
-    println("[{s}] {s}: {d}", self.label, n, s);
-  }
+                <p>Amounts are cents. Valid withdrawals keep the balance non-negative.</p>
+                <pre><code class="language-silk">#require balance &gt;= 0;
+#require amount &gt;= 0 &amp;&amp; amount &lt;= balance;
+#assure result == balance - amount;
+#assure result &gt;= 0;
+fn withdraw (balance: int, amount: int) -&gt; int {
+  return balance - amount;
 }
-fn platform () -&gt; string {
-  if attr(target="wasm32-wasi") { return "wasi"; }
-  if attr(os="linux") { return "linux"; }
-  return "host";
-}
-async fn main () -&gt; int {
-  let raw = await configured_name();
-  let name: Result(string, string) = Ok(raw ?? "world");
-  let greeter = ConsoleGreeter{ label: platform() };
-  match (name) {
-    Ok(v) =&gt; greeter.write(v, yield score()),
-    Err(e) =&gt; println("error: {s}", e),
-  };
+
+fn main () -&gt; int {
+  let remaining = withdraw(100, 30);
+  #assert remaining == 70;
   return 0;
 }</code></pre>
               </div>
@@ -63,7 +47,7 @@ async fn main () -&gt; int {
         <div class="container">
           <div class="prose">
             <h2>Start</h2>
-            <p>A short path into the language, toolchain, references, and verification model.</p>
+            <p>Write a program, then choose your next task.</p>
           </div>
 
           <div class="list mt-lg">

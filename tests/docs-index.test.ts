@@ -119,9 +119,10 @@ test('reset caches only cloneable projections, including non-doc routes and redi
     pageInfo: { url: landing.pageInfo.url, outputRelname: landing.pageInfo.outputRelname,
       pageFile: { relname: landing.sourceId } },
     vars: { redirectFrom: ['/old-landing/'] },
+    sitePage: { url: landing.pageInfo.url, title: 'landing', summary: 'landing summary', section: 'Runtime', text: '' },
   })
   for (const entry of result.state.values()) {
-    assert.deepEqual(Object.keys(entry).sort(), entry.doc ? ['doc', 'pageInfo', 'vars'] : ['pageInfo', 'vars'])
+    assert.deepEqual(Object.keys(entry).sort(), entry.doc ? ['doc', 'pageInfo', 'vars'] : ['pageInfo', 'sitePage', 'vars'])
     assert.deepEqual(Object.keys(entry.pageInfo).sort(), ['outputRelname', 'pageFile', 'url'])
     assert.deepEqual(Object.keys(entry.vars), ['redirectFrom'])
   }
@@ -152,6 +153,7 @@ test('body upsert reads and renders only one page; empty delta does no body work
   assert.notDeepEqual(updated.data.runtimeExports, initial.data.runtimeExports)
   assert.notDeepEqual(updated.data.runtimeSearch, initial.data.runtimeSearch)
   assert.equal(updated.data.runtimeSearch.items[0].text, 'a Changed body')
+  assert.equal(updated.data.siteSearch.items[0].text, 'a Changed body')
   assert.notEqual(updated.state.get(pages[0].sourceId), initial.state.get(pages[0].sourceId))
   assert.equal(updated.state.get(pages[1].sourceId), initial.state.get(pages[1].sourceId))
   clear(pages)

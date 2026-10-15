@@ -17,6 +17,11 @@ This is the exact canonical documentation page for [`std::process::child`](/silk
 
 ## Role
 
+All pipes created for child standard streams and exec-error reporting must
+have close-on-exec set on both ends before forking. Failure to set either flag
+closes both descriptors and reports `ErrorStage::Pipe` with the mapped I/O
+error; no child is spawned with an unprotected exec-error descriptor.
+
 [`std::process::child`](/silk/docs/std/process-child/) is a shipped nested module in the Silk standard library.
 This exact-name page exists so the module can be discovered and referenced directly by its canonical name.
 
@@ -30,6 +35,12 @@ Use the following owning docs for the substantive API/design context for this mo
 
 - The shipped source for this module is [`std/process/child.slk`](https://github.com/oro-computer/silk/blob/master/std/process/child.slk).
 - The canonical module name is [`std::process::child`](/silk/docs/std/process-child/).
+- `PtyChild.take_master()` transfers descriptor ownership to the caller;
+ `wait()` does not close the master. The owner must keep it open while
+ draining output and waiting for normal exit. Closing the last
+ master of a live controlling terminal can deliver `SIGHUP` to the child.
+ Accumulate short reads to the application's message boundary and drain
+ unbounded output while supervising exit to avoid blocking child writes.
 - Family-wide semantics, examples, and cross-module relationships live in the owning docs listed above.
 - `Command` owns the backing allocations used by its argument and environment
  vectors. It implements [`std::interfaces::Drop`](/silk/docs/std/interfaces/); `drop()` releases both
@@ -55,3 +66,27 @@ Use the following owning docs for the substantive API/design context for this mo
 - To force-stop a supervised tree, call `kill_group(signal)` before `wait()`.
  `wait()` reaps the direct child; terminated descendants are reaped by their
  direct parent or the operating system.
+
+`Command.resource_limits(cpu_seconds: int, address_space_bytes: int)` enables
+hard and soft CPU/address-space limits for the child and disables core dumps.
+Both arguments must be positive; invalid configuration makes spawn fail.
+The configuration fields are `limits_enabled: bool`, `cpu_seconds: int`, and
+`address_space_bytes: int` (disabled/zero by default). Both pipe and PTY spawn
+paths apply limits before exec and report failures through the exec handshake
+with `ErrorStage::ResourceLimits` (stage 18). The parent is not constrained.
+Limit setup has no rollback in the child: any failure terminates the child.
+This does not close descriptors, change dumpability, or sandbox filesystem
+access; workers can explicitly use the process containment operations.
+
+For resource-limit setup failures, `Failed.detail` preserves the native errno;
+`Failed.kind()` classifies invalid input and permission failures. Invalid
+nonpositive configuration reports `EINVAL` in `detail`.
+
+### Data segment limits
+
+`Command.data_limit(bytes: int) -> void` requests equal soft/hard RLIMIT_DATA
+limits before exec, independently of `resource_limits`. Nonpositive values
+are rejected at spawn with `ErrorStage::ResourceLimits`, as are native setup
+failures. Both ordinary and PTY spawn apply this setting only in the child;
+the parent is unchanged. This bounds data allocations, not the entire virtual
+address space; combine it with `resource_limits` when both bounds are needed.

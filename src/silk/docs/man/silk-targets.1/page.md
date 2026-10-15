@@ -60,7 +60,10 @@ Per-target capabilities include:
  executable or object/static/shared library-output support for the target,
 - native and Objective-C native-input support,
 - Unix/POSIX/WASM classification,
-- async-runtime availability.
+- async-runtime availability. Linux x86_64 and Linux AArch64 glibc/musl
+ targets report this capability as available. The macOS and iOS
+ device/simulator targets report it when their non-constant executable path
+ is host-backed by the current Apple Silicon macOS compiler host.
 
 ## Examples
 

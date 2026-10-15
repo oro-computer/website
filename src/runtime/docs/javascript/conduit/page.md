@@ -139,6 +139,7 @@ declare module "oro:conduit" {
          * @type {string}
          */
         sharedKey: string;
+        isErroring: boolean;
         /**
          * The URL string for the WebSocket server.
          * @type {string}
@@ -170,7 +171,6 @@ declare module "oro:conduit" {
          * @return {Promise<Conduit>}
          */
         connect(callback?: ((arg0: Error | null) => any) | undefined): Promise<Conduit>;
-        isErroring: boolean;
         /**
          * Reconnects a `Conduit` socket.
          * @param {{retries?: number, timeout?: number}} [options]

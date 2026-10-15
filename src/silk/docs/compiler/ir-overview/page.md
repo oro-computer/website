@@ -703,6 +703,35 @@ incrementally in tests and then in the compiler’s lowering pipeline.
  `SILK_OUTPUT_EXECUTABLE`) therefore exercise the IR→ELF backend for
  constant-style programs, helper-call programs, and a growing subset of
  general structured-control-flow programs on `linux/x86_64`.
+- [`src/backend_ir_elf_aarch64.zig`](https://github.com/oro-computer/silk/blob/master/src/backend_ir_elf_aarch64.zig) consumes the same `ir.Program` CFG for
+ `linux-aarch64` and `linux-aarch64-musl` executable output:
+ - it emits AArch64 instructions and the `EM_AARCH64` ELF64 image directly,
+ without a C translation, external assembler, or external compiler,
+ - values use 8-byte frame slots; AAPCS64 integer-like parameters/results use
+ `x0`…`x7`, `f32`/`f64` parameters/results use `v0`…`v7`, additional
+ arguments use a 16-byte-aligned outgoing stack area, and flattened results
+ beyond the register envelope use caller-provided hidden storage; the entry
+ stub invokes the program entry before Linux syscall 94 (`exit_group`), so
+ hosted task-pool workers cannot keep the process alive after `main` returns,
+ - stack frames up to 1 MiB use synthesized addresses after scaled immediates
+ are exhausted, and conditional CFG edges use local `CBZ` plus long-range
+ `B` edges so a function may exceed the conditional branch's +/-1 MiB range,
+ - signed `i64` division and remainder guard `minInt(i64) / -1` and
+ `minInt(i64) % -1` with a trap so evaluator, x86_64, and AArch64 execution
+ do not diverge on the architecture-specific `sdiv` overflow result,
+ - the selector accepts integer and floating-point scalar constants,
+ copies/numeric/raw casts, integer and IEEE-754
+ arithmetic/bitwise/shifts/comparisons, stack/data address and memory
+ operations, CFG branches, direct/indirect/external calls, external data,
+ multi-scalar and hidden-storage returns, and traps,
+ - executable/shared output can select bundled-runtime AArch64 archive members
+ in process, relocate them into the image, and preserve their unresolved
+ system references as loader-resolved GOT imports; GOT address pairs whose
+ provider is selected from the same archive are resolved directly to that
+ linked text/data provider, and
+ - explicit AArch64 relocatable objects and archives can participate in
+ executable/shared links; inline assembly and raw/framework linker
+ configuration remain outside this in-process ELF path.
 
 The next IR-focused steps for the back-end are:
 
@@ -713,8 +742,10 @@ The next IR-focused steps for the back-end are:
  forms (for example, general expression statements beyond call statements,
  more complex boolean
  combinations, and eventually higher-level constructs such as [`match`](/silk/wiki/language/flow-match/)),
-- extend the current IR→ELF backend beyond `linux/x86_64` and the current
- scalar subset:
+- expand the Linux/AArch64 IR→ELF backend beyond its implemented
+ floating-point and explicit native-input linkage to cover inline assembly
+ and the remaining raw/system-library linker configuration already available
+ on Linux x86_64:
  - non-executable outputs (ELF relocatable objects, static libraries, and
  shared libraries) are implemented for `linux/x86_64` for the same scalar
  subset as executables, including emitting exported constants (`export let`)

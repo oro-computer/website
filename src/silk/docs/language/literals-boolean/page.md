@@ -26,6 +26,7 @@ What works end-to-end today (lexer → parser → checker → lowering → codeg
 - `bool` variables, parameters, and return values.
 - `if` / [`while`](/silk/wiki/language/flow-while/) conditions must have type `bool`.
 - Boolean operators:
+ - equality `==` and inequality `!=`, including Boolean field values,
  - unary `!`,
  - short-circuit `&&` and `||` (left-to-right, skip evaluation of the right
  operand when the result is already determined).

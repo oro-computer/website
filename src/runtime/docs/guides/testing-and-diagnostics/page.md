@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "If the runtime app is real, it needs two things early:"
+description: "Test code inside the Runtime, then use diagnostics and logs to investigate failures."
 docsCollection: "runtime"
 section: "guides"
 order: 21
@@ -11,12 +11,7 @@ githubRef: "master"
 
 # Testing and diagnostics
 
-If the runtime app is real, it needs two things early:
-
-- tests that can run with the app’s actual runtime modules,
-- diagnostics that explain behavior without attaching a debugger every time.
-
-This guide sets up both.
+Test code inside the Runtime, then use diagnostics and logs to investigate failures.
 
 ## 1) Add a runtime test file
 
@@ -37,7 +32,7 @@ test('summarizeNote truncates the body', (t) => {
 })
 ```
 
-The point is not just unit testing in the abstract. The test runs inside the same runtime surface your app uses.
+The test runs inside the app, with its Runtime modules available.
 
 ## 2) Run the tests through [`oroc`](/runtime/docs/cli/oroc/)
 

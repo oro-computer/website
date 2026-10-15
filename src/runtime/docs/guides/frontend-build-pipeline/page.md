@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "Most production Oro Runtime applications do not ship raw source files. They run a web build first, then copy the built artifacts into the runtime bundle. This guide shows a clean pipeline that works f"
+description: "Build the web frontend first, then map its output into the native app bundle."
 docsCollection: "runtime"
 section: "guides"
 order: 17
@@ -11,9 +11,7 @@ githubRef: "master"
 
 # Frontend build pipeline
 
-Most production Oro Runtime applications do not ship raw source files. They run a web build first, then copy the built
-artifacts into the runtime bundle. This guide shows a clean pipeline that works for Vite, Rollup, esbuild, or a custom
-script without hiding the actual build contract.
+Build the web frontend first, then map its output into the native app bundle.
 
 ## 1) Treat `dist/` as the bundle boundary
 
@@ -100,9 +98,9 @@ For a production build:
 oroc build . --prod
 ```
 
-The point is not to maintain two different application shapes. The same `oro.toml` and [`copy_map`](/runtime/docs/config/copy-map/) should describe both.
+Use the same `oro.toml` and copy map for both builds.
 
-## 7) A practical Vite-style mental model
+## 7) A Vite build pipeline
 
 If your frontend stack already outputs a web app, Oro Runtime is just the native bundling and integration layer:
 

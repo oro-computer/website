@@ -38,9 +38,11 @@ What works end-to-end today (lexer → parser → checker → lowering → codeg
  - float literals default to `f64`, but adopt `f32`/`f64`/`f128` from context.
 - Duration literal tokens of the form `<number><unit>` (no whitespace) such as
  `500ms` and `1.5s` (specified in [literals duration](/silk/docs/language/literals-duration/)).
-- Lowering note (current IR backend subset): unannotated local `let` bindings
- participate only in the integer subset. Prefer explicit type annotations for
- `bool` and float locals when you intend to build an executable/library.
+- Lowering note (current IR backend subset): an unannotated local `let` binding
+ retains the type inferred for its initializer. In particular, arithmetic over
+ explicitly widened `i128`, `u128`, or `f128` operands lowers identically with
+ or without a redundant annotation on the local binding. This rule applies in
+ imported modules as well as the executable entry module.
 
 Limitations:
 

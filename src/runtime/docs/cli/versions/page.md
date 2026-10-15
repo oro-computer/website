@@ -16,15 +16,16 @@ Print Oro CLI/runtime and dependency versions.
 ## Usage
 
 ```bash
-oroc versions [options] [<dependency>]
+oroc versions [options] [<dependency-name>]
 ```
 
 ## Options
 
 | Option | Description |
 | --- | --- |
-| `-f, --format=<format>` | text \| json (default: text) |
-| `-V, --verbose` | verbose output |
+| `-f, --format=<format>` | print as 'text' or 'json' |
+| `--json` | shorthand for '--format=json' |
+| `-V, --verbose` | enable verbose output |
 | `--log-file=<path>` | mirror logs to a JSON file |
 
 ## Examples
@@ -34,3 +35,8 @@ oroc versions
 oroc versions -f json
 oroc versions sqlite
 ```
+
+## Structured output
+
+`oroc versions --json` is shorthand for `oroc versions --format=json`.
+Place `--json` after `versions`; the global form enables log streaming.
