@@ -10,6 +10,7 @@
               </p>
               <div class="hero-actions">
                 <a class="button button-primary" href="/runtime/learn/">Start learning</a>
+                <a class="button" href="https://www.npmjs.com/package/@oro-computer/runtime">Download on npm</a>
                 <a class="button" href="/runtime/docs/">Read the docs</a>
                 <a class="button" href="/runtime/docs/javascript/overview/">JavaScript APIs</a>
                 <a class="button" href="/runtime/docs/cli/oroc/">CLI</a>
@@ -23,10 +24,13 @@
                 <a class="button button-quiet" href="/runtime/docs/guides/from-zero-to-first-run/">Guide</a>
               </div>
               <div class="panel-body">
-                <pre><code class="language-bash">oroc init field-notes
+                <pre><code class="language-bash">npm install --global @oro-computer/runtime@latest
+oroc --version
+oroc init field-notes
 cd field-notes
 oroc build --run .</code></pre>
-                <p>Create a project, build it, and run it locally.</p>
+                <p>Install with Node.js 22+ and npm, then create and run a project. Native builds need <a href="/runtime/docs/cli/setup/">host tools and SDKs</a>.</p>
+                <p><a href="https://www.npmjs.com/package/@oro-computer/runtime" data-runtime-release>Latest release on npm</a></p>
               </div>
             </div>
           </div>

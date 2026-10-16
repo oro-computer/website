@@ -27,6 +27,7 @@ export function header(
             ? [
                 ['JavaScript APIs', '/runtime/docs/javascript/overview/'],
                 ['CLI', '/runtime/docs/cli/oroc/'],
+                ['Download', 'https://www.npmjs.com/package/@oro-computer/runtime'],
               ]
             : []),
       ]

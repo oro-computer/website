@@ -9,11 +9,15 @@ Build **Field Notes**: write a draft, save it, and reopen the app to find it aga
 ### Terminal
 
 ```bash
-npm install --global @oro-computer/runtime
+npm install --global @oro-computer/runtime@latest
 oroc --version
 oroc init field-notes
 cd field-notes
 ```
+
+Install the CLI from [npm](https://www.npmjs.com/package/@oro-computer/runtime). The `@latest` tag selects npm’s latest release; rerun the install command to update.
+
+<a href="https://www.npmjs.com/package/@oro-computer/runtime" data-runtime-release>Latest release on npm</a>.
 
 Run the remaining commands from `field-notes`.
 

@@ -15,12 +15,14 @@ Create and run the generated desktop app. Once it opens, [turn it into Field Not
 
 ## Install the toolchain
 
-With Node.js 22 or newer:
+Install the CLI from [npm](https://www.npmjs.com/package/@oro-computer/runtime) with Node.js 22 or newer:
 
 ```bash
-npm install --global @oro-computer/runtime
+npm install --global @oro-computer/runtime@latest
 oroc --version
 ```
+
+<a href="https://www.npmjs.com/package/@oro-computer/runtime" data-runtime-release>Latest release on npm</a>. The `@latest` tag selects npm’s latest release. Rerun the install command to update an existing installation.
 
 Native builds also need your host compiler and SDKs. See [host setup](/runtime/docs/cli/setup/) and [platform support](/runtime/docs/guides/platform-support/).
 

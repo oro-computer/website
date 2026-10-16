@@ -13,6 +13,17 @@ githubRef: "master"
 
 Build native apps with HTML, CSS, and JavaScript. Your interface runs in the platform WebView; `oro:*` imports connect it to native capabilities.
 
+## Install the toolchain
+
+Install the CLI from [npm](https://www.npmjs.com/package/@oro-computer/runtime) with Node.js 22+:
+
+```bash
+npm install --global @oro-computer/runtime@latest
+oroc --version
+```
+
+<a href="https://www.npmjs.com/package/@oro-computer/runtime" data-runtime-release>Latest release on npm</a>. The `@latest` tag selects npm’s latest release; rerun the install command to update. Native builds also need [host tools and SDKs](/runtime/docs/cli/setup/).
+
 ## Start with a draft
 
 [Build Field Notes](/runtime/learn/getting-started/): write a draft, save it, and reopen it. The five-chapter path then adds a preview window, clipboard, and notifications.
@@ -35,7 +46,6 @@ Already have a web project? [Create and run the scaffold](/runtime/docs/guides/f
 Use the [JavaScript APIs](/runtime/docs/javascript/overview/), [CLI](/runtime/docs/cli/oroc/), or [configuration reference](/runtime/docs/config/reference/). Check [platform support](/runtime/docs/guides/platform-support/) before choosing a host-specific feature.
 
 <!-- Preserve existing section links; details now live in the linked references. -->
-<span id="install-the-toolchain"></span>
 <span id="cli-input-forms"></span>
 <span id="a-native-hello-world"></span>
 <span id="recommended-reading-path"></span>

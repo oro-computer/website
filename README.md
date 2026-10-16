@@ -30,6 +30,11 @@ are output files; do not commit `public/`.
   Homepage styles live in `src/style.css`; learn styles in `src/layouts/learn.layout.css`.
 - `src/lib/`: rendering, URL, collection, and navigation helpers.
 - `src/globals/global.vars.ts`: shared site configuration.
+- Runtime download links point to [npm](https://www.npmjs.com/package/@oro-computer/runtime),
+  and install examples use `@latest`. `src/lib/runtime-release-client.ts` fetches
+  npm's latest dist-tag in the browser only on pages with `data-runtime-release`
+  labels. Without JavaScript or when the registry is unavailable, the static npm
+  links remain usable. Builds do not fetch release metadata.
 - `src/globals/global.data.ts`: a watch-session index keyed by DOMStack `sourceId`,
   caching validated document metadata, Markdown, and rendered search text. Navigation,
   search, and LLM-export views are derived from those cached entries.

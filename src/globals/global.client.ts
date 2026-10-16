@@ -1,6 +1,8 @@
 import { initSiteSearch } from '#lib/search-client.ts'
+import { initRuntimeRelease } from '#lib/runtime-release-client.ts'
 
 initSiteSearch()
+void initRuntimeRelease()
 
 const yearNode = document.querySelector('[data-year]')
 if (yearNode) yearNode.textContent = String(new Date().getFullYear())
