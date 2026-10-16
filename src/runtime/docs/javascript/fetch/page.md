@@ -20,12 +20,11 @@ githubRef: "master"
 
 ## Examples
 
-Use the runtime fetch stack exactly like standard web fetch:
+Use global fetch directly; no import is needed in an app window:
 
 ```js
-import fetch from 'oro:fetch'
-
 const response = await fetch('https://example.com/api/status')
+if (!response.ok) throw new Error(`Request failed (${response.status})`)
 const data = await response.json()
 
 console.log(data)

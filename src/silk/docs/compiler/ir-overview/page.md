@@ -79,7 +79,7 @@ and IEEE-754 floating-point values:
  arithmetic and comparison machinery can be reused.
 - `I8` / `U8`, `I16` / `U16`, `I32` / `U32`, `I64` / `U64`
  - fixed-width integer types with explicit signedness and width.
- - the current lowering and ELF backend primarily exercise `I64`
+ - the lowering and ELF backend primarily exercise `I64`
  (corresponding to the language’s `int` on `linux/x86_64`) plus `Bool` for
  conditions and boolean locals.
 - `F32` / `F64`
@@ -137,7 +137,7 @@ scalars in order:
 - `ptr: u64` (address of UTF-8 bytes)
 - `len: i64` (byte length, excluding any trailing `\\0`)
 
-Within the current back-end subset, this allows exported functions to accept
+Within the back-end subset, this allows exported functions to accept
 and return `string` values in a C-friendly `SilkString` layout without adding a
 dedicated “string pointer” ABI.
 
@@ -153,7 +153,7 @@ The initial IR supports only what is needed to model small scalar-returning
 programs, with scalar values drawn from `Bool`, the fixed-width integer types,
 and `F32`/`F64`.
 
-In the current compiler, the surface `char` type is lowered into this IR as a
+In the compiler, the surface `char` type is lowered into this IR as a
 `U32` scalar holding the Unicode code point value.
 
 ## Multi-Scalar Values at ABI Boundaries
@@ -188,7 +188,7 @@ the underlying non-optional type:
 
 - scalar payloads lower as `(Bool tag, payload)`,
 - `string?` lowers as `(Bool tag, u64 ptr, i64 len)`,
-- and `struct?` lowers as `(Bool tag, slot0, slot1, ...)` for the current POD
+- and `struct?` lowers as `(Bool tag, slot0, slot1, ...)` for the POD
  struct subset.
 
 Nested optionals (`T??`) are lowered in this subset by treating the payload
@@ -222,26 +222,26 @@ signed integers) to the destination type.
  the result into the destination scalar slot.
  - `dest` must have scalar type `U8`, `base` must have scalar type `U64`, and
  `offset` must have scalar type `I64`.
- - The current compiler uses this instruction for bytewise `string` equality
+ - The compiler uses this instruction for bytewise `string` equality
  and ordered comparisons in the `linux/x86_64` IR→ELF backend subset; the IR
- interpreter currently treats it as unsupported.
+ interpreter treats it as unsupported.
 - `StackAddr`
  - produce the address of the stack slot backing an existing `ValueId`.
  - `dest` must have scalar type `U64`.
- - This is a backend-facing operation used by the current compiler to lower
+ - This is a backend-facing operation used by the compiler to lower
  borrowed references (`&T`) without requiring contiguous aggregate storage;
- the IR interpreter currently treats it as unsupported.
+ the IR interpreter treats it as unsupported.
 - `Load`
  - load an 8-byte scalar value from memory at address `ptr` into `dest`,
  canonicalizing the loaded raw bits according to the destination `ScalarType`.
  - `ptr` must have scalar type `U64`.
- - This is used by the current compiler for reading through borrowed references;
- the IR interpreter currently treats it as unsupported.
+ - This is used by the compiler for reading through borrowed references;
+ the IR interpreter treats it as unsupported.
 - `Store`
  - store an 8-byte scalar value from [`src`](https://github.com/oro-computer/silk/tree/master/src) to memory at address `ptr`.
  - `ptr` must have scalar type `U64`.
- - This is used by the current compiler for mutating through borrowed references;
- the IR interpreter currently treats it as unsupported.
+ - This is used by the compiler for mutating through borrowed references;
+ the IR interpreter treats it as unsupported.
 - `Copy`
  - copy a scalar value from one `ValueId` to another (both IDs must have the
  same `ScalarType`); this is used by CFG-based boolean lowering to merge
@@ -285,7 +285,7 @@ calls between functions within the same `IrProgram`:
 
 - `Call`
  - calls another IR function within the same `IrProgram`,
- - in the Supported forms, calls are:
+ - in Silk, calls are:
  - direct (identified by function index, not by name or pointer),
  - between functions that return one or more scalar results (most commonly a
  single integer-like scalar, `Bool`, or `F32`/`F64`, with limited multi-scalar
@@ -404,7 +404,7 @@ is lowered into explicit basic blocks and branches in IR. The design is:
  a `Br` back to the header or a `Br` to the exit (for `break`),
  - an exit block that receives control when the loop condition is false.
 
-Current implementation
+implementation
 
 - A narrow, constant‑oriented lowering in [`src/lower_ir.zig`](https://github.com/oro-computer/silk/blob/master/src/lower_ir.zig) is wired into
  the compiler:
@@ -482,7 +482,7 @@ incrementally in tests and then in the compiler’s lowering pipeline.
 - [`src/ir.zig`](https://github.com/oro-computer/silk/blob/master/src/ir.zig) defines the initial IR data structures and minimal operations
  for:
  - value IDs and their associated scalar types (`Bool`, fixed-width
- integers, and floats; the current lowering primarily uses `I64`, `Bool`,
+ integers, and floats; the lowering primarily uses `I64`, `Bool`,
  `U32` for surface `char`, and `F64`/`F32` where float literals or
  annotations are present),
  - instructions for scalar constants (`ConstInt` as raw bits), integer and
@@ -492,7 +492,7 @@ incrementally in tests and then in the compiler’s lowering pipeline.
  - basic blocks and functions with explicit `Br` / `BrCond` / `Return`
  control-flow terminators,
  - a `Call` instruction for direct calls between scalar-returning
- functions with scalar parameters (currently exercised in tests and
+ functions with scalar parameters (exercised in tests and
  CLI/ABI paths with helpers taking up to ten `int` parameters), and an
  `ir.Program` type that groups multiple functions with a designated
  entry index.
@@ -567,10 +567,10 @@ incrementally in tests and then in the compiler’s lowering pipeline.
 
         ```silk
         if <cond> {
-          [let ...;]
+          [let...;]
           return <expr>;
         } else {
-          [let ...;]
+          [let...;]
           return <expr>;
         }
         ```
@@ -585,7 +585,7 @@ incrementally in tests and then in the compiler’s lowering pipeline.
  - the loop condition is a boolean expression supported by
  `lowerBoolExpr` (for example, `n > 0`), and
  - each loop body consists only of scalar `let` bindings (unannotated
- locals are currently restricted to integers) and optional `break;`
+ locals are restricted to integers) and optional `break;`
  or `continue;` statements (no nested `if` / [`while`](/silk/wiki/language/flow-while/) or `return` in
  the loop body), which are lowered into explicit loop-header, body,
  and exit blocks using `Br` and `BrCond` (with `break;` branching to
@@ -735,7 +735,7 @@ incrementally in tests and then in the compiler’s lowering pipeline.
 
 The next IR-focused steps for the back-end are:
 
-- extend front-end lowering beyond the current scalar subset so that
+- extend front-end lowering beyond the scalar subset so that
  pointer-like types and aggregates are emitted explicitly in IR and
  correctly mapped to target calling conventions and layout rules,
 - document and implement IR support for the language’s richer expression

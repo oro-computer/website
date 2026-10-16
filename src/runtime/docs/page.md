@@ -21,6 +21,10 @@ Already have a web project? [Create and run the scaffold](/runtime/docs/guides/f
 
 ## Grow the app
 
+- Build the interface with [React and Vite](/runtime/docs/guides/frontend-build-pipeline/).
+- Use [web platform APIs](/runtime/docs/guides/web-platform-apis/) such as global `fetch`, workers, streams, and storage.
+- [Build a mobile app](/runtime/docs/guides/mobile-targets-and-device-installs/) for Android and iOS, with local drafts and native sharing.
+
 - Keep multiple notes in [SQLite](/runtime/docs/guides/local-data-with-sqlite/).
 - Stay usable offline with [service workers](/runtime/docs/guides/offline-first-with-service-workers/).
 - Coordinate [windows and messages](/runtime/docs/guides/windows-and-messaging/).

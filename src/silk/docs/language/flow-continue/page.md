@@ -78,7 +78,7 @@ fn main () -> int {
  end-to-end.
 - `continue;` outside a loop is rejected (`E2008`).
 
-Example that uses `continue` in the Supported forms:
+Example that uses `continue` in Silk:
 
 
 ## Common Pitfalls

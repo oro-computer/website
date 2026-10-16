@@ -116,7 +116,7 @@ impl AbortSignalBorrow {
  time). Do not read from or close the returned fd; it is owned by the signal
  and used as an internal wake mechanism.
 - `AbortSignal.wait()` blocks the current OS thread until the signal is aborted.
- In the Supported forms, this is a blocking synchronization primitive. For
+ In Silk, this is a blocking synchronization primitive. For
  select-style waiting, use `wait_fd()` instead.
 
 ## Using `AbortSignalBorrow` Across Tasks

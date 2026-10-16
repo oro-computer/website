@@ -49,7 +49,7 @@ implemented by the compiler/runtime today.
  instead of blocking the executor owner OS thread,
  - outside an executor (or on non-owner threads), it blocks the current OS
  thread until the task produces a value.
-- `yield` on a temporary task handle is eager in the Supported forms:
+- `yield` on a temporary task handle is eager in Silk:
  - `yield <task_expr>` where `<task_expr>` is not a named handle drains the
  task (joining dedicated-thread tasks only) and yields its final value `T`
  (so the temporary handle does not leak).
@@ -108,7 +108,7 @@ implemented by the compiler/runtime today.
  - live `Task(T)` bindings are drained/destroyed on scope exit,
  - and the same cleanup runs for lowered early-exit paths such as `return`.
  - these blocks do not create nested executors or inject implicit cancellation
- tokens in the Supported forms.
+ tokens in Silk.
 - `yield` is **task-context-only**:
  - `yield` is only allowed inside `task` functions (`task fn` / `async task fn`)
  and inside `task { ... }` / `task loop { ... }` blocks.
@@ -133,7 +133,7 @@ implemented by the compiler/runtime today.
 `task` concurrency runs on OS threads. Crossing a task boundary is therefore a
 thread-crossing operation.
 
-In Silk currently:
+In Silk :
 
 - Passing values into a `task fn` is **by value**. For ownership-tracked values
  (for example `Drop` types and `Task(T)` / `Promise(T)` handles), this is a
@@ -164,11 +164,11 @@ In Silk currently:
  across the task boundary.
 
 Note: this includes `&Struct` values produced by `new`. The compiler-inserted
-reference counting (RC) used for `new` is non-atomic in the Supported forms and
+reference counting (RC) used for `new` is non-atomic in Silk and
 is not safe to share across OS threads.
 
 These rules prevent common “accidentally share a borrowed view across threads”
-bugs in the Supported forms. They do not prevent data races in programs that
+bugs in Silk. They do not prevent data races in programs that
 explicitly share memory through FFI or other low-level mechanisms; such sharing
 must be synchronized by the program.
 
@@ -193,7 +193,7 @@ must be synchronized by the program.
  `await` on a non-owner thread blocks the OS thread until the promise is
  resolved.
  - Awaiting a `Task(T)` is rejected by design; use `yield` / `yield *` for task values.
- - Executable entrypoints currently support `fn main (...) -> int`,
+ - Executable entrypoints support `fn main (...) -> int`,
  `fn main (...) -> void`, `async fn main (...) -> int`,
  `async fn main (...) -> void`, `fn main(argc: int, argv: u64) -> int`,
  and `fn main(argc: int, argv: u64) -> void`.
@@ -238,7 +238,7 @@ must be synchronized by the program.
 
 `await <expr>` is the surface syntax for unwrapping a `Promise(T)` handle.
 
-In Silk currently:
+In Silk :
 
 - `await Promise(T)` unwraps the completed promise and yields `T`.
 - `await Promise(Task(T))` yields `Task(T)` (which can then be consumed via `yield` / `yield *`).
@@ -256,7 +256,7 @@ In Silk currently:
 
 #### Typed Errors Across Async Calls
 
-Typed-error handling composes with async calls in the Supported forms, but the
+Typed-error handling composes with async calls in Silk, but the
 fallible operation remains the **async call site** rather than the `await`
 itself.
 
@@ -272,14 +272,14 @@ async fn open_value () -> int | OpenFailed {
 }
 ```
 
-the current checker behavior is:
+the checker behavior is:
 
 - `await open_value()` is rejected with `E2023` because the fallible async call
  has not been handled yet.
 - `let p: Promise(int) = open_value()?;` is accepted inside a matching error
  contract.
 - `let v: int = await open_value()?;` is accepted and is the supported
- propagation form in the Supported forms.
+ propagation form in Silk.
 - Explicit handling with [`match`](/silk/wiki/language/flow-match/) applies to the async call itself, so the
  success arm receives the `Promise(T)` handle:
 
@@ -297,7 +297,7 @@ match (open_value()) {
 
 #### Task/Promise Handle Ownership
 
-In Silk currently, `Task(T)` and `Promise(T)` are **single-use
+In Silk, `Task(T)` and `Promise(T)` are **single-use
 handles**:
 
 - A `Promise(T)` handle may be **awaited at most once**. `await` consumes the handle.
@@ -325,7 +325,7 @@ handles**:
 - A consumed handle may not be used again (including attempting to `await` it a
  second time, or attempting to `yield *` it a second time).
 - Consuming a handle that was created outside the current loop body is rejected
- in the Supported forms (a loop may iterate multiple times).
+ in Silk (a loop may iterate multiple times).
 
 These rules are enforced at compile time and exist to prevent double-free and
 use-after-free bugs in the current runtime lowering, where `await` frees the
@@ -333,7 +333,7 @@ underlying handle storage after join/unwrap.
 
 #### Handle Lifetime and Cleanup
 
-In Silk currently, `Task(T)` and `Promise(T)` handles are stored in
+In Silk, `Task(T)` and `Promise(T)` handles are stored in
 heap-allocated handle memory:
 
 - `await` unwraps a promise and then frees the promise handle storage.
@@ -349,7 +349,7 @@ heap-allocated handle memory:
  there is no per-call worker thread to join.
  - `Promise(T)` cleanup frees the handle storage.
 
-Because tasks are implemented using OS threads in the Supported forms, this
+Because tasks are implemented using OS threads in Silk, this
 automatic cleanup can block the current OS thread when it joins a task. Promise
 cleanup uses the hosted async runtime’s destroy helper and may suspend the
 current coroutine while waiting for a pending promise to resolve when running
@@ -380,7 +380,7 @@ In the intended model for tasks:
  right-hand task to the enclosing task’s receiver and then joins/cleans up the
  drained task.
 
-In Silk currently:
+In Silk :
 
 - `yield` is a blocking OS-thread operation (like the rest of the current
  concurrency runtime).
@@ -392,7 +392,7 @@ In Silk currently:
 
 #### Collected Array Ownership
 
-In the Supported forms, `yield *` and `await *` produce a heap-allocated
+In Silk, `yield *` and `await *` produce a heap-allocated
 collection of values (`T[]`) for convenience. This is a current behavior:
 
 - the compiler inserts deterministic cleanup for these collections when their
@@ -405,7 +405,7 @@ collection of values (`T[]`) for convenience. This is a current behavior:
 `async { ... }`, `task { ... }`, `async loop { ... }`, and `task loop { ... }`
 introduce surface syntax for structured regions.
 
-In Silk currently, these forms remain lexical scopes, but they are
+In Silk, these forms remain lexical scopes, but they are
 runtime-backed for live-handle cleanup:
 
 - live `Promise(T)` bindings are awaited/destroyed on scope exit,
@@ -419,8 +419,7 @@ runtime-backed for live-handle cleanup:
 
 This language document describes the shipped concurrency subset and its current
 boundaries. Longer-term runtime architecture notes are tracked in
-[async runtime](/silk/docs/compiler/async-runtime/); the runtime backlog items for the current
-hosted subset are now implemented.
+[async runtime](/silk/docs/compiler/async-runtime/); the runtime backlog items for the hosted subset are now implemented.
 
 Current boundaries and non-goals:
 

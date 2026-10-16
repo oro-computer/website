@@ -18,7 +18,7 @@ Full reference: [result](/silk/wiki/std/result/).
 
 ## Notes
 
-- Implemented (current representation is a tagged union enum).
+- Implemented (representation is a tagged union enum).
 - Full reference: [result](/silk/wiki/std/result/)
 
 ## Importing

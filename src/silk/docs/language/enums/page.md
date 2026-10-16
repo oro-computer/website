@@ -52,8 +52,7 @@ What works end-to-end today (parser → checker → lowering → codegen):
  use shorthand (`A`, `Data(x)`) when the scrutinee type is the enum,
  - binders may be names or `_`,
  - no guards (`if ...`) yet,
- - and expression-form matches must still be *exhaustive* in the current
- subset:
+ - and expression-form matches must still be *exhaustive* in the supported forms:
  - either by explicit arm coverage for every variant,
  - or by a single final wildcard `_` arm that covers all remaining
  unmatched variants.
@@ -86,7 +85,7 @@ What works end-to-end today (parser → checker → lowering → codegen):
  - instance methods are callable as `value.method(...)` when the first
  parameter is a receiver (`self: &EnumName` / `mut self: &EnumName`),
  - the special `constructor` method used by `new Type(...)` is for `struct`
- types; enums do not support `constructor` methods in the Supported forms.
+ types; enums do not support `constructor` methods in Silk.
 
 Not implemented yet (or not yet stable/documented):
 
@@ -94,8 +93,8 @@ Not implemented yet (or not yet stable/documented):
 - A stable ABI story for passing/returning enums across the C99 boundary (do
  not assume an enum layout until it is specified in [abi libsilk](/silk/docs/compiler/abi-libsilk/)).
 
-When the compiler rejects an enum construct in the Supported forms, the most
-common error is `E2002` (“unsupported expression in the Supported forms”). Type
+When the compiler rejects an enum construct in Silk, the most
+common error is `E2002` (“unsupported expression in Silk”). Type
 mismatches inside enum constructors or match arms are `E2001` (“type mismatch”).
 
 ## Surface Syntax
@@ -143,7 +142,7 @@ fn main () -> int {
 
 Notes:
 
-- `E::A()` and `A()` are invalid in the Supported forms (unit variants are not callable).
+- `E::A()` and `A()` are invalid in Silk (unit variants are not callable).
 - A unit variant is an ordinary value of its enum type. It may initialize a
  binding or aggregate field, be returned or passed to a function, and be
  assigned to an existing mutable binding or struct field. These value uses
@@ -154,7 +153,7 @@ Notes:
 When a named enum declares exactly two variants, the `??` operator may be used
 as a compact success/fallback form.
 
-Rules in the Supported forms:
+Rules in Silk:
 
 - declaration order matters: the first declared variant is the “success” case,
  and the second declared variant triggers the fallback,
@@ -165,7 +164,7 @@ Rules in the Supported forms:
  instead,
 - the second variant may be unit or may carry payloads; its payload is ignored
  by the `??` form and the fallback expression runs.
-- the right-hand side is still an expression in the current grammar; terminal
+- the right-hand side is still an expression in the grammar; terminal
  statements such as `return`, `break`, and `continue` are not accepted there
  yet.
 
@@ -214,11 +213,11 @@ fn main () -> int {
 
 Notes:
 
-- `E::Data` by itself is not a value in the Supported forms (tuple variants must
+- `E::Data` by itself is not a value in Silk (tuple variants must
  be constructed with `(...)`).
 - If a tuple-variant constructor argument has the wrong type, you get `E2001`.
 - If the argument count does not match the variant definition, the compiler
- currently rejects the construct with `E2002`.
+ rejects the construct with `E2002`.
 
 ### Generic enums (instantiation via alias)
 
@@ -284,7 +283,7 @@ Binders:
 
 ### Exhaustiveness
 
-In the Supported forms, enum exhaustiveness is split by [`match`](/silk/wiki/language/flow-match/) form:
+In Silk, enum exhaustiveness is split by [`match`](/silk/wiki/language/flow-match/) form:
 
 - Expression form:
  - either there is exactly one arm per enum variant,
@@ -301,7 +300,7 @@ In the Supported forms, enum exhaustiveness is split by [`match`](/silk/wiki/lan
 
 If a match is not exhaustive:
 
-- expression form currently reports `E2002`, and
+- expression form reports `E2002`, and
 - statement form without full coverage uses the checker’s missing-arm path when
  it reaches that analysis.
 
@@ -424,7 +423,7 @@ ABI mature.
 ## Common Pitfalls
 
 - **Forgetting parentheses**: `E::Data(7)` is valid, but `E::Data` is not a value
- in the Supported forms (error `E2002`).
+ in Silk (error `E2002`).
 - **Calling a unit variant**: `E::A` is a value; `E::A()` is rejected (`E2002`).
 - **Wrong binder count**: `E::Pair(a)` does not match `Pair(int, int)` (`E2002`).
 - **Non-exhaustive matches**: you must list every variant (error `E2002` in the

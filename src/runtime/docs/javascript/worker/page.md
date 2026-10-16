@@ -20,11 +20,11 @@ githubRef: "master"
 
 ## Examples
 
+Use the global constructor directly in application code; no import is needed.
+
 Launch a dedicated worker through the runtime worker surface:
 
 ```js
-import Worker from 'oro:worker'
-
 const worker = new Worker(new URL('./worker.js', import.meta.url), {
   workerData: { job: 'thumbnail' }
 })

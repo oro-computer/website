@@ -16,7 +16,7 @@ unsafe contiguous memory access, intended to sit underneath safe collections.
 
 Full reference: [buffers](/silk/wiki/language/buffers/).
 
-In the current toolchain, buffer-like functionality is provided via `std::`:
+In the toolchain, buffer-like functionality is provided via `std::`:
 
 - [`std::vector::Vector(T)`](/silk/docs/std/vector/) for owning growable storage
 - [`std::buffer::BufferU8`](/silk/docs/std/buffer/) as an owning packed byte buffer, plus width-oriented

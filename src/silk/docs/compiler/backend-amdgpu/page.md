@@ -182,7 +182,7 @@ The intended workflow for this slice is:
    ```
 
 5. Load and dispatch the object through a ROCR/HSA runtime path. The compiler
- currently emits `.hsaco` bytes and provides the tested AQL packet serializer;
+ emits `.hsaco` bytes and provides the tested AQL packet serializer;
  it does not yet create HSA queues or ring doorbells from the CLI. On a host
  with an accessible ROCR runtime and compatible GPU agent, use the opt-in
  load check:
@@ -211,7 +211,7 @@ Common authoring failures are reported with specific diagnostics:
 - `AMDGPU source kernels must return void`: use `export fn name () { ... }` or
  `export fn name () -> void { ... }`.
 - In the standalone `--kind object --target amdgcn-...` source-intrinsic path,
- the diagnostic that says AMDGPU source kernels currently support only
+ the diagnostic that says AMDGPU source kernels support only
  compiler-backed GPU calls and optional `return;`: keep that source body to
  [`std::gpu::isa`](/silk/docs/std/gpu-isa/), [`std::gpu::device::store_u32_at_global_x`](/silk/docs/std/gpu-device/),
  [`std::gpu::device::classify_u32_at_global_x`](/silk/docs/std/gpu-device/), and `return;` for now; `let`,
@@ -410,7 +410,7 @@ The current encoder provides:
  and CDNA3 MFMA forms so call sites can be added without changing the object
  writer shape.
 
-The public source-intrinsic names currently accepted inside AMDGPU object-output
+The public source-intrinsic names accepted inside AMDGPU object-output
 kernels are:
 
 - `__silk_amdgpu_s_add_i32(dst, src0, src1)`
@@ -428,7 +428,7 @@ kernels are:
 - `__silk_amdgpu_ds_read_b32(dst, address, byte_offset)`
 - `__silk_amdgpu_mfma_f32_16x16x16_f16(acc_dst_start, src_a_pair_start, src_b_pair_start, acc_src_start)` (`gfx942` only)
 
-The target-neutral selector currently recognizes the portable packed-`u32`
+The target-neutral selector recognizes the portable packed-`u32`
 fill and threshold-classification graphs, including direct pure/device helper
 calls. Broader Silk IR selection still requires lowering and verified hazard
 coverage for:

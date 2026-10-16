@@ -357,6 +357,6 @@ impl MatrixF64 {
 
 [`std::math`](/silk/docs/std/math/) intends to expose higher precision scalars for numeric work and
 tensor integration. The language primitives `i128` / `u128` / `f128` are now
-part of the supported native backend subset; [`std::math`](/silk/docs/std/math/) currently focuses on
+part of the supported native backend subset; [`std::math`](/silk/docs/std/math/) focuses on
 `f32` and `f64` surfaces and will add higher-precision variants incrementally
 as needed.

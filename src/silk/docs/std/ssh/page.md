@@ -32,8 +32,7 @@ bindings, because the backend does not yet lower that alias
 shape when [`std::ssh`](/silk/docs/std/ssh/) itself is compiled as an object during staged stdlib
 builds.
 
-In other words, these forms are intended to be interchangeable in the current
-subset:
+In other words, these forms are intended to be interchangeable in the supported forms:
 
 ```silk
 import std::ssh;
@@ -56,7 +55,7 @@ mbedTLS dependencies, matching the [`std::ssh2`](/silk/docs/std/ssh2/) behavior 
 
 ## Exported API
 
-The compatibility facade currently forwards:
+The compatibility facade forwards:
 
 - SSH2 constants such as `ERR_*`, `SFTP_FXF_*`, and `SFTP_RENAME_*`,
 - top-level helpers such as `init()`, `exit()`, `version()`,

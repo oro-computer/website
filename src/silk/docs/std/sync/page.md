@@ -211,7 +211,7 @@ Notes:
  payload layout, and frees the backing allocation.
 - The hosted backend stores concrete payload slots in the Arc allocation. This
  includes scalar payloads, multi-slot structs/enums, optionals, functions, and
- fixed arrays supported by the current hosted lowering subset.
+ fixed arrays supported by the hosted lowering subset.
 - `Arc(T)` is task-safe only when `T` is task-safe to share. The checker applies
  the same conservative task-boundary rule to the concrete payload and rejects
  borrowed non-opaque references inside `Arc(T)`.
@@ -240,7 +240,7 @@ Notes:
  ownership stays with the original `CancellationToken`.
 - `Condvar.wait(self: &Condvar, m: &Mutex)` is called as `cv.wait(m)` — the
  compiler implicitly borrows the `m` binding for `&T` parameters (there is no
- general `&expr` operator in the Supported forms).
+ general `&expr` operator in Silk).
 - `Channel(T).recv()` returns `None` once the channel is closed *and* empty.
 - `Channel(T).try_send()` returns `Some(SyncFailed)` when the channel is closed
  or full.

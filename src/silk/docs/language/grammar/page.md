@@ -120,7 +120,7 @@ At a high level, the language can be structured as:
 
  The surface syntax for packages, imports, and exports is specified in detail in
  [packages imports exports](/silk/docs/language/packages-imports-exports/). The grammar in this file mirrors
- the currently Supported forms:
+ the Supported forms:
 
  - `PackageDecl ::= 'package' PackagePath ';'`
  - `ModuleDecl ::= 'module' PackagePath ModuleAsOpt ';'`
@@ -155,7 +155,7 @@ At a high level, the language can be structured as:
  - `FnExportModifier ::= ('export' AttrAnnot* ('default')?)?`
 
  For top-level declarations that can be exported, the `ExportModifier`
- appears before the declaration keyword (currently `fn`, `let`, `ext`, `type`,
+ appears before the declaration keyword (`fn`, `let`, `ext`, `type`,
  `struct`, `enum`, `theory`, `error`, and `interface`):
 
  - `FnDecl ::= FnSpecs FnExportModifier FnModifierOpt 'fn' FnGenericParamListOpt FnNameOpt FnSignature FnBody`
@@ -210,24 +210,24 @@ At a high level, the language can be structured as:
  parameters.
  - The compile-time side uses `GenericParam` syntax (`T` and `N: int`) and does
  not permit `mut`.
- - `FnNameOpt` is currently permitted only for default-exported functions
+ - `FnNameOpt` is permitted only for default-exported functions
  (`export default fn (...) { ... }`). For non-default functions, the `fn`
  identifier is required.
  - Default export statements (`export default Name;`) always name an existing
  symbol; they do not permit anonymous exports.
  - The run-time side uses ordinary `Param` syntax (`mut x: T` or `x: T`, with
- the type annotation optional in the Supported forms).
+ the type annotation optional in Silk).
  - If there is no `;`, the entire list is treated as run-time parameters.
  - Default arguments are supported in function parameter lists:
  - any parameter may provide a default expression (`x: int = 1`),
  - defaulted parameters must be **trailing** (once a parameter has a
  default, all subsequent parameters must also have defaults) because
- call syntax is positional-only in the current language subset,
- - and in the initial subset, default expressions are restricted to
+ call syntax is positional-only in the language subset,
+ - and in Silk, default expressions are restricted to
  a constant/literal expression subset (no name references), so they can be
  inlined at call sites during lowering.
  - a parameter declared as `T?` with a default has two effective behaviors
- in the initial subset:
+ in Silk:
  - if the default expression has type `T`, the parameter has effective
  type `T` (the argument may be omitted at call sites, but the callee
  sees a non‑optional value),
@@ -240,7 +240,7 @@ At a high level, the language can be structured as:
  `...` (for example `fn f(x: int, ...rest: int) { ... }`),
  - only one varargs parameter is permitted per function and it must be
  **final**,
- - in the Supported forms, varargs parameters:
+ - in Silk, varargs parameters:
  - must have an explicit type annotation,
  - may not be `mut`,
  - and may not have a default expression.
@@ -286,13 +286,13 @@ At a high level, the language can be structured as:
  This allows Silk code to bind a local name that differs from the C/FFI symbol
  name (for example to avoid name collisions in wrapper modules).
 
- The current compiler implementation supports external declarations (`ext`) whose type
+ The compiler implementation supports external declarations (`ext`) whose type
  is either:
 
  - a `FunctionType` (external functions, callable from Silk), or
  - a supported scalar type (external variables, readable as values in Silk).
 
- Silk currently **requires an initializer** for runtime bindings
+ Silk **requires an initializer** for runtime bindings
  (`let`/`var`) and for compile-time constant bindings (`const`). Uninitialized
  declarations like `let x: int;` / `const x: int;` are parsed but rejected by
  the checker (see [diagnostics](/silk/docs/compiler/diagnostics/), `E2015`).
@@ -323,8 +323,7 @@ At a high level, the language can be structured as:
 
  Notes:
 
- - Only `#require` directives may appear in `StructSpecs` in the current
- language subset (`#assure` / `#theory` are rejected on `struct`).
+ - Only `#require` directives may appear in `StructSpecs` in the language subset (`#assure` / `#theory` are rejected on `struct`).
 
  Enum declarations are part of the core language design. They are specified in
  [enums](/silk/docs/language/enums/).
@@ -351,11 +350,11 @@ At a high level, the language can be structured as:
 
  Note: const-parameter-style generics (`N: int` parameters and integer literal
  type arguments like `Foo(u8, 1024)`) remain tracked work; the front-end parses
- these surface forms but the compiler currently focuses on type parameters
+ these surface forms but the compiler focuses on type parameters
  and monomorphization for type arguments.
 
  Exception: the nominal optional form `Option(T)` is recognized as sugar for
- `T?` and is accepted in the Supported forms.
+ `T?` and is accepted in Silk.
 
 - Types (Supported forms):
 
@@ -372,7 +371,7 @@ At a high level, the language can be structured as:
  - `FunctionType ::= 'fn' '(' TypeListOpt ')' ResultTypeOpt`
  - `CFunctionType ::= 'c_fn' '(' TypeListOpt ')' ResultTypeOpt`
  - `UnsafeFunctionType ::= 'unsafe' (FunctionType | CFunctionType)`
- - `AttrFunctionType ::= AttrAnnot FunctionType` (in the Supported forms, this is
+ - `AttrFunctionType ::= AttrAnnot FunctionType` (in Silk, this is
  accepted as sugar for selecting ABI variants such as `attr(abi=c) fn (...) -> ...`)
  - `TypeListOpt ::= TypeList`
  - `TypeList ::= Type (',' Type)*`
@@ -389,11 +388,11 @@ At a high level, the language can be structured as:
  recognizes `Option(T)` and desugars it to the same internal representation
  as `T?`. Borrowed reference types (`&T`) are now parsed in type annotations.
  Array/slice types (`T[]`, `T[N]`) are
- parsed and type-checked in the Supported forms (with element-type
+ parsed and type-checked in Silk (with element-type
  restrictions), and are part of the implemented expression grammar via array
  literals (`[a, b, c]`) and indexing (`xs[i]`). Function types
  (`fn (T, ...) -> R`) are parsed as part of the `Type` grammar, and function
- values are supported in the current lowering subset (including capturing
+ values are supported in the lowering subset (including capturing
  closures as a restricted scalar-only subset; see [types](/silk/docs/language/types/) and
  [memory model](/silk/docs/language/memory-model/)).
 
@@ -506,7 +505,7 @@ At a high level, the language can be structured as:
  - [`match`](/silk/wiki/language/flow-match/) as a statement (arms are blocks), used for typed errors as
  specified in [typed errors](/silk/docs/language/typed-errors/).
 
- In the Supported forms, the [`match`](/silk/wiki/language/flow-match/) statement form is restricted to a
+ In Silk, the [`match`](/silk/wiki/language/flow-match/) statement form is restricted to a
  call-expression scrutinee and the patterns listed above.
 
 - Expressions (Supported forms):
@@ -575,7 +574,7 @@ At a high level, the language can be structured as:
  or `string`, and `RawOpt`. It is used by unsafe pointer view casts
  like `ptr as u8[](/silk/docs/len)` (slice view) and `ptr as string(len)` (string view).
 
- - The type checker currently permits `mut <expr>` only in call arguments (and
+ - The type checker permits `mut <expr>` only in call arguments (and
  method receivers) when the corresponding parameter is declared `mut` and is:
  - a borrowed reference type (`mut r: &T`), or
  - a slice type (`mut s: T[]`).
@@ -592,13 +591,12 @@ At a high level, the language can be structured as:
  `if let move Some(value) = maybe { ... }`,
  `else if let move Some(value) = maybe { ... }`, and
  `while let move Some(value) = next() { ... }`.
- - The type checker currently permits `new <expr>` only when it can determine a
- concrete reference result type of the form `&Struct`. In the current
- implementation this happens either:
+ - The type checker permits `new <expr>` only when it can determine a
+ concrete reference result type of the form `&Struct`. In the implementation this happens either:
  - from an expected `&Struct` type context (for example `let x: &Frame = new
- Frame{ ... };` or as a call argument whose parameter type is `&Struct`)
+ Frame{... };` or as a call argument whose parameter type is `&Struct`)
  - from the operand itself when it names the struct type (for example `let x
- = new Frame{ ... };` or `let x = new Frame(...);`)
+ = new Frame{... };` or `let x = new Frame(...);`)
  `new` is supported only in function bodies (not in top-level `let`
  initializers).
 
@@ -743,7 +741,7 @@ At a high level, the language can be structured as:
  - simple function calls such as `helper()` or `util::helper(1, 2)` are
  parsed as call expressions using the `Postfix`/`CallSuffix` productions;
  the compiler supports calls to named functions, but the type checker
- and back-end currently restrict which value types can appear at call boundaries;
+ and back-end restrict which value types can appear at call boundaries;
  see [cli silk](/silk/docs/compiler/cli-silk/) for the exact supported subset.
 
 Further expression forms (ranges, etc.) are described in other
@@ -767,4 +765,4 @@ As the parser and lexer are implemented, this file must be updated with:
 - notes about desugaring and how surface constructs map into the internal AST,
 - clear indication of which productions are implemented today vs. planned
  future work, so that downstream users can see both the full language
- design and the currently supported subset.
+ design and the supported subset.

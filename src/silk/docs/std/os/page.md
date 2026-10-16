@@ -73,7 +73,7 @@ Use these when you prefer explicit namespacing over using `OS_PLATFORM` /
 [`std::os::arch()`](/silk/docs/std/os/) and [`std::os::platform()`](/silk/docs/std/os/) map `ARCH_NAME` and `PLATFORM_NAME`
 into enums suitable for [`match`](/silk/wiki/language/flow-match/).
 
-The `Unknown` case is returned when the current compiler target is not covered
+The `Unknown` case is returned when the compiler target is not covered
 by the current enum set.
 
 ## Uptime
@@ -98,6 +98,6 @@ Ownership:
 
 - Callers must drop the returned vector when finished.
 
-Current implementation:
+implementation:
 
 - `CPU.model` is set to `ARCH_NAME` for each returned CPU record.

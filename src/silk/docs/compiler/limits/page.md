@@ -35,13 +35,13 @@ cap is also documented in the relevant language document (for example
 
 ## Front-End (Type Checker) Structural Limits
 
-The current checker uses fixed-capacity buffers for a number of intermediate
+The checker uses fixed-capacity buffers for a number of intermediate
 tables. Module-/package-scoped tables are heap-backed to avoid stack overflows
 when compiling large module sets, while some per-function scratch state is
 still stack-backed.
 
 When these limits are exceeded, the compiler typically reports
-`E2002` (“unsupported expression in the Supported forms”) because the checker
+`E2002` (“unsupported expression in Silk”) because the checker
 uses `CheckError.UnsupportedExpression` as a shared “not supported yet” / “hit
 an internal cap” path. This will be refined into dedicated “limit exceeded”
 diagnostics as the compiler matures.
@@ -66,7 +66,7 @@ a flattened scalar-slot struct value.
 
 - **Varargs pack capacity** (`N`): **128**
 
-See [varargs](/silk/docs/language/varargs/) for the surface rules and current representation.
+See [varargs](/silk/docs/language/varargs/) for the surface rules and representation.
 
 ## Lowering / IR Limits
 
@@ -124,7 +124,7 @@ instead of releasing arbitrary pointers.
  - Engine behavior:
  - the bundled QuickJS regexp engine consults the timeout hook once every
  **10000** internal execution steps,
- - so the current shipped execution budget is approximately **2.56 million**
+ - so the shipped execution budget is approximately **2.56 million**
  hook-accounted steps before the runtime returns `EXEC_ERR_TIMEOUT`.
  - Effect:
  - pathological backtracking is bounded and reported as a timeout instead of

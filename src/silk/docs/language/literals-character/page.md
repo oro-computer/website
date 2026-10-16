@@ -34,12 +34,12 @@ What works end-to-end today (lexer → parser → checker → lowering → codeg
  - `\xNN` (exactly two hex digits)
  - `\u{...}` (1–6 hex digits)
 - Equality and inequality comparisons (`==`, `!=`) over `char` values.
-- `char` values are lowered as a `u32` scalar in the current IR backend subset.
+- `char` values are lowered as a `u32` scalar in the IR backend subset.
 
 Not implemented yet (or not specified as stable):
 
 - A dedicated diagnostic for invalid character literal spellings (most invalid
- forms currently surface as generic “unsupported expression” errors in the
+ forms surface as generic “unsupported expression” errors in the
  Supported forms).
 
 ## Surface Syntax

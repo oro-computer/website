@@ -122,13 +122,12 @@ export fn parse_datetime_iso (s: string) -> DateTimeParseResult;
 The language examples use `std::now()`; the stdlib should make the clock source
 explicit:
 
-[`std::temporal`](/silk/docs/std/temporal/) currently exposes only a monotonic clock read:
+[`std::temporal`](/silk/docs/std/temporal/) exposes only a monotonic clock read:
 
 Notes:
 
 - `now_monotonic()` must be monotonic (not subject to wall-clock adjustments).
-- Sleeping is exposed via [`std::task`](/silk/docs/std/task/) (`sleep` / `sleep_until`) in the current
- stdlib.
+- Sleeping is exposed via [`std::task`](/silk/docs/std/task/) (`sleep` / `sleep_until`) in the stdlib.
 
 ## Duration Helpers
 

@@ -27,7 +27,7 @@ located compiler runtime archive.
 ## No open-world interface-object ABI
 
 Silk’s ordinary `interface` feature is a language-level conformance mechanism.
-In the current compiler, runtime interface values are implemented only through
+In the compiler, runtime interface values are implemented only through
 the closed-world compilation strategy documented in
 [interfaces](/silk/docs/language/interfaces/):
 
@@ -37,7 +37,7 @@ the closed-world compilation strategy documented in
 - and rewrites interface method calls into ordinary dispatch over that union.
 
 This document does **not** define a generic C ABI for arbitrary Silk interface
-values. In particular, `libsilk.a` does not currently promise:
+values. In particular, `libsilk.a` does not promise:
 
 - a public `SilkInterface` object,
 - a stable `(data pointer, vtable pointer)` trait-object layout,
@@ -148,7 +148,7 @@ The initial C header provided in the Silk compiler repository defines:
   ```
 
  Notes:
- - The current `linux/x86_64` backend subset passes and returns `range` values
+ - The `linux/x86_64` backend subset passes and returns `range` values
  as three 8-byte scalar slots (`start`, `end`, `flags`).
  - `flags` is a bitfield:
  - bit 0: `has_end` (when unset, `end` is ignored),
@@ -188,7 +188,7 @@ The initial C header provided in the Silk compiler repository defines:
  Notes:
  - `SilkF128` stores the IEEE‑754 binary128 bit pattern. It is not C `long double`.
  - These types are passed and returned as two integer-like 8-byte slots in the
- current `linux/x86_64` backend subset.
+ `linux/x86_64` backend subset.
 
 - Package export symbol helpers for C/Objective-C bridge headers:
 
@@ -326,7 +326,7 @@ The initial C header provided in the Silk compiler repository defines:
 
  `silk_compiler_set_noheap` enables the same no-heap mode as the CLI
  (`silk --noheap`): heap-backed allocation is disabled for the supported
- subset. `--noheap` is currently incompatible with `--debug`; the ABI rejects
+ subset. `--noheap` is incompatible with `--debug`; the ABI rejects
  configurations that enable both.
 
  `silk_compiler_set_optimization_level` selects the optimization level (0-3),
@@ -364,7 +364,7 @@ The initial C header provided in the Silk compiler repository defines:
 
  For `linux-aarch64` and `linux-aarch64-musl`,
  `SILK_OUTPUT_EXECUTABLE` first attempts the direct AArch64 IR backend. Its
- current AAPCS64 subset covers integer and `f32`/`f64` scalar constants,
+ AAPCS64 subset covers integer and `f32`/`f64` scalar constants,
  numeric/raw casts, arithmetic, bitwise operations, shifts, comparisons,
  stack/data memory, function/data addresses, CFG branches,
  direct/indirect helpers, and external scalar function/data imports. Integer
@@ -403,7 +403,7 @@ The initial C header provided in the Silk compiler repository defines:
  programs that fit the constant subset.
 
  For AMDGPU targets, `SILK_OUTPUT_OBJECT` emits an AMDHSA `.hsaco` code object
- for the current source-kernel subset: exactly one exported root-package
+ for the source-kernel subset: exactly one exported root-package
  void function with up to 32 immutable `u64` parameters whose body is empty or
  contains only supported compiler-backed GPU call statements. Low-level
  `__silk_amdgpu_*` calls retain integer-literal operands; the semantic
@@ -417,7 +417,7 @@ The initial C header provided in the Silk compiler repository defines:
  [backend amdgpu](/silk/docs/compiler/backend-amdgpu/) documents the canonical source-intrinsic
  declaration sets and authoring diagnostics.
 
- The provider-neutral mixed CPU/GPU executable option is currently a `silk
+ The provider-neutral mixed CPU/GPU executable option is a `silk
  build --gpu-target` CLI surface, not a `libsilk` compiler-setting function.
  This GPU-v1 work does not change the C99 ABI. Embedders retain the documented
  standalone AMDGPU object and AQL packet APIs.
@@ -588,7 +588,7 @@ The initial C header provided in the Silk compiler repository defines:
  - the CLI / driver now supports non-const `ios-aarch64`,
  `ios-simulator-aarch64`, and `ios-simulator-x86_64` executable, object,
  static-library, and shared-library builds on Apple Silicon macOS for the
- current pure-Silk scalar/library subset, including reachable float-to-int
+ pure-Silk scalar/library subset, including reachable float-to-int
  lowering and portable bundled runtime helper families
  (number / regex / unicode / filesystem / dns / process / signal / term /
  pty / readline / task-pool / async),
@@ -615,7 +615,7 @@ The initial C header provided in the Silk compiler repository defines:
  - if Formal Silk syntax is present (for example `#require`, `#assure`,
  `#assert`, `#invariant`, `#variant`, `#monovariant`, `#const`), it also runs the Z3-backed verifier
  and fails the build if verification fails (`E3001`..`E3008`),
- - the verifier is currently skipped for stdlib modules (`std::...`),
+ - the verifier is skipped for stdlib modules (`std::...`),
  - when the host-native archive is present, Z3 is linked from the built-in
  static archive [`vendor/lib/<host-layout>/libz3.a`](https://github.com/oro-computer/silk/blob/master/vendor/lib/<host-layout>/libz3.a),
  - the verifier honors `SILK_Z3_LIB` (environment variable) to override
@@ -631,7 +631,7 @@ The initial C header provided in the Silk compiler repository defines:
  `export let answer: int = 42;` in `util` allows `let x: int = answer;`
  in `app`),
  - imported exported functions (`export fn`) are callable across packages
- for the current scalar subset (both unqualified `foo()` and qualified
+ for the scalar subset (both unqualified `foo()` and qualified
  `pkg::foo()` call forms are accepted initially), and functions in the
  same package share a call namespace across modules in the same module
  set,
@@ -686,9 +686,9 @@ The initial C header provided in the Silk compiler repository defines:
  - there MUST be exactly one top‑level function with one of the forms
 
       ```silk
-      fn main() -> int { ... }
+      fn main() -> int {... }
 
-      fn main(argc: int, argv: u64) -> int { ... }
+      fn main(argc: int, argv: u64) -> int {... }
       ```
 
  with a declared result type of `int`, and either:
@@ -707,7 +707,7 @@ The initial C header provided in the Silk compiler repository defines:
  (the package of the first module added to the compiler via `silk_compiler_add_source_buffer`)
  are emitted as globally-visible symbols for that output; other packages are compiled as
  dependencies and their `export` declarations are treated as internal for that output.
- - within the current `linux/x86_64` IR subset, `string` and `regexp` values are supported at ABI boundaries in a C-friendly `SilkString { ptr, len }` layout:
+ - within the `linux/x86_64` IR subset, `string` and `regexp` values are supported at ABI boundaries in a C-friendly `SilkString { ptr, len }` layout:
  - `string`/`regexp` parameters lower to two integer-like scalars in order (`u64` pointer, then `i64` byte length) and consume the normal integer argument locations (registers then stack),
  - `string`/`regexp` results return as two integer-like scalars in `rax`/`rdx`,
  - `regexp` values remain opaque runtime-engine bytecode views: downstream C code may forward them, but must not construct them as if the byte layout were a stable public format,
@@ -719,16 +719,16 @@ The initial C header provided in the Silk compiler repository defines:
  - `string`: string literals, `let` bindings of `string`, `return` of a `string` value, direct calls to `string`-returning helpers, and `==`/`!=`/`<`/`<=`/`>`/`>=` comparisons over `string` values (producing `bool`),
  - `regexp`: regex literals (`/pattern/flags`), `let` bindings of `regexp`, `return` of a `regexp` value, and direct calls between helpers that accept/return `regexp`,
  - other string operations (concatenation, indexing, etc.) are not implemented yet; higher-level regex matching lives in [`std::regex`](/silk/docs/std/regex/) and is routed through `ext` calls.
- - within the current `linux/x86_64` IR subset, `i128`/`u128`/`f128` values are supported at ABI boundaries using the stable C99 `{ lo, hi }` struct shapes:
+ - within the `linux/x86_64` IR subset, `i128`/`u128`/`f128` values are supported at ABI boundaries using the stable C99 `{ lo, hi }` struct shapes:
  - parameters lower to two integer-like scalars (`u64 lo`, then `u64`/`i64 hi`) and consume integer argument locations,
  - results return as two integer-like scalars in `rax`/`rdx`,
  - `f128` values are transported as raw IEEE binary128 bits in the two lanes (not via SSE registers),
  - module-level constant-evaluable wide bindings and inferred local wide
  arithmetic use this same lane representation; source placement and a
  redundant local type annotation do not alter the ABI or lowering.
- - within the current `linux/x86_64` IR subset, a limited `struct` subset is supported at ABI boundaries:
+ - within the `linux/x86_64` IR subset, a limited `struct` subset is supported at ABI boundaries:
  - within function bodies and internal helper calls, `struct` declarations with 0+ fields of supported value types are supported (scalar primitives, `string`, nested structs, and supported optionals),
- - at ABI boundaries for exported/FFI functions, only ABI-safe structs are currently supported: after slot-flattening, all scalar slots must be `i64`/`u64`/`f64` (until packed ABI mapping for smaller fields is implemented),
+ - at ABI boundaries for exported/FFI functions, only ABI-safe structs are supported: after slot-flattening, all scalar slots must be `i64`/`u64`/`f64` (until packed ABI mapping for smaller fields is implemented),
  - ordinary borrowed references/slices are rejected up front on `ext` declarations and unnamed C-facing root-package `export fn` signatures; only opaque handle references (`&Handle` where `Handle` is `struct Name;`) may cross the external ABI boundary,
  - named-package Silk object exports may accept slice parameters (`T[]`) in the compiler-owned package ABI; these lower to two integer-like scalars (`u64` pointer, then `i64` element count) and are not emitted through C header generation,
  - at the C ABI surface, exported function *parameters* support 1+ slot ABI-safe structs by lowering the struct to its scalar slots in order; downstream C callers should declare separate parameters for 3+ slot structs (by-value C struct parameters are ABI-compatible only for the 1–2 slot cases), while exported function *returns* support 1+ slot ABI-safe structs (3+ slot returns use the native backend’s sret return path and are ABI-compatible with returning an equivalent C struct by value),
@@ -739,7 +739,7 @@ The initial C header provided in the Silk compiler repository defines:
  exports omit the reserved prefix and emit clean C symbols by collapsing
  package `::` namespace separators to `_` and placing a single `_`
  between the package namespace and function name; declaration-level
- `attr(abi=c)` is currently supported only on top-level exported
+ `attr(abi=c)` is supported only on top-level exported
  functions, with functions nested inside inline `module Name { ... }`
  blocks rejected until that export path is implemented end to end;
  clean C ABI symbols that collide with another C ABI export or any other
@@ -748,13 +748,13 @@ The initial C header provided in the Silk compiler repository defines:
  package's public C ABI symbols and the dependency functions as they are
  actually emitted into that output, including internal raw dependency
  symbols,
- - named-package exported data currently uses the default
+ - named-package exported data uses the default
  package-qualified symbol `__silk_export_data__pkg__name`,
  - C/Objective-C bridge headers should spell those symbols through
  `SILK_C_ABI_EXPORT_FN(pkg, name)`, `SILK_PACKAGE_EXPORT_FN(pkg, name)`,
  or `SILK_PACKAGE_EXPORT_DATA(pkg, name)` from `silk/silk.h` instead of
  hardcoding generated spellings,
- - within the current `linux/x86_64` IR subset, optionals (`T?`) are supported at ABI boundaries for the supported payload subset (scalar payloads, `string?`, and optionals of ABI-safe structs):
+ - within the `linux/x86_64` IR subset, optionals (`T?`) are supported at ABI boundaries for the supported payload subset (scalar payloads, `string?`, and optionals of ABI-safe structs):
  - an optional lowers to a `Bool` tag followed by the payload scalar slots: `(tag, payload0, payload1, ...)` with `tag=0` for `None` and `tag=1` for `Some(...)`,
  - nested optionals (`T??`) lower by treating the payload slots as the full inner optional representation (for example `int??` lowers as `(tag0, tag1, i64 payload)`),
  - optional parameters are passed as these scalar slots in order (so downstream C callers should declare separate parameters, treating `tag` as an integer-like 0/1 value),
@@ -765,7 +765,7 @@ The initial C header provided in the Silk compiler repository defines:
  on Apple Silicon macOS hosts,
  `macos-aarch64`, `ios-aarch64`, `ios-simulator-aarch64`, and
  `ios-simulator-x86_64` can emit a Mach-O 64-bit relocatable object for
- the same current host-backed library subset, emitting supported functions
+ the same host-backed library subset, emitting supported functions
  (scalar-returning, `void`-returning, and a limited `string` subset) and supported exported constants
  (`export let`/`export const`; scalar exports require an explicit type annotation and a literal initializer, and string exports may omit `: string` when the initializer is a string literal), and marking `export fn`
  declarations, supported exported constants, and a valid executable `main`
@@ -792,8 +792,7 @@ The initial C header provided in the Silk compiler repository defines:
  documented IR subset; on Apple
  Silicon macOS hosts, `macos-aarch64`, `ios-aarch64`,
  `ios-simulator-aarch64`, and `ios-simulator-x86_64` can emit a Mach-O
- static archive via Apple `libtool -static` for the same current
- host-backed library subset, emitting
+ static archive via Apple `libtool -static` for the same host-backed library subset, emitting
  supported functions (scalar-returning, `void`-returning, and a limited `string` subset) and supported
  exported constants (`export let`/`export const`; scalar exports require an explicit type annotation and a literal initializer, and string exports may omit `: string` when the initializer is a string literal), and
  marking `export fn` declarations, supported exported constants, and a
@@ -811,7 +810,7 @@ The initial C header provided in the Silk compiler repository defines:
  backend's documented IR subset;
  on Apple Silicon macOS hosts, `macos-aarch64`, `ios-aarch64`,
  `ios-simulator-aarch64`, and `ios-simulator-x86_64` can emit a Mach-O
- dylib for the same current host-backed library subset,
+ dylib for the same host-backed library subset,
  emitting supported functions (scalar-returning, `void`-returning, and a limited `string` subset) and
  supported exported constants (`export let`/`export const`; scalar exports require an explicit type annotation and a literal initializer, and string exports may omit `: string` when the initializer is a string literal), and
  marking `export fn` declarations, supported exported constants, and a
@@ -844,7 +843,7 @@ The initial C header provided in the Silk compiler repository defines:
 
               ```silk
               fn helper (x, y) -> int {
-                [let ...;]
+                [let...;]
                 return <expr>;
               }
               ```
@@ -874,10 +873,10 @@ The initial C header provided in the Silk compiler repository defines:
 
                   ```silk
                   if <cond> {
-                    [let ...;]
+                    [let...;]
                     return <expr>;
                   } else {
-                    [let ...;]
+                    [let...;]
                     return <expr>;
                   }
                   ```
@@ -903,10 +902,10 @@ The initial C header provided in the Silk compiler repository defines:
               ```silk
               fn main () -> int {
                 if <cond> {
-                  [let ...;]
+                  [let...;]
                   return <expr>;
                 } else {
-                  [let ...;]
+                  [let...;]
                   return <expr>;
                 }
               }

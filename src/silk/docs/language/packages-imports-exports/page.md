@@ -56,7 +56,7 @@ extended as the compiler’s resolver and linker mature.
 
 Limitations:
 
-- Bulk re-exports (“export from ...”) and forwarding of export surfaces.
+- Bulk re-exports (“export from...”) and forwarding of export surfaces.
 - A stable, fully specified “package build” system outside the current CLI/module-set
  model (see [package manifests](/silk/docs/compiler/package-manifests/) for current manifest support).
 
@@ -182,7 +182,7 @@ Rules :
  - `impl User { ... }`, `new User()`, `User{ ... }`, and `type Alias = User`
  resolve `User` to the current inline module before falling back outward.
  - other inline-module declarations still require explicit `::` qualification
- in Silk currently.
+ in Silk.
 - `export module Name { ... }` exports the namespace:
  - exported declarations inside it become part of the containing package’s
  export surface with their names prefixed by `Name::` (for example
@@ -239,7 +239,7 @@ Rules:
 - `import` declarations identify dependencies and bring exported symbols
  from the imported package into scope in the importing module, subject to
  the visibility rules below.
-- Currently:
+- :
  - importing a package makes its exported `let` bindings with explicit
  type annotations visible as ordinary, unqualified names in the
  importing module (for example, `import util;` followed by `answer`
@@ -250,7 +250,7 @@ Rules:
  (`util::answer`) forms are accepted for now, but the qualified form
  reflects the intended package-namespaced style,
  - exported functions (`export fn`) are callable across packages for the
- compiler’s current backend subset:
+ compiler’s supported forms:
  - within a package, top-level functions form a shared namespace across
  all modules in that package (so functions in one module may call
  functions defined in another module of the same package),
@@ -260,8 +260,7 @@ Rules:
  are accepted initially for imported exports, matching the current
  constant-import behavior, though the qualified form reflects the
  intended package-namespaced style,
- - this callable subset is limited to the compiler’s current
- code generation subset (supported parameters/results, direct calls, and
+ - this callable subset is limited to the compiler’s code generation subset (supported parameters/results, direct calls, and
  structured control flow supported by the IR→ELF backend on
  `linux/x86_64`),
  - struct type names (`struct` declarations) from imported packages are visible in the importing module for the supported `struct` subset:
@@ -591,7 +590,7 @@ import { StringBuilder, write_u8 as writeByte } from "./runtime.slk";
 
 Notes:
 
-- There is no combined `import foo, { bar } from "...";` form in the current grammar.
+- There is no combined `import foo, { bar } from "...";` form in the grammar.
  Use separate `import` declarations.
 - File specifiers should include the `.slk` extension explicitly. `std/...`
  strings are package specifiers rather than file paths.
@@ -642,7 +641,7 @@ Exported names for named imports:
  - exported values: `export fn`, named `export default fn`, `export let`, and
  exported `ext` bindings, and
  - type names: `struct`, `enum`, `error`, and `interface` declarations.
- In Silk currently, type exports are recorded but not fully
+ In Silk, type exports are recorded but not fully
  enforced for all type declarations; loading a module into the module set
  makes its type declarations available for type checking when that module’s
  package is imported (and for some fully-qualified uses in monomorphized
@@ -811,7 +810,7 @@ Rules:
  will be specified and implemented alongside the package graph in
  [architecture](/silk/docs/compiler/architecture/).
 
-Currently, most type names are treated as visible across
+Most type names are treated as visible across
 module boundaries once the relevant module(s) are loaded into the module set.
 The `export` modifier is still recorded on type declarations so the
 package/export model can be tightened later without changing source.
@@ -902,12 +901,12 @@ Rules :
  - The entry may rename the exported name: `export { localName as ExportedName };`.
 - Re-exported names are part of the module/package export surface, so other
  modules may import them via `import { Name } from "./barrel.slk";`.
-- Currently, `export { ... }` supports values and exported
+-, `export { ... }` supports values and exported
  Formal Silk theories (`theory` declarations). It does not export type names.
 
 ## Notes
 
-The current compiler front-end:
+The compiler front-end:
 
 - parses `package` declarations into the AST,
 - parses `import` declarations into the AST,
@@ -956,7 +955,7 @@ export tables:
  prototype/definition pairing described above (`export fn name(...) -> T;` +
  `export fn name(...) -> T { ... }`), which is accepted only when the
  signatures match,
-- these export tables are currently used only for consistency checks; the
+- these export tables are used only for consistency checks; the
  type checker does not yet use them for cross-package name resolution.
 
 Future work will:

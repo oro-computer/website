@@ -57,7 +57,7 @@ Not implemented (yet):
  streams after the response has been parsed.
 - Automatic decompression, redirects, cookies, proxies, etc.
 - Fully nonblocking connect/write/read integration. The async-friendly helpers
- currently offload the blocking one-shot request path to a task worker.
+ offload the blocking one-shot request path to a task worker.
 
 ## Exported API
 
@@ -184,7 +184,7 @@ export async fn request_url_stream_with_headers_async (url: string, method: stri
 
 Notes:
 
-- This API is currently blocking and uses `Connection: close` by default.
+- This API is blocking and uses `Connection: close` by default.
 - `request_async(...)` / `request_v6_async(...)` are async-friendly wrappers,
  not a fully nonblocking HTTP transport. They run the blocking one-shot
  request path on a task worker so async code can `await` the result without

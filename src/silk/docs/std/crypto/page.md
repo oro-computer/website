@@ -15,7 +15,7 @@ githubRef: "master"
 cryptographic primitives through a selectable security provider. The `builtin`
 provider uses target-matched built-in `libsodium` archives on the hosted POSIX
 baseline; the Apple `platform` provider uses Security-backed runtime helpers
-for the currently wired core/random subset.
+for the wired core/random subset.
 
 The long-term goal is:
 
@@ -114,7 +114,7 @@ Key design rules:
  `ext` declarations,
 - APIs accept explicit output buffers (typically `mut out: &std::buffer::BufferU8`),
  and may grow those buffers via `reserve_additional` when needed,
-- where libsodium requires out-parameters and the current language subset cannot
+- where libsodium requires out-parameters and the language subset cannot
  take the address of a stack scalar, APIs may require caller-provided scratch
  bytes (for example by requiring extra capacity in a `BufferU8` beyond the
  returned `len`),
@@ -147,11 +147,11 @@ For each construction:
 - sealing: `*_seal(mut c: &std::buffer::BufferU8, m: std::arrays::ByteSlice, ad: std::arrays::ByteSlice, nonce: std::arrays::ByteSlice, key: std::arrays::ByteSlice) -> std::crypto::CryptoError?`
  - returns `None` on success, otherwise `Some(CryptoError)`
  - sets `c.len = ciphertext_len` on success
- - requires extra capacity (`ciphertext_len + 8`) for libsodium’s `clen_p` out-parameter scratch in the Supported forms
+ - requires extra capacity (`ciphertext_len + 8`) for libsodium’s `clen_p` out-parameter scratch in Silk
 - opening: `*_open(mut m: &std::buffer::BufferU8, c: std::arrays::ByteSlice, ad: std::arrays::ByteSlice, nonce: std::arrays::ByteSlice, key: std::arrays::ByteSlice) -> std::crypto::CryptoError?`
  - returns `None` on success, otherwise `Some(CryptoError)`
  - sets `m.len = message_len` on success
- - requires extra capacity (`message_len + 8`) for libsodium’s `mlen_p` out-parameter scratch in the Supported forms
+ - requires extra capacity (`message_len + 8`) for libsodium’s `mlen_p` out-parameter scratch in Silk
 
 Associated data is optional: callers may pass `ad = { ptr: 0, len: 0 }`.
 

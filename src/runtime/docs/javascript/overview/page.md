@@ -14,6 +14,12 @@ githubRef: "master"
 Oro Runtime apps run inside the platform WebView. You use standard web APIs (DOM, ES modules, `fetch`, URLs, WebCrypto,
 WebAssembly) and import Oro-specific native capabilities as explicit ES modules under the `oro:*` namespace.
 
+## Web APIs are globals
+
+Use `fetch`, `URL`, `Headers`, `Request`, `Response`, `AbortController`, streams, `Worker`, `SharedWorker`, `localStorage`, and `navigator.serviceWorker` directly. They need no `oro:*` imports. The [web platform guide](/runtime/docs/guides/web-platform-apis/) covers networking, storage, media, cryptography, files, device capabilities, and platform differences.
+
+Build an interface with [React and Vite](/runtime/docs/guides/frontend-build-pipeline/) or another static frontend tool, then [package it for Android and iOS](/runtime/docs/guides/mobile-targets-and-device-installs/).
+
 ## How the JavaScript surface is organized
 
 The runtime’s JavaScript surface is broad, but it stays predictable:

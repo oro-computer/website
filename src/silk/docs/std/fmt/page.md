@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "The initial formatting engine is implemented in std/fmt.slk and is intentionally scoped to the current compiler/backend subset (no generics, no runtime interface dispatch)."
+description: "The initial formatting engine is implemented in std/fmt.slk and is intentionally scoped to the compiler/backend subset (no generics, no runtime interface dispatch)."
 docsCollection: "silk"
 section: "std"
 order: 77
@@ -12,7 +12,7 @@ githubRef: "master"
 # [`std::fmt`](/silk/docs/std/fmt/)
 
 The initial formatting engine is implemented
-in [`std/fmt.slk`](https://github.com/oro-computer/silk/blob/master/std/fmt.slk) and is intentionally scoped to the current compiler/backend
+in [`std/fmt.slk`](https://github.com/oro-computer/silk/blob/master/std/fmt.slk) and is intentionally scoped to the compiler/backend
 subset (no generics, no runtime interface dispatch).
 
 [`std::fmt`](/silk/docs/std/fmt/) provides a shared, Zig-`std.fmt`-style format-string syntax and a
@@ -58,8 +58,8 @@ Precision is written after a dot:
 Within `{ ... }`:
 
 - optional **argument selector**:
- - digits: `0`, `1`, `2`, ...
- - bracketed index: `[0]`, `[1]`, ... (reserved for future named arguments; currently only numeric indices are accepted)
+ - digits: `0`, `1`, `2`,...
+ - bracketed index: `[0]`, `[1]`,... (reserved for future named arguments; only numeric indices are accepted)
 - optional **specifier string** (examples: `d`, `x`, `s`, `c`, `e`)
 - optional `:` followed by:
  - optional `fill` + `alignment`:
@@ -72,10 +72,9 @@ Within `{ ... }`:
 
 ## Exported API
 
-Because the language does not yet have generics, the current API uses an
+Because the language does not yet have generics, the API uses an
 explicit argument carrier type (`Arg`). With language-level varargs, the
-formatter now accepts a variable number of arguments (up to the current
-compiler’s varargs limit).
+formatter now accepts a variable number of arguments (up to the compiler’s varargs limit).
 
 ### `Arg`
 
@@ -91,8 +90,8 @@ compiler’s varargs limit).
 - `Arg.bool(value: bool)` — boolean argument.
 - `Arg.char(value: char)` — Unicode scalar argument (formatted as UTF-8 bytes for `{c}` / `{u}`; invalid codepoints render as U+FFFD).
 - `Arg.string(value: string)` — string argument.
-- `Arg.regexp(value: regexp)` — regexp argument (currently formatted as placeholder text).
-- `Arg.Region(value: Region)` — region argument (currently formatted as placeholder text).
+- `Arg.regexp(value: regexp)` — regexp argument (formatted as placeholder text).
+- `Arg.Region(value: Region)` — region argument (formatted as placeholder text).
 
 Compiler convenience: the compiler supports an opt-in implicit
 call-argument coercion mechanism for struct types that provide exported static
@@ -121,7 +120,7 @@ The current formatter supports:
 - `e` — scientific `f64`/`f128`
 - `c` — Unicode scalar (`char`) rendered as UTF-8 bytes
 - `u` — Unicode scalar (`char`) rendered as UTF-8 bytes
-- `any` — alias for default formatting in the Supported forms
+- `any` — alias for default formatting in Silk
 
 When the specifier is empty (`{}`), a default is chosen based on the argument
 kind.
@@ -133,7 +132,7 @@ include an explicit sign for non-negative values (for example `"{:4}"` formats
 Supported forms limitation: formatting signed integers (`int`/`i128`) in
 non-decimal bases (`b`/`o`/`x`/`X`) requires non-negative values.
 
-Float formatting is implemented for `f64` in the Supported forms:
+Float formatting is implemented for `f64` in Silk:
 
 - `{}` / `{d}` format as decimal by default, with an automatic scientific fallback
  for very small / very large magnitudes.
@@ -145,7 +144,7 @@ Hex float formatting (`{x}` on floats) and full debug formatting (`{any}`
 recursing through arbitrary types) remain future work.
 
 `f128` formatting is implemented by converting values to `f64` for formatting,
-so output precision is limited to `f64` precision in the Supported forms.
+so output precision is limited to `f64` precision in Silk.
 
 ## High-Level Formatting (`format`)
 

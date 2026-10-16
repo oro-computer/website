@@ -37,7 +37,7 @@ fn main () -> int {
  code and are not emitted as runtime/linkable symbols.
 - The Supported forms targets scalar-only const evaluation; `string`/aggregate
  return values and higher-order const evaluation are planned.
-- In the Supported forms, `const fn` bodies must not allocate (`new`) or use
+- In Silk, `const fn` bodies must not allocate (`new`) or use
  regions/`with`, must not contain `panic`, and may only call other `const fn`
  declarations.
 

@@ -23,7 +23,7 @@
                 <a class="button button-quiet" href="/silk/docs/guides/formal-silk/">Walkthrough</a>
               </div>
               <div class="panel-body">
-                <p>Amounts are cents. Valid withdrawals keep the balance non-negative.</p>
+                <p>Formal Silk proves the numeric contract at compile time. <a href="/silk/docs/guides/formal-silk/">Parse CLI input and validate it before this call.</a></p>
                 <pre><code class="language-silk">#require balance &gt;= 0;
 #require amount &gt;= 0 &amp;&amp; amount &lt;= balance;
 #assure result == balance - amount;

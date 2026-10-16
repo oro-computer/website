@@ -43,7 +43,7 @@ What works end-to-end today (lexer → parser → checker → lowering → codeg
  - embedded `\r\n` and `\r` in the literal source are normalized to `\n`,
  - `\r` escapes are normalized to `\n`.
 - Equality and ordering comparisons (`==`, `!=`, `<`, `<=`, `>`, `>=`) over
- `string` values in the Supported forms.
+ `string` values in Silk.
 - Compile-time file embedding with `#embed("path")`, text encodings
  `#embed("path", "utf8")` / `#embed("path", "utf16")`, and integer array
  encodings `#embed("path", "u8")` / `#embed("path", "u16")` /
@@ -187,7 +187,7 @@ fn main () -> int {
   // Control escapes.
   if "\t" != "\x09" { return 3; }
   if "\n" != "\x0A" { return 4; }
-  if "\r" != "\n" { return 5; } // `\r` is normalized to `\n` in the current subset.
+  if "\r" != "\n" { return 5; } // `\r` is normalized to `\n`.
 
   // NUL bytes are permitted; strings are length-tracked (not NUL-terminated).
   if "\0" != "\x00" { return 6; }

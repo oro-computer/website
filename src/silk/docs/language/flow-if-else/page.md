@@ -150,7 +150,7 @@ fn main () -> int {
 }
 ```
 
-Supported patterns in the Supported forms (same as [`match`](/silk/wiki/language/flow-match/) expressions; see
+Supported patterns in Silk (same as [`match`](/silk/wiki/language/flow-match/) expressions; see
 [flow match](/silk/docs/language/flow-match/)):
 
 - optionals: `None`, `Some(name)`, `Some(_)`

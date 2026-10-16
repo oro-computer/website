@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "std::crypto provides cryptography primitives (hosted baseline via libsodium in the current design)."
+description: "std::crypto provides cryptography primitives (hosted baseline via libsodium in the design)."
 docsCollection: "silkWiki"
 section: "std"
 order: 76
@@ -12,7 +12,7 @@ githubRef: "master"
 # [`std::crypto`](/silk/docs/std/crypto/)
 
 [`std::crypto`](/silk/docs/std/crypto/) provides cryptography primitives (hosted baseline via libsodium
-in the current design).
+in the design).
 
 Full reference: [crypto](/silk/wiki/std/crypto/).
 

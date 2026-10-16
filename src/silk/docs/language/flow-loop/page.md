@@ -14,7 +14,7 @@ githubRef: "master"
 The [`loop`](/silk/wiki/language/flow-loop/) statement executes a block repeatedly until it is terminated by a
 `break` or `return`.
 
-: `loop { ... }`, plus `async loop { ... }` and
+Supported forms: `loop { ... }`, plus `async loop { ... }` and
 `task loop { ... }`.
 
 ## Surface Syntax
@@ -41,7 +41,7 @@ Notes:
 
 - `async loop` and `task loop` are still loop statements: they do not end with
  `;`.
-- In Silk currently, `async loop` / `task loop` follow the same
+- In Silk, `async loop` / `task loop` follow the same
  async-context restriction as `async { ... }` / `task { ... }`:
  they are only allowed inside functions declared with `async`
  ([diagnostics](/silk/docs/compiler/diagnostics/), `E2031`).

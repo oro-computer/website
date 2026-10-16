@@ -43,9 +43,9 @@ Supported forms:
 
 Limitations (Supported forms):
 
-- The region backing store is currently restricted to `u8[N]` (a fixed-size
+- The region backing store is restricted to `u8[N]` (a fixed-size
  byte array type annotation).
-- Hosted native lowering currently keeps the active-region selector
+- Hosted native lowering keeps the active-region selector
  process-global, and the backing bytes/cursor generated for each anonymous
  `with <bytes>` site are static. Overlapping `with` dynamic extents on
  multiple OS threads are therefore unsupported, even when the source sites
@@ -97,10 +97,10 @@ Rules:
 - A region declaration has no initializer.
 - The type annotation specifies the region backing size and must be a fixed
  byte array type: `u8[N]`.
- - In the current parser subset, `N` may be an integer literal or a
+ - In the parser subset, `N` may be an integer literal or a
  literal-only integer arithmetic expression using `+`, `-`, `*`, `/`, `%`,
  and parentheses.
- - In the current region subset, that expression must fold to a concrete byte
+ - In the region subset, that expression must fold to a concrete byte
  count at parse/type-check time.
 - The declared name is bound as a `Region` value.
 
@@ -198,7 +198,7 @@ Rules (Supported forms):
 
 - `<bytes>` must be a positive integer literal.
 - `<region>` must name a `Region` value that has a compile-time-known backing size
- in the Supported forms (for example a `const region` declaration).
+ in Silk (for example a `const region` declaration).
 - Slice bounds use **byte offsets** (the region backing store is `u8[N]`).
 - `<start>` / `<end>` must be non-negative integer literals.
 - When an explicit `<end>` is present, it is exclusive (`[start..end]`).
@@ -215,7 +215,7 @@ Within a `with <region> { ... }` block:
 
 - any `new` allocation performed by the compiler’s `new` lowering uses the
  active region as its backing store,
-- allocations are **8-byte aligned** in the Supported forms,
+- allocations are **8-byte aligned** in Silk,
 - if the region does not have enough remaining space, the program traps.
 
 Outside of a `with` block, `new` uses the current heap model described in
@@ -259,8 +259,7 @@ with a {
 Regions are bump allocators: each allocation advances a cursor within the
 backing byte buffer.
 
-Because region-backed `new` allocations are still RC-managed in the current
-subset and do not free backing bytes on last-release, reclaiming region memory
+Because region-backed `new` allocations are still RC-managed in the supported forms and do not free backing bytes on last-release, reclaiming region memory
 requires resetting the region cursor so the backing bytes can be reused.
 
 Current behavior:

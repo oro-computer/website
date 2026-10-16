@@ -17,7 +17,7 @@ publication helpers. Its shape is influenced by the local runtime MIME API:
 lookup by name or content type, a parsed `MIMEType` view, and separate helpers
 for content-type parameters.
 
-The module is intentionally allocation-free in Silk currently:
+The module is intentionally allocation-free in Silk :
 returned strings are borrowed views or static constants.
 
 ## Exported API

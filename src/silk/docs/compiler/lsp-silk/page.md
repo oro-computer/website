@@ -79,7 +79,7 @@ The server supports the standard LSP initialization sequence:
 
 - `initialize` (request):
  - Advertised capabilities:
- - `positionEncoding`: `"utf-16"` (the server currently operates in UTF-16 positions for maximum client compatibility).
+ - `positionEncoding`: `"utf-16"` (the server operates in UTF-16 positions for maximum client compatibility).
  - `textDocumentSync`:
  - `openClose: true`,
  - `change: 1` (Full document sync),
@@ -93,7 +93,7 @@ The server supports the standard LSP initialization sequence:
  - `semanticTokensProvider`:
  - legend-driven `full` semantic token responses,
  - token types include namespaces, types, enums, interfaces, structs, parameters, variables, properties, enum members, functions, methods, keywords, comments, strings, numbers, and operators.
- - `inlayHintProvider: true` (type inlay hints for currently supported local bindings; see below).
+ - `inlayHintProvider: true` (type inlay hints for supported local bindings; see below).
  - `completionProvider`:
  - does not support resolve,
  - advertises trigger characters `.`, `:`, `{`, `,`, `"`, `` ` ``, and `/`,
@@ -103,7 +103,7 @@ The server supports the standard LSP initialization sequence:
  - provides function and method signatures for the current call.
 - The server uses `rootUri` (or `rootPath`) to help locate a stdlib root when no explicit `--std-root` or `SILK_STD_ROOT` is set.
 - `initialized` (notification):
- - Accepted but does not currently trigger additional behavior.
+ - Accepted but does not trigger additional behavior.
 - `shutdown` (request) and `exit` (notification) are honored as in the LSP spec.
 - Requests received after `shutdown` (other than `exit`) are treated as invalid and answered with an error response.
 - `$\/cancelRequest` notifications are accepted and ignored; the initial server does not track per-request cancellation state.
@@ -270,7 +270,7 @@ module set.
  initialized in the current literal, and supplies `filterText` so editors
  can keep showing field choices even when the partial token does not
  prefix-match a field label.
-- Currently:
+- :
  - returns completion items with `label`, `kind`, and `detail` populated when symbol data is available,
  - attaches Markdown documentation for functions, methods, structs, and documented `let` bindings when doc comments are available, falling back to a compact signature/type preview,
  - filters results by the identifier prefix immediately preceding the cursor position,
@@ -383,7 +383,7 @@ Limitations:
 The server provides `textDocument/inlayHint`.
 
 - The implementation emits type hints for:
- - unannotated `let` bindings when the initializer’s type is inferable from the current tooling subset,
+ - unannotated `let` bindings when the initializer’s type is inferable from the tooling subset,
  - `for` binders over inferable arrays, slices, and ranges,
  - unannotated C-style `for` initializer bindings with the same inferable-type rule.
 - Hints are range-aware: the server only returns hints whose insertion positions fall inside the requested LSP range.
@@ -524,7 +524,9 @@ By default, the language server will load standard library packages referenced b
 
 You can disable stdlib integration entirely with `--nostd`, which is useful for sandboxed editor setups or custom stdlib forks.
 
-### Diagnostics Source and Current Limits
+<span id="diagnostics-source-and-current-limits"></span>
+
+### Diagnostics Source and Limits
 
 Diagnostics are derived from the existing compiler front-end:
 
@@ -562,7 +564,7 @@ The current LSP diagnostic surface follows these rules:
  - the server evaluates `attr(...)` query conditions using the host target (`arch`, `os`, `target`) and the enabled feature set (empty in Silk currently),
  - when an `if` / `else if` condition is an attribute-query boolean expression that resolves to a constant `true`/`false`, the inactive branch body is published as a `Hint` diagnostic tagged `Unnecessary` so editors may render it faded (similar to inactive `#if` blocks in C/C++).
 
-Current limits:
+limits:
 
 - parse and attribute-pass diagnostics are still built locally from the parser / attr pass because those subsystems do not yet surface the same reusable diagnostic struct as the later resolve/type-check stages,
 - when an internal error path still lacks an exact span, the server falls back to the owning module with a coarse range rather than dropping the diagnostic entirely.

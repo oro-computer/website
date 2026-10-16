@@ -21,13 +21,13 @@ Need the toolchain first? Follow [setup](/silk/docs/usage/getting-started/#build
 
 ## Take the next step
 
-[Extract a reusable module](/silk/docs/guides/modules-and-packages/), [use the standard library](/silk/docs/guides/standard-library/), or [prove a function contract](/silk/docs/guides/formal-silk/).
+[Extract a reusable module](/silk/docs/guides/modules-and-packages/), [use the standard library](/silk/docs/guides/standard-library/), or [validate CLI input and prove a function contract](/silk/docs/guides/formal-silk/).
 
 For host integration, start with [embedding Silk](/silk/docs/compiler/libsilk-quickstart/). For device work, see the [CPU/GPU walkthrough](/silk/docs/usage/pure-silk-gpu/).
 
 ## Look up a detail
 
-Use the [language specification](/silk/spec/2026/), [standard library reference](/silk/docs/std/overview/), or [CLI](/silk/docs/compiler/cli-silk/). The [implementation status](/silk/docs/compiler/implementation-status/) records current limits.
+Use the [language specification](/silk/spec/2026/), [standard library reference](/silk/docs/std/overview/), or [CLI](/silk/docs/compiler/cli-silk/). The [targets and capabilities](/silk/docs/compiler/implementation-status/) lists target-specific behavior.
 
 <!-- Preserve existing section links; details now live in the linked references. -->
 <span id="a-minimal-hello-world"></span>

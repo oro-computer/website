@@ -19,7 +19,7 @@ windowed apps, keeps Objective-C and raw `silk_rt_*` symbols behind the runtime
 module, and provides a high-level `Context` / `Frame` workflow for rendering
 into [`std::window`](/silk/docs/std/window/) AppKit windows.
 
-The shipped implementation currently supports macOS. Linux exposes the same
+The shipped implementation supports macOS. Linux exposes the same
 public package names for import/type-checking, but runtime-facing operations
 return `Err(MetalFailed{ code: UnsupportedPlatform })` without declaring Metal
 runtime externs for that target. Other non-macOS targets keep the documented

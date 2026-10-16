@@ -13,7 +13,7 @@ githubRef: "master"
 
 [`match`](/silk/wiki/language/flow-match/) provides structured pattern matching.
 
-Currently:
+Supported forms:
 
 - `match <optional> { None => expr, Some(x) => expr }` is supported (expression form),
 - `match <enum> { E::V => expr, ... }` is supported in a restricted exhaustive subset,

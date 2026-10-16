@@ -15,7 +15,7 @@ A small native-argv helper surface is implemented in
 [`std/args.slk`](https://github.com/oro-computer/silk/blob/master/std/args.slk) to make early programs ergonomic while `string[]` parameters and
 richer slice/iterator features are still future work.
 
-[`std::args`](/silk/docs/std/args/) currently supports two executable argument shapes:
+[`std::args`](/silk/docs/std/args/) supports two executable argument shapes:
 
 - hosted/native entrypoints that receive:
 

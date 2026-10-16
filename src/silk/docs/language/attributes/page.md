@@ -34,7 +34,7 @@ Values may be:
 
 
 
-Defined in Silk currently:
+Defined in Silk :
 
 - `attr(...)` as a prefix annotation on declarations and statements.
 - `attr(...)` as a compile-time query expression of type `bool`.
@@ -97,7 +97,7 @@ An attribute item may be either:
 - a tag: `attr(one)`, or
 - a key/value item: `attr(arch="x86_64")`.
 
-In the Supported forms, key/value items use one of:
+In Silk, key/value items use one of:
 
 - `=` for string/identifier/bool keys (for example `arch="x86_64"`, `abi=c`),
 - `=`, `<`, `<=`, `>`, `>=` for numeric toolchain keys (for example
@@ -161,7 +161,7 @@ and do not exist as runtime calls.
 
 ## Built-in attribute keys
 
-Silk currently recognizes the following keys in queries and
+Silk recognizes the following keys in queries and
 conditional compilation contexts:
 
 - `arch`: `"x86_64"`, `"aarch64"`, or `"wasm32"`
@@ -223,7 +223,7 @@ symbols against the dependency functions as they are actually emitted into that
 output, including dependency functions that become internal raw symbols rather
 than public package-qualified exports.
 
-Declaration-level `attr(abi=c)` currently applies only to top-level exported
+Declaration-level `attr(abi=c)` applies only to top-level exported
 functions. A top-level `package` or `module` declaration participates in the
 namespace-derived C symbol spelling above, but functions nested inside
 `module Name { ... }` inline module blocks are rejected until inline-module C
@@ -235,7 +235,7 @@ marshal at a C call boundary.
 
 ## Task scheduling (`task=pool` / `task=thread`)
 
-In the current hosted subset, `task fn` execution is implemented on OS threads.
+In the hosted subset, `task fn` execution is implemented on OS threads.
 By default, calling a `task fn` schedules that task on the global task pool.
 
 When a `task fn` (or `async task fn`) is annotated with:
@@ -284,7 +284,7 @@ the pool does not deadlock itself.
 
 Features are named build-time toggles intended for conditional compilation.
 
-In Silk currently, features may be enabled from:
+In Silk, features may be enabled from:
 
 - the CLI (`--feature` / `-F`), and
 - package manifests (`silk.toml`):

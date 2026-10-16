@@ -249,7 +249,7 @@ Conformance rules:
  - `export async task fn m (...) -> R` is treated as `m(...) -> Promise(Task(R))`.
  This allows module interfaces to express async/task entrypoints by writing the
  appropriate handle type in the interface method result.
-- In Silk currently, module conformance is checked against the
+- In Silk, module conformance is checked against the
  module’s **exported** functions (written as `export fn ...`), since those are
  the module members that are visible across module boundaries.
 
@@ -264,7 +264,7 @@ Generic module conformance:
 
 
 
-The current compiler now supports interface-typed runtime values without a
+The compiler now supports interface-typed runtime values without a
 separate boxed/vtable runtime. Instead, the native compiler resolves an
 interface value type to a closed-world union of all known concrete conformers
 in the current compilation set.
@@ -282,7 +282,7 @@ let xs: Object[] = [
 ];
 ```
 
-Currently, `Object[]` is lowered as an array whose element
+`Object[]` is lowered as an array whose element
 type is the union of the known `Object` conformers (`Foo | Bar` in this
 example). A method call like `value.as_string()` on an interface-typed runtime
 value is rewritten by the checker into an ordinary [`match`](/silk/wiki/language/flow-match/) dispatch over that
@@ -294,7 +294,7 @@ as `value: Object => ...` accepts the scrutinee. This concrete form is selected
 statically and therefore also covers single-conformer cases without requiring a
 preexisting interface-typed union value.
 
-This means the current runtime interface subset supports:
+This means the runtime interface subset supports:
 
 - interface-typed local bindings, function parameters, borrowed function
  parameters (`&Interface`), and array elements,
@@ -310,7 +310,7 @@ This means the current runtime interface subset supports:
  [`std::interfaces::Drop`](/silk/docs/std/interfaces/) for deterministic cleanup; see
  [interfaces](/silk/docs/std/interfaces/) and [memory model](/silk/docs/language/memory-model/)).
 
-Current limits:
+limits:
 
 - This is a closed-world compilation strategy, not an open-world trait-object
  ABI. The conformer set is computed from the known program/package being
@@ -328,13 +328,13 @@ Current limits:
  conformer to an already-built interface-typed runtime boundary without
  recompiling the consumer too, because the consumer’s lowered union shape was
  chosen from the closed world it already knew about.
-- Runtime interface values currently depend on the existing union-value backend,
+- Runtime interface values depend on the existing union-value backend,
  so they are supported where the resulting conformer union is representable by
- Silk currently.
+ Silk.
 
 ### Closed-world compilation versus open-world ABI
 
-The current compiler strategy is:
+The compiler strategy is:
 
 - source-level interface declarations and `impl ... as ...` conformance,
 - compile-time discovery of the conformers that are present in the current
@@ -343,7 +343,7 @@ The current compiler strategy is:
 - and lowering interface method calls to ordinary [`match`](/silk/wiki/language/flow-match/) dispatch over that
  union.
 
-The current compiler does **not** promise:
+The compiler does **not** promise:
 
 - a heap-boxed trait object,
 - a stable `(data pointer, vtable pointer)` object model,

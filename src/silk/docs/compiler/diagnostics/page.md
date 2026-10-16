@@ -62,7 +62,7 @@ Rule for feature-vs-rejection wording:
  missing implementation work in some compiler paths rather than forbidden
  types.
  - monomorphized generics are language features, so `E2016` is for generic
- forms the current compiler has not implemented yet, not for generic syntax
+ forms the compiler has not implemented yet, not for generic syntax
  that is outside the language.
 
 ## Terminology
@@ -169,7 +169,7 @@ diagnostic data payload.
 
 ## Error Codes
 
-The compiler assigns a stable code to each currently supported error kind.
+The compiler assigns a stable code to each supported error kind.
 
 ### Parsing
 
@@ -292,7 +292,7 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2086` — `const fn` may not allocate (`new`).
 - `E2087` — `const fn` may not call a non-`const fn`.
 - `E2088` — `const fn` may not contain `panic` statements.
-- `E2089` — unsupported construct in a `const fn` body (outside the current const-eval subset).
+- `E2089` — unsupported construct in a `const fn` body (outside the const-eval subset).
 - `E2090` — `const fn` may be called only from compile-time contexts.
 - `E2091` — generic function call type arguments could not be inferred at the call site.
 - `E2092` — use of moved value.
@@ -429,7 +429,7 @@ Notes:
  available.
 - Executable entrypoint shape failures should name the rejected form directly
  (for example ``unsupported executable entrypoint form: `async task fn main``` )
- and say which executable entrypoint forms are currently supported.
+ and say which executable entrypoint forms are supported.
 - When executable lowering fails during runtime-support setup before ordinary
  function-body lowering begins, `E4001` should name the blocked runtime stage
  directly (for example

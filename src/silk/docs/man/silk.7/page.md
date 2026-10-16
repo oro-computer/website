@@ -74,13 +74,13 @@ Recommended terminal workflow:
 
 ## Current Code Generation Coverage
 
-The compiler currently supports full parsing and type checking, but code
+The compiler supports full parsing and type checking, but code
 generation is not yet implemented for the full language surface. When a program
-type-checks but uses a construct outside the currently implemented codegen
+type-checks but uses a construct outside the implemented codegen
 coverage, builds fail with `E4001` diagnostics that point at the rejected
 construct and name its kind.
 
-The currently implemented coverage is documented in:
+The implemented coverage is documented in:
 
 - [`silk(1)`](/silk/docs/man/silk.1/) (see the `build` command and its notes),
 - [cli silk](/silk/docs/compiler/cli-silk/),

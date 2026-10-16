@@ -29,11 +29,11 @@ fn withdraw (balance: int, amount: int) -> int {
 }
 ```
 
-The compiler proves the contract where it is used. [Run the full example](/silk/docs/guides/formal-silk/) to see an accepted call and a rejected one.
+The compiler proves the contract where it is used. [Run the full example](/silk/docs/guides/formal-silk/) to validate CLI input, prove a guarded call, and see an unguarded call fail verification.
 
 ## Choose a path
 
-Build a [command-line tool](/silk/learn/getting-started/), [reuse a package](/silk/docs/guides/project-dependencies/), or [expose a C ABI](/silk/docs/compiler/abi-libsilk/). Check [implementation status](/silk/docs/compiler/implementation-status/) when choosing a target or feature.
+Build a [command-line tool](/silk/learn/getting-started/), [reuse a package](/silk/docs/guides/project-dependencies/), or [expose a C ABI](/silk/docs/compiler/abi-libsilk/). Check [targets and capabilities](/silk/docs/compiler/implementation-status/) when choosing a target or feature.
 
 <!-- Preserve existing section links; details now live in the linked references. -->
 <span id="why-it-exists"></span>

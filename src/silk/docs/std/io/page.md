@@ -31,7 +31,7 @@ See also:
 
 ## Exported API
 
-The current stdlib provides basic unbuffered stdio primitives
+The stdlib provides basic unbuffered stdio primitives
 (stdin reads and stdout/stderr writes), a small formatting surface
 (implemented without libc varargs; formatted bytes are written via
 [`std::runtime::io::write`](/silk/docs/std/runtime-io/)), and a minimal async wrapper layer in
@@ -115,7 +115,7 @@ Notes:
 
 - `print`/`println` accept Zig-`std.fmt`-style format strings (see
  [fmt](/silk/docs/std/fmt/)) and a variable number of [`std::fmt::Arg`](/silk/docs/std/fmt/) arguments (within
- the current compiler’s varargs limit).
+ the compiler’s varargs limit).
 - `eprint`/`eprintln` are the stderr equivalents of `print`/`println`.
 - `IOFailed.code` is a stable stdlib error code; callers should prefer `IOFailed.kind()`.
 - Invalid buffer arguments report `IOErrorKind::InvalidInput`.
@@ -149,7 +149,7 @@ Notes:
  a manual libc `--needed` entry is not required for typical hosted [`std::io`](/silk/docs/std/io/)
  use.
 - `string` parameters in `ext` calls are lowered as C-string pointers in the
- current backend subset (the backing bytes include a trailing NUL terminator;
+ supported forms (the backing bytes include a trailing NUL terminator;
  Silk `string` length excludes it).
 - [`std::io::async`](/silk/docs/std/io-async/) provides small async wrappers (`read`/`write`) on top of
  [`std::runtime::io::{read_async,write_async}`](/silk/docs/std/runtime-io/). On `linux/*` these are backed
@@ -158,7 +158,7 @@ Notes:
  Abortable variants (`read_abortable` / `write_abortable`) accept an optional
  [`std::abort_controller::AbortSignalBorrow`](/silk/docs/std/abort-controller/) and return `IOErrorKind::Aborted`
  when cancelled.
- Note: in the Supported forms, aborts are observed before starting an I/O
+ Note: in Silk, aborts are observed before starting an I/O
  attempt; they do not interrupt an in-flight operation.
 - [`std::io::stream`](/silk/docs/std/io-stream/) provides task-based adapters that connect POSIX/WASI file
  descriptors (`fd`) with [`std::stream`](/silk/docs/std/stream/) (`ReadableStream` / `WritableStream`):

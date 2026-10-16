@@ -2,6 +2,7 @@ import MarkdownIt from 'markdown-it'
 import { sanitizeMarkdown, sanitizeSpecMarkdown } from './public-copy.ts'
 import { canonicalLink } from '#lib/urls.ts'
 import { collections, type Collection } from '#lib/collections.ts'
+import { silkProse } from './silk-prose.ts'
 const parser = new MarkdownIt({ html: true })
 export function publicContent(
   text: string,
@@ -35,6 +36,9 @@ export function publicContent(
           currentFile: sourcePath,
           kind: collection === 'silkWiki' ? 'wiki' : 'docs',
         })
+  if (collection === 'silk' || collection === 'silkWiki') {
+    protectedText = silkProse(protectedText)
+  }
   // Only rewrite link destinations outside code; inline API examples remain literal.
   protectedText = protectedText.replace(
     /(\]\()([^\s)]+)(?=[\s)])/g,

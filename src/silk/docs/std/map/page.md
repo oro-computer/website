@@ -23,17 +23,16 @@ iteration and accessors).
 
 ## Considerations
 
-In the Supported forms:
+In Silk:
 
 - `HashMap(K, V)` owns keys and values by value:
  - `clear` / `drop` run `Drop` for all live entries,
  - `remove` drops the removed key and returns the removed value,
  - `put` returns the previous value when replacing an existing entry.
 - `TreeMap(K, V)` does not run `Drop` for stored keys/values yet; it should be
- treated as single-slot storage in the Supported forms.
+ treated as single-slot storage in Silk.
 - `HashMap(K, V)` stores keys and values in the compiler’s **scalar-slot**
- layout (`sizeof(K)` / `sizeof(V)` bytes, multiples of 8 in the current
- subset). This supports multi-slot value types such as `string` and non-opaque
+ layout (`sizeof(K)` / `sizeof(V)` bytes, multiples of 8 in the supported forms). This supports multi-slot value types such as `string` and non-opaque
  structs/enums over supported primitives.
 - `TreeMap(K, V)` is still limited by its current node layout and, for now,
  should be treated as **single-slot** storage (keys/values that lower to a

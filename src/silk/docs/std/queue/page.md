@@ -60,10 +60,10 @@ Notes:
 
 - `front()` / `back()` return `T?` so empty queues can be queried without
  trapping.
-- `FixedQueue(T)` is currently a marker interface in this subset. The concrete
+- `FixedQueue(T)` is a marker interface in this subset. The concrete
  fixed queue structs still implement the full queue method surface plus the
  marker, but generic interface inheritance (`FixedQueue(T) extends Queue(T)`)
- is not accepted by the current checker for this generic case yet.
+ is not accepted by the checker for this generic case yet.
 - The fixed-capacity variants still implement `ReserveAdditional`; “fixed”
  here means “does not grow implicitly during `push_*`”.
 

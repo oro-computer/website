@@ -96,4 +96,4 @@ Add `bike` with a 250-cent fee. Update usage and error messages, add a test, and
 
 ## Next
 
-Use `Result` for expected validation failures; see [typed errors](/silk/docs/language/errors/) for contract errors. Continue with [filesystem workflows](/silk/docs/usage/tutorials/04-filesystem/) or [testing](/silk/docs/guides/testing/).
+Use `Result` for expected validation failures; see [typed errors](/silk/docs/language/errors/) for contract errors. For numeric input, [parse CLI values and prove guarded calls with Formal Silk](/silk/docs/guides/formal-silk/). Continue with [filesystem workflows](/silk/docs/usage/tutorials/04-filesystem/) or [testing](/silk/docs/guides/testing/).

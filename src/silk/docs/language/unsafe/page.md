@@ -111,7 +111,7 @@ erase the caller's obligation from the interface contract.
 
 ## Operations That Require an Unsafe Context
 
-The current compiler requires `unsafe` for:
+The compiler requires `unsafe` for:
 
 - constructing an array/slice or string view from a raw `u64`/`usize` address,
  including `ptr as T[]`, `ptr as T[](/silk/docs/len)`, and `ptr as string(len)`;

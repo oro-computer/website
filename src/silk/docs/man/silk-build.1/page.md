@@ -120,7 +120,7 @@ Notes:
  stderr output; non-interactive output stays concise.
 - successful builds report final artifacts as `build: <kind> -> <path>`.
 - script-style entrypoints: when building an executable, if the **first** `.slk` input contains top-level statements (after the normal `package`/`module` header and `import` block) and does not define an explicit `main`, `silk build` synthesizes an implicit `fn main() -> int` that executes those statements and then returns `0`.
-- for `--kind executable`, `--std-lib` / `--std <path>.a` is currently rejected when linking additional `.c`/`.h`/`.m`/`.o`/`.a` inputs (std sources are compiled into the build instead).
+- for `--kind executable`, `--std-lib` / `--std <path>.a` is rejected when linking additional `.c`/`.h`/`.m`/`.o`/`.a` inputs (std sources are compiled into the build instead).
 - on supported hosted target layouts (Linux x86_64 or AArch64, glibc or
  musl, plus macOS AArch64), crypto/TLS/SSH imports and recognized native
  symbols select the target-matched built-in archives produced by
@@ -262,7 +262,7 @@ Notes:
  - `linux-x86_64-musl` (same IR-backed subset with musl loader/libc defaults)
  - `linux-aarch64` and `linux-aarch64-musl` (direct integer and `f32`/`f64`
  scalar IR-backed ELF64 executables plus const-main fallback, and direct
- `EM_AARCH64` object/static/shared library output; the current AAPCS64
+ `EM_AARCH64` object/static/shared library output; the AAPCS64
  subset supports stack/data memory, function/data addresses, direct and
  indirect helpers, external scalar function/data imports, `x0`…`x7` and
  `v0`…`v7` argument/result classes, stack-spilled additional arguments,
@@ -374,7 +374,7 @@ These flags are shown in `silk build --help` only on Apple Silicon macOS compile
  - when a build module is executed and no explicit path override is provided, the compiler looks for `<package_root>/build.slk` (or uses `[build].build_module_path` from `silk.toml` when set).
  - the build module is invoked with `argv[1] = <package_root>` and `argv[2] = <action>` where `<action>` is `build`, `install`, or `uninstall`.
 - build modules are opt-in by default; to run one for `silk build --package` without passing `--build-module`, set `[build].build_module = true` in `silk.toml`.
-- build-module execution currently supports Linux x86_64, Linux AArch64 (glibc
+- build-module execution supports Linux x86_64, Linux AArch64 (glibc
  or musl), and Apple Silicon macOS hosts.
 - `--build-module-path <path>` — override the build module path.
  - if `<path>` is relative, it is resolved relative to `<package_root>`.

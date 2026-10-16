@@ -63,7 +63,7 @@ When explicit input files are used (no `--package`), the `silk` CLI may load add
 - `--filter <pattern>` — run only tests whose test path contains `<pattern>` (substring match). The test path is the nested test name stack joined with `/` (for example `suite/case`).
 - `--package <dir|manifest>`, `--pkg <dir|manifest>` — load the module set from a `silk.toml` manifest instead of explicit input files. When `<file> ...` inputs are omitted and `--package` / `--pkg` is also omitted, but `./silk.toml` exists, `silk test` behaves as if `--package .` was provided.
  - when the root manifest enables a build module via `[build].build_module = true`, `silk test --package` runs that build module and uses the emitted manifest/module set for package tests,
- - for compatibility, package tests currently invoke the build module with the action string `build`,
+ - for compatibility, package tests invoke the build module with the action string `build`,
  - manifest-native link metadata for the test harness (`[[target]].inputs`, `cflags`, `ldflags`, `needed`, and `runpath`) is taken from `[build].default_target` when it names a code target, otherwise the first declared code target; matching package and dependency `[[native]]` entries are merged as package-level native requirements; `kind = "man"` targets are ignored for target metadata.
  - raw manifest native sources (`.c`, `.h`, and supported `.m`) are compiled to temporary objects for the generated test harness; `.o`, `.a`, shared libraries, needed libraries, runpaths, and supported `ldflags` entries are linked as declared.
  - built-in provider native-input auto-linking for libsodium, mbedTLS, and

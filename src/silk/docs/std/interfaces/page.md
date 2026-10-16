@@ -15,7 +15,7 @@ This module defines small,
 non-generic standard-library interfaces (“protocols”) that can be used today to
 express common capabilities across `std::` types.
 
-The current compiler supports a closed-world runtime interface subset. Runtime
+The compiler supports a closed-world runtime interface subset. Runtime
 interface values are compiled as unions of the known concrete conformers in the
 current build, and interface method calls on those values are rewritten into
 ordinary union dispatch. The compiler still does not expose a separate boxed
@@ -68,7 +68,7 @@ See also:
 - [structs impls layout](/silk/docs/language/structs-impls-layout/) (method + `export` rules)
 
 ## Exported API
-[`std/interfaces.slk`](https://github.com/oro-computer/silk/blob/master/std/interfaces.slk) currently defines the following interfaces:
+[`std/interfaces.slk`](https://github.com/oro-computer/silk/blob/master/std/interfaces.slk) defines the following interfaces:
 
 ```silk
 module std::interfaces;
@@ -169,7 +169,7 @@ Notes:
 - `Serialize` is also recognized by the `as` cast operator:
  - when a type provides `serialize(self: &T) -> S`, an explicit cast
  `value as S` lowers to `value.serialize()` (see [operators](/silk/docs/language/operators/)).
-- Current stdlib adopters of `Serialize(string)` include:
+- stdlib adopters of `Serialize(string)` include:
  - [`std::strings::String`](/silk/docs/std/strings/)
  - [`std::path::PathBuf`](/silk/docs/std/path/)
  - [`std::url::URLSearchParams`](/silk/docs/std/url/)
@@ -181,7 +181,7 @@ Notes:
  `fn try_serialize(self: &T) -> Result(S, E)`,
  - calls use `value.try_serialize()`,
  - unlike `Serialize`, `TrySerialize` is not used by `as` casts.
-- Current stdlib adopters of `TrySerialize(std::memory::OutOfMemory)` include:
+- stdlib adopters of `TrySerialize(std::memory::OutOfMemory)` include:
  - [`std::strings::String`](/silk/docs/std/strings/)
  - [`std::path::PathBuf`](/silk/docs/std/path/)
  - [`std::url::URL`](/silk/docs/std/url/)
@@ -197,7 +197,7 @@ Notes:
  - `Deserialize` must remain infallible. Fallible parsing or allocation-backed
  constructors should use `Parse(E, S)` or explicit `Result(...)`-returning
  APIs rather than forcing a trap-heavy `Deserialize` impl.
-- Current stdlib adopters of `Parse` include:
+- stdlib adopters of `Parse` include:
  - [`std::strings::String`](/silk/docs/std/strings/)
  - [`std::path::PathBuf`](/silk/docs/std/path/)
  - [`std::url::URL`](/silk/docs/std/url/)
@@ -206,7 +206,7 @@ Notes:
  - [`std::uuid::UUID`](/silk/docs/std/uuid/)
  These types can now expose a consistent receiverless parse surface without
  overloading the cast operator.
-- Current stdlib adopters of the core container/view protocols include:
+- stdlib adopters of the core container/view protocols include:
  - [`std::arrays::Slice(T)`](/silk/docs/std/arrays/) and [`std::arrays::ByteSlice`](/silk/docs/std/arrays/) implement `Len` and
  `IsEmpty`, while `SliceIter(T)` and `ByteSliceIter` implement `Iterator(...)`.
  - [`std::buffer::BufferU8`](/silk/docs/std/buffer/) implements `Len`, `Capacity`, `IsEmpty`, `Clear`,
@@ -301,7 +301,7 @@ Automatic invocation :
  the storage is discarded.
 - **Return:** on `return`, the compiler drops all in-scope droppable bindings
  except any value moved into the return result (for example `return value;`
- and `return Some(value);` treat `value` as moved in the Supported forms).
+ and `return Some(value);` treat `value` as moved in Silk).
 - **Overwrite:** when a `struct` *value* binding is overwritten via assignment,
  the compiler calls `drop` on the old value before copying in the new value.
 - **Heap last-release:** for compiler-managed `new` allocations (`&T` with RC),

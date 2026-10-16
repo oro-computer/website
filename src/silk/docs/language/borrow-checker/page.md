@@ -13,7 +13,7 @@ githubRef: "master"
 
 This document specifies Silk’s intended borrow-checking model for references.
 
-Silk currently implements:
+Silk implements:
 
 - call-scoped alias checks for mutable borrows (including slice range borrows),
 - lexical lifetime checks for slice and reference borrows (no escaping borrows
@@ -52,7 +52,7 @@ borrows and borrowed `&T` values so obvious use-after-scope cases are rejected
 (for example returning a slice borrowed from a local fixed array, or returning
 `&T` borrowed from a local struct binding).
 
-The currently shipped subset therefore already includes borrowed views in the
+The shipped subset therefore already includes borrowed views in the
 positions that matter most for day-to-day code:
 
 - local `&T` and `T[]` bindings,
@@ -73,7 +73,7 @@ point into existing storage:
 - When borrowing a range from an existing slice binding `s: T[]`, the borrow’s
  underlying origin is `s`’s origin (sub-slicing does not extend lifetime).
 
-Lexical lifetime rules enforced by Silk currently:
+Lexical lifetime rules enforced by Silk :
 
 - A slice value that ultimately borrows from a **local fixed array binding**
  (`T[N]`) may not escape that binding’s lexical scope.
@@ -90,7 +90,7 @@ Lexical lifetime rules enforced by Silk currently:
  parameter).
 
 These rules are intentionally conservative, but they are the complete lexical
-lifetime model for the currently supported language subset.
+lifetime model for the supported language subset.
 
 ## Lexical Reference Lifetimes
 
@@ -115,7 +115,7 @@ or fixed-array origin, the lexical escape check still rejects the return.
 
 ## Local Mutation While Borrowed
 
-Silk currently also rejects direct mutation of ordinary local
+Silk also rejects direct mutation of ordinary local
 storage while a borrow of that same storage remains live.
 
 This applies to:
@@ -139,7 +139,7 @@ rules instead.
 
 ## Borrow-Carrying Wrappers and Conservative Control Flow
 
-The current checker also preserves borrow identity through a small set of
+The checker also preserves borrow identity through a small set of
 wrapper and control-flow forms:
 
 - `Some(<borrow>)` preserves the underlying borrow identity.
@@ -150,7 +150,7 @@ wrapper and control-flow forms:
  `T[]` also participate in the same local mutation, lexical escape, move, and
  `await` checks as direct borrowed bindings.
 - Refutable-pattern binders also preserve borrow identity when the scrutinee
- already proves a single local borrow origin. In the Supported forms, this
+ already proves a single local borrow origin. In Silk, this
  includes:
  - `if let Some(x) = r { ... }`
  - `let Some(x) = r else { ... };`
@@ -177,11 +177,11 @@ wrapper and control-flow forms:
  - or all borrowing arms are caller-owned inputs.
 
 When a borrowed control-flow expression could refer to multiple distinct local
-origins, the Supported forms rejects it with `E2122` instead of guessing.
+origins, Silk rejects it with `E2122` instead of guessing.
 
 ## Boundary Safety
 
-The current compiler also enforces conservative rules at boundaries where a
+The compiler also enforces conservative rules at boundaries where a
 borrowed view could outlive the storage it refers to.
 
 ### `async fn` boundaries
@@ -204,7 +204,7 @@ Opaque handle references are allowed:
 These are treated as external handles rather than borrow-checked views into
 ordinary Silk storage.
 
-Borrowed parameters are permitted in the Supported forms, but the checker also
+Borrowed parameters are permitted in Silk, but the checker also
 enforces a conservative async call-site rule:
 
 - an ordinary reference or slice that still resolves to function-local stack
@@ -213,7 +213,7 @@ enforces a conservative async call-site rule:
 - opaque handle references remain allowed because they are not borrow-checked
  views into ordinary Silk storage.
 
-This is the borrow model for the current async subset. Additional async surface
+This is the borrow model for the async subset. Additional async surface
 area must define equivalent suspension and escape rules before it lands.
 
 ### External ABI boundaries
@@ -284,7 +284,7 @@ This enables moving values into other values (for example as call arguments or
 as the payload of `Some(...)`) without accidentally copying a resource-owning
 value and dropping it twice.
 
-In the Supported forms, ownership transfer is intentionally conservative:
+In Silk, ownership transfer is intentionally conservative:
 
 - A binding may not be moved while it has any live borrows (reference or slice
  views) in scope, including borrows stored in struct fields.
@@ -339,13 +339,13 @@ In the Supported forms, ownership transfer is intentionally conservative:
  - copyable existing sources still copy, so both bindings remain independent,
  - `let move Some(value) = maybe;`,
  `let move Some(value) = maybe else { ... };`, `if let move Some(value) =
- maybe { ... }`, `else if let move Some(value) = maybe { ... }`, and
+ maybe {... }`, `else if let move Some(value) = maybe {... }`, and
  `while let move Some(value) = next() { ... }` consume the pattern scrutinee
  under the same move and borrow checks.
 
 ## Completeness
 
-The borrow checker is complete for the currently documented and
+The borrow checker is complete for the documented and
 regression-tested Silk language subset, including the wrapper and control-flow
 forms described above. New language features may still require new borrow
 rules, but those are not treated as pre-declared borrow-checker roadmap items.

@@ -98,7 +98,7 @@ export fn ipv4_is_loopback (addr: Ipv4Addr) -> bool;
 
 Notes:
 
-- This is currently implemented as a byte-swap for the supported little-endian
+- This is implemented as a byte-swap for the supported little-endian
  hosted baseline.
 
 ## Hosted TCP API
@@ -248,7 +248,7 @@ ordinary resource failures.
 
 Notes:
 
-- This API is currently **mostly blocking** (only `connect_async` and
+- This API is **mostly blocking** (only `connect_async` and
  `accept_async` are integrated with the hosted event loop today).
 - This module targets hosted `linux/x86_64` via [`std::runtime::net`](/silk/docs/std/runtime-net/)
  (POSIX sockets); `wasm32-wasi` has no Preview 1 sockets, so the runtime
@@ -269,7 +269,7 @@ Notes:
  fd and closes that duplicate when the accept completes.
 - If you want to discard error details, prefer `match (r)` when the `Result`
  payload may implement `Drop` (for example `TCPStream` / `TCPListener`), since
- `ResultType.ok_value(r)` copies the `Result` payload in the Supported forms.
+ `ResultType.ok_value(r)` copies the `Result` payload in Silk.
 - [`std::net::stream`](/silk/docs/std/net-stream/) provides task-based adapters that connect `TCPStream` with
  [`std::stream`](/silk/docs/std/stream/) using producer/consumer loops:
  - [`std::net::stream::pipe_tcpstream_to_stream`](/silk/docs/std/net-stream/) / `pipe_tcpstream_to_stream_abortable`

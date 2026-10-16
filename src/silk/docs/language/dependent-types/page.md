@@ -20,8 +20,7 @@ The front-end can parse and preserve:
 - type application in type positions (for example `VectorN(int, 1024)`),
 
 but the compiler does not yet implement constraint checking, inference, or
-monomorphization/code generation for parameterized declarations. In the current
-compiler subset, generic parameter lists and applied types are rejected during
+monomorphization/code generation for parameterized declarations. In the supported forms, generic parameter lists and applied types are rejected during
 type checking ([diagnostics](/silk/docs/compiler/diagnostics/), `E2016`). See
 [generics](/silk/docs/language/generics/).
 
@@ -72,7 +71,7 @@ fn h(x: int) -> int { return x; } // RT-only
 ```
 
 This split is parsed and preserved by the front-end, but generic functions are
-rejected by the current checker until monomorphization is implemented
+rejected by the checker until monomorphization is implemented
 ([diagnostics](/silk/docs/compiler/diagnostics/), `E2016`).
 
 ## Relationship to Arrays and Collections
@@ -84,4 +83,4 @@ Const parameters are intended to power:
 - and compile-time-checked indexing/slicing APIs.
 
 These features require additional language and runtime support beyond the
-current implementation.
+implementation.

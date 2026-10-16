@@ -16,7 +16,7 @@ task/runtime utilities on `linux/x86_64`.
 
 This is **not** the full structured-concurrency design, but the hosted
 `linux/x86_64` toolchain now ships a bring-up async executor (fibers) used to
-make `await` a true suspension point. In the Supported forms:
+make `await` a true suspension point. In Silk:
 
 - `task fn` calls default to the global task pool; `attr(task=thread)` opts a
  task back into a dedicated OS thread per call.
@@ -99,7 +99,7 @@ Notes:
 - `join(h)` is the reusable helper for the common `Task(T)` shape that yields
  one final value and no intermediate stream that the caller wants to keep.
  It consumes the handle.
-- `join_or(fallback, h)` currently behaves like `join(h)` while keeping the
+- `join_or(fallback, h)` behaves like `join(h)` while keeping the
  fallback explicit at the call site for future widening of the helper surface.
 
 Implementation note:

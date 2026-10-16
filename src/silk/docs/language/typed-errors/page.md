@@ -77,8 +77,7 @@ Rules:
 
 - `error Name { ... }` declares a nominal, struct-like type that represents an
  unrecoverable logic bug / contract violation.
-- An `error` declaration has the same field rules as `struct` in the current
- compiler subset (scalar fields; see
+- An `error` declaration has the same field rules as `struct` in the supported forms (scalar fields; see
  [structs impls layout](/silk/docs/language/structs-impls-layout/)).
 - An `error` type may also be used as data (returned, stored, logged) when it is
  *not* part of a `T | ...` error contract.
@@ -86,7 +85,7 @@ Rules:
 Implementation
 
 - The compiler treats `error` as a distinct nominal type category (separate from
- `struct`) but reuses the same field/layout rules in the Supported forms.
+ `struct`) but reuses the same field/layout rules in Silk.
 
 ## Error-Producing Function Signatures (`T | ErrorType...`)
 
@@ -120,7 +119,7 @@ Rules:
 
 Implementation notes:
 
-- The current compiler models typed errors as a distinct “error set” attached to
+- The compiler models typed errors as a distinct “error set” attached to
  the function signature and to expressions that may `panic`.
 - The success type is still a normal Silk type (including optionals).
 
@@ -147,7 +146,7 @@ Rules:
 
 Implementation notes:
 
-- `panic` is a statement (not an expression) in Silk currently.
+- `panic` is a statement (not an expression) in Silk.
 
 ## Propagating Typed Errors (`?`)
 
@@ -180,14 +179,13 @@ Rules:
 
 Implementation notes:
 
-- In the current compiler, `call()?` is lowered as “call + tag dispatch; on
+- In the compiler, `call()?` is lowered as “call + tag dispatch; on
  error return the appropriate error payload; on success yield the value”,
  using the same encoding as the [`match`](/silk/wiki/language/flow-match/) statement lowering.
 
 ### Async Calls and `await`
 
-Typed-error propagation already composes with async calls in the current
-subset, but the fallible expression is still the async **call** rather than the
+Typed-error propagation already composes with async calls in the supported forms, but the fallible expression is still the async **call** rather than the
 `await` operator.
 
 For example:
@@ -202,7 +200,7 @@ async fn open_value () -> int | OpenFailed {
 }
 ```
 
-In the Supported forms:
+In Silk:
 
 - `open_value()` is treated as an error-producing call whose success value is
  `Promise(int)`.
@@ -272,7 +270,7 @@ Implementation notes:
  (`prctl(PR_SET_DUMPABLE, 0, 0, 0, 0)`) before calling `abort()` to keep abort fast,
  - on backends/targets where `abort()` is unavailable, it is lowered to the
  backend’s `Trap` primitive.
-- `std::halt()` and `std::reboot()` are currently lowered to `Trap` in the
+- `std::halt()` and `std::reboot()` are lowered to `Trap` in the
  native backend subset.
 
 This rule is intentionally *context-dependent*: it is triggered by the error
@@ -317,12 +315,12 @@ The Terminal Arm Rule does **not** apply in this form because the scrutinee is
 not a `T | ErrorType...` typed-error expression; the error is a normal returned
 value.
 
-Runtime invariant (struct form, current backend): exactly one of `value` and
+Runtime invariant (struct form, backend): exactly one of `value` and
 `err` must be `Some(...)`. If the invariant is broken, execution traps.
 
 Implementation notes:
 
-- The current compiler supports a match subset for optionals as an
+- The compiler supports a match subset for optionals as an
  *expression* (`match x { None => expr, Some(v) => expr }`).
 - The [`match`](/silk/wiki/language/flow-match/) expression also supports `Ok(...)` / `Err(...)` patterns for
  `Result` values (see [flow match](/silk/docs/language/flow-match/)).
@@ -337,7 +335,7 @@ Implementation notes:
 - `pure fn` may not have a `|` in its return type.
 - `pure fn` may not contain `panic` statements.
 
-The checker enforces these rules in Silk currently (see
+The checker enforces these rules in Silk (see
 [diagnostics](/silk/docs/compiler/diagnostics/)).
 
 ### `ext` boundary
@@ -350,9 +348,8 @@ typed errors into:
 - explicit error structs/enums,
 - or a terminal action appropriate for the platform.
 
-the current compiler rejects `ext` declarations whose function types use
-`|` (and rejects exported C ABI surfaces with `|`) in the current
-implementation.
+the compiler rejects `ext` declarations whose function types use
+`|` (and rejects exported C ABI surfaces with `|`) in the implementation.
 
 ## Related proposals
 

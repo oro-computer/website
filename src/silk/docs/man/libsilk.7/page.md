@@ -333,7 +333,7 @@ void          silk_compiler_destroy(SilkCompiler *compiler);
  - must be called exactly once for each non‑`NULL` handle from `silk_compiler_create`,
  - releases all modules and errors owned by the compiler.
 
-A single `SilkCompiler` instance is not currently specified as thread-safe; callers should either confine it to one thread or synchronize access.
+A single `SilkCompiler` instance is not specified as thread-safe; callers should either confine it to one thread or synchronize access.
 
 ## Examples
 
@@ -406,7 +406,7 @@ bool silk_compiler_set_debug(SilkCompiler *compiler,
  on failed `assert` for native Linux x86_64 and AArch64),
  - additional Z3 debug output and `.smt2` dump emission on failing Formal Silk
  verification (see [formal verification](/silk/docs/language/formal-verification/)).
-- `--debug` is currently incompatible with `--noheap`.
+- `--debug` is incompatible with `--noheap`.
 
 ### No-heap build mode (`noheap`)
 
@@ -417,7 +417,7 @@ bool silk_compiler_set_noheap(SilkCompiler *compiler,
 
 - Enables the same no-heap build mode as the CLI (`silk --noheap`), disabling
  heap-backed allocation for the supported subset.
-- `--noheap` is currently incompatible with `--debug`.
+- `--noheap` is incompatible with `--debug`.
 
 ### Target triple
 
@@ -470,7 +470,7 @@ bool silk_compiler_set_target(SilkCompiler *compiler,
  two-parameter `main` form receives the Linux process argument count in `x0`
  and the raw argv-list pointer in `x1`. Direct and constant-fallback ELF images
  declare an explicit read/write, non-executable stack with `PT_GNU_STACK`.
-- Note: for `wasm32` targets, only `SILK_OUTPUT_EXECUTABLE` is supported. `wasm32-wasi` currently supports only `fn main () -> int` (no argv).
+- Note: for `wasm32` targets, only `SILK_OUTPUT_EXECUTABLE` is supported. `wasm32-wasi` supports only `fn main () -> int` (no argv).
 - Note: for AMDGPU targets, `SILK_OUTPUT_OBJECT` emits a `.hsaco` only when
  the input contains exactly one exported root-package void source kernel with
  up to 32 immutable `u64` parameters whose body is empty or contains only
@@ -515,7 +515,7 @@ bool silk_compiler_set_std_archive(SilkCompiler *compiler,
 
 These configuration functions affect dynamic metadata emitted for executable
 and shared library outputs on platforms/backends that support dynamic linking
-(currently Linux x86_64 and Linux AArch64, including their musl identities).
+(Linux x86_64 and Linux AArch64, including their musl identities).
 
 #### `silk_compiler_add_needed_library`
 
@@ -668,7 +668,7 @@ Return value:
 - On success of front‑end validation:
  - for non‑executable outputs (`SILK_OUTPUT_STATIC_LIBRARY`,
  `SILK_OUTPUT_SHARED_LIBRARY`, `SILK_OUTPUT_OBJECT`):
- - on supported targets/backends (currently `linux/x86_64`, plus
+ - on supported targets/backends (`linux/x86_64`, plus
  Apple Silicon host-backed `macos-aarch64` and iOS device/simulator
  object/static/shared outputs, plus AMDGPU `.hsaco` source-intrinsic
  object output), the compiler attempts code generation for the documented
@@ -709,7 +709,7 @@ Return value:
  - evaluates the constant integer expression determined by `main`,
  - emits a tiny native executable image *directly* using an Silk‑owned
  backend (no C stub, no external C compiler):
- - currently this backend writes a minimal target-specific executable
+ - this backend writes a minimal target-specific executable
  that terminates the process with the evaluated `main` value:
  - ELF64 for `linux-x86_64`, `linux-aarch64`, and `android-aarch64`,
  - Mach-O 64-bit for `macos-x86_64`, `macos-aarch64`, `ios-aarch64`, `ios-simulator-aarch64`, and `ios-simulator-x86_64`,
@@ -721,7 +721,7 @@ Return value:
  - this path emits target-specific arm64 or x86_64 assembly, assembles
  it with host `clang -c`, links executables and dylibs with host
  `ld`, builds static archives with Apple `libtool -static`, ad
- hoc-signs macOS Mach-O executables when needed, and currently covers
+ hoc-signs macOS Mach-O executables when needed, and covers
  the implemented scalar IR subset,
  - for `macos-aarch64` and the three iOS device/simulator targets, the same subset is available through
  `silk_compiler_build(...)` because that ABI entrypoint writes a
@@ -747,7 +747,7 @@ Return value:
 
 #### Executable entrypoint rule
 
-For executable builds (`kind == SILK_OUTPUT_EXECUTABLE`), the ABI currently enforces a simple entrypoint rule:
+For executable builds (`kind == SILK_OUTPUT_EXECUTABLE`), the ABI enforces a simple entrypoint rule:
 
 - there MUST be exactly one top‑level function with one of the signatures:
 
@@ -908,16 +908,16 @@ At this stage, successful builds are limited to the backends implemented by the
 compiler:
 
 - On Linux x86_64 and AArch64, the compiler can emit native ELF64 executables,
- objects, static libraries, and shared libraries for each current IR subset documented
+ objects, static libraries, and shared libraries for each IR subset documented
  in [abi libsilk](/silk/docs/compiler/abi-libsilk/) (structured control flow, helper calls,
  hosted runtime calls, native inputs, and external ABI calls).
 - On `wasm32-unknown-unknown` and `wasm32-wasi`, executable builds emit `.wasm`
- modules for the current IR-backed wasm32 subset documented in
+ modules for the IR-backed wasm32 subset documented in
  [abi libsilk](/silk/docs/compiler/abi-libsilk/) (including multi-module builds, export-only
  modules, and `ext` imports under `env.<name>`).
 - On `amdgcn-amd-amdhsa-gfx942`, `amdgcn-amd-amdhsa-gfx1100`, and
  `amdgcn-amd-amdhsa-gfx1151`, object builds emit AMDHSA `.hsaco` code objects
- for the current source-intrinsic subset; see
+ for the source-intrinsic subset; see
  `silk-build(1)` and the
  [AMDGPU backend guide](/silk/docs/compiler/backend-amdgpu/)
  for the canonical declaration sets.
@@ -930,7 +930,7 @@ compiler:
 When Formal Silk verification syntax is present (for example `#require`,
 `#assure`, `#assert`, `#invariant`, `#variant`, `#monovariant`, `#const`), `libsilk` runs the Z3-backed
 Formal Silk verifier and fails the build if verification conditions cannot be
-proven. The verifier is currently skipped for `std::...` modules until it
+proven. The verifier is skipped for `std::...` modules until it
 covers the full std surface.
 
 ## Environment

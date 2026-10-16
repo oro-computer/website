@@ -17,7 +17,7 @@ For first-time readers, a good path is:
 
 1. [types](/silk/docs/language/types/) (primitive types like `int`, `f64`, `bool`, `string`),
 2. this overview (what literal categories exist),
-3. the specific literal docs below (syntax, semantics, and current implementation notes).
+3. the specific literal docs below (syntax, semantics, and implementation notes).
 
 Returning readers typically want the notes near the top
 of each literal concept doc, plus the “Tests” links for runnable

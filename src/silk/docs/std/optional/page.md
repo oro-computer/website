@@ -34,6 +34,6 @@ export fn unwrap_or_else (T; value: T?, f: fn() -> T) -> T;
 
 - These functions forward to the built-in optional methods.
 - The canonical semantics remain specified in [optional](/silk/docs/language/optional/).
-- In Silk currently, higher-order generic calls may require
+- In Silk, higher-order generic calls may require
  explicit compile-time type arguments at the call site, for example
  [`std::optional::map(int, int; value, f)`](/silk/docs/std/optional/).

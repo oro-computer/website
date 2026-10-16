@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "std::https provides a small HTTPS client/server connection API on top of std::tls (currently the built-in mbedTLS provider) and std::net::TCPStream, plus URL and stream convenience helpers."
+description: "std::https provides a small HTTPS client/server connection API on top of std::tls (the built-in mbedTLS provider) and std::net::TCPStream, plus URL and stream convenience helpers."
 docsCollection: "silk"
 section: "std"
 order: 109
@@ -12,7 +12,7 @@ githubRef: "master"
 # [`std::https`](/silk/docs/std/https/)
 
 [`std::https`](/silk/docs/std/https/) provides a
-small HTTPS client/server connection API on top of [`std::tls`](/silk/docs/std/tls/) (currently the
+small HTTPS client/server connection API on top of [`std::tls`](/silk/docs/std/tls/) (the
 built-in mbedTLS provider) and [`std::net::TCPStream`](/silk/docs/std/net/), plus URL and stream
 convenience helpers.
 
@@ -26,7 +26,7 @@ See also:
 
 ## Scope
 Provider note: because this module depends on [`std::tls`](/silk/docs/std/tls/), default Apple `auto`
-builds currently fall back to the built-in mbedTLS provider for TLS. Explicit
+builds fall back to the built-in mbedTLS provider for TLS. Explicit
 `platform` builds reject [`std::https`](/silk/docs/std/https/) until the Network/Security-backed TLS
 surface is specified and implemented.
 

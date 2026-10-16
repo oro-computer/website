@@ -36,7 +36,7 @@ See also:
 - `BufferU8`: an owning, growable **packed byte buffer** (byte-addressed `ptr`,
  with `len` and `cap` measured in bytes).
 - width-oriented scalar buffer aliases built on [`std::vector::Vector(T)`](/silk/docs/std/vector/) for
- convenience in the Supported forms.
+ convenience in Silk.
 
 ### `Buffer(T)`
 

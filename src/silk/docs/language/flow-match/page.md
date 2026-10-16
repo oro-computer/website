@@ -16,9 +16,7 @@ The [`match`](/silk/wiki/language/flow-match/) expression provides structured pa
 Key ideas:
 
 - A [`match`](/silk/wiki/language/flow-match/) selects one of several branches based on a scrutinee expression.
-- The full language design includes richer patterns and arm guards, but the
- current shipped subset documented here does not implement `if` guards in any
- [`match`](/silk/wiki/language/flow-match/) form yet.
+- Guard clauses (`pattern if condition => ...`) are rejected in every `match` form.
 - [`match`](/silk/wiki/language/flow-match/) is an expression; all arms must be compatible in type.
 
 The compiler must:
@@ -28,12 +26,9 @@ The compiler must:
 
 ## Surface Syntax
 
-The full language design includes rich pattern matching, guards, and matching
-over many scrutinee types. The current compiler implementation supports only a
-narrow, explicitly documented subset so we can validate end-to-end lowering and
-code generation.
+Choose patterns that match the scrutinee’s type. The accepted expression and statement forms are described below, including their exhaustiveness rules.
 
-In the initial subset, [`match`](/silk/wiki/language/flow-match/) is accepted as an *expression* of the form:
+In Silk, [`match`](/silk/wiki/language/flow-match/) is accepted as an *expression* of the form:
 
 ```silk
 match <scrutinee> {
@@ -45,8 +40,8 @@ match <scrutinee> {
 Notes:
 
 - Arms are separated by commas; a trailing comma is permitted.
-- In the initial subset, arm bodies are expressions (not blocks).
-- In the current compiler, expression-form [`match`](/silk/wiki/language/flow-match/) is implemented for:
+- Expression-form arms contain expressions. Use statement-form `match` for block bodies.
+- In the compiler, expression-form [`match`](/silk/wiki/language/flow-match/) is implemented for:
  - optionals,
  - primitive integers,
  - primitive booleans,
@@ -54,12 +49,12 @@ Notes:
  - enums,
  - type unions,
  - and recoverable `Result`-style values.
-- Guard clauses of the form `pattern if cond => ...` are currently unsupported
+- Guard clauses of the form `pattern if cond => ...` are unsupported
  across all of those subsets.
 
 ### Optional Matching (`T?`)
 
-For optionals, the Supported forms is:
+For optionals, the syntax is:
 
 - The scrutinee expression must have optional type `T?` (`Option(T)`), where `T`
  is a payload type supported by the backend.
@@ -89,12 +84,11 @@ fn main () -> int {
 The compiler also supports a small [`match`](/silk/wiki/language/flow-match/) subset for integer-like primitive
 scrutinees.
 
-Notes: 
+Notes:
 
-- The scrutinee expression must have a primitive integer type in the current
- backend subset (`int`, `i64`, `u64`, and the fixed-width integer primitives).
+- The scrutinee expression must have a primitive integer type (`int`, `i64`, `u64`, and the fixed-width integer primitives).
 - Patterns are restricted to:
- - integer literals (`0`, `1`, `123`, `0xFF`, ...), and
+ - integer literals (`0`, `1`, `123`, `0xFF`,...), and
  - a wildcard `_` arm.
 - The match must be exhaustive:
  - when the scrutinee is not a known integer literal, there must be exactly one
@@ -209,7 +203,7 @@ fn main () -> int {
 The language design supports matching over user-defined `enum` types
 ([enums](/silk/docs/language/enums/)).
 
-Notes: 
+Notes:
 
 - The scrutinee expression must have an enum type `E` (including an
  instantiated generic enum in module-set builds).
@@ -233,7 +227,7 @@ The same typed-binder arm syntax is also accepted for concrete struct values in
 the backend when the checker can select exactly one applicable
 arm statically.
 
-Notes: 
+Notes:
 
 - For a union scrutinee, the scrutinee expression must have a union type
  `T1 | ... | Tn`.
@@ -287,7 +281,7 @@ fn main () -> int {
  that arm and has the annotated type `T`; `_: T` checks the same type contract
  without introducing a binder.
 - The result type of a [`match`](/silk/wiki/language/flow-match/) expression is the common type of its arms; all
- arms must type-check to the same result type in the initial subset.
+ arms must type-check to the same result type in Silk.
 - Pattern binders for ownership-tracked payloads are owners, not borrowed
  aliases. When an arm consumes such a binder as its result, including by
  wrapping it in another enum or optional constructor, ownership transfers to
@@ -334,7 +328,7 @@ An optional trailing semicolon is permitted after the closing brace:
 match (x) { _ => { } };
 ```
 
-In Silk currently, the statement form is supported for:
+In Silk, the statement form is supported for:
 
 - ordinary value matching (no typed-error contract), and
 - typed error handling ([typed errors](/silk/docs/language/typed-errors/)).
@@ -412,7 +406,7 @@ Key semantic rule (Terminal Arm Rule):
 
 Implementation
 
-- The compiler currently implements [`match`](/silk/wiki/language/flow-match/) as an expression for the documented
+- The compiler implements [`match`](/silk/wiki/language/flow-match/) as an expression for the documented
  Supported forms:
  - optionals (`T?`),
  - primitive integers,
@@ -432,7 +426,7 @@ Rule because it is not a `T | ...` typed-error expression.
 ### Result Matching (`Ok(...)` / `Err(...)`)
 
 The [`match`](/silk/wiki/language/flow-match/) expression also supports a small subset for
-recoverable “success or error” values. In the initial subset, this includes:
+recoverable “success or error” values. In Silk, this includes:
 
 - [`std::result::Result(T, E)`](/silk/docs/std/result/) (an `enum` with `Ok(T)` and `Err(E)` variants), and
 - “Result-like” structs of the form `{ value: T?, err: E? }`.

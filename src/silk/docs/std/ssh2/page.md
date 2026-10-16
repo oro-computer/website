@@ -67,7 +67,7 @@ error value. The underlying libssh2 error code is retained as structured detail
 Non-blocking I/O is surfaced via `SSH2ErrorKind::WouldBlock` (mapped from
 `LIBSSH2_ERROR_EAGAIN`).
 
-Public error/value types in the Supported forms:
+Public error/value types in Silk:
 
 ```silk
 module std::ssh2;
@@ -128,7 +128,7 @@ non-null when non-empty).
 
 ## Exported API
 
-The current [`std::ssh2`](/silk/docs/std/ssh2/) surface currently lives in a single module
+The current [`std::ssh2`](/silk/docs/std/ssh2/) surface lives in a single module
 [`std/ssh2.slk`](https://github.com/oro-computer/silk/blob/master/std/ssh2.slk) (`module std::ssh2;`) and provides:
 
 - `Session` — init/free, blocking mode, timeouts, handshake, disconnect, and

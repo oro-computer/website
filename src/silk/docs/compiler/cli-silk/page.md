@@ -47,7 +47,7 @@ The implementation is intentionally smaller and focuses on:
  `package`, and the utility commands use grouped terminal help sections,
  - `--version` — print the Silk toolchain version, ABI version, and git commit and exit,
 - `silk repl` — start an interactive “compile-and-run” REPL:
- - currently supported on:
+ - supported on:
  - `linux/x86_64` via the native ELF executable backend,
  - `linux/aarch64` via the native AArch64 ELF executable and bundled-runtime
  backend,
@@ -162,7 +162,7 @@ The implementation is intentionally smaller and focuses on:
  - when `--package` is provided and the root manifest enables a build module
  via `[build].build_module = true`, the compiler runs that build module and
  type-checks the emitted manifest/module set instead of the raw `silk.toml`;
- for compatibility, the build module currently receives the action string
+ for compatibility, the build module receives the action string
  `build`.
 - `silk targets [--json]` — inspect target triples and architecture aliases:
  - human output matches the target/architecture lists used by
@@ -225,7 +225,7 @@ The implementation is intentionally smaller and focuses on:
  - `--json` emits `schemaVersion`, `command`, `path`, `fileSize`, `format`,
  and `sections`,
  - ELF64 little-endian artifacts report section names, offsets, sizes, and
- allocation/write/execute flags; other artifact formats currently report
+ allocation/write/execute flags; other artifact formats report
  `format: "unknown"` with an empty section list,
  - very large artifacts still report `fileSize` from filesystem metadata even
  when section parsing is skipped.
@@ -234,7 +234,7 @@ The implementation is intentionally smaller and focuses on:
  - each test runs in its own process, so a failing `assert` (panic/abort) does not stop the whole suite,
  - top-level test bodies that contain `await` are run through async test wrappers and awaited by the generated runner,
  - executable test runners require a hosted-runtime-capable native backend and
- currently run on Linux x86_64, Linux AArch64 (glibc or musl), and Apple
+ run on Linux x86_64, Linux AArch64 (glibc or musl), and Apple
  Silicon macOS. Formal Silk target metadata reflects the selected native
  execution target.
  - the supported code generation subset matches `silk build` for the selected execution target.
@@ -251,7 +251,7 @@ The implementation is intentionally smaller and focuses on:
 - when `--package` is provided:
  - input files must be omitted (the compiler loads the package module set from the manifest),
  - the manifest file is `silk.toml` (when a directory is provided, it is discovered in that directory),
- - when the root manifest enables a build module via `[build].build_module = true`, the compiler runs that build module and uses the emitted manifest for package tests; for compatibility, the build module currently receives the action string `build`,
+ - when the root manifest enables a build module via `[build].build_module = true`, the compiler runs that build module and uses the emitted manifest for package tests; for compatibility, the build module receives the action string `build`,
  - manifest-native link metadata for the test harness (`[[target]].inputs`, `cflags`, `ldflags`, `needed`, and `runpath`) is taken from:
  - `[build].default_target` when it names a code target,
  - otherwise the first declared code target,
@@ -692,7 +692,7 @@ The implementation is intentionally smaller and focuses on:
  to built-in archives for std APIs that do not yet have an Apple platform
  mapping; it selects `builtin` elsewhere.
  - `platform` is valid only for Apple targets and is strict. It routes the
- currently supported [`std::crypto`](/silk/docs/std/crypto/) primitives (`init`, `memzero`, `equal`,
+ supported [`std::crypto`](/silk/docs/std/crypto/) primitives (`init`, `memzero`, `equal`,
  and [`std::crypto::random`](/silk/docs/std/crypto-random/)) through the Apple Security runtime helpers and
  links `Security.framework`; [`std::net`](/silk/docs/std/net/) also links `Network.framework` for
  Apple-provider builds while Network-backed TCP/UDP work continues. It
@@ -767,7 +767,7 @@ The implementation is intentionally smaller and focuses on:
  set `[build].build_module = true` in `silk.toml`
  (see [package manifests](/silk/docs/compiler/package-manifests/)),
  - build-module execution requires a hosted-runtime-capable compiler host
- and currently supports Linux x86_64, Linux AArch64 (glibc or musl), and
+ and supports Linux x86_64, Linux AArch64 (glibc or musl), and
  Apple Silicon macOS,
  - successful compilation or cache restoration of the compiler-generated
  build-module runner is intentionally silent; final artifact summaries
@@ -838,7 +838,7 @@ The implementation is intentionally smaller and focuses on:
  - `argc`: the process argument count, and
  - `argv`: a raw pointer to the argv pointer list (a C-style `char**`, where `argv[0]` is at byte offset `0`, `argv[1]` at `8`, etc.),
  - other targets and backends may continue to require the parameterless `fn main() -> int` or `fn main() -> void` forms until they implement argument passing,
-- for `--kind object`, `--kind static`, and `--kind shared`, `main` is optional; the current backend emits supported `export fn` functions and supported exported constants (`export let`/`export const`; scalar exports require an explicit type annotation, and string exports may omit `: string` when the initializer is a string literal), plus a valid executable `main` when present, as globally-visible symbols,
+- for `--kind object`, `--kind static`, and `--kind shared`, `main` is optional; the backend emits supported `export fn` functions and supported exported constants (`export let`/`export const`; scalar exports require an explicit type annotation, and string exports may omit `: string` when the initializer is a string literal), plus a valid executable `main` when present, as globally-visible symbols,
  - it is valid for a non-executable output to contain no globally-visible symbols (for example, type-only or interface-only modules); in that case the build still succeeds and produces an “empty” object/archive/shared library,
  - `--debug` (or `-g`) enables a debug build mode for the supported native
  Linux x86_64 and AArch64 back-end subsets:
@@ -846,7 +846,7 @@ The implementation is intentionally smaller and focuses on:
  - dynamically-linked executables export internal function symbols in `.dynsym` (similar to `-rdynamic`) so stack traces can be symbolized without external tooling,
  - when Formal Silk verification fails, `--debug` also emits a Z3 debug block and writes an SMT-LIB2 reproduction script under `.silk/z3/` (or `$SILK_WORK_DIR/z3`; see [formal verification](/silk/docs/language/formal-verification/)),
  - compiled code can query build metadata at runtime via [`std::runtime::build::{is_debug,kind,mode,version}()`](/silk/docs/std/runtime-build/),
- - `--noheap` disables heap allocation for the current compiler/runtime subset:
+ - `--noheap` disables heap allocation for the compiler/runtime subset:
  - heap-backed `new` (outside a `with` region) is rejected with `E2027`,
  - `ext` bindings to libc heap primitives (`malloc`/`calloc`/`realloc`/`free`/etc) are rejected with `E2027` in non-stdlib modules,
  - [`std::runtime::mem::{alloc,realloc,free}`](/silk/docs/std/runtime-mem/) traps when called without an active `with` region (no implicit heap fallback),
@@ -854,7 +854,7 @@ The implementation is intentionally smaller and focuses on:
  - imported stdlib async/task declarations alone do not trigger `E2027`; the error is raised only once user code uses those awaitable surfaces under `--noheap`,
  - capturing closures are rejected with `E2027`,
  - region-backed `new` inside `with` is still permitted,
- - `--noheap` is currently incompatible with `--debug` (debug panic traces require `malloc`/`free`),
+ - `--noheap` is incompatible with `--debug` (debug panic traces require `malloc`/`free`),
  - by default, builds an executable (`--kind executable`),
  - when `--kind object`, `--kind static`, or `--kind shared` is provided:
  - on `linux/x86_64` and `linux/aarch64`, attempts to emit an ELF64
@@ -964,7 +964,7 @@ The implementation is intentionally smaller and focuses on:
  - for `--target wasm32-unknown-unknown`:
  - an IR→WASM backend for the supported subset (multi-module builds, control flow, string/data segments, and `ext` imports),
  - exports `memory` plus `main` when present (embedder entry), or emits an **export-only** module (no `main`) that exports supported `export fn` declarations from the root package,
- - note: Silk `int` currently lowers to wasm `i64`, so wasm exports using `int` surface as `i64`,
+ - note: Silk `int` lowers to wasm `i64`, so wasm exports using `int` surface as `i64`,
  - for `--target wasm32-wasi`:
  - an IR→WASM backend that emits `memory` plus `_start () -> void`, imports `wasi_snapshot_preview1.proc_exit`, and calls Silk `fn main () -> int` or `fn main () -> void` (the `main(argc, argv)` entrypoint form is not supported yet for WASI),
  - programs that need argv on `wasm32-wasi` should read it inside `main()`
@@ -993,7 +993,7 @@ The implementation is intentionally smaller and focuses on:
  - the same, with a final `if` whose condition is a compile‑time boolean literal (`true` / `false`) and whose branches each satisfy the “constant lets + return constant expression” rule, and
  - optionally, one or more trivial constant [`while`](/silk/wiki/language/flow-while/) loops before the final `return`, with constant boolean conditions and bodies of constant `let` bindings followed by `break;`, as described in [ir overview](/silk/docs/compiler/ir-overview/),
  - or a `fn main() -> void` body in the same supported statement subset, with `return;` or implicit fallthrough producing exit status `0`,
- - on `linux/x86_64`, a richer IR‑based backend is used first; for this backend, the currently supported (documented and tested) subset includes:
+ - on `linux/x86_64`, a richer IR‑based backend is used first; for this backend, the supported (documented and tested) subset includes:
  - `fn main() -> int`, `fn main() -> void`, and helper functions that:
  - take scalar parameters (defaulting to `int` when unannotated) drawn from `int`, `bool`, `char`, `f32`, `f64`, `Instant`, `Duration`, and the fixed-width integer types (`u8`/`i8` … `u64`/`i64`); helper functions return a scalar from the same set, or `void` (omitted result type or explicit `-> void`) when used only as standalone statements (`return;` and implicit fallthrough returns are supported for `void` helpers),
  - helpers may also accept and return `string` values at ABI boundaries (represented as `{ ptr: u64, len: i64 }` / `SilkString`; results return via `rax`/`rdx`),
@@ -1011,7 +1011,7 @@ The implementation is intentionally smaller and focuses on:
  - use `if` as an expression (`let x: T = if cond { a } else { b };`) when both branches produce the same supported value type `T` (scalars, `string`, unit-only enums, and supported optionals),
  - use `break;` and `continue;` inside [`while`](/silk/wiki/language/flow-while/) loops,
  - allow call expressions as standalone statements (discarding the returned value),
- - allow assignment and compound assignment to `let mut` locals by name (`x = expr;`, `x += y;`); the left-hand side must be an identifier; `=` is supported for all currently supported value types (including `string`, the supported `struct` subset, and optionals of those); compound assignments are supported only for numeric scalar locals,
+ - allow assignment and compound assignment to `let mut` locals by name (`x = expr;`, `x += y;`); the left-hand side must be an identifier; `=` is supported for all supported value types (including `string`, the supported `struct` subset, and optionals of those); compound assignments are supported only for numeric scalar locals,
  - and, for helpers, use direct calls between functions of this shape; scalar parameters follow the System V AMD64 calling convention as documented in [ir overview](/silk/docs/compiler/ir-overview/):
  - integer-like scalars (`bool` and integers) use up to 6 general-purpose registers (`rdi`, `rsi`, `rdx`, `rcx`, `r8`, `r9`),
  - `f32`/`f64` use up to 8 XMM registers (`xmm0`..`xmm7`),
@@ -1022,7 +1022,7 @@ The implementation is intentionally smaller and focuses on:
  - within function bodies, the compiler supports a small `string` expression subset: string literals, `let` bindings of `string`, `return` of a `string` value, `if` expressions that produce `string` values, direct calls to `string`-returning helpers, and `==`/`!=`/`<`/`<=`/`>`/`>=` comparisons over `string` values (producing `bool`); other string operations (concatenation, indexing, etc.) are not implemented yet,
  - string literals are embedded as rodata byte blobs and `.text`→rodata fixups are emitted/handled appropriately for each output kind (ELF relocations for object/static outputs; direct RIP-relative displacement patching for shared libraries and executables once the final `.text`/rodata layout is known),
  - for non-executable outputs, exported `string` constants (`export let`/`export const` with a string literal initializer; `: string` is optional) are emitted as `SilkString` data symbols for downstream C consumers, and exported functions of this subset may accept and return `string` values using the same `{ ptr: u64, len: i64 }` ABI.
- - on `linux/x86_64`, the current backend also supports a limited `struct` subset:
+ - on `linux/x86_64`, the backend also supports a limited `struct` subset:
  - `struct` declarations with 0+ fields of supported value types:
  - scalar primitives (`int`/fixed-width ints, `bool`, `char`, `f32`, `f64`, `Instant`, `Duration`),
  - `string` (lowered as `{ ptr: u64, len: i64 }`),
@@ -1032,7 +1032,7 @@ The implementation is intentionally smaller and focuses on:
  - `==`/`!=` comparisons over values of those structs (deep/slot-wise equality, including embedded strings, nested structs, and optionals) producing `bool`,
  - passing and returning such structs by value in helper calls by lowering them to their scalar slots in order (“slot flattening”) and using the same System V AMD64 calling convention as scalar arguments/results,
  - at ABI boundaries for exported/FFI functions, structs must be ABI-safe: after slot flattening, all slots must be `i64`/`u64`/`f64` (for example `string` fields are ABI-safe, but `bool`, `char`, and `f32` fields are not).
- - on `linux/x86_64`, the current backend also supports a limited optional subset:
+ - on `linux/x86_64`, the backend also supports a limited optional subset:
  - optionals of scalar payload types (`T?` where `T` is `bool`, `char`, `f32`, `f64`, `int`, `Instant`, `Duration`, or a fixed-width integer),
  - optionals of `string` payload type (`string?`), and optionals of the supported `struct` subset (`Type?` where `Type` is a supported 0+ field `struct`),
  - optionals of unit-only enum payload types (`E?` where `E` is an `enum` with no payload fields),
@@ -1162,7 +1162,7 @@ The implementation is intentionally smaller and focuses on:
  - a small program that calls one or more helpers (with the same scalar subset), all lowered into IR and compiled together into a single executable,
  - when multiple input files are provided, this executable build path operates on the entire module set and supports:
  - same-package helper calls across modules (functions in one module calling functions defined in another module of the same package), and
- - imported exported calls (`export fn`) across packages for the current scalar subset (both `foo()` and `pkg::foo()` call forms are accepted initially after `import pkg;`),
+ - imported exported calls (`export fn`) across packages for the scalar subset (both `foo()` and `pkg::foo()` call forms are accepted initially after `import pkg;`),
  - examples that are known to be supported and tested include:
  - straight‑line integer programs such as `fn main() -> int { return 1 + 2 * 3; }`,
  - programs with local and top‑level integer `let` bindings used in the final `return`,
@@ -1233,7 +1233,7 @@ The implementation is intentionally smaller and focuses on:
           return helper(1);
         }
         ```
-- for programs that type‑check but fall outside both the constant subset and the current IR‑based backend subset, `silk build` exits non‑zero with `E4001` diagnostics that point at the rejected construct (or `E4002` when the backend fails unexpectedly).
+- for programs that type‑check but fall outside both the constant subset and the IR‑based backend subset, `silk build` exits non‑zero with `E4001` diagnostics that point at the rejected construct (or `E4002` when the backend fails unexpectedly).
 - Hosted wide-scalar lowering is source-shape independent: immutable
  constant-evaluable module bindings and inferred local `i128`/`u128`/`f128`
  expressions use the same two-lane IR as explicitly annotated locals. If a
@@ -1313,7 +1313,7 @@ Top-level commands:
  `PKG/NAME` or `PKG/NAME=VALUE` (for example `ui/tui`).
  - When `--package` is provided, input files must be omitted and the module set is loaded from the package manifest (see [package manifests](/silk/docs/compiler/package-manifests/)).
  - when the root manifest enables a build module via `[build].build_module = true`, `silk check --package` runs that build module and uses the emitted manifest/module set instead of the raw `silk.toml`,
- - for compatibility, package checks currently invoke the build module with the action string `build`,
+ - for compatibility, package checks invoke the build module with the action string `build`,
  - When `<file> ...` inputs are omitted and `--package` / `--pkg` is also omitted, but `./silk.toml` exists, `silk check` behaves as if `--package .` was provided.
  - After successful type checking, applies `[check]` code-quality rules from
  `silk.toml`. `[check.rules.cyclomatic_complexity]` measures each named
@@ -1334,7 +1334,7 @@ Top-level commands:
  - Each test runs in its own process, so a failing `assert` (panic/abort) does not stop the whole suite.
  - Top-level test bodies that contain `await` are run through async test wrappers and awaited by the generated runner.
  - Test executables require a hosted-runtime-capable native backend and
- currently run on Linux x86_64, Linux AArch64 (glibc or musl), and Apple
+ run on Linux x86_64, Linux AArch64 (glibc or musl), and Apple
  Silicon macOS. Formal Silk target metadata reflects the selected native
  target.
  - On Linux AArch64, an automatically discovered stdlib archive that lacks a
@@ -1359,7 +1359,7 @@ Top-level commands:
  - `SILK_TEST_MAX_OUTPUT_BYTES` caps captured stdout/stderr per test process for diagnostics (default: `1048576`; output beyond this limit is truncated).
  - When `<file> ...` inputs are omitted and `--package` is also omitted, but `./silk.toml` exists, `silk test` behaves as if `--package .` was provided.
  - When `--package` is provided and the root manifest enables a build module via `[build].build_module = true`, `silk test --package` runs that build module and uses the emitted manifest for the test harness/module set.
- - for compatibility, package tests currently invoke the build module with the action string `build`.
+ - for compatibility, package tests invoke the build module with the action string `build`.
  - Manifest-native test-harness metadata comes from the selected code target:
  - `.c`, `.h`, and supported `.m` entries in `[[target]].inputs` are
  compiled to temporary objects and linked with the generated test harness,
@@ -1402,7 +1402,7 @@ Top-level commands:
  - build modules are opt-in by default; to run one without `--build-module`,
  set `[build].build_module = true` in `silk.toml`
  (see [package manifests](/silk/docs/compiler/package-manifests/)),
- - build-module execution currently supports Linux x86_64, Linux AArch64
+ - build-module execution supports Linux x86_64, Linux AArch64
  (glibc or musl), and Apple Silicon macOS hosts,
  - `--package-target <name>` selects one or more manifest `[[target]]` entries by name (repeatable; `--pkg-target` is accepted as an alias),
  - when omitted, the compiler builds every manifest `[[target]]` entry by default,
@@ -1534,7 +1534,7 @@ Top-level commands:
  - imported stdlib async/task declarations alone do not trigger `E2027`; the error is raised only once user code uses those awaitable surfaces under `--noheap`,
  - capturing closures are rejected with `E2027`,
  - region-backed `new` inside `with` is still permitted.
- - `--noheap` is currently incompatible with `--debug` (debug panic traces require `malloc`/`free`).
+ - `--noheap` is incompatible with `--debug` (debug panic traces require `malloc`/`free`).
  - For the supported subset, emits the selected artifact (or an assembly listing when `--emit asm` is selected) at `<path>`.
  - C99 header emission (for downstream consumers of exported symbols):
  - `--c-header <path>` writes a generated C header at `<path>` that declares the root package’s exported symbols (`export fn` prototypes and `export let` extern declarations) for consumption from C/C++,

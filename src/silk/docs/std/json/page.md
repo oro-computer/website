@@ -126,7 +126,7 @@ Notes:
 - The exported free functions are thin compatibility wrappers around the
  corresponding `Document` methods.
 - Arrays and objects are stored as linked lists over `ValueId` indices because
- Silk currently does not yet support the reference-rich layout a
+ Silk does not yet support the reference-rich layout a
  pointer-based DOM would want.
 - The internal DOM storage now uses a private
  [`std::json::dom_storage_well_formed(...)`](/silk/docs/std/json/) theory defined inside

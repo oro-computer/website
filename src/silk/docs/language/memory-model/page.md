@@ -14,7 +14,7 @@ githubRef: "master"
 This document specifies Silk’s intended memory model: how values are allocated,
 passed, and how (future) heap-managed values interact with the type system.
 
-Silk currently implements a
+Silk implements a
 minimal heap model for `new` on `linux/x86_64` and a small lexical
 move/cleanup model for droppable values:
 
@@ -25,7 +25,7 @@ move/cleanup model for droppable values:
 
 Regions and a richer move/borrow model remain design-in-progress. See
 [regions](/silk/docs/language/regions/), [borrow checker](/silk/docs/language/borrow-checker/), and [implementation status](/silk/docs/compiler/implementation-status/)
-for current scope.
+for scope.
 
 ## Semantics
 
@@ -68,7 +68,7 @@ Rule: values created without `new` are stack values by default.
  request consuming pattern binding.
 - Lifetime is lexical (ends when the scope ends).
 
-This aligns with Silk currently, which is value-oriented and does
+This aligns with Silk, which is value-oriented and does
 not implement a general heap allocation model.
 
 ### Heap allocation (`new`) and boxed values
@@ -80,7 +80,7 @@ heap and are represented as an `&Struct` reference in user code.
 - The underlying allocation’s lifetime is managed by compiler-inserted reference
  counting (RC) for values originating from `new`.
 
-Important: this is currently an internal Silk-managed heap for Silk code, not an
+Important: this is an internal Silk-managed heap for Silk code, not an
 FFI pointer model. The compiler does not permit `&Struct` for
 non-opaque structs in `ext` signatures; only `&Opaque` handles may cross the
 FFI boundary (see [structs impls layout](/silk/docs/language/structs-impls-layout/) and
@@ -89,7 +89,7 @@ FFI boundary (see [structs impls layout](/silk/docs/language/structs-impls-layou
 #### Thread safety and `task` boundaries
 
 `new` produces an `&Struct` reference whose lifetime is managed by
-compiler-inserted reference counting (RC). In the Supported forms, RC retain and
+compiler-inserted reference counting (RC). In Silk, RC retain and
 release operations are not atomic, so sharing such references across OS threads
 is unsafe.
 
@@ -124,12 +124,12 @@ does not upgrade ordinary compiler-managed `new` RC to atomic RC.
 #### Notes
 
 - `new` is supported only in function bodies (top-level `let` initializers
- cannot contain `new` in the Supported forms).
+ cannot contain `new` in Silk).
 - `new` is supported only when the checker can determine a concrete reference
- result type of the form `&Struct`. In the Supported forms, this happens
+ result type of the form `&Struct`. In Silk, this happens
  in two ways:
  - from an expected type context `&Struct` (for example `let x: &Frame = new
- Frame{ ... };` or as a call argument where the parameter type is `&Struct`)
+ Frame{... };` or as a call argument where the parameter type is `&Struct`)
  - from the `new` operand itself when it names a struct type (for example
  `let x = new Frame{ ... };` or `let x = new Frame(...);`), which allows
  `let` bindings to infer `&Frame` without an explicit annotation
@@ -146,7 +146,7 @@ does not upgrade ordinary compiler-managed `new` RC to atomic RC.
 
 #### Region-backed allocation (`with` + `region`)
 
-In the Supported forms, `new` may also allocate from a region when an active
+In Silk, `new` may also allocate from a region when an active
 region context is established with `with` (see [regions](/silk/docs/language/regions/)).
 
 - Inside `with <region> { ... }`, `new` allocates from the region’s backing
@@ -170,7 +170,7 @@ region context is established with `with` (see [regions](/silk/docs/language/reg
 
 ## Destructors (`Drop`)
 
-In Silk currently, Silk supports deterministic cleanup for
+In Silk, Silk supports deterministic cleanup for
 resource-owning `struct` values via [`std::interfaces::Drop`](/silk/docs/std/interfaces/).
 
 A `struct` type is considered “droppable” when it provides a method with this
@@ -190,7 +190,7 @@ Automatic invocation :
  fallthrough, `break`, and `continue`).
 - **Return:** on `return`, the compiler drops all in-scope droppable bindings
  except any value moved into the return result (for example `return value;`
- and `return Some(value);` treat `value` as moved in the Supported forms).
+ and `return Some(value);` treat `value` as moved in Silk).
 - **Overwrite:** assigning to an existing value drops the old value before the
  new value is copied in.
 - **Field take and reinitialization:** moving an ownership-tracked direct field
@@ -266,7 +266,7 @@ Environment allocation and lifetime (Supported forms):
 Limitations:
 
 - Capturing non-scalar values (including `string`, structs, arrays/slices,
- optionals, and `Drop` types) is rejected in the Supported forms.
+ optionals, and `Drop` types) is rejected in Silk.
 - Captures are immutable snapshots; the Supported forms does not support
  capturing by reference or mutating captured state.
 
@@ -275,5 +275,5 @@ Limitations:
 - Borrow checking is intended to be a compile-time property in the safe subset:
  invalid borrows should be rejected statically.
 - See [mutability](/silk/docs/language/mutability/) for the current implemented borrow rules
- (call-scoped aliasing checks for `&T` parameters in the Supported forms).
+ (call-scoped aliasing checks for `&T` parameters in Silk).
 - See [borrow checker](/silk/docs/language/borrow-checker/) for the broader planned borrow checker.

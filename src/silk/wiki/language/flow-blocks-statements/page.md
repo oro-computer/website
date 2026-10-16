@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "Blocks ({ ... }) group statements and introduce a new scope."
+description: "Blocks ({... }) group statements and introduce a new scope."
 docsCollection: "silkWiki"
 section: "language"
 order: 13

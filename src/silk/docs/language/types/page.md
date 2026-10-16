@@ -22,11 +22,11 @@ This document specifies the Silk type system used by the compiler front-end and 
  In Silk (including array literals, indexing reads, and
  iterable `for` loops). Indexed assignment targets (`xs[i] = v`) are supported
  for these element types; compound index ops require numeric scalar element
- types in the Supported forms.
+ types in Silk.
  - Parameterized nominal types (monomorphized): generic `struct` and
  `interface` declarations with **type parameters**, plus applied types in
  type positions (`Name(u8)`, `Name(string)`) for those declarations.
-- Reserved intrinsics: the compiler currently exposes reserved, stdlib
+- Reserved intrinsics: the compiler exposes reserved, stdlib
  bring-up intrinsics for working with the `string` ABI (`__silk_string_ptr`,
  `__silk_string_len`, and `__silk_string_from_ptr_len`). User code should
  generally prefer the language sugar:
@@ -39,7 +39,7 @@ This document specifies the Silk type system used by the compiler front-end and 
  are not a stable user API.
 - Special-case: the nominal optional form `Option(T)` is accepted and desugared
  to `T?` in type annotations (it is not a general generics feature).
-- Parsed but rejected by the current checker: const parameters and integer
+- Parsed but rejected by the checker: const parameters and integer
  literal type arguments (`Foo(N: int)`, `Foo(u8, 1024)`) ([diagnostics](/silk/docs/compiler/diagnostics/), `E2016`).
 - Removed builtin map type form: `map(K, V)` (`E2017`; use
  `std::map::{HashMap, TreeMap}` instead).
@@ -48,13 +48,13 @@ This document specifies the Silk type system used by the compiler front-end and 
  - In the current scalar-slot model ([structs impls layout](/silk/docs/language/structs-impls-layout/)),
  these primitives lower to **two 8-byte slots** (`lo: u64`, `hi: u64`).
  - `f128` uses the IEEE‑754 binary128 bit pattern stored across those slots.
- - In the current backend implementation, `f128` arithmetic and some `as`
+ - In the backend implementation, `f128` arithmetic and some `as`
  casts lower to bundled runtime helper calls:
  - on `linux/x86_64`, the helpers use `__float128` and rely on libgcc
  symbols (for example `__addtf3`),
  - on targets where `long double` is an IEEE‑754 binary128 value (for
  example `linux/aarch64`), the helpers use `long double`,
- - on other targets, the helper calls are currently stubbed and will trap
+ - on other targets, the helper calls are stubbed and will trap
  if executed.
  - Diagnostics rule: `u128` / `f128` are language features, so any compiler
  rejection is an implementation gap in a specific compiler path, not a
@@ -68,7 +68,7 @@ This document specifies the Silk type system used by the compiler front-end and 
  i128);` binds `product` as `i128`; adding `: i128` does not change either
  checking or generated code.
 - Typed errors (`error`, `panic`, and `T | ErrorType...`) are specified in
- [typed errors](/silk/docs/language/typed-errors/). The current compiler models typed error
+ [typed errors](/silk/docs/language/typed-errors/). The compiler models typed error
  contracts as an effect on function return types and expressions.
  - Separately, type unions (`T1 | T2 | ...`) are supported in type annotations
  as described in [type unions](/silk/docs/language/type-unions/). In function declaration
@@ -128,14 +128,13 @@ The core categories are:
  expected (see [optional](/silk/docs/language/optional/)).
 - Reference (borrow): `&T`
  - Examples: `&User`.
- - Notes: reference type; in the Supported forms, `&Struct` may appear in
+ - Notes: reference type; in Silk, `&Struct` may appear in
  parameter types and as local values when produced by `new` or by calls that
  return `&Struct`. Mutability follows the `mut` borrow contract and per-call
  aliasing rules described in [mutability](/silk/docs/language/mutability/).
 - Arrays / Slices: `T[]`, `T[N]`
  - Examples: `i32[]`, `byte[32]`, `u8[1024 * 1024]`.
- - Notes: dynamic slice vs fixed length (compile‑time `N`). In the current
- parser subset, `N` may be:
+ - Notes: dynamic slice vs fixed length (compile‑time `N`). In the parser subset, `N` may be:
  - an integer literal,
  - a literal-only integer arithmetic expression using `+`, `-`, `*`, `/`,
  `%`, and parentheses,
@@ -145,7 +144,7 @@ The core categories are:
  scalar-slot memory model (for example primitive scalars, `string`, and
  supported `regexp`, supported non-opaque structs, and enums). See
  [structs impls layout](/silk/docs/language/structs-impls-layout/) for the current scalar-slot memory
- model. In the Supported forms, fixed array lengths are limited to
+ model. In Silk, fixed array lengths are limited to
  `N <= 4096`. Indexing `xs[i]` traps when `i` is out of bounds in the
  Supported forms.
 - Range: `range`
@@ -167,10 +166,10 @@ The core categories are:
  - Examples: `fn(i32) -> i32`, `unsafe fn(u64) -> u8`.
  - Notes: function types are part of the type grammar and function-typed
  values are supported as function values (including capturing closures) in
- Silk currently.
+ Silk.
  The `unsafe` call effect is represented in function types. Concurrency
  disciplines (`task` / `async`) and explicit `pure` remain declaration-only
- in the Supported forms (see [concurrency](/silk/docs/language/concurrency/)).
+ in Silk (see [concurrency](/silk/docs/language/concurrency/)).
 - Capturing Closures:
  - Notes: capturing closures are supported as function values with an
  environment; see “Function Types and Closures” below for Supported forms
@@ -233,7 +232,7 @@ Import/export:
 
 ## Implicit Call-Argument Coercions
 
-In Silk currently, Silk supports a small, **opt-in** implicit
+In Silk, Silk supports a small, **opt-in** implicit
 coercion mechanism for function call arguments. This exists to keep the
 current standard library ergonomic while generics and richer overload
 systems are still evolving.
@@ -405,7 +404,7 @@ Notes:
 
 - This is contextual; it does not change the expression’s nominal type outside
  a `string`-expecting site.
-- This rule is currently specialized to [`std::strings::String`](/silk/docs/std/strings/).
+- This rule is specialized to [`std::strings::String`](/silk/docs/std/strings/).
 - `String.serialize()` / `String.as_string()` still describe the borrowed view
  that is being exposed, so explicit `.as_string()` is no longer required
  solely to satisfy these ordinary borrowed `string` contexts.
@@ -424,14 +423,14 @@ let n: int = x as int;
 ```
 
 This operator is intended for explicit, potentially lossy primitive numeric
-conversions. In the Supported forms it also supports explicit conversions via
+conversions. In Silk it also supports explicit conversions via
 [`std::interfaces::Serialize(T)`](/silk/docs/std/interfaces/) by lowering `expr as T` to `expr.serialize()`
 when the operand type provides a matching `serialize` method.
 For structured conversions, it also supports [`std::interfaces::Deserialize(S)`](/silk/docs/std/interfaces/)
 by lowering `expr as T` to `T.deserialize(expr)` when the target type provides
 a matching static `deserialize` method.
 
-The supported conversions and semantics for Silk currently are
+The supported conversions and semantics for Silk are
 specified in [operators](/silk/docs/language/operators/) (“Casts (`as`)”).
 
 Notes:
@@ -448,7 +447,7 @@ The compiler must:
 
 - Treat nominal types as distinct even if their field layout is identical.
 - In the full language design, support parameterized types in all contexts
- where the spec permits them. In Silk currently, **type-parameter**
+ where the spec permits them. In Silk, **type-parameter**
  generics are supported for nominal declarations (`struct` / `interface`) and
  for applied types in type positions (`Name(u8)`).
  - Const parameters and integer-literal type arguments (`Name(N: int)`,
@@ -492,7 +491,7 @@ Key requirements:
 - Distinguish owning vs. non-owning types in the type system.
 - Preserve aliasing and lifetime constraints so that regions, buffers, and FFI safety rules can be enforced.
 
-Current implementation notes:
+implementation notes:
 
 - `&Struct` is supported in function parameter types and as local values when
  produced by heap allocation (`new`) or by calls that return `&Struct`.
@@ -510,7 +509,7 @@ Current implementation notes:
 
 ## Function Types and Closures
 
-Silk currently:
+Silk :
 
 - Parses function types in type positions (most notably for `ext` declarations).
 - Implements function expressions (lambdas) in expression positions:
@@ -519,8 +518,7 @@ Silk currently:
  - block body `void` shorthand: `fn (x: int, y: int) { ... }` (implicit `void`)
 - Function expressions may declare `&T` parameters only when `T` is a
  single-slot scalar primitive (for example `&int` / `&bool`).
-- Function expression bodies are checked under the `pure` rules in the current
- subset. Non-capturing function expressions are inferred as `pure` function
+- Function expression bodies are checked under the `pure` rules in the supported forms. Non-capturing function expressions are inferred as `pure` function
  types and are permitted in `pure` code:
  - they may call only `pure` functions,
  - they may not mutate (`let mut`/`var`, assignment),
@@ -533,7 +531,7 @@ Silk currently:
  - a function expression body may reference **immutable** locals/parameters
  from an enclosing scope; those values are captured by value into a heap
  environment,
- - in the Supported forms, only **scalar** captures are supported (`int`, fixed
+ - in Silk, only **scalar** captures are supported (`int`, fixed
  width ints, `bool`, `char`, `f32`, `f64`, `Instant`, `Duration`),
  - forming captures inside `pure` code is rejected (capture environments
  allocate), but closure *values* are still checked under the `pure` rules and
@@ -547,7 +545,7 @@ Silk currently:
 - Discipline modifiers for function declarations (`pure` / `task` / `async` /
  `unsafe`) are implemented. In type positions, `unsafe fn (...) -> R` and
  `unsafe c_fn (...) -> R` represent the unsafe call effect; concurrency and
- explicit-purity modifiers are not type syntax in the Supported forms.
+ explicit-purity modifiers are not type syntax in Silk.
 
 ### C Function Pointers (`c_fn`)
 

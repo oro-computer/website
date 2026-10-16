@@ -58,7 +58,7 @@ Notes:
 
 - These are simple wrappers over the language’s built-in string comparisons and
  optional-coalesce operator (`??`), chosen because they are implementable in
- Silk currently.
+ Silk.
 - `starts_with` and `ends_with` compare the UTF-8 byte sequences carried by
  `string`. They do not normalize Unicode or compare grapheme clusters. An empty
  prefix or suffix matches every string.

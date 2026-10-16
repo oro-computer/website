@@ -23,7 +23,7 @@ This exact-name page exists so the module can be discovered and referenced direc
 Use this module when Silk code needs raw Vulkan constants, type aliases, and
 entrypoint declarations while a host application owns instance/device creation,
 surface setup, swapchains, queues, command buffers, synchronization, and
-presentation. The current Silk compiler subset does not model Vulkan's C
+presentation. The Silk compiler subset does not model Vulkan's C
 struct-heavy API ergonomically yet, so these bindings are primarily an ABI
 surface for lower-level integration work.
 

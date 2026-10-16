@@ -51,12 +51,12 @@ Supported operator subset:
  - `Instant` vs `Instant`
 
 Other arithmetic (`*`, `/`, `%`) and bitwise operators are not defined for time
-types in the Supported forms.
+types in Silk.
 
 ## Overflow
 
 Arithmetic uses the same deterministic wrapping behavior as the underlying
-`i64` operations in the current back-end subset (two’s complement wraparound).
+`i64` operations in the back-end subset (two’s complement wraparound).
 
 ## Notes
 

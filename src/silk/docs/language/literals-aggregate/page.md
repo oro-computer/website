@@ -44,7 +44,7 @@ let empty_slice: i32[] = [];
  exactly `N` elements.
 - When an expected type is present and it is `T[]`, the literal’s elements are
  type-checked against `T` and the resulting value has type `T[]`.
- - In Silk currently, this slice form is lowered as a non-owning
+ - In Silk, this slice form is lowered as a non-owning
  view over a compiler-generated backing array.
  - Lifetime rules are not yet enforced for such
  slices; do not allow a slice derived from a stack-backed array literal to
@@ -55,7 +55,7 @@ Compiler requirements:
 - Infer element type when possible, or require explicit annotation where
  ambiguity exists.
 - Validate that all elements are convertible to the target element type.
-- Enforce current-subset restrictions on which element types are supported for
+- Enforce verification restrictions on which element types are supported for
  array lowering/codegen (see [types](/silk/docs/language/types/) and
  [structs impls layout](/silk/docs/language/structs-impls-layout/)).
 
@@ -149,7 +149,7 @@ struct Beep {
 
 When a struct literal omits a field, the compiler uses the field default
 expression when present; otherwise it falls back to zero-initialization in the
-current backend subset. This means the empty literal form is useful when all
+supported forms. This means the empty literal form is useful when all
 fields have defaults:
 
 ```silk
@@ -163,8 +163,7 @@ Important notes:
  `new` for heap allocation explicitly.
 - The parser only treats `{ ... }` as an inferred struct literal when it
  contains a struct-style initializer list (or is `{}`); blocks (`{ Stmt* }`)
- remain statement syntax (there is no general “block expression” in the current
- subset).
+ remain statement syntax (there is no general “block expression” in the supported forms).
 
 ### Default constructors (empty struct literals)
 
@@ -199,13 +198,13 @@ Supported forms note:
 Compiler requirements:
 
 - Enforce that field names are valid and that each field is initialized at most once.
-- Define the behavior for omitted fields (in the Supported forms, omitted fields
+- Define the behavior for omitted fields (in Silk, omitted fields
  are default-initialized).
 - Respect struct lowering/layout rules from [`structs-impls-layout.md`](/silk/docs/language/structs-impls-layout/).
 
 ### Notes
 
-The current compiler implementation supports struct literals only for the
+The compiler implementation supports struct literals only for the
 limited struct subset described in [`structs-impls-layout.md`](/silk/docs/language/structs-impls-layout/):
 
 - structs with 0+ fields of supported value types (scalar primitives, `string`,
@@ -213,7 +212,7 @@ limited struct subset described in [`structs-impls-layout.md`](/silk/docs/langua
 - literals may omit fields:
  - omitted fields that have a field default (`field: T = <expr>`) use that
  default expression,
- - otherwise, omitted fields are **zero-initialized** in the current backend
+ - otherwise, omitted fields are **zero-initialized** in the backend
  subset,
 - no duplicate field initializers are permitted,
 - field order is not semantically significant.
@@ -221,7 +220,7 @@ limited struct subset described in [`structs-impls-layout.md`](/silk/docs/langua
 Fixed-array literals infer POD struct element layouts from local values and
 struct-valued field accesses, and copy every element slot into array storage.
 
-Fixed-array elements currently exclude optional types, even when `Some(value)`
+Fixed-array elements exclude optional types, even when `Some(value)`
 can infer the element type. Use a supported struct element with an optional
 field when aggregate storage is needed. This is an array-layout limitation,
 not a requirement to annotate `Some` constructors.

@@ -15,11 +15,9 @@ githubRef: "master"
 
 ## Examples
 
-Use the WHATWG URL implementation for robust URL parsing:
+Use the global URL constructor for URL parsing; no import is needed:
 
 ```js
-import URL from 'oro:url'
-
 const url = new URL('https://oro.computer/docs?project=runtime')
 
 console.log(url.pathname)

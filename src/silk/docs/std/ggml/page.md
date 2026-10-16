@@ -24,7 +24,7 @@ Upstream:
 
 ## What ships today
 
-The currently exported [`std::ggml`](/silk/docs/std/ggml/) surface covers:
+The exported [`std::ggml`](/silk/docs/std/ggml/) surface covers:
 
 - context creation and destruction with bounded context storage,
 - 1-D through 4-D tensor allocation,
@@ -49,7 +49,7 @@ reviewed binding rather than an untyped FFI escape hatch.
 
 ## Platform and linking
 
-[`std::ggml`](/silk/docs/std/ggml/) is currently supported on these hosted target layouts:
+[`std::ggml`](/silk/docs/std/ggml/) is supported on these hosted target layouts:
 
 - `linux/x86_64` with glibc
 - `linux/x86_64` with musl
@@ -191,13 +191,13 @@ silk guide "std ggml platform linking"
 
 ## ABI and FFI notes
 
-Two current compiler constraints shape this wrapper:
+Two compiler constraints shape this wrapper:
 
 - Silk’s current hosted FFI surface does not expose ggml’s C `int` positions
  as C-width `int`, so [`std::ggml`](/silk/docs/std/ggml/) uses `i32` for ggml type codes, status
  codes, indices, and thread counts.
 - ggml exposes some entrypoints that accept small structs by value, notably
- `ggml_init(struct ggml_init_params)`. The current Silk ABI subset cannot call
+ `ggml_init(struct ggml_init_params)`. The Silk ABI subset cannot call
  those entrypoints directly in a layout-stable way.
 
 To bridge that second gap and prevent upstream assertions from becoming the
@@ -209,7 +209,7 @@ integer handles.
 - `silk_ggml_init(mem_size, mem_buffer, no_alloc) -> u64`
 
 [`std::ggml::Context.init(...)`](/silk/docs/std/ggml/) is therefore the supported way to enter ggml
-from Silk code in the Supported forms.
+from Silk code in Silk.
 
 ## Ownership and lifetime
 
@@ -774,7 +774,7 @@ failures return status `1`.
 
 ## Verification status
 
-The Silk compiler repository currently verifies [`std::ggml`](/silk/docs/std/ggml/) through:
+The Silk compiler repository verifies [`std::ggml`](/silk/docs/std/ggml/) through:
 
 - compile-only object builds,
 - runnable CPU graph fixtures,

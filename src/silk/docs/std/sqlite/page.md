@@ -91,7 +91,7 @@ The raw SQLite return codes remain available for debugging/telemetry.
 
 ## Exported API
 
-The current [`std::sqlite`](/silk/docs/std/sqlite/) surface currently lives in [`std/sqlite.slk`](https://github.com/oro-computer/silk/blob/master/std/sqlite.slk) and
+The current [`std::sqlite`](/silk/docs/std/sqlite/) surface lives in [`std/sqlite.slk`](https://github.com/oro-computer/silk/blob/master/std/sqlite.slk) and
 provides:
 
 - `Database`: `open`, `open_read_only`, `open_in_memory`, `exec`, `prepare`,

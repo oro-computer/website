@@ -78,7 +78,7 @@ Notes:
 - Methods that extract or transform payloads consume the `Result` by value. This
  follows the move/cleanup model and avoids copying `Drop` payloads.
 - Callback-based combinators (`map`, `map_err`, `and_then`, `or_else`) accept
- function-typed values. Capturing closures exist in the Supported forms, but
+ function-typed values. Capturing closures exist in Silk, but
  captures are restricted (see [memory model](/silk/docs/language/memory-model/)).
 - For portable backend-subset builds, prefer the block-body form with an
  explicit result type for combinator callbacks:

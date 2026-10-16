@@ -86,10 +86,10 @@ This intentionally limits verification across the `ext` boundary.
 
 ## Notes
 
-Silk currently implements this feature under the `ext`
+Silk implements this feature under the `ext`
 keyword. The docs treat `ext` as canonical.
 
-Currently supported:
+supported:
 
 - parsing `ext` external declarations and representing them in the AST,
 - optional external symbol aliases (`ext local "extern" = ...;`),
@@ -106,7 +106,7 @@ Currently supported:
  - a top-level function name, or
  - a non-capturing `fn (...) -> ...` expression,
  - capturing closures (and arbitrary function-typed locals) are rejected for
- `ext` function-pointer parameters in the Supported forms,
+ `ext` function-pointer parameters in Silk,
 - `c_fn (...) -> R` types as explicit C callback pointers (Supported forms):
  - `c_fn` is a code-pointer-only function pointer type intended for FFI,
  - unlike `fn (...) -> R` function values, `c_fn (...) -> R` values do not carry a
@@ -157,12 +157,12 @@ Currently supported:
 
 Not implemented yet (documented design, future work):
 
-- writing to `ext` variables (they are read-only in the Supported forms),
+- writing to `ext` variables (they are read-only in Silk),
 - `ext` variables of non-scalar types (strings, structs, optionals, arrays),
-- richer string and aggregate marshalling (for example: returning `string` from `ext` calls as an owned Silk value, passing/returning user-defined structs by value beyond the current ABI-safe POD subset, and C-facing array/slice bridging).
+- richer string and aggregate marshalling (for example: returning `string` from `ext` calls as an owned Silk value, passing/returning user-defined structs by value beyond the ABI-safe POD subset, and C-facing array/slice bridging).
 - calling back into Silk from foreign code with capturing closures or richer
  closure environments (only plain non-capturing function pointers are
- supported as `ext` parameters in the Supported forms).
+ supported as `ext` parameters in Silk).
 
 ## Passing Callbacks to C (`c_fn`)
 
@@ -263,7 +263,7 @@ Safety:
  provide explicit create/destroy functions; always call the destruction
  function when you are done.
 - Using a handle after destruction is undefined behavior; the compiler does not
- currently enforce this at compile time.
+ enforce this at compile time.
 
 Notes on executable `ext` calls (current linux/x86_64 implementation):
 
@@ -392,7 +392,7 @@ Rules:
 
 Implementation
 
-- The current compiler rejects `ext` declarations that include `|`, and rejects
+- The compiler rejects `ext` declarations that include `|`, and rejects
  exporting error-producing functions to C ABI outputs.
 
 The spec also includes a “Structs, Arrays, and Closures (Complex Types)” subsection for FFI. As the implementation proceeds, this document must be extended to:
@@ -404,7 +404,7 @@ The spec also includes a “Structs, Arrays, and Closures (Complex Types)” sub
 ## Structs
 
 The full language design includes rich user-defined structs and nested
-aggregates. The current compiler implementation supports only a small subset of
+aggregates. The compiler implementation supports only a small subset of
 structs in code generation:
 
 - structs with 0+ fields of supported value types (scalar primitives, `string`,
@@ -432,7 +432,7 @@ hidden sret pointers).
 ## Optionals
 
 The full language design includes rich optional patterns (`?.`, [`match`](/silk/wiki/language/flow-match/), nested
-optionals, etc.). The current compiler implementation supports only a limited
+optionals, etc.). The compiler implementation supports only a limited
 optional subset in code generation:
 
 - optionals whose payload type is a supported scalar, `string`, or a supported
@@ -442,7 +442,7 @@ optional subset in code generation:
 - and nested optionals (`T??`) for the same supported payload subset, including
  unwrapping `T??` to `T?` via `??`.
 
-At ABI boundaries in the current `linux/x86_64` subset, optionals are lowered
+At ABI boundaries in the `linux/x86_64` subset, optionals are lowered
 as a `Bool` tag followed by the payload scalar slots in order:
 
 - `(tag, payload)` for scalar payload optionals,

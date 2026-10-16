@@ -31,7 +31,7 @@ The empty block `{}` is permitted.
 
 ## Statements
 
-Silk currently supports these statement forms (see
+Silk supports these statement forms (see
 [grammar](/silk/docs/language/grammar/) for exact syntax):
 
 - Local bindings:
@@ -44,7 +44,7 @@ Silk currently supports these statement forms (see
 - Specification-only declarations: `#const` (Formal Silk; not usable in runtime expressions).
 - Structured blocks: `async { ... }` / `task { ... }` (see [concurrency](/silk/docs/language/concurrency/)).
 - Expression statements: limited to calls, assignments, and increment/decrement
- in the Supported forms ([flow expression statements](/silk/docs/language/flow-expression-statements/)).
+ in Silk ([flow expression statements](/silk/docs/language/flow-expression-statements/)).
 - Flow control:
  - `if` / `else` statements (including `if let` pattern destructuring),
  - [`while`](/silk/wiki/language/flow-while/) loops,
@@ -175,8 +175,7 @@ let <pattern> = <expr> else {
 Semantics (Supported forms):
 
 - The initializer expression is evaluated exactly once.
-- If the pattern matches, the pattern binders are introduced into the **current
- scope** for the remainder of the block (like a normal `let` binding).
+- If the pattern matches, the pattern binders are introduced into the **scope** for the remainder of the block (like a normal `let` binding).
 - `let mut <pattern> = ... else { ... };` introduces mutable pattern binders.
 - `let move <pattern> = ...;` and `let move <pattern> = ... else { ... };`
  consume the scrutinee for
@@ -221,9 +220,9 @@ fn main () -> int {
 - the binding is immutable (there is no `const mut`),
 - a `const` binding is a normal runtime value (unlike `#const`), but its value
  is computed by the compiler at compile time and does not incur runtime
- computation cost in Silk currently.
+ computation cost in Silk.
 
-In Silk currently, compile-time evaluation for runtime `const`
+In Silk, compile-time evaluation for runtime `const`
 bindings is restricted to:
 
 - scalar primitive types (`bool`, integer/float scalars, `char`, `Instant`, `Duration`),
@@ -234,7 +233,7 @@ bindings is restricted to:
  - calls to `const fn` functions where all arguments are themselves compile-time evaluable, and
  - struct literals and field access when the struct type is a supported compile-time POD `struct`, and
  - `as` casts between supported scalar types, and
- - a small operator subset (notably `+`, `-`, `*`, bitwise ops, shifts; `/` and `%` are currently rejected for `const`).
+ - a small operator subset (notably `+`, `-`, `*`, bitwise ops, shifts; `/` and `%` are rejected for `const`).
 
 - `string` bindings whose initializer is either:
  - a string literal (`"..."` or `` `...` ``), or
@@ -259,7 +258,7 @@ in runtime expressions (see [formal verification](/silk/docs/language/formal-ver
 The broader language design includes expression-oriented flow constructs (for
 example [`match`](/silk/wiki/language/flow-match/) expressions today and `if` expressions).
 
-In Silk currently:
+In Silk :
 
 - a block is not an expression and does not produce a value; it is purely a
  statement list used as the body of constructs.

@@ -162,7 +162,7 @@ Notes:
  `FlagSet`; keep the `FlagSet` alive until you are done reading positional
  tokens from `ParsedArgs`.
 - Typed values are retrieved from the `FlagSet` via the returned handles.
-- Flag declarations prefer options structs (`BoolOptions`, `IntOptions`, ...).
+- Flag declarations prefer options structs (`BoolOptions`, `IntOptions`,...).
 - Options structs use `default_value` because `default` is a reserved keyword.
 
 ## Example

@@ -113,4 +113,4 @@ that cross into Silk. The public facade releases those handles through
 The runtime bridge intentionally keeps Objective-C selectors, SDK headers,
 Metal protocol types, and by-value SDK structs out of Silk's public ABI. It
 uses opaque `u64` handles and scalar arguments so the facade remains compatible
-with the current C99-safe FFI subset.
+with the C99-safe FFI subset.

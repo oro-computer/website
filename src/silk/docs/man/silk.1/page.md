@@ -198,7 +198,7 @@ For the implementation, the supported options are:
 
 - **REPL command:**
  - `silk repl` starts an interactive “compile-and-run” REPL.
- - Currently supported on:
+ - supported on:
  - `linux/x86_64` via the native ELF backend.
  - `linux/aarch64` via the native AArch64 ELF and bundled-runtime backend.
  - `macos/aarch64` on Apple Silicon hosts for session startup and non-printing declaration/state lines via the current host-backed `macos-aarch64` executable path.
@@ -308,7 +308,7 @@ For the implementation, the supported options are:
  provider feature exposed during checking.
  - `--package <dir|manifest>` (or `--pkg`) — load the module set from a package manifest (`silk.toml`) instead of explicit input files. When `--package` is provided, `<file> ...` inputs must be omitted.
  - when the root manifest enables a build module via `[build].build_module = true`, `silk check --package` runs that build module and uses the emitted manifest/module set instead of the raw `silk.toml`,
- - for compatibility, package checks currently invoke the build module with the action string `build`,
+ - for compatibility, package checks invoke the build module with the action string `build`,
  - When `<file> ...` inputs are omitted and `--package` / `--pkg` is also omitted, but `./silk.toml` exists, `silk check` behaves as if `--package .` was provided.
  - `--` — end of options; treat remaining args as file paths (even if they begin with `-`).
 
@@ -385,7 +385,7 @@ For the implementation, the supported options are:
  - each test runs in its own process, so a failing `assert` (panic/abort) does not stop the whole suite.
  - top-level test bodies that contain `await` are run through async test wrappers and awaited by the generated runner.
  - test executables require a hosted-runtime-capable native backend and
- currently run on Linux x86_64, Linux AArch64 (glibc or musl), and Apple
+ run on Linux x86_64, Linux AArch64 (glibc or musl), and Apple
  Silicon macOS. Formal Silk target metadata reflects the selected native
  target.
  - `--feature <spec>`, `-F<spec>` — enable a build feature for
@@ -404,7 +404,7 @@ For the implementation, the supported options are:
  - `<file> ...` inputs must be omitted.
  - When `<file> ...` inputs are omitted and `--package` / `--pkg` is also omitted, but `./silk.toml` exists, `silk test` behaves as if `--package .` was provided.
  - when the root manifest enables a build module via `[build].build_module = true`, `silk test --package` runs that build module and uses the emitted manifest/module set for package tests,
- - for compatibility, package tests currently invoke the build module with the action string `build`,
+ - for compatibility, package tests invoke the build module with the action string `build`,
  - manifest-native link metadata for the test harness (`[[target]].inputs`, `cflags`, `ldflags`, `needed`, and `runpath`) comes from `[build].default_target` when it names a code target, otherwise the first declared code target; matching package and dependency `[[native]]` entries are merged as package-level native requirements; `kind = "man"` targets are ignored for target metadata.
  - raw manifest native sources (`.c`, `.h`, and supported `.m`) are compiled to temporary objects for the generated test harness; `.o`, `.a`, shared libraries, needed libraries, runpaths, and supported `ldflags` entries are linked as declared.
  - built-in provider native-input auto-linking for libsodium, mbedTLS, and
@@ -430,7 +430,7 @@ For the implementation, the supported options are:
  - the build module is invoked with `argv[1] = <package_root>` and `argv[2] = <action>` where `<action>` is `build`, `install`, or `uninstall`.
  - legacy aliases: `--build-script` and `--build-script-path`.
  - build modules are opt-in by default; to run one for `silk build --package` without passing `--build-module`, set `[build].build_module = true` in `silk.toml`.
- - build-module execution currently supports Linux x86_64, Linux AArch64
+ - build-module execution supports Linux x86_64, Linux AArch64
  (glibc or musl), and Apple Silicon macOS hosts.
  - successful compilation or cache restoration of Silk's internal build-module runner is silent; final artifact summaries name only requested package targets, while runner diagnostics and build-module stderr remain visible.
  - `--build-module-path <path>` — override the build module path (implies `--build-module`).
@@ -467,7 +467,7 @@ For the implementation, the supported options are:
  - imported stdlib async/task declarations alone do not trigger `E2027`; the error is raised only once user code uses those awaitable surfaces under `--noheap`,
  - capturing closures are rejected with `E2027`,
  - region-backed `new` inside `with` is still permitted,
- - `--noheap` is currently incompatible with `--debug` (debug panic traces require `malloc`/`free`).
+ - `--noheap` is incompatible with `--debug` (debug panic traces require `malloc`/`free`).
  - `--strip-unused` — force reachability-based pruning even at `-O0`:
  - for `--kind executable`, prunes unused extern symbols at `-O0`;
  unreachable functions are already excluded at every optimization level,
@@ -512,7 +512,7 @@ For the implementation, the supported options are:
  - common `x86_64-*-linux-musl` triples such as `x86_64-unknown-linux-musl` are accepted as aliases for `linux-x86_64-musl`,
  - `linux-aarch64` and `linux-aarch64-musl` emit Silk-owned ELF64
  executables, relocatable objects, indexed static archives, and shared
- objects for the current integer/bool scalar IR subset, including
+ objects for the integer/bool scalar IR subset, including
  CFG branches and direct helpers with up to eight AAPCS64 register
  parameters and one result; constant-main emission remains the fallback
  for executable builds when that IR path does not apply. Shared output
@@ -531,7 +531,7 @@ For the implementation, the supported options are:
  - `macos-aarch64`:
  - supports the const-main Mach-O path above everywhere the target is recognized, and
  - on Apple Silicon macOS hosts also has a temporary host `clang -c` /
- `ld` non-const executable bring-up path for the current integer/bool
+ `ld` non-const executable bring-up path for the integer/bool
  scalar IR subset plus Mach-O object/static/shared output for
  `--kind object|static|shared`,
  - and on those Apple Silicon hosts the target metadata and subset
@@ -547,7 +547,7 @@ For the implementation, the supported options are:
  `clang -c` / `ld`, including reachable float-to-int lowering via
  target-correct helper objects compiled from [`src/silk_rt_f128.c`](https://github.com/oro-computer/silk/blob/master/src/silk_rt_f128.c),
  - on those Apple Silicon hosts also support Mach-O
- object/static/shared library outputs for the current library IR
+ object/static/shared library outputs for the library IR
  subset,
  - the same host-backed iOS path now also compiles the portable
  bundled runtime helper families on demand for the requested iOS SDK
@@ -575,8 +575,8 @@ For the implementation, the supported options are:
  opt-in through [`std::window`](/silk/docs/std/window/) usage, not a separate flag,
  - `wasm32-unknown-unknown` (IR-backed wasm32 mode; emits a `.wasm` module exporting `memory` and exported functions, including `main` when present; `ext` declarations become imports under `env.<name>`; also supports export-only modules with no `main` for JS/Node-style embedding),
  - `wasm32-wasi` (IR-backed wasm32 WASI mode; emits `memory` and `_start () -> void`, imports `wasi_snapshot_preview1.proc_exit`, and calls Silk `fn main () -> int` or `fn main () -> void`; also supports export-only modules for embedding, which do not include `_start`),
- - unknown or currently unsupported triples cause `silk build` to fail with `error[E4001]: unsupported code generation target`.
- - Note: wasm targets are only supported for `--kind executable` currently.
+ - unknown or unsupported triples cause `silk build` to fail with `error[E4001]: unsupported code generation target`.
+ - Note: wasm targets are only supported for `--kind executable`.
  - `--arch` and `--target` are mutually exclusive; passing both is an error.
  - `--gpu-target <gpu-target>` additionally compiles root-package
  `attr(device=gpu)` functions for AMD `gfx942`, `gfx1100`, or `gfx1151`,
@@ -620,9 +620,9 @@ For the implementation, the supported options are:
  `[build] security_provider`; `auto` selects platform-backed APIs first on
  Apple targets and falls back to built-in archives for std APIs that do
  not yet have an Apple platform mapping. Other targets use built-in.
- - The build currently:
+ - The build :
  - runs front-end checks,
- - when multiple input files are provided, performs module-set validation (package/import resolution + multi-module type checking that accounts for imported exported constants and imported `export fn` calls for the current scalar subset),
+ - when multiple input files are provided, performs module-set validation (package/import resolution + multi-module type checking that accounts for imported exported constants and imported `export fn` calls for the scalar subset),
  - resolves `std::...` imports by loading stdlib source files from a configured stdlib root (see **Environment** below),
  - for `--kind executable` (the default):
  - when the module set defines a valid Silk entrypoint, enforces the executable entrypoint rule (exactly one `main` of either `fn main() -> int`, `fn main() -> void`, `async fn main() -> int`, `async fn main() -> void`, `fn main(argc: int, argv: u64) -> int`, or `fn main(argc: int, argv: u64) -> void`),
@@ -634,10 +634,10 @@ For the implementation, the supported options are:
  native executables, when the `argc`/`argv` form is used, `argv` is a
  raw pointer to the argv pointer list (a C-style `char**`, where
  `argv[0]` is at byte offset `0`, `argv[1]` at `8`, etc.),
- - for `--kind object`, `--kind static`, and `--kind shared`, `main` is optional; the current backend emits supported `export fn` functions and supported exported constants (`export let` with an explicit type annotation and a literal initializer; currently scalar types and `string`), plus a valid executable `main` when present, as global symbols,
+ - for `--kind object`, `--kind static`, and `--kind shared`, `main` is optional; the backend emits supported `export fn` functions and supported exported constants (`export let` with an explicit type annotation and a literal initializer; scalar types and `string`), plus a valid executable `main` when present, as global symbols,
  - it is valid for a non-executable output to contain no globally-visible symbols (for example, type-only or interface-only modules); in that case the build still succeeds and produces an “empty” object/archive/shared library,
  - declaration-only exported function prototypes (`export fn name(...) -> T;`) are accepted as module exports for type-checking, but do not emit code; calls lower as link-time symbol references that must be satisfied by other Silk sources in the module set and/or `.c`/`.m`/`.o`/`.a` inputs,
- - on `linux/x86_64`, the current backend also supports a limited `string` subset (SilkString `{ ptr, len }` ABI, string literals + `let`/`return` + calls to `string`-returning helpers + `==`/`!=`/`<`/`<=`/`>`/`>=` comparisons; exported `string` constants are supported for non-executable outputs),
+ - on `linux/x86_64`, the backend also supports a limited `string` subset (SilkString `{ ptr, len }` ABI, string literals + `let`/`return` + calls to `string`-returning helpers + `==`/`!=`/`<`/`<=`/`>`/`>=` comparisons; exported `string` constants are supported for non-executable outputs),
  - on `linux/x86_64`, `linux-aarch64`, and their musl variants, the current
  backends also support a limited external scalar function/data subset:
  - top-level `ext` declarations of external functions (`ext name = fn (T, ...) -> R;`) may be called like normal functions from Silk code,
@@ -770,7 +770,7 @@ For the implementation, the supported options are:
  - use structured control flow (`if` / `else`, [`while`](/silk/wiki/language/flow-while/), `break;`, `continue;`) with conditions built from boolean literals, comparisons, calls to `bool`-returning helpers, logical operators `!` / `&&` / `||` (with `&&` / `||` short-circuiting), and boolean locals,
  - use boolean expressions in `let` initializers and `bool` return statements, including short-circuit `&&` / `||` (for example `let flag: bool = a && b;`),
  - allow call expressions as standalone statements (discarding the returned value),
- - allow assignment and compound assignment to `let mut` locals by name (`x = expr;`, `x += y;`); `=` is supported for all currently supported value types (including `string`, the supported `struct` subset, and optionals of those), and compound assignments are supported only for numeric scalar locals,
+ - allow assignment and compound assignment to `let mut` locals by name (`x = expr;`, `x += y;`); `=` is supported for all supported value types (including `string`, the supported `struct` subset, and optionals of those), and compound assignments are supported only for numeric scalar locals,
  - for optionals in the supported subset (scalar payloads, `string?`, and optionals of the supported `struct` subset), supports `None`, `Some(<expr>)`, `==` / `!=` comparisons (tag + payload equality; `opt == None` and `opt == Some(x)` infer type from the other operand), optional field access (`opt?.field`), `match <scrutinee> { None => <expr>, Some(<name|_>) => <expr>, }`, and `??` coalescing with short-circuit fallback evaluation (including unwrapping `T??` to `T?`); the same `??` operator is also accepted for recoverable `Result`-style values and for ordinary named enums with exactly two declared variants, where declaration order defines the coalescing shape (first variant = success side, second variant = fallback side); the right-hand side of `??` may also be the narrow terminal control-flow forms `return`, `break`, or `continue` (with the same validity rules as the statement forms); nested optionals (`T??`) are supported for the same payload subset, and optionals pass/return between helpers as `(bool tag, payload0, payload1, ...)` where the payload slots follow the lowering of the underlying type (for example `string?` is `(bool, u64 ptr, i64 len)`); for non-executable outputs, exported functions may accept and return these optionals,
  - for a limited subset of structs (slot-flattened structs with 0+ fields of supported value types), supports `struct` declarations, struct literals (`Type{ field: expr, ... }`, including partial initialization), field access (`value.field`, including nested access), `==` / `!=` comparisons (deep/slot-wise), and passing/returning such structs by value using the System V AMD64 convention (one ABI “eightbyte” per slot). For non-executable outputs, exported functions accept only ABI-safe structs whose flattened scalar slots are restricted to `i64`/`u64`/`f64`; downstream C callers should declare separate parameters for 3+ slot structs,
  - and, for helpers, use direct calls between functions that fit this subset, following the System V AMD64 scalar calling convention (`rdi`..`r9` for integer-like args, `xmm0`..`xmm7` for `f32`/`f64`, stack spill for remaining args, and `rax`/`xmm0` results), and
@@ -816,7 +816,7 @@ For the implementation, the supported options are:
             }
           }
           ```
- - for programs that type-check but are outside both the constant subset and the current IR-based subset, `silk build` exits non-zero with `E4001` / `E4002` diagnostics describing the backend limitation.
+ - for programs that type-check but are outside both the constant subset and the IR-based subset, `silk build` exits non-zero with `E4001` / `E4002` diagnostics describing the backend limitation.
 
 - **Doc command:**
  - Markdown mode: `silk doc [--all] <file> [<file> ...] [-o <path>]`:

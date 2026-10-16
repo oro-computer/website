@@ -43,7 +43,7 @@ These behave like normal `const` string values:
 
 ### `BUILD_KIND`
 
-The output kind currently being built:
+The output kind being built:
 
 - `"executable"`
 - `"object"`
@@ -52,7 +52,7 @@ The output kind currently being built:
 
 ### `BUILD_MODE`
 
-The build mode currently being built:
+The build mode being built:
 
 - `"debug"`
 - `"release"`

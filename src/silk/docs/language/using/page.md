@@ -132,7 +132,7 @@ Imported methods inherit the source method’s visibility:
 - importing a `public fn` method produces a `public` method in the target impl,
 - importing a private method produces a private method in the target impl.
 
-Since `using` does not accept visibility modifiers in the Supported forms, this
+Since `using` does not accept visibility modifiers in Silk, this
 inheritance rule is the only way to control whether an imported method is
 callable outside the target `impl { ... }` block.
 
@@ -143,7 +143,7 @@ When the imported method’s signature depends on `Self` (for example
 across distinct struct types requires that the underlying layouts are
 compatible.
 
-In Silk currently, a pair of non-opaque, non-`error` structs are
+In Silk, a pair of non-opaque, non-`error` structs are
 considered compatible when they have the same number of fields and the same
 field types in the same order (field names do not matter).
 

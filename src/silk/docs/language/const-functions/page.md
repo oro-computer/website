@@ -20,7 +20,7 @@ githubRef: "master"
 This document defines the surface syntax and semantics for compile-time
 functions.
 
-In Silk currently, `const fn` (and `const pure fn`) can be called
+In Silk, `const fn` (and `const pure fn`) can be called
 from `const` binding initializers when all arguments and the result are
 compile-time values (scalar values and eligible POD `struct` values).
 
@@ -85,7 +85,7 @@ Supported forms (Implementation target):
  declaration order. They may be returned from and passed to `const fn`, and
  used in `const` initializers.
 
-Planned (not yet supported for `const fn` in the Supported forms):
+Planned (not yet supported for `const fn` in Silk):
 
 - `string` values (string literals are supported directly in `const` bindings),
 - aggregate values beyond compile-time POD structs (enum/optional/slice/array),
@@ -98,7 +98,7 @@ The Supported forms defines a deliberately small “const-eval VM” surface. A
 
 ### Signature rules
 
-In the Supported forms, a `const fn`:
+In Silk, a `const fn`:
 
 - must not be `task` or `async`,
 - must not declare a typed-error contract (`-> T | ErrorType...`),
@@ -107,14 +107,14 @@ In the Supported forms, a `const fn`:
 
 ### Body rules
 
-In the Supported forms, a `const fn`:
+In Silk, a `const fn`:
 
 - must not allocate (`new`) and must not use regions/`with`,
 - must not contain `panic` statements,
 - must not declare `const` local bindings,
 - may call only other `const fn` declarations,
 - is restricted to a small expression subset over scalar values:
- - literals and local names (parameters and `let` bindings; no global `const` reads in the Supported forms),
+ - literals and local names (parameters and `let` bindings; no global `const` reads in Silk),
  - `as` casts between supported scalar types,
  - unary operators: `-`, `~`, `!`,
  - binary operators:
@@ -166,7 +166,7 @@ Const functions do not create new static storage. In particular:
 - compile-time execution may compute scalar values and fold them into constants,
 - compile-time execution must not allocate heap memory,
 - compile-time execution must not synthesize new global read-only data (for
- example, it cannot build a new string at compile time in the Supported forms).
+ example, it cannot build a new string at compile time in Silk).
 
 String literals are still backed by read-only static storage, but they are
 introduced by the literal syntax itself (see [`literals-string.md`](/silk/docs/language/literals-string/)), not by the

@@ -27,11 +27,11 @@ Current host-build note:
 
 This document now serves two roles:
 
-- Describe the **current shipped hosted async runtime** used by the compiler today.
+- Describe the **shipped hosted async runtime** used by the compiler.
 - Specify the longer-term architecture (compiler coroutine transform + richer event loop)
  that the implementation is expected to evolve toward.
 
-The current hosted async runtime is implemented in C in [`src/silk_rt_async.c`](https://github.com/oro-computer/silk/blob/master/src/silk_rt_async.c) and wired
+The hosted async runtime is implemented in C in [`src/silk_rt_async.c`](https://github.com/oro-computer/silk/blob/master/src/silk_rt_async.c) and wired
 into lowering in [`src/lower_ir.zig`](https://github.com/oro-computer/silk/blob/master/src/lower_ir.zig). It provides:
 
 - stackful coroutines (fibers) using the host `ucontext` implementation on
@@ -55,11 +55,13 @@ See also:
 - runtime layering: [runtime](/silk/docs/std/runtime/)
 - current blocking hosted utilities: [task](/silk/docs/std/task/), [io](/silk/docs/std/io/), [networking](/silk/docs/std/networking/)
 
-## Current Implementation (Shipped)
+<span id="current-implementation-shipped"></span>
+
+## Implementation
 
 ### Promise handle layout (ABI for runtime lowering)
 
-Currently, `Promise(T)` values are lowered as a single `u64` handle
+`Promise(T)` values are lowered as a single `u64` handle
 that points at heap-allocated handle storage with this layout:
 
 - `[0] u64 kind`
@@ -72,7 +74,7 @@ When a promise is pending, `impl_ptr` is non-zero and points at runtime-owned st
 
 ### Runtime entrypoints
 
-The compiler lowering currently uses these runtime functions (all bundled into the
+The compiler lowering uses these runtime functions (all bundled into the
 runtime C objects linked into hosted outputs):
 
 - `silk_rt_async_spawn(entry_ptr: u64, promise_handle: u64) -> i32`
@@ -118,10 +120,10 @@ The runtime also exposes low-level awaitable building blocks:
 - `silk_rt_async_net_connect_ipv6(fd: i64, addr_hi: u64, addr_lo: u64, port: u16, scope_id: i64) -> u64`
 
 These are intended to be wrapped by stable [`std::runtime::event_loop`](/silk/docs/std/runtime-event_loop/) / [`std::task`](/silk/docs/std/task/) /
-[`std::io`](/silk/docs/std/io/) surfaces as that layer is brought up. In the current stdlib snapshot,
+[`std::io`](/silk/docs/std/io/) surfaces as that layer is brought up. In the stdlib snapshot,
 timers and fd readiness are exposed via [`std::runtime::event_loop`](/silk/docs/std/runtime-event_loop/), and sleep
 helpers are wrapped as [`std::task::{sleep_ms_async,sleep_async}`](/silk/docs/std/task/). As of the
-current hosted runtime snapshot, `silk_rt_async_io_{read,write}` return
+hosted runtime snapshot, `silk_rt_async_io_{read,write}` return
 `Promise(i64)` handles (lowered as a `u64` promise handle) whose payload is the operation result:
 - `>= 0` is the byte count,
 - `< 0` is `-errno` (for example `-EINTR`).
@@ -181,22 +183,24 @@ uses:
 
 falling back to `poll(2)` when `io_uring` is unavailable.
 
-Limitations (current):
+Limitations:
 
 - The [`std::runtime::event_loop`](/silk/docs/std/runtime-event_loop/) handle surface is still limited:
  - only one global executor/event loop instance may be active at a time,
  - [`std::runtime::event_loop::init()`](/silk/docs/std/runtime-event_loop/) fails when an executor is already active
  (for example inside `async fn main`).
 - Structured blocks do not yet inject implicit cancellation into arbitrary
- child operations; current scope semantics are deterministic live-handle
+ child operations; scope semantics are deterministic live-handle
  cleanup, not a general child-registry cancellation system.
 - Completion-based I/O is implemented for `read`/`write`/`accept`/`connect` when `io_uring` is available.
  - Explicit completion cancellation is not yet exposed as part of the shipped
  std/runtime surface.
 
-## Current Hosted Runtime Status
+<span id="current-hosted-runtime-status"></span>
 
-The runtime-backlog items for the current hosted concurrency subset are now
+## Hosted Runtime Status
+
+The runtime-backlog items for the hosted concurrency subset are now
 
 
 - plain `task fn` / `async task fn` calls now default to the global task pool,
@@ -267,7 +271,7 @@ The compiler is responsible for:
 - computing which locals must be stored in the frame across each suspension point,
 - preserving typed-error and `panic` semantics during the transform.
 
-Note: the current shipped bring-up does **not** yet implement this state-machine
+Note: the shipped bring-up does **not** yet implement this state-machine
 transform. Instead, `async fn` bodies execute on stackful coroutines provided by
 the runtime (system `ucontext` or the bundled AArch64 musl switch), and suspension
 points yield back to the executor by swapping contexts. The long-term plan is to
@@ -299,7 +303,7 @@ The CLI already permits `async fn main () -> int` as an executable entrypoint
 Structured concurrency forms (`async { ... }`, `task { ... }`, and their [`loop`](/silk/wiki/language/flow-loop/)
 variants) are now **runtime-backed lexical scopes** for live-handle cleanup.
 
-Current shipped guarantees:
+shipped guarantees:
 
 - live `Promise(T)` bindings are awaited/destroyed on scope exit,
 - live `Task(T)` bindings are drained/destroyed on scope exit (joining
@@ -314,7 +318,7 @@ Current non-goals:
 - no implicit nested executor creation,
 - no automatic [`std::abort_controller`](/silk/docs/std/abort-controller/) injection,
 - and no general cancellation registry for arbitrary child operations beyond
- the explicit handles that are currently live in scope.
+ the explicit handles that are live in scope.
 
 ## Runtime Layering ([`std::runtime`](/silk/docs/std/runtime/))
 

@@ -67,11 +67,11 @@ struct Point {
 When a struct literal omits a field, the compiler initializes the field from its
 default expression.
 
-In Silk currently, a field default must be a compile-time
+In Silk, a field default must be a compile-time
 evaluable expression. This is broader than the current default-function-argument
 rule.
 
-Supported forms currently include:
+Supported forms include:
 
 - literals,
 - `const` bindings,
@@ -79,7 +79,7 @@ Supported forms currently include:
 - struct literals, and
 - field access over compile-time values.
 
-Current limits:
+limits:
 
 - `new` is still rejected,
 - ordinary runtime helper calls are rejected, and
@@ -140,7 +140,7 @@ Type checking rules (Supported forms):
 
 Notes:
 
-- `extends` does not imply implicit subtyping in Silk currently:
+- `extends` does not imply implicit subtyping in Silk :
  there is no implicit coercion from `Derived` to `Base` (or `&Derived` to
  `&Base`) yet.
 
@@ -180,7 +180,7 @@ calling the corresponding destruction/free function provided by the foreign
 library.
 
 Using an opaque handle after it has been destroyed is **undefined behavior**.
-The compiler does not currently enforce this at compile time.
+The compiler does not enforce this at compile time.
 
 #### ABI and Lowering
 
@@ -252,11 +252,11 @@ though the intended C-like packed layout would be 8 bytes.
 ### ABI and Code Generation
 
 The Silk language design includes full support for user-defined structs, nested
-aggregates, and FFI-safe ABI mapping. The current compiler/backend
+aggregates, and FFI-safe ABI mapping. The compiler/backend
 implementation supports only a narrow, explicitly documented subset:
 
 - Only "plain" structs with **0+ fields** are supported by codegen.
- - Empty structs (`struct Empty {}`) are currently represented as a single
+ - Empty structs (`struct Empty {}`) are represented as a single
  placeholder `u64` slot in the scalar-slot model.
 - Fields may be:
  - scalar primitive types (`bool`, fixed-width integers, `int`, `char`,
@@ -386,7 +386,7 @@ Rules:
  See [interfaces](/silk/docs/language/interfaces/).
 - The method named `constructor` is treated specially:
  - it is only meaningful for `struct` types (it backs `new Type(...)`); enums
- do not support `constructor` methods in the Supported forms,
+ do not support `constructor` methods in Silk,
  - it is `public` by default,
  - when explicitly marked `private`, it is callable only within the defining
  `impl { ... }` block,

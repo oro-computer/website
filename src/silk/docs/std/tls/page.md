@@ -18,7 +18,7 @@ The initial goals are:
 
 - a small but usable [`std::tls`](/silk/docs/std/tls/) session API for clients and servers,
 - a transport-agnostic I/O model so TLS can be layered over [`std::net::TCPStream`](/silk/docs/std/net/)
- or custom runtimes ,
+ or custom runtimes,
 - end-to-end runnable tests that do not depend on real sockets (to keep the
  test suite runnable in sandboxed environments).
 
@@ -45,7 +45,7 @@ This avoids a runtime `DT_NEEDED` dependency on system mbedTLS shared libraries.
 When the built-in archives are missing, `silk build` reports an error that
 instructs the user to run `zig build deps` for the selected target.
 
-The built-in mbedTLS in the Silk compiler repository is pinned (currently **Mbed TLS 4.0.0**).
+The built-in mbedTLS in the Silk compiler repository is pinned (**Mbed TLS 4.0.0**).
 In mbedTLS 4.x, TLS depends on the PSA crypto subsystem for randomness and
 cryptographic operations.
 
@@ -78,7 +78,7 @@ messages. mbedTLS reports these via `MBEDTLS_ERR_SSL_RECEIVED_NEW_SESSION_TICKET
 `TLSErrorKind::WouldBlockRead`) so higher-level callers can continue reading
 application bytes.
 
-Public error/value types in the Supported forms:
+Public error/value types in Silk:
 
 ```silk
 module std::tls;
@@ -163,7 +163,7 @@ These pointers can be passed to `Session.set_bio_mempipe(...)`.
 - The Supported forms wires `Session` to transports via `MemPipe` and hosted
  POSIX file descriptors (`set_bio_fd`). General user-provided transport
  callbacks are planned but require additional FFI expressiveness beyond the
- current implementation.
+ implementation.
 - [`std::websocket`](/silk/docs/std/websocket/) composes its secure client/server path with `Session` over a
  retained [`std::net::TCPStream`](/silk/docs/std/net/). The WebSocket owner sets verified client
  hostnames before handshaking, applies phase deadlines to the socket, and

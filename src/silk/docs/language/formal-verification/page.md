@@ -67,7 +67,7 @@ The ordinary checker and Formal Silk answer different questions:
 - a contract on an `unsafe fn` is processed like a contract on a safe function.
  Calls must still establish every modeled `#require`, and successful calls may
  contribute modeled `#assure` facts;
-- machine facts that are not represented by the current model remain outside
+- machine facts that are not represented by the verification model remain outside
  the proof. Examples include allocation provenance, mapped byte extent,
  executable-page permission, dynamic-symbol lifetime, and agreement between
  an integer address and a declared `c_fn` ABI.
@@ -105,6 +105,8 @@ It reports `E3007` (`Formal Silk: call precondition may not hold`). Removing the
 unsafe boundary instead reports `E2129` first. The passing and failing cases
 are covered by [`tests/silk/pass_formal_unsafe_transparent.slk`](https://github.com/oro-computer/silk/blob/master/tests/silk/pass_formal_unsafe_transparent.slk) and
 [`tests/silk/verify_fail_unsafe_call_precondition.slk`](https://github.com/oro-computer/silk/blob/master/tests/silk/verify_fail_unsafe_call_precondition.slk).
+
+For a complete CLI example that parses external input and proves a guarded call, see [Validate input with Formal Silk](/silk/docs/guides/formal-silk/).
 
 ## Z3 linkage and overrides
 
@@ -152,7 +154,7 @@ a distributable success-path bundle under `.silk/formal/` (or
 
 ## Z3 model
 
-The current Formal Silk verifier maps Silk constructs directly to Z3:
+The Formal Silk verifier maps Silk constructs directly to Z3:
 
 - `bool` → Z3 Bool.
 - `string` → Z3 String (Supported forms: literals and equality/inequality comparisons).
@@ -165,7 +167,7 @@ The current Formal Silk verifier maps Silk constructs directly to Z3:
  Arithmetic is modular 2^N (wraparound). Ordered comparisons and `>>` use
  signed semantics for signed integers (`i*`/`int`) and unsigned semantics for
  unsigned integers (`u*`).
-- other primitive/runtime values that do not currently have dedicated numeric
+- other primitive/runtime values that do not have dedicated numeric
  reasoning support (for example `char`, floating-point primitives, `Range`,
  `Instant`, and `Duration`) are modeled as **opaque uninterpreted values**.
 - non-primitive runtime values passed through contracts
@@ -186,7 +188,7 @@ Supported operators in specification expressions (Supported forms):
  - arithmetic: `+`, `-`, `*`, `/`, `%`
  - bitwise: `&`, `|`, `^`, `<<`, `>>`
  - comparisons: `<`, `<=`, `>`, `>=`, `==`, `!=`
-- size/layout queries: `sizeof`, `alignof`, `offsetof` (type operands and other statically-sized operands in the Supported forms)
+- size/layout queries: `sizeof`, `alignof`, `offsetof` (type operands and other statically-sized operands in Silk)
 
 Supported name-resolution sources in specification expressions (Supported forms):
 
@@ -195,7 +197,7 @@ Supported name-resolution sources in specification expressions (Supported forms)
 - and const-evaluable module/package `const` bindings, including exported
  qualified names such as [`std::limits::I64_MAX`](/silk/docs/std/limits/).
 
-Other operators and expression forms are currently rejected in verified code
+Other operators and expression forms are rejected in verified code
 (see the notes below).
 
 ## The `ext` boundary
@@ -205,7 +207,7 @@ External declarations (`ext`) have no body available to the verifier.
 Therefore:
 
 - The verifier cannot generate VCs about the behavior of `ext` bodies.
-- In the current verifier subset, calls are supported only to functions and
+- In Silk, calls are supported only to functions and
  methods that have Formal Silk contracts (see “Contracted calls” below).
  `ext` declarations do not have Formal Silk contracts yet, so verified code
  cannot call `ext` functions.
@@ -350,7 +352,7 @@ Rules:
 
 The verifier will interpret:
 
-- `#invariant` expressions (type `bool` in the Supported forms) as properties that must hold:
+- `#invariant` expressions (type `bool` in Silk) as properties that must hold:
  - before entering the loop,
  - after each iteration (assuming the body and condition do not diverge),
  - and at `break` exits (so proofs after the loop may rely on the invariant).
@@ -411,7 +413,7 @@ Implemented end-to-end (Z3-backed, Supported forms):
 - Formal Silk declarations via `#const`:
  - may be referenced only by specification expressions,
  - are rejected in runtime expressions (`E2014`).
-- `theory` (reusable assertions, initial subset):
+- `theory` (reusable assertions):
  - `theory Name(params) { ... }` defines a reusable set of proof obligations
  (exportable/importable at top level),
  - `#theory Name(args);` applies it in a function body as compile-time-only
@@ -434,7 +436,7 @@ Implemented end-to-end (Z3-backed, Supported forms):
  - after the call, the verifier assumes the callee’s postconditions (explicit
  `#assure` plus attached-theory `#assure`/`#invariant`) into verified
  callers' symbolic state so subsequent proofs can use them,
- - if the callee has a source-visible body, the Supported forms requires that
+ - if the callee has a source-visible body, Silk requires that
  body to be a single return expression (no runtime statements); the verifier
  inlines that return expression in the caller’s symbolic state,
  - if the callee has **no body** (a declaration-only prototype, typically used
@@ -444,7 +446,7 @@ Implemented end-to-end (Z3-backed, Supported forms):
  - introduces an uninterpreted symbolic value for the return,
  - and assumes postconditions about that return value,
  - if the callee has **no Formal Silk contract**, verified code may still call
- it in the Supported forms:
+ it in Silk:
  - if the source-visible body is a single return expression, the verifier
  may inline that return expression into the caller’s symbolic state,
  - otherwise the verifier treats the return value as opaque and assumes no
@@ -454,7 +456,7 @@ Implemented end-to-end (Z3-backed, Supported forms):
  contractless calls,
  - recursion is not supported yet.
 - Stdlib modules are verified when they use Formal Silk syntax, subject to the
- same current-subset restrictions described here.
+ same verification restrictions described here.
 
 Not implemented yet :
 
@@ -476,7 +478,7 @@ Not implemented yet :
  ([`match`](/silk/wiki/language/flow-match/), nested loops, indirect calls, and many operators are not supported
  yet in verified code). Statement-level `if` path splitting is implemented in
  the Supported forms.
-- Verified assignment statements currently support local names and direct field
+- Verified assignment statements support local names and direct field
  writes through named aggregate or receiver values (`name.field = expr`).
  Direct field writes re-prove the target aggregate's struct `#require`
  clauses after the write. Optional-field, index, nested-field, and compound
@@ -653,7 +655,7 @@ Theory bodies are verifier-only:
 
 - Theory argument expressions and theory directive expressions are **Formal Silk
  specification expressions** evaluated by the verifier.
-- In the Supported forms, specification expressions do not support function
+- In Silk, specification expressions do not support function
  calls or value construction (for example `foo(x)`, `Type{...}`, arrays, or
  `new`). Such expressions are rejected as unsupported Formal Silk.
 
@@ -698,7 +700,7 @@ The payload contract is intentionally source-oriented and portable:
 - `payload_format = "smt2"`
 - `payload_encoding = "source"`
 
-That is, Silk currently distributes normalized SMT-LIB2 source, not a
+That is, Silk distributes normalized SMT-LIB2 source, not a
 solver-private binary snapshot. This keeps the artifact inspectable, stable
 across hosts, and suitable for replay with an external `z3 -smt2 ...` tool.
 

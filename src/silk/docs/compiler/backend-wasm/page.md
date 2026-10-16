@@ -133,7 +133,7 @@ Notes:
 ### Integer and float types
 
 - `int` maps to:
- - `i64` in wasm32/wasm64 backends (matching current compiler semantics).
+ - `i64` in wasm32/wasm64 backends (matching compiler semantics).
 - Fixed-width ints map to their obvious wasm integer types:
  - `u8`/`i8`/`u16`/`i16`/`u32`/`i32` lower to `i32` values (with masking/sign
  rules applied in codegen),

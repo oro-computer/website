@@ -114,9 +114,11 @@ The compiler must:
  - disallow patterns that would lead to data races,
  - ensure that aliasing and lifetime rules are respected when mutation is allowed.
 
-## Current Implementation Restrictions
+<span id="current-implementation-restrictions"></span>
 
-Silk currently implements:
+## Implementation Restrictions
+
+Silk implements:
 
 - Local `let mut` bindings, including assignment and numeric compound assignment.
 - `mut` value parameters (`fn inc(mut x: int) { x = x + 1; }`) as a callee-local
@@ -136,18 +138,18 @@ Silk currently implements:
 - Local borrowed references (`&T`) as first-class values:
  - via the borrow operator `&expr` on borrowable lvalues (e.g. `&pair`, `&obj.field`, `&x`), and
  - via implicit borrow coercions in contexts that expect `&T`
- (currently implemented for `&Struct`; for example `let r: &Pair = pair;`).
+ (implemented for `&Struct`; for example `let r: &Pair = pair;`).
  These borrows are checked with conservative **lexical lifetime** rules (they
  may not escape the scope of the borrowed stack storage).
 - Local bindings of `&Struct` values that originate from heap allocation (`new`)
  or from calls that return `&Struct`:
- - these `&Struct` values are refcounted in the Supported forms,
+ - these `&Struct` values are refcounted in Silk,
  - copying a `&Struct` binding (e.g. `let g: &File = f;`) creates an alias to
  the same underlying heap allocation and increments the refcount.
 
 ## Borrow Safety Rules
 
-Borrowed references (`&T`) in Silk currently are safe-by-default
+Borrowed references (`&T`) in Silk are safe-by-default
 and, for now, use conservative **lexical lifetime** checks:
 
 - Borrowed references can be created and stored as local values (see above).
@@ -203,7 +205,7 @@ are first bound to locals and then passed by name).
 When borrowing a range from an existing slice binding (for example `s: T[]`),
 the checker interprets `&s[start..end]` as a subrange of the underlying base
 (offset by `s`’s known bounds) for the purposes of overlap checks. This
-disjointness reasoning is currently limited to integer-literal bounds and to
+disjointness reasoning is limited to integer-literal bounds and to
 slice bindings whose own bounds are known.
 
 For `&Struct` reference-typed local bindings and slice-typed (`T[]`) local

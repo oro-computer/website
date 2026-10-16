@@ -52,7 +52,7 @@ valid token sequence. Use an explicit empty pattern, for example `/(?:)/`.
 
 ## Flags
 
-The supported flag set is intentionally small in the Supported forms:
+The supported flag set is intentionally small in Silk:
 
 - `g` — global (recorded; does not change [`std::regex::matches`](/silk/docs/std/regex/) semantics)
 - `i` — ignore case
@@ -81,7 +81,7 @@ The type checker rejects:
 - If a literal/borrowed/foreign `regexp` is later passed to the low-level
  regex free path, the runtime ignores it safely instead of freeing arbitrary
  pointers.
-- In the Supported forms, matching is defined over the raw bytes of the input
+- In Silk, matching is defined over the raw bytes of the input
  `string`, and match indices are byte offsets.
 - Literal compilation uses the same conservative regexp compile stack budget as
  runtime [`std::regex::RegExp.compile(...)`](/silk/docs/std/regex/); excessively deep patterns are

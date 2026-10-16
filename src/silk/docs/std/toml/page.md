@@ -119,7 +119,7 @@ Notes:
 - The exported free functions are thin compatibility wrappers around the
  corresponding `Document` methods.
 - Tables and arrays are stored as linked lists over `ValueId` indices to match
- Silk currently.
+ Silk.
 - The internal DOM storage now uses a private
  [`std::toml::dom_storage_well_formed(...)`](/silk/docs/std/toml/) theory defined inside
  [`std/toml.slk`](https://github.com/oro-computer/silk/blob/master/std/toml.slk), and the public document accessors attach that local contract

@@ -86,7 +86,7 @@ Rules:
  - If `<path>` is relative, it is resolved relative to `<package_root>`.
  - The file must exist, otherwise the build fails.
 - The build module is executed as a hosted native program on the build host.
- This is currently supported only on `linux/x86_64`.
+ This is supported only on `linux/x86_64`.
 - The emitted manifest is parsed and used for the remainder of the build in
  place of reading `<package_root>/silk.toml`.
 - The emitted manifest’s `[build].build_module` / `[build].build_module_path`
@@ -149,7 +149,7 @@ Parameters:
 - `package_root` — the absolute package root directory.
 - `action` — the package action.
  - `silk build --package ...` passes `build`, `install`, or `uninstall`.
- - `silk check --package ...` and `silk test --package ...` currently pass
+ - `silk check --package ...` and `silk test --package ...` pass
  `build` for compatibility with existing build modules.
  - When omitted by the driver, the action is treated as `build`.
 

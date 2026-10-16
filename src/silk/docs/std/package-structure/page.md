@@ -24,7 +24,7 @@ available to user programs.
 - `std::` is a **reserved namespace root**.
 - The standard library is a **distribution of modules** whose module names begin
  with `std::...`:
- - [`std::buffer`](/silk/docs/std/buffer/) (currently implemented as a module; long-term `Buffer(T)` intrinsic; see [buffer](/silk/docs/std/buffer/) and [buffers](/silk/docs/language/buffers/))
+ - [`std::buffer`](/silk/docs/std/buffer/) (implemented as a module; long-term `Buffer(T)` intrinsic; see [buffer](/silk/docs/std/buffer/) and [buffers](/silk/docs/language/buffers/))
  - [`std::strings`](/silk/docs/std/strings/)
  - [`std::memory`](/silk/docs/std/memory/)
  - [`std::arrays`](/silk/docs/std/arrays/)
@@ -152,7 +152,7 @@ The concrete selection mechanism is a compiler/driver responsibility and must
 be documented in the CLI ([cli silk](/silk/docs/compiler/cli-silk/)) and embedding ABI
 ([abi libsilk](/silk/docs/compiler/abi-libsilk/)) once implemented.
 
-Current toolchain behavior (first slice):
+toolchain behavior (first slice):
 
 - Both the `silk` CLI and the `libsilk.a` embedding build path resolve
  `std::...` imports from a stdlib root selected by:
@@ -178,7 +178,7 @@ static archive for a specific target ABI:
  or Mach-O objects on `macos/aarch64`) and should be treated as one artifact
  per supported target triple/ABI, not as a universally portable library.
 
-Current toolchain behavior (`linux/x86_64`):
+toolchain behavior (`linux/x86_64`):
 
 - The compiler still loads stdlib Silk sources from the configured stdlib root
  for parsing/type-checking (so the language-level package graph is validated),

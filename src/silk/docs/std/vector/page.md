@@ -25,9 +25,9 @@ for most scalar values; [`std::vector`](/silk/docs/std/vector/) is specified in 
 element type `T`, not a stable packed byte layout. In particular, in the
 Supported forms `Vector(T)` stores elements using the scalar-slot
 layout of `T` (each slot is 8 bytes). Each element occupies `sizeof(T)` bytes
-(a multiple of 8 in the Supported forms), so multi-slot values like `string` and
+(a multiple of 8 in Silk), so multi-slot values like `string` and
 non-opaque structs/enums are supported. This is still not a packed byte
-representation: for example `sizeof(u8) == 8` in the Supported forms, so
+representation: for example `sizeof(u8) == 8` in Silk, so
 `Vector(u8)` stores one byte per 8-byte slot. Use [`std::buffer::BufferU8`](/silk/docs/std/buffer/) when
 packed bytes matter.
 
@@ -186,7 +186,7 @@ impl Vector(T) as std::interfaces::Drop {
 
 Notes:
 
-- `Vector(T)` is intentionally low-level in the Supported forms:
+- `Vector(T)` is intentionally low-level in Silk:
  - `init(cap)` returns `Err(AllocFailed)` when allocation fails or when `cap`
  is invalid.
  - `try_init(cap)` returns `None` on any allocation/validation failure.
@@ -195,8 +195,7 @@ Notes:
  allocation failure as [`std::memory::OutOfMemory?`](/silk/docs/std/memory/) (including internal size
  arithmetic overflow; leaves the vector unchanged on failure).
 - Bounds checks are expressed as `#require` contracts (and reusable [`std::formal`](/silk/docs/std/formal/)
- theories) for verifier tooling; they are not runtime checks in the current
- compiler subset.
+ theories) for verifier tooling; they are not runtime checks in the supported forms.
 - `at` / `try_set` are “checked” accessors:
  - `at` returns `None` when `index` is out of bounds,
  - `try_set` returns `false` when `index` is out of bounds.

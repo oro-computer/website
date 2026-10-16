@@ -59,7 +59,7 @@ required SDK/tool is not installed.
  `ios-device`, or `android`.
 - `--device`, `-d <id>` - select a simulator UDID, physical device id, or adb
  serial.
-- `--booted` - use the currently booted iOS simulator.
+- `--booted` - use the booted iOS simulator.
 - `--name <name>` - select a named simulator/emulator for boot actions.
 - `--app <path>` - app path for install and run actions. `launch` / `run`
  derives Apple bundle identifiers from `.app` bundles; Android APK launch
@@ -104,7 +104,7 @@ from `Info.plist` and launches that installed bundle id. `.ipa` and Android
 `.apk` launches require an explicit `--bundle-id` or `--package` because those
 archive formats are install inputs and are not parsed by this command yet.
 
-Android install currently accepts APK inputs only. Android App Bundles (`.aab`)
+Android install accepts APK inputs only. Android App Bundles (`.aab`)
 need bundletool/device-specific APK generation and are rejected with a concrete
 diagnostic until that lifecycle path is implemented.
 

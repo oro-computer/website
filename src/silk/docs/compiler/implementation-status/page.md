@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "This page is a downstream-facing snapshot of what the reference Silk compiler and toolchain support end-to-end today. It is intentionally high-level: each language, standard-library, and compiler page"
+description: "Supported targets, artifacts, and toolchain capabilities for Silk."
 docsCollection: "silk"
 section: "compiler"
 order: 255
@@ -9,24 +9,22 @@ githubRepo: "oro-computer/silk"
 githubRef: "master"
 ---
 
-# Notes
+# Targets and capabilities
 
-This page is a downstream-facing snapshot of what the **reference** Silk compiler and toolchain support end-to-end
-today. It is intentionally high-level: each language, standard-library, and compiler page carries the feature-specific
-details for its own supported forms.
+Use this page to choose a target and artifact type, then follow the language, standard-library, and compiler references for detailed rules.
 
 Use this page to answer:
 
-- What targets and artifact kinds can I rely on today?
-- Which parts of Silk are implemented end-to-end versus specified ahead of implementation?
+- Which targets and artifact kinds can I build?
+- Which capabilities does each toolchain provide?
 - Where should I look when the compiler rejects a program?
 
 ## Quick sanity check
 
-If you want a fast read on what your local toolchain can do today, start here:
+Inspect your installed toolchain with:
 
 ```sh
-silk check hello.slk
+silk check --verify hello.slk
 silk build hello.slk -o build/hello
 silk package lint
 silk targets
@@ -34,13 +32,12 @@ silk build --list-gpu-targets
 silk env
 ```
 
-- `silk check` tells you whether the parser, resolver, checker, and verifier all
+- `silk check --verify` tells you whether the parser, resolver, checker, and verifier all
  accept the current module set.
 - `silk build` tells you whether the selected backend can lower that checked
  program to the target artifact you want.
 - `silk package lint` validates package-root metadata and distribution shape.
-- `silk targets` reports the target and artifact matrix for the current
- compiler host.
+- `silk targets` reports the target and artifact matrix for the compiler host.
 - `silk build --list-gpu-targets` reports the processors and runtime providers
  available for mixed CPU/GPU executables.
 - `silk env` shows the resolved environment that affects stdlib and package
@@ -48,7 +45,7 @@ silk env
 
 ## End-to-end surfaces
 
-Silk’s current toolchain surface is strongest in these areas:
+Silk’s toolchain surface is strongest in these areas:
 
 - **Hosted native toolchains**
  - `linux/x86_64` remains the most complete hosted path: checking, testing,
@@ -101,7 +98,7 @@ Silk’s current toolchain surface is strongest in these areas:
  [`silk-package(1)`](/silk/docs/man/silk-package.1/).
 - **Diagnostics and documentation tooling**
  - `silk repl` provides an interactive compile-and-run loop on Linux x86_64;
- Apple Silicon macOS currently supports session startup and non-printing
+ Apple Silicon macOS supports session startup and non-printing
  declaration/state lines. `silk help` exposes command-specific help without
  relying on option passthrough.
  - `silk error`, [`silk guide`](/silk/docs/usage/guide-examples/), `silk doc`, `silk man`, and `silk proto` explain
@@ -158,7 +155,7 @@ These are user-facing and expected to stay in sync with the compiler:
 Across the site:
 
 - **Guides** teach the common workflow and give runnable examples.
-- **Reference pages** define the syntax, semantics, and current compiler behavior.
+- **Reference pages** define the syntax, semantics, and compiler behavior.
 - **The spec** describes the full intended language surface, even when implementation is still catching up.
 
 When you need the exact behavior of a feature, prefer the feature page over this summary.

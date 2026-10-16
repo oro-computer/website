@@ -47,7 +47,7 @@ prefix:
 when `std::xml` is present in the module set, and also when linking `.o`/`.a`
 inputs that reference the shim symbols.
 
-Note: the built-in libxml2 path currently auto-links on `linux/x86_64` glibc
+Note: the built-in libxml2 path auto-links on `linux/x86_64` glibc
 and musl and requires the target libc math provider at link/runtime
 (`libm.so.6` on glibc, `libc.so` on musl).
 

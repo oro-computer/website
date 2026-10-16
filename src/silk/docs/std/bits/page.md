@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "A small bit-manipulation and byte-order helper subset is implemented in std/bits.slk for the current backend subset."
+description: "A small bit-manipulation and byte-order helper subset is implemented in std/bits.slk for Silk."
 docsCollection: "silk"
 section: "std"
 order: 85
@@ -12,8 +12,7 @@ githubRef: "master"
 # [`std::bits`](/silk/docs/std/bits/)
 
 A small bit-manipulation
-and byte-order helper subset is implemented in [`std/bits.slk`](https://github.com/oro-computer/silk/blob/master/std/bits.slk) for the current
-backend subset.
+and byte-order helper subset is implemented in [`std/bits.slk`](https://github.com/oro-computer/silk/blob/master/std/bits.slk) for the supported forms.
 
 [`std::bits`](/silk/docs/std/bits/) provides common bit “twiddling” helpers:
 

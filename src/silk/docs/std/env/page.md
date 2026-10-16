@@ -131,7 +131,7 @@ queries.
 
 [`std::env::cwd()`](/silk/docs/std/env/) returns the current working directory as a `string?`.
 
-Current implementation:
+implementation:
 
 - returns [`std::env::get("PWD")`](/silk/docs/std/env/).
 
@@ -188,7 +188,7 @@ caller.
 
 [`std::env::home_dir()`](/silk/docs/std/env/) returns the user’s home directory as a `string?`.
 
-Current implementation:
+implementation:
 
 - returns [`std::env::get("HOME")`](/silk/docs/std/env/).
 
@@ -196,7 +196,7 @@ Current implementation:
 
 [`std::env::temp_dir()`](/silk/docs/std/env/) returns a temporary-directory path as a `string`.
 
-Current implementation:
+implementation:
 
 1. uses `TMPDIR` when set,
 2. otherwise uses `TMP` or `TEMP` when set,

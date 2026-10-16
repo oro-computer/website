@@ -26,6 +26,7 @@ export function runSilkAudit(context: AuditContext, reporter: Reporter = console
     ...configs.flatMap(config => checkDocLinks(config.source, context.outputRoot, sources)),
     ...configs.flatMap(config => checkText(config.source, pattern('\\bconst\\s+region\\s+arena\\b|\\bexport\\s+const\\s+region\\s+arena\\b|\\bwith\\s+arena\\b\\s*\\{|\\bfrom\\s+arena\\b|\\bglobal_arena\\b', 'i'), 'Found arena identifier in examples (use regions + neutral names).')),
     ...configs.flatMap(config => checkText(config.source, pattern('\\bWorks today\\b|\\bWhat works today\\b|\\(Works today\\)|Syntax\\s*\\(Selected\\)', 'i'), "Found deprecated 'Works today' / 'Syntax (Selected)' labeling.")),
+    ...configs.flatMap(config => checkText(config.source, /\bcurrent\s+(?:implementation|subset|compiler|support|checker|backend|verifier|toolchain)\b/i, 'Describe Silk behavior directly rather than as a temporary implementation.')),
     ...configs.flatMap(config => checkLines(config.source, 'viewer')),
     ...configs.flatMap(config => checkLines(config.source, 'manpage')),
     ...configs.flatMap(config => checkLines(config.source, 'editorial')),

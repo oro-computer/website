@@ -13,7 +13,7 @@ githubRef: "master"
 
 This document describes the intended architecture of the Silk compiler implemented in Zig.
 
-Current hard implementation limits (file size caps, current maxima, etc.)
+hard implementation limits (file size caps, current maxima, etc.)
 are documented in [limits](/silk/docs/compiler/limits/).
 
 ## High-Level Structure
@@ -140,7 +140,7 @@ Current snapshot (Silk (ABI) 0.1.1):
  linker flags remain separate semantic-mapping work.
 - [`src/backend_macho_aarch64_host.zig`](https://github.com/oro-computer/silk/blob/master/src/backend_macho_aarch64_host.zig) provides a **temporary Apple Silicon
  host-backed Mach-O backend**:
- - it currently covers the validated scalar IR executable subset on
+ - it covers the validated scalar IR executable subset on
  `macos/aarch64` hosts for:
  - `macos-aarch64`,
  - `ios-aarch64`,
@@ -155,8 +155,7 @@ Current snapshot (Silk (ABI) 0.1.1):
  - `macos-aarch64`, `ios-aarch64`, `ios-simulator-aarch64`, and
  `ios-simulator-x86_64` also reuse the same host-backed object emitter to
  produce Mach-O relocatable objects, static library archives via Apple
- `libtool -static`, and Mach-O dylibs via the Apple linker for the current
- supported library IR subset,
+ `libtool -static`, and Mach-O dylibs via the Apple linker for the supported library IR subset,
  - `ios-aarch64`, `ios-simulator-aarch64`, and `ios-simulator-x86_64` are
  intentionally narrower than `macos-aarch64`, but now include:
  - pure-Silk scalar executables,

@@ -15,13 +15,17 @@ Store app data in its sandbox. Use a native picker when the user chooses a file 
 
 ## 1) Start with a dedicated app-data directory
 
-Create a directory for mutable data inside your working tree or chosen output location:
+Use the writable app-data location on desktop and mobile. Treat the bundled resource directory as read-only:
 
 ```js
 import * as fs from 'oro:fs/promises'
+import { DATA } from 'oro:path/well-known'
+import { join } from 'oro:path'
 
-await fs.mkdir('./data', { recursive: true })
-await fs.writeFile('./data/state.json', JSON.stringify({ notes: [] }, null, 2), 'utf8')
+if (!DATA) throw new Error('App data directory is unavailable')
+const dataDirectory = join(DATA, 'field-notes')
+const statePath = join(dataDirectory, 'state.json')
+await fs.mkdir(dataDirectory, { recursive: true })
 ```
 
 Use ordinary JSON for early iterations. Move to SQLite once the model is stable.
@@ -29,19 +33,19 @@ Use ordinary JSON for early iterations. Move to SQLite once the model is stable.
 ## 2) Read and write structured files
 
 ```js
-import * as fs from 'oro:fs/promises'
-
+// Continue in the same module.
 async function loadState() {
   try {
-    const text = await fs.readFile('./data/state.json', 'utf8')
+    const text = await fs.readFile(statePath, 'utf8')
     return JSON.parse(text)
-  } catch {
-    return { notes: [] }
+  } catch (error) {
+    if (error.code === 'ENOENT') return { notes: [] }
+    throw error
   }
 }
 
 async function saveState(state) {
-  await fs.writeFile('./data/state.json', JSON.stringify(state, null, 2), 'utf8')
+  await fs.writeFile(statePath, JSON.stringify(state, null, 2), 'utf8')
 }
 ```
 

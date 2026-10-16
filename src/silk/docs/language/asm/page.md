@@ -45,7 +45,7 @@ statement.
 
 ### Assembly dialect
 
-Currently, `<text>` is assembled by the system assembler
+`<text>` is assembled by the system assembler
 (`as`) for the active native host backend:
 
 - `linux/x86_64`: GNU `as` in **Intel syntax** (`.intel_syntax noprefix`)
@@ -65,7 +65,7 @@ fn main () -> int {
 
 ### Restrictions
 
-- `asm` is currently implemented for the native `linux/x86_64`,
+- `asm` is implemented for the native `linux/x86_64`,
  `linux/aarch64`, and `macos/aarch64` backends.
 - The assembled output must not require **relocations**. As a result, inline
  asm may not refer to external symbols (for example `call foo` where `foo` is

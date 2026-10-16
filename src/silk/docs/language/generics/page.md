@@ -21,13 +21,13 @@ Diagnostics rule:
 
 - Generics are part of the Silk language design, not an out-of-language
  extension.
-- When the current compiler rejects a generic form with `E2016`, that means the
+- When the compiler rejects a generic form with `E2016`, that means the
  implementation is incomplete for that generic form, not that the language
  forbids generics.
 
 Note: `Option(T)` is a special-case surface form that is treated as sugar for
-`T?` in the Supported forms (see [optional](/silk/docs/language/optional/)). This is still
-accepted in the Supported forms even as general-purpose type-parameter generics are
+`T?` in Silk (see [optional](/silk/docs/language/optional/)). This is still
+accepted in Silk even as general-purpose type-parameter generics are
 implemented.
 
 ## Overview
@@ -35,7 +35,7 @@ implemented.
 Silk supports parameterized declarations by allowing a parameter list on
 `struct`, `interface`, `enum`, `impl`, and `fn` declarations.
 
-In Silk currently:
+In Silk :
 
 - **Supported**: type parameters (`T`) and const parameters (`N: usize`) on
  `struct`/`interface`/`enum`/`impl`, type application in type positions
@@ -308,6 +308,6 @@ Rules:
  `enum`, `error`, and `type` declarations may not reuse the same name.
 - Name conflicts across generic arities are rejected (for example, `struct Foo`
  and `struct Foo(T)` cannot both exist in the same package namespace).
-- Const parameters are currently restricted to integer primitive types; const
+- Const parameters are restricted to integer primitive types; const
  values are usable in type positions (for example `T[N]`) but are not yet
  exposed as runtime values.

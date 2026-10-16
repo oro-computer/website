@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "The Silk compiler repository includes a .gitattributes entry that tags *.slk files as Silk sources for GitHub Linguist."
+description: "The Silk compiler repository includes a.gitattributes entry that tags *.slk files as Silk sources for GitHub Linguist."
 docsCollection: "silk"
 section: "usage"
 order: 248

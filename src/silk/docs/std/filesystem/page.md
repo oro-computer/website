@@ -45,7 +45,7 @@ See also:
  `Stats.is_symbolic_link()` is only true for `lstat(...)` results that
  actually describe a link.
  - `birthtime*` falls back to `ctime*` on targets where creation time is not
- available from the runtime metadata source (currently the hosted Linux
+ available from the runtime metadata source (the hosted Linux
  baseline and the shipped `wasm32-wasi` preview1 backend).
  - On `wasm32-wasi`, `mode` carries file-type bits synthesized from the WASI
  file type, while fields not exposed by preview1 metadata (`uid`, `gid`,
@@ -356,8 +356,7 @@ Notes:
  page-aligned for range mappings).
  - `File.mmap_readonly_range(offset, len)` does not validate the range against
  the file size. Mapping beyond EOF may trap on access (for example SIGBUS).
- - `mkdir_all` is a convenience helper for `mkdir -p` behavior. In the current
- hosted subset it treats `EEXIST` as success and does not distinguish an
+ - `mkdir_all` is a convenience helper for `mkdir -p` behavior. In the hosted subset it treats `EEXIST` as success and does not distinguish an
  existing directory from an existing non-directory at the same path.
  - `mkdirp` is an exported compatibility alias for `mkdir_all`.
  - `chmod(path, mode)` replaces the permission bits of an existing filesystem
@@ -409,7 +408,7 @@ Notes:
  - `lstat(path)` returns `Stats` for the path itself.
  - this is the call to use when you want `is_symbolic_link()` to observe the
  symlink rather than its target.
- - `fstat(file)` / `File.stat()` report metadata for the currently open file
+ - `fstat(file)` / `File.stat()` report metadata for the open file
  descriptor without changing the seek position.
  - `metadata_size(file)` / `File.metadata_size()` and
  `file_size(file)` / `File.file_size()` return `fstat(2).st_size` without
@@ -424,13 +423,13 @@ Notes:
  - `realpath(path)` is the filesystem-backed canonicalization helper.
  - unlike lexical [`std::path::normalize(path)`](/silk/docs/std/path/), this consults the filesystem
  and resolves symlinks on the hosted POSIX backend,
- - on `wasm32-wasi` this helper is currently unsupported and reports
+ - on `wasm32-wasi` this helper is unsupported and reports
  `InvalidInput`.
  - [`std::fs::stream`](/silk/docs/std/fs-stream/) provides task-based adapters that connect [`std::fs`](/silk/docs/std/filesystem/) with
  [`std::stream`](/silk/docs/std/stream/) using producer/consumer loops
  ([`std::fs::stream::pipe_file_to_stream`](/silk/docs/std/fs-stream/) and
  [`std::fs::stream::pipe_stream_to_file`](/silk/docs/std/fs-stream/)). These are blocking OS-thread
- operations in the current runtime subset.
+ operations in the runtime subset.
  - The runtime filesystem layer ([`std::runtime::fs`](/silk/docs/std/runtime-fs/)) also exposes
  `mkstemp(template_ptr)` as a low-level primitive for creating unique
  temporary files from writable NUL-terminated templates (hosted POSIX

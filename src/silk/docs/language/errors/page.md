@@ -141,7 +141,7 @@ Runtime behavior :
 
 Notes:
 
-- Failed assertions are currently isolated by the `silk test` runner (each
+- Failed assertions are isolated by the `silk test` runner (each
  test runs in its own process). Future work may allow reporting failed
  assertions without process isolation (for example by lowering `assert` to a
  typed error in test contexts).

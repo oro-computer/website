@@ -39,7 +39,7 @@ where the leftmost hex pairs correspond to lower byte indices.
 
 ## Parsing and Formatting
 
-The current API supports:
+The API supports:
 
 - parsing:
  - canonical hyphenated form (`8-4-4-4-12` hex digits),
@@ -105,15 +105,15 @@ Formal Silk surface:
  `uuid_version_field_is(...)` and `uuid_rfc4122_variant(...)` for downstream
  code that needs to reason about those bitfields separately.
 
-Current verifier boundary:
+verifier boundary:
 
-- The current Formal Silk subset does not yet express “on `Ok(UUID)`” style
+- The Formal Silk subset does not yet express “on `Ok(UUID)`” style
  success-side postconditions for `Result(UUID, E)` constructors cleanly.
 - Verified blocks still only support primitive/string-like symbolic local
  bindings, so a downstream proof cannot yet bind a `UUID` local and then
  inspect its fields directly inside Formal Silk.
 - So [`std::uuid::{v1,v3,v5,v6,v7}`](/silk/docs/std/uuid/) are still fully implemented and tested, but
- their version/variant guarantees are currently documented and regression
+ their version/variant guarantees are documented and regression
  tested rather than exposed as first-class success-side contracts.
 
 ## Supported Versions

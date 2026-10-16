@@ -30,9 +30,8 @@ Rules:
 - A function may declare **at most one** varargs parameter.
 - The varargs parameter must be **the final** parameter in the list.
 - The varargs parameter must have an explicit **type annotation**.
-- Varargs parameters are **not** permitted to be `mut` in the Supported forms.
-- Varargs parameters may not have a default expression (`= ...`) in the current
- subset.
+- Varargs parameters are **not** permitted to be `mut` in Silk.
+- Varargs parameters may not have a default expression (`= ...`) in the supported forms.
 - The same trailing-varargs form may be used in interface method signatures,
  and `impl ... as ...` / `module ... as ...` conformance compares the varargs
  marker as part of the required signature.
@@ -101,7 +100,7 @@ fixed-size **pack value** with:
 
 - `len: int` — the number of provided varargs arguments.
 - `a0 .. a(N-1)` — storage for up to `N` arguments (implementation-defined,
- currently `N = 32`).
+ `N = 32`).
 
 The pack is passed by value using the same “flattened scalar slot” ABI as other
 POD structs.
@@ -118,4 +117,4 @@ Notes:
 
 This document is about Silk varargs. C variadic functions declared via `ext`
 (`printf`-style `...`) are a separate concern and are **not** implemented yet
-in the Supported forms.
+in Silk.

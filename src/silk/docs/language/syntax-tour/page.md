@@ -27,11 +27,11 @@ This guide complements (not replaces):
 Silk’s `docs/` are the canonical specification, and many documents describe both:
 
 - the full language design, and
-- Silk currently (what parses, type-checks, and code-generates today).
+- Silk (what parses, type-checks, and code-generates today).
 
 This tour follows the same approach:
 
-- examples labeled “Example” are intended to compile in the Supported forms,
+- examples labeled “Example” are intended to compile in Silk,
 - examples labeled “Design” illustrate planned syntax and are not necessarily implemented.
 
 When in doubt, prefer:
@@ -175,8 +175,7 @@ package app;
 import std::strings;
 
 fn main () -> int {
-  let s: string = trim(" hi "); // may be visible unqualified in the current subset
-  let t: string = std::strings::trim(" hi ");
+  let trimmed: string = std::strings::trim(" hi ");
   return 0;
 }
 ```
@@ -254,7 +253,7 @@ fn main () -> int {
   const answer: int = 42;
   let x: int = answer;
   let mut y: int = 0;
-  var z: int = 1; // `var` is an alias for `let mut` (current subset)
+  var z: int = 1; // `var` is an alias for `let mut`
 
   y = y + 1;
   z += 2;
@@ -264,7 +263,7 @@ fn main () -> int {
 
 Notes:
 
-- `const` initializers must be compile-time evaluable in the Supported forms
+- `const` initializers must be compile-time evaluable in Silk
  (see `E2041`).
 - Only `let mut`/`var` bindings are assignable lvalues (see
  [mutability](/silk/docs/language/mutability/) and [operators](/silk/docs/language/operators/)).
@@ -453,7 +452,7 @@ fn main () -> int {
 }
 ```
 
-Heap allocation (`new`) produces a `&Struct` reference in the Supported forms:
+Heap allocation (`new`) produces a `&Struct` reference in Silk:
 
 ```silk
 struct Boxed { value: int }
@@ -479,10 +478,10 @@ fn main () -> int {
 }
 ```
 
-Single inheritance (current surface is implemented; see [structs impls layout](/silk/docs/language/structs-impls-layout/)):
+Single inheritance (surface is implemented; see [structs impls layout](/silk/docs/language/structs-impls-layout/)):
 
 ```silk
-// Design shape (field/layout rules and current subset limits are documented).
+// Field and layout rules are documented with structs.
 struct Base { x: int = 0 }
 struct Derived extends Base { y: int = 0 }
 ```
@@ -852,7 +851,7 @@ pattern forms.
 
 ### `async { ... }` and `task { ... }`
 
-Structured blocks (implemented as lexical blocks in the Supported forms; see
+Structured blocks (implemented as lexical blocks in Silk; see
 [concurrency](/silk/docs/language/concurrency/)):
 
 ```silk
@@ -1074,7 +1073,7 @@ directive tokens that attach to functions and loops:
 - reusable proof bundles: `theory` / `#theory`
 
 See [formal verification](/silk/docs/language/formal-verification/) for the exact verifier model and
-current restrictions.
+restrictions.
 
 ### Contracts on functions
 

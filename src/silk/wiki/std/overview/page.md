@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "std:: is the Silk standard library namespace. The docs/std/ tree specifies the intended API and structure; an in-tree stdlib implementation exists under std/ for Silk currently."
+description: "std:: is the Silk standard library namespace. The docs/std/ tree specifies the intended API and structure; an in-tree stdlib implementation exists under std/ for Silk."
 docsCollection: "silkWiki"
 section: "std"
 order: 49
@@ -13,7 +13,7 @@ githubRef: "master"
 
 `std::` is the Silk standard library namespace. The `docs/std/` tree specifies
 the intended API and structure; an in-tree stdlib implementation exists
-under [`std/`](https://github.com/oro-computer/silk/tree/master/std/) for Silk currently.
+under [`std/`](https://github.com/oro-computer/silk/tree/master/std/) for Silk.
 
 Full reference: [overview](/silk/wiki/std/overview/).
 

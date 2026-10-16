@@ -130,7 +130,7 @@ behavior depends on the terminal, but common bindings include:
  includes the standard 8-byte header used by the hosted runtime).
 
 ## Considerations
-- Completion is currently list-based rather than callback-based:
+- Completion is list-based rather than callback-based:
  - Silk code can register static completion candidates,
  - but the lower-level `linenoise` callback/hints ABI is still not exposed
  directly as a public Silk callback surface.

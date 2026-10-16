@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "Build the web frontend first, then map its output into the native app bundle."
+description: "Build a React notes app with Vite and package its complete static output for desktop and mobile."
 docsCollection: "runtime"
 section: "guides"
 order: 17
@@ -9,115 +9,174 @@ githubRepo: "oro-computer/runtime"
 githubRef: "master"
 ---
 
-# Frontend build pipeline
+# React and a frontend build pipeline
 
-Build the web frontend first, then map its output into the native app bundle.
+Build Field Notes with React and Vite, then package the generated web files as a native app. The same static output can target desktop, Android, and iOS.
 
-## 1) Treat `dist/` as the bundle boundary
+**Before you start:** install [Oro Runtime and native build tools](/runtime/learn/getting-started/). This example uses Node.js 22.12+ and pins the tooling’s major versions so the configuration below is reproducible. Commit the generated lockfile for exact dependency versions.
 
-Keep source and shipped files separate:
-
-```text
-field-notes/
-  oro.toml
-  copy-map.toml
-  package.json
-  scripts/
-    build-web.sh
-  src/
-    index.html
-    main.js
-    styles.css
-  dist/
-```
-
-Your frontend tooling writes `dist/`. Oro Runtime copies from `dist/` into the application bundle.
-
-## 2) Make the web build explicit in `oro.toml`
-
-```toml
-[build]
-name = "field-notes"
-script = "./scripts/build-web.sh"
-copy_map = "copy-map.toml"
-env = "API_BASE_URL SENTRY_DSN"
-```
-
-`build.script` is the hand-off point between your frontend toolchain and the runtime bundle step.
-
-## 3) Copy only built artifacts
-
-`copy-map.toml`:
-
-```toml
-"./dist/index.html" = "index.html"
-"./dist/main.js" = "main.js"
-"./dist/styles.css" = "styles.css"
-"./dist/assets/logo.svg" = "assets/logo.svg"
-```
-
-That keeps shipping deterministic. If the build did not produce a file, it does not end up in the app.
-
-## 4) Keep the build script boring
-
-`scripts/build-web.sh`:
+## Create the project
 
 ```bash
-#!/usr/bin/env bash
-set -euo pipefail
+mkdir field-notes-react
+cd field-notes-react
+npm init -y
+npm install react@19 react-dom@19
+npm install --save-dev vite@7 @vitejs/plugin-react@5
+npm pkg set type=module 'scripts.build=vite build' 'scripts.dev=vite'
+mkdir src
+```
 
-npm ci
+Create each file below in `field-notes-react`. The HTML entry belongs at the project root for Vite.
+
+### `index.html`
+
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Field Notes</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./src/main.jsx"></script>
+  </body>
+</html>
+```
+
+### `vite.config.js`
+
+```js
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  base: './',
+  plugins: [react()],
+  build: {
+    rollupOptions: {
+      external: (id) => id.startsWith('oro:'),
+    },
+  },
+})
+```
+
+`base: './'` makes generated asset URLs relative to the bundled page. Vite bundles React and npm dependencies; `external` leaves native `oro:*` imports for Runtime to resolve. The app below uses web globals and needs no native imports. When adding `oro:*` features, preview those inside Runtime; an ordinary browser dev server cannot resolve them.
+
+### `src/main.jsx`
+
+```jsx
+import { useState } from 'react'
+import { createRoot } from 'react-dom/client'
+import './styles.css'
+
+const storageKey = 'field-notes:react-draft'
+
+function readDraft() {
+  try {
+    return { text: localStorage.getItem(storageKey) ?? '', message: 'Ready.' }
+  } catch (error) {
+    return { text: '', message: `Could not restore your draft: ${error.message}` }
+  }
+}
+
+function FieldNotes() {
+  const [initial] = useState(readDraft)
+  const [draft, setDraft] = useState(initial.text)
+  const [status, setStatus] = useState(initial.message)
+
+  function saveDraft(event) {
+    event.preventDefault()
+    try {
+      localStorage.setItem(storageKey, draft)
+      setStatus('Draft saved on this device.')
+    } catch (error) {
+      setStatus(`Could not save your draft: ${error.message}`)
+    }
+  }
+
+  return (
+    <main>
+      <h1>Field Notes</h1>
+      <form onSubmit={saveDraft}>
+        <label htmlFor="draft">Your draft</label>
+        <textarea id="draft" value={draft} onChange={(event) => setDraft(event.target.value)} />
+        <button type="submit">Save draft</button>
+      </form>
+      <p role="status">{status}</p>
+      <h2>Preview</h2>
+      <p className="preview">{draft || 'Your note will appear here.'}</p>
+    </main>
+  )
+}
+
+createRoot(document.getElementById('root')).render(<FieldNotes />)
+```
+
+The controlled textarea updates a live preview. React renders user input as text, including `<` and `>` characters. Saving handles storage failures and preserves the text in the editor. Web globals such as `localStorage`, `fetch`, and `URL` need no imports.
+
+### `src/styles.css`
+
+```css
+:root { color-scheme: light dark; font: 18px/1.6 system-ui; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+main {
+  max-width: 42rem;
+  margin: auto;
+  padding: max(1rem, env(safe-area-inset-top))
+           max(1rem, env(safe-area-inset-right))
+           max(1rem, env(safe-area-inset-bottom))
+           max(1rem, env(safe-area-inset-left));
+}
+label, textarea { display: block; width: 100%; }
+textarea { min-height: 12rem; padding: .75rem; font: inherit; }
+button { min-height: 44px; margin-top: 1rem; padding: .5rem 1rem; font: inherit; }
+.preview { white-space: pre-wrap; overflow-wrap: anywhere; }
+```
+
+## Package the web output
+
+### `oro.toml`
+
+```toml
+[meta]
+bundle_identifier = "com.example.field-notes-react"
+title = "Field Notes"
+version = "0.1.0"
+
+[build]
+name = "field-notes-react"
+script = "npm run build"
+copy = "dist"
+output = "build"
+
+[window]
+width = "70%"
+height = "80%"
+```
+
+`build.script` runs Vite before Runtime copies `dist/`. Copying the whole directory includes generated asset names, CSS, and split chunks. Do not keep the scaffold’s `copy = "src"` or list individual hashed files in a copy map.
+
+```bash
 npm run build
+oroc build --allow-exec --run .
 ```
 
-The runtime should not guess how your web build works. A small shell wrapper makes the contract obvious and easy to
-reproduce in CI.
+**Expected result:** `dist/index.html` and `dist/assets/` are generated; a native Field Notes window opens. Type `Inspect the north trail`, save, close, and run `oroc run .`: the draft should return. Type `<strong>Keep this text</strong>`: the preview should display the literal text.
 
-## 5) Pass environment intentionally
+Rebuild after source changes with `oroc build --allow-exec --run .`. `oroc run .` launches the existing native artifact. After cloning the project, run `npm ci` before building; dependency installation stays outside the native build hook.
 
-If your frontend build needs environment variables, declare them instead of relying on everything from the shell:
+## Use another frontend tool
 
-```toml
-[build]
-env = "API_BASE_URL SENTRY_DSN RELEASE_CHANNEL"
-```
+Vue, Svelte, Preact, and plain JavaScript follow the same hand-off: generate a static HTML entry and assets, copy the entire output directory, and leave `oro:*` imports external. Set asset paths for the bundled location. For frameworks with server rendering, configure their static export or client build; the app bundle needs files it can load locally.
 
-That keeps local machines and CI builds aligned.
+For client-side routes, hash routing works without a server. To use path routes, configure [routing](/runtime/docs/guides/custom-protocols-and-routing/) for direct navigation and reloads.
 
-## 6) Use the same project model in dev and prod
-
-During development:
-
-```bash
-oroc run .
-```
-
-For a production build:
-
-```bash
-oroc build . --prod
-```
-
-Use the same `oro.toml` and copy map for both builds.
-
-## 7) A Vite build pipeline
-
-If your frontend stack already outputs a web app, Oro Runtime is just the native bundling and integration layer:
-
-- Vite/Rollup/esbuild produce `dist/`
-- [`copy_map`](/runtime/docs/config/copy-map/) defines what ships
-- `oroc run .` and `oroc build .` turn that output into a native application
-
-That keeps your web tooling choice independent from the runtime.
-
-## Considerations
-
-- Do not copy `src/` directly once you have a real build step.
-- Keep generated filenames stable unless you also update [`copy_map`](/runtime/docs/config/copy-map/).
-- Put machine-local build secrets in `.ororc` or the CI environment, not in `oro.toml`.
+See the official [React root API](https://react.dev/reference/react-dom/client/createRoot) and [Vite build guide](https://vite.dev/guide/build) for the frontend concepts used here.
 
 ## Next
 
-- [Configure your runtime project](/runtime/docs/guides/configure-your-runtime-project/)
-- [Build and package](/runtime/docs/guides/build-and-package/)
-- [Configuration reference](/runtime/docs/config/reference/)
+[Build this app for Android or iOS →](/runtime/docs/guides/mobile-targets-and-device-installs/). Explore [web platform APIs](/runtime/docs/guides/web-platform-apis/) and [calling HTTP APIs](/runtime/docs/guides/calling-http-apis/) to add sync.

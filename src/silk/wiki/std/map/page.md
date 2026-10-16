@@ -20,7 +20,7 @@ Full reference: [map](/silk/wiki/std/map/).
 
 ## Notes
 
-- Supported forms: usable in Silk currently with documented limits.
+- Supported forms: usable in Silk with documented limits.
 - Full reference: [map](/silk/wiki/std/map/)
 
 ## Importing

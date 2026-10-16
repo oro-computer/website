@@ -97,7 +97,7 @@ ownership remains a separate future type, such as `Arc(T)`.
 
 ## Notes
 
-The current hosted/native subset exposes:
+The hosted/native subset exposes:
 
 - [`std::atomic::Ordering`](/silk/docs/std/atomic/),
 - [`std::atomic::AtomicBool`](/silk/docs/std/atomic/),

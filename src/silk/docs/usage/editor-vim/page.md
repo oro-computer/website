@@ -47,15 +47,15 @@ The `vim/syntax/silk.vim` file is derived from:
 - the literals, types, flow-control, optional/mutability, concurrency, FFI, and verification pages in the language reference,
 - the current token and keyword tables in [`src/token.zig`](https://github.com/oro-computer/silk/blob/master/src/token.zig).
 
-It currently highlights:
+It highlights:
 
-- lexer keywords (as currently implemented by the keyword table in [`src/token.zig`](https://github.com/oro-computer/silk/blob/master/src/token.zig)): `package`, `module`, `import`, `from`, `export`, `public`, `private`, `default`, `const`, `let`, `var`, `mut`, `fn`, `test`, `theory`, `struct`, `enum`, `type`, `error`, `interface`, `impl`, `as`, `raw`, `extends`, `if`, `else`, [`loop`](/silk/wiki/language/flow-loop/), [`while`](/silk/wiki/language/flow-while/), `for`, `in`, [`match`](/silk/wiki/language/flow-match/), `return`, `panic`, `break`, `continue`, `assert`, `await`, `yield`, `pure`, `async`, `task`, `region`, `with`, `new`, `sizeof`, `ext`, `None`/`none`/`null`, `Some`, `true`/`false`;
+- lexer keywords (as implemented by the keyword table in [`src/token.zig`](https://github.com/oro-computer/silk/blob/master/src/token.zig)): `package`, `module`, `import`, `from`, `export`, `public`, `private`, `default`, `const`, `let`, `var`, `mut`, `fn`, `test`, `theory`, `struct`, `enum`, `type`, `error`, `interface`, `impl`, `as`, `raw`, `extends`, `if`, `else`, [`loop`](/silk/wiki/language/flow-loop/), [`while`](/silk/wiki/language/flow-while/), `for`, `in`, [`match`](/silk/wiki/language/flow-match/), `return`, `panic`, `break`, `continue`, `assert`, `await`, `yield`, `pure`, `async`, `task`, `region`, `with`, `new`, `sizeof`, `ext`, `None`/`none`/`null`, `Some`, `true`/`false`;
 - spec-reserved / design-in-progress keywords used in language-reference examples: `where`;
 - testing and assertion keywords: `test`, `assert`;
 - builtin types and type-like names: `bool`, integer and float types (`u8`, `i8`, …, `u64`, `i64`, `int`, `f32`, `f64`), `char`, `string`, `void`, `Instant`, `Duration`, `Task`, `Promise`, `map`, `Option`, `Buffer`, and other core names drawn from the spec;
 - literal forms: boolean literals (`true`, `false`), `None`/`Some`, numeric literals (decimal integers and floats) and duration literals with unit suffixes (e.g. `10ns`, `250us`, `5ms`, `2s`, `5min`, `1h`, `7d`), character and string literals;
 - compiler/runtime intrinsics: identifiers matching `__silk_*` (internal ABI surface);
-- special method names: `constructor` and `drop` (both have language-defined meaning in the current compiler);
+- special method names: `constructor` and `drop` (both have language-defined meaning in the compiler);
 - well-known package prefixes such as `std::`, so that standard library imports and qualified names stand out from ordinary identifiers;
 - operators and punctuation, including `++`, `--`, `?.`, `??`, `::`, `..`, `..=`, `...`, `->`, `=>` as described in [operators](/silk/docs/language/operators/);
 - Formal Silk annotations: `#const`, `#require`, `#assure`, `#assert`, `#invariant`, `#variant`, `#monovariant`, `#theory` (including whitespace forms like `# require`) are treated as preprocessor-style constructs;
@@ -155,7 +155,7 @@ For a richer editing experience (on top of syntax highlighting), you can pair th
 
 - If you are using coc.nvim, see [editor coc nvim](/silk/docs/usage/editor-coc-nvim/) for a dedicated configuration guide.
 - `silk-lsp` implements the Language Server Protocol over stdin/stdout.
-- It currently supports:
+- It supports:
  - full-document text synchronization,
  - diagnostics driven by the parser and type checker,
  - hover with approximate type hints for identifiers and struct fields,

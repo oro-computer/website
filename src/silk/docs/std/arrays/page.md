@@ -120,7 +120,7 @@ Notes:
  packed-byte storage, use [`std::buffer::BufferU8`](/silk/docs/std/buffer/). For owning scalar-slot
  storage, use [`std::buffer::Buffer(T)`](/silk/docs/std/buffer/) or [`std::vector::Vector(T)`](/silk/docs/std/vector/) and view it
  as [`std::arrays::Slice(T)`](/silk/docs/std/arrays/).
-- In the current API, `ptr` is represented as a raw `u64`
+- In the API, `ptr` is represented as a raw `u64`
  address for early FFI-friendly bridging. The constructors enforce basic
  invariants via `#require`:
  - `len >= 0`, and
@@ -128,15 +128,15 @@ Notes:
  slices).
  In the shipped stdlib sources, these invariants are also packaged as
  reusable theories in [`std::formal`](/silk/docs/std/formal/) (for example `slice_well_formed(ptr, len)`).
-- `get` / `set` are intentionally low-level in the Supported forms and
+- `get` / `set` are intentionally low-level in Silk and
  are unchecked beyond `#require` contracts. They are implemented using
  compiler-backed memory intrinsics routed through [`std::runtime::mem`](/silk/docs/std/runtime-mem/) (see
  [runtime](/silk/docs/std/runtime/)).
-- `Slice(T)` uses the scalar-slot memory model of Silk currently:
+- `Slice(T)` uses the scalar-slot memory model of Silk :
  elements occupy `sizeof(T)` bytes (8 bytes per scalar slot), so multi-slot
  values like `string` and non-opaque structs/enums are supported.
  For byte-oriented APIs that require packed bytes, use `ByteSlice`.
-- `at` / `try_set` are the “checked” accessors in the Supported forms:
+- `at` / `try_set` are the “checked” accessors in Silk:
  - `at` returns `None` when `index` is out of bounds,
  - `try_set` returns `false` when `index` is out of bounds.
 - `SliceIter(T)` provides a minimal sequential iterator for `Slice(T)` values.

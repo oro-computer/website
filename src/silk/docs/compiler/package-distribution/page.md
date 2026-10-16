@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "The manifest, CLI, install, inspection/linting, and binary-dependency consumption behavior described here are implemented in the current toolchain. This document describes the package authoring, publi"
+description: "The manifest, CLI, install, inspection/linting, and binary-dependency consumption behavior described here are implemented in the toolchain. This document describes the package authoring, publi"
 docsCollection: "silk"
 section: "compiler"
 order: 260
@@ -13,7 +13,7 @@ githubRef: "master"
 
 The manifest, CLI,
 install, inspection/linting, and binary-dependency consumption behavior
-described here are implemented in the current toolchain. This document
+described here are implemented in the toolchain. This document
 describes the package authoring, publication, and consumption model Silk uses
 today.
 
@@ -215,7 +215,7 @@ Notes:
  package root is known from `silk.toml`.
 - `share/silk/formal/` stores installed Formal Silk export bundles keyed by the
  packaged artifact-relative path.
- - each bundle currently contains:
+ - each bundle contains:
  - `manifest.json` with entry-to-symbol metadata,
  - and `bundle.smt2` with normalized Z3 SMT-LIB2 source sections for the
  exported theories / contracted functions / contracted methods carried by
@@ -559,7 +559,7 @@ channel-agnostic:
  no implementation sources,
  - current selection is deterministic and package-manager-agnostic:
  object first, then static library, then shared library,
- - ambiguous compatible artifacts currently fail with a diagnostic rather than
+ - ambiguous compatible artifacts fail with a diagnostic rather than
  guessing,
 - dependency native requirement consumption
  - matching dependency `[[native]]` entries are linked when the dependency is
@@ -604,7 +604,7 @@ Out of scope for the package model itself:
  metadata, rather than overloading one manager- or platform-specific string.
 - `[package].definitions` should remain the canonical package-wide public
  surface field. Per-artifact `definitions` may narrow that surface when
- needed, but Silk does not currently need a separate `[exports]` table.
+ needed, but Silk does not need a separate `[exports]` table.
 
 For a runnable package root that exercises package-owned native code in a useful
 program, see [`examples/projects/cove/`](https://github.com/oro-computer/silk/tree/master/examples/projects/cove/). It is a static HTTP file
@@ -612,9 +612,11 @@ server with a local `docroot` path dependency, a pathless `access_log`
 dependency resolved from the package's default `packages/` directory, and a
 target-gated native C helper declared by the docroot package.
 
-## Current Operational Limits
+<span id="current-operational-limits"></span>
 
-- Dependency artifact auto-consumption is currently implemented for
+## Operational Limits
+
+- Dependency artifact auto-consumption is implemented for
  `linux/x86_64` outputs.
 - Artifact selection is intentionally strict: for a given package, target, and
  output kind, authors must ship one unambiguous compatible artifact. Multiple

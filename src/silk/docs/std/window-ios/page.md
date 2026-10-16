@@ -51,7 +51,7 @@ Current provider
  the requested title, frame size, visibility, and background color from
  [`std::window::Options`](/silk/docs/std/window/); desktop chrome, positioning, size constraints, and
  always-on-top settings have no UIKit equivalent.
-- The portable [`std::window::run_loop(...)`](/silk/docs/std/window/) API currently reports
+- The portable [`std::window::run_loop(...)`](/silk/docs/std/window/) API reports
  `ApplicationLifecycleRequired` on iOS because UIKit owns event delivery under
  `UIApplicationMain`.
 - Direct portable [`std::window::next_event(...)`](/silk/docs/std/window/) returns

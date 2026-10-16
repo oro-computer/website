@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "This document records the current design direction for boxed stdlib wrappers around language primitive values and primitive-adjacent built-ins."
+description: "This document records the design direction for boxed stdlib wrappers around language primitive values and primitive-adjacent built-ins."
 docsCollection: "silk"
 section: "std"
 order: 231
@@ -11,7 +11,7 @@ githubRef: "master"
 
 # Boxed Value Types
 
-This document records the current design direction for boxed stdlib wrappers
+This document records the design direction for boxed stdlib wrappers
 around language primitive values and primitive-adjacent built-ins.
 
 The goal is to make common primitive values usable as first-class stdlib
@@ -62,12 +62,12 @@ Design notes:
 - Numeric subclass wrappers such as `Integer`, `Float`, `Double`, or
  width-specific wrappers should only be added when a concrete stdlib surface
  requires them.
-- `Number` currently supports:
+- `Number` supports:
  - conversions to/from primitive numerics
  - explicit mixed-kind comparison helpers
  - formatting / parsing
  - predicates like `is_int`, `is_float`, `is_signed`
- - fallible exact casts within the current backend-supported cast envelope
+ - fallible exact casts within the backend-supported cast envelope
 
 ### [`std::path::Path`](/silk/docs/std/path/)
 
@@ -78,7 +78,7 @@ Design direction:
 - The implementation is a borrowed wrapper over `string`, paired with
  the existing owned `PathBuf`.
 - A future primitive `path` type is still reasonable, but that remains a
- language/ABI follow-up rather than part of the current stdlib rollout.
+ language/ABI follow-up rather than part of the stdlib rollout.
 
 Minimum `Path` surface:
 
@@ -190,7 +190,7 @@ When these boxed families are implemented, the docs must specify:
  `call(...)` helpers, or remain a holder-only box around first-class
  function values.
 3. Revisit whether `path` should later become a distinct language primitive in
- addition to the current stdlib box.
+ addition to the stdlib box.
 
 ## Design goals
 

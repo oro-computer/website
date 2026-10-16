@@ -590,7 +590,7 @@ Dependency resolution + verification:
 Limitations:
 
 - Only local-path dependencies are supported (no remote fetch).
-- Dependency features are currently selected only via the importer’s manifest
+- Dependency features are selected only via the importer’s manifest
  (`[dependencies].<dep>.features`) and the CLI. A dependency’s own
  `[build].features` are applied only when that dependency is built as the root
  package.
@@ -907,7 +907,7 @@ Current uses:
 - `silk package lint` validates that artifact files exist and are covered by
  `[dist]`,
 - `silk build` and `silk test --package` auto-consume one compatible artifact
- for imported binary-only/interface-only dependencies (currently on
+ for imported binary-only/interface-only dependencies (on
  `linux/x86_64` glibc or musl, preferring object, then static, then shared
  payloads),
 - and `silk build install` emits installed `[[artifact]]` records for built
@@ -1036,7 +1036,7 @@ Fields:
  - `@builtin/<name>.a` — resolves to the built-in static archive under the
  active Silk prefix (for example `@builtin/libmbedtls.a`),
  - this form is supported only for `.a` inputs and only on supported native
- hosts (`linux/x86_64`, `macos/aarch64`) in the current toolchain,
+ hosts (`linux/x86_64`, `macos/aarch64`) in the toolchain,
  - explicit `@builtin/...` entries remain supported when a package wants to
  pin a specific built-in archive input, but common built-in dependency
  families are also auto-linked for executable/shared targets:
@@ -1262,7 +1262,7 @@ Rules:
  - the emitted manifest’s `[build].build_module` / `[build].build_module_path`
  values are ignored for the current invocation to prevent recursive build
  module execution,
- - `silk check --package` and `silk test --package` currently invoke the build
+ - `silk check --package` and `silk test --package` invoke the build
  module with the action string `"build"` for compatibility with existing
  build modules,
  - CLI overrides:

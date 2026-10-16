@@ -259,7 +259,7 @@ Notes:
 - **Child processes (POSIX)**: implemented via `fork(2)` + `exec*` + `waitpid(2)`
  with pipe-based stdio, PTY-backed child spawn, and poll-based output capture.
 - **WASI (Preview 1)**: `getcwd` and `chdir` are implemented via a virtual
- working directory. `getpid()` and `effective_user_id()` currently return 0,
+ working directory. `getpid()` and `effective_user_id()` return 0,
  and the OS-queried
  executable path is unavailable; use [`std::args::current().get(0)`](/silk/docs/std/args/) or
  [`std::env::executable_path_from_args`](/silk/docs/std/env/) when argv is available.

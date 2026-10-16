@@ -45,7 +45,7 @@ These behave like normal `const` values:
 
 A canonical target platform/OS name string.
 
-Current compiler target set and values:
+compiler target set and values:
 
 - `linux-x86_64`, `linux-x86_64-musl`, `linux-aarch64`, and
  `linux-aarch64-musl`:
@@ -70,7 +70,7 @@ Current compiler target set and values:
 
 A canonical target CPU architecture name string.
 
-Current compiler target set and values:
+compiler target set and values:
 
 - `linux-x86_64`, `linux-x86_64-musl`, `macos-x86_64`,
  `ios-simulator-x86_64`, and `windows-x86_64`:
@@ -89,7 +89,7 @@ Current compiler target set and values:
 
 Whether the compilation target is a UNIX family target.
 
-Current compiler target set:
+compiler target set:
 
 - `linux-x86_64`: `true`
 - `linux-x86_64-musl`: `true`
@@ -113,7 +113,7 @@ Current compiler target set:
 
 Whether the compilation target is a POSIX target.
 
-Current compiler target set:
+compiler target set:
 
 - `linux-x86_64`: `true`
 - `linux-x86_64-musl`: `true`

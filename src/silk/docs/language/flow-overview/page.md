@@ -33,7 +33,7 @@ compiler must implement.
 
 ## Notes
 
-Implemented end-to-end in the current compiler:
+Implemented end-to-end in the compiler:
 
 - `if` / `else` as statement forms ([flow if else](/silk/docs/language/flow-if-else/))
 - [`loop`](/silk/wiki/language/flow-loop/) loops ([flow loop](/silk/docs/language/flow-loop/))

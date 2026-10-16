@@ -18,20 +18,20 @@ This document summarizes the key syntax and concepts from the Silk language in a
 This cheat sheet includes **both**:
 
 - the full language design (where some features are still evolving), and
-- the **currently implemented compiler subset**.
+- the **implemented compiler subset**.
 
-For the authoritative “current implementation notes”, prefer:
+For the authoritative “implementation notes”, prefer:
 
 - [implementation status](/silk/docs/compiler/implementation-status/), and
 - any “notes sections inside the relevant concept documents.
 
-In particular, features such as regions (beyond the current `with` + `new`
+In particular, features such as regions (beyond the `with` + `new`
 subset), concurrency runtime (scheduler/event loop), and
 dependent types are **not** implemented end-to-end yet. Value constraints are
 expressed via Formal Silk (`#require` / `#assure`, including `#require` on
 `struct` declarations).
 
-In Silk currently:
+In Silk :
 
 - Runtime `let`/`var` bindings and compile-time `const` bindings must have an initializer ([diagnostics](/silk/docs/compiler/diagnostics/), `E2015`).
 - Destructuring `let` bindings from structs are supported:
@@ -43,7 +43,7 @@ In Silk currently:
  - variants: `let Ok(v) = expr;`, `let Pair(a, b) = expr;`, `let E::Variant(x) = expr;` (traps on non-matching variants)
 - Refutable `let` bindings are supported:
  - `let <pattern> = <expr> else { ... };` (the `else` block must be terminal)
-- `const` initializers must be compile-time evaluable ([diagnostics](/silk/docs/compiler/diagnostics/), `E2041`); in the Supported forms this is restricted to scalar expressions and calls to `const fn` functions (still no `/` or `%`), plus string literals / `const` string aliases.
+- `const` initializers must be compile-time evaluable ([diagnostics](/silk/docs/compiler/diagnostics/), `E2041`); in Silk this is restricted to scalar expressions and calls to `const fn` functions (still no `/` or `%`), plus string literals / `const` string aliases.
 - Monomorphized generics are supported for `struct`/`interface`/`impl` and applied types (`Name(args...)`):
  - const parameters/arguments and generic functions are still rejected (`E2016`),
 - A small concurrency subset is implemented (`Task(T)` / `Promise(T)` plus `yield`/`await`; see [concurrency](/silk/docs/language/concurrency/)).
@@ -51,7 +51,7 @@ In Silk currently:
 - Function expressions are implemented as first-class function values:
  - non-capturing: inferred `pure` — `let add = fn (x: int, y: int) -> x + y;`
  - capturing closures: may capture immutable scalar locals/parameters by value;
- forming captures inside `pure` code is rejected in the Supported forms.
+ forming captures inside `pure` code is rejected in Silk.
 
 ## Types (Surface Forms)
 

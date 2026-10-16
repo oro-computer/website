@@ -19,10 +19,9 @@ Const functions (`const fn`) are specified separately in
 [const functions](/silk/docs/language/const-functions/). The `const` modifier is orthogonal to the
 discipline system described here (a `const fn` may also be declared `pure`).
 
-, but Silk currently now implements
-`pure fn` parsing and a strict purity checker. Concurrency disciplines (`task` /
+Silk implements `pure fn` parsing and a strict purity checker. Concurrency disciplines (`task` /
 `async`) are parsed and `Task(T)` / `Promise(T)` handles plus `yield` (task
-values) and `await` (promise values) are implemented in the Supported forms
+values) and `await` (promise values) are implemented in Silk
 (`await Task(T)` is rejected). On the hosted `linux/x86_64` target, the compiler
 now ships a bring-up async runtime (single-threaded executor + stackful
 coroutines in `libsilk_rt`) so `await` can suspend and resume without blocking
@@ -56,7 +55,7 @@ The checker is expected to enforce:
 - `task` code may call `task` and `pure` code, and must satisfy task-safety
  rules for captured/argument data.
 - `async` code may `await` other async operations; it may call `pure` code and
- may offload blocking work via explicit adapters .
+ may offload blocking work via explicit adapters.
 
 Crossing discipline boundaries is intended to be explicit and diagnostic-driven
 (for example suggesting the correct adapter/intrinsic).
@@ -91,13 +90,12 @@ Today:
  body satisfies the purity rules, it is treated as `pure` for call
  checking, and may be called from `pure` code,
  - functions/methods with `&T` parameters are not eligible for inference
- (explicit `pure fn` remains supported for `&T` parameters in the current
- subset),
- - `pure` cannot be combined with `task` or `async` in the Supported forms,
+ (explicit `pure fn` remains supported for `&T` parameters in the supported forms),
+ - `pure` cannot be combined with `task` or `async` in Silk,
  - a `pure fn` may not have `mut` parameters,
  - a `pure fn` may not declare mutable locals (`var` or `let mut`) and may not
  perform mutation via assignment,
- - a `pure fn` may not allocate (`new`) in the Supported forms,
+ - a `pure fn` may not allocate (`new`) in Silk,
  - a `pure fn` may not have a typed-error contract (`-> T | Error...`) and may
  not contain `panic` statements.
 - `task fn`, `async fn`, and `async task fn` are parsed and preserved in the AST.
@@ -152,7 +150,7 @@ Today:
  - `fn (x: int) -> int { return x + 1; }` (block body).
  - `fn (x: int) { ... }` (block body, implicit `void` result).
  - Function expressions may not declare `&Struct` parameters; only single-slot
- scalar `&T` parameters (for example `&int`) are supported in the Supported forms.
+ scalar `&T` parameters (for example `&int`) are supported in Silk.
  - Function expressions are eligible for purity inference (“auto-pure”):
  - when the body satisfies the `pure` rules, the function value is treated
  as `pure` for call checking (it may be called from `pure` code),

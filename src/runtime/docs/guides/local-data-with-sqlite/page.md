@@ -17,8 +17,12 @@ Give Field Notes a SQLite database so it can store and query multiple notes on t
 
 ```js
 import * as fs from 'oro:fs/promises'
+import { DATA } from 'oro:path/well-known'
+import { join } from 'oro:path'
 
-await fs.mkdir('./data', { recursive: true })
+if (!DATA) throw new Error('App data directory is unavailable')
+const dataDirectory = join(DATA, 'field-notes')
+await fs.mkdir(dataDirectory, { recursive: true })
 ```
 
 ## 2) Open a database
@@ -30,12 +34,12 @@ import {
   OPEN_READWRITE,
 } from 'oro:sqlite'
 
-const db = open('./data/field-notes.db', {
+const db = open(join(dataDirectory, 'notes.db'), {
   flags: OPEN_CREATE | OPEN_READWRITE,
 })
 ```
 
-Use a real on-disk path for app data. Reserve `:memory:` for tests and experiments.
+The snippets in this guide continue in the same module. Use the writable app-data path on desktop and mobile; bundled resources can be read-only. Reserve `:memory:` for tests and experiments.
 
 ## 3) Create a schema on startup
 
@@ -60,8 +64,8 @@ const now = new Date().toISOString()
 
 db.exec(`
   insert into notes (title, body, created_at, updated_at)
-  values ('First note', 'Built with oro:sqlite', '${now}', '${now}')
-`)
+  values (?, ?, ?, ?)
+`, { params: ['First note', 'Built with oro:sqlite', now, now] })
 
 const rows = db.query(`
   select id, title, updated_at
@@ -79,8 +83,8 @@ export function createNote(db, title, body) {
   const now = new Date().toISOString()
   db.exec(`
     insert into notes (title, body, created_at, updated_at)
-    values (${JSON.stringify(title)}, ${JSON.stringify(body)}, '${now}', '${now}')
-  `)
+    values (?, ?, ?, ?)
+  `, { params: [title, body, now, now] })
 }
 
 export function listNotes(db) {
@@ -92,7 +96,7 @@ export function listNotes(db) {
 }
 ```
 
-Even if you later swap this for prepared statements or a repository layer, the app should still talk in terms of note operations, not raw SQL from button handlers.
+The `params` array binds user text as values, preserving quotes and newlines. Call `createNote` and `listNotes` from the view; keep SQL and connection ownership in this module. Call `db.close()` when the connection is no longer needed.
 
 ## 6) Why this is better than ad-hoc JSON
 

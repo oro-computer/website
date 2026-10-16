@@ -40,7 +40,7 @@ Implementation
  which is desugared into the same internal optional representation as
  `T?`.
  - For example, the following is valid today and type-checks successfully
- (note that the current compiler requires `let` initializers; see
+ (note that the compiler requires `let` initializers; see
  [diagnostics](/silk/docs/compiler/diagnostics/), `E2015`):
 
     ```silk
@@ -51,14 +51,14 @@ Implementation
     }
     ```
 
-- The current `linux/x86_64` IR→ELF backend subset now supports a first slice
+- The `linux/x86_64` IR→ELF backend subset now supports a first slice
  of optional *values* for a subset of payload types:
  - construct optionals via `None` and `Some(value)`,
  - access fields of optional structs via optional chaining
  (`opt?.field`, producing a `FieldType?` value),
  - call methods on optional structs via optional chaining
  (`opt?.method(args)`, producing a `ResultType?` value),
- - use nested optionals (`T??`) for a subset of payloads in the current backend
+ - use nested optionals (`T??`) for a subset of payloads in the backend
  (see below),
  - compare supported optionals via `==` / `!=` (tag + payload equality; nested
  optionals compare recursively),
@@ -73,7 +73,7 @@ Implementation
 
  - scalars (`bool`, `char`, `f32`, `f64`, `int`, and fixed-width integers),
  - `string` (lowered as `{ ptr: u64, len: i64 }`),
- - enums (tagged unions) in the current enum backend subset (lowered as `(u64 tag, payload_0, payload_1, ...)`),
+ - enums (tagged unions) in the enum backend subset (lowered as `(u64 tag, payload_0, payload_1, ...)`),
  - and the supported `struct` subset (0+ fields of supported value types,
  including nested structs and optionals; see [structs impls layout](/silk/docs/language/structs-impls-layout/)).
 
@@ -81,7 +81,7 @@ Implementation
  followed by the payload scalars: `(Bool tag, payload0, payload1, ...)` where
  `tag=0` means `None` and `tag=1` means `Some(...)`. The payload scalar slots
  follow the same lowering rules as the underlying non-optional type (1 scalar
- for scalar payloads, 2 scalars for `string`, N scalars for the current `struct`
+ for scalar payloads, 2 scalars for `string`, N scalars for the `struct`
  subset, and N scalars for enums (including the enum’s own `u64` tag slot).
 
  Nested optionals (`T??`) are supported in this backend subset for the same
@@ -113,8 +113,7 @@ Implementation
  as in `opt?.optional_field`, and optional indexing remain unsupported),
  - and richer optional forms beyond the backend.
 
-Note: optional payload equality (`==` / `!=`) is still limited in the current
-backend subset; comparisons against `None` are supported broadly, but full
+Note: optional payload equality (`==` / `!=`) is still limited in the supported forms; comparisons against `None` are supported broadly, but full
 payload equality for all optional payload kinds (notably optional-of-enum) is
 still evolving.
 

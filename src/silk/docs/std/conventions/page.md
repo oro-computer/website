@@ -119,7 +119,7 @@ needing to know internal sentinel values or manually fill out large structs.
  - treat invalid handles as no-ops (for example `close`/`drop`), or
  - return a recoverable error (for example `InvalidInput`) rather than trapping.
 - If a type’s primary constructor requires configuration (capacity, hash function pointers, etc.), provide a convenience constructor that uses a sensible default:
- - for capacity-driven containers: `empty()` and a parameterized constructor (`init(cap)` in the Supported forms; consider `with_capacity(cap)` long-term),
+ - for capacity-driven containers: `empty()` and a parameterized constructor (`init(cap)` in Silk; consider `with_capacity(cap)` long-term),
  - for option/config structs: a `default()` constructor or clearly-named presets (for example `read_only()` / `write_only()`).
 - `Drop` types must be safe to drop in their default/empty/invalid state and should be idempotent when possible (invalidate the handle/pointer after freeing).
 - Constructors must not silently “succeed” while discarding failures:
@@ -214,7 +214,7 @@ low-level code (buffers, parsing, and pointer/length handling):
  validate at runtime and return a recoverable error value rather than relying
  on preconditions.
 - See [formal verification](/silk/docs/language/formal-verification/) for the Formal Silk model. Note
- that the verifier currently skips `std::...` modules; contracts in `std::`
+ that the verifier skips `std::...` modules; contracts in `std::`
  are still valuable as precise documentation and for future verification work.
 
 ## UTF-8 and Text

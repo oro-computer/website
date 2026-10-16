@@ -15,7 +15,7 @@ Silk has explicit module/package structure:
 
 - a source file may declare `package ...;` or header-form `module ...;` (mutually exclusive),
 - imports come next as a contiguous block,
-- then declarations (`fn`, `let`, `struct`, `enum`, `impl`, ...).
+- then declarations (`fn`, `let`, `struct`, `enum`, `impl`,...).
 
 Silk supports both:
 

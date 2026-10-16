@@ -21,10 +21,10 @@ Key points:
  - a raw pointer to the start of the memory block,
  - a capacity (number of elements that can be stored).
 - `Buffer(T)` does **not** track the number of initialized elements (length).
-- `Buffer(T)` uses the current compiler’s **scalar-slot** layout (for example
+- `Buffer(T)` uses the compiler’s **scalar-slot** layout (for example
  `sizeof(u8) == 8`). For packed bytes suitable for OS/FFI byte APIs, use
  [`std::buffer::BufferU8`](/silk/docs/std/buffer/).
-- The current API includes operations such as:
+- The API includes operations such as:
  - allocation: [`std::buffer::Buffer(T).init(cap)`](/silk/docs/std/buffer/) / [`std::buffer::alloc(T; cap)`](/silk/docs/std/buffer/)
  - reads/writes: `buf.read(i)` / `buf.write(i, v)` and module-level wrappers
  - views: `buf.view(len)` / `buf.slice(start, end)` returning [`std::arrays::Slice(T)`](/silk/docs/std/arrays/)

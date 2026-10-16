@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "loop { ... } is an infinite loop that exits via break or return."
+description: "loop {... } is an infinite loop that exits via break or return."
 docsCollection: "silkWiki"
 section: "language"
 order: 6

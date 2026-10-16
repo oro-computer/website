@@ -26,9 +26,11 @@ expr;
 - The expression is evaluated exactly once.
 - The result value (if any) is discarded.
 
-## Current implementation restrictions
+<span id="current-implementation-restrictions"></span>
 
-For Silk currently, an expression statement is only valid when
+## Implementation restrictions
+
+For Silk, an expression statement is only valid when
 the expression is either:
 
 - a call expression (a function call), or
@@ -44,7 +46,7 @@ All other expression statements are rejected.
 This restriction will be relaxed as more of the expression language is lowered
 and code-generated.
 
-Examples (accepted in the Supported forms):
+Examples (accepted in Silk):
 
 ```silk
 fn main () -> int {
@@ -69,7 +71,7 @@ async fn main () -> int {
 }
 ```
 
-Examples (rejected in the Supported forms):
+Examples (rejected in Silk):
 
 ```silk
 fn main () -> int {

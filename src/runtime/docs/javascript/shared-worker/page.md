@@ -20,11 +20,11 @@ githubRef: "master"
 
 ## Examples
 
+Use the global constructor directly in application code; no import is needed.
+
 Launch a shared worker and communicate through its shared port:
 
 ```js
-import { SharedWorker } from 'oro:shared-worker'
-
 const worker = new SharedWorker(new URL('./shared.js', import.meta.url))
 
 worker.port.start()

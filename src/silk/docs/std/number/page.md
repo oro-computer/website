@@ -132,19 +132,19 @@ Notes:
 - `Number.parse(...)` canonicalizes parsed integers to the tagged `i128` /
  `u128` forms and parsed floats to the tagged `f64` form.
 - `Number` is an inline tagged payload. It does not heap-allocate and does not
- require a dedicated enum payload layout in Silk currently.
+ require a dedicated enum payload layout in Silk.
 - Text rendering for `Number` is fallible because it returns an owned
  [`std::strings::String`](/silk/docs/std/strings/).
-- Exact extraction helpers are currently defined for the integer families
+- Exact extraction helpers are defined for the integer families
  (`i64` / `u64` / `i128` / `u128`).
 - For float-backed `Number` values:
  - `to_i64_exact()` / `to_u64_exact()` succeed only for integral values that
  round-trip exactly through the corresponding `f64 <-> i64` / `u64` cast
  path,
- - `to_i128_exact()` is currently a conservative wrapper over the `i64`
+ - `to_i128_exact()` is a conservative wrapper over the `i64`
  round-trip envelope, so it does not accept larger exact integral `f64`
  values such as `2^63`,
- - `to_u128_exact()` is currently a conservative wrapper over the `u64`
+ - `to_u128_exact()` is a conservative wrapper over the `u64`
  round-trip envelope, so it can accept exact non-negative `f64` integers
  such as `2^63` while still rejecting values outside the exact `u64`
  envelope.

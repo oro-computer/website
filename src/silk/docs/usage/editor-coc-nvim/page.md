@@ -9,7 +9,7 @@ githubRepo: "oro-computer/silk"
 githubRef: "master"
 ---
 
-# coc.nvim Integration for Silk
+# Coc.nvim Integration for Silk
 
 This page describes the coc.nvim client for the `silk-lsp` language server.
 
@@ -91,7 +91,7 @@ Use `:CocCommand` for server lifecycle management:
 
 ## Features
 
-The extension exposes the capabilities currently implemented by `silk-lsp`:
+The extension exposes the capabilities implemented by `silk-lsp`:
 
 - diagnostics from the Silk lexer, parser, and type checker,
 - hover with approximate type hints for identifiers and struct fields,

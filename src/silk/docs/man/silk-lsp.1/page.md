@@ -29,7 +29,7 @@ The server indexes open documents together with the nearest-package
 `silk.toml` graph, manifest definition files, stdlib modules (when enabled),
 and manifest-owned native C sources/headers used by `ext` declarations.
 
-The currently advertised capability surface includes:
+The advertised capability surface includes:
 
 - diagnostics via `textDocument/publishDiagnostics`,
 - `textDocument/hover`,

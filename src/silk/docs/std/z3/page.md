@@ -27,7 +27,7 @@ responsible for using the Z3 reference-counting APIs correctly.
 
 On the supported glibc hosted baseline, the Silk toolchain vendors:
 
-- Z3 headers under [`vendor/include`](https://github.com/oro-computer/silk/tree/master/vendor/include) (e.g. `z3.h`, `z3_api.h`, `z3_fixedpoint.h`, ...),
+- Z3 headers under [`vendor/include`](https://github.com/oro-computer/silk/tree/master/vendor/include) (e.g. `z3.h`, `z3_api.h`, `z3_fixedpoint.h`,...),
 - a Z3 static archive under the supported glibc target layout:
  [`vendor/lib/x64-linux/libz3.a`](https://github.com/oro-computer/silk/blob/master/vendor/lib/x64-linux/libz3.a).
 
@@ -108,7 +108,7 @@ dynamic dependencies for common system libraries:
 - `libpthread.so.0`
 - `libm.so.6`
 
-## glibc C23 Compatibility Shims
+## Glibc C23 Compatibility Shims
 
 The shipped glibc `libz3.a` build references some glibc C23 entrypoints (for
 example `__isoc23_sscanf`) that may be missing on older glibc versions.
@@ -138,7 +138,7 @@ storage remains valid.
 
 ## Platform Support
 
-The current toolchain provides built-in [`std::runtime::z3`](/silk/docs/std/runtime-z3/) auto-linking only on
+The toolchain provides built-in [`std::runtime::z3`](/silk/docs/std/runtime-z3/) auto-linking only on
 Linux x86_64 glibc.
 
 Linux x86_64 musl is supported only when downstream supplies a musl-built Z3

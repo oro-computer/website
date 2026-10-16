@@ -212,7 +212,7 @@ Each stream has a bounded in-memory queue. The `cap` is expressed in **chunks**
 
 `TransformStream` models a Web Streams-style transform stage.
 
-In Silk currently, [`std::stream`](/silk/docs/std/stream/) does **not** attach a transformer
+In Silk, [`std::stream`](/silk/docs/std/stream/) does **not** attach a transformer
 callback internally. Instead, `TransformStream` exposes two bounded pipes and
 expects you to run the transform loop in a task:
 
@@ -315,7 +315,7 @@ async fn main () -> int {
 - aborts/cancels on error.
 
 To make piping cooperatively cancellable, use `pipe_to_abortable` with an
-[`std::abort_controller::AbortSignalBorrow`](/silk/docs/std/abort-controller/). In the Supported forms, aborts are
+[`std::abort_controller::AbortSignalBorrow`](/silk/docs/std/abort-controller/). In Silk, aborts are
 observed between read/write steps; they do not yet interrupt a blocking
 `ReadableStream.read()` call.
 
@@ -340,5 +340,5 @@ fn run_pipeline (src: std::stream::ReadableStream, dst: std::stream::WritableStr
  - dropping `WritableStream` closes the stream
  (readers observe `Read::Done` after draining).
 - `PassThroughStream.take_readable` / `take_writable` exist to make ownership
- transfer ergonomic in the Supported forms (moving out of struct fields is
+ transfer ergonomic in Silk (moving out of struct fields is
  limited).

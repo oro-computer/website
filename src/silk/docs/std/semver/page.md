@@ -96,7 +96,7 @@ Formal contract surface:
 - The current formal surface intentionally stops short of fully encoding the
  prerelease identifier ordering rules as a reusable theory. Those rules are
  implemented and tested at runtime, but the shipped proof vocabulary focuses
- on the SemVer core triplet where the current verifier subset is strongest.
+ on the SemVer core triplet where the supported forms is strongest.
 
 Notes:
 

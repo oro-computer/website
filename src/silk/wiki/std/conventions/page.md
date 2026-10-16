@@ -50,7 +50,7 @@ fn main () -> int {
     _: std::process::GetCwdFailed => { return 2; },
   }
 
-  // Owned std values are explicitly dropped in the current subset.
+  // Explicitly drop owned standard-library values after use.
   cwd.drop();
   return 0;
 }

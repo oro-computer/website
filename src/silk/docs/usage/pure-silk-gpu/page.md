@@ -166,7 +166,7 @@ trailing values. The compiler and embedded bundle own the provider layout;
 application code does not declare HIP/CUDA functions or pack argument bytes.
 
 First-class address-space pointer types, aggregate device values, recursion,
-and indirect device calls are not part of either current device subset. The
+and indirect device calls are not part of either device subset. The
 typed indexed memory operations cover ordinary global/shared data movement
 without exposing provider address-space syntax. Low-level AMD instruction work
 remains available separately through the standalone [`std::gpu::isa`](/silk/docs/std/gpu-isa/)

@@ -35,7 +35,7 @@ Use one of these output kinds when building:
 - `.SILK_OUTPUT_SHARED_LIBRARY`
 - `.SILK_OUTPUT_OBJECT`
 
-For wasm targets, see [WASM backend](/silk/docs/compiler/backend-wasm/) and [C ABI (`libsilk`)](/silk/docs/compiler/abi-libsilk/) for the currently supported output subset.
+For wasm targets, see [WASM backend](/silk/docs/compiler/backend-wasm/) and [C ABI (`libsilk`)](/silk/docs/compiler/abi-libsilk/) for the supported output subset.
 
 ### `silk.Error`
 

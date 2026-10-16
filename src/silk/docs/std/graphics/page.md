@@ -212,7 +212,7 @@ These APIs are inherently low-level:
 The `std::graphics` bindings focus on mechanical ABI mapping and leave
 ownership/lifetime management to higher layers.
 
-Important current limitation (compiler subset):
+Important limitation (compiler subset):
 
 - The compiler does not yet implement packed C struct layout. As a result,
  these bindings use `u64` pointers for C pointer parameters and do not rely on

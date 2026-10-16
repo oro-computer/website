@@ -22,7 +22,7 @@ The module exports:
 The implementation is an owning ring-buffer-backed container rather
 than a linked list. That is intentional:
 
-- it matches the current compiler/runtime subset cleanly,
+- it matches the compiler/runtime subset cleanly,
 - it shares storage and ownership behavior with the queue/stack modules,
 - and it provides the requested list vocabulary without introducing a second
  allocator/intrusive-node model.

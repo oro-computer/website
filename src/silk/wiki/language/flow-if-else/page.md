@@ -13,7 +13,7 @@ githubRef: "master"
 
 Use `if` / `else` for boolean branching.
 
-In Silk currently, `if` is a statement that chooses which block
+In Silk, `if` is a statement that chooses which block
 executes. The broader language design includes expression-oriented forms; see
 the canonical spec for details.
 
@@ -47,7 +47,7 @@ fn main () -> int {
 ```
 
 ### Example: `else if` chains
-Currently, `else if` parses as sugar for a nested `if` in
+`else if` parses as sugar for a nested `if` in
 the `else` branch.
 
 ```silk

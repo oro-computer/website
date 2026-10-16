@@ -17,8 +17,8 @@ githubRef: "master"
 - [`std::image::png`](/silk/docs/std/image-png/) — PNG decode/encode backed by libpng,
 - [`std::image::jpeg`](/silk/docs/std/image-jpeg/) — JPEG decode/encode backed by libjpeg-turbo.
 
-The codec modules focus on simple, ABI-safe entrypoints (currently RGBA8) that
-work with the current `ext` / C ABI subset.
+The codec modules focus on simple, ABI-safe entrypoints (RGBA8) that
+work with the `ext` / C ABI subset.
 
 ## Module Layout
 
@@ -53,15 +53,15 @@ When the built-in archives are present, `silk build` auto-links them when
 when linking `.o`/`.a` inputs that reference the shim symbols.
 
 Why shims: libpng and libjpeg-turbo expose callback-heavy APIs and/or by-value
-struct arguments. The current Silk ABI subset is intentionally small, so the
+struct arguments. The Silk ABI subset is intentionally small, so the
 toolchain builds shim archives that provide scalar-ABI-friendly functions.
 
 Notes:
 
-- The PNG path currently auto-links on `linux/x86_64` glibc and musl and
+- The PNG path auto-links on `linux/x86_64` glibc and musl and
  requires zlib plus the target libc math provider at link/runtime
  (`libm.so.6` on glibc, `libc.so` on musl).
-- The JPEG path currently auto-links on `linux/x86_64` glibc and musl and
+- The JPEG path auto-links on `linux/x86_64` glibc and musl and
  requires the target libc math provider at link/runtime (`libm.so.6` on glibc,
  `libc.so` on musl).
 

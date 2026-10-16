@@ -21,14 +21,14 @@ backend (see [backend wasm](/silk/docs/compiler/backend-wasm/)).
 
 The public Silk surface is centered around:
 
-- `Engine` — a runtime context and configuration (currently minimal).
+- `Engine` — a runtime context and configuration (minimal).
 - `Module` — a validated module (owned bytes + parsed metadata).
 - `Instance` — an instantiated module (module + runtime state).
 - `Func` — an exported function handle for calling.
 - `Imports` — host-provided imports used during instantiation.
 - linear memory access via `Instance.memory_bytes()` (returns `None` when the module has no memory; otherwise `Some(ByteSlice)`, possibly length 0).
 - `Val` / `ValType` — a small tagged value representation for wasm values
- (currently used for results).
+ (used for results).
 
 ## Host Imports
 `Module.instantiate_with_imports(imports: Imports)` uses `Imports` to resolve
@@ -41,7 +41,7 @@ Imported functions are dispatched through a single host callback:
 - `Imports.func_call: HostCall`
 
 `HostCall` uses a scalar-only calling convention so it can be stored as a
-first-class value and passed around in Silk currently:
+first-class value and passed around in Silk :
 
 ```silk
 type fn HostCall = fn (import_index: i64,

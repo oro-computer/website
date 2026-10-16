@@ -330,7 +330,7 @@ used to satisfy it at link time:
 - `builtin` uses the toolchain-built static archives from this document
  (`libsodium.a`, the mbedTLS archives, and `libssh2.a`).
 - `platform` is available on Apple targets and strictly uses Apple platform
- frameworks for the primitives currently wired through the standard library.
+ frameworks for the primitives wired through the standard library.
 - `auto` selects platform-backed APIs first on Apple targets and falls back to
  built-in archives for std APIs that do not yet have an Apple platform mapping;
  it selects `builtin` elsewhere.
@@ -340,7 +340,7 @@ used to satisfy it at link time:
 `SILK_SECURITY_PROVIDER` wins over `[build] security_provider` in `silk.toml`;
 if neither is present, `auto` is used.
 
-On Apple targets, `auto` and `platform` currently route [`std::crypto`](/silk/docs/std/crypto/)
+On Apple targets, `auto` and `platform` route [`std::crypto`](/silk/docs/std/crypto/)
 initialization, hardened memory operations, constant-time equality, and
 [`std::crypto::random`](/silk/docs/std/crypto-random/) through the Apple Security-backed bundled runtime helper
 and link `Security.framework`. [`std::net`](/silk/docs/std/net/) provider builds link

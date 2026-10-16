@@ -20,7 +20,7 @@ The language includes the following operators and delimiters:
 - Assignment and compound assignment: `=`, `+=`, `-=`, `*=`, `/=`.
 - Increment/decrement: `++`, `--` (prefix and postfix).
 - Arithmetic: `+`, `-`, `*`, `/`, `%`.
- - Currently:
+ - :
  - integer operands support `+`, `-`, `*`, `/`, and `%`,
  - floating-point operands (`f32`/`f64`) support `+`, `-`, `*`, and `/`
  (no `%`).
@@ -32,7 +32,7 @@ The language includes the following operators and delimiters:
  - `range` supports shifting by an `int` offset:
  - `range + int`, `range - int`, `int + range`.
 - Bitwise: `&`, `|`, `^`, `~`, `<<`, `>>`.
- - Currently, bitwise operators are defined for
+ -, bitwise operators are defined for
  integer operands (`int` and the fixed-width integer types):
  - `&`, `|`, `^` perform bitwise AND/OR/XOR on two integer values of the
  same type and produce a result of that same type.
@@ -43,7 +43,7 @@ The language includes the following operators and delimiters:
  signed integers (`i*`/`int`) and a logical right shift for unsigned
  integers (`u*`).
 - Comparison: `==`, `!=`, `<`, `<=`, `>`, `>=`.
- - Currently, comparisons are defined for both integer
+ -, comparisons are defined for both integer
  operands and floating-point operands of the same type.
  - In Silk, `==` and `!=` are also defined for `bool`
  operands, including values read from struct fields and references. The
@@ -66,7 +66,7 @@ The language includes the following operators and delimiters:
  - `Some(x) == Some(y)` compares the payload values for equality (recursively
  for nested optionals),
  - and `!=` is the logical negation of `==`.
- - Currently, `None` and `Some(...)` can appear in
+ -, `None` and `Some(...)` can appear in
  equality expressions when the other operand has an optional type (for
  example `opt == None` and `opt == Some(x)`), using that other operand’s
  type to infer the optional payload type.
@@ -79,10 +79,10 @@ The language includes the following operators and delimiters:
  everything (including itself), and ordered comparisons (`<`, `<=`, `>`,
  `>=`) are false when either operand is `NaN`.
 - Logical: `!`, `&&`, `||`.
- - Currently:
+ - :
  - `!` is supported for `bool` operands.
 - Member and scope: `.`, `::`, `?.`.
-- Currently:
+- :
  - `.` and `::` are supported,
  - and `?.` is supported for optional chaining on the supported `struct` subset:
  - `opt?.field` yields `FieldType?`,
@@ -105,9 +105,9 @@ The language includes the following operators and delimiters:
  - `..` and `..=` form range literals of type `range` (see [types](/silk/docs/language/types/)).
  - `...` is the varargs/rest marker (see [varargs](/silk/docs/language/varargs/)).
 - Other punctuation: `?`, `??`, `->`, `=>`, `,`, `;`, `(`, `)`, `{`, `}`, `[`, `]`, `_`, `:`.
- - Currently, `??` is supported for:
+ -, `??` is supported for:
  - optionals in Silk (including scalar, `string`, and
- the current `struct` subset, plus nested optionals in the supported
+ the `struct` subset, plus nested optionals in the supported
  payload subset; see [optional](/silk/docs/language/optional/)), and
  - recoverable `Result`-like values, where `result ?? fallback` yields the
  `Ok(...)` payload and evaluates `fallback` only for `Err(...)`
@@ -151,7 +151,7 @@ expression statement.
 
 Rules:
 
-- The left-hand side must be an assignable lvalue. In the Supported forms, it may be:
+- The left-hand side must be an assignable lvalue. In Silk, it may be:
  - an identifier that refers to a local `let mut` binding, or
  - a struct field lvalue `name.field` (or nested field lvalue `name.field1.field2...`)
  where `name` is either:
@@ -189,7 +189,7 @@ Compound assignments are shorthand for “read-modify-write”:
 Rules:
 
 - The left-hand side must be an assignable lvalue (as described above for `=`).
-- In the Supported forms, compound assignments are supported only for numeric
+- In Silk, compound assignments are supported only for numeric
  scalar types (integers and `f32`/`f64`), including numeric struct fields.
 - The compound assignment expression has type `void`.
 
@@ -265,15 +265,15 @@ Built-in size model :
 - Sizes reflect the current scalar-slot lowering model ([structs impls layout](/silk/docs/language/structs-impls-layout/)):
  each lowered scalar occupies one 8-byte slot.
 - A `string` value occupies two slots (`(u64 ptr, i64 len)`), so `sizeof string`
- is `16` in the Supported forms.
+ is `16` in Silk.
 - A `T[]` slice value occupies two slots (`(u64 ptr, i64 len)`), so `sizeof T[]`
- is `16` in the Supported forms.
-- A `T[N]` fixed array occupies `N * sizeof(T)` bytes in the Supported forms,
+ is `16` in Silk.
+- A `T[N]` fixed array occupies `N * sizeof(T)` bytes in Silk,
  using the element’s scalar-slot size.
 
 Notes:
 
-- `sizeof string` (type operand) is the **representation** size (currently 16
+- `sizeof string` (type operand) is the **representation** size (16
  bytes in the scalar-slot model), while `sizeof <string value>` is the
  **content** size (byte length).
 - `sizeof` is a byte-size operator. For logical element counts (for example a
@@ -310,7 +310,7 @@ Built-in alignment model :
 
 - Alignments reflect the current scalar-slot lowering model
  ([structs impls layout](/silk/docs/language/structs-impls-layout/)): values are stored as 8-byte slots.
-- All non-`void` types currently have alignment `8`.
+- All non-`void` types have alignment `8`.
 - `alignof void` is `1`.
 
 Parsing notes:
@@ -399,7 +399,7 @@ Rules (Supported forms):
  static type declares conformance (`impl T as Interface`) or when the operand is
  a module declared `module Name as Interface`.
 - For primitive types, enum/error types, reference types (`&T`), slice/array types
- (`T[]`, `T[N]`), optionals (`T?`), and function types, `is` currently checks
+ (`T[]`, `T[N]`), optionals (`T?`), and function types, `is` checks
  **exact type equality** (after resolving type aliases).
 
 Notes:
@@ -513,7 +513,7 @@ conversions:
  explicit conversions between raw addresses and array/slice views:
  - `ptr as T[]` constructs a `T[]` slice view where the pointer component is
  `ptr` and the length component is a dedicated **unknown-length** sentinel
- (currently, `i64.min`). The compiler does not validate
+ (, `i64.min`). The compiler does not validate
  the pointer value.
  - Indexing and assignment through an unknown-length slice are permitted
  but **unchecked**: the runtime performs no `index < len` bounds check.
@@ -538,7 +538,7 @@ conversions:
  - These casts are unsafe because:
  - the compiler does not validate pointer provenance (whether the address is
  valid for the claimed element type).
- - in the current scalar-slot subset, `T[]` / `T[N]` indexing assumes the
+ - in the scalar-slot subset, `T[]` / `T[N]` indexing assumes the
  pointed-to memory is laid out in Silk’s scalar-slot representation. This
  is not a packed-byte view. For packed byte access (for example string
  storage), use [`std::runtime::mem::{load_u8,store_u8}`](/silk/docs/std/runtime-mem/) or
@@ -561,7 +561,7 @@ conversions:
  - Supported forms limitation: the compiler must be able to resolve the
  receiver’s nominal type at the cast site so it can lower the implicit
  `serialize()` call. This includes name expressions, field accesses, calls,
- and array/slice indexing (`arr[i] as T`) in the Supported forms.
+ and array/slice indexing (`arr[i] as T`) in Silk.
 - `Deserialize(S)`-backed casts (explicit conversion via `deserialize(...)`):
  - When the target type provides a unique **static** method named `deserialize`
  matching the [`std::interfaces::Deserialize(S)`](/silk/docs/std/interfaces/) surface (`fn deserialize(value: S) -> Self`),
@@ -682,7 +682,7 @@ Rules (Supported forms):
  intended for low-level interop (for example passing `&Struct` pointers to C
  APIs that use `void *` / `T *` handles).
  - This does not make integer→reference casts legal: `u64 as raw &T` remains
- rejected in the Supported forms.
+ rejected in Silk.
 - Semantics:
  - The operand’s current canonical scalar bits are reinterpreted as the target
  type’s canonical scalar bits (bit-level truncation/masking for narrower
@@ -692,8 +692,7 @@ Rules (Supported forms):
  - the high lane is reinterpreted across `u64`/`i64` as needed,
  - when casting a 128-bit value to a <=64-bit target, the low lane is used,
  - when casting a <=64-bit *integer* value to `i128`/`u128`, the high lane
- is sign-extended (`i128`) or zero-extended (`u128`) in the current
- subset.
+ is sign-extended (`i128`) or zero-extended (`u128`) in the supported forms.
  - No numeric conversion is performed. For example, `1.0 as u64` yields
  `1`, while `1.0 as raw u64` yields the IEEE-754 bit pattern.
 

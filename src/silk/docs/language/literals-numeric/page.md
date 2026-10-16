@@ -38,7 +38,7 @@ What works end-to-end today (lexer → parser → checker → lowering → codeg
  - float literals default to `f64`, but adopt `f32`/`f64`/`f128` from context.
 - Duration literal tokens of the form `<number><unit>` (no whitespace) such as
  `500ms` and `1.5s` (specified in [literals duration](/silk/docs/language/literals-duration/)).
-- Lowering note (current IR backend subset): an unannotated local `let` binding
+- Lowering note (IR backend subset): an unannotated local `let` binding
  retains the type inferred for its initializer. In particular, arithmetic over
  explicitly widened `i128`, `u128`, or `f128` operands lowers identically with
  or without a redundant annotation on the local binding. This rule applies in
@@ -135,7 +135,7 @@ fn main () -> int {
 }
 ```
 
-Example: time types share an `i64`-based representation in the Supported forms
+Example: time types share an `i64`-based representation in Silk
 ([duration instant](/silk/docs/language/duration-instant/)), so integer literals can be used as
 `Instant`/`Duration` values via context:
 

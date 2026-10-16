@@ -1,6 +1,6 @@
 ---
 layout: "docs"
-description: "Fetch notes from a remote API, attach stored credentials, and bring the response into local state."
+description: "Use global fetch with cancellation, response validation, and safe local persistence."
 docsCollection: "runtime"
 section: "guides"
 order: 11
@@ -11,103 +11,114 @@ githubRef: "master"
 
 # Calling HTTP APIs
 
-Fetch notes from a remote API, attach stored credentials, and bring the response into local state.
+Load a remote note list with the global `fetch`, reject malformed responses, and report network errors without losing local drafts. No import is needed for `fetch`, `Headers`, `Request`, `Response`, `URL`, or `AbortController`.
 
-## 1) Start with [`oro:fetch`](/runtime/docs/javascript/fetch/)
+## Fetch and validate a response
 
-Use [`oro:fetch`](/runtime/docs/javascript/fetch/) exactly the way you would use the web platform `fetch` API:
-
-```js
-import fetch from 'oro:fetch'
-
-const response = await fetch('https://api.example.com/notes')
-const notes = await response.json()
-```
-
-That keeps most application code portable and familiar.
-
-## 2) Attach stored credentials
-
-Pair API calls with [`oro:secure-storage`](/runtime/docs/javascript/secure-storage/) so session state survives restarts:
+Save as `src/remote-notes.js`. This complete module expects an HTTPS endpoint returning an array of `{ id, title, body }` objects. Replace the example origin with your API’s address.
 
 ```js
-import fetch from 'oro:fetch'
-import * as secureStorage from 'oro:secure-storage'
+const apiBase = 'https://api.example.com/'
 
-export async function fetchNotes() {
-  const token = await secureStorage.getItem('refresh-token')
+function parseNotes(value) {
+  if (!Array.isArray(value)) throw new Error('Expected a list of notes')
 
-  const response = await fetch('https://api.example.com/notes', {
-    headers: {
-      authorization: `Bearer ${token}`,
-      accept: 'application/json',
-    },
+  const seen = new Set()
+  return value.map((note) => {
+    if (!note || !Number.isSafeInteger(note.id) || note.id <= 0 ||
+        typeof note.title !== 'string' || typeof note.body !== 'string') {
+      throw new Error('A note has an invalid id, title, or body')
+    }
+    if (seen.has(note.id)) throw new Error('The response contains duplicate note ids')
+    seen.add(note.id)
+    return { id: note.id, title: note.title, body: note.body }
   })
+}
 
-  if (!response.ok) throw new Error(`sync failed: ${response.status}`)
-  return await response.json()
+export async function fetchNotes({ accessToken, signal } = {}) {
+  const url = new URL('/notes', apiBase)
+  url.searchParams.set('limit', '100')
+  const headers = new Headers({ accept: 'application/json' })
+  if (accessToken) headers.set('authorization', `Bearer ${accessToken}`)
+
+  const response = await fetch(url.href, { headers, signal })
+  if (!response.ok) throw new Error(`Could not load notes (HTTP ${response.status})`)
+  return parseNotes(await response.json())
 }
 ```
 
-## 3) Use explicit sync functions
+`fetch` rejects network failures, but an HTTP 404 or 500 still produces a response. Check `ok` before decoding. `json()` parses JSON; `parseNotes` checks the application’s data shape. For a paginated API, follow its cursor or next-page contract before treating a response as the complete collection.
 
-Keep network behavior out of click handlers:
+## Cancel stale work and show failures
+
+Call the module from a view with a reload button and a status element. Here `status` is an element with `role="status"`, and `renderNotes` renders titles and bodies as text.
 
 ```js
-export async function syncNotes(db) {
-  const remoteNotes = await fetchNotes()
+import { fetchNotes } from './remote-notes.js'
 
-  db.exec('delete from notes')
-  for (const note of remoteNotes) {
-    db.exec(`
-      insert into notes (id, title, body, created_at, updated_at)
-      values (
-        ${Number(note.id)},
-        ${JSON.stringify(note.title)},
-        ${JSON.stringify(note.body)},
-        ${JSON.stringify(note.created_at)},
-        ${JSON.stringify(note.updated_at)}
-      )
-    `)
+let activeRequest
+
+async function reloadNotes({ accessToken, status, renderNotes }) {
+  activeRequest?.abort()
+  const request = new AbortController()
+  activeRequest = request
+  const timeout = setTimeout(() => request.abort(), 15000)
+  status.textContent = 'Loading notes…'
+
+  try {
+    const notes = await fetchNotes({ accessToken, signal: request.signal })
+    if (activeRequest !== request) return
+    renderNotes(notes)
+    status.textContent = `Loaded ${notes.length} notes.`
+  } catch (error) {
+    if (activeRequest !== request) return
+    status.textContent = request.signal.aborted
+      ? 'Request cancelled or timed out. Your local notes are still available.'
+      : `Could not load notes: ${error.message}`
+  } finally {
+    clearTimeout(timeout)
+    if (activeRequest === request) activeRequest = undefined
   }
 }
 ```
 
-The runtime is not the place to hide network state. Make sync operations explicit and observable.
+Keep existing content visible while loading. Render remote strings with `textContent` or ordinary React text children. For authenticated calls, pass a short-lived access token from your sign-in flow; use [secure storage](/runtime/docs/guides/secure-storage-and-sessions/) for credentials that must survive restarts. Handle expiry through your API’s token refresh flow.
 
-## 4) Use [`oro:https`](/runtime/docs/javascript/https/) when you need stream-style control
+## Store validated notes with bound SQL parameters
 
-For simple downloads, `fetch` is enough. For Node-style request handling or low-level streaming, drop to [`oro:https`](/runtime/docs/javascript/https/):
+For a database with `notes(id, title, body, created_at, updated_at)` from the [SQLite guide](/runtime/docs/guides/local-data-with-sqlite/), upsert a validated page in one transaction:
 
 ```js
-import { get } from 'oro:https'
-import process from 'oro:process'
-
-get('https://example.com/health', (res) => {
-  res.on('data', (chunk) => process.stdout.write(chunk))
-})
+export function storeRemoteNotes(db, notes) {
+  const syncedAt = new Date().toISOString()
+  db.exec('BEGIN')
+  try {
+    for (const note of notes) {
+      db.exec(`
+        INSERT INTO notes (id, title, body, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          title = excluded.title,
+          body = excluded.body,
+          updated_at = excluded.updated_at
+      `, { params: [note.id, note.title, note.body, syncedAt, syncedAt] })
+    }
+    db.exec('COMMIT')
+  } catch (error) {
+    db.exec('ROLLBACK')
+    throw error
+  }
+}
 ```
 
-That is useful for long-lived connections, custom headers, or stream-oriented integrations.
+Bound values preserve quotes and newlines without turning data into SQL. The transaction avoids half-written pages. This example caches a server-owned list; keep unsent local drafts separate and design conflict resolution before adding two-way sync. A failed fetch never deletes local rows.
 
-## 5) Debug TLS issues without guessing
+## Choose the network API for the task
 
-When a remote API handshake is failing and you need to inspect TLS behavior:
-
-```bash
-oroc run . --tls-keylog=./tls-keys.log
-```
-
-That gives you a deterministic artifact you can use during debugging instead of blindly retrying requests.
-
-## Considerations
-
-- Use `fetch` by default. Drop to [`oro:http`](/runtime/docs/javascript/http/) or [`oro:https`](/runtime/docs/javascript/https/) only when you need stream-level control.
-- Store durable remote data in SQLite, not only in memory.
-- Treat sync as a feature with its own state: pending, success, stale, failed.
+Use global `fetch` for JSON APIs, downloads, and uploads. [`oro:http`](/runtime/docs/javascript/http/) and [`oro:https`](/runtime/docs/javascript/https/) expose Node-style request and stream interfaces. Native TLS provider availability differs from WebView HTTPS; see [platform support](/runtime/docs/guides/platform-support/).
 
 ## Next
 
+- [Web platform APIs](/runtime/docs/guides/web-platform-apis/)
 - [Local data with SQLite](/runtime/docs/guides/local-data-with-sqlite/)
 - [Offline-first with service workers](/runtime/docs/guides/offline-first-with-service-workers/)
-- [`oro:fetch`](/runtime/docs/javascript/fetch/)

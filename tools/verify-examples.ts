@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawnSync } from 'node:child_process'
 import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -61,4 +61,56 @@ try {
   }
 } finally {
   await rm(workspace, { recursive: true, force: true })
+}
+
+// Exercise the published input boundary and ensure removing a guard breaks its proof.
+const formalWorkspace = await mkdtemp(join(tmpdir(), 'oro-formal-input-'))
+try {
+  const $ = load(markdown().render(await readFile('src/silk/docs/guides/formal-silk/page.md', 'utf8')))
+  const source = $('code.language-silk').first().text()
+  assert.ok(source.includes('fn try_withdraw'), 'The formal guide must contain the complete CLI example')
+  const file = join(formalWorkspace, 'withdraw.slk')
+  const executable = join(formalWorkspace, 'withdraw')
+  await writeFile(file, source)
+  const std = process.env.SILK_STD_ROOT ? ['--std-root', process.env.SILK_STD_ROOT] : []
+  const run = (args: string[]) => execFileSync('silk', [...args, ...std], { cwd: formalWorkspace, encoding: 'utf8', timeout: 60_000 })
+  run(['check', '--verify', file])
+  run(['build', file, '-o', executable])
+  for (const [args, status, output] of [
+    [['2500'], 0, 'Remaining: 7500 cents'],
+    [['0'], 0, 'Remaining: 10000 cents'],
+    [['10000'], 0, 'Remaining: 0 cents'],
+    [['-1'], 1, 'Amount must be between 0 and 10000 cents.'],
+    [['10001'], 1, 'Amount must be between 0 and 10000 cents.'],
+    [['hello'], 1, 'Enter a whole number of cents within the int range.'],
+    [['2500oops'], 1, 'Enter a whole number of cents within the int range.'],
+    [['9223372036854775808'], 1, 'Enter a whole number of cents within the int range.'],
+    [[], 2, 'Usage: withdraw <amount-in-cents>'],
+    [['1', '2'], 2, 'Usage: withdraw <amount-in-cents>'],
+  ] as const) {
+    const result = spawnSync(executable, [...args], { encoding: 'utf8' })
+    assert.equal(result.status, status, args.join(' '))
+    assert.equal(result.stdout.trim(), output, args.join(' '))
+  }
+  for (const replacement of ['', '#assert amount <= balance;']) {
+    await writeFile(file, source.replace('if amount > balance { return -1; }', replacement))
+    const result = spawnSync('silk', ['check', '--verify', file, ...std], { cwd: formalWorkspace, encoding: 'utf8' })
+    assert.notEqual(result.status, 0, 'An unchecked external amount must fail verification')
+    assert.match(result.stderr, /E3007|E3006/, 'Expect a proof failure at the call or assertion')
+  }
+  console.log('PASS Formal Silk: verified build, 10 CLI cases, missing guard and unproved assertion rejected')
+  const tutorial = load(markdown().render(await readFile('src/silk/docs/usage/tutorials/07-formal-silk/page.md', 'utf8')))
+  const tutorialBlocks = tutorial('code.language-silk').toArray()
+  assert.equal(tutorialBlocks.length, 5)
+  for (const [index, block] of tutorialBlocks.entries()) {
+    const tutorialFile = join(formalWorkspace, `tutorial-${index + 1}.slk`)
+    const tutorialExecutable = join(formalWorkspace, `tutorial-${index + 1}`)
+    await writeFile(tutorialFile, tutorial(block).text())
+    run(['check', '--verify', tutorialFile])
+    run(['build', tutorialFile, '-o', tutorialExecutable])
+    assert.equal(execFileSync(tutorialExecutable, [], { encoding: 'utf8' }).trim(), '')
+  }
+  console.log('PASS Formal Silk tutorial: 5 verified native programs, all exit successfully')
+} finally {
+  await rm(formalWorkspace, { recursive: true, force: true })
 }

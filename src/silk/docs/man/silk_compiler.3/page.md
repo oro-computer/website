@@ -94,7 +94,7 @@ Build-mode and verification configuration:
 
 - `silk_compiler_set_debug(true)` enables the same debug lowering/debug-verifier behavior as CLI `--debug`.
 - `silk_compiler_set_noheap(true)` enables the same no-heap restrictions as CLI `--noheap`.
-- `silk_compiler_set_debug` and `silk_compiler_set_noheap` are currently mutually exclusive; attempting to enable both fails.
+- `silk_compiler_set_debug` and `silk_compiler_set_noheap` are mutually exclusive; attempting to enable both fails.
 - `silk_compiler_set_z3_lib` overrides the Z3 dynamic library path used for Formal Silk verification.
 
 Target, linkage, and header emission:
@@ -127,7 +127,7 @@ On Apple Silicon macOS hosts, `macos-aarch64` filesystem and in-memory builds ca
 
 ## Thread safety
 
-The `SilkCompiler` object is not currently specified as thread-safe. Confine it to one thread or synchronize access.
+The `SilkCompiler` object is not specified as thread-safe. Confine it to one thread or synchronize access.
 
 ## See Also
 

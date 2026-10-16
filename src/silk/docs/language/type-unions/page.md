@@ -53,7 +53,7 @@ contracts as authoritative.
 ## Rules
 
 The implementation intentionally supports only unions whose member
-types have a safe, well-defined representation in the current compiler/backend
+types have a safe, well-defined representation in the compiler/backend
 subset.
 
 A union type `T1 | T2 | ... | Tn` is permitted when all member types are in the
@@ -91,7 +91,7 @@ A value of a union type is a **tagged** value:
 
 ### Representation
 
-In the current native backend subset, unions are lowered as:
+In the native backend subset, unions are lowered as:
 
 - `(u64 tag, u64 payload_0, ..., u64 payload_(N-1))`
 

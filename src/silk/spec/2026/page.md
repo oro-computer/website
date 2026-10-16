@@ -28,20 +28,20 @@ This document summarizes the key syntax and concepts from the Silk language in a
 This cheat sheet includes **both**:
 
 - the full language design (where some features are still evolving), and
-- the **currently implemented compiler subset**.
+- the **implemented compiler subset**.
 
-For the authoritative “current implementation notes”, prefer:
+For the authoritative “implementation notes”, prefer:
 
 - `the implementation status` (implementation status), and
 - any “notes sections inside the relevant concept documents.
 
-In particular, features such as regions (beyond the current `with` + `new`
+In particular, features such as regions (beyond the `with` + `new`
 subset), concurrency runtime (scheduler/event loop), and
 dependent types are **not** implemented end-to-end yet. Value constraints are
 expressed via Formal Silk (`#require` / `#assure`, including `#require` on
 `struct` declarations).
 
-In Silk currently:
+In Silk :
 
 - Runtime `let`/`var` bindings and compile-time `const` bindings must have an initializer ([`Compiler Diagnostics`](/silk/docs/compiler/diagnostics/), `E2015`).
 - Destructuring `let` bindings from structs are supported:
@@ -53,7 +53,7 @@ In Silk currently:
  - variants: `let Ok(v) = expr;`, `let Pair(a, b) = expr;`, `let E::Variant(x) = expr;` (traps on non-matching variants)
 - Refutable `let` bindings are supported:
  - `let <pattern> = <expr> else { ... };` (the `else` block must be terminal)
-- `const` initializers must be compile-time evaluable ([`Compiler Diagnostics`](/silk/docs/compiler/diagnostics/), `E2041`); in the Supported forms this is restricted to scalar expressions and calls to `const fn` functions (still no `/` or `%`), plus string literals / `const` string aliases.
+- `const` initializers must be compile-time evaluable ([`Compiler Diagnostics`](/silk/docs/compiler/diagnostics/), `E2041`); in Silk this is restricted to scalar expressions and calls to `const fn` functions (still no `/` or `%`), plus string literals / `const` string aliases.
 - Monomorphized generics are supported for `struct`/`interface`/`impl` and applied types (`Name(args...)`):
  - const parameters/arguments and generic functions are still rejected (`E2016`),
 - A small concurrency subset is implemented (`Task(T)` / `Promise(T)` plus `yield`/`await`; see [`Concurrency`](/silk/docs/language/concurrency/)).
@@ -61,7 +61,7 @@ In Silk currently:
 - Function expressions are implemented as first-class function values:
  - non-capturing: inferred `pure` — `let add = fn (x: int, y: int) -> x + y;`
  - capturing closures: may capture immutable scalar locals/parameters by value;
- forming captures inside `pure` code is rejected in the Supported forms.
+ forming captures inside `pure` code is rejected in Silk.
 
 ### Types (Surface Forms)
 
@@ -297,11 +297,11 @@ This guide complements (not replaces):
 This specification is the canonical specification, and many documents describe both:
 
 - the full language design, and
-- Silk currently (what parses, type-checks, and code-generates today).
+- Silk (what parses, type-checks, and code-generates today).
 
 This tour follows the same approach:
 
-- examples labeled “Example” are intended to compile in the Supported forms,
+- examples labeled “Example” are intended to compile in Silk,
 - examples labeled “Design” illustrate planned syntax and are not necessarily implemented.
 
 When in doubt, prefer:
@@ -445,8 +445,7 @@ package app;
 import std::strings;
 
 fn main () -> int {
-  let s: string = trim(" hi "); // may be visible unqualified in the current subset
-  let t: string = std::strings::trim(" hi ");
+  let trimmed: string = std::strings::trim(" hi ");
   return 0;
 }
 ```
@@ -524,7 +523,7 @@ fn main () -> int {
   const answer: int = 42;
   let x: int = answer;
   let mut y: int = 0;
-  var z: int = 1; // `var` is an alias for `let mut` (current subset)
+  var z: int = 1; // `var` is an alias for `let mut`
 
   y = y + 1;
   z += 2;
@@ -534,7 +533,7 @@ fn main () -> int {
 
 Notes:
 
-- `const` initializers must be compile-time evaluable in the Supported forms
+- `const` initializers must be compile-time evaluable in Silk
  (see `E2041`).
 - Only `let mut`/`var` bindings are assignable lvalues (see
  [`Mutability`](/silk/docs/language/mutability/) and `Operators`).
@@ -723,7 +722,7 @@ fn main () -> int {
 }
 ```
 
-Heap allocation (`new`) produces a `&Struct` reference in the Supported forms:
+Heap allocation (`new`) produces a `&Struct` reference in Silk:
 
 ```silk
 struct Boxed { value: int }
@@ -749,10 +748,10 @@ fn main () -> int {
 }
 ```
 
-Single inheritance (current surface is implemented; see [`Structs, Impl Blocks, and Memory Layout`](/silk/docs/language/structs-impls-layout/)):
+Single inheritance (surface is implemented; see [`Structs, Impl Blocks, and Memory Layout`](/silk/docs/language/structs-impls-layout/)):
 
 ```silk
-// Design shape (field/layout rules and current subset limits are documented).
+// Field and layout rules are documented with structs.
 struct Base { x: int = 0 }
 struct Derived extends Base { y: int = 0 }
 ```
@@ -1122,7 +1121,7 @@ pattern forms.
 
 #### `async { ... }` and `task { ... }`
 
-Structured blocks (implemented as lexical blocks in the Supported forms; see
+Structured blocks (implemented as lexical blocks in Silk; see
 [`Concurrency`](/silk/docs/language/concurrency/)):
 
 ```silk
@@ -1344,7 +1343,7 @@ directive tokens that attach to functions and loops:
 - reusable proof bundles: `theory` / `#theory`
 
 See `Formal Silk` for the exact verifier model and
-current restrictions.
+restrictions.
 
 #### Contracts on functions
 
@@ -1513,7 +1512,7 @@ At a high level, the language can be structured as:
 
  The surface syntax for packages, imports, and exports is specified in detail in
  [`Packages, Imports, and Exports`](/silk/docs/language/packages-imports-exports/). The grammar in this file mirrors
- the currently Supported forms:
+ the Supported forms:
 
  - `PackageDecl ::= 'package' PackagePath ';'`
  - `ModuleDecl ::= 'module' PackagePath ModuleAsOpt ';'`
@@ -1548,7 +1547,7 @@ At a high level, the language can be structured as:
  - `FnExportModifier ::= ('export' AttrAnnot* ('default')?)?`
 
  For top-level declarations that can be exported, the `ExportModifier`
- appears before the declaration keyword (currently `fn`, `let`, `ext`, `type`,
+ appears before the declaration keyword (`fn`, `let`, `ext`, `type`,
  `struct`, `enum`, `theory`, `error`, and `interface`):
 
  - `FnDecl ::= FnSpecs FnExportModifier FnModifierOpt 'fn' FnGenericParamListOpt FnNameOpt FnSignature FnBody`
@@ -1603,24 +1602,24 @@ At a high level, the language can be structured as:
  parameters.
  - The compile-time side uses `GenericParam` syntax (`T` and `N: int`) and does
  not permit `mut`.
- - `FnNameOpt` is currently permitted only for default-exported functions
+ - `FnNameOpt` is permitted only for default-exported functions
  (`export default fn (...) { ... }`). For non-default functions, the `fn`
  identifier is required.
  - Default export statements (`export default Name;`) always name an existing
  symbol; they do not permit anonymous exports.
  - The run-time side uses ordinary `Param` syntax (`mut x: T` or `x: T`, with
- the type annotation optional in the Supported forms).
+ the type annotation optional in Silk).
  - If there is no `;`, the entire list is treated as run-time parameters.
  - Default arguments are supported in function parameter lists:
  - any parameter may provide a default expression (`x: int = 1`),
  - defaulted parameters must be **trailing** (once a parameter has a
  default, all subsequent parameters must also have defaults) because
- call syntax is positional-only in the current language subset,
- - and in the initial subset, default expressions are restricted to
+ call syntax is positional-only in the language subset,
+ - and in Silk, default expressions are restricted to
  a constant/literal expression subset (no name references), so they can be
  inlined at call sites during lowering.
  - a parameter declared as `T?` with a default has two effective behaviors
- in the initial subset:
+ in Silk:
  - if the default expression has type `T`, the parameter has effective
  type `T` (the argument may be omitted at call sites, but the callee
  sees a non‑optional value),
@@ -1633,7 +1632,7 @@ At a high level, the language can be structured as:
  `...` (for example `fn f(x: int, ...rest: int) { ... }`),
  - only one varargs parameter is permitted per function and it must be
  **final**,
- - in the Supported forms, varargs parameters:
+ - in Silk, varargs parameters:
  - must have an explicit type annotation,
  - may not be `mut`,
  - and may not have a default expression.
@@ -1679,13 +1678,13 @@ At a high level, the language can be structured as:
  This allows Silk code to bind a local name that differs from the C/FFI symbol
  name (for example to avoid name collisions in wrapper modules).
 
- The current compiler implementation supports external declarations (`ext`) whose type
+ The compiler implementation supports external declarations (`ext`) whose type
  is either:
 
  - a `FunctionType` (external functions, callable from Silk), or
  - a supported scalar type (external variables, readable as values in Silk).
 
- Silk currently **requires an initializer** for runtime bindings
+ Silk **requires an initializer** for runtime bindings
  (`let`/`var`) and for compile-time constant bindings (`const`). Uninitialized
  declarations like `let x: int;` / `const x: int;` are parsed but rejected by
  the checker (see [`Compiler Diagnostics`](/silk/docs/compiler/diagnostics/), `E2015`).
@@ -1716,8 +1715,7 @@ At a high level, the language can be structured as:
 
  Notes:
 
- - Only `#require` directives may appear in `StructSpecs` in the current
- language subset (`#assure` / `#theory` are rejected on `struct`).
+ - Only `#require` directives may appear in `StructSpecs` in the language subset (`#assure` / `#theory` are rejected on `struct`).
 
  Enum declarations are part of the core language design. They are specified in
  ``enum` Types`.
@@ -1744,11 +1742,11 @@ At a high level, the language can be structured as:
 
  Note: const-parameter-style generics (`N: int` parameters and integer literal
  type arguments like `Foo(u8, 1024)`) remain tracked work; the front-end parses
- these surface forms but the compiler currently focuses on type parameters
+ these surface forms but the compiler focuses on type parameters
  and monomorphization for type arguments.
 
  Exception: the nominal optional form `Option(T)` is recognized as sugar for
- `T?` and is accepted in the Supported forms.
+ `T?` and is accepted in Silk.
 
 - Types (Supported forms):
 
@@ -1765,7 +1763,7 @@ At a high level, the language can be structured as:
  - `FunctionType ::= 'fn' '(' TypeListOpt ')' ResultTypeOpt`
  - `CFunctionType ::= 'c_fn' '(' TypeListOpt ')' ResultTypeOpt`
  - `UnsafeFunctionType ::= 'unsafe' (FunctionType | CFunctionType)`
- - `AttrFunctionType ::= AttrAnnot FunctionType` (in the Supported forms, this is
+ - `AttrFunctionType ::= AttrAnnot FunctionType` (in Silk, this is
  accepted as sugar for selecting ABI variants such as `attr(abi=c) fn (...) -> ...`)
  - `TypeListOpt ::= TypeList`
  - `TypeList ::= Type (',' Type)*`
@@ -1782,11 +1780,11 @@ At a high level, the language can be structured as:
  recognizes `Option(T)` and desugars it to the same internal representation
  as `T?`. Borrowed reference types (`&T`) are now parsed in type annotations.
  Array/slice types (`T[]`, `T[N]`) are
- parsed and type-checked in the Supported forms (with element-type
+ parsed and type-checked in Silk (with element-type
  restrictions), and are part of the implemented expression grammar via array
  literals (`[a, b, c]`) and indexing (`xs[i]`). Function types
  (`fn (T, ...) -> R`) are parsed as part of the `Type` grammar, and function
- values are supported in the current lowering subset (including capturing
+ values are supported in the lowering subset (including capturing
  closures as a restricted scalar-only subset; see `Types` and
  [`Memory Model (Stack, Heap, and Moves)`](/silk/docs/language/memory-model/)).
 
@@ -1899,7 +1897,7 @@ At a high level, the language can be structured as:
  - [`match`](/silk/wiki/language/flow-match/) as a statement (arms are blocks), used for typed errors as
  specified in `Typed Errors (`error`, `panic`, and `T | ErrorType...`)`.
 
- In the Supported forms, the [`match`](/silk/wiki/language/flow-match/) statement form is restricted to a
+ In Silk, the [`match`](/silk/wiki/language/flow-match/) statement form is restricted to a
  call-expression scrutinee and the patterns listed above.
 
 - Expressions (Supported forms):
@@ -1968,7 +1966,7 @@ At a high level, the language can be structured as:
  or `string`, and `RawOpt`. It is used by unsafe pointer view casts
  like `ptr as u8[](/silk/docs/len)` (slice view) and `ptr as string(len)` (string view).
 
- - The type checker currently permits `mut <expr>` only in call arguments (and
+ - The type checker permits `mut <expr>` only in call arguments (and
  method receivers) when the corresponding parameter is declared `mut` and is:
  - a borrowed reference type (`mut r: &T`), or
  - a slice type (`mut s: T[]`).
@@ -1985,13 +1983,12 @@ At a high level, the language can be structured as:
  `if let move Some(value) = maybe { ... }`,
  `else if let move Some(value) = maybe { ... }`, and
  `while let move Some(value) = next() { ... }`.
- - The type checker currently permits `new <expr>` only when it can determine a
- concrete reference result type of the form `&Struct`. In the current
- implementation this happens either:
+ - The type checker permits `new <expr>` only when it can determine a
+ concrete reference result type of the form `&Struct`. In the implementation this happens either:
  - from an expected `&Struct` type context (for example `let x: &Frame = new
- Frame{ ... };` or as a call argument whose parameter type is `&Struct`)
+ Frame{... };` or as a call argument whose parameter type is `&Struct`)
  - from the operand itself when it names the struct type (for example `let x
- = new Frame{ ... };` or `let x = new Frame(...);`)
+ = new Frame{... };` or `let x = new Frame(...);`)
  `new` is supported only in function bodies (not in top-level `let`
  initializers).
 
@@ -2136,7 +2133,7 @@ At a high level, the language can be structured as:
  - simple function calls such as `helper()` or `util::helper(1, 2)` are
  parsed as call expressions using the `Postfix`/`CallSuffix` productions;
  the compiler supports calls to named functions, but the type checker
- and back-end currently restrict which value types can appear at call boundaries;
+ and back-end restrict which value types can appear at call boundaries;
  see ``silk` CLI` for the exact supported subset.
 
 Further expression forms (ranges, etc.) are described in other
@@ -2160,7 +2157,7 @@ As the parser and lexer are implemented, this file must be updated with:
 - notes about desugaring and how surface constructs map into the internal AST,
 - clear indication of which productions are implemented today vs. planned
  future work, so that downstream users can see both the full language
- design and the currently supported subset.
+ design and the supported subset.
 
 ## Types
 
@@ -2175,11 +2172,11 @@ This document specifies the Silk type system used by the compiler front-end and 
  in the backend (including array literals, indexing reads, and
  iterable `for` loops). Indexed assignment targets (`xs[i] = v`) are supported
  for these element types; compound index ops require numeric scalar element
- types in the Supported forms.
+ types in Silk.
  - Parameterized nominal types (monomorphized): generic `struct` and
  `interface` declarations with **type parameters**, plus applied types in
  type positions (`Name(u8)`, `Name(string)`) for those declarations.
-- Reserved intrinsics: the compiler currently exposes reserved, stdlib
+- Reserved intrinsics: the compiler exposes reserved, stdlib
  bring-up intrinsics for working with the `string` ABI (`__silk_string_ptr`,
  `__silk_string_len`, and `__silk_string_from_ptr_len`). User code should
  generally prefer the language sugar:
@@ -2192,7 +2189,7 @@ This document specifies the Silk type system used by the compiler front-end and 
  are not a stable user API.
 - Special-case: the nominal optional form `Option(T)` is accepted and desugared
  to `T?` in type annotations (it is not a general generics feature).
-- Parsed but rejected by the current checker: const parameters and integer
+- Parsed but rejected by the checker: const parameters and integer
  literal type arguments (`Foo(N: int)`, `Foo(u8, 1024)`) ([`Compiler Diagnostics`](/silk/docs/compiler/diagnostics/), `E2016`).
 - Removed builtin map type form: `map(K, V)` (`E2017`; use
  `std::map::{HashMap, TreeMap}` instead).
@@ -2201,13 +2198,13 @@ This document specifies the Silk type system used by the compiler front-end and 
  - In the current scalar-slot model ([`Structs, Impl Blocks, and Memory Layout`](/silk/docs/language/structs-impls-layout/)),
  these primitives lower to **two 8-byte slots** (`lo: u64`, `hi: u64`).
  - `f128` uses the IEEE‑754 binary128 bit pattern stored across those slots.
- - In the current backend implementation, `f128` arithmetic and some `as`
+ - In the backend implementation, `f128` arithmetic and some `as`
  casts lower to bundled runtime helper calls:
  - on `linux/x86_64`, the helpers use `__float128` and rely on libgcc
  symbols (for example `__addtf3`),
  - on targets where `long double` is an IEEE‑754 binary128 value (for
  example `linux/aarch64`), the helpers use `long double`,
- - on other targets, the helper calls are currently stubbed and will trap
+ - on other targets, the helper calls are stubbed and will trap
  if executed.
  - Diagnostics rule: `u128` / `f128` are language features, so any compiler
  rejection is an implementation gap in a specific compiler path, not a
@@ -2221,7 +2218,7 @@ This document specifies the Silk type system used by the compiler front-end and 
  i128);` binds `product` as `i128`; adding `: i128` does not change either
  checking or generated code.
 - Typed errors (`error`, `panic`, and `T | ErrorType...`) are specified in
- `Typed Errors (`error`, `panic`, and `T | ErrorType...`)`. The current compiler models typed error
+ `Typed Errors (`error`, `panic`, and `T | ErrorType...`)`. The compiler models typed error
  contracts as an effect on function return types and expressions.
  - Separately, type unions (`T1 | T2 | ...`) are supported in type annotations
  as described in `Type Unions (`T1 | T2 | ...`)`. In function declaration
@@ -2281,14 +2278,13 @@ The core categories are:
  expected (see [`Optional`](/silk/docs/language/optional/)).
 - Reference (borrow): `&T`
  - Examples: `&User`.
- - Notes: reference type; in the Supported forms, `&Struct` may appear in
+ - Notes: reference type; in Silk, `&Struct` may appear in
  parameter types and as local values when produced by `new` or by calls that
  return `&Struct`. Mutability follows the `mut` borrow contract and per-call
  aliasing rules described in [`Mutability`](/silk/docs/language/mutability/).
 - Arrays / Slices: `T[]`, `T[N]`
  - Examples: `i32[]`, `byte[32]`, `u8[1024 * 1024]`.
- - Notes: dynamic slice vs fixed length (compile‑time `N`). In the current
- parser subset, `N` may be:
+ - Notes: dynamic slice vs fixed length (compile‑time `N`). In the parser subset, `N` may be:
  - an integer literal,
  - a literal-only integer arithmetic expression using `+`, `-`, `*`, `/`,
  `%`, and parentheses,
@@ -2298,7 +2294,7 @@ The core categories are:
  scalar-slot memory model (for example primitive scalars, `string`, and
  supported `regexp`, supported non-opaque structs, and enums). See
  [`Structs, Impl Blocks, and Memory Layout`](/silk/docs/language/structs-impls-layout/) for the current scalar-slot memory
- model. In the Supported forms, fixed array lengths are limited to
+ model. In Silk, fixed array lengths are limited to
  `N <= 4096`. Indexing `xs[i]` traps when `i` is out of bounds in the
  Supported forms.
 - Range: `range`
@@ -2320,10 +2316,10 @@ The core categories are:
  - Examples: `fn(i32) -> i32`, `unsafe fn(u64) -> u8`.
  - Notes: function types are part of the type grammar and function-typed
  values are supported as function values (including capturing closures) in
- Silk currently.
+ Silk.
  The `unsafe` call effect is represented in function types. Concurrency
  disciplines (`task` / `async`) and explicit `pure` remain declaration-only
- in the Supported forms (see [`Concurrency`](/silk/docs/language/concurrency/)).
+ in Silk (see [`Concurrency`](/silk/docs/language/concurrency/)).
 - Capturing Closures:
  - Notes: capturing closures are supported as function values with an
  environment; see “Function Types and Closures” below for Supported forms
@@ -2386,7 +2382,7 @@ Import/export:
 
 ### Implicit Call-Argument Coercions
 
-In Silk currently, Silk supports a small, **opt-in** implicit
+In Silk, Silk supports a small, **opt-in** implicit
 coercion mechanism for function call arguments. This exists to keep the
 current standard library ergonomic while generics and richer overload
 systems are still evolving.
@@ -2558,7 +2554,7 @@ Notes:
 
 - This is contextual; it does not change the expression’s nominal type outside
  a `string`-expecting site.
-- This rule is currently specialized to [`std::strings::String`](/silk/docs/std/strings/).
+- This rule is specialized to [`std::strings::String`](/silk/docs/std/strings/).
 - `String.serialize()` / `String.as_string()` still describe the borrowed view
  that is being exposed, so explicit `.as_string()` is no longer required
  solely to satisfy these ordinary borrowed `string` contexts.
@@ -2577,14 +2573,14 @@ let n: int = x as int;
 ```
 
 This operator is intended for explicit, potentially lossy primitive numeric
-conversions. In the Supported forms it also supports explicit conversions via
+conversions. In Silk it also supports explicit conversions via
 [`std::interfaces::Serialize(T)`](/silk/docs/std/interfaces/) by lowering `expr as T` to `expr.serialize()`
 when the operand type provides a matching `serialize` method.
 For structured conversions, it also supports [`std::interfaces::Deserialize(S)`](/silk/docs/std/interfaces/)
 by lowering `expr as T` to `T.deserialize(expr)` when the target type provides
 a matching static `deserialize` method.
 
-The supported conversions and semantics for Silk currently are
+The supported conversions and semantics for Silk are
 specified in `Operators` (“Casts (`as`)”).
 
 Notes:
@@ -2601,7 +2597,7 @@ The compiler must:
 
 - Treat nominal types as distinct even if their field layout is identical.
 - In the full language design, support parameterized types in all contexts
- where the spec permits them. In Silk currently, **type-parameter**
+ where the spec permits them. In Silk, **type-parameter**
  generics are supported for nominal declarations (`struct` / `interface`) and
  for applied types in type positions (`Name(u8)`).
  - Const parameters and integer-literal type arguments (`Name(N: int)`,
@@ -2645,7 +2641,7 @@ Key requirements:
 - Distinguish owning vs. non-owning types in the type system.
 - Preserve aliasing and lifetime constraints so that regions, buffers, and FFI safety rules can be enforced.
 
-Current implementation notes:
+implementation notes:
 
 - `&Struct` is supported in function parameter types and as local values when
  produced by heap allocation (`new`) or by calls that return `&Struct`.
@@ -2663,7 +2659,7 @@ Current implementation notes:
 
 ### Function Types and Closures
 
-Silk currently:
+Silk :
 
 - Parses function types in type positions (most notably for `ext` declarations).
 - Implements function expressions (lambdas) in expression positions:
@@ -2672,8 +2668,7 @@ Silk currently:
  - block body `void` shorthand: `fn (x: int, y: int) { ... }` (implicit `void`)
 - Function expressions may declare `&T` parameters only when `T` is a
  single-slot scalar primitive (for example `&int` / `&bool`).
-- Function expression bodies are checked under the `pure` rules in the current
- subset. Non-capturing function expressions are inferred as `pure` function
+- Function expression bodies are checked under the `pure` rules in the supported forms. Non-capturing function expressions are inferred as `pure` function
  types and are permitted in `pure` code:
  - they may call only `pure` functions,
  - they may not mutate (`let mut`/`var`, assignment),
@@ -2686,7 +2681,7 @@ Silk currently:
  - a function expression body may reference **immutable** locals/parameters
  from an enclosing scope; those values are captured by value into a heap
  environment,
- - in the Supported forms, only **scalar** captures are supported (`int`, fixed
+ - in Silk, only **scalar** captures are supported (`int`, fixed
  width ints, `bool`, `char`, `f32`, `f64`, `Instant`, `Duration`),
  - forming captures inside `pure` code is rejected (capture environments
  allocate), but closure *values* are still checked under the `pure` rules and
@@ -2700,7 +2695,7 @@ Silk currently:
 - Discipline modifiers for function declarations (`pure` / `task` / `async` /
  `unsafe`) are implemented. In type positions, `unsafe fn (...) -> R` and
  `unsafe c_fn (...) -> R` represent the unsafe call effect; concurrency and
- explicit-purity modifiers are not type syntax in the Supported forms.
+ explicit-purity modifiers are not type syntax in Silk.
 
 #### C Function Pointers (`c_fn`)
 
@@ -2748,7 +2743,7 @@ For first-time readers, a good path is:
 
 1. `Types` (primitive types like `int`, `f64`, `bool`, `string`),
 2. this overview (what literal categories exist),
-3. the specific literal docs below (syntax, semantics, and current implementation notes).
+3. the specific literal docs below (syntax, semantics, and implementation notes).
 
 Returning readers typically want the notes near the top
 of each literal concept doc, plus the “Tests” links for runnable
@@ -2807,7 +2802,7 @@ What works end-to-end today (lexer → parser → checker → lowering → codeg
  - float literals default to `f64`, but adopt `f32`/`f64`/`f128` from context.
 - Duration literal tokens of the form `<number><unit>` (no whitespace) such as
  `500ms` and `1.5s` (specified in [`Duration Literals`](/silk/docs/language/literals-duration/)).
-- Lowering note (current IR backend subset): an unannotated local `let` binding
+- Lowering note (IR backend subset): an unannotated local `let` binding
  retains the type inferred for its initializer. In particular, arithmetic over
  explicitly widened `i128`, `u128`, or `f128` operands lowers identically with
  or without a redundant annotation on the local binding. This rule applies in
@@ -2904,7 +2899,7 @@ fn main () -> int {
 }
 ```
 
-Example: time types share an `i64`-based representation in the Supported forms
+Example: time types share an `i64`-based representation in Silk
 (``Duration` & `Instant``), so integer literals can be used as
 `Instant`/`Duration` values via context:
 
@@ -2993,7 +2988,7 @@ What works end-to-end today (lexer → parser → checker → lowering → codeg
  - embedded `\r\n` and `\r` in the literal source are normalized to `\n`,
  - `\r` escapes are normalized to `\n`.
 - Equality and ordering comparisons (`==`, `!=`, `<`, `<=`, `>`, `>=`) over
- `string` values in the Supported forms.
+ `string` values in Silk.
 - Compile-time file embedding with `#embed("path")`, text encodings
  `#embed("path", "utf8")` / `#embed("path", "utf16")`, and integer array
  encodings `#embed("path", "u8")` / `#embed("path", "u16")` /
@@ -3137,7 +3132,7 @@ fn main () -> int {
   // Control escapes.
   if "\t" != "\x09" { return 3; }
   if "\n" != "\x0A" { return 4; }
-  if "\r" != "\n" { return 5; } // `\r` is normalized to `\n` in the current subset.
+  if "\r" != "\n" { return 5; } // `\r` is normalized to `\n`.
 
   // NUL bytes are permitted; strings are length-tracked (not NUL-terminated).
   if "\0" != "\x00" { return 6; }
@@ -3254,7 +3249,7 @@ valid token sequence. Use an explicit empty pattern, for example `/(?:)/`.
 
 ### Flags
 
-The supported flag set is intentionally small in the Supported forms:
+The supported flag set is intentionally small in Silk:
 
 - `g` — global (recorded; does not change [`std::regex::matches`](/silk/docs/std/regex/) semantics)
 - `i` — ignore case
@@ -3283,7 +3278,7 @@ The type checker rejects:
 - If a literal/borrowed/foreign `regexp` is later passed to the low-level
  regex free path, the runtime ignores it safely instead of freeing arbitrary
  pointers.
-- In the Supported forms, matching is defined over the raw bytes of the input
+- In Silk, matching is defined over the raw bytes of the input
  `string`, and match indices are byte offsets.
 - Literal compilation uses the same conservative regexp compile stack budget as
  runtime [`std::regex::RegExp.compile(...)`](/silk/docs/std/regex/); excessively deep patterns are
@@ -3335,12 +3330,12 @@ What works end-to-end today (lexer → parser → checker → lowering → codeg
  - `\xNN` (exactly two hex digits)
  - `\u{...}` (1–6 hex digits)
 - Equality and inequality comparisons (`==`, `!=`) over `char` values.
-- `char` values are lowered as a `u32` scalar in the current IR backend subset.
+- `char` values are lowered as a `u32` scalar in the IR backend subset.
 
 Not implemented yet (or not specified as stable):
 
 - A dedicated diagnostic for invalid character literal spellings (most invalid
- forms currently surface as generic “unsupported expression” errors in the
+ forms surface as generic “unsupported expression” errors in the
  Supported forms).
 
 ### Surface Syntax
@@ -3482,7 +3477,7 @@ let empty_slice: i32[] = [];
  exactly `N` elements.
 - When an expected type is present and it is `T[]`, the literal’s elements are
  type-checked against `T` and the resulting value has type `T[]`.
- - In Silk currently, this slice form is lowered as a non-owning
+ - In Silk, this slice form is lowered as a non-owning
  view over a compiler-generated backing array.
  - Lifetime rules are not yet enforced for such
  slices; do not allow a slice derived from a stack-backed array literal to
@@ -3493,7 +3488,7 @@ Compiler requirements:
 - Infer element type when possible, or require explicit annotation where
  ambiguity exists.
 - Validate that all elements are convertible to the target element type.
-- Enforce current-subset restrictions on which element types are supported for
+- Enforce verification restrictions on which element types are supported for
  array lowering/codegen (see `Types` and
  [`Structs, Impl Blocks, and Memory Layout`](/silk/docs/language/structs-impls-layout/)).
 
@@ -3587,7 +3582,7 @@ struct Beep {
 
 When a struct literal omits a field, the compiler uses the field default
 expression when present; otherwise it falls back to zero-initialization in the
-current backend subset. This means the empty literal form is useful when all
+supported forms. This means the empty literal form is useful when all
 fields have defaults:
 
 ```silk
@@ -3601,8 +3596,7 @@ Important notes:
  `new` for heap allocation explicitly.
 - The parser only treats `{ ... }` as an inferred struct literal when it
  contains a struct-style initializer list (or is `{}`); blocks (`{ Stmt* }`)
- remain statement syntax (there is no general “block expression” in the current
- subset).
+ remain statement syntax (there is no general “block expression” in the supported forms).
 
 #### Default constructors (empty struct literals)
 
@@ -3637,13 +3631,13 @@ Supported forms note:
 Compiler requirements:
 
 - Enforce that field names are valid and that each field is initialized at most once.
-- Define the behavior for omitted fields (in the Supported forms, omitted fields
+- Define the behavior for omitted fields (in Silk, omitted fields
  are default-initialized).
 - Respect struct lowering/layout rules from [`Structs, Impl Blocks, and Memory Layout`](/silk/docs/language/structs-impls-layout/).
 
 #### Notes
 
-The current compiler implementation supports struct literals only for the
+The compiler implementation supports struct literals only for the
 limited struct subset described in [`Structs, Impl Blocks, and Memory Layout`](/silk/docs/language/structs-impls-layout/):
 
 - structs with 0+ fields of supported value types (scalar primitives, `string`,
@@ -3651,7 +3645,7 @@ limited struct subset described in [`Structs, Impl Blocks, and Memory Layout`](/
 - literals may omit fields:
  - omitted fields that have a field default (`field: T = <expr>`) use that
  default expression,
- - otherwise, omitted fields are **zero-initialized** in the current backend
+ - otherwise, omitted fields are **zero-initialized** in the backend
  subset,
 - no duplicate field initializers are permitted,
 - field order is not semantically significant.
@@ -3659,7 +3653,7 @@ limited struct subset described in [`Structs, Impl Blocks, and Memory Layout`](/
 Fixed-array literals infer POD struct element layouts from local values and
 struct-valued field accesses, and copy every element slot into array storage.
 
-Fixed-array elements currently exclude optional types, even when `Some(value)`
+Fixed-array elements exclude optional types, even when `Some(value)`
 can infer the element type. Use a supported struct element with an optional
 field when aggregate storage is needed. This is an array-layout limitation,
 not a requirement to annotate `Some` constructors.
@@ -3813,7 +3807,7 @@ compiler must implement.
 
 ### Notes
 
-Implemented end-to-end in the current compiler:
+Implemented end-to-end in the compiler:
 
 - `if` / `else` as statement forms (``if` / `else``)
 - [`loop`](/silk/wiki/language/flow-loop/) loops (``loop` Loop`)
@@ -4044,7 +4038,7 @@ fn main () -> int {
 }
 ```
 
-Supported patterns in the Supported forms (same as [`match`](/silk/wiki/language/flow-match/) expressions; see
+Supported patterns in Silk (same as [`match`](/silk/wiki/language/flow-match/) expressions; see
 ``match` Expression (and Statement)`):
 
 - optionals: `None`, `Some(name)`, `Some(_)`
@@ -4587,7 +4581,7 @@ fn main () -> int {
  end-to-end.
 - `continue;` outside a loop is rejected (`E2008`).
 
-Example that uses `continue` in the Supported forms:
+Example that uses `continue` in Silk:
 
 - [`examples/`](https://github.com/oro-computer/silk/tree/master/examples/)
 - [`examples/`](https://github.com/oro-computer/silk/tree/master/examples/)
@@ -4698,7 +4692,7 @@ Key ideas:
 
 - A [`match`](/silk/wiki/language/flow-match/) selects one of several branches based on a scrutinee expression.
 - The full language design includes richer patterns and arm guards, but the
- current shipped subset documented here does not implement `if` guards in any
+ shipped subset documented here does not implement `if` guards in any
  [`match`](/silk/wiki/language/flow-match/) form yet.
 - [`match`](/silk/wiki/language/flow-match/) is an expression; all arms must be compatible in type.
 
@@ -4710,11 +4704,11 @@ The compiler must:
 ### Surface Syntax
 
 The full language design includes rich pattern matching, guards, and matching
-over many scrutinee types. The current compiler implementation supports only a
+over many scrutinee types. The compiler implementation supports only a
 narrow, explicitly documented subset so we can validate end-to-end lowering and
 code generation.
 
-In the initial subset, [`match`](/silk/wiki/language/flow-match/) is accepted as an *expression* of the form:
+In Silk, [`match`](/silk/wiki/language/flow-match/) is accepted as an *expression* of the form:
 
 ```silk
 match <scrutinee> {
@@ -4726,8 +4720,8 @@ match <scrutinee> {
 Notes:
 
 - Arms are separated by commas; a trailing comma is permitted.
-- In the initial subset, arm bodies are expressions (not blocks).
-- In the current compiler, expression-form [`match`](/silk/wiki/language/flow-match/) is implemented for:
+- In Silk, arm bodies are expressions (not blocks).
+- In the compiler, expression-form [`match`](/silk/wiki/language/flow-match/) is implemented for:
  - optionals,
  - primitive integers,
  - primitive booleans,
@@ -4735,12 +4729,12 @@ Notes:
  - enums,
  - type unions,
  - and recoverable `Result`-style values.
-- Guard clauses of the form `pattern if cond => ...` are currently unsupported
+- Guard clauses of the form `pattern if cond => ...` are unsupported
  across all of those subsets.
 
 #### Optional Matching (`T?`)
 
-For optionals, the Supported forms is:
+For optionals, the syntax is:
 
 - The scrutinee expression must have optional type `T?` (`Option(T)`), where `T`
  is a payload type supported by the backend.
@@ -4770,12 +4764,11 @@ fn main () -> int {
 The compiler also supports a small [`match`](/silk/wiki/language/flow-match/) subset for integer-like primitive
 scrutinees.
 
-Notes: 
+Notes:
 
-- The scrutinee expression must have a primitive integer type in the current
- backend subset (`int`, `i64`, `u64`, and the fixed-width integer primitives).
+- The scrutinee expression must have a primitive integer type in the supported forms (`int`, `i64`, `u64`, and the fixed-width integer primitives).
 - Patterns are restricted to:
- - integer literals (`0`, `1`, `123`, `0xFF`, ...), and
+ - integer literals (`0`, `1`, `123`, `0xFF`,...), and
  - a wildcard `_` arm.
 - The match must be exhaustive:
  - when the scrutinee is not a known integer literal, there must be exactly one
@@ -4890,7 +4883,7 @@ fn main () -> int {
 The language design supports matching over user-defined `enum` types
 (``enum` Types`).
 
-Notes: 
+Notes:
 
 - The scrutinee expression must have an enum type `E` (including an
  instantiated generic enum in module-set builds).
@@ -4914,7 +4907,7 @@ The same typed-binder arm syntax is also accepted for concrete struct values in
 the backend when the checker can select exactly one applicable
 arm statically.
 
-Notes: 
+Notes:
 
 - For a union scrutinee, the scrutinee expression must have a union type
  `T1 | ... | Tn`.
@@ -4968,7 +4961,7 @@ fn main () -> int {
  that arm and has the annotated type `T`; `_: T` checks the same type contract
  without introducing a binder.
 - The result type of a [`match`](/silk/wiki/language/flow-match/) expression is the common type of its arms; all
- arms must type-check to the same result type in the initial subset.
+ arms must type-check to the same result type in Silk.
 - Pattern binders for ownership-tracked payloads are owners, not borrowed
  aliases. When an arm consumes such a binder as its result, including by
  wrapping it in another enum or optional constructor, ownership transfers to
@@ -5015,7 +5008,7 @@ An optional trailing semicolon is permitted after the closing brace:
 match (x) { _ => { } };
 ```
 
-In Silk currently, the statement form is supported for:
+In Silk, the statement form is supported for:
 
 - ordinary value matching (no typed-error contract), and
 - typed error handling (`Typed Errors (`error`, `panic`, and `T | ErrorType...`)`).
@@ -5093,7 +5086,7 @@ Key semantic rule (Terminal Arm Rule):
 
 Implementation
 
-- The compiler currently implements [`match`](/silk/wiki/language/flow-match/) as an expression for the documented
+- The compiler implements [`match`](/silk/wiki/language/flow-match/) as an expression for the documented
  Supported forms:
  - optionals (`T?`),
  - primitive integers,
@@ -5113,7 +5106,7 @@ Rule because it is not a `T | ...` typed-error expression.
 #### Result Matching (`Ok(...)` / `Err(...)`)
 
 The [`match`](/silk/wiki/language/flow-match/) expression also supports a small subset for
-recoverable “success or error” values. In the initial subset, this includes:
+recoverable “success or error” values. In Silk, this includes:
 
 - [`std::result::Result(T, E)`](/silk/docs/std/result/) (an `enum` with `Ok(T)` and `Err(E)` variants), and
 - “Result-like” structs of the form `{ value: T?, err: E? }`.
@@ -5237,11 +5230,11 @@ struct Point {
 When a struct literal omits a field, the compiler initializes the field from its
 default expression.
 
-In Silk currently, a field default must be a compile-time
+In Silk, a field default must be a compile-time
 evaluable expression. This is broader than the current default-function-argument
 rule.
 
-Supported forms currently include:
+Supported forms include:
 
 - literals,
 - `const` bindings,
@@ -5249,7 +5242,7 @@ Supported forms currently include:
 - struct literals, and
 - field access over compile-time values.
 
-Current limits:
+limits:
 
 - `new` is still rejected,
 - ordinary runtime helper calls are rejected, and
@@ -5310,7 +5303,7 @@ Type checking rules (Supported forms):
 
 Notes:
 
-- `extends` does not imply implicit subtyping in Silk currently:
+- `extends` does not imply implicit subtyping in Silk :
  there is no implicit coercion from `Derived` to `Base` (or `&Derived` to
  `&Base`) yet.
 
@@ -5350,7 +5343,7 @@ calling the corresponding destruction/free function provided by the foreign
 library.
 
 Using an opaque handle after it has been destroyed is **undefined behavior**.
-The compiler does not currently enforce this at compile time.
+The compiler does not enforce this at compile time.
 
 ##### ABI and Lowering
 
@@ -5422,11 +5415,11 @@ though the intended C-like packed layout would be 8 bytes.
 #### ABI and Code Generation
 
 The Silk language design includes full support for user-defined structs, nested
-aggregates, and FFI-safe ABI mapping. The current compiler/backend
+aggregates, and FFI-safe ABI mapping. The compiler/backend
 implementation supports only a narrow, explicitly documented subset:
 
 - Only "plain" structs with **0+ fields** are supported by codegen.
- - Empty structs (`struct Empty {}`) are currently represented as a single
+ - Empty structs (`struct Empty {}`) are represented as a single
  placeholder `u64` slot in the scalar-slot model.
 - Fields may be:
  - scalar primitive types (`bool`, fixed-width integers, `int`, `char`,
@@ -5556,7 +5549,7 @@ Rules:
  See `Interfaces`.
 - The method named `constructor` is treated specially:
  - it is only meaningful for `struct` types (it backs `new Type(...)`); enums
- do not support `constructor` methods in the Supported forms,
+ do not support `constructor` methods in Silk,
  - it is `public` by default,
  - when explicitly marked `private`, it is callable only within the defining
  `impl { ... }` block,
@@ -5670,8 +5663,7 @@ What works end-to-end today (parser → checker → lowering → codegen):
  use shorthand (`A`, `Data(x)`) when the scrutinee type is the enum,
  - binders may be names or `_`,
  - no guards (`if ...`) yet,
- - and expression-form matches must still be *exhaustive* in the current
- subset:
+ - and expression-form matches must still be *exhaustive* in the supported forms:
  - either by explicit arm coverage for every variant,
  - or by a single final wildcard `_` arm that covers all remaining
  unmatched variants.
@@ -5704,7 +5696,7 @@ What works end-to-end today (parser → checker → lowering → codegen):
  - instance methods are callable as `value.method(...)` when the first
  parameter is a receiver (`self: &EnumName` / `mut self: &EnumName`),
  - the special `constructor` method used by `new Type(...)` is for `struct`
- types; enums do not support `constructor` methods in the Supported forms.
+ types; enums do not support `constructor` methods in Silk.
 
 Not implemented yet (or not yet stable/documented):
 
@@ -5712,8 +5704,8 @@ Not implemented yet (or not yet stable/documented):
 - A stable ABI story for passing/returning enums across the C99 boundary (do
  not assume an enum layout until it is specified in `C99 ABI and `libsilk.a``).
 
-When the compiler rejects an enum construct in the Supported forms, the most
-common error is `E2002` (“unsupported expression in the Supported forms”). Type
+When the compiler rejects an enum construct in Silk, the most
+common error is `E2002` (“unsupported expression in Silk”). Type
 mismatches inside enum constructors or match arms are `E2001` (“type mismatch”).
 
 ### Surface Syntax
@@ -5761,7 +5753,7 @@ fn main () -> int {
 
 Notes:
 
-- `E::A()` and `A()` are invalid in the Supported forms (unit variants are not callable).
+- `E::A()` and `A()` are invalid in Silk (unit variants are not callable).
 - A unit variant is an ordinary value of its enum type. It may initialize a
  binding or aggregate field, be returned or passed to a function, and be
  assigned to an existing mutable binding or struct field. These value uses
@@ -5772,7 +5764,7 @@ Notes:
 When a named enum declares exactly two variants, the `??` operator may be used
 as a compact success/fallback form.
 
-Rules in the Supported forms:
+Rules in Silk:
 
 - declaration order matters: the first declared variant is the “success” case,
  and the second declared variant triggers the fallback,
@@ -5783,7 +5775,7 @@ Rules in the Supported forms:
  instead,
 - the second variant may be unit or may carry payloads; its payload is ignored
  by the `??` form and the fallback expression runs.
-- the right-hand side is still an expression in the current grammar; terminal
+- the right-hand side is still an expression in the grammar; terminal
  statements such as `return`, `break`, and `continue` are not accepted there
  yet.
 
@@ -5832,11 +5824,11 @@ fn main () -> int {
 
 Notes:
 
-- `E::Data` by itself is not a value in the Supported forms (tuple variants must
+- `E::Data` by itself is not a value in Silk (tuple variants must
  be constructed with `(...)`).
 - If a tuple-variant constructor argument has the wrong type, you get `E2001`.
 - If the argument count does not match the variant definition, the compiler
- currently rejects the construct with `E2002`.
+ rejects the construct with `E2002`.
 
 #### Generic enums (instantiation via alias)
 
@@ -5902,7 +5894,7 @@ Binders:
 
 #### Exhaustiveness
 
-In the Supported forms, enum exhaustiveness is split by [`match`](/silk/wiki/language/flow-match/) form:
+In Silk, enum exhaustiveness is split by [`match`](/silk/wiki/language/flow-match/) form:
 
 - Expression form:
  - either there is exactly one arm per enum variant,
@@ -5919,7 +5911,7 @@ In the Supported forms, enum exhaustiveness is split by [`match`](/silk/wiki/lan
 
 If a match is not exhaustive:
 
-- expression form currently reports `E2002`, and
+- expression form reports `E2002`, and
 - statement form without full coverage uses the checker’s missing-arm path when
  it reaches that analysis.
 
@@ -6042,7 +6034,7 @@ ABI mature.
 ### Common Pitfalls
 
 - **Forgetting parentheses**: `E::Data(7)` is valid, but `E::Data` is not a value
- in the Supported forms (error `E2002`).
+ in Silk (error `E2002`).
 - **Calling a unit variant**: `E::A` is a value; `E::A()` is rejected (`E2002`).
 - **Wrong binder count**: `E::Pair(a)` does not match `Pair(int, int)` (`E2002`).
 - **Non-exhaustive matches**: you must list every variant (error `E2002` in the
@@ -6298,7 +6290,7 @@ Conformance rules:
  - `export async task fn m (...) -> R` is treated as `m(...) -> Promise(Task(R))`.
  This allows module interfaces to express async/task entrypoints by writing the
  appropriate handle type in the interface method result.
-- In Silk currently, module conformance is checked against the
+- In Silk, module conformance is checked against the
  module’s **exported** functions (written as `export fn ...`), since those are
  the module members that are visible across module boundaries.
 
@@ -6313,7 +6305,7 @@ Generic module conformance:
 
 
 
-The current compiler now supports interface-typed runtime values without a
+The compiler now supports interface-typed runtime values without a
 separate boxed/vtable runtime. Instead, the native compiler resolves an
 interface value type to a closed-world union of all known concrete conformers
 in the current compilation set.
@@ -6331,7 +6323,7 @@ let xs: Object[] = [
 ];
 ```
 
-In the current implementation, `Object[]` is lowered as an array whose element
+In Silk, `Object[]` is lowered as an array whose element
 type is the union of the known `Object` conformers (`Foo | Bar` in this
 example). A method call like `value.as_string()` on an interface-typed runtime
 value is rewritten by the checker into an ordinary [`match`](/silk/wiki/language/flow-match/) dispatch over that
@@ -6343,7 +6335,7 @@ as `value: Object => ...` accepts the scrutinee. This concrete form is selected
 statically and therefore also covers single-conformer cases without requiring a
 preexisting interface-typed union value.
 
-This means the current runtime interface subset supports:
+This means the runtime interface subset supports:
 
 - interface-typed local bindings, function parameters, borrowed function
  parameters (`&Interface`), and array elements,
@@ -6359,7 +6351,7 @@ This means the current runtime interface subset supports:
  [`std::interfaces::Drop`](/silk/docs/std/interfaces/) for deterministic cleanup; see
  [`std::interfaces`](/silk/docs/std/interfaces/) and [`Memory Model (Stack, Heap, and Moves)`](/silk/docs/language/memory-model/)).
 
-Current limits:
+limits:
 
 - This is a closed-world compilation strategy, not an open-world trait-object
  ABI. The conformer set is computed from the known program/package being
@@ -6367,7 +6359,7 @@ Current limits:
 - The runtime representation of an interface-typed value therefore depends on
  that conformer set. If the set of known conformers changes, the lowered
  runtime shape can change too.
-- The current implementation does not introduce a general boxed interface
+- The implementation does not introduce a general boxed interface
  object or vtable layout.
 - There is no language-level guarantee today that an ordinary interface type
  such as `Object` has one stable binary layout that can be passed unchanged
@@ -6377,13 +6369,13 @@ Current limits:
  conformer to an already-built interface-typed runtime boundary without
  recompiling the consumer too, because the consumer’s lowered union shape was
  chosen from the closed world it already knew about.
-- Runtime interface values currently depend on the existing union-value backend,
+- Runtime interface values depend on the existing union-value backend,
  so they are supported where the resulting conformer union is representable by
- Silk currently.
+ Silk.
 
 #### Closed-world compilation versus open-world ABI
 
-The current compiler strategy is:
+The compiler strategy is:
 
 - source-level interface declarations and `impl ... as ...` conformance,
 - compile-time discovery of the conformers that are present in the current
@@ -6392,7 +6384,7 @@ The current compiler strategy is:
 - and lowering interface method calls to ordinary [`match`](/silk/wiki/language/flow-match/) dispatch over that
  union.
 
-The current compiler does **not** promise:
+The compiler does **not** promise:
 
 - a heap-boxed trait object,
 - a stable `(data pointer, vtable pointer)` object model,
@@ -6464,7 +6456,7 @@ extended as the compiler’s resolver and linker mature.
 
 Not implemented yet:
 
-- Bulk re-exports (“export from ...”) and forwarding of export surfaces.
+- Bulk re-exports (“export from...”) and forwarding of export surfaces.
 - A stable, fully specified “package build” system outside the current CLI/module-set
  model (see `Package Manifests (`silk.toml`)` for current manifest support).
 
@@ -6590,7 +6582,7 @@ Rules :
  - `impl User { ... }`, `new User()`, `User{ ... }`, and `type Alias = User`
  resolve `User` to the current inline module before falling back outward.
  - other inline-module declarations still require explicit `::` qualification
- in Silk currently.
+ in Silk.
 - `export module Name { ... }` exports the namespace:
  - exported declarations inside it become part of the containing package’s
  export surface with their names prefixed by `Name::` (for example
@@ -6647,7 +6639,7 @@ Rules:
 - `import` declarations identify dependencies and bring exported symbols
  from the imported package into scope in the importing module, subject to
  the visibility rules below.
-- Currently:
+- :
  - importing a package makes its exported `let` bindings with explicit
  type annotations visible as ordinary, unqualified names in the
  importing module (for example, `import util;` followed by `answer`
@@ -6658,7 +6650,7 @@ Rules:
  (`util::answer`) forms are accepted for now, but the qualified form
  reflects the intended package-namespaced style,
  - exported functions (`export fn`) are callable across packages for the
- compiler’s current backend subset:
+ compiler’s supported forms:
  - within a package, top-level functions form a shared namespace across
  all modules in that package (so functions in one module may call
  functions defined in another module of the same package),
@@ -6668,8 +6660,7 @@ Rules:
  are accepted initially for imported exports, matching the current
  constant-import behavior, though the qualified form reflects the
  intended package-namespaced style,
- - this callable subset is limited to the compiler’s current
- code generation subset (supported parameters/results, direct calls, and
+ - this callable subset is limited to the compiler’s code generation subset (supported parameters/results, direct calls, and
  structured control flow supported by the IR→ELF backend on
  `linux/x86_64`),
  - struct type names (`struct` declarations) from imported packages are visible in the importing module for the supported `struct` subset:
@@ -6993,7 +6984,7 @@ import { StringBuilder, write_u8 as writeByte } from "./runtime.slk";
 
 Notes:
 
-- There is no combined `import foo, { bar } from "...";` form in the current grammar.
+- There is no combined `import foo, { bar } from "...";` form in the grammar.
  Use separate `import` declarations.
 - File specifiers should include the `.slk` extension explicitly. `std/...`
  strings are package specifiers rather than file paths.
@@ -7044,7 +7035,7 @@ Exported names for named imports:
  - exported values: `export fn`, named `export default fn`, `export let`, and
  exported `ext` bindings, and
  - type names: `struct`, `enum`, `error`, and `interface` declarations.
- In Silk currently, type exports are recorded but not fully
+ In Silk, type exports are recorded but not fully
  enforced for all type declarations; loading a module into the module set
  makes its type declarations available for type checking when that module’s
  package is imported (and for some fully-qualified uses in monomorphized
@@ -7213,7 +7204,7 @@ Rules:
  will be specified and implemented alongside the package graph in
  [`Compiler Architecture`](/silk/docs/compiler/architecture/).
 
-Currently, most type names are treated as visible across
+Most type names are treated as visible across
 module boundaries once the relevant module(s) are loaded into the module set.
 The `export` modifier is still recorded on type declarations so the
 package/export model can be tightened later without changing source.
@@ -7304,12 +7295,12 @@ Rules :
  - The entry may rename the exported name: `export { localName as ExportedName };`.
 - Re-exported names are part of the module/package export surface, so other
  modules may import them via `import { Name } from "./barrel.slk";`.
-- Currently, `export { ... }` supports values and exported
+-, `export { ... }` supports values and exported
  Formal Silk theories (`theory` declarations). It does not export type names.
 
 ### Notes
 
-The current compiler front-end:
+The compiler front-end:
 
 - parses `package` declarations into the AST,
 - parses `import` declarations into the AST,
@@ -7358,7 +7349,7 @@ export tables:
  prototype/definition pairing described above (`export fn name(...) -> T;` +
  `export fn name(...) -> T { ... }`), which is accepted only when the
  signatures match,
-- these export tables are currently used only for consistency checks; the
+- these export tables are used only for consistency checks; the
  type checker does not yet use them for cross-package name resolution.
 
 Future work (tracked in `the implementation plan`) will:
@@ -7414,7 +7405,7 @@ Implementation
  which is desugared into the same internal optional representation as
  `T?`.
  - For example, the following is valid today and type-checks successfully
- (note that the current compiler requires `let` initializers; see
+ (note that the compiler requires `let` initializers; see
  [`Compiler Diagnostics`](/silk/docs/compiler/diagnostics/), `E2015`):
 
     ```silk
@@ -7425,14 +7416,14 @@ Implementation
     }
     ```
 
-- The current `linux/x86_64` IR→ELF backend subset now supports a first slice
+- The `linux/x86_64` IR→ELF backend subset now supports a first slice
  of optional *values* for a subset of payload types:
  - construct optionals via `None` and `Some(value)`,
  - access fields of optional structs via optional chaining
  (`opt?.field`, producing a `FieldType?` value),
  - call methods on optional structs via optional chaining
  (`opt?.method(args)`, producing a `ResultType?` value),
- - use nested optionals (`T??`) for a subset of payloads in the current backend
+ - use nested optionals (`T??`) for a subset of payloads in the backend
  (see below),
  - compare supported optionals via `==` / `!=` (tag + payload equality; nested
  optionals compare recursively),
@@ -7447,7 +7438,7 @@ Implementation
 
  - scalars (`bool`, `char`, `f32`, `f64`, `int`, and fixed-width integers),
  - `string` (lowered as `{ ptr: u64, len: i64 }`),
- - enums (tagged unions) in the current enum backend subset (lowered as `(u64 tag, payload_0, payload_1, ...)`),
+ - enums (tagged unions) in the enum backend subset (lowered as `(u64 tag, payload_0, payload_1, ...)`),
  - and the supported `struct` subset (0+ fields of supported value types,
  including nested structs and optionals; see [`Structs, Impl Blocks, and Memory Layout`](/silk/docs/language/structs-impls-layout/)).
 
@@ -7455,7 +7446,7 @@ Implementation
  followed by the payload scalars: `(Bool tag, payload0, payload1, ...)` where
  `tag=0` means `None` and `tag=1` means `Some(...)`. The payload scalar slots
  follow the same lowering rules as the underlying non-optional type (1 scalar
- for scalar payloads, 2 scalars for `string`, N scalars for the current `struct`
+ for scalar payloads, 2 scalars for `string`, N scalars for the `struct`
  subset, and N scalars for enums (including the enum’s own `u64` tag slot).
 
  Nested optionals (`T??`) are supported in this backend subset for the same
@@ -7487,8 +7478,7 @@ Implementation
  as in `opt?.optional_field`, and optional indexing remain unsupported),
  - and richer optional forms beyond the backend.
 
-Note: optional payload equality (`==` / `!=`) is still limited in the current
-backend subset; comparisons against `None` are supported broadly, but full
+Note: optional payload equality (`==` / `!=`) is still limited in the supported forms; comparisons against `None` are supported broadly, but full
 payload equality for all optional payload kinds (notably optional-of-enum) is
 still evolving.
 
@@ -7827,7 +7817,7 @@ Runtime behavior :
 
 Notes:
 
-- Failed assertions are currently isolated by the `silk test` runner (each
+- Failed assertions are isolated by the `silk test` runner (each
  test runs in its own process). Future work may allow reporting failed
  assertions without process isolation (for example by lowering `assert` to a
  typed error in test contexts).
@@ -7901,8 +7891,7 @@ Rules:
 
 - `error Name { ... }` declares a nominal, struct-like type that represents an
  unrecoverable logic bug / contract violation.
-- An `error` declaration has the same field rules as `struct` in the current
- compiler subset (scalar fields; see
+- An `error` declaration has the same field rules as `struct` in the supported forms (scalar fields; see
  [`Structs, Impl Blocks, and Memory Layout`](/silk/docs/language/structs-impls-layout/)).
 - An `error` type may also be used as data (returned, stored, logged) when it is
  *not* part of a `T | ...` error contract.
@@ -7910,7 +7899,7 @@ Rules:
 Implementation
 
 - The compiler treats `error` as a distinct nominal type category (separate from
- `struct`) but reuses the same field/layout rules in the Supported forms.
+ `struct`) but reuses the same field/layout rules in Silk.
 
 ### Error-Producing Function Signatures (`T | ErrorType...`)
 
@@ -7944,7 +7933,7 @@ Rules:
 
 Implementation notes:
 
-- The current compiler models typed errors as a distinct “error set” attached to
+- The compiler models typed errors as a distinct “error set” attached to
  the function signature and to expressions that may `panic`.
 - The success type is still a normal Silk type (including optionals).
 
@@ -7971,7 +7960,7 @@ Rules:
 
 Implementation notes:
 
-- `panic` is a statement (not an expression) in Silk currently.
+- `panic` is a statement (not an expression) in Silk.
 
 ### Propagating Typed Errors (`?`)
 
@@ -8004,14 +7993,13 @@ Rules:
 
 Implementation notes:
 
-- In the current compiler, `call()?` is lowered as “call + tag dispatch; on
+- In the compiler, `call()?` is lowered as “call + tag dispatch; on
  error return the appropriate error payload; on success yield the value”,
  using the same encoding as the [`match`](/silk/wiki/language/flow-match/) statement lowering.
 
 #### Async Calls and `await`
 
-Typed-error propagation already composes with async calls in the current
-subset, but the fallible expression is still the async **call** rather than the
+Typed-error propagation already composes with async calls in the supported forms, but the fallible expression is still the async **call** rather than the
 `await` operator.
 
 For example:
@@ -8026,7 +8014,7 @@ async fn open_value () -> int | OpenFailed {
 }
 ```
 
-In the Supported forms:
+In Silk:
 
 - `open_value()` is treated as an error-producing call whose success value is
  `Promise(int)`.
@@ -8096,7 +8084,7 @@ Implementation notes:
  (`prctl(PR_SET_DUMPABLE, 0, 0, 0, 0)`) before calling `abort()` to keep abort fast,
  - on backends/targets where `abort()` is unavailable, it is lowered to the
  backend’s `Trap` primitive.
-- `std::halt()` and `std::reboot()` are currently lowered to `Trap` in the
+- `std::halt()` and `std::reboot()` are lowered to `Trap` in the
  native backend subset.
 
 This rule is intentionally *context-dependent*: it is triggered by the error
@@ -8141,12 +8129,12 @@ The Terminal Arm Rule does **not** apply in this form because the scrutinee is
 not a `T | ErrorType...` typed-error expression; the error is a normal returned
 value.
 
-Runtime invariant (struct form, current backend): exactly one of `value` and
+Runtime invariant (struct form, backend): exactly one of `value` and
 `err` must be `Some(...)`. If the invariant is broken, execution traps.
 
 Implementation notes:
 
-- The current compiler supports a match subset for optionals as an
+- The compiler supports a match subset for optionals as an
  *expression* (`match x { None => expr, Some(v) => expr }`).
 - The [`match`](/silk/wiki/language/flow-match/) expression also supports `Ok(...)` / `Err(...)` patterns for
  `Result` values (see ``match` Expression (and Statement)`).
@@ -8161,7 +8149,7 @@ Implementation notes:
 - `pure fn` may not have a `|` in its return type.
 - `pure fn` may not contain `panic` statements.
 
-The checker enforces these rules in Silk currently (see
+The checker enforces these rules in Silk (see
 [`Compiler Diagnostics`](/silk/docs/compiler/diagnostics/)).
 
 #### `ext` boundary
@@ -8174,9 +8162,8 @@ typed errors into:
 - explicit error structs/enums,
 - or a terminal action appropriate for the platform.
 
-the current compiler rejects `ext` declarations whose function types use
-`|` (and rejects exported C ABI surfaces with `|`) in the current
-implementation.
+the compiler rejects `ext` declarations whose function types use
+`|` (and rejects exported C ABI surfaces with `|`) in the implementation.
 
 ### Related proposals
 
@@ -8288,9 +8275,11 @@ The compiler must:
  - disallow patterns that would lead to data races,
  - ensure that aliasing and lifetime rules are respected when mutation is allowed.
 
-### Current Implementation Restrictions
+<span id="current-implementation-restrictions"></span>
 
-Silk currently implements:
+### Implementation Restrictions
+
+Silk implements:
 
 - Local `let mut` bindings, including assignment and numeric compound assignment.
 - `mut` value parameters (`fn inc(mut x: int) { x = x + 1; }`) as a callee-local
@@ -8310,18 +8299,18 @@ Silk currently implements:
 - Local borrowed references (`&T`) as first-class values:
  - via the borrow operator `&expr` on borrowable lvalues (e.g. `&pair`, `&obj.field`, `&x`), and
  - via implicit borrow coercions in contexts that expect `&T`
- (currently implemented for `&Struct`; for example `let r: &Pair = pair;`).
+ (implemented for `&Struct`; for example `let r: &Pair = pair;`).
  These borrows are checked with conservative **lexical lifetime** rules (they
  may not escape the scope of the borrowed stack storage).
 - Local bindings of `&Struct` values that originate from heap allocation (`new`)
  or from calls that return `&Struct`:
- - these `&Struct` values are refcounted in the Supported forms,
+ - these `&Struct` values are refcounted in Silk,
  - copying a `&Struct` binding (e.g. `let g: &File = f;`) creates an alias to
  the same underlying heap allocation and increments the refcount.
 
 ### Borrow Safety Rules
 
-Borrowed references (`&T`) in Silk currently are safe-by-default
+Borrowed references (`&T`) in Silk are safe-by-default
 and, for now, use conservative **lexical lifetime** checks:
 
 - Borrowed references can be created and stored as local values (see above).
@@ -8377,7 +8366,7 @@ are first bound to locals and then passed by name).
 When borrowing a range from an existing slice binding (for example `s: T[]`),
 the checker interprets `&s[start..end]` as a subrange of the underlying base
 (offset by `s`’s known bounds) for the purposes of overlap checks. This
-disjointness reasoning is currently limited to integer-literal bounds and to
+disjointness reasoning is limited to integer-literal bounds and to
 slice bindings whose own bounds are known.
 
 For `&Struct` reference-typed local bindings and slice-typed (`T[]`) local
@@ -8437,7 +8426,7 @@ rules.
 This document specifies Silk’s intended memory model: how values are allocated,
 passed, and how (future) heap-managed values interact with the type system.
 
-Silk currently implements a
+Silk implements a
 minimal heap model for `new` on `linux/x86_64` and a small lexical
 move/cleanup model for droppable values:
 
@@ -8448,7 +8437,7 @@ move/cleanup model for droppable values:
 
 Regions and a richer move/borrow model remain design-in-progress. See
 [`Regions`](/silk/docs/language/regions/), [`Borrow Checking (Static Alias and Lifetime Safety)`](/silk/docs/language/borrow-checker/), and `the implementation status`
-for current scope.
+for scope.
 
 ### Goals
 
@@ -8491,7 +8480,7 @@ Rule: values created without `new` are stack values by default.
  request consuming pattern binding.
 - Lifetime is lexical (ends when the scope ends).
 
-This aligns with Silk currently, which is value-oriented and does
+This aligns with Silk, which is value-oriented and does
 not implement a general heap allocation model.
 
 #### Heap allocation (`new`) and boxed values
@@ -8503,7 +8492,7 @@ heap and are represented as an `&Struct` reference in user code.
 - The underlying allocation’s lifetime is managed by compiler-inserted reference
  counting (RC) for values originating from `new`.
 
-Important: this is currently an internal Silk-managed heap for Silk code, not an
+Important: this is an internal Silk-managed heap for Silk code, not an
 FFI pointer model. The compiler does not permit `&Struct` for
 non-opaque structs in `ext` signatures; only `&Opaque` handles may cross the
 FFI boundary (see [`Structs, Impl Blocks, and Memory Layout`](/silk/docs/language/structs-impls-layout/) and
@@ -8512,7 +8501,7 @@ FFI boundary (see [`Structs, Impl Blocks, and Memory Layout`](/silk/docs/languag
 ##### Thread safety and `task` boundaries
 
 `new` produces an `&Struct` reference whose lifetime is managed by
-compiler-inserted reference counting (RC). In the Supported forms, RC retain and
+compiler-inserted reference counting (RC). In Silk, RC retain and
 release operations are not atomic, so sharing such references across OS threads
 is unsafe.
 
@@ -8547,12 +8536,12 @@ does not upgrade ordinary compiler-managed `new` RC to atomic RC.
 ##### Notes
 
 - `new` is supported only in function bodies (top-level `let` initializers
- cannot contain `new` in the Supported forms).
+ cannot contain `new` in Silk).
 - `new` is supported only when the checker can determine a concrete reference
- result type of the form `&Struct`. In the Supported forms, this happens
+ result type of the form `&Struct`. In Silk, this happens
  in two ways:
  - from an expected type context `&Struct` (for example `let x: &Frame = new
- Frame{ ... };` or as a call argument where the parameter type is `&Struct`)
+ Frame{... };` or as a call argument where the parameter type is `&Struct`)
  - from the `new` operand itself when it names a struct type (for example
  `let x = new Frame{ ... };` or `let x = new Frame(...);`), which allows
  `let` bindings to infer `&Frame` without an explicit annotation
@@ -8569,7 +8558,7 @@ does not upgrade ordinary compiler-managed `new` RC to atomic RC.
 
 ##### Region-backed allocation (`with` + `region`)
 
-In the Supported forms, `new` may also allocate from a region when an active
+In Silk, `new` may also allocate from a region when an active
 region context is established with `with` (see [`Regions`](/silk/docs/language/regions/)).
 
 - Inside `with <region> { ... }`, `new` allocates from the region’s backing
@@ -8593,7 +8582,7 @@ region context is established with `with` (see [`Regions`](/silk/docs/language/r
 
 ### Destructors (`Drop`)
 
-In Silk currently, Silk supports deterministic cleanup for
+In Silk, Silk supports deterministic cleanup for
 resource-owning `struct` values via [`std::interfaces::Drop`](/silk/docs/std/interfaces/).
 
 A `struct` type is considered “droppable” when it provides a method with this
@@ -8613,7 +8602,7 @@ Automatic invocation :
  fallthrough, `break`, and `continue`).
 - **Return:** on `return`, the compiler drops all in-scope droppable bindings
  except any value moved into the return result (for example `return value;`
- and `return Some(value);` treat `value` as moved in the Supported forms).
+ and `return Some(value);` treat `value` as moved in Silk).
 - **Overwrite:** assigning to an existing value drops the old value before the
  new value is copied in.
 - **Field take and reinitialization:** moving an ownership-tracked direct field
@@ -8689,7 +8678,7 @@ Environment allocation and lifetime (Supported forms):
 Limitations:
 
 - Capturing non-scalar values (including `string`, structs, arrays/slices,
- optionals, and `Drop` types) is rejected in the Supported forms.
+ optionals, and `Drop` types) is rejected in Silk.
 - Captures are immutable snapshots; the Supported forms does not support
  capturing by reference or mutating captured state.
 
@@ -8698,14 +8687,14 @@ Limitations:
 - Borrow checking is intended to be a compile-time property in the safe subset:
  invalid borrows should be rejected statically.
 - See [`Mutability`](/silk/docs/language/mutability/) for the current implemented borrow rules
- (call-scoped aliasing checks for `&T` parameters in the Supported forms).
+ (call-scoped aliasing checks for `&T` parameters in Silk).
 - See [`Borrow Checking (Static Alias and Lifetime Safety)`](/silk/docs/language/borrow-checker/) for the broader planned borrow checker.
 
 ## Borrow Checking (Static Alias and Lifetime Safety)
 
 This document specifies Silk’s intended borrow-checking model for references.
 
-Silk currently implements:
+Silk implements:
 
 - call-scoped alias checks for mutable borrows (including slice range borrows),
 - lexical lifetime checks for slice and reference borrows (no escaping borrows
@@ -8744,7 +8733,7 @@ borrows and borrowed `&T` values so obvious use-after-scope cases are rejected
 (for example returning a slice borrowed from a local fixed array, or returning
 `&T` borrowed from a local struct binding).
 
-The currently shipped subset therefore already includes borrowed views in the
+The shipped subset therefore already includes borrowed views in the
 positions that matter most for day-to-day code:
 
 - local `&T` and `T[]` bindings,
@@ -8765,7 +8754,7 @@ point into existing storage:
 - When borrowing a range from an existing slice binding `s: T[]`, the borrow’s
  underlying origin is `s`’s origin (sub-slicing does not extend lifetime).
 
-Lexical lifetime rules enforced by Silk currently:
+Lexical lifetime rules enforced by Silk :
 
 - A slice value that ultimately borrows from a **local fixed array binding**
  (`T[N]`) may not escape that binding’s lexical scope.
@@ -8782,7 +8771,7 @@ Lexical lifetime rules enforced by Silk currently:
  parameter).
 
 These rules are intentionally conservative, but they are the complete lexical
-lifetime model for the currently supported language subset.
+lifetime model for the supported language subset.
 
 ### Lexical Reference Lifetimes
 
@@ -8807,7 +8796,7 @@ or fixed-array origin, the lexical escape check still rejects the return.
 
 ### Local Mutation While Borrowed
 
-Silk currently also rejects direct mutation of ordinary local
+Silk also rejects direct mutation of ordinary local
 storage while a borrow of that same storage remains live.
 
 This applies to:
@@ -8831,7 +8820,7 @@ rules instead.
 
 ### Borrow-Carrying Wrappers and Conservative Control Flow
 
-The current checker also preserves borrow identity through a small set of
+The checker also preserves borrow identity through a small set of
 wrapper and control-flow forms:
 
 - `Some(<borrow>)` preserves the underlying borrow identity.
@@ -8842,7 +8831,7 @@ wrapper and control-flow forms:
  `T[]` also participate in the same local mutation, lexical escape, move, and
  `await` checks as direct borrowed bindings.
 - Refutable-pattern binders also preserve borrow identity when the scrutinee
- already proves a single local borrow origin. In the Supported forms, this
+ already proves a single local borrow origin. In Silk, this
  includes:
  - `if let Some(x) = r { ... }`
  - `let Some(x) = r else { ... };`
@@ -8869,11 +8858,11 @@ wrapper and control-flow forms:
  - or all borrowing arms are caller-owned inputs.
 
 When a borrowed control-flow expression could refer to multiple distinct local
-origins, the Supported forms rejects it with `E2122` instead of guessing.
+origins, Silk rejects it with `E2122` instead of guessing.
 
 ### Boundary Safety
 
-The current compiler also enforces conservative rules at boundaries where a
+The compiler also enforces conservative rules at boundaries where a
 borrowed view could outlive the storage it refers to.
 
 #### `async fn` boundaries
@@ -8896,7 +8885,7 @@ Opaque handle references are allowed:
 These are treated as external handles rather than borrow-checked views into
 ordinary Silk storage.
 
-Borrowed parameters are permitted in the Supported forms, but the checker also
+Borrowed parameters are permitted in Silk, but the checker also
 enforces a conservative async call-site rule:
 
 - an ordinary reference or slice that still resolves to function-local stack
@@ -8905,7 +8894,7 @@ enforces a conservative async call-site rule:
 - opaque handle references remain allowed because they are not borrow-checked
  views into ordinary Silk storage.
 
-This is the borrow model for the current async subset. Additional async surface
+This is the borrow model for the async subset. Additional async surface
 area must define equivalent suspension and escape rules before it lands.
 
 #### External ABI boundaries
@@ -8976,7 +8965,7 @@ This enables moving values into other values (for example as call arguments or
 as the payload of `Some(...)`) without accidentally copying a resource-owning
 value and dropping it twice.
 
-In the Supported forms, ownership transfer is intentionally conservative:
+In Silk, ownership transfer is intentionally conservative:
 
 - A binding may not be moved while it has any live borrows (reference or slice
  views) in scope, including borrows stored in struct fields.
@@ -9031,13 +9020,13 @@ In the Supported forms, ownership transfer is intentionally conservative:
  - copyable existing sources still copy, so both bindings remain independent,
  - `let move Some(value) = maybe;`,
  `let move Some(value) = maybe else { ... };`, `if let move Some(value) =
- maybe { ... }`, `else if let move Some(value) = maybe { ... }`, and
+ maybe {... }`, `else if let move Some(value) = maybe { ... }`, and
  `while let move Some(value) = next() { ... }` consume the pattern scrutinee
  under the same move and borrow checks.
 
 ### Completeness
 
-The borrow checker is complete for the currently documented and
+The borrow checker is complete for the documented and
 regression-tested Silk language subset, including the wrapper and control-flow
 forms described above. New language features may still require new borrow
 rules, but those are not treated as pre-declared borrow-checker roadmap items.
@@ -9152,7 +9141,7 @@ erase the caller's obligation from the interface contract.
 
 ### Operations That Require an Unsafe Context
 
-The current compiler requires `unsafe` for:
+The compiler requires `unsafe` for:
 
 - constructing an array/slice or string view from a raw `u64`/`usize` address,
  including `ptr as T[]`, `ptr as T[](/silk/docs/len)`, and `ptr as string(len)`;
@@ -9416,7 +9405,7 @@ Values may be:
 
 
 
-Defined in Silk currently:
+Defined in Silk :
 
 - `attr(...)` as a prefix annotation on declarations and statements.
 - `attr(...)` as a compile-time query expression of type `bool`.
@@ -9479,7 +9468,7 @@ An attribute item may be either:
 - a tag: `attr(one)`, or
 - a key/value item: `attr(arch="x86_64")`.
 
-In the Supported forms, key/value items use one of:
+In Silk, key/value items use one of:
 
 - `=` for string/identifier/bool keys (for example `arch="x86_64"`, `abi=c`),
 - `=`, `<`, `<=`, `>`, `>=` for numeric toolchain keys (for example
@@ -9543,7 +9532,7 @@ and do not exist as runtime calls.
 
 ### Built-in attribute keys
 
-Silk currently recognizes the following keys in queries and
+Silk recognizes the following keys in queries and
 conditional compilation contexts:
 
 - `arch`: `"x86_64"`, `"aarch64"`, or `"wasm32"`
@@ -9605,7 +9594,7 @@ symbols against the dependency functions as they are actually emitted into that
 output, including dependency functions that become internal raw symbols rather
 than public package-qualified exports.
 
-Declaration-level `attr(abi=c)` currently applies only to top-level exported
+Declaration-level `attr(abi=c)` applies only to top-level exported
 functions. A top-level `package` or `module` declaration participates in the
 namespace-derived C symbol spelling above, but functions nested inside
 `module Name { ... }` inline module blocks are rejected until inline-module C
@@ -9617,7 +9606,7 @@ marshal at a C call boundary.
 
 ### Task scheduling (`task=pool` / `task=thread`)
 
-In the current hosted subset, `task fn` execution is implemented on OS threads.
+In the hosted subset, `task fn` execution is implemented on OS threads.
 By default, calling a `task fn` schedules that task on the global task pool.
 
 When a `task fn` (or `async task fn`) is annotated with:
@@ -9666,7 +9655,7 @@ the pool does not deadlock itself.
 
 Features are named build-time toggles intended for conditional compilation.
 
-In Silk currently, features may be enabled from:
+In Silk, features may be enabled from:
 
 - the CLI (`--feature` / `-F`), and
 - package manifests (`silk.toml`):
@@ -9849,7 +9838,7 @@ ownership remains a separate future type, such as `Arc(T)`.
 
 ### Notes
 
-The current hosted/native subset exposes:
+The hosted/native subset exposes:
 
 - [`std::atomic::Ordering`](/silk/docs/std/atomic/),
 - [`std::atomic::AtomicBool`](/silk/docs/std/atomic/),
@@ -9875,10 +9864,10 @@ Key points:
  - a raw pointer to the start of the memory block,
  - a capacity (number of elements that can be stored).
 - `Buffer(T)` does **not** track the number of initialized elements (length).
-- `Buffer(T)` uses the current compiler’s **scalar-slot** layout (for example
+- `Buffer(T)` uses the compiler’s **scalar-slot** layout (for example
  `sizeof(u8) == 8`). For packed bytes suitable for OS/FFI byte APIs, use
  [`std::buffer::BufferU8`](/silk/docs/std/buffer/).
-- The current API includes operations such as:
+- The API includes operations such as:
  - allocation: [`std::buffer::Buffer(T).init(cap)`](/silk/docs/std/buffer/) / [`std::buffer::alloc(T; cap)`](/silk/docs/std/buffer/)
  - reads/writes: `buf.read(i)` / `buf.write(i, v)` and module-level wrappers
  - views: `buf.view(len)` / `buf.slice(start, end)` returning [`std::arrays::Slice(T)`](/silk/docs/std/arrays/)
@@ -9942,9 +9931,9 @@ Supported forms:
 
 Limitations (Supported forms):
 
-- The region backing store is currently restricted to `u8[N]` (a fixed-size
+- The region backing store is restricted to `u8[N]` (a fixed-size
  byte array type annotation).
-- Hosted native lowering currently keeps the active-region selector
+- Hosted native lowering keeps the active-region selector
  process-global, and the backing bytes/cursor generated for each anonymous
  `with <bytes>` site are static. Overlapping `with` dynamic extents on
  multiple OS threads are therefore unsupported, even when the source sites
@@ -9996,10 +9985,10 @@ Rules:
 - A region declaration has no initializer.
 - The type annotation specifies the region backing size and must be a fixed
  byte array type: `u8[N]`.
- - In the current parser subset, `N` may be an integer literal or a
+ - In the parser subset, `N` may be an integer literal or a
  literal-only integer arithmetic expression using `+`, `-`, `*`, `/`, `%`,
  and parentheses.
- - In the current region subset, that expression must fold to a concrete byte
+ - In the region subset, that expression must fold to a concrete byte
  count at parse/type-check time.
 - The declared name is bound as a `Region` value.
 
@@ -10097,7 +10086,7 @@ Rules (Supported forms):
 
 - `<bytes>` must be a positive integer literal.
 - `<region>` must name a `Region` value that has a compile-time-known backing size
- in the Supported forms (for example a `const region` declaration).
+ in Silk (for example a `const region` declaration).
 - Slice bounds use **byte offsets** (the region backing store is `u8[N]`).
 - `<start>` / `<end>` must be non-negative integer literals.
 - When an explicit `<end>` is present, it is exclusive (`[start..end]`).
@@ -10114,7 +10103,7 @@ Within a `with <region> { ... }` block:
 
 - any `new` allocation performed by the compiler’s `new` lowering uses the
  active region as its backing store,
-- allocations are **8-byte aligned** in the Supported forms,
+- allocations are **8-byte aligned** in Silk,
 - if the region does not have enough remaining space, the program traps.
 
 Outside of a `with` block, `new` uses the current heap model described in
@@ -10158,8 +10147,7 @@ with a {
 Regions are bump allocators: each allocation advances a cursor within the
 backing byte buffer.
 
-Because region-backed `new` allocations are still RC-managed in the current
-subset and do not free backing bytes on last-release, reclaiming region memory
+Because region-backed `new` allocations are still RC-managed in the supported forms and do not free backing bytes on last-release, reclaiming region memory
 requires resetting the region cursor so the backing bytes can be reused.
 
 Current behavior:
@@ -10231,7 +10219,7 @@ implemented by the compiler/runtime today.
  instead of blocking the executor owner OS thread,
  - outside an executor (or on non-owner threads), it blocks the current OS
  thread until the task produces a value.
-- `yield` on a temporary task handle is eager in the Supported forms:
+- `yield` on a temporary task handle is eager in Silk:
  - `yield <task_expr>` where `<task_expr>` is not a named handle drains the
  task (joining dedicated-thread tasks only) and yields its final value `T`
  (so the temporary handle does not leak).
@@ -10290,7 +10278,7 @@ implemented by the compiler/runtime today.
  - live `Task(T)` bindings are drained/destroyed on scope exit,
  - and the same cleanup runs for lowered early-exit paths such as `return`.
  - these blocks do not create nested executors or inject implicit cancellation
- tokens in the Supported forms.
+ tokens in Silk.
 - `yield` is **task-context-only**:
  - `yield` is only allowed inside `task` functions (`task fn` / `async task fn`)
  and inside `task { ... }` / `task loop { ... }` blocks.
@@ -10315,7 +10303,7 @@ implemented by the compiler/runtime today.
 `task` concurrency runs on OS threads. Crossing a task boundary is therefore a
 thread-crossing operation.
 
-In Silk currently:
+In Silk :
 
 - Passing values into a `task fn` is **by value**. For ownership-tracked values
  (for example `Drop` types and `Task(T)` / `Promise(T)` handles), this is a
@@ -10346,11 +10334,11 @@ In Silk currently:
  across the task boundary.
 
 Note: this includes `&Struct` values produced by `new`. The compiler-inserted
-reference counting (RC) used for `new` is non-atomic in the Supported forms and
+reference counting (RC) used for `new` is non-atomic in Silk and
 is not safe to share across OS threads.
 
 These rules prevent common “accidentally share a borrowed view across threads”
-bugs in the Supported forms. They do not prevent data races in programs that
+bugs in Silk. They do not prevent data races in programs that
 explicitly share memory through FFI or other low-level mechanisms; such sharing
 must be synchronized by the program.
 
@@ -10361,7 +10349,7 @@ must be synchronized by the program.
  - `await` is a true suspension point backed by a single-threaded executor
  (fibers), so awaiting a pending `Promise(T)` can park and resume without
  blocking the OS thread.
- - The current implementation uses stackful coroutines in `libsilk_rt`
+ - The implementation uses stackful coroutines in `libsilk_rt`
  (`the implementation`) rather than a compiler state-machine coroutine
  transform. The long-term design remains a compiler transform + stable
  [`std::runtime::event_loop`](/silk/docs/std/runtime-event_loop/) surface (see [`Async Runtime (Hosted)`](/silk/docs/compiler/async-runtime/)).
@@ -10375,7 +10363,7 @@ must be synchronized by the program.
  `await` on a non-owner thread blocks the OS thread until the promise is
  resolved.
  - Awaiting a `Task(T)` is rejected by design; use `yield` / `yield *` for task values.
- - Executable entrypoints currently support `fn main (...) -> int`,
+ - Executable entrypoints support `fn main (...) -> int`,
  `fn main (...) -> void`, `async fn main (...) -> int`,
  `async fn main (...) -> void`, `fn main(argc: int, argv: u64) -> int`,
  and `fn main(argc: int, argv: u64) -> void`.
@@ -10420,7 +10408,7 @@ must be synchronized by the program.
 
 `await <expr>` is the surface syntax for unwrapping a `Promise(T)` handle.
 
-In Silk currently:
+In Silk :
 
 - `await Promise(T)` unwraps the completed promise and yields `T`.
 - `await Promise(Task(T))` yields `Task(T)` (which can then be consumed via `yield` / `yield *`).
@@ -10438,7 +10426,7 @@ In Silk currently:
 
 ##### Typed Errors Across Async Calls
 
-Typed-error handling composes with async calls in the Supported forms, but the
+Typed-error handling composes with async calls in Silk, but the
 fallible operation remains the **async call site** rather than the `await`
 itself.
 
@@ -10454,14 +10442,14 @@ async fn open_value () -> int | OpenFailed {
 }
 ```
 
-the current checker behavior is:
+the checker behavior is:
 
 - `await open_value()` is rejected with `E2023` because the fallible async call
  has not been handled yet.
 - `let p: Promise(int) = open_value()?;` is accepted inside a matching error
  contract.
 - `let v: int = await open_value()?;` is accepted and is the supported
- propagation form in the Supported forms.
+ propagation form in Silk.
 - Explicit handling with [`match`](/silk/wiki/language/flow-match/) applies to the async call itself, so the
  success arm receives the `Promise(T)` handle:
 
@@ -10479,7 +10467,7 @@ match (open_value()) {
 
 ##### Task/Promise Handle Ownership
 
-In Silk currently, `Task(T)` and `Promise(T)` are **single-use
+In Silk, `Task(T)` and `Promise(T)` are **single-use
 handles**:
 
 - A `Promise(T)` handle may be **awaited at most once**. `await` consumes the handle.
@@ -10507,7 +10495,7 @@ handles**:
 - A consumed handle may not be used again (including attempting to `await` it a
  second time, or attempting to `yield *` it a second time).
 - Consuming a handle that was created outside the current loop body is rejected
- in the Supported forms (a loop may iterate multiple times).
+ in Silk (a loop may iterate multiple times).
 
 These rules are enforced at compile time and exist to prevent double-free and
 use-after-free bugs in the current runtime lowering, where `await` frees the
@@ -10515,7 +10503,7 @@ underlying handle storage after join/unwrap.
 
 ##### Handle Lifetime and Cleanup
 
-In Silk currently, `Task(T)` and `Promise(T)` handles are stored in
+In Silk, `Task(T)` and `Promise(T)` handles are stored in
 heap-allocated handle memory:
 
 - `await` unwraps a promise and then frees the promise handle storage.
@@ -10531,7 +10519,7 @@ heap-allocated handle memory:
  there is no per-call worker thread to join.
  - `Promise(T)` cleanup frees the handle storage.
 
-Because tasks are implemented using OS threads in the Supported forms, this
+Because tasks are implemented using OS threads in Silk, this
 automatic cleanup can block the current OS thread when it joins a task. Promise
 cleanup uses the hosted async runtime’s destroy helper and may suspend the
 current coroutine while waiting for a pending promise to resolve when running
@@ -10562,7 +10550,7 @@ In the intended model for tasks:
  right-hand task to the enclosing task’s receiver and then joins/cleans up the
  drained task.
 
-In Silk currently:
+In Silk :
 
 - `yield` is a blocking OS-thread operation (like the rest of the current
  concurrency runtime).
@@ -10574,7 +10562,7 @@ In Silk currently:
 
 ##### Collected Array Ownership
 
-In the Supported forms, `yield *` and `await *` produce a heap-allocated
+In Silk, `yield *` and `await *` produce a heap-allocated
 collection of values (`T[]`) for convenience. This is a current behavior:
 
 - the compiler inserts deterministic cleanup for these collections when their
@@ -10587,7 +10575,7 @@ collection of values (`T[]`) for convenience. This is a current behavior:
 `async { ... }`, `task { ... }`, `async loop { ... }`, and `task loop { ... }`
 introduce surface syntax for structured regions.
 
-In Silk currently, these forms remain lexical scopes, but they are
+In Silk, these forms remain lexical scopes, but they are
 runtime-backed for live-handle cleanup:
 
 - live `Promise(T)` bindings are awaited/destroyed on scope exit,
@@ -10601,8 +10589,7 @@ runtime-backed for live-handle cleanup:
 
 This language document describes the shipped concurrency subset and its current
 boundaries. Longer-term runtime architecture notes are tracked in
-[`Async Runtime (Hosted)`](/silk/docs/compiler/async-runtime/); the runtime backlog items for the current
-hosted subset are now implemented.
+[`Async Runtime (Hosted)`](/silk/docs/compiler/async-runtime/); the runtime backlog items for the hosted subset are now implemented.
 
 Current boundaries and non-goals:
 
@@ -10757,7 +10744,7 @@ a distributable success-path bundle under `.silk/formal/` (or
 
 ### Z3 model
 
-The current Formal Silk verifier maps Silk constructs directly to Z3:
+The Formal Silk verifier maps Silk constructs directly to Z3:
 
 - `bool` → Z3 Bool.
 - `string` → Z3 String (Supported forms: literals and equality/inequality comparisons).
@@ -10770,7 +10757,7 @@ The current Formal Silk verifier maps Silk constructs directly to Z3:
  Arithmetic is modular 2^N (wraparound). Ordered comparisons and `>>` use
  signed semantics for signed integers (`i*`/`int`) and unsigned semantics for
  unsigned integers (`u*`).
-- other primitive/runtime values that do not currently have dedicated numeric
+- other primitive/runtime values that do not have dedicated numeric
  reasoning support (for example `char`, floating-point primitives, `Range`,
  `Instant`, and `Duration`) are modeled as **opaque uninterpreted values**.
 - non-primitive runtime values passed through contracts
@@ -10791,7 +10778,7 @@ Supported operators in specification expressions (Supported forms):
  - arithmetic: `+`, `-`, `*`, `/`, `%`
  - bitwise: `&`, `|`, `^`, `<<`, `>>`
  - comparisons: `<`, `<=`, `>`, `>=`, `==`, `!=`
-- size/layout queries: `sizeof`, `alignof`, `offsetof` (type operands and other statically-sized operands in the Supported forms)
+- size/layout queries: `sizeof`, `alignof`, `offsetof` (type operands and other statically-sized operands in Silk)
 
 Supported name-resolution sources in specification expressions (Supported forms):
 
@@ -10800,7 +10787,7 @@ Supported name-resolution sources in specification expressions (Supported forms)
 - and const-evaluable module/package `const` bindings, including exported
  qualified names such as [`std::limits::I64_MAX`](/silk/docs/std/limits/).
 
-Other operators and expression forms are currently rejected in verified code
+Other operators and expression forms are rejected in verified code
 (see the notes below).
 
 ### The `ext` boundary
@@ -10810,7 +10797,7 @@ External declarations (`ext`) have no body available to the verifier.
 Therefore:
 
 - The verifier cannot generate VCs about the behavior of `ext` bodies.
-- In the current verifier subset, calls are supported only to functions and
+- In Silk, calls are supported only to functions and
  methods that have Formal Silk contracts (see “Contracted calls” below).
  `ext` declarations do not have Formal Silk contracts yet, so verified code
  cannot call `ext` functions.
@@ -10955,7 +10942,7 @@ Rules:
 
 The verifier will interpret:
 
-- `#invariant` expressions (type `bool` in the Supported forms) as properties that must hold:
+- `#invariant` expressions (type `bool` in Silk) as properties that must hold:
  - before entering the loop,
  - after each iteration (assuming the body and condition do not diverge),
  - and at `break` exits (so proofs after the loop may rely on the invariant).
@@ -11016,7 +11003,7 @@ Implemented end-to-end (Z3-backed, Supported forms):
 - Formal Silk declarations via `#const`:
  - may be referenced only by specification expressions,
  - are rejected in runtime expressions (`E2014`).
-- `theory` (reusable assertions, initial subset):
+- `theory` (reusable assertions):
  - `theory Name(params) { ... }` defines a reusable set of proof obligations
  (exportable/importable at top level),
  - `#theory Name(args);` applies it in a function body as compile-time-only
@@ -11039,7 +11026,7 @@ Implemented end-to-end (Z3-backed, Supported forms):
  - after the call, the verifier assumes the callee’s postconditions (explicit
  `#assure` plus attached-theory `#assure`/`#invariant`) into verified
  callers' symbolic state so subsequent proofs can use them,
- - if the callee has a source-visible body, the Supported forms requires that
+ - if the callee has a source-visible body, Silk requires that
  body to be a single return expression (no runtime statements); the verifier
  inlines that return expression in the caller’s symbolic state,
  - if the callee has **no body** (a declaration-only prototype, typically used
@@ -11049,7 +11036,7 @@ Implemented end-to-end (Z3-backed, Supported forms):
  - introduces an uninterpreted symbolic value for the return,
  - and assumes postconditions about that return value,
  - if the callee has **no Formal Silk contract**, verified code may still call
- it in the Supported forms:
+ it in Silk:
  - if the source-visible body is a single return expression, the verifier
  may inline that return expression into the caller’s symbolic state,
  - otherwise the verifier treats the return value as opaque and assumes no
@@ -11059,7 +11046,7 @@ Implemented end-to-end (Z3-backed, Supported forms):
  contractless calls,
  - recursion is not supported yet.
 - Stdlib modules are verified when they use Formal Silk syntax, subject to the
- same current-subset restrictions described here.
+ same verification restrictions described here.
 
 Not implemented yet :
 
@@ -11081,7 +11068,7 @@ Not implemented yet :
  ([`match`](/silk/wiki/language/flow-match/), nested loops, indirect calls, and many operators are not supported
  yet in verified code). Statement-level `if` path splitting is implemented in
  the Supported forms.
-- Verified assignment statements currently support local names and direct field
+- Verified assignment statements support local names and direct field
  writes through named aggregate or receiver values (`name.field = expr`).
  Direct field writes re-prove the target aggregate's struct `#require`
  clauses after the write. Optional-field, index, nested-field, and compound
@@ -11258,7 +11245,7 @@ Theory bodies are verifier-only:
 
 - Theory argument expressions and theory directive expressions are **Formal Silk
  specification expressions** evaluated by the verifier.
-- In the Supported forms, specification expressions do not support function
+- In Silk, specification expressions do not support function
  calls or value construction (for example `foo(x)`, `Type{...}`, arrays, or
  `new`). Such expressions are rejected as unsupported Formal Silk.
 
@@ -11303,7 +11290,7 @@ The payload contract is intentionally source-oriented and portable:
 - `payload_format = "smt2"`
 - `payload_encoding = "source"`
 
-That is, Silk currently distributes normalized SMT-LIB2 source, not a
+That is, Silk distributes normalized SMT-LIB2 source, not a
 solver-private binary snapshot. This keeps the artifact inspectable, stable
 across hosts, and suitable for replay with an external `z3 -smt2 ...` tool.
 
@@ -11344,13 +11331,13 @@ Diagnostics rule:
 
 - Generics are part of the Silk language design, not an out-of-language
  extension.
-- When the current compiler rejects a generic form with `E2016`, that means the
+- When the compiler rejects a generic form with `E2016`, that means the
  implementation is incomplete for that generic form, not that the language
  forbids generics.
 
 Note: `Option(T)` is a special-case surface form that is treated as sugar for
-`T?` in the Supported forms (see [`Optional`](/silk/docs/language/optional/)). This is still
-accepted in the Supported forms even as general-purpose type-parameter generics are
+`T?` in Silk (see [`Optional`](/silk/docs/language/optional/)). This is still
+accepted in Silk even as general-purpose type-parameter generics are
 implemented.
 
 ### Overview
@@ -11358,7 +11345,7 @@ implemented.
 Silk supports parameterized declarations by allowing a parameter list on
 `struct`, `interface`, `enum`, `impl`, and `fn` declarations.
 
-In Silk currently:
+In Silk :
 
 - **Supported**: type parameters (`T`) and const parameters (`N: usize`) on
  `struct`/`interface`/`enum`/`impl`, type application in type positions
@@ -11631,7 +11618,7 @@ Rules:
  `enum`, `error`, and `type` declarations may not reuse the same name.
 - Name conflicts across generic arities are rejected (for example, `struct Foo`
  and `struct Foo(T)` cannot both exist in the same package namespace).
-- Const parameters are currently restricted to integer primitive types; const
+- Const parameters are restricted to integer primitive types; const
  values are usable in type positions (for example `T[N]`) but are not yet
  exposed as runtime values.
 
@@ -11646,8 +11633,7 @@ The front-end can parse and preserve:
 - type application in type positions (for example `VectorN(int, 1024)`),
 
 but the compiler does not yet implement constraint checking, inference, or
-monomorphization/code generation for parameterized declarations. In the current
-compiler subset, generic parameter lists and applied types are rejected during
+monomorphization/code generation for parameterized declarations. In the supported forms, generic parameter lists and applied types are rejected during
 type checking ([`Compiler Diagnostics`](/silk/docs/compiler/diagnostics/), `E2016`). See
 [`Generics (Monomorphized)`](/silk/docs/language/generics/).
 
@@ -11698,7 +11684,7 @@ fn h(x: int) -> int { return x; } // RT-only
 ```
 
 This split is parsed and preserved by the front-end, but generic functions are
-rejected by the current checker until monomorphization is implemented
+rejected by the checker until monomorphization is implemented
 ([`Compiler Diagnostics`](/silk/docs/compiler/diagnostics/), `E2016`).
 
 ### Relationship to Arrays and Collections
@@ -11710,7 +11696,7 @@ Const parameters are intended to power:
 - and compile-time-checked indexing/slicing APIs.
 
 These features require additional language and runtime support beyond the
-current implementation.
+implementation.
 
 ## Struct Requirements (`#require`)
 
@@ -11763,10 +11749,9 @@ Const functions (`const fn`) are specified separately in
 `Const Functions (`const fn`)`. The `const` modifier is orthogonal to the
 discipline system described here (a `const fn` may also be declared `pure`).
 
-, but Silk currently now implements
-`pure fn` parsing and a strict purity checker. Concurrency disciplines (`task` /
+Silk implements `pure fn` parsing and a strict purity checker. Concurrency disciplines (`task` /
 `async`) are parsed and `Task(T)` / `Promise(T)` handles plus `yield` (task
-values) and `await` (promise values) are implemented in the Supported forms
+values) and `await` (promise values) are implemented in Silk
 (`await Task(T)` is rejected). On the hosted `linux/x86_64` target, the compiler
 now ships a bring-up async runtime (single-threaded executor + stackful
 coroutines in `libsilk_rt`) so `await` can suspend and resume without blocking
@@ -11800,7 +11785,7 @@ The checker is expected to enforce:
 - `task` code may call `task` and `pure` code, and must satisfy task-safety
  rules for captured/argument data.
 - `async` code may `await` other async operations; it may call `pure` code and
- may offload blocking work via explicit adapters .
+ may offload blocking work via explicit adapters.
 
 Crossing discipline boundaries is intended to be explicit and diagnostic-driven
 (for example suggesting the correct adapter/intrinsic).
@@ -11835,13 +11820,12 @@ Today:
  body satisfies the purity rules, it is treated as `pure` for call
  checking, and may be called from `pure` code,
  - functions/methods with `&T` parameters are not eligible for inference
- (explicit `pure fn` remains supported for `&T` parameters in the current
- subset),
- - `pure` cannot be combined with `task` or `async` in the Supported forms,
+ (explicit `pure fn` remains supported for `&T` parameters in the supported forms),
+ - `pure` cannot be combined with `task` or `async` in Silk,
  - a `pure fn` may not have `mut` parameters,
  - a `pure fn` may not declare mutable locals (`var` or `let mut`) and may not
  perform mutation via assignment,
- - a `pure fn` may not allocate (`new`) in the Supported forms,
+ - a `pure fn` may not allocate (`new`) in Silk,
  - a `pure fn` may not have a typed-error contract (`-> T | Error...`) and may
  not contain `panic` statements.
 - `task fn`, `async fn`, and `async task fn` are parsed and preserved in the AST.
@@ -11896,7 +11880,7 @@ Today:
  - `fn (x: int) -> int { return x + 1; }` (block body).
  - `fn (x: int) { ... }` (block body, implicit `void` result).
  - Function expressions may not declare `&Struct` parameters; only single-slot
- scalar `&T` parameters (for example `&int`) are supported in the Supported forms.
+ scalar `&T` parameters (for example `&int`) are supported in Silk.
  - Function expressions are eligible for purity inference (“auto-pure”):
  - when the body satisfies the `pure` rules, the function value is treated
  as `pure` for call checking (it may be called from `pure` code),
@@ -11929,7 +11913,7 @@ Today:
 This document defines the surface syntax and semantics for compile-time
 functions.
 
-In Silk currently, `const fn` (and `const pure fn`) can be called
+In Silk, `const fn` (and `const pure fn`) can be called
 from `const` binding initializers when all arguments and the result are
 compile-time values (scalar values and eligible POD `struct` values).
 
@@ -11994,7 +11978,7 @@ Supported forms (Implementation target):
  declaration order. They may be returned from and passed to `const fn`, and
  used in `const` initializers.
 
-Planned (not yet supported for `const fn` in the Supported forms):
+Planned (not yet supported for `const fn` in Silk):
 
 - `string` values (string literals are supported directly in `const` bindings),
 - aggregate values beyond compile-time POD structs (enum/optional/slice/array),
@@ -12007,7 +11991,7 @@ The Supported forms defines a deliberately small “const-eval VM” surface. A
 
 #### Signature rules
 
-In the Supported forms, a `const fn`:
+In Silk, a `const fn`:
 
 - must not be `task` or `async`,
 - must not declare a typed-error contract (`-> T | ErrorType...`),
@@ -12016,14 +12000,14 @@ In the Supported forms, a `const fn`:
 
 #### Body rules
 
-In the Supported forms, a `const fn`:
+In Silk, a `const fn`:
 
 - must not allocate (`new`) and must not use regions/`with`,
 - must not contain `panic` statements,
 - must not declare `const` local bindings,
 - may call only other `const fn` declarations,
 - is restricted to a small expression subset over scalar values:
- - literals and local names (parameters and `let` bindings; no global `const` reads in the Supported forms),
+ - literals and local names (parameters and `let` bindings; no global `const` reads in Silk),
  - `as` casts between supported scalar types,
  - unary operators: `-`, `~`, `!`,
  - binary operators:
@@ -12075,7 +12059,7 @@ Const functions do not create new static storage. In particular:
 - compile-time execution may compute scalar values and fold them into constants,
 - compile-time execution must not allocate heap memory,
 - compile-time execution must not synthesize new global read-only data (for
- example, it cannot build a new string at compile time in the Supported forms).
+ example, it cannot build a new string at compile time in Silk).
 
 String literals are still backed by read-only static storage, but they are
 introduced by the literal syntax itself (see [`String Literals`](/silk/docs/language/literals-string/)), not by the
@@ -12109,9 +12093,8 @@ Rules:
 - A function may declare **at most one** varargs parameter.
 - The varargs parameter must be **the final** parameter in the list.
 - The varargs parameter must have an explicit **type annotation**.
-- Varargs parameters are **not** permitted to be `mut` in the Supported forms.
-- Varargs parameters may not have a default expression (`= ...`) in the current
- subset.
+- Varargs parameters are **not** permitted to be `mut` in Silk.
+- Varargs parameters may not have a default expression (`= ...`) in the supported forms.
 - The same trailing-varargs form may be used in interface method signatures,
  and `impl ... as ...` / `module ... as ...` conformance compares the varargs
  marker as part of the required signature.
@@ -12180,7 +12163,7 @@ fixed-size **pack value** with:
 
 - `len: int` — the number of provided varargs arguments.
 - `a0 .. a(N-1)` — storage for up to `N` arguments (implementation-defined,
- currently `N = 32`).
+ `N = 32`).
 
 The pack is passed by value using the same “flattened scalar slot” ABI as other
 POD structs.
@@ -12197,7 +12180,7 @@ Notes:
 
 This document is about Silk varargs. C variadic functions declared via `ext`
 (`printf`-style `...`) are a separate concern and are **not** implemented yet
-in the Supported forms.
+in Silk.
 
 ## Language Spec Conventions
 
@@ -12216,7 +12199,7 @@ Concept documents should be structured so readers can answer, quickly:
 - “What is this feature for?”
 - “What syntax does the compiler accept?”
 - “What are the rules and edge cases?”
-- “What works in the current compiler today?”
+- “What works in the compiler?”
 
 Recommended sections:
 
@@ -12247,7 +12230,7 @@ these layers:
 - Lowering/backends: which forms code-generate end-to-end on supported targets.
 - C ABI / FFI: whether the feature is permitted at exported boundaries.
 
-When something is rejected in the Supported forms, include the diagnostic code
+When something is rejected in Silk, include the diagnostic code
 from [`Compiler Diagnostics`](/silk/docs/compiler/diagnostics/) when one exists.
 
 ### Examples
@@ -12282,7 +12265,7 @@ These terms are used consistently across the spec:
 - **Block**: `{ stmt* }`, a scope boundary and the unit of structured control
  flow. (Whether blocks are also expressions depends on the concept; docs must
  be explicit.)
-- **current implementation**: the set of features that parse, type-check, and
+- **implementation**: the set of features that parse, type-check, and
  code-generate end-to-end today.
 
 ### Cross-References
@@ -12307,7 +12290,7 @@ The language includes the following operators and delimiters:
 - Assignment and compound assignment: `=`, `+=`, `-=`, `*=`, `/=`.
 - Increment/decrement: `++`, `--` (prefix and postfix).
 - Arithmetic: `+`, `-`, `*`, `/`, `%`.
- - Currently:
+ - :
  - integer operands support `+`, `-`, `*`, `/`, and `%`,
  - floating-point operands (`f32`/`f64`) support `+`, `-`, `*`, and `/`
  (no `%`).
@@ -12319,7 +12302,7 @@ The language includes the following operators and delimiters:
  - `range` supports shifting by an `int` offset:
  - `range + int`, `range - int`, `int + range`.
 - Bitwise: `&`, `|`, `^`, `~`, `<<`, `>>`.
- - Currently, bitwise operators are defined for
+ -, bitwise operators are defined for
  integer operands (`int` and the fixed-width integer types):
  - `&`, `|`, `^` perform bitwise AND/OR/XOR on two integer values of the
  same type and produce a result of that same type.
@@ -12330,7 +12313,7 @@ The language includes the following operators and delimiters:
  signed integers (`i*`/`int`) and a logical right shift for unsigned
  integers (`u*`).
 - Comparison: `==`, `!=`, `<`, `<=`, `>`, `>=`.
- - Currently, comparisons are defined for both integer
+ -, comparisons are defined for both integer
  operands and floating-point operands of the same type.
  - In the backend, `==` and `!=` are also defined for `bool`
  operands, including values read from struct fields and references. The
@@ -12353,7 +12336,7 @@ The language includes the following operators and delimiters:
  - `Some(x) == Some(y)` compares the payload values for equality (recursively
  for nested optionals),
  - and `!=` is the logical negation of `==`.
- - Currently, `None` and `Some(...)` can appear in
+ -, `None` and `Some(...)` can appear in
  equality expressions when the other operand has an optional type (for
  example `opt == None` and `opt == Some(x)`), using that other operand’s
  type to infer the optional payload type.
@@ -12366,10 +12349,10 @@ The language includes the following operators and delimiters:
  everything (including itself), and ordered comparisons (`<`, `<=`, `>`,
  `>=`) are false when either operand is `NaN`.
 - Logical: `!`, `&&`, `||`.
- - Currently:
+ - :
  - `!` is supported for `bool` operands.
 - Member and scope: `.`, `::`, `?.`.
-- Currently:
+- :
  - `.` and `::` are supported,
  - and `?.` is supported for optional chaining on the supported `struct` subset:
  - `opt?.field` yields `FieldType?`,
@@ -12392,9 +12375,9 @@ The language includes the following operators and delimiters:
  - `..` and `..=` form range literals of type `range` (see `Types`).
  - `...` is the varargs/rest marker (see [`Varargs (Variable Arguments)`](/silk/docs/language/varargs/)).
 - Other punctuation: `?`, `??`, `->`, `=>`, `,`, `;`, `(`, `)`, `{`, `}`, `[`, `]`, `_`, `:`.
- - Currently, `??` is supported for:
+ -, `??` is supported for:
  - optionals in the backend (including scalar, `string`, and
- the current `struct` subset, plus nested optionals in the supported
+ the `struct` subset, plus nested optionals in the supported
  payload subset; see [`Optional`](/silk/docs/language/optional/)), and
  - recoverable `Result`-like values, where `result ?? fallback` yields the
  `Ok(...)` payload and evaluates `fallback` only for `Err(...)`
@@ -12438,7 +12421,7 @@ expression statement.
 
 Rules:
 
-- The left-hand side must be an assignable lvalue. In the Supported forms, it may be:
+- The left-hand side must be an assignable lvalue. In Silk, it may be:
  - an identifier that refers to a local `let mut` binding, or
  - a struct field lvalue `name.field` (or nested field lvalue `name.field1.field2...`)
  where `name` is either:
@@ -12476,7 +12459,7 @@ Compound assignments are shorthand for “read-modify-write”:
 Rules:
 
 - The left-hand side must be an assignable lvalue (as described above for `=`).
-- In the Supported forms, compound assignments are supported only for numeric
+- In Silk, compound assignments are supported only for numeric
  scalar types (integers and `f32`/`f64`), including numeric struct fields.
 - The compound assignment expression has type `void`.
 
@@ -12552,15 +12535,15 @@ Built-in size model :
 - Sizes reflect the current scalar-slot lowering model ([`Structs, Impl Blocks, and Memory Layout`](/silk/docs/language/structs-impls-layout/)):
  each lowered scalar occupies one 8-byte slot.
 - A `string` value occupies two slots (`(u64 ptr, i64 len)`), so `sizeof string`
- is `16` in the Supported forms.
+ is `16` in Silk.
 - A `T[]` slice value occupies two slots (`(u64 ptr, i64 len)`), so `sizeof T[]`
- is `16` in the Supported forms.
-- A `T[N]` fixed array occupies `N * sizeof(T)` bytes in the Supported forms,
+ is `16` in Silk.
+- A `T[N]` fixed array occupies `N * sizeof(T)` bytes in Silk,
  using the element’s scalar-slot size.
 
 Notes:
 
-- `sizeof string` (type operand) is the **representation** size (currently 16
+- `sizeof string` (type operand) is the **representation** size (16
  bytes in the scalar-slot model), while `sizeof <string value>` is the
  **content** size (byte length).
 - `sizeof` is a byte-size operator. For logical element counts (for example a
@@ -12597,7 +12580,7 @@ Built-in alignment model :
 
 - Alignments reflect the current scalar-slot lowering model
  ([`Structs, Impl Blocks, and Memory Layout`](/silk/docs/language/structs-impls-layout/)): values are stored as 8-byte slots.
-- All non-`void` types currently have alignment `8`.
+- All non-`void` types have alignment `8`.
 - `alignof void` is `1`.
 
 Parsing notes:
@@ -12686,7 +12669,7 @@ Rules (Supported forms):
  static type declares conformance (`impl T as Interface`) or when the operand is
  a module declared `module Name as Interface`.
 - For primitive types, enum/error types, reference types (`&T`), slice/array types
- (`T[]`, `T[N]`), optionals (`T?`), and function types, `is` currently checks
+ (`T[]`, `T[N]`), optionals (`T?`), and function types, `is` checks
  **exact type equality** (after resolving type aliases).
 
 Notes:
@@ -12800,7 +12783,7 @@ conversions:
  explicit conversions between raw addresses and array/slice views:
  - `ptr as T[]` constructs a `T[]` slice view where the pointer component is
  `ptr` and the length component is a dedicated **unknown-length** sentinel
- (currently, `i64.min`). The compiler does not validate
+ (, `i64.min`). The compiler does not validate
  the pointer value.
  - Indexing and assignment through an unknown-length slice are permitted
  but **unchecked**: the runtime performs no `index < len` bounds check.
@@ -12825,7 +12808,7 @@ conversions:
  - These casts are unsafe because:
  - the compiler does not validate pointer provenance (whether the address is
  valid for the claimed element type).
- - in the current scalar-slot subset, `T[]` / `T[N]` indexing assumes the
+ - in the scalar-slot subset, `T[]` / `T[N]` indexing assumes the
  pointed-to memory is laid out in Silk’s scalar-slot representation. This
  is not a packed-byte view. For packed byte access (for example string
  storage), use [`std::runtime::mem::{load_u8,store_u8}`](/silk/docs/std/runtime-mem/) or
@@ -12848,7 +12831,7 @@ conversions:
  - Supported forms limitation: the compiler must be able to resolve the
  receiver’s nominal type at the cast site so it can lower the implicit
  `serialize()` call. This includes name expressions, field accesses, calls,
- and array/slice indexing (`arr[i] as T`) in the Supported forms.
+ and array/slice indexing (`arr[i] as T`) in Silk.
 - `Deserialize(S)`-backed casts (explicit conversion via `deserialize(...)`):
  - When the target type provides a unique **static** method named `deserialize`
  matching the [`std::interfaces::Deserialize(S)`](/silk/docs/std/interfaces/) surface (`fn deserialize(value: S) -> Self`),
@@ -12969,7 +12952,7 @@ Rules (Supported forms):
  intended for low-level interop (for example passing `&Struct` pointers to C
  APIs that use `void *` / `T *` handles).
  - This does not make integer→reference casts legal: `u64 as raw &T` remains
- rejected in the Supported forms.
+ rejected in Silk.
 - Semantics:
  - The operand’s current canonical scalar bits are reinterpreted as the target
  type’s canonical scalar bits (bit-level truncation/masking for narrower
@@ -12979,8 +12962,7 @@ Rules (Supported forms):
  - the high lane is reinterpreted across `u64`/`i64` as needed,
  - when casting a 128-bit value to a <=64-bit target, the low lane is used,
  - when casting a <=64-bit *integer* value to `i128`/`u128`, the high lane
- is sign-extended (`i128`) or zero-extended (`u128`) in the current
- subset.
+ is sign-extended (`i128`) or zero-extended (`u128`) in the supported forms.
  - No numeric conversion is performed. For example, `1.0 as u64` yields
  `1`, while `1.0 as raw u64` yields the IEEE-754 bit pattern.
 
@@ -13409,12 +13391,12 @@ Supported operator subset:
  - `Instant` vs `Instant`
 
 Other arithmetic (`*`, `/`, `%`) and bitwise operators are not defined for time
-types in the Supported forms.
+types in Silk.
 
 ### Overflow
 
 Arithmetic uses the same deterministic wrapping behavior as the underlying
-`i64` operations in the current back-end subset (two’s complement wraparound).
+`i64` operations in the back-end subset (two’s complement wraparound).
 
 ### Notes
 
@@ -13508,10 +13490,10 @@ This intentionally limits verification across the `ext` boundary.
 
 ### Notes
 
-Silk currently implements this feature under the `ext`
+Silk implements this feature under the `ext`
 keyword. The docs treat `ext` as canonical.
 
-Currently supported:
+supported:
 
 - parsing `ext` external declarations and representing them in the AST,
 - optional external symbol aliases (`ext local "extern" = ...;`),
@@ -13525,7 +13507,7 @@ Currently supported:
  - a top-level function name, or
  - a non-capturing `fn (...) -> ...` expression,
  - capturing closures (and arbitrary function-typed locals) are rejected for
- `ext` function-pointer parameters in the Supported forms,
+ `ext` function-pointer parameters in Silk,
 - `c_fn (...) -> R` types as explicit C callback pointers (Supported forms):
  - `c_fn` is a code-pointer-only function pointer type intended for FFI,
  - unlike `fn (...) -> R` function values, `c_fn (...) -> R` values do not carry a
@@ -13576,12 +13558,12 @@ Currently supported:
 
 Not implemented yet (documented design, future work):
 
-- writing to `ext` variables (they are read-only in the Supported forms),
+- writing to `ext` variables (they are read-only in Silk),
 - `ext` variables of non-scalar types (strings, structs, optionals, arrays),
-- richer string and aggregate marshalling (for example: returning `string` from `ext` calls as an owned Silk value, passing/returning user-defined structs by value beyond the current ABI-safe POD subset, and C-facing array/slice bridging).
+- richer string and aggregate marshalling (for example: returning `string` from `ext` calls as an owned Silk value, passing/returning user-defined structs by value beyond the ABI-safe POD subset, and C-facing array/slice bridging).
 - calling back into Silk from foreign code with capturing closures or richer
  closure environments (only plain non-capturing function pointers are
- supported as `ext` parameters in the Supported forms).
+ supported as `ext` parameters in Silk).
 
 ### Passing Callbacks to C (`c_fn`)
 
@@ -13682,7 +13664,7 @@ Safety:
  provide explicit create/destroy functions; always call the destruction
  function when you are done.
 - Using a handle after destruction is undefined behavior; the compiler does not
- currently enforce this at compile time.
+ enforce this at compile time.
 
 Notes on executable `ext` calls (current linux/x86_64 implementation):
 
@@ -13811,7 +13793,7 @@ Rules:
 
 Implementation
 
-- The current compiler rejects `ext` declarations that include `|`, and rejects
+- The compiler rejects `ext` declarations that include `|`, and rejects
  exporting error-producing functions to C ABI outputs.
 
 The spec also includes a “Structs, Arrays, and Closures (Complex Types)” subsection for FFI. As the implementation proceeds, this document must be extended to:
@@ -13823,7 +13805,7 @@ The spec also includes a “Structs, Arrays, and Closures (Complex Types)” sub
 ### Structs
 
 The full language design includes rich user-defined structs and nested
-aggregates. The current compiler implementation supports only a small subset of
+aggregates. The compiler implementation supports only a small subset of
 structs in code generation:
 
 - structs with 0+ fields of supported value types (scalar primitives, `string`,
@@ -13851,7 +13833,7 @@ hidden sret pointers).
 ### Optionals
 
 The full language design includes rich optional patterns (`?.`, [`match`](/silk/wiki/language/flow-match/), nested
-optionals, etc.). The current compiler implementation supports only a limited
+optionals, etc.). The compiler implementation supports only a limited
 optional subset in code generation:
 
 - optionals whose payload type is a supported scalar, `string`, or a supported
@@ -13861,7 +13843,7 @@ optional subset in code generation:
 - and nested optionals (`T??`) for the same supported payload subset, including
  unwrapping `T??` to `T?` via `??`.
 
-At ABI boundaries in the current `linux/x86_64` subset, optionals are lowered
+At ABI boundaries in the `linux/x86_64` subset, optionals are lowered
 as a `Bool` tag followed by the payload scalar slots in order:
 
 - `(tag, payload)` for scalar payload optionals,
@@ -13919,7 +13901,7 @@ statement.
 
 #### Assembly dialect
 
-In the current implementation, `<text>` is assembled by the system assembler
+In Silk, `<text>` is assembled by the system assembler
 (`as`) for the active native host backend:
 
 - `linux/x86_64`: GNU `as` in **Intel syntax** (`.intel_syntax noprefix`)
@@ -13939,7 +13921,7 @@ fn main () -> int {
 
 #### Restrictions
 
-- `asm` is currently implemented for the native `linux/x86_64`,
+- `asm` is implemented for the native `linux/x86_64`,
  `linux/aarch64`, and `macos/aarch64` backends.
 - The assembled output must not require **relocations**. As a result, inline
  asm may not refer to external symbols (for example `call foo` where `foo` is
@@ -13950,7 +13932,7 @@ fn main () -> int {
 
 ### Portability and safety notes
 
-- `asm` is target-dependent by nature. The current implementation is supported
+- `asm` is target-dependent by nature. The implementation is supported
  only for the native `linux/x86_64`, `linux/aarch64`, and `macos/aarch64`
  backends.
 - Using `asm` can make programs non-portable. Prefer standard library
@@ -14003,7 +13985,7 @@ The empty block `{}` is permitted.
 
 ### Statements
 
-Silk currently supports these statement forms (see
+Silk supports these statement forms (see
 [`Formal Grammar Spec`](/silk/docs/language/grammar/) for exact syntax):
 
 - Local bindings:
@@ -14016,7 +13998,7 @@ Silk currently supports these statement forms (see
 - Specification-only declarations: `#const` (Formal Silk; not usable in runtime expressions).
 - Structured blocks: `async { ... }` / `task { ... }` (see [`Concurrency`](/silk/docs/language/concurrency/)).
 - Expression statements: limited to calls, assignments, and increment/decrement
- in the Supported forms ([`Expression Statements`](/silk/docs/language/flow-expression-statements/)).
+ in Silk ([`Expression Statements`](/silk/docs/language/flow-expression-statements/)).
 - Flow control:
  - `if` / `else` statements (including `if let` pattern destructuring),
  - [`while`](/silk/wiki/language/flow-while/) loops,
@@ -14147,8 +14129,7 @@ let <pattern> = <expr> else {
 Semantics (Supported forms):
 
 - The initializer expression is evaluated exactly once.
-- If the pattern matches, the pattern binders are introduced into the **current
- scope** for the remainder of the block (like a normal `let` binding).
+- If the pattern matches, the pattern binders are introduced into the **scope** for the remainder of the block (like a normal `let` binding).
 - `let mut <pattern> = ... else { ... };` introduces mutable pattern binders.
 - `let move <pattern> = ...;` and `let move <pattern> = ... else { ... };`
  consume the scrutinee for
@@ -14193,9 +14174,9 @@ fn main () -> int {
 - the binding is immutable (there is no `const mut`),
 - a `const` binding is a normal runtime value (unlike `#const`), but its value
  is computed by the compiler at compile time and does not incur runtime
- computation cost in Silk currently.
+ computation cost in Silk.
 
-In Silk currently, compile-time evaluation for runtime `const`
+In Silk, compile-time evaluation for runtime `const`
 bindings is restricted to:
 
 - scalar primitive types (`bool`, integer/float scalars, `char`, `Instant`, `Duration`),
@@ -14206,7 +14187,7 @@ bindings is restricted to:
  - calls to `const fn` functions where all arguments are themselves compile-time evaluable, and
  - struct literals and field access when the struct type is a supported compile-time POD `struct`, and
  - `as` casts between supported scalar types, and
- - a small operator subset (notably `+`, `-`, `*`, bitwise ops, shifts; `/` and `%` are currently rejected for `const`).
+ - a small operator subset (notably `+`, `-`, `*`, bitwise ops, shifts; `/` and `%` are rejected for `const`).
 
 - `string` bindings whose initializer is either:
  - a string literal (`"..."` or `` `...` ``), or
@@ -14231,7 +14212,7 @@ in runtime expressions (see `Formal Silk` and
 The broader language design includes expression-oriented flow constructs (for
 example [`match`](/silk/wiki/language/flow-match/) expressions today and `if` expressions).
 
-In Silk currently:
+In Silk :
 
 - a block is not an expression and does not produce a value; it is purely a
  statement list used as the body of constructs.
@@ -14428,7 +14409,7 @@ These behave like normal `const` string values:
 
 #### `BUILD_KIND`
 
-The output kind currently being built:
+The output kind being built:
 
 - `"executable"`
 - `"object"`
@@ -14437,7 +14418,7 @@ The output kind currently being built:
 
 #### `BUILD_MODE`
 
-The build mode currently being built:
+The build mode being built:
 
 - `"debug"`
 - `"release"`
@@ -14544,7 +14525,7 @@ These behave like normal `const` values:
 
 A canonical target platform/OS name string.
 
-Current compiler target set and values:
+compiler target set and values:
 
 - `linux-x86_64`, `linux-x86_64-musl`, `linux-aarch64`, and
  `linux-aarch64-musl`:
@@ -14569,7 +14550,7 @@ Current compiler target set and values:
 
 A canonical target CPU architecture name string.
 
-Current compiler target set and values:
+compiler target set and values:
 
 - `linux-x86_64`, `linux-x86_64-musl`, `macos-x86_64`,
  `ios-simulator-x86_64`, and `windows-x86_64`:
@@ -14588,7 +14569,7 @@ Current compiler target set and values:
 
 Whether the compilation target is a UNIX family target.
 
-Current compiler target set:
+compiler target set:
 
 - `linux-x86_64`: `true`
 - `linux-x86_64-musl`: `true`
@@ -14612,7 +14593,7 @@ Current compiler target set:
 
 Whether the compilation target is a POSIX target.
 
-Current compiler target set:
+compiler target set:
 
 - `linux-x86_64`: `true`
 - `linux-x86_64-musl`: `true`
@@ -15124,9 +15105,11 @@ expr;
 - The expression is evaluated exactly once.
 - The result value (if any) is discarded.
 
-### Current implementation restrictions
+<span id="current-implementation-restrictions-1"></span>
 
-For Silk currently, an expression statement is only valid when
+### Implementation restrictions
+
+For Silk, an expression statement is only valid when
 the expression is either:
 
 - a call expression (a function call), or
@@ -15142,7 +15125,7 @@ All other expression statements are rejected.
 This restriction will be relaxed as more of the expression language is lowered
 and code-generated.
 
-Examples (accepted in the Supported forms):
+Examples (accepted in Silk):
 
 ```silk
 fn main () -> int {
@@ -15167,7 +15150,7 @@ async fn main () -> int {
 }
 ```
 
-Examples (rejected in the Supported forms):
+Examples (rejected in Silk):
 
 ```silk
 fn main () -> int {
@@ -15202,7 +15185,7 @@ The compiler must:
 The `for` loop iterates over a range or iterable and executes a block once per
 element.
 
-: integer range iteration (`start..end` and
+Supported forms include integer range iteration (`start..end` and
 `start..=end`), array/slice iteration (`for x in xs { ... }` for `T[N]` and
 `T[]`), iterator iteration (`for x in it { ... }` when `it.next() -> T?`), and
 C-style `for (init; condition; step) { ... }` loops.
@@ -15239,12 +15222,12 @@ for (<init>; <condition>; <step>) {
 
 Notes:
 
-- `for <pattern> in <iterable> { ... }` currently accepts a single identifier
+- `for <pattern> in <iterable> { ... }` accepts a single identifier
  binder (and `_`) as the ordinary element-binding form.
 - `for let <pattern> in <iterable> { ... }` is the refutable pattern form.
  `for let mut <pattern> in <iterable> { ... }` marks pattern binders mutable
  for the current loop iteration.
- It uses the same currently supported refutable match-pattern subset as
+ It uses the same supported refutable match-pattern subset as
  `if let` / `while let`.
 - `<iterable>` is an expression.
 - `<init>` is a local binding (`let` / `var` / `const`) with an initializer.
@@ -15280,7 +15263,7 @@ Notes:
 - `continue` advances to the next element (it performs the increment step, then
  re-checks the range condition).
 - The loop binder is in scope only inside the loop body block.
-- The binder is immutable in the Supported forms (it behaves like a `let`
+- The binder is immutable in Silk (it behaves like a `let`
  binding that is updated by the loop machinery; user code cannot assign to it).
 
 Type checking (Supported forms):
@@ -15309,7 +15292,7 @@ fn main () -> int {
 
 #### Array and slice iteration
 
-In Silk currently, `for` also supports iterating over builtin
+In Silk, `for` also supports iterating over builtin
 array and slice types:
 
 - fixed arrays `T[N]`,
@@ -15377,8 +15360,7 @@ fn main () -> int {
 Limitations:
 
 - Element types are limited to the currently-supported array/slice element
- subset (types that lower to a fixed scalar slot sequence in the current
- back-end, such as primitive scalars, `string`, and supported non-opaque
+ subset (types that lower to a fixed scalar slot sequence in the back-end, such as primitive scalars, `string`, and supported non-opaque
  structs).
 - Iteration is by value; to mutate an element, use indexing (`xs[i] = ...`).
 
@@ -15452,7 +15434,7 @@ Init binding mutability (Supported forms):
 
 ### Guidance
 
-In Silk currently, `for` supports integer ranges and builtin
+In Silk, `for` supports integer ranges and builtin
 array/slice iteration. To write other loops today, use [`while`](/silk/wiki/language/flow-while/):
 
 ```silk
@@ -15484,7 +15466,7 @@ Compiler requirements:
 The [`loop`](/silk/wiki/language/flow-loop/) statement executes a block repeatedly until it is terminated by a
 `break` or `return`.
 
-: `loop { ... }`, plus `async loop { ... }` and
+Supported forms: `loop { ... }`, plus `async loop { ... }` and
 `task loop { ... }`.
 
 ### Surface Syntax
@@ -15511,7 +15493,7 @@ Notes:
 
 - `async loop` and `task loop` are still loop statements: they do not end with
  `;`.
-- In Silk currently, `async loop` / `task loop` follow the same
+- In Silk, `async loop` / `task loop` follow the same
  async-context restriction as `async { ... }` / `task { ... }`:
  they are only allowed inside functions declared with `async`
  ([`Compiler Diagnostics`](/silk/docs/compiler/diagnostics/), `E2031`).
@@ -15583,7 +15565,7 @@ contracts as authoritative.
 ### Rules
 
 The implementation intentionally supports only unions whose member
-types have a safe, well-defined representation in the current compiler/backend
+types have a safe, well-defined representation in the compiler/backend
 subset.
 
 A union type `T1 | T2 | ... | Tn` is permitted when all member types are in the
@@ -15621,7 +15603,7 @@ A value of a union type is a **tagged** value:
 
 #### Representation
 
-In the current native backend subset, unions are lowered as:
+In the native backend subset, unions are lowered as:
 
 - `(u64 tag, u64 payload_0, ..., u64 payload_(N-1))`
 
@@ -15811,7 +15793,7 @@ Imported methods inherit the source method’s visibility:
 - importing a `public fn` method produces a `public` method in the target impl,
 - importing a private method produces a private method in the target impl.
 
-Since `using` does not accept visibility modifiers in the Supported forms, this
+Since `using` does not accept visibility modifiers in Silk, this
 inheritance rule is the only way to control whether an imported method is
 callable outside the target `impl { ... }` block.
 
@@ -15822,7 +15804,7 @@ When the imported method’s signature depends on `Self` (for example
 across distinct struct types requires that the underlying layouts are
 compatible.
 
-In Silk currently, a pair of non-opaque, non-`error` structs are
+In Silk, a pair of non-opaque, non-`error` structs are
 considered compatible when they have the same number of fields and the same
 field types in the same order (field names do not matter).
 
@@ -15889,7 +15871,7 @@ Rule for feature-vs-rejection wording:
  missing implementation work in some compiler paths rather than forbidden
  types.
  - monomorphized generics are language features, so `E2016` is for generic
- forms the current compiler has not implemented yet, not for generic syntax
+ forms the compiler has not implemented yet, not for generic syntax
  that is outside the language.
 
 ### Terminology
@@ -15996,7 +15978,7 @@ diagnostic data payload.
 
 ### Error Codes
 
-The compiler assigns a stable code to each currently supported error kind.
+The compiler assigns a stable code to each supported error kind.
 
 #### Parsing
 
@@ -16119,7 +16101,7 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2086` — `const fn` may not allocate (`new`).
 - `E2087` — `const fn` may not call a non-`const fn`.
 - `E2088` — `const fn` may not contain `panic` statements.
-- `E2089` — unsupported construct in a `const fn` body (outside the current const-eval subset).
+- `E2089` — unsupported construct in a `const fn` body (outside the const-eval subset).
 - `E2090` — `const fn` may be called only from compile-time contexts.
 - `E2091` — generic function call type arguments could not be inferred at the call site.
 - `E2092` — use of moved value.
@@ -16146,7 +16128,7 @@ The compiler assigns a stable code to each currently supported error kind.
 - `E2113` — enum destructuring pattern does not match the enum type (unknown variant or wrong arity).
 - `E2114` — `u128` is not implemented yet in all compiler paths.
 - `E2115` — `f128` is not implemented yet in all compiler paths.
-- `E2116` — invalid inline assembly (inline asm failed to assemble, or uses unsupported features in the current implementation).
+- `E2116` — invalid inline assembly (inline asm failed to assemble, or uses unsupported features in Silk).
 - `E2117` — `let ... else { ... };` requires the `else` block to end with a terminal statement.
 - `E2118` — borrowed-view type may not appear in an `async fn` result.
 - `E2119` — borrowed-view type may not cross an `ext` / unnamed C-facing `export fn` boundary.
@@ -16256,7 +16238,7 @@ Notes:
  available.
 - Executable entrypoint shape failures should name the rejected form directly
  (for example ``unsupported executable entrypoint form: `async task fn main``` )
- and say which executable entrypoint forms are currently supported.
+ and say which executable entrypoint forms are supported.
 - When executable lowering fails during runtime-support setup before ordinary
  function-body lowering begins, `E4001` should name the blocked runtime stage
  directly (for example
@@ -16318,7 +16300,7 @@ This document defines the C99 ABI and the interface of the `libsilk.a` static li
 ### No open-world interface-object ABI
 
 Silk’s ordinary `interface` feature is a language-level conformance mechanism.
-In the current compiler, runtime interface values are implemented only through
+In the compiler, runtime interface values are implemented only through
 the closed-world compilation strategy documented in
 `Interfaces`:
 
@@ -16328,7 +16310,7 @@ the closed-world compilation strategy documented in
 - and rewrites interface method calls into ordinary dispatch over that union.
 
 This document does **not** define a generic C ABI for arbitrary Silk interface
-values. In particular, `libsilk.a` does not currently promise:
+values. In particular, `libsilk.a` does not promise:
 
 - a public `SilkInterface` object,
 - a stable `(data pointer, vtable pointer)` trait-object layout,
@@ -16436,7 +16418,7 @@ The initial C header provided in the Silk compiler repository defines:
   ```
 
  Notes:
- - The current `linux/x86_64` backend subset passes and returns `range` values
+ - The `linux/x86_64` backend subset passes and returns `range` values
  as three 8-byte scalar slots (`start`, `end`, `flags`).
  - `flags` is a bitfield:
  - bit 0: `has_end` (when unset, `end` is ignored),
@@ -16476,7 +16458,7 @@ The initial C header provided in the Silk compiler repository defines:
  Notes:
  - `SilkF128` stores the IEEE‑754 binary128 bit pattern. It is not C `long double`.
  - These types are passed and returned as two integer-like 8-byte slots in the
- current `linux/x86_64` backend subset.
+ `linux/x86_64` backend subset.
 
 - Package export symbol helpers for C/Objective-C bridge headers:
 
@@ -16614,7 +16596,7 @@ The initial C header provided in the Silk compiler repository defines:
 
  `silk_compiler_set_noheap` enables the same no-heap mode as the CLI
  (`silk --noheap`): heap-backed allocation is disabled for the supported
- subset. `--noheap` is currently incompatible with `--debug`; the ABI rejects
+ subset. `--noheap` is incompatible with `--debug`; the ABI rejects
  configurations that enable both.
 
  `silk_compiler_set_optimization_level` selects the optimization level (0-3),
@@ -16652,7 +16634,7 @@ The initial C header provided in the Silk compiler repository defines:
 
  For `linux-aarch64` and `linux-aarch64-musl`,
  `SILK_OUTPUT_EXECUTABLE` first attempts the direct AArch64 IR backend. Its
- current AAPCS64 subset covers integer and `f32`/`f64` scalar constants,
+ AAPCS64 subset covers integer and `f32`/`f64` scalar constants,
  numeric/raw casts, arithmetic, bitwise operations, shifts, comparisons,
  stack/data memory, function/data addresses, CFG branches,
  direct/indirect helpers, and external scalar function/data imports. Integer
@@ -16691,7 +16673,7 @@ The initial C header provided in the Silk compiler repository defines:
  programs that fit the constant subset.
 
  For AMDGPU targets, `SILK_OUTPUT_OBJECT` emits an AMDHSA `.hsaco` code object
- for the current source-kernel subset: exactly one exported root-package
+ for the source-kernel subset: exactly one exported root-package
  void function with up to 32 immutable `u64` parameters whose body is empty or
  contains only supported compiler-backed GPU call statements. Low-level
  `__silk_amdgpu_*` calls retain integer-literal operands; the semantic
@@ -16705,7 +16687,7 @@ The initial C header provided in the Silk compiler repository defines:
  [`AMDGPU Backend`](/silk/docs/compiler/backend-amdgpu/) documents the canonical source-intrinsic
  declaration sets and authoring diagnostics.
 
- The provider-neutral mixed CPU/GPU executable option is currently a `silk
+ The provider-neutral mixed CPU/GPU executable option is a `silk
  build --gpu-target` CLI surface, not a `libsilk` compiler-setting function.
  This GPU-v1 work does not change the C99 ABI. Embedders retain the documented
  standalone AMDGPU object and AQL packet APIs.
@@ -16859,7 +16841,7 @@ The initial C header provided in the Silk compiler repository defines:
  - the CLI / driver now supports non-const `ios-aarch64`,
  `ios-simulator-aarch64`, and `ios-simulator-x86_64` executable, object,
  static-library, and shared-library builds on Apple Silicon macOS for the
- current pure-Silk scalar/library subset, including reachable float-to-int
+ pure-Silk scalar/library subset, including reachable float-to-int
  lowering and portable bundled runtime helper families
  (number / regex / unicode / filesystem / dns / process / signal / term /
  pty / readline / task-pool / async),
@@ -16886,7 +16868,7 @@ The initial C header provided in the Silk compiler repository defines:
  - if Formal Silk syntax is present (for example `#require`, `#assure`,
  `#assert`, `#invariant`, `#variant`, `#monovariant`, `#const`), it also runs the Z3-backed verifier
  and fails the build if verification fails (`E3001`..`E3008`),
- - the verifier is currently skipped for stdlib modules (`std::...`),
+ - the verifier is skipped for stdlib modules (`std::...`),
  - when the host-native archive is present, Z3 is linked from the built-in
  static archive [`vendor/lib/<host-layout>/libz3.a`](https://github.com/oro-computer/silk/blob/master/vendor/lib/<host-layout>/libz3.a),
  - the verifier honors `SILK_Z3_LIB` (environment variable) to override
@@ -16902,7 +16884,7 @@ The initial C header provided in the Silk compiler repository defines:
  `export let answer: int = 42;` in `util` allows `let x: int = answer;`
  in `app`),
  - imported exported functions (`export fn`) are callable across packages
- for the current scalar subset (both unqualified `foo()` and qualified
+ for the scalar subset (both unqualified `foo()` and qualified
  `pkg::foo()` call forms are accepted initially), and functions in the
  same package share a call namespace across modules in the same module
  set,
@@ -16957,9 +16939,9 @@ The initial C header provided in the Silk compiler repository defines:
  - there MUST be exactly one top‑level function with one of the forms
 
       ```silk
-      fn main() -> int { ... }
+      fn main() -> int {... }
 
-      fn main(argc: int, argv: u64) -> int { ... }
+      fn main(argc: int, argv: u64) -> int {... }
       ```
 
  with a declared result type of `int`, and either:
@@ -16978,7 +16960,7 @@ The initial C header provided in the Silk compiler repository defines:
  (the package of the first module added to the compiler via `silk_compiler_add_source_buffer`)
  are emitted as globally-visible symbols for that output; other packages are compiled as
  dependencies and their `export` declarations are treated as internal for that output.
- - within the current `linux/x86_64` IR subset, `string` and `regexp` values are supported at ABI boundaries in a C-friendly `SilkString { ptr, len }` layout:
+ - within the `linux/x86_64` IR subset, `string` and `regexp` values are supported at ABI boundaries in a C-friendly `SilkString { ptr, len }` layout:
  - `string`/`regexp` parameters lower to two integer-like scalars in order (`u64` pointer, then `i64` byte length) and consume the normal integer argument locations (registers then stack),
  - `string`/`regexp` results return as two integer-like scalars in `rax`/`rdx`,
  - `regexp` values remain opaque runtime-engine bytecode views: downstream C code may forward them, but must not construct them as if the byte layout were a stable public format,
@@ -16990,16 +16972,16 @@ The initial C header provided in the Silk compiler repository defines:
  - `string`: string literals, `let` bindings of `string`, `return` of a `string` value, direct calls to `string`-returning helpers, and `==`/`!=`/`<`/`<=`/`>`/`>=` comparisons over `string` values (producing `bool`),
  - `regexp`: regex literals (`/pattern/flags`), `let` bindings of `regexp`, `return` of a `regexp` value, and direct calls between helpers that accept/return `regexp`,
  - other string operations (concatenation, indexing, etc.) are not implemented yet; higher-level regex matching lives in [`std::regex`](/silk/docs/std/regex/) and is routed through `ext` calls.
- - within the current `linux/x86_64` IR subset, `i128`/`u128`/`f128` values are supported at ABI boundaries using the stable C99 `{ lo, hi }` struct shapes:
+ - within the `linux/x86_64` IR subset, `i128`/`u128`/`f128` values are supported at ABI boundaries using the stable C99 `{ lo, hi }` struct shapes:
  - parameters lower to two integer-like scalars (`u64 lo`, then `u64`/`i64 hi`) and consume integer argument locations,
  - results return as two integer-like scalars in `rax`/`rdx`,
  - `f128` values are transported as raw IEEE binary128 bits in the two lanes (not via SSE registers),
  - module-level constant-evaluable wide bindings and inferred local wide
  arithmetic use this same lane representation; source placement and a
  redundant local type annotation do not alter the ABI or lowering.
- - within the current `linux/x86_64` IR subset, a limited `struct` subset is supported at ABI boundaries:
+ - within the `linux/x86_64` IR subset, a limited `struct` subset is supported at ABI boundaries:
  - within function bodies and internal helper calls, `struct` declarations with 0+ fields of supported value types are supported (scalar primitives, `string`, nested structs, and supported optionals),
- - at ABI boundaries for exported/FFI functions, only ABI-safe structs are currently supported: after slot-flattening, all scalar slots must be `i64`/`u64`/`f64` (until packed ABI mapping for smaller fields is implemented),
+ - at ABI boundaries for exported/FFI functions, only ABI-safe structs are supported: after slot-flattening, all scalar slots must be `i64`/`u64`/`f64` (until packed ABI mapping for smaller fields is implemented),
  - ordinary borrowed references/slices are rejected up front on `ext` declarations and unnamed C-facing root-package `export fn` signatures; only opaque handle references (`&Handle` where `Handle` is `struct Name;`) may cross the external ABI boundary,
  - named-package Silk object exports may accept slice parameters (`T[]`) in the compiler-owned package ABI; these lower to two integer-like scalars (`u64` pointer, then `i64` element count) and are not emitted through C header generation,
  - at the C ABI surface, exported function *parameters* support 1+ slot ABI-safe structs by lowering the struct to its scalar slots in order; downstream C callers should declare separate parameters for 3+ slot structs (by-value C struct parameters are ABI-compatible only for the 1–2 slot cases), while exported function *returns* support 1+ slot ABI-safe structs (3+ slot returns use the native backend’s sret return path and are ABI-compatible with returning an equivalent C struct by value),
@@ -17010,7 +16992,7 @@ The initial C header provided in the Silk compiler repository defines:
  exports omit the reserved prefix and emit clean C symbols by collapsing
  package `::` namespace separators to `_` and placing a single `_`
  between the package namespace and function name; declaration-level
- `attr(abi=c)` is currently supported only on top-level exported
+ `attr(abi=c)` is supported only on top-level exported
  functions, with functions nested inside inline `module Name { ... }`
  blocks rejected until that export path is implemented end to end;
  clean C ABI symbols that collide with another C ABI export or any other
@@ -17019,13 +17001,13 @@ The initial C header provided in the Silk compiler repository defines:
  package's public C ABI symbols and the dependency functions as they are
  actually emitted into that output, including internal raw dependency
  symbols,
- - named-package exported data currently uses the default
+ - named-package exported data uses the default
  package-qualified symbol `__silk_export_data__pkg__name`,
  - C/Objective-C bridge headers should spell those symbols through
  `SILK_C_ABI_EXPORT_FN(pkg, name)`, `SILK_PACKAGE_EXPORT_FN(pkg, name)`,
  or `SILK_PACKAGE_EXPORT_DATA(pkg, name)` from `silk/silk.h` instead of
  hardcoding generated spellings,
- - within the current `linux/x86_64` IR subset, optionals (`T?`) are supported at ABI boundaries for the supported payload subset (scalar payloads, `string?`, and optionals of ABI-safe structs):
+ - within the `linux/x86_64` IR subset, optionals (`T?`) are supported at ABI boundaries for the supported payload subset (scalar payloads, `string?`, and optionals of ABI-safe structs):
  - an optional lowers to a `Bool` tag followed by the payload scalar slots: `(tag, payload0, payload1, ...)` with `tag=0` for `None` and `tag=1` for `Some(...)`,
  - nested optionals (`T??`) lower by treating the payload slots as the full inner optional representation (for example `int??` lowers as `(tag0, tag1, i64 payload)`),
  - optional parameters are passed as these scalar slots in order (so downstream C callers should declare separate parameters, treating `tag` as an integer-like 0/1 value),
@@ -17036,7 +17018,7 @@ The initial C header provided in the Silk compiler repository defines:
  on Apple Silicon macOS hosts,
  `macos-aarch64`, `ios-aarch64`, `ios-simulator-aarch64`, and
  `ios-simulator-x86_64` can emit a Mach-O 64-bit relocatable object for
- the same current host-backed library subset, emitting supported functions
+ the same host-backed library subset, emitting supported functions
  (scalar-returning, `void`-returning, and a limited `string` subset) and supported exported constants
  (`export let`/`export const`; scalar exports require an explicit type annotation and a literal initializer, and string exports may omit `: string` when the initializer is a string literal), and marking `export fn`
  declarations, supported exported constants, and a valid executable `main`
@@ -17063,8 +17045,7 @@ The initial C header provided in the Silk compiler repository defines:
  documented IR subset; on Apple
  Silicon macOS hosts, `macos-aarch64`, `ios-aarch64`,
  `ios-simulator-aarch64`, and `ios-simulator-x86_64` can emit a Mach-O
- static archive via Apple `libtool -static` for the same current
- host-backed library subset, emitting
+ static archive via Apple `libtool -static` for the same host-backed library subset, emitting
  supported functions (scalar-returning, `void`-returning, and a limited `string` subset) and supported
  exported constants (`export let`/`export const`; scalar exports require an explicit type annotation and a literal initializer, and string exports may omit `: string` when the initializer is a string literal), and
  marking `export fn` declarations, supported exported constants, and a
@@ -17082,7 +17063,7 @@ The initial C header provided in the Silk compiler repository defines:
  backend's documented IR subset;
  on Apple Silicon macOS hosts, `macos-aarch64`, `ios-aarch64`,
  `ios-simulator-aarch64`, and `ios-simulator-x86_64` can emit a Mach-O
- dylib for the same current host-backed library subset,
+ dylib for the same host-backed library subset,
  emitting supported functions (scalar-returning, `void`-returning, and a limited `string` subset) and
  supported exported constants (`export let`/`export const`; scalar exports require an explicit type annotation and a literal initializer, and string exports may omit `: string` when the initializer is a string literal), and
  marking `export fn` declarations, supported exported constants, and a
@@ -17115,7 +17096,7 @@ The initial C header provided in the Silk compiler repository defines:
 
               ```silk
               fn helper (x, y) -> int {
-                [let ...;]
+                [let...;]
                 return <expr>;
               }
               ```
@@ -17145,10 +17126,10 @@ The initial C header provided in the Silk compiler repository defines:
 
                   ```silk
                   if <cond> {
-                    [let ...;]
+                    [let...;]
                     return <expr>;
                   } else {
-                    [let ...;]
+                    [let...;]
                     return <expr>;
                   }
                   ```
@@ -17174,10 +17155,10 @@ The initial C header provided in the Silk compiler repository defines:
               ```silk
               fn main () -> int {
                 if <cond> {
-                  [let ...;]
+                  [let...;]
                   return <expr>;
                 } else {
-                  [let ...;]
+                  [let...;]
                   return <expr>;
                 }
               }

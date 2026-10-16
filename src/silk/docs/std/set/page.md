@@ -23,13 +23,13 @@ structures.
 
 ## Considerations
 
-In the Supported forms:
+In Silk:
 
 - `SetMap(T)` and `TreeSet(T)` store elements by value, but do not automatically
  run `Drop` for stored elements when entries are removed.
 - `SetMap(T)` stores elements in compiler typed-array layout, which supports
  multi-slot borrowed values such as `string`.
-- `TreeSet(T)` currently stores each element in a single 8-byte scalar slot
+- `TreeSet(T)` stores each element in a single 8-byte scalar slot
  (`as raw u64`). Multi-slot values such as `string` (and most structs) are not
  supported as ordered-set elements yet.
 - Avoid storing Drop-managed structs as set elements until the compiler has
@@ -140,7 +140,7 @@ The current [`std::set`](/silk/wiki/std/set/) implementation follows the same sh
 - `SetMapIter(T)` and `TreeSetIter(T)` implement [`std::interfaces::Iterator(...)`](/silk/docs/std/interfaces/).
 
 That makes the set types good reader-facing examples of the stdlib’s
-container-oriented interface conventions even in the current static-only
+container-oriented interface conventions even in the static-only
 interface subset.
 
 ## Design goals

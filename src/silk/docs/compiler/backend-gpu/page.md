@@ -94,8 +94,7 @@ serializes each public operation with a process-wide mutex.
 
 A kernel may directly call:
 
-- another `attr(device=gpu)` function whose signature and body fit the current
- device-IR subset; or
+- another `attr(device=gpu)` function whose signature and body fit the device-IR subset; or
 - an explicitly declared `pure fn` whose signature and reachable body fit the
  same subset.
 

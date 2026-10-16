@@ -147,10 +147,10 @@ Runtime areas in the shipped stdlib:
  preopened directory as a sandbox root, and resolves relative paths against a
  virtual cwd ([`std::runtime::wasi::cwd`](/silk/docs/std/runtime-wasi-cwd/))).
  - includes read-only mapping helpers (`mmap_readonly` / `munmap`); on
- `wasm32-wasi` mapping is currently unsupported and reports `InvalidInput`.
+ `wasm32-wasi` mapping is unsupported and reports `InvalidInput`.
  - includes `mkstemp(template_ptr)` for creating unique temporary files from a
  writable NUL-terminated template ending in `XXXXXX` (hosted POSIX
- baseline). On `wasm32-wasi` this operation is currently unsupported and
+ baseline). On `wasm32-wasi` this operation is unsupported and
  reports `InvalidInput`.
  - includes raw stat metadata queries (`stat`, `lstat`, `fstat`) plus path
  classification (`path_kind`) and owned canonical path resolution
@@ -161,7 +161,7 @@ Runtime areas in the shipped stdlib:
  underlying OS,
  - on `wasm32-wasi`, `stat` / `lstat` / `fstat` are implemented from WASI
  preview1 filestat syscalls with a reduced metadata set, `path_kind` is
- supported, and `realpath` is currently unsupported and reports
+ supported, and `realpath` is unsupported and reports
  `InvalidInput`.
 - [`std::runtime::io`](/silk/docs/std/runtime-io/) — low-level stdio primitives used by [`std::io`](/silk/docs/std/io/) (on
  `wasm32-wasi`, rewritten to [`std::runtime::wasi::io`](/silk/docs/std/runtime-wasi-io/), which maintains a
@@ -172,7 +172,7 @@ Runtime areas in the shipped stdlib:
  It also includes PTY helpers used by [`std::process::child::Command.spawn_pty`](/silk/docs/std/process-child/)
  on the hosted POSIX baseline (`pty_open`, `pty_prepare_child`).
 - [`std::runtime::task`](/silk/docs/std/runtime-task/) — hosted task/runtime primitives used by [`std::task`](/silk/docs/std/task/)
- (sleep/yield_now/available parallelism; currently blocking OS-thread operations;
+ (sleep/yield_now/available parallelism; blocking OS-thread operations;
  delegates to [`std::runtime::posix::task`](/silk/docs/std/runtime-posix-task/) in the shipped stdlib).
 - [`std::runtime::sync`](/silk/docs/std/runtime-sync/) — hosted synchronization primitives used by [`std::sync`](/silk/docs/std/sync/)
  (mutexes/condvars and allocation helpers; delegates to
@@ -237,7 +237,7 @@ Runtime areas in the shipped stdlib:
  updating the current hook set. Concurrent allocator changes can still
  affect which hook future bundled-runtime allocations use.
  - `silk_rt_realloc_bytes(...)` and `silk_rt_free_bytes(...)` only accept
- pointers that correspond to a currently live allocation previously
+ pointers that correspond to a live allocation previously
  returned by `silk_rt_malloc_bytes(...)` or
  `silk_rt_realloc_bytes(...)`. Foreign pointers, forged helper headers,
  stale pre-`realloc` pointers, and already-freed helper pointers are all
@@ -256,7 +256,7 @@ Runtime areas in the shipped stdlib:
 - [`std::runtime::window`](/silk/docs/std/runtime-window/) — low-level target/provider detection, opaque
  provider handles, nonblocking provider event polling, high-level provider
  `run(...)` / `run_ex(...)` boundaries, and native window-control hooks used
- by [`std::window`](/silk/docs/std/window/). The shipped runtime currently opens AppKit windows with
+ by [`std::window`](/silk/docs/std/window/). The shipped runtime opens AppKit windows with
  stdlib creation options, pumps one AppKit event at a time, exposes AppKit
  title/visibility/focus/size/position/minimize/maximize/always-on-top/
  background controls, enters `UIApplicationMain` and creates a visible
@@ -288,7 +288,7 @@ Follow-ups are expected to introduce additional runtime areas:
  - `sleep_ms_abortable(ms, sig) -> bool`
  - `fd_wait_readable_abortable(fd, sig) -> bool`
  - `fd_wait_writable_abortable(fd, sig) -> bool`
- In the Supported forms, aborts are generally observed only before/after the
+ In Silk, aborts are generally observed only before/after the
  awaited operation. For `fd_wait_readable_abortable`, when the runtime can
  provide a pollable abort fd (`AbortSignalBorrow.wait_fd()`), aborts can
  interrupt an in-flight wait by awaiting `fd_wait_readable2(fd, abort_fd)`.
@@ -352,7 +352,7 @@ compiling the reachable std sources as part of the build on supported targets.
 
 ### Building a Custom Std Archive
 
-For supported native hosted archive targets in the current toolchain
+For supported native hosted archive targets in the toolchain
 (`linux/x86_64`, `linux/aarch64`, and `macos/aarch64`), a prebuilt stdlib archive
 (`libsilk_std.a`) contains one object per std module.
 

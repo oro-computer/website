@@ -89,7 +89,7 @@ When explicit input files are used (no `--package`), the `silk` CLI may load add
  `PKG/NAME=VALUE` (for example `ui/tui` or `ui/tui=false`).
 - `--package <dir|manifest>`, `--pkg <dir|manifest>` — load the module set from a `silk.toml` manifest instead of explicit input files.
  - when the root manifest enables a build module via `[build].build_module = true`, `silk check --package` runs that build module and checks the emitted manifest/module set instead of the raw `silk.toml`,
- - for compatibility, package checks currently invoke the build module with the action string `build`.
+ - for compatibility, package checks invoke the build module with the action string `build`.
 - `--` — end of options; treat following args as file paths (even if they begin with `-`).
 
 ## Examples

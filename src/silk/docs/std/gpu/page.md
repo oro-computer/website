@@ -32,7 +32,7 @@ HIP or CUDA dependency.
  the most recent failed operation on the current process. A later GPU
  operation may overwrite the borrowed text.
 - `launch(kernel_name: string, grid_size: u64, workgroup_size: u64,
- ...args: u64) -> int` packs zero to 32 explicit `u64` kernel arguments,
+...args: u64) -> int` packs zero to 32 explicit `u64` kernel arguments,
  loads the named embedded kernel, validates the argument byte count recorded
  in the executable bundle, and enqueues a one-dimensional dispatch.
  `grid_size` is the total number of work items;
@@ -52,7 +52,7 @@ HIP or CUDA dependency.
  - `synchronize_failed() -> bool` is true when `synchronize_status` is
  nonzero.
 - `launch_and_synchronize(kernel_name: string, grid_size: u64,
- workgroup_size: u64, ...args: u64) -> DispatchResult` calls `launch`, then
+ workgroup_size: u64,...args: u64) -> DispatchResult` calls `launch`, then
  calls `synchronize` exactly once even if launch failed, and returns both
  statuses. It is the public replaceable-stdlib operation behind checked `gpu`
  forms.

@@ -43,12 +43,12 @@ for (<init>; <condition>; <step>) {
 
 Notes:
 
-- `for <pattern> in <iterable> { ... }` currently accepts a single identifier
+- `for <pattern> in <iterable> { ... }` accepts a single identifier
  binder (and `_`) as the ordinary element-binding form.
 - `for let <pattern> in <iterable> { ... }` is the refutable pattern form.
  `for let mut <pattern> in <iterable> { ... }` marks pattern binders mutable
  for the current loop iteration.
- It uses the same currently supported refutable match-pattern subset as
+ It uses the same supported refutable match-pattern subset as
  `if let` / `while let`.
 - `<iterable>` is an expression.
 - `<init>` is a local binding (`let` / `var` / `const`) with an initializer.
@@ -84,7 +84,7 @@ Notes:
 - `continue` advances to the next element (it performs the increment step, then
  re-checks the range condition).
 - The loop binder is in scope only inside the loop body block.
-- The binder is immutable in the Supported forms (it behaves like a `let`
+- The binder is immutable in Silk (it behaves like a `let`
  binding that is updated by the loop machinery; user code cannot assign to it).
 
 Type checking (Supported forms):
@@ -113,7 +113,7 @@ fn main () -> int {
 
 ### Array and slice iteration
 
-In Silk currently, `for` also supports iterating over builtin
+In Silk, `for` also supports iterating over builtin
 array and slice types:
 
 - fixed arrays `T[N]`,
@@ -181,8 +181,7 @@ fn main () -> int {
 Limitations:
 
 - Element types are limited to the currently-supported array/slice element
- subset (types that lower to a fixed scalar slot sequence in the current
- back-end, such as primitive scalars, `string`, and supported non-opaque
+ subset (types that lower to a fixed scalar slot sequence in the back-end, such as primitive scalars, `string`, and supported non-opaque
  structs).
 - Iteration is by value; to mutate an element, use indexing (`xs[i] = ...`).
 
@@ -256,7 +255,7 @@ Init binding mutability (Supported forms):
 
 ## Guidance
 
-In Silk currently, `for` supports integer ranges and builtin
+In Silk, `for` supports integer ranges and builtin
 array/slice iteration. To write other loops today, use [`while`](/silk/wiki/language/flow-while/):
 
 ```silk
