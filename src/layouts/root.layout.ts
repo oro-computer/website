@@ -6,6 +6,7 @@ import type { LayoutFunction } from '@domstack/static/types.js'
 import { header, footer } from '#lib/navigation.ts'
 import { searchDialog } from '#lib/search-dialog.ts'
 import { collections, type Collection } from '#lib/collections.ts'
+import { themeBootstrap } from '#lib/theme.ts'
 
 interface RootVars {
   title: string
@@ -54,7 +55,10 @@ const root: LayoutFunction<RootVars, string> = ({
           <meta name="viewport" content="width=device-width, initial-scale=1" />
           <title>${title}</title>
           <meta name="description" content="${v.description || ''}" />
-          <meta name="theme-color" content="#11100F" />
+          <meta name="color-scheme" content="light dark" />
+          <meta name="theme-color" content="#FAF8F4" media="(prefers-color-scheme: light)" />
+          <meta name="theme-color" content="#11100F" media="(prefers-color-scheme: dark)" />
+          <script>${raw(themeBootstrap)}</script>
           <link rel="canonical" href="${canonical}" />
           <meta property="og:title" content="${title}" />
           <meta property="og:description" content="${v.description || ''}" />

@@ -7,7 +7,7 @@
 
 - Shared horizontal navigation connects the two technology initiatives: Oro Runtime and Silk.
 - Homepage: generous typography, a geometric petal study, and two clearly linked product sections.
-- Documentation: quiet dark surfaces, a bounded reading column, and separate scrolling navigation.
+- Documentation: quiet themed surfaces, a bounded reading column, and separate scrolling navigation.
 - Use 24px minimum page gutters (16px on narrow phones), 24–48px component gaps,
   and 96px section spacing on desktop / 48px on mobile. Controls target at least 44px.
 - Reading content must reflow at 320px; code and wide tables may scroll within their own bounds.

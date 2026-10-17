@@ -28,6 +28,12 @@ are output files; do not commit `public/`.
   `npm run typecheck`; this adds no runtime registry or subscriptions.
 - `src/globals/global.css`: shared Oro styles, based on `docs/branding/`.
   Homepage styles live in `src/style.css`; learn styles in `src/layouts/learn.layout.css`.
+- Light and dark palettes use semantic `light-dark()` tokens and follow the OS by
+  default, including without JavaScript. The header's sun/moon icon button saves
+  explicit choices in `localStorage` under `oro-theme`. `src/lib/theme.ts` restores
+  a saved choice before paint; `theme-client.ts` handles controls and live system
+  changes. Keep brand gold for button fills and use `--color-accent` for readable
+  text, focus rings, and selection markers.
 - `src/lib/`: rendering, URL, collection, and navigation helpers.
 - `src/globals/global.vars.ts`: shared site configuration.
 - Runtime download links point to [npm](https://www.npmjs.com/package/@oro-computer/runtime),
@@ -346,7 +352,7 @@ build prerequisites were checked against source. The npm registry confirmed Runt
 `0.1.7` with Node.js 22+; the older release-status paragraph in Runtime's README
 was superseded by its published package metadata.
 
-The shared dark design follows `docs/branding/`, drawing on Spotify Technology's
+The shared light and dark design follows `docs/branding/`, drawing on Spotify Technology's
 product hierarchy and Reflection's generous typography and spacing. CDP browser
 review and WCAG AA checks cover desktop and mobile layouts, syntax highlighting,
 interactive states, and documentation controls. Run `npm run test:browser` to keep

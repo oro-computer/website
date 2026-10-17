@@ -1,9 +1,9 @@
 :root {
-  --hljs-comment: #b8b4ad;
-  --hljs-keyword: #f6c945;
-  --hljs-string: #88d4a7;
-  --hljs-number: #ffb17b;
-  --hljs-built-in: #c9b4ff;
+  --hljs-comment: light-dark(#625c53, #b8b4ad);
+  --hljs-keyword: light-dark(#785300, #f6c945);
+  --hljs-string: light-dark(#236641, #88d4a7);
+  --hljs-number: light-dark(#91420d, #ffb17b);
+  --hljs-built-in: light-dark(#5b3ba2, #c9b4ff);
 }
 
 pre code.hljs,
@@ -19,7 +19,7 @@ code.hljs {
 
 .hljs-doctag,
 .hljs-meta {
-  color: rgba(250, 248, 244, 0.68);
+  color: var(--hljs-comment);
 }
 
 .hljs-keyword,
@@ -55,12 +55,12 @@ code.hljs {
 
 .hljs-title,
 .hljs-section {
-  color: rgba(250, 248, 244, 0.96);
+  color: var(--color-code-fg);
   font-weight: 650;
 }
 
 .hljs-literal {
-  color: #ffd76b;
+  color: var(--hljs-keyword);
 }
 
 .hljs-name,
@@ -68,7 +68,7 @@ code.hljs {
 .hljs-variable,
 .hljs-symbol,
 .hljs-bullet {
-  color: rgba(250, 248, 244, 0.9);
+  color: var(--color-code-fg);
 }
 
 .hljs-emphasis {

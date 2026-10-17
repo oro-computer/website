@@ -11,7 +11,7 @@
 
 Lead with what a developer can build. Oro Runtime and Silk are the primary
 technology initiatives. Use short, concrete descriptions and distinguish setup
-requirements from application workflows. A dark canvas, generous negative space,
+requirements from application workflows. A warm ivory or dark canvas, generous negative space,
 clear product hierarchy, and restrained geometric artwork carry the visual tone.
 The reference sites are technology.spotify.com (product clarity and dark composition)
 and reflection.ai (typographic scale and spacious rhythm); retain Oro's identity.

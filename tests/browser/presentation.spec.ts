@@ -8,18 +8,24 @@ const routes = [
   '/runtime/docs/guides/hello-world/', '/runtime/docs/javascript/sqlite/',
   '/runtime/docs/cli/build/', '/runtime/docs/config/reference/', '/silk/docs/usage/getting-started/',
   '/silk/docs/usage/github-actions/', '/silk/docs/man/silk_abi_get_version.3/',
-  '/silk/wiki/', '/blog/', '/blog/2026/hello-world/',
+  '/silk/wiki/', '/blog/', '/blog/2026/hello-world/', '/silk/spec/2026/',
 ]
 
-for (const route of routes) test(`dark presentation and WCAG AA: ${route}`, async ({ page }) => {
-  await page.goto(route)
-  expect(await page.locator('body').evaluate(element => getComputedStyle(element).backgroundColor)).toBe('rgb(17, 16, 15)')
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
-  const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()
-  expect(results.violations.map(({ id, nodes }) => ({ id, targets: nodes.map(node => node.target), details: nodes.map(node => node.failureSummary) }))).toEqual([])
+for (const scheme of ['light', 'dark'] as const) test.describe(`${scheme} presentation`, () => {
+  test.use({ colorScheme: scheme })
+  for (const route of routes) test(`WCAG AA and reflow: ${route}`, async ({ page }) => {
+    if (route === '/silk/spec/2026/') test.setTimeout(90_000)
+    await page.goto(route)
+    expect(await page.locator('body').evaluate(element => getComputedStyle(element).backgroundColor))
+      .toBe(scheme === 'light' ? 'rgb(250, 248, 244)' : 'rgb(17, 16, 15)')
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()
+    expect(results.violations.map(({ id, nodes }) => ({ id, targets: nodes.map(node => node.target), details: nodes.map(node => node.failureSummary) }))).toEqual([])
+  })
 })
 
-test('primary actions retain contrast when hovered and keyboard focused', async ({ page }) => {
+for (const scheme of ['light', 'dark'] as const) test(`${scheme} primary actions retain contrast when hovered and keyboard focused`, async ({ page }) => {
+  await page.emulateMedia({ colorScheme: scheme })
   await page.goto('/')
   const action = page.getByRole('link', { name: 'Explore Runtime' })
   for (const state of ['default', 'hover', 'focus']) {
@@ -88,7 +94,16 @@ test('selected navigation has a contrasting visual indicator', async ({ page }) 
   await page.goto('/runtime/docs/guides/hello-world/')
   const selected = page.locator('.site-subnav-links [aria-current="page"]')
   const contrast = await selected.evaluate(element => {
-    const rgba = (value: string) => value.match(/[\d.]+/g)!.map(Number)
+    const canvas = document.createElement('canvas')
+    canvas.width = canvas.height = 1
+    const ctx = canvas.getContext('2d')!
+    const rgba = (value: string) => {
+      ctx.clearRect(0, 0, 1, 1)
+      ctx.fillStyle = value
+      ctx.fillRect(0, 0, 1, 1)
+      const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data
+      return [r!, g!, b!, a! / 255]
+    }
     const over = (foreground: number[], background: number[]) => {
       const alpha = foreground[3] ?? 1
       return [0, 1, 2].map(index => foreground[index]! * alpha + background[index]! * (1 - alpha))

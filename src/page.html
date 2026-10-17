@@ -12,12 +12,12 @@
     <div class="home-art" aria-hidden="true">
       <svg viewBox="0 0 600 600" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <linearGradient id="petal-gold" x1="80" y1="80" x2="510" y2="520" gradientUnits="userSpaceOnUse"><stop stop-color="#FAF8F4"/><stop offset=".45" stop-color="#F6C945"/><stop offset="1" stop-color="#F47A28"/></linearGradient>
-          <linearGradient id="petal-purple" x1="500" y1="100" x2="100" y2="500" gradientUnits="userSpaceOnUse"><stop stop-color="#C9B4FF"/><stop offset="1" stop-color="#5B3BA2"/></linearGradient>
+          <linearGradient id="petal-gold" x1="80" y1="80" x2="510" y2="520" gradientUnits="userSpaceOnUse"><stop stop-color="var(--color-fg)"/><stop offset=".45" stop-color="var(--color-accent)"/><stop offset="1" stop-color="#F47A28"/></linearGradient>
+          <linearGradient id="petal-purple" x1="500" y1="100" x2="100" y2="500" gradientUnits="userSpaceOnUse"><stop stop-color="var(--color-purple-text)"/><stop offset="1" stop-color="#5B3BA2"/></linearGradient>
           <path id="petal" d="M300 300C155 300 76 224 100 140C124 56 282 87 300 300Z"/>
         </defs>
-        <circle cx="300" cy="300" r="252" stroke="#FAF8F4" stroke-opacity=".1" stroke-dasharray="2 10"/>
-        <path d="M300 20V580M20 300H580" stroke="#FAF8F4" stroke-opacity=".08"/>
+        <circle cx="300" cy="300" r="252" stroke="currentColor" stroke-opacity=".18" stroke-dasharray="2 10"/>
+        <path d="M300 20V580M20 300H580" stroke="currentColor" stroke-opacity=".12"/>
         <g stroke="url(#petal-gold)" stroke-width="1.1">
           <use href="#petal"/><use href="#petal" transform="rotate(90 300 300)"/><use href="#petal" transform="rotate(180 300 300)"/><use href="#petal" transform="rotate(270 300 300)"/>
           <g transform="translate(300 300) scale(.9) translate(-300 -300)"><use href="#petal"/><use href="#petal" transform="rotate(90 300 300)"/><use href="#petal" transform="rotate(180 300 300)"/><use href="#petal" transform="rotate(270 300 300)"/></g>

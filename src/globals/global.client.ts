@@ -1,6 +1,8 @@
 import { initSiteSearch } from '#lib/search-client.ts'
 import { initRuntimeRelease } from '#lib/runtime-release-client.ts'
+import { initTheme } from '#lib/theme-client.ts'
 
+initTheme()
 initSiteSearch()
 void initRuntimeRelease()
 

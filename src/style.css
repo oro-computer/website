@@ -2,7 +2,7 @@
 .home-hero { position: relative; display: grid; grid-template-columns: 1.15fr 1fr; align-items: center; gap: 24px; padding-top: 88px; }
 .home-hero-copy { position: relative; z-index: 1; }
 .home-hero h1 { margin-top: 32px; font-size: clamp(3rem, 7.7vw, 7rem); font-weight: 550; line-height: 1.02; letter-spacing: -.055em; }
-.home-hero h1 em { color: var(--color-gold); font-style: normal; }
+.home-hero h1 em { color: var(--color-accent); font-style: normal; }
 .home-hero .home-lede { margin-top: 32px; font-size: 1.125rem; line-height: 1.7; }
 .home-hero .hero-actions { margin-top: 32px; }
 .home-art { min-width: 0; display: grid; justify-items: center; padding: 16px 0 32px; background: radial-gradient(ellipse, rgba(246,201,69,.055), transparent 68%); }
@@ -10,19 +10,19 @@
 .art-caption { margin-top: 8px; font: .875rem var(--font-mono); color: var(--color-muted); }
 .home-hero-bottom { grid-column: 1 / -1; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-top: 48px; padding: 24px 0; border-top: 1px solid var(--color-border); font-size: .875rem; color: var(--color-muted); }
 .home-hero-bottom a { color: var(--color-fg); text-decoration: none; }
-.home-hero-bottom a span { margin-left: 24px; color: var(--color-gold); }
+.home-hero-bottom a span { margin-left: 24px; color: var(--color-accent); }
 .home-technologies { padding-top: 96px; }
 .home-section-heading { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 64px; margin-bottom: 64px; align-items: end; }
 .home-section-heading .section-kicker { grid-column: 1 / -1; }
 .home-section-heading h2, .home-invitation h2 { font-size: clamp(2.5rem, 4.3vw, 4rem); font-weight: 500; line-height: 1.1; letter-spacing: -.04em; }
 .home-section-heading p:last-child { padding-bottom: 4px; }
 .home-product { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; padding: 64px 0; border-top: 1px solid var(--color-border); }
-.product-number { font: .875rem var(--font-mono); color: var(--color-gold); }
+.product-number { font: .875rem var(--font-mono); color: var(--color-accent); }
 .home-product h3 { margin: 24px 0; font-size: clamp(2rem, 3.3vw, 3rem); line-height: 1.12; font-weight: 500; letter-spacing: -.035em; }
 .home-product-copy > p:not(.product-number):not(.product-footnote) { max-width: 47ch; font-size: 1.125rem; }
 .home-product-links { display: flex; flex-wrap: wrap; gap: 16px 32px; margin-top: 24px; }
 .home-product-links a { display: inline-flex; align-items: center; gap: 16px; min-height: 44px; font-size: .95rem; color: var(--color-fg); text-decoration-color: var(--color-border-strong); }
-.home-product-links a:first-child { color: var(--color-gold); }
+.home-product-links a:first-child { color: var(--color-accent); }
 .home-product .product-footnote { margin-top: 24px; font-size: .875rem; color: var(--color-muted); }
 .home-code { min-width: 0; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-code-bg); overflow: hidden; }
 .home-code-heading, .home-code-footer { display: flex; align-items: center; gap: 12px; padding: 20px 24px; color: var(--color-muted); font: .875rem var(--font-mono); }
@@ -31,8 +31,8 @@
 .home-code pre { padding: 24px; border: 0; border-radius: 0; box-shadow: none; font-size: .875rem; background: transparent; }
 .home-code pre code { line-height: 1.8; }
 .home-code-footer { border-top: 1px solid var(--color-border); font-family: var(--font-body); }
-.status-dot { width: 6px; height: 6px; border-radius: 50%; background: #88d4a7; flex: 0 0 auto; }
-.home-product-silk .product-number { color: #c9b4ff; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-green-text); flex: 0 0 auto; }
+.home-product-silk .product-number { color: var(--color-purple-text); }
 .home-invitation { display: grid; grid-template-columns: 1fr 1fr; gap: 32px 64px; padding-top: 80px; padding-bottom: 96px; border-top: 1px solid var(--color-border); margin-top: 32px; }
 .home-invitation .section-kicker { grid-column: 1 / -1; }
 .home-invitation > div { align-self: end; }
